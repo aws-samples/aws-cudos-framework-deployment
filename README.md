@@ -1,17 +1,19 @@
-## My Project
+# CUDOS Framework: Enterprise Dashboards
 
-TODO: Fill this README out!
+## Welcome to customer automation for CUDOS Framework repository
 
-Be sure to:
+### The scripts in this repo have been succesfully tested in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home)
 
-* Change the title in this README
-* Edit your repository description on GitHub
+In the [**cudos**](./cudos/) subdirectory you will find a set of scripts automate some parts of the [CUDOS workshop](https://cudos.workshop.aws/), specifically parts of:
+  - creating Athena views
+  - creating Amazon QuickSight datasource
+  - creating Amazon QuickSight datasets
+  - deploying the CUDOS dashboard to Amazon QuickSight
+  - creating proper account mapping from account id's to account names
 
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
-
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
+In the [**tao**](./tao/) subdirectory you will find a set of scripts automate Trusted Advisor Organisation view dashboard deployment, specifically parts of:
+  - creating AWS Glue Data Catalog
+  - creating Amazon QuickSight datasource
+  - creating Amazon QuickSight datasets
+  - deploying the TAO dashboard to Amazon QuickSight
 

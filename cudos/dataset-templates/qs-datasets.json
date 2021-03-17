@@ -1,0 +1,9 @@
+{
+	"qs_datasets": {
+        "summary_view": {},
+        "ec2_running_cost": {},
+        "compute_savings_plan_eligible_spend": {},
+        "s3_view": {},
+        "customer_all": {}
+	}
+}

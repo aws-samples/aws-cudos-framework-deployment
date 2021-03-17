@@ -1,0 +1,53 @@
+{
+  "AwsAccountId": "${awsAccountId}",
+  "DashboardId": "${dashboardId}",
+  "Name": "CUDOS Dashboard",
+  "Permissions": [
+    {
+      "Principal": "${user_arn}",
+      "Actions": [
+        "quicksight:DescribeDashboard",
+        "quicksight:ListDashboardVersions",
+        "quicksight:UpdateDashboardPermissions",
+        "quicksight:QueryDashboard",
+        "quicksight:UpdateDashboard",
+        "quicksight:DeleteDashboard",
+        "quicksight:DescribeDashboardPermissions",
+        "quicksight:UpdateDashboardPublishedVersion"
+      ]
+    }
+  ],
+  "DashboardPublishOptions": {
+    "AdHocFilteringOption": {
+      "AvailabilityStatus": "DISABLED"
+    }
+  },
+  "SourceEntity": {
+    "SourceTemplate": {
+      "DataSetReferences": [
+        {
+          "DataSetPlaceholder": "summary_view",
+          "DataSetArn": "arn:aws:quicksight:${region}:${awsAccountId}:dataset/d01a936f-2b8f-49dd-8f95-d9c7130c5e46"
+        },
+        {
+          "DataSetPlaceholder": "ec2_running_cost",
+          "DataSetArn": "arn:aws:quicksight:${region}:${awsAccountId}:dataset/9497cc49-c9b1-4dcd-8bcc-c16396898f29"
+        },
+        {
+          "DataSetPlaceholder": "compute_savings_plan_eligible_spend",
+          "DataSetArn": "arn:aws:quicksight:${region}:${awsAccountId}:dataset/3fa0d804-9bf5-4a20-a61d-4bdbb6d543b1"
+        },
+        {
+          "DataSetPlaceholder": "s3_view",
+          "DataSetArn": "arn:aws:quicksight:${region}:${awsAccountId}:dataset/826896be-4d0f-4f90-832f-3427f5444016"
+        },
+        {
+          "DataSetPlaceholder": "customer_all",
+          "DataSetArn": "arn:aws:quicksight:${region}:${awsAccountId}:dataset/595c66b7-08b6-46ad-87ed-b74fe34dd333"
+        }
+      ],
+      "Arn": "arn:aws:quicksight:us-east-1:${sourceAccountId}:template/${sourceTemplateId}"
+    }
+  },
+  "VersionDescription": "1"
+}

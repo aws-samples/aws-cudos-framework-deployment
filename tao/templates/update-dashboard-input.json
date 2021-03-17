@@ -1,0 +1,23 @@
+{
+    "AwsAccountId": "${account}",
+    "DashboardId": "${dashboardId}",
+    "Name": "Trusted Advisor Organizational View",
+      "DashboardPublishOptions": {
+        "AdHocFilteringOption": {
+          "AvailabilityStatus": "DISABLED"
+        }
+      },
+    "SourceEntity": {
+        "SourceTemplate": {
+            "DataSetReferences": [
+                {
+                    "DataSetPlaceholder": "ta-organizational-view",
+                    "DataSetArn": "arn:aws:quicksight:${region}:${account}:dataset/${dataSetId}"
+                }
+            ],
+            "Arn": "arn:aws:quicksight:us-east-1:${sourceAccountId}:template/${sourceTemplateId}"
+        }
+    },
+    "VersionDescription": "1"
+}
+

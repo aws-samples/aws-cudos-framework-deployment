@@ -1,0 +1,97 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "athena:BatchGetQueryExecution",
+                "athena:GetQueryExecution",
+                "athena:GetQueryResults",
+                "athena:GetWorkGroup",
+                "athena:ListDatabases",
+                "athena:ListEngineVersions",
+                "athena:ListWorkGroups",
+                "athena:ListQueryExecutions",
+                "athena:ListNamedQueries",
+                "athena:StartQueryExecution",
+                "athena:UpdateWorkGroup"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudshell:CreateEnvironment",
+                "cloudshell:CreateSession",
+                "cloudshell:GetEnvironmentStatus",
+                "cloudshell:GetFileUploadUrls",
+                "cloudshell:PutCredentials",
+                "cloudshell:StartEnvironment"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "glue:GetDatabase",
+                "glue:GetDatabases",
+                "glue:GetPartition",
+                "glue:GetPartitions",
+                "glue:GetTable",
+                "glue:GetTables",
+                "glue:UpdateTable"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "organizations:ListAccounts"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "quicksight:CreateDashboard",
+                "quicksight:CreateDataSet",
+                "quicksight:CreateDataSource",
+                "quicksight:CreateUser",
+                "quicksight:DeleteDashboard",
+                "quicksight:DeleteDataSet",
+                "quicksight:DeleteDataSource",
+                "quicksight:DescribeDashboard",
+                "quicksight:DescribeTemplate",
+                "quicksight:ListUsers"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetBucketLocation",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:ListAllMyBuckets",
+                "s3:PutObject"
+            ],
+            "Resource": [
+              "arn:aws:s3:::<CUR-BUCKET>",
+              "arn:aws:s3:::<CUR-BUCKET>/*",
+              "arn:aws:s3:::<ATHENA-QUERY-RESULTS-BUCKET>",
+              "arn:aws:s3:::<ATHENA-QUERY-RESULTS-BUCKET>/*"
+            ]
+        }
+    ]
+}

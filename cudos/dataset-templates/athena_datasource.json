@@ -1,0 +1,27 @@
+{
+        "DataSourceId": "95aa6f18-abb4-436f-855f-182b199a961f",
+        "Name": "cudos_athena_datasource",
+        "Type": "ATHENA",
+        "DataSourceParameters": {
+            "AthenaParameters": {
+                "WorkGroup": "primary"
+            }
+        },
+        "SslProperties": {
+            "DisableSsl": false
+        },
+        "Permissions": [
+            {
+                "Principal": "${user_arn}",
+                "Actions": [
+                    "quicksight:UpdateDataSourcePermissions",
+                    "quicksight:DescribeDataSource",
+                    "quicksight:DescribeDataSourcePermissions",
+                    "quicksight:PassDataSource",
+                    "quicksight:UpdateDataSource",
+                    "quicksight:DeleteDataSource"
+                ]
+            }
+        ]
+
+}
