@@ -11,7 +11,7 @@ In the [**cudos**](./cudos/) subdirectory you will find a set of scripts automat
   - deploying the CUDOS dashboard to Amazon QuickSight
   - creating proper account mapping from account id's to account names
 
-In the [**tao**](./tao/) subdirectory you will find a set of scripts automate Trusted Advisor Organisation view dashboard deployment, specifically parts of:
+In the [**tao**](./tao/) subdirectory you will find a set of scripts automate [Trusted Advisor Organisation view dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed) deployment, specifically parts of:
   - creating AWS Glue Data Catalog
   - creating Amazon QuickSight datasource
   - creating Amazon QuickSight datasets
