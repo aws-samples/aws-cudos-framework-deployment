@@ -68,7 +68,7 @@ function get_aws_account() {
 function athena_database_name() {
   if [ "${athena_database_name}" = "" ]; then
     echo "Fetching Athena Database names..."
-    databases=$(aws athena list-databases --catalog-name AwsDataCatalog --query 'DatabaseList[*].Name' --output text)
+    databases=$(aws athena list-databases --region ${AWS_DEFAULT_REGION} --catalog-name AwsDataCatalog --query 'DatabaseList[*].Name' --output text)
     echo "Discovered Athena Database names.
 Please select which one to use:
 ----"
@@ -97,7 +97,7 @@ function get_cur_name() {
     echo "Discovered Athena Table names. . Please select which one to use:
 ----"
     ahq_query_result=$(aws athena get-query-results \
-    --query-execution-id ${query_execution_id} --query 'ResultSet.Rows[*].Data[*].VarCharValue' --output text)
+    --region ${AWS_DEFAULT_REGION} --query-execution-id ${query_execution_id} --query 'ResultSet.Rows[*].Data[*].VarCharValue' --output text)
 
     select aws_athena_cur_table_name in $ahq_query_result
     do
@@ -120,7 +120,7 @@ function get_cur_region() {
 function get_user_arn() {
   if [ "${user_arn}" = "" ]; then
     echo "Fetching QuickSight User ARNs..."
-    alias=$(aws quicksight list-users --aws-account-id ${account} --namespace default --region us-east-1 --query 'UserList[*].Arn' --output text)
+    alias=$(aws quicksight list-users --aws-account-id ${account} --region ${aws_region} --namespace default --query 'UserList[*].Arn' --output text)
     echo "Discovered QuickSight User ARNs.
 Please select which one to use:
 ----"
@@ -164,7 +164,7 @@ function check_existing_config() {
 # Executes Athena queries, expects string, returns execution id
 function execute_ahq() {
     local ahq_query="$1"
-    query_execution_id=$(aws athena start-query-execution \
+    query_execution_id=$(aws athena --region ${aws_region} start-query-execution \
         --query-execution-context Database=${athena_database_name},Catalog=${aws_data_catalog_name} \
         --work-group "primary" --query-string "${ahq_query}" --query 'QueryExecutionId')
     ahq_query_status=$(ahq_query_status "${query_execution_id}")
@@ -177,7 +177,7 @@ function execute_ahq() {
 
 function execute_ahq_from_file() {
     local ahq_query_file="$1"
-    query_execution_id=$(aws athena start-query-execution \
+    query_execution_id=$(aws athena --region ${AWS_DEFAULT_REGION} start-query-execution \
         --query-execution-context Database=${athena_database_name},Catalog=${aws_data_catalog_name} \
         --work-group "primary" --query-string "file://${ahq_query_file}" --query 'QueryExecutionId')
     ahq_query_status=$(ahq_query_status "${query_execution_id}")
@@ -190,19 +190,19 @@ function execute_ahq_from_file() {
 
 function ahq_query_status() {
     local query_execution_id="$1"
-    ahq_query_status=$(aws athena get-query-execution \
+    ahq_query_status=$(aws athena --region ${AWS_DEFAULT_REGION} get-query-execution \
         --query-execution-id ${query_execution_id} --query 'QueryExecution.Status.State')
     printf "${ahq_query_status}"
 }
 
 function check_cur_enabled() {
     echo -n "Checking if CUR is enabled and available..."
-    aws_data_catalog=$(aws athena list-data-catalogs --query 'DataCatalogsSummary[?Type==`GLUE`].CatalogName')
+    aws_data_catalog=$(aws athena --region ${AWS_DEFAULT_REGION} list-data-catalogs --query 'DataCatalogsSummary[?Type==`GLUE`].CatalogName')
     if [ "$aws_data_catalog" != "${aws_data_catalog_name}" ]; then
         echo "Error: please ensure CUR is enabled, allow it from 24 to 48 hours to propagate."
         exit 1
     fi
-    aws_athena_database=$(aws athena list-databases --catalog-name "${aws_data_catalog_name}" \
+    aws_athena_database=$(aws athena --region ${AWS_DEFAULT_REGION} list-databases --catalog-name "${aws_data_catalog_name}" \
         --query "DatabaseList[?Name==\`${athena_database_name}\`].Name" )
     if [ "$aws_data_catalog" != "${aws_data_catalog_name}" ]; then
         echo "Error: please ensure CUR is enabled, allow it from 24 to 48 hours to propagate."
@@ -211,7 +211,7 @@ function check_cur_enabled() {
     # Check if customer has Resource Ids enabled
     ahq_query=$(<work/${account}/queries/resource_ids_present.sql)
     query_execution_id=$(execute_ahq "${ahq_query}")
-    ahq_query_result=$(aws athena get-query-results \
+    ahq_query_result=$(aws athena --region ${AWS_DEFAULT_REGION} get-query-results \
         --query-execution-id ${query_execution_id} --query 'length(ResultSet.Rows[])')
     if [ $ahq_query_result -le 1 ]; then
         echo "Error: Resource IDs not found in CUR"
@@ -245,12 +245,12 @@ function PrepareDataSets() {
 }
 
 function CreateDatasets() {
-  aws quicksight create-data-source --aws-account-id ${awsAccountId} --cli-input-json file://work/${account}/datasets/athena_datasource.json
-  aws quicksight create-data-set --aws-account-id ${awsAccountId} --cli-input-json file://work/${account}/datasets/summary_view-input_new.json
-  aws quicksight create-data-set --aws-account-id ${awsAccountId} --cli-input-json file://work/${account}/datasets/s3_view-input_new.json
-  aws quicksight create-data-set --aws-account-id ${awsAccountId} --cli-input-json file://work/${account}/datasets/compute_savings_plan_eligible_spend_new.json
-  aws quicksight create-data-set --aws-account-id ${awsAccountId} --cli-input-json file://work/${account}/datasets/ec2_running_cost_new.json
-  aws quicksight create-data-set --aws-account-id ${awsAccountId} --cli-input-json file://work/${account}/datasets/cur_new.json
+  aws quicksight create-data-source --aws-account-id ${awsAccountId} --region ${AWS_DEFAULT_REGION} --cli-input-json file://work/${account}/datasets/athena_datasource.json
+  aws quicksight create-data-set --aws-account-id ${awsAccountId} --region ${AWS_DEFAULT_REGION} --cli-input-json file://work/${account}/datasets/summary_view-input_new.json
+  aws quicksight create-data-set --aws-account-id ${awsAccountId} --region ${AWS_DEFAULT_REGION} --cli-input-json file://work/${account}/datasets/s3_view-input_new.json
+  aws quicksight create-data-set --aws-account-id ${awsAccountId} --region ${AWS_DEFAULT_REGION} --cli-input-json file://work/${account}/datasets/compute_savings_plan_eligible_spend_new.json
+  aws quicksight create-data-set --aws-account-id ${awsAccountId} --region ${AWS_DEFAULT_REGION} --cli-input-json file://work/${account}/datasets/ec2_running_cost_new.json
+  aws quicksight create-data-set --aws-account-id ${awsAccountId} --region ${AWS_DEFAULT_REGION} --cli-input-json file://work/${account}/datasets/cur_new.json
 }
 
 function generate_queries() {
