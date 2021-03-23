@@ -53,6 +53,7 @@ fi
 
 case "$action" in
   prepare)
+    config
     transform_templates
     echo "Please run ${myName} --action=deploy"
   ;;
