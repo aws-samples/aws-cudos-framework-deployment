@@ -17,3 +17,24 @@ In the [**tao**](./tao/) subdirectory you will find a set of scripts automate [T
   - creating Amazon QuickSight datasets
   - deploying the TAO dashboard to Amazon QuickSight
 
+## How to use this repo
+
+##### Important: Complete the [Prerequisites](https://cudos.workshop.aws/prerequisites.html)
+##### Important: [Specifying a Query Result Location Using a Workgroup](https://docs.aws.amazon.com/athena/latest/ug/querying.html#query-results-specify-location-workgroup)
+
+1. Launch [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home)
+2. Clone the repo
+
+  ```bash
+  git clone https://github.com/aws-samples/aws-cudos-framework-deployment
+  ```
+
+3. Change directory to the respectful dashboard deployment. Run the setup scripts per the instructions in the repo
+
+  ```bash
+  cd cudos
+  ./shell-script/customer-cudos.sh
+  ```
+
+  
+
