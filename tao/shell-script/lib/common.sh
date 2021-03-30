@@ -40,14 +40,14 @@ function config() {
   if [ -z "${s3FolderPath}" ]; then
     get_s3FolderPath
   fi
+  if [ -z "${region}" ]; then
+    get_region
+  fi
   if [ -z "${user_arn}" ]; then
     get_user_arn
   fi
   if [ -z "${databaseName}" ]; then
     get_athena_database_name
-  fi
-  if [ -z "${region}" ]; then
-    get_region
   fi
   [[ -d "work/$account/" ]] || mkdir -p "work/$account/"
   echo "export region=${region}
@@ -74,7 +74,7 @@ function transform_templates() {
 }
 function get_user_arn() {
     echo "Fetching QuickSight User ARNs..."
-    alias=$(aws quicksight list-users --aws-account-id ${account} --namespace default --region us-east-1 --query 'UserList[*].Arn' --output text)
+    alias=$(aws quicksight list-users --aws-account-id ${account} --namespace default --region ${region} --query 'UserList[*].Arn' --output text)
     echo "Discovered QuickSight User ARNs. Please select which one to use:"
     select qs_user_arn in $alias
     do
