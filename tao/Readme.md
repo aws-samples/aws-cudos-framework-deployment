@@ -2,7 +2,7 @@
 
 1. Enable [Trusted Advisor Organizational View](https://docs.aws.amazon.com/awssupport/latest/user/organizational-view.html#enable-organizational-view)
 
-2. Create Trusted Advisor Organizational View [report](https://docs.aws.amazon.com/awssupport/latest/user/organizational-view.html#create-organizational-view-reports)
+2. Create Trusted Advisor Organizational View [report](https://docs.aws.amazon.com/awssupport/latest/user/organizational-view.html#create-organizational-view-reports). Select **JSON** format for the report.
 
 3. Download Trusted Advisor Organizational View [report](https://docs.aws.amazon.com/awssupport/latest/user/organizational-view.html#download-organizational-view-reports) and unzip it
 
