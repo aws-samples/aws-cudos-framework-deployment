@@ -33,7 +33,7 @@
     - Run following script: 
 
         ```bash
-        ./shell-script/tao.sh --action=update
+        ./shell-script/tao.sh --action=refresh-data
         ```
 
 
