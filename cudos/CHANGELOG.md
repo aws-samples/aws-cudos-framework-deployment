@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.50
+* Compute Summary: EC2 Running Hours by Platform Last 3 Month introducing OS details
+* Compute Summary: TOP 20 Lambdas Previous Month Account in Tooltip
+
 ## CUDOS - 4.49
 * Compute Summary: Renamed “EC2 Coverage MoM (Cost)” to EC2 Running Hours Cost by Purchase Option
 * Storage Summary: TOP 20 EBS Volumes Previous Month EBS Volumes and Snapshots have dedicated visuals
