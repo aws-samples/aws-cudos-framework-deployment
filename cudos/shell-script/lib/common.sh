@@ -115,12 +115,19 @@ function get_cur_region() {
     export region=${aws_region}
     export AWS_DEFAULT_REGION=${aws_region}
   fi
+  # QuickSight User Identity may be from a different region than the dashboard deployment region
+  echo -n "Enter QuickSight Identity region [default : ${region}]: "
+  read aws_identity_region
+  if [ "${aws_identity_region}" = "" ]; then
+    export aws_identity_region=${region}
+  fi
 }
 
 function get_user_arn() {
   if [ "${user_arn}" = "" ]; then
     echo "Fetching QuickSight User ARNs..."
-    alias=$(aws quicksight list-users --aws-account-id ${account} --region ${aws_region} --namespace default --query 'UserList[*].Arn' --output text)
+    # Fetching quicksight users, which may be from an alternate region from the dashboard deployment
+    alias=$(aws quicksight list-users --aws-account-id ${account} --region ${aws_identity_region} --namespace default --query 'UserList[*].Arn' --output text)
     echo "Discovered QuickSight User ARNs.
 Please select which one to use:
 ----"
