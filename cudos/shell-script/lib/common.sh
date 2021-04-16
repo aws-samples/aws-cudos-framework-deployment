@@ -47,6 +47,8 @@ function config() {
   get_cur_name
   get_user_arn
   echo "export region=${aws_region}
+export aws_identity_region=${aws_qs_identity_region}
+export aws_qs_identity_region=${aws_qs_identity_region}
 export athena_database_name=${aws_athena_database_name}
 export athena_cur_table_name=${aws_athena_cur_table_name}
 export user_arn=$qs_user_arn
@@ -116,10 +118,13 @@ function get_cur_region() {
     export AWS_DEFAULT_REGION=${aws_region}
   fi
   # QuickSight User Identity may be from a different region than the dashboard deployment region
-  echo -n "Enter QuickSight Identity region [default : ${region}]: "
-  read aws_identity_region
-  if [ "${aws_identity_region}" = "" ]; then
-    export aws_identity_region=${region}
+  if  [ "${aws_identity_region}" = "" ]; then
+    echo -n "Enter QuickSight Identity region [default : ${region}]: "
+    read aws_qs_identity_region
+    if [ "${aws_qs_identity_region}" = "" ]; then
+      export aws_identity_region=${region}
+      export aws_qs_identity_region=${region}
+    fi
   fi
 }
 
