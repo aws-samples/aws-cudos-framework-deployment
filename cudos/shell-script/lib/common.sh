@@ -160,6 +160,7 @@ function check_existing_config() {
                     mv "update-dashboard-$account.json" "work/$account/update-dashboard.json" || echo "update file not found.."
                     echo "complete"
                     deployFileName="work/$account/deploy-dashboard.json"
+                    deployCIDFileName="work/$account/deploy-cid-dashboard.json"
                     updateFileName="work/$account/update-dashboard.json"
                     break;;
                 [Nn]* )
@@ -172,6 +173,7 @@ function check_existing_config() {
     else
         [[ -d "work/$account" ]] || mkdir -p "work/$account"
         deployFileName="work/$account/deploy-dashboard.json"
+        deployCIDFileName="work/$account/deploy-cid-dashboard.json"
         updateFileName="work/$account/update-dashboard.json"
     fi
 }
