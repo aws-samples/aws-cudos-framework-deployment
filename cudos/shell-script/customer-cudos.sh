@@ -68,6 +68,15 @@ echo "
 ####### Generated deploy-dashboard.json
 "
 
+# Generate create-cid-dashboard json document
+{ echo "cat <<EOF"
+  cat dashboards/create-cid-dashboard.json
+  echo "EOF"
+} | sh > $deployCIDFileName
+echo "
+####### Generated deploy-cid-dashboard.json
+"
+
 # Generate update-dashboard json document
 { echo "cat <<EOF"
   cat dashboards/update-dashboard.json
@@ -76,6 +85,11 @@ echo "
 echo "
 ####### Generated update-dashboard.json
 "
+echo "
+####### Deploying CID Dashboard
+"
+
+aws quicksight create-dashboard --region ${AWS_DEFAULT_REGION} --cli-input-json "file://${deployCIDFileName}" --output table
 
 echo "
 ####### Deploying CUDOS Dashboard
@@ -259,6 +273,7 @@ fi
 
     delete)
 
+    aws quicksight delete-dashboard --region ${AWS_DEFAULT_REGION} --dashboard-id cost_intelligence_dashboard --aws-account-id $account --output table
     aws quicksight delete-dashboard --region ${AWS_DEFAULT_REGION} --dashboard-id $dashboardId --aws-account-id $account --output table
 
     ;;
