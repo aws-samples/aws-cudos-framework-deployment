@@ -1,5 +1,8 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.50.1
+* AI/ML: SageMaker Savings Plan recommendations
+
 ## CUDOS - 4.50
 * Compute Summary: EC2 Running Hours by Platform Last 3 Month introducing OS details
 * Compute Summary: TOP 20 Lambdas Previous Month Account in Tooltip
