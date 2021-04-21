@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.51
+* AI/ML: Textrct and Rekognition visuals
+
+
 ## CUDOS - 4.50.1
 * AI/ML: SageMaker Savings Plan recommendations
 
