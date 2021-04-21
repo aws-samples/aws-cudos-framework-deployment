@@ -1,5 +1,8 @@
 # What's new in TAO Dashboard
 
+## TAO Dashboard v1.2.1:
+* Fix for duplicating Lambda Functions on Security and Cost Optimization sheets
+
 ## TAO Dashboard v1.2:
 * Security tab new visuals:
   * AWS Lambda Functions Using Deprecated (or about to be deprecated) Runtimes
