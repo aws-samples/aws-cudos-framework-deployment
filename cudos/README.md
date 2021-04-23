@@ -57,7 +57,7 @@
     ./shell-script/customer-cudos.sh cleanup
     ```
 
-12. To delete CUDOS dashboard and datasets from Amazon QuickSight run
+12. To delete CID dashboard from Amazon QuickSight run
 
     ```bash
     ./shell-script/customer-cudos.sh cid-delete
