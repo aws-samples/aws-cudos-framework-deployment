@@ -1,8 +1,8 @@
 # Pre-Requisites
 
 *Note: If the customer has multiple payer accounts, this will need to be done for each payer account individually.*
- 
-1. Set up Hourly CUR with Athena compatibility and resource_ids and wait at least 24 hours. 
+
+1. Set up Hourly CUR with Athena compatibility and resource_ids and wait at least 24 hours.
 
 2. Deploy crawler-cfn.yml CloudFormation template generated in the CUR S3 bucket
 
@@ -25,7 +25,7 @@
 8. Run the ./shell-script/customer-cudos.sh script from the **cudos** directory (NOT from cudos/shell-script)
 
   *Note: Your user would require minimal permissions on the IAM Role described in  [minimal_permissions.json](https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/cudos/minimal_permissions.json)*
-  
+
   *Note: `map` parameter requires AWS Organisations API [ListAccounts](https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListAccounts.html)*
 
   ```bash
@@ -33,6 +33,7 @@
   ./shell-script/customer-cudos.sh prepare
   ./shell-script/customer-cudos.sh deploy-datasets
   ./shell-script/customer-cudos.sh deploy-dashboard
+  ./shell-script/customer-cudos.sh deploy-cid-dashboard
   ./shell-script/customer-cudos.sh map
   ./shell-script/customer-cudos.sh refresh-data-sets
   ```
@@ -54,4 +55,10 @@
     ```bash
     ./shell-script/customer-cudos.sh delete
     ./shell-script/customer-cudos.sh cleanup
+    ```
+
+12. To delete CUDOS dashboard and datasets from Amazon QuickSight run
+
+    ```bash
+    ./shell-script/customer-cudos.sh cid-delete
     ```

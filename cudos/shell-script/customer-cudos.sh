@@ -68,15 +68,6 @@ echo "
 ####### Generated deploy-dashboard.json
 "
 
-# Generate create-cid-dashboard json document
-{ echo "cat <<EOF"
-  cat dashboards/create-cid-dashboard.json
-  echo "EOF"
-} | sh > $deployCIDFileName
-echo "
-####### Generated deploy-cid-dashboard.json
-"
-
 # Generate update-dashboard json document
 { echo "cat <<EOF"
   cat dashboards/update-dashboard.json
@@ -85,11 +76,6 @@ echo "
 echo "
 ####### Generated update-dashboard.json
 "
-echo "
-####### Deploying CID Dashboard
-"
-
-aws quicksight create-dashboard --region ${AWS_DEFAULT_REGION} --cli-input-json "file://${deployCIDFileName}" --output table
 
 echo "
 ####### Deploying CUDOS Dashboard
@@ -125,6 +111,30 @@ echo "
 ####### "
 
 fi
+    ;;
+
+    deploy-cid-dashboard)
+    get_user_arn
+
+    check_existing_config
+
+
+# Generate create-cid-dashboard json document
+{ echo "cat <<EOF"
+  cat dashboards/create-cid-dashboard.json
+  echo "EOF"
+} | sh > $deployCIDFileName
+echo "
+####### Generated deploy-cid-dashboard.json
+"
+
+echo "
+####### Deploying CID Dashboard
+"
+
+aws quicksight create-dashboard --region ${AWS_DEFAULT_REGION} --cli-input-json "file://${deployCIDFileName}" --output table
+
+
     ;;
 
     refresh-data-sets)
@@ -273,8 +283,13 @@ fi
 
     delete)
 
-    aws quicksight delete-dashboard --region ${AWS_DEFAULT_REGION} --dashboard-id cost_intelligence_dashboard --aws-account-id $account --output table
     aws quicksight delete-dashboard --region ${AWS_DEFAULT_REGION} --dashboard-id $dashboardId --aws-account-id $account --output table
+
+    ;;
+
+    cid-delete)
+
+    aws quicksight delete-dashboard --region ${AWS_DEFAULT_REGION} --dashboard-id cost_intelligence_dashboard --aws-account-id $account --output table
 
     ;;
 
@@ -322,10 +337,12 @@ echo "Usage: ${myName} config | prepare | deploy-datasets | deploy-dashboard | d
   map: generates account_map Athena view containing account names
   deploy-datasets: creates QuickSight datasets
   deploy-dashboard: deploys the CUDOS dashboard
+  deploy-cid-dashboard: deploys the CID dashboard
   update-dashboard: updates the CUDOS dashboard to the latest release
   refresh-data-sets: triggers SPICE refresh for CUDOS QuickSight datasets
   status: to debug failed deployments and get the status of the CUDOS dashboard
   delete: deletes the CUDOS dashboard from QuickSight
+  cid-delete: deletes the CID dashboard from QuickSight
   cleanup: deletes the CUDOS datasets from QuickSight"
 ;;
 
