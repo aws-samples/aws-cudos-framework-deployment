@@ -1,8 +1,10 @@
 # What's new in CUDOS Dashboard
 
-## CUDOS - 4.51
-* AI/ML: Textrct and Rekognition visuals
+## CUDOS - 4.51.1
+* RI/SP Summary: Removed a filter on a few visuals that was breaking on filtering by account ids
 
+* ## CUDOS - 4.51
+* AI/ML: Textract and Rekognition visuals
 
 ## CUDOS - 4.50.1
 * AI/ML: SageMaker Savings Plan recommendations
