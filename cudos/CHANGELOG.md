@@ -1,5 +1,8 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.51.2
+* Storage Summary: Fixed a type on the EBS Explorer filter
+
 ## CUDOS - 4.51.1
 * RI/SP Summary: Removed a filter on a few visuals that was breaking on filtering by account ids
 
