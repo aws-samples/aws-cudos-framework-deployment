@@ -1,5 +1,8 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.52
+* Billing Summary: Discounts now show positive value; New visual showing discounts and their type MoM
+
 ## CUDOS - 4.51.2
 * Storage Summary: Fixed a type on the EBS Explorer filter
 
