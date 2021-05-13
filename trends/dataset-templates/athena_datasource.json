@@ -1,0 +1,27 @@
+{
+        "DataSourceId": "bd4dd2a3-7c40-4071-9bbb-6b5d2883537b",
+        "Name": "Cost_Dashboard",
+        "Type": "ATHENA",
+        "DataSourceParameters": {
+            "AthenaParameters": {
+                "WorkGroup": "primary"
+            }
+        },
+        "SslProperties": {
+            "DisableSsl": false
+        },
+        "Permissions": [
+            {
+                "Principal": "${user_arn}",
+                "Actions": [
+                    "quicksight:UpdateDataSourcePermissions",
+                    "quicksight:DescribeDataSource",
+                    "quicksight:DescribeDataSourcePermissions",
+                    "quicksight:PassDataSource",
+                    "quicksight:UpdateDataSource",
+                    "quicksight:DeleteDataSource"
+                ]
+            }
+        ]
+
+}

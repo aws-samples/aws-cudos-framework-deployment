@@ -1,0 +1,31 @@
+CREATE OR REPLACE VIEW aws_regions AS
+SELECT *
+FROM
+  (
+ VALUES
+     ROW ('ap-northeast-1', 'Japan', 'Tokyo', '35.64', '139.76')
+   , ROW ('ap-south-1', 'India', 'Mumbai', '19.08', '72.88')
+   , ROW ('cn-northwest-1', 'China', 'Ningxia', '38.47', '106.26')
+   , ROW ('eu-central-1', 'Germany', 'Frankfurt', '50.11', '8.68')
+   , ROW ('eu-north-1', 'Sweden', 'Stockholm', '59.33', '18.07')
+   , ROW ('eu-west-1', 'Ireland', 'Dublin', '53.28', '-7.71')
+   , ROW ('us-east-2', 'USA', 'Ohio', '40.36', '-82.91')
+   , ROW ('us-gov-west-1', 'USA', 'Oregon', '39.53', '-119.88')
+   , ROW ('us-west-1', 'USA', 'N. California', '36.55', '-119.89')
+   , ROW ('us-west-2', 'USA', 'Oregon', '43.82', '-120.33')
+   , ROW ('ap-east-1', 'Hong Kong', 'Hong Kong', '22.28', '114.15')
+   , ROW ('ap-northeast-2', 'South Korea', 'Seoul', '37.72', '126.04')
+   , ROW ('ap-northeast-3', 'Japan', 'Osaka', '34.69', '135.5')
+   , ROW ('ap-southeast-2', 'Australia', 'Sydney', '-33.88', '151.23')
+   , ROW ('ca-central-1', 'Canada', 'Montral', '44.08', '-77.42')
+   , ROW ('cn-north-1', 'China', 'Beijing', '39.91', '116.41')
+   , ROW ('eu-west-3', 'France', 'Paris', '48.85', '2.35')
+   , ROW ('me-south-1', 'Bahrain', 'Bahrain', '26.11', '50.50')
+   , ROW ('sa-east-1', 'Brazil', 'Sao Paulo', '-23.37', '-46.63')
+   , ROW ('us-gov-east-1', 'USA', 'Ohio', '40.4897', '-81.45')
+   , ROW ('ap-southeast-1', 'Singapore', 'Singapore', '1.35', '103.86')
+   , ROW ('eu-west-2', 'UK', 'London', '51.53', '0.12')
+   , ROW ('us-east-1', 'USA', 'Washington DC', '38.80', '-77.11')
+   , ROW ('eu-south-1', 'Italy', 'Milan', '45.46', '9.18')
+   , ROW ('af-south-1', 'Africa', 'Cape Town', '-33.91', '18.42')
+)  ignored_table_name (region_name, region_country, region_city, region_latitude, region_longitude)
