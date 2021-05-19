@@ -28,6 +28,8 @@
 
   *Note: `map` parameter requires AWS Organisations API [ListAccounts](https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListAccounts.html)*
 
+  **Important: Run each of these one at a time in the order they appear below**
+
   ```bash
   ./shell-script/customer-cudos.sh config
   ./shell-script/customer-cudos.sh prepare
