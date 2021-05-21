@@ -1,5 +1,8 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.53
+* DynamoDB: Cost breakdown per account is now visualised in categories, OnDemand = PayPerRequest, Commited Throughput is CommitedThroughput that is not covered by Reservations
+
 ## CUDOS - 4.52
 * Billing Summary: Discounts now show positive value; New visual showing discounts and their type MoM
 
