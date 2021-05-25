@@ -17,7 +17,7 @@ In the [**tao**](./tao/) subdirectory you will find a set of scripts automate [T
   - creating Amazon QuickSight datasets
   - deploying the TAO dashboard to Amazon QuickSight
 
-In the [**trends**](./trends/) subdirectory you will find a set of scripts automate some parts of the [CUDOS workshop](https://cudos.workshop.aws/workshop-trends.html/), specifically parts of:
+In the [**trends**](./trends/) subdirectory you will find a set of scripts automate some parts of the [CUDOS workshop](https://cudos.workshop.aws/workshop-trends.html), specifically parts of:
   - creating Athena views
   - creating Amazon QuickSight datasource
   - creating Amazon QuickSight datasets
