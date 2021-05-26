@@ -293,7 +293,7 @@ case "$1" in
     echo ") ignored_tabe_name (account_id, account_status, account_name, account_email_id)
 ),
 t2 as (
-select distinct line_item_usage_account_id, bill_payer_account_id FROM cost_usage GROUP BY line_item_usage_account_id, bill_payer_account_id
+select distinct line_item_usage_account_id, bill_payer_account_id FROM ${athena_cur_table_name} GROUP BY line_item_usage_account_id, bill_payer_account_id
       )
 SELECT t1.*, t2.bill_payer_account_id AS parent_account_id FROM t1 LEFT JOIN t2 ON t1.account_id=t2.line_item_usage_account_id
     " >> work/${account}/account_map_view.sql
