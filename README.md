@@ -1,6 +1,6 @@
-# CUDOS Framework: Enterprise Dashboards
+# Cloud Intelligence Dashboards (CUDOS Framework)
 
-## Welcome to customer automation for CUDOS Framework repository
+## Welcome to customer automation for Cloud Intelligence Dashboards (CUDOS Framework) repository
 
 ### The scripts in this repo have been succesfully tested in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home)
 
