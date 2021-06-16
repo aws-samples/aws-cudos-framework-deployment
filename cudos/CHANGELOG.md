@@ -1,5 +1,8 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.53.2
+* S3: Daily Storage Bucket Explorer now visualises total bucket usage amount
+
 ## CUDOS - 4.53
 * DynamoDB: Cost breakdown per account is now visualised in categories, OnDemand = PayPerRequest, Commited Throughput is CommitedThroughput that is not covered by Reservations
 
