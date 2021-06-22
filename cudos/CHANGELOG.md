@@ -1,6 +1,9 @@
 # What's new in CUDOS Dashboard
 
 ## CUDOS - 4.53.2
+* Scale optimised for smaller screens
+
+## CUDOS - 4.53.2
 * S3: Daily Storage Bucket Explorer now visualises total bucket usage amount
 
 ## CUDOS - 4.53
