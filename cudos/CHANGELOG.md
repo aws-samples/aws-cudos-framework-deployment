@@ -1,6 +1,9 @@
 # What's new in CUDOS Dashboard
 
-## CUDOS - 4.53.2
+## CUDOS - 4.55
+* Data Transfer now includes only chargable DTO. Example: Excluding S3, ALB -> CloudFront, as it is not charged.
+
+## CUDOS - 4.54
 * Scale optimised for smaller screens
 
 ## CUDOS - 4.53.2
