@@ -31,6 +31,8 @@
   **Important: Run each of these one at a time in the order they appear below**
 
   ```bash
+  git clone https://github.com/aws-samples/aws-cudos-framework-deployment
+  cd aws-cudos-framework-deployment/cudos/
   ./shell-script/customer-cudos.sh config
   ./shell-script/customer-cudos.sh prepare
   ./shell-script/customer-cudos.sh deploy-datasets
