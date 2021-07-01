@@ -2,12 +2,12 @@ Parameters:
   1stReadMe:
     Type: String
     Default: README
-    Description: > 
+    Description: >
               Prerequisites met:
               1. https://cudos.workshop.aws/prerequisites/prepare-cur.html
               2. https://cudos.workshop.aws/prerequisites/prepare-athena.html
               3. https://cudos.workshop.aws/prerequisites/prepare-cur-athena.html
-              4. https://cudos.workshop.aws/prerequisites/prepare-quicksight.html 
+              4. https://cudos.workshop.aws/prerequisites/prepare-quicksight.html
               5. Run the crawler or wait up to 1 day so that new CUR delivery would invoke the crawler which would create the tables
 
   QuickSightUser:
@@ -23,22 +23,22 @@ Parameters:
   BucketFolderPath:
     Type: String
     MinLength: 3
-    Default:
-    Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName 
+    Default: 
+    Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName
   AthenaQueryResultsBucket:
     Type: String
     MinLength: 3
-    Default: aws-athena-query-results-replaceaccount-us-east-2
+    Default: aws-athena-query-results-123456789012-us-east-1
     Description: REQUIRED - Name of the s3 bucket configured for athena query results(do not add a trailing slash)
   CURDatabaseName:
     Type:  String
     MinLength: 1
     Description: 'REQUIRED - Athena CUR Database name'
-    Default: my_curr
+    Default: 
   CURTableName:
     Type:  String
     MinLength: 1
-    Default: my_c_u_r_r
+    Default: 
     Description: 'REQUIRED - Athena CUR Table name'
   Suffix:
     Type: String
@@ -97,6 +97,7 @@ Resources:
                   - glue:UpdateTable
                   - glue:GetTables
                   - glue:GetPartitions
+                  - glue:CreateTable
                 Resource:
                   - !Join
                     - ''
@@ -145,12 +146,12 @@ Resources:
                   - s3:GetBucketLocation
                   - s3:GetObject
                   - s3:PutObject
-                Resource: 
+                Resource:
                   - !Join
                     - ''
                     - - 'arn:aws:s3:::'
                       - !Ref AthenaQueryResultsBucket
-                  - !Join  
+                  - !Join
                     - ''
                     - - 'arn:aws:s3:::'
                       - !Ref AthenaQueryResultsBucket
@@ -187,7 +188,7 @@ Resources:
           TableName: !Ref CURTableName
           ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cudos/view-templates'
       Code:
-        ZipFile: | 
+        ZipFile: |
               import json,urllib3,re,boto3,os,time
               from urllib.parse import urlencode
               import cfnresponse
@@ -232,7 +233,7 @@ Resources:
                         if distinct_count(column['Name'],tableName,databaseName) > 0:
                           reservedInstancePresent = True
 
-                  
+
                   if savingsPlanPresent and reservedInstancePresent:
                       queryMode = "spriFile"
                   elif savingsPlanPresent:
@@ -242,7 +243,7 @@ Resources:
                   else:
                       queryMode = 'File'
                   print('View mode:' + queryMode)
-                  
+
                   viewDict=json.loads(str(http.request('GET',viewTemplatesUri + '/' + 'views.json' ).data.decode('utf-8')))
                   print (str(viewDict))
                   for key in viewDict["view_templates"]:
@@ -254,7 +255,7 @@ Resources:
                         QueryString=viewCode,
                         QueryExecutionContext={'Database': databaseName},
                         WorkGroup='primary')
-                  
+
                   accountMap="CREATE OR REPLACE VIEW account_map AS SELECT DISTINCT line_item_usage_account_id account_id, line_item_usage_account_id account_name FROM " +  tableName
                   response = athena.start_query_execution(
                         QueryString=accountMap,
@@ -287,15 +288,15 @@ Resources:
         - ''
         - - QSCURBuildViewsLambdaExecutor
           - !Ref Suffix
-  
+
   QSCURDataSource:
     Type: AWS::QuickSight::DataSource
-    Properties: 
+    Properties:
       Type: ATHENA
       DataSourceId: 000a7319-45ea-417b-8f1e-c190367aeeff
       AwsAccountId: !Ref AWS::AccountId
       Name: CURDataSource
-      DataSourceParameters: 
+      DataSourceParameters:
         AthenaParameters:
           WorkGroup: primary
       Permissions:
@@ -306,11 +307,11 @@ Resources:
             - 'quicksight:UpdateDataSource'
             - 'quicksight:DeleteDataSource'
             - 'quicksight:UpdateDataSourcePermissions'
-          Principal: !Sub 
+          Principal: !Sub
             - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
-  
+
   CudosCurDataset:
     Type: AWS::QuickSight::DataSet
     Properties:
@@ -1366,7 +1367,7 @@ Resources:
             - quicksight:DeleteDataSet
             - quicksight:CreateIngestion
             - quicksight:CancelIngestion
-          Principal: !Sub 
+          Principal: !Sub
             - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
@@ -1450,7 +1451,7 @@ Resources:
             - quicksight:DeleteDataSet
             - quicksight:CreateIngestion
             - quicksight:CancelIngestion
-          Principal: !Sub 
+          Principal: !Sub
             - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
@@ -1564,7 +1565,7 @@ Resources:
             - quicksight:DeleteDataSet
             - quicksight:CreateIngestion
             - quicksight:CancelIngestion
-          Principal: !Sub 
+          Principal: !Sub
             - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
@@ -1654,11 +1655,11 @@ Resources:
             - quicksight:DeleteDataSet
             - quicksight:CreateIngestion
             - quicksight:CancelIngestion
-          Principal: !Sub 
+          Principal: !Sub
             - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
-    
+
   SummaryViewDataset:
     Type: AWS::QuickSight::DataSet
     Properties:
@@ -1785,7 +1786,7 @@ Resources:
             Name: ri_sp_mapping
             Schema: !Ref CURDatabaseName
             Catalog: AwsDataCatalog
-        b8a2c186-48b4-44a7-b0fd-d94bc161ebc7: 
+        b8a2c186-48b4-44a7-b0fd-d94bc161ebc7:
           RelationalTable:
             DataSourceArn: !GetAtt QSCURDataSource.Arn
             InputColumns:
@@ -1886,7 +1887,7 @@ Resources:
             - quicksight:DeleteDataSet
             - quicksight:CreateIngestion
             - quicksight:CancelIngestion
-          Principal: !Sub 
+          Principal: !Sub
             - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
@@ -1895,8 +1896,8 @@ Resources:
     Type: AWS::QuickSight::Dashboard
     Properties:
       AwsAccountId: !Ref AWS::AccountId
-      DashboardId: cudoscfn
-      Name: cudoscfn
+      DashboardId: cudos
+      Name: CUDOS 
       DashboardPublishOptions:
         AdHocFilteringOption:
           AvailabilityStatus: DISABLED
