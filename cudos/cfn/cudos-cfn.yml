@@ -13,7 +13,7 @@ Parameters:
   QuickSightUser:
     Type: String
     MinLength: 1
-    Default: 
+    Default: REPLACE WITH QuickSight USER
     Description: REQUIRED - User name of QuickSight user from default namespace (as displayed in QuickSight admin panel). Dashboard created by this template with be shared with this user.
   QuicksightIdentityRegion:
     Type: String
@@ -23,22 +23,22 @@ Parameters:
   BucketFolderPath:
     Type: String
     MinLength: 3
-    Default: 
+    Default: REPLACE WITH CUR FOLDER AND PATH
     Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName
   AthenaQueryResultsBucket:
     Type: String
     MinLength: 3
-    Default: aws-athena-query-results-123456789012-us-east-1
+    Default: REPLACE WITH Athena S3 Bucket configured for athena query results(do not add a trailing slash)
     Description: REQUIRED - Name of the s3 bucket configured for athena query results(do not add a trailing slash)
   CURDatabaseName:
     Type:  String
     MinLength: 1
     Description: 'REQUIRED - Athena CUR Database name'
-    Default: 
+    Default: REPLACE WITH Athena CUR DATABASE
   CURTableName:
     Type:  String
     MinLength: 1
-    Default: 
+    Default: REPLACE WITH Athena CUR TABLE
     Description: 'REQUIRED - Athena CUR Table name'
   Suffix:
     Type: String
@@ -1897,7 +1897,7 @@ Resources:
     Properties:
       AwsAccountId: !Ref AWS::AccountId
       DashboardId: cudos
-      Name: CUDOS 
+      Name: CUDOS
       DashboardPublishOptions:
         AdHocFilteringOption:
           AvailabilityStatus: DISABLED
