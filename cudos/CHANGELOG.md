@@ -1,5 +1,11 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.56
+
+* Compute/Media/Message Brokers: TOP Visuals for Lambda, Fargate Clusters, Kinesis, Elemental now have 20 and 5 distinct filters delivering better granularity in visualisation, and visualise last 30 days
+* DynamoDB: TOP 15 Dynamo DB Tables Previous Month Usage Cost now visualises last 30 days, added account what the table belongs to and now has an action filter to Daily Cost per Table Previous Month
+* DynamoDB: DynamoDB Period over period was missing a charge_type filter, fixed
+
 ## CUDOS - 4.55
 * Data Transfer now includes only chargable DTO. Example: Excluding S3, ALB -> CloudFront, as it is not charged.
 
