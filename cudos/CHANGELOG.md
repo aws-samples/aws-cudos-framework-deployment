@@ -1,5 +1,11 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.56.1
+
+* RI/SP Summary: New recommendation on Budgets
+* MoM Trends: New recommendation on AWS Cost Anomaly Cetection
+* Storage Sumary: Renamed "TOP EBS Spend Accounts Previous Month" to "TOP EBS Spend Accounts Last 3 Months"
+
 ## CUDOS - 4.56
 
 * Compute/Media/Message Brokers: TOP Visuals for Lambda, Fargate Clusters, Kinesis, Elemental now have 20 and 5 distinct filters delivering better granularity in visualisation, and visualise last 30 days
