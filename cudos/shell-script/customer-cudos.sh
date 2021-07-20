@@ -175,10 +175,10 @@ then
    exit
 fi
 echo "latest available template version is ${current_dashboard_source_version}"
-if [ ${current_dashboard_source_version} -eq ${latest_template_version} ]; then
+if [[ "${current_dashboard_source_version}" -eq "${latest_template_version}" ]]; then
     echo "You have the latest version deployed, no update required, exiting"
     exit
-elif [ ${current_dashboard_source_version} -gt ${latest_template_version} ]; then
+elif [[ "${current_dashboard_source_version}" -gt "${latest_template_version}" ]]; then
     echo "Error: Your deployed version is newer than the latest template, please check your installation, exiting"
     exit
 fi
