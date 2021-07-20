@@ -3,7 +3,7 @@
 ## CUDOS - 4.56.1
 
 * RI/SP Summary: New recommendation on Budgets
-* MoM Trends: New recommendation on AWS Cost Anomaly Cetection
+* MoM Trends: New recommendation on AWS Cost Anomaly Detection
 * Storage Sumary: Renamed "TOP EBS Spend Accounts Previous Month" to "TOP EBS Spend Accounts Last 3 Months"
 
 ## CUDOS - 4.56
