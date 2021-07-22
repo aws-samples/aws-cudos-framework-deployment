@@ -13,7 +13,7 @@ Parameters:
   QuickSightUser:
     Type: String
     MinLength: 1
-    Default: 
+    Default: "_"
     Description: REQUIRED - User name of QuickSight user from default namespace (as displayed in QuickSight admin panel). Dashboard created by this template with be shared with this user.
   QuicksightIdentityRegion:
     Type: String
@@ -23,7 +23,7 @@ Parameters:
   BucketFolderPath:
     Type: String
     MinLength: 3
-    Default: 
+    Default: "___"
     Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName
   AthenaQueryResultsBucket:
     Type: String
@@ -33,12 +33,12 @@ Parameters:
   CURDatabaseName:
     Type:  String
     MinLength: 1
+    Default: "__"
     Description: 'REQUIRED - Athena CUR Database name'
-    Default: 
   CURTableName:
     Type:  String
     MinLength: 1
-    Default: 
+    Default: "_"
     Description: 'REQUIRED - Athena CUR Table name'
   Suffix:
     Type: String
@@ -1665,7 +1665,7 @@ Resources:
     Properties:
       DataSetId: c5c2a97b-e903-4ede-a919-a0e091e843a4
       AwsAccountId: !Ref AWS::AccountId
-      Name: summary_view_1
+      Name: summary_view
       ImportMode: SPICE
       LogicalTableMap:
         2af1581c-abc8-4f82-9f4f-4cebb089cefa:
@@ -1931,3 +1931,111 @@ Resources:
               Region: !Ref QuicksightIdentityRegion
 
       VersionDescription: "1"
+
+  SpiceRefreshExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Join
+        - ''
+        - - SpiceRefreshExecutionRole
+          - !Ref Suffix
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Join
+          - ''
+          - - SpiceRefreshExecutionPolicy
+            - !Ref Suffix
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action: 
+                  - quicksight:CreateIngestion
+                Resource:
+                  - Fn::Join: [ "/", [!GetAtt SummaryViewDataset.Arn , "ingestion", "*" ] ]
+                  - Fn::Join: [ "/", [!GetAtt EC2RunningCostDataset.Arn , "ingestion" , "*" ] ]
+                  - Fn::Join: [ "/", [!GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn , "ingestion" , "*" ] ] 
+                  - Fn::Join: [ "/", [!GetAtt S3ViewDataset.Arn, "ingestion" , "*" ] ]
+              - Effect: Allow
+                Action: 
+                  - quicksight:ListDatasets 
+                Resource: 
+                  - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*
+
+  SpiceRefreshLambdaCreator:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.7
+      FunctionName: !Join
+        - ''
+        - - QSCUDOSRefreshDatasets
+          - !Ref Suffix
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SpiceRefreshExecutionRole.Arn
+      Timeout: 600
+      Code:
+        ZipFile: |
+              import boto3
+              from datetime import datetime
+              def get_account_id():
+                  sts = boto3.client('sts')
+                  accountId = sts.get_caller_identity()['Account']
+                  print(accountId)
+                  return accountId
+              def refresh_datasets(accountId):
+                  qs = boto3.client('quicksight')
+                  datasets = qs.list_data_sets(AwsAccountId=accountId)
+                  i = 50
+                  for dataset in datasets['DataSetSummaries']:
+
+                      name = dataset['Name']
+                      if dataset['ImportMode'] == 'SPICE':
+
+                          if name == "ec2_running_cost" or \
+                          name == "s3_view" or \
+                          name == "summary_view" or \
+                          name == "compute_savings_plan_eligible_spend":
+                              ingestionId = datetime.now().strftime("%d%m%y-%H%M%S-%f")
+                              print("Refreshing dataset {0}".format(name))
+                              r = qs.create_ingestion(AwsAccountId=accountId,
+                                  DataSetId=dataset['DataSetId'],
+                                  IngestionId=ingestionId
+                                  )
+                              print(r)
+              def lambda_handler(event, context):
+                  a = get_account_id()
+                  refresh_datasets(a)
+
+
+  SpiceRefreshRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      ScheduleExpression: "rate(1 day)"
+      Targets: 
+        - Id: SpiceRefreshScheduler
+          Arn: !GetAtt SpiceRefreshLambdaCreator.Arn
+
+
+  InvokeLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !GetAtt SpiceRefreshLambdaCreator.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SpiceRefreshRule.Arn
