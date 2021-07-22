@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.57
+
+* Sheet Visit Anonymous Statistics. We added this little icon 📊 to each sheet to better prioritise new visuals and features for CUDOS Dashboard based on the sheet popularity. No PII data is collected, we are querying frequency of the icon download from the CloudFront logs of the CloudFront distribution where the icon is stored. If you would like to opt-out of this anonymous statistics collection, please save your dashboard as analysis and remove the icon from the text blocks 
+
 ## CUDOS - 4.56.1
 
 * RI/SP Summary: New recommendation on Budgets
