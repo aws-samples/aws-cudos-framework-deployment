@@ -4,7 +4,7 @@
 
 ### The scripts in this repo have been succesfully tested in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home)
 
-In the [**cudos**](./cudos/) subdirectory you will find a set of scripts automate some parts of the [CUDOS workshop](https://cudos.workshop.aws/), specifically parts of:
+In the [**cudos**](./cudos/) subdirectory you will find a set of scripts automate some parts of the [CUDOS Dashboard Well Architected Lab](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2b_cudos_dashboard/), specifically parts of:
   - creating Athena views
   - creating Amazon QuickSight datasource
   - creating Amazon QuickSight datasets
