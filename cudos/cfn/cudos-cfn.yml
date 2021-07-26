@@ -9,7 +9,7 @@ Parameters:
               3. https://cudos.workshop.aws/prerequisites/prepare-cur-athena.html
               4. https://cudos.workshop.aws/prerequisites/prepare-quicksight.html
               5. Run the crawler or wait up to 1 day so that new CUR delivery would invoke the crawler which would create the tables
-  
+
   QuickSightUser:
     Type: String
     MinLength: 1
@@ -1932,6 +1932,44 @@ Resources:
 
       VersionDescription: "1"
 
+  CIDDashboard:
+    Type: AWS::QuickSight::Dashboard
+    Properties:
+      AwsAccountId: !Ref AWS::AccountId
+      DashboardId: cost_intelligence_dashboard
+      Name: Cost Intelligence Dashboard
+      DashboardPublishOptions:
+        AdHocFilteringOption:
+          AvailabilityStatus: DISABLED
+      SourceEntity:
+        SourceTemplate:
+          DataSetReferences:
+            - DataSetArn: !GetAtt SummaryViewDataset.Arn
+              DataSetPlaceholder: summary_view
+            - DataSetArn: !GetAtt EC2RunningCostDataset.Arn
+              DataSetPlaceholder: ec2_running_cost
+            - DataSetArn: !GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn
+              DataSetPlaceholder: compute_savings_plan_eligible_spend
+            - DataSetArn: !GetAtt S3ViewDataset.Arn
+              DataSetPlaceholder: s3_view
+          Arn: arn:aws:quicksight:us-east-1:869004330191:template/cost-intelligence-dashboard
+      Permissions:
+        - Actions:
+            - quicksight:DescribeDashboard
+            - quicksight:ListDashboardVersions
+            - quicksight:UpdateDashboardPermissions
+            - quicksight:QueryDashboard
+            - quicksight:UpdateDashboard
+            - quicksight:DeleteDashboard
+            - quicksight:DescribeDashboardPermissions
+            - quicksight:UpdateDashboardPublishedVersion
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+      VersionDescription: "1"
+
   SpiceRefreshExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1964,17 +2002,17 @@ Resources:
                   - logs:PutLogEvents
                 Resource: '*'
               - Effect: Allow
-                Action: 
+                Action:
                   - quicksight:CreateIngestion
                 Resource:
                   - Fn::Join: [ "/", [!GetAtt SummaryViewDataset.Arn , "ingestion", "*" ] ]
                   - Fn::Join: [ "/", [!GetAtt EC2RunningCostDataset.Arn , "ingestion" , "*" ] ]
-                  - Fn::Join: [ "/", [!GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn , "ingestion" , "*" ] ] 
+                  - Fn::Join: [ "/", [!GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn , "ingestion" , "*" ] ]
                   - Fn::Join: [ "/", [!GetAtt S3ViewDataset.Arn, "ingestion" , "*" ] ]
               - Effect: Allow
-                Action: 
-                  - quicksight:ListDatasets 
-                Resource: 
+                Action:
+                  - quicksight:ListDatasets
+                Resource:
                   - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*
 
   SpiceRefreshLambdaCreator:
@@ -2025,16 +2063,16 @@ Resources:
 
   SpiceRefreshRule:
     Type: AWS::Events::Rule
-    Properties: 
+    Properties:
       ScheduleExpression: "rate(1 day)"
-      Targets: 
+      Targets:
         - Id: SpiceRefreshScheduler
           Arn: !GetAtt SpiceRefreshLambdaCreator.Arn
 
 
-  InvokeLambdaPermission: 
+  InvokeLambdaPermission:
     Type: AWS::Lambda::Permission
-    Properties: 
+    Properties:
       FunctionName: !GetAtt SpiceRefreshLambdaCreator.Arn
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
