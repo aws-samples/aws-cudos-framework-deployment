@@ -167,7 +167,7 @@ fi
 echo "latest available template version is ${latest_template_version}"
 
 echo -n "Getting currently deployed source version..."
-current_dashboard_source_version=$(aws quicksight describe-dashboard --dashboard-id $dashboardId --query 'Dashboard.Version.SourceEntityArn' \
+current_dashboard_source_version=$(aws quicksight describe-dashboard --dashboard-id $dashboardId --region ${AWS_DEFAULT_REGION} --query 'Dashboard.Version.SourceEntityArn' \
     --aws-account-id $account | cut -f 6 -d \: | cut -f 4 -d \/)
 if [ $? -ne 0 ]
 then
@@ -201,7 +201,7 @@ echo "
 ####### Applying latest changes to the deployed Dashboard...
 "
 
-updated_dashboard_versionStatus=$(aws quicksight list-dashboard-versions --aws-account-id $account --dashboard-id $dashboardId --query "DashboardVersionSummaryList[?Arn==\`${updated_dashboard_versionArn}\`].Status")
+updated_dashboard_versionStatus=$(aws quicksight list-dashboard-versions --aws-account-id $account --dashboard-id $dashboardId --region ${AWS_DEFAULT_REGION} --query "DashboardVersionSummaryList[?Arn==\`${updated_dashboard_versionArn}\`].Status")
 
 if [ "$updated_dashboard_versionStatus" != "CREATION_SUCCESSFUL" ]; then
     echo "Error: something went wrong, exiting"
