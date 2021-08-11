@@ -15,6 +15,9 @@ required_cli_ver="2.1.17"
 required_cli1x_ver="1.18.139"
 aws_data_catalog_name="AwsDataCatalog"
 
+# Global Variables
+read -p "Enter your query execution result location:  " result_location
+
 # Tooling
 git=$(which git)
 
@@ -162,7 +165,7 @@ function execute_ahq() {
     local ahq_query="$1"
     query_execution_id=$(aws athena --region ${aws_region} start-query-execution \
         --query-execution-context Database=${athena_database_name},Catalog=${aws_data_catalog_name} \
-        --work-group "primary" --query-string "${ahq_query}" --query 'QueryExecutionId')
+        --work-group "primary" --query-string "${ahq_query}" --query 'QueryExecutionId' --result-configuration OutputLocation="${result_location}")
     ahq_query_status=$(ahq_query_status "${query_execution_id}")
     while [ "${ahq_query_status}" = "RUNNING" ]; do
         sleep 1
@@ -175,7 +178,7 @@ function execute_ahq_from_file() {
     local ahq_query_file="$1"
     query_execution_id=$(aws athena --region ${AWS_DEFAULT_REGION} start-query-execution \
         --query-execution-context Database=${athena_database_name},Catalog=${aws_data_catalog_name} \
-        --work-group "primary" --query-string "file://${ahq_query_file}" --query 'QueryExecutionId')
+        --work-group "primary" --query-string "file://${ahq_query_file}" --query 'QueryExecutionId' --result-configuration OutputLocation="${result_location}")
     ahq_query_status=$(ahq_query_status "${query_execution_id}")
     while [ "${ahq_query_status}" = "RUNNING" ]; do
         sleep 1
