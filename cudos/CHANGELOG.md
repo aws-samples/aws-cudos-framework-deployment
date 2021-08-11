@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.58
+
+* RI/SP Summary: Renamed Previous Month Savings → Previous Month Net Savings; Renamed Usage Saving by Pricing Model and Service → Usage Net Saving by Pricing Model and Service; Now these two visuals show NET savings with respect to unutilized savings, this affects customers with unitilized ri/sp.
+
 ## CUDOS - 4.57
 
 * Sheet Visit Anonymous Statistics. We added this little icon 📊 to each sheet to better prioritise new visuals and features for CUDOS Dashboard based on the sheet popularity. No PII data is collected, we are querying frequency of the icon download from the CloudFront logs of the CloudFront distribution where the icon is stored. If you would like to opt-out of this anonymous statistics collection, please save your dashboard as analysis and remove the icon from the text blocks 
