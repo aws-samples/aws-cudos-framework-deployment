@@ -197,6 +197,10 @@ then
    exit
 fi
 
+# Sleep to handle the new async behaviour or QS API
+
+sleep 45
+
 echo "
 ####### Applying latest changes to the deployed Dashboard...
 "
