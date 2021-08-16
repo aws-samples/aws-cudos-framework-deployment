@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.59
+
+* Compute Summary: New visual "TOP 10 Accounts by EC2 CPU Credit Usage Cost" and related recommendation. 
+
 ## CUDOS - 4.58
 
 * RI/SP Summary: Renamed Previous Month Savings → Previous Month Net Savings; Renamed Usage Saving by Pricing Model and Service → Usage Net Saving by Pricing Model and Service; Now these two visuals show NET savings with respect to unutilized savings, this affects customers with unitilized ri/sp.
