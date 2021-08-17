@@ -1,6 +1,33 @@
 # What's new in CUDOS Dashboard
 
-## CUDOS - 4.53.2
+## CUDOS - 4.59
+
+* Compute Summary: New visual "TOP 10 Accounts by EC2 CPU Credit Usage Cost" and related recommendation. 
+
+## CUDOS - 4.58
+
+* RI/SP Summary: Renamed Previous Month Savings → Previous Month Net Savings; Renamed Usage Saving by Pricing Model and Service → Usage Net Saving by Pricing Model and Service; Now these two visuals show NET savings with respect to unutilized savings, this affects customers with unitilized ri/sp.
+
+## CUDOS - 4.57
+
+* Sheet Visit Anonymous Statistics. We added this little icon 📊 to each sheet to better prioritise new visuals and features for CUDOS Dashboard based on the sheet popularity. No PII data is collected, we are querying frequency of the icon download from the CloudFront logs of the CloudFront distribution where the icon is stored. If you would like to opt-out of this anonymous statistics collection, please save your dashboard as analysis and remove the icon from the text blocks 
+
+## CUDOS - 4.56.1
+
+* RI/SP Summary: New recommendation on Budgets
+* MoM Trends: New recommendation on AWS Cost Anomaly Detection
+* Storage Sumary: Renamed "TOP EBS Spend Accounts Previous Month" to "TOP EBS Spend Accounts Last 3 Months"
+
+## CUDOS - 4.56
+
+* Compute/Media/Message Brokers: TOP Visuals for Lambda, Fargate Clusters, Kinesis, Elemental now have 20 and 5 distinct filters delivering better granularity in visualisation, and visualise last 30 days
+* DynamoDB: TOP 15 Dynamo DB Tables Previous Month Usage Cost now visualises last 30 days, added account what the table belongs to and now has an action filter to Daily Cost per Table Previous Month
+* DynamoDB: DynamoDB Period over period was missing a charge_type filter, fixed
+
+## CUDOS - 4.55
+* Data Transfer now includes only chargable DTO. Example: Excluding S3, ALB -> CloudFront, as it is not charged.
+
+## CUDOS - 4.54
 * Scale optimised for smaller screens
 
 ## CUDOS - 4.53.2

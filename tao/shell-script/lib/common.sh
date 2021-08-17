@@ -275,6 +275,9 @@ function update() {
      exit
   fi
 
+# Sleep to handle the new async behaviour or QS API
+    sleep 30
+
   echo "
   ####### Applying latest changes to the deployed Dashboard...
   "
