@@ -2077,3 +2077,5 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt SpiceRefreshRule.Arn
+
+
