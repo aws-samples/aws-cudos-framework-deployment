@@ -314,6 +314,8 @@ Resources:
 
   CudosCurDataset:
     Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
     Properties:
       DataSetId: 09ea7319-45ea-417b-8f1e-c190367a44b3
       AwsAccountId: !Ref AWS::AccountId
@@ -1374,6 +1376,8 @@ Resources:
 
   ComputeSavinsPlanEligibleSpendDataset:
     Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
     Properties:
       DataSetId: a1954de4-084c-4d41-b6c6-c6c09fe35b58
       AwsAccountId: !Ref AWS::AccountId
@@ -1458,6 +1462,8 @@ Resources:
 
   S3ViewDataset:
     Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
     Properties:
       DataSetId: 5a1923d0-66ea-4818-af22-574beed814e8
       AwsAccountId: !Ref AWS::AccountId
@@ -1572,6 +1578,8 @@ Resources:
 
   EC2RunningCostDataset:
     Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
     Properties:
       DataSetId: 66f12c29-6e03-4237-845a-b62ac3fb9540
       AwsAccountId: !Ref AWS::AccountId
@@ -1662,6 +1670,8 @@ Resources:
 
   SummaryViewDataset:
     Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
     Properties:
       DataSetId: c5c2a97b-e903-4ede-a919-a0e091e843a4
       AwsAccountId: !Ref AWS::AccountId
