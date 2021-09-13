@@ -181,7 +181,7 @@ Resources:
       Handler: index.lambda_handler
       MemorySize: 128
       Role: !GetAtt QSCURExecRole.Arn
-      Timeout: 600
+      Timeout: 60
       Environment:
         Variables:
           DatabaseName: !Ref CURDatabaseName
