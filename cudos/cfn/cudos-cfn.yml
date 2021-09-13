@@ -221,6 +221,7 @@ Resources:
 
 
               def create_views():
+                key='No View'
                 try:
                   response = glue.get_table(DatabaseName=databaseName,Name=tableName)
                   savingsPlanPresent = False
