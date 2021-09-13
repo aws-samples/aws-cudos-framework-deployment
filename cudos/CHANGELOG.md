@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.59.1
+
+* DynamoDB: PITR recommendation now has a link to the AWS documentation. 
+
 ## CUDOS - 4.59
 
 * Compute Summary: New visual "TOP 10 Accounts by EC2 CPU Credit Usage Cost" and related recommendation. 
