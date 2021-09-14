@@ -192,6 +192,9 @@ Resources:
               import json,urllib3,re,boto3,os,time
               from urllib.parse import urlencode
               import cfnresponse
+              import logging
+              logger = logging.getLogger()
+              logger.setLevel(logging.INFO)  
 
               http=urllib3.PoolManager()
               glue=boto3.client('glue')
@@ -201,13 +204,13 @@ Resources:
               viewTemplatesUri=os.environ["ViewTemplatesUri"]
 
               def lambda_handler(event, context):
-
+                logger.info("Cloud formation %s event, using database %s, cur table %s", event['RequestType'], databaseName, tableName)
                 if event['RequestType'] == 'Create':
                   res, reason = create_views()
                 elif event['RequestType'] == 'Update':
                   res, reason = create_views()
                 elif event['RequestType'] == 'Delete':
-                  res, reason = (True, "Delete method not implemented. Views will be deleted with DB in later step.")
+                  res, reason = (True, "Delete method not implemented")
                 else:
                   res = False
                   reason = "Unknown operation: " + event['RequestType']
@@ -222,6 +225,8 @@ Resources:
 
               def create_views():
                 key='No View'
+                step='Identify RI SP configuration'
+                logger.info('Trying to %s', step)
                 try:
                   response = glue.get_table(DatabaseName=databaseName,Name=tableName)
                   savingsPlanPresent = False
@@ -243,28 +248,39 @@ Resources:
                       queryMode = 'riFile'
                   else:
                       queryMode = 'File'
-                  print('View mode:' + queryMode)
+                  
+                  logger.info('Step %s completed, query mode is %s', step, queryMode)
 
+                  step="Download View Metadata"
+                  logger.info("Trying to %s", step)
                   viewDict=json.loads(str(http.request('GET',viewTemplatesUri + '/' + 'views.json' ).data.decode('utf-8')))
-                  print (str(viewDict))
+                  logger.info ('Step %s completed, the view metadata is: %s',step,str(viewDict))
                   for key in viewDict["view_templates"]:
                       sqlFileUri=viewTemplatesUri + '/' + viewDict["view_templates"][key][queryMode]
-                      print('Downloading view from: ' + sqlFileUri)
+                      step="Downloading view " + viewDict["view_templates"][key][queryMode] + " from " + sqlFileUri
+                      logger.info('%s',step)
                       viewTemplate=str(http.request('GET',sqlFileUri).data.decode('utf-8'))
                       viewCode=viewTemplate.replace('${athena_cur_table_name}',tableName)
+                      logger.info('Completed %s', step)
+                      step="Running athena query for view" + viewDict["view_templates"][key][queryMode] 
+                      logger.info('%s', step)
                       response = athena.start_query_execution(
                         QueryString=viewCode,
                         QueryExecutionContext={'Database': databaseName},
                         WorkGroup='primary')
-
+                      logger.info('Completed step %s',step)
+                      
                   accountMap="CREATE OR REPLACE VIEW account_map AS SELECT DISTINCT line_item_usage_account_id account_id, line_item_usage_account_id account_name FROM " +  tableName
+                  step="Executing account map query: " + accountMap
+                  logger.info("%s", step)
                   response = athena.start_query_execution(
                         QueryString=accountMap,
                         QueryExecutionContext={'Database': databaseName},
                         WorkGroup='primary')
+                  logger.info("Completed %s", step)
                   return(True, "Views created successfully")
                 except Exception as e:
-                  return (False, "Couldnt create view: "  + key + ' :' + str(e))
+                  return (False, "Step: "  + step + ' :' + str(e))
 
               def distinct_count(fieldName,tableName,databaseName):
                 queryState = 'QUEUED'
