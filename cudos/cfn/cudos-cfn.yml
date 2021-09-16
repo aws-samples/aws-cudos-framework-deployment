@@ -40,6 +40,11 @@ Parameters:
     MinLength: 1
     Default: REPLACE WITH Athena CUR TABLE
     Description: 'REQUIRED - Athena CUR Table name'
+  QuickSightDataSetRefreshSchedule:
+    Type: String
+    MinLength: 3
+    Default: cron(0 4 * * ? *)
+    Description: 'REQUIRED - cron expression on when to refresh spice datasets daily outside of business hours. Default is 4 AM utc, this should work for most customers in US and EU time zones' 
   Suffix:
     Type: String
     Description: OPTIONAL - If you need to create multiple instances of embedding sample on same aws account, add a short NUMERIC suffix here.
@@ -2091,7 +2096,7 @@ Resources:
   SpiceRefreshRule:
     Type: AWS::Events::Rule
     Properties:
-      ScheduleExpression: "rate(1 day)"
+      ScheduleExpression: !Ref QuickSightDataSetRefreshSchedule
       Targets:
         - Id: SpiceRefreshScheduler
           Arn: !GetAtt SpiceRefreshLambdaCreator.Arn
