@@ -306,7 +306,7 @@ Resources:
               queryState = 'QUEUED'
               queryId = athena.start_query_execution(
                   QueryString=f"""
-                      SELECT COUNT(distinct {fieldName} 
+                      SELECT COUNT(distinct {fieldName}) 
                       FROM {database_name}.{table_name} 
                       WHERE {fieldName} <> ''
                   """.strip(),
