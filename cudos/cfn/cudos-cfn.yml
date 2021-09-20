@@ -194,112 +194,130 @@ Resources:
           ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cudos/view-templates'
       Code:
         ZipFile: |
-              import json,urllib3,re,boto3,os,time
-              from urllib.parse import urlencode
-              import cfnresponse
-              import logging
-              logger = logging.getLogger()
-              logger.setLevel(logging.INFO)  
+          import os
+          #import re
+          import json
+          import time
+          import boto3
+          import urllib3
+          import logging
+          #from urllib.parse import urlencode
+          import cfnresponse
 
-              http=urllib3.PoolManager()
-              glue=boto3.client('glue')
-              athena=boto3.client('athena')
-              databaseName=os.environ["DatabaseName"]
-              tableName=os.environ["TableName"]
-              viewTemplatesUri=os.environ["ViewTemplatesUri"]
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)  
+          http = urllib3.PoolManager()
 
-              def lambda_handler(event, context):
-                logger.info("Cloud formation %s event, using database %s, cur table %s", event['RequestType'], databaseName, tableName)
-                if event['RequestType'] == 'Create':
+          glue = boto3.client('glue')
+          athena = boto3.client('athena')
+
+          database_name = os.environ["DatabaseName"]
+          table_name = os.environ["TableName"]
+          view_templates_uri = os.environ["ViewTemplatesUri"]
+
+          def lambda_handler(event, context):
+              logger.info(f"Cloud formation {event['RequestType']} event,"
+                  f" using database {database_name},"
+                  f" cur table {table_name}"
+              )
+              if event['RequestType'] == 'Create':
                   res, reason = create_views()
-                elif event['RequestType'] == 'Update':
+              elif event['RequestType'] == 'Update':
                   res, reason = create_views()
-                elif event['RequestType'] == 'Delete':
+              elif event['RequestType'] == 'Delete':
                   res, reason = (True, "Delete method not implemented")
-                else:
+              else:
                   res = False
                   reason = "Unknown operation: " + event['RequestType']
-                responseData = {}
-                responseData['Reason'] = reason
-                print(responseData)
-                if res:
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
-                else:
-                  cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
-
-
-              def create_views():
-                key='No View'
-                step='Identify RI SP configuration'
-                logger.info('Trying to %s', step)
-                try:
-                  response = glue.get_table(DatabaseName=databaseName,Name=tableName)
-                  savingsPlanPresent = False
-                  reservedInstancePresent = False
+              response_data = {'Reason': reason}
+              print(response_data)
+              if res:
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              else:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+          
+          def create_views():
+              key = 'No View'
+              step = 'Identify RI SP configuration'
+              logger.info('Trying to %s', step)
+              try:
+                  response = glue.get_table(DatabaseName=database_name, Name=table_name)
+                  savings_plan_present = False
+                  reserved_instance_present = False
                   for column in response['Table']['StorageDescriptor']['Columns']:
                       if column['Name'] == 'savings_plan_savings_plan_a_r_n':
-                        if distinct_count(column['Name'],tableName,databaseName) > 0:
-                          savingsPlanPresent = True
+                          if distinct_count(column['Name'], table_name, database_name) > 0:
+                              savings_plan_present = True
                       if column['Name'] == 'reservation_reservation_a_r_n':
-                        if distinct_count(column['Name'],tableName,databaseName) > 0:
-                          reservedInstancePresent = True
-
-
-                  if savingsPlanPresent and reservedInstancePresent:
-                      queryMode = "spriFile"
-                  elif savingsPlanPresent:
-                      queryMode = 'spFile'
-                  elif reservedInstancePresent:
-                      queryMode = 'riFile'
+                          if distinct_count(column['Name'], table_name, database_name) > 0:
+                              reserved_instance_present = True
+                  if savings_plan_present and reserved_instance_present:
+                      query_mode = "spriFile"
+                  elif savings_plan_present:
+                      query_mode = 'spFile'
+                  elif reserved_instance_present:
+                      query_mode = 'riFile'
                   else:
-                      queryMode = 'File'
-                  
-                  logger.info('Step %s completed, query mode is %s', step, queryMode)
-
+                      query_mode = 'File'
+                  logger.info(f"Step {step} completed, query mode is '{query_mode}'")
                   step="Download View Metadata"
-                  logger.info("Trying to %s", step)
-                  viewDict=json.loads(str(http.request('GET',viewTemplatesUri + '/' + 'views.json' ).data.decode('utf-8')))
-                  logger.info ('Step %s completed, the view metadata is: %s',step,str(viewDict))
-                  for key in viewDict["view_templates"]:
-                      sqlFileUri=viewTemplatesUri + '/' + viewDict["view_templates"][key][queryMode]
-                      step="Downloading view " + viewDict["view_templates"][key][queryMode] + " from " + sqlFileUri
-                      logger.info('%s',step)
-                      viewTemplate=str(http.request('GET',sqlFileUri).data.decode('utf-8'))
-                      viewCode=viewTemplate.replace('${athena_cur_table_name}',tableName)
+
+                  logger.info(f"Trying to {step}")
+                  view_dict=json.loads(str(http.request('GET', f'{view_templates_uri}/views.json').data.decode('utf-8')))
+                  logger.info (f"Step '{step}' completed, the view metadata is: {view_dict}")
+                  
+                  for key in view_dict["view_templates"]:
+                      sql_file_uri = view_templates_uri + '/' + view_dict["view_templates"][key][query_mode]
+                      step = "Downloading view " + sql_file_uri
+                      logger.info(step)
+                      view_template = str(http.request('GET', sql_file_uri).data.decode('utf-8'))
+                      view_code = view_template.replace('${athena_cur_table_name}',table_name)
                       logger.info('Completed %s', step)
-                      step="Running athena query for view" + viewDict["view_templates"][key][queryMode] 
-                      logger.info('%s', step)
+                      step = "Running athena query for view" + view_dict["view_templates"][key][query_mode] 
+                      logger.info(step)
                       response = athena.start_query_execution(
-                        QueryString=viewCode,
-                        QueryExecutionContext={'Database': databaseName},
-                        WorkGroup='primary')
+                          QueryString=view_code,
+                          QueryExecutionContext={'Database': database_name},
+                          WorkGroup='primary'
+                      )
                       logger.info('Completed step %s',step)
-                      
-                  accountMap="CREATE OR REPLACE VIEW account_map AS SELECT DISTINCT line_item_usage_account_id account_id, line_item_usage_account_id account_name FROM " +  tableName
-                  step="Executing account map query: " + accountMap
-                  logger.info("%s", step)
+                  # Create a dummy account map. Can be modified later        
+                  account_map_query = f"""
+                      CREATE OR REPLACE VIEW account_map 
+                      AS SELECT DISTINCT 
+                          line_item_usage_account_id account_id, 
+                          line_item_usage_account_id account_name
+                      FROM {table_name}
+                  """  
+                  step = f"Executing account map query: {repr(account_map_query)}" 
+                  logger.info(step)
                   response = athena.start_query_execution(
-                        QueryString=accountMap,
-                        QueryExecutionContext={'Database': databaseName},
-                        WorkGroup='primary')
+                      QueryString=account_map_query,
+                      QueryExecutionContext={'Database': database_name},
+                      WorkGroup='primary',
+                  )
                   logger.info("Completed %s", step)
                   return(True, "Views created successfully")
-                except Exception as e:
-                  return (False, "Step: "  + step + ' :' + str(e))
+              except Exception as exc:
+                  logger.error(exc, exc_info=True)
+                  return (False, f"Step: '{step}' Exception: [{type(exc)}] {str(exc)}")
 
-              def distinct_count(fieldName,tableName,databaseName):
-                queryState = 'QUEUED'
-                queryId = athena.start_query_execution(
-                  QueryString="select count(distinct "+fieldName+") from "+databaseName+"."+tableName+" where "+fieldName+" <> ''",
-                  QueryExecutionContext={'Database': databaseName},
-                  WorkGroup='primary')['QueryExecutionId']
-
-                while queryState in ['QUEUED','RUNNING']:
+          def distinct_count(fieldName, table_name, database_name):
+              queryState = 'QUEUED'
+              queryId = athena.start_query_execution(
+                  QueryString=f"""
+                      SELECT COUNT(distinct {fieldName} 
+                      FROM {database_name}.{table_name} 
+                      WHERE {fieldName} <> ''
+                  """.strip(),
+                  QueryExecutionContext={'Database': database_name},
+                  WorkGroup='primary'
+              )['QueryExecutionId']
+              while queryState in ['QUEUED','RUNNING']:
                   time.sleep(10)
                   queryState = athena.get_query_execution(QueryExecutionId=queryId)['QueryExecution']['Status']['State']
-
-                response = athena.get_query_results(QueryExecutionId=queryId)
-                return int(response['ResultSet']['Rows'][1]['Data'][0]['VarCharValue'])
+              response = athena.get_query_results(QueryExecutionId=queryId)
+              return int(response['ResultSet']['Rows'][1]['Data'][0]['VarCharValue'])
 
   QSCURBuildViewsLambdaExecutor:
     Type: Custom::QSCURBuildViewsLambdaExecutor
@@ -2061,36 +2079,40 @@ Resources:
       Timeout: 600
       Code:
         ZipFile: |
-              import boto3
-              from datetime import datetime
-              def get_account_id():
-                  sts = boto3.client('sts')
-                  accountId = sts.get_caller_identity()['Account']
-                  print(accountId)
-                  return accountId
-              def refresh_datasets(accountId):
-                  qs = boto3.client('quicksight')
-                  datasets = qs.list_data_sets(AwsAccountId=accountId)
-                  i = 50
-                  for dataset in datasets['DataSetSummaries']:
+          import boto3
+          from datetime import datetime
+          
+          DATASETS_TO_REFRESH = [
+              "ec2_running_cost",
+              "s3_view",
+              "summary_view",
+              "compute_savings_plan_eligible_spend",
+          ]
 
-                      name = dataset['Name']
-                      if dataset['ImportMode'] == 'SPICE':
+          def get_account_id():
+              sts = boto3.client('sts')
+              account_id = sts.get_caller_identity()['Account']
+              print('account_id = ', account_id)
+              return account_id
+          
+          def refresh_datasets(account_id):
+              quicksight = boto3.client('quicksight')
+              datasets = quicksight.list_data_sets(AwsAccountId=account_id)
+              for dataset in datasets['DataSetSummaries']:
+                  name = dataset['Name']
+                  if dataset['ImportMode'] == 'SPICE' and name in DATASETS_TO_REFRESH:
+                      ingestion_id = datetime.now().strftime("%d%m%y-%H%M%S-%f")
+                      print("Refreshing dataset {0}".format(name))
+                      res = quicksight.create_ingestion(
+                          AwsAccountId=account_id,
+                          DataSetId=dataset['DataSetId'],
+                          IngestionId=ingestion_id
+                      )
+                      print(res)
 
-                          if name == "ec2_running_cost" or \
-                          name == "s3_view" or \
-                          name == "summary_view" or \
-                          name == "compute_savings_plan_eligible_spend":
-                              ingestionId = datetime.now().strftime("%d%m%y-%H%M%S-%f")
-                              print("Refreshing dataset {0}".format(name))
-                              r = qs.create_ingestion(AwsAccountId=accountId,
-                                  DataSetId=dataset['DataSetId'],
-                                  IngestionId=ingestionId
-                                  )
-                              print(r)
-              def lambda_handler(event, context):
-                  a = get_account_id()
-                  refresh_datasets(a)
+          def lambda_handler(event, context):
+              account_id = get_account_id()
+              refresh_datasets(account_id)
 
 
   SpiceRefreshRule:
