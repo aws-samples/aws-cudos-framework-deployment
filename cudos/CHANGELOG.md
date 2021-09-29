@@ -1,13 +1,15 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.61
+
+* MoM Trends: Aligned charge type filters on all visuals 
+
 ## CUDOS - 4.60
 
 * Databases: Elasticsearch renamed to OpenSearch
 * End User Computing: WorkSpaces Autostop visuals filter on the last 30 days now, instead of the previous month
 * DataTransfer: Resource level visuals filter on the last 30 days now, instead of the previous month
 * MoM Trends: Added MoM difference in absolute values (MoM $), now its possible to sort by all columns
-
-
 
 ## CUDOS - 4.59.1
 
