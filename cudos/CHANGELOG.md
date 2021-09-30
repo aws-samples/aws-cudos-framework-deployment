@@ -1,6 +1,10 @@
 # What's new in CUDOS Dashboard
 
-## CUDOS - 4.61
+## CUDOS - 4.60.2
+
+* Compute: EC2 Family Running Hours Cost Last 90 Days visual now has a focus area controll on the right to filter in or out diferent purchase options
+
+## CUDOS - 4.60.1
 
 * MoM Trends: Aligned charge type filters on all visuals 
 
