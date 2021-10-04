@@ -1,6 +1,23 @@
 #!/bin/bash
 set -e
 
+# named arguments, from https://brianchildress.co/named-parameters-in-bash/
+export master_account_id=${master_account_id:-self}
+export role_name=${role_name:-none}
+cmd=$1
+while [ $# -gt 0 ]; do
+
+   if [[ $1 == *"--"* ]]; then
+        param="${1/--/}"
+        declare $param="$2"
+        # echo $1 $2 // Optional to see the parameter:value result
+   fi
+
+  shift
+done
+echo "Master account: "$master_account_id
+echo "Role name to assume in master account: "$role_name
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 source "${DIR}/lib/common.sh"
@@ -34,7 +51,7 @@ fi
 # Get CUR region
 get_cur_region
 
-case "$1" in
+case "$cmd" in
     config)
 
     config
@@ -317,10 +334,60 @@ fi
 
     echo "create or replace view account_map as select * from ( values "> work/${account}/account_map_view.sql
 
-    aws organizations list-accounts --query 'Accounts[*].{account_id:Id,account_name:Name}' \
-    --output text | awk '{ saved = $1; $1 = ""; print ",ROW ( \""saved"\",", "\""substr($0, 2)":",saved,"\")" }' >> work/${account}/account_map_view.sql
+    if [ $master_account_id = "self" ]
+    then
+        echo 'Executing in account '$account
+        echo 'Fetching account names...'
 
-    echo ") ignored_tabe_name (account_id, account_name)" >> work/${account}/account_map_view.sql
+        aws organizations list-accounts --query 'Accounts[*].{account_id:Id,account_name:Name}' \
+        --output text | awk '{ saved = $1; $1 = ""; print ",ROW ( \""saved"\",", "\""substr($0, 2)":",saved,"\")" }' >> work/${account}/account_map_view.sql
+        echo ") ignored_table_name (account_id, account_name)" >> work/${account}/account_map_view.sql
+    else
+        echo 'Executing in member account '$account
+        echo 'Assuming role '$role_arn'in master account '$master_account_id'...'
+
+        ORIG_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+        ORIG_AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+        ORIG_AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
+
+        role_arn='arn:aws:iam::'$master_account_id':role/'$role_name
+        role_session_name='cudos'
+        profile_name='cudos'
+
+        temp_role=$(aws sts assume-role --output json \
+            --role-arn $role_arn \
+            --role-session-name $role_session_name)
+
+        unset AWS_SECRET_ACCESS_KEY
+        unset AWS_SECRET_KEY
+        unset AWS_SESSION_TOKEN
+
+        export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+        export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+        export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+
+        aws configure --profile $profile_name set aws_access_key_id $AWS_ACCESS_KEY_ID
+        aws configure --profile $profile_name set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+        aws configure --profile $profile_name set aws_session_token $AWS_SESSION_TOKEN
+
+        echo "Assumed role:"
+        aws sts get-caller-identity --output json
+
+        echo 'Fetching account names...'
+
+        aws organizations list-accounts --query 'Accounts[*].{account_id:Id,account_name:Name}' \
+        --output text | awk '{ saved = $1; $1 = ""; print ",ROW ( \""saved"\",", "\""substr($0, 2)":",saved,"\")" }' >> work/${account}/account_map_view.sql
+        echo ") ignored_table_name (account_id, account_name)" >> work/${account}/account_map_view.sql
+
+        echo "Returning to member account"
+        unset AWS_SECRET_ACCESS_KEY
+        unset AWS_SECRET_KEY
+        unset AWS_SESSION_TOKEN
+
+        export AWS_ACCESS_KEY_ID=$ORIG_AWS_ACCESS_KEY_ID
+        export AWS_SECRET_ACCESS_KEY=$ORIG_AWS_SECRET_ACCESS_KEY
+        export AWS_SESSION_TOKEN=$ORIG_AWS_SESSION_TOKEN
+    fi
 
     if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "msys"* ]]; then
       sed -i "s/\"/\'/g;s/REPLACE/\,ROW\ /g;2s/\,//" work/${account}/account_map_view.sql
@@ -347,7 +414,11 @@ echo "Usage: ${myName} config | prepare | deploy-datasets | deploy-dashboard | d
   status: to debug failed deployments and get the status of the CUDOS dashboard
   delete: deletes the CUDOS dashboard from QuickSight
   cid-delete: deletes the CID dashboard from QuickSight
-  cleanup: deletes the CUDOS datasets from QuickSight"
+  cleanup: deletes the CUDOS datasets from QuickSight
+  
+  map takes two optional parameters, --master_account_id and --role_name, for execution in a member account
+        master_account_id is the id of the organization's master account
+        role_name is the name of a cross-account role in the master account that the user running this script can assume and which can list member accounts"
 ;;
 
 esac
