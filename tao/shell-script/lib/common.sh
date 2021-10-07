@@ -222,7 +222,7 @@ function status() {
     
 }
 
-function refresh-data() {
+function refreshdata() {
   aws quicksight create-ingestion --ingestion-id `date +%Y_%m_%H_%M` --aws-account-id ${account} --data-set-id ${dataSetId}
 }
 function update() {
