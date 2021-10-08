@@ -1,3 +1,4 @@
+#!/bin/sh
 
 set -e
 
@@ -73,9 +74,9 @@ case "$action" in
     config
     update
   ;;
-  refresh-data)
+  refresh_data)
     config
-    refresh-data
+    refresh_data
   ;;
   *)
   printf "$action is not valid action\n"
