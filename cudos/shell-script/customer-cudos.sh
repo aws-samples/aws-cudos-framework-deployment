@@ -346,6 +346,7 @@ fi
         echo 'Executing in member account '$account
         echo 'Assuming role '$role_arn'in master account '$master_account_id'...'
 
+        # save session variables in case they were used
         ORIG_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
         ORIG_AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
         ORIG_AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
@@ -370,9 +371,10 @@ fi
         echo ") ignored_table_name (account_id, account_name)" >> work/${account}/account_map_view.sql
 
         echo "Returning to member account"
-        export AWS_ACCESS_KEY_ID=$ORIG_AWS_ACCESS_KEY_ID
-        export AWS_SECRET_ACCESS_KEY=$ORIG_AWS_SECRET_ACCESS_KEY
-        export AWS_SESSION_TOKEN=$ORIG_AWS_SESSION_TOKEN
+        # restore session variables in case they were used; unsets them if they were not
+        AWS_ACCESS_KEY_ID=$ORIG_AWS_ACCESS_KEY_ID
+        AWS_SECRET_ACCESS_KEY=$ORIG_AWS_SECRET_ACCESS_KEY
+        AWS_SESSION_TOKEN=$ORIG_AWS_SESSION_TOKEN
     fi
 
     if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "msys"* ]]; then
