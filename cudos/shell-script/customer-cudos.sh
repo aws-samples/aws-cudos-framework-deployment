@@ -351,39 +351,25 @@ fi
         ORIG_AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 
         role_arn='arn:aws:iam::'$master_account_id':role/'$role_name
-        role_session_name='cudos'
-        profile_name='cudos'
+        role_session_name=$(aws sts get-caller-identity --query Arn --output text | awk -F/ '{ print $3 }')
+        echo 'Role session name: '$role_session_name
 
-        temp_role=$(aws sts assume-role --output json \
-            --role-arn $role_arn \
-            --role-session-name $role_session_name)
+        temp_role=$(aws sts assume-role --role-arn $role_arn --role-session-name $role_session_name \
+                    --query 'Credentials.[AccessKeyId, SecretAccessKey, SessionToken]' --output text)
 
-        unset AWS_SECRET_ACCESS_KEY
-        unset AWS_SECRET_KEY
-        unset AWS_SESSION_TOKEN
-
-        export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
-        export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
-        export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
-
-        aws configure --profile $profile_name set aws_access_key_id $AWS_ACCESS_KEY_ID
-        aws configure --profile $profile_name set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-        aws configure --profile $profile_name set aws_session_token $AWS_SESSION_TOKEN
+        AWS_ACCESS_KEY_ID=$(echo $temp_role | awk '{ print $1 }')
+        AWS_SECRET_ACCESS_KEY=$(echo $temp_role | awk '{ print $2 }')
+        AWS_SESSION_TOKEN=$(echo $temp_role | awk '{ print $3 }')
 
         echo "Assumed role:"
         aws sts get-caller-identity --output json
 
         echo 'Fetching account names...'
-
         aws organizations list-accounts --query 'Accounts[*].{account_id:Id,account_name:Name}' \
         --output text | awk '{ saved = $1; $1 = ""; print ",ROW ( \""saved"\",", "\""substr($0, 2)":",saved,"\")" }' >> work/${account}/account_map_view.sql
         echo ") ignored_table_name (account_id, account_name)" >> work/${account}/account_map_view.sql
 
         echo "Returning to member account"
-        unset AWS_SECRET_ACCESS_KEY
-        unset AWS_SECRET_KEY
-        unset AWS_SESSION_TOKEN
-
         export AWS_ACCESS_KEY_ID=$ORIG_AWS_ACCESS_KEY_ID
         export AWS_SECRET_ACCESS_KEY=$ORIG_AWS_SECRET_ACCESS_KEY
         export AWS_SESSION_TOKEN=$ORIG_AWS_SESSION_TOKEN
