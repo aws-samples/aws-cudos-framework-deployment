@@ -260,7 +260,6 @@ function update() {
     echo "Please run following commands to get updates:
       1. aws quicksight update-dashboard --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/update-dashboard-input.json
       2. aws quicksight list-dashboard-versions --aws-account-id ${account}  --dashboard-id $dashboardId --query 'DashboardVersionSummaryList[-1].VersionNumber' | xargs -I {} aws quicksight update-dashboard-published-version --aws-account-id ${account} --dashboard-id $dashboardId --version-number {}
-      # TODO 2nd command is not necessary, to be confirmed
     " 
     exit
   fi
