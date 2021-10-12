@@ -229,7 +229,7 @@ function update() {
   echo "Checking for updates..."
   echo -n "Getting latest available source template version..."
   latest_template_version=$(aws quicksight describe-template --query 'Template.Version.VersionNumber' \
-      --aws-account-id ${sourceAccountId} --template-id ${sourceTemplateId})
+      --aws-account-id ${sourceAccountId} --template-id ${sourceTemplateId} --region=us-east-1)
   if [ $? -ne 0 ]
   then
      echo "unable to retreive latest template version number, please check you have requested accesss."
@@ -238,14 +238,14 @@ function update() {
   echo "latest available template version is ${latest_template_version}"
 
   echo -n "Getting currently deployed source version..."
-  current_dashboard_source_version=$(aws quicksight describe-dashboard --dashboard-id $dashboardId --query 'Dashboard.Version.SourceEntityArn' \
-      --aws-account-id $account | cut -f 6 -d \: | cut -f 4 -d \/)
+  current_dashboard_source_version=$(aws quicksight describe-dashboard --dashboard-id $dashboardId --query 'Dashboard.Version.VersionNumber' \
+      --aws-account-id $account)
   if [ $? -ne 0 ]
   then
      echo "unable to retreive version number, please check you have dashboard deployed."
      exit
   fi
-  echo "latest available template version is ${current_dashboard_source_version}"
+  echo "current deployed template version is ${current_dashboard_source_version}"
   if [ ${current_dashboard_source_version} -eq ${latest_template_version} ]; then
       echo "You have the latest version deployed, no update required, exiting"
       exit
@@ -254,12 +254,13 @@ function update() {
       exit
   fi
 
-  echo "Update available ( ${current_dashboard_source_version} > ${latest_template_version} ), proceeding"
+  echo "Update available ( ${current_dashboard_source_version} < ${latest_template_version} ), proceeding"
 
   if [[ "$deploymentMode" != "auto" ]] ; then
     echo "Please run following commands to get updates:
       1. aws quicksight update-dashboard --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/update-dashboard-input.json
-      2. aws quicksight list-dashboard-versions --aws-account-id ${account}  --dashboard-id $dashboardId --query "DashboardVersionSummaryList[-1].VersionNumber" | xargs -I {} aws quicksight update-dashboard-published-version --aws-account-id ${account} --dashboard-id $dashboardId --version-number {}
+      2. aws quicksight list-dashboard-versions --aws-account-id ${account}  --dashboard-id $dashboardId --query 'DashboardVersionSummaryList[-1].VersionNumber' | xargs -I {} aws quicksight update-dashboard-published-version --aws-account-id ${account} --dashboard-id $dashboardId --version-number {}
+      # TODO 2nd command is not necessary, to be confirmed
     " 
     exit
   fi
