@@ -68,6 +68,8 @@
                 "quicksight:CreateDataSet",
                 "quicksight:CreateDataSource",
                 "quicksight:CreateIngestion",
+                "quicksight:PassDataSource",
+                "quicksight:PassDataSet",
                 "quicksight:CreateUser",
                 "quicksight:DeleteDashboard",
                 "quicksight:DeleteDataSet",
