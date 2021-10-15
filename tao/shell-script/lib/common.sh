@@ -238,8 +238,8 @@ function update() {
   echo "latest available template version is ${latest_template_version}"
 
   echo -n "Getting currently deployed source version..."
-  current_dashboard_source_version=$(aws quicksight describe-dashboard --dashboard-id $dashboardId --query 'Dashboard.Version.VersionNumber' \
-      --aws-account-id $account)
+  current_dashboard_source_version=$(aws quicksight describe-dashboard --dashboard-id $dashboardId --query 'Dashboard.Version.SourceEntityArn' \
+      --aws-account-id $account | cut -f 6 -d \: | cut -f 4 -d \/)
   if [ $? -ne 0 ]
   then
      echo "unable to retreive version number, please check you have dashboard deployed."
