@@ -229,7 +229,7 @@ function update() {
   echo "Checking for updates..."
   echo -n "Getting latest available source template version..."
   latest_template_version=$(aws quicksight describe-template --query 'Template.Version.VersionNumber' \
-      --aws-account-id ${sourceAccountId} --template-id ${sourceTemplateId} --region=us-east-1)
+      --aws-account-id ${sourceAccountId} --template-id ${sourceTemplateId} --region us-east-1)
   if [ $? -ne 0 ]
   then
      echo "unable to retreive latest template version number, please check you have requested accesss."
