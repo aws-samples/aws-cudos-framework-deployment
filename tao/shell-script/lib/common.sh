@@ -43,6 +43,9 @@ function config() {
   if [ -z "${region}" ]; then
     get_region
   fi
+  if [ -z "${aws_identity_region}" ]; then
+    get_qs_identity_region
+  fi
   if [ -z "${user_arn}" ]; then
     get_user_arn
   fi
@@ -74,7 +77,7 @@ function transform_templates() {
 }
 function get_user_arn() {
     echo "Fetching QuickSight User ARNs..."
-    alias=$(aws quicksight list-users --aws-account-id ${account} --namespace default --region ${region} --query 'UserList[*].Arn' --output text)
+    alias=$(aws quicksight list-users --aws-account-id ${account} --namespace default --region ${aws_identity_region} --query 'UserList[*].Arn' --output text)
     echo "Discovered QuickSight User ARNs. Please select which one to use:"
     select qs_user_arn in $alias
     do
@@ -131,6 +134,16 @@ function get_region() {
     export region=${aws_region}
     export AWS_DEFAULT_REGION=${aws_region}
 }
+
+function get_qs_identity_region() {
+    echo -n "Enter QuickSight Identity region [default : ${region}]: "
+    read aws_qs_identity_region
+    if  [ "${aws_qs_identity_region}" = "" ]; then
+      export aws_qs_identity_region=${region}
+    fi
+    export aws_identity_region=${aws_qs_identity_region}
+}
+
 function get_deployment_mode() {
   echo "Please select deployment mode:"
   select deployment in manual automated
@@ -165,11 +178,13 @@ function deploy() {
     aws quicksight create-data-set --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/data-set-input.json
     echo "aws quicksight create-dashboard --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/dashboard-input.json"
     aws quicksight create-dashboard --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/dashboard-input.json
+    
     if [ $? -ne 0 ]
     then
        echo \"Something went wrong\"
        exit
     fi
+    sleep 20
     status
   else
        echo "Please run the following commands to deploy dashboard:
