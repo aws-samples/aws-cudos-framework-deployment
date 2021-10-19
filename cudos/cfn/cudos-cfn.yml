@@ -333,9 +333,12 @@ Resources:
     Type: AWS::QuickSight::DataSource
     Properties:
       Type: ATHENA
-      DataSourceId: 000a7319-45ea-417b-8f1e-c190367aeeff
+      DataSourceId: !Join 
+        - ''
+        - - 'QSCURDataSource' 
+          - !Ref Suffix 
       AwsAccountId: !Ref AWS::AccountId
-      Name: CURDataSource
+      Name: !Join [ '' , [ 'QSCURDataSource' ,  !Ref Suffix ] ]
       DataSourceParameters:
         AthenaParameters:
           WorkGroup: primary
@@ -357,10 +360,10 @@ Resources:
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
     Properties:
-      DataSetId: 09ea7319-45ea-417b-8f1e-c190367a44b3
+      DataSetId: !Join [ '' , [ !Ref CURTableName ,  !Ref Suffix ] ]
       AwsAccountId: !Ref AWS::AccountId
       ImportMode: DIRECT_QUERY
-      Name: !Ref CURTableName
+      Name: !Join [ '' , [ !Ref CURTableName ,  !Ref Suffix ] ]
       LogicalTableMap:
         018196f9-eb08-4428-a1ba-0a34d36bd8ce:
           Alias: Intermediate Table
@@ -1419,9 +1422,9 @@ Resources:
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
     Properties:
-      DataSetId: a1954de4-084c-4d41-b6c6-c6c09fe35b58
+      DataSetId: !Join [ '' , [ 'ComputeSavinsPlanEligibleSpend' ,  !Ref Suffix ] ]
       AwsAccountId: !Ref AWS::AccountId
-      Name: compute_savings_plan_eligible_spend
+      Name: !Join [ '' , [ 'compute_savings_plan_eligible_spend' ,  !Ref Suffix ] ] 
       ImportMode: SPICE
       LogicalTableMap:
         6fad7bcd-2e08-4891-ba11-1d171b1b5a0d:
@@ -1505,9 +1508,9 @@ Resources:
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
     Properties:
-      DataSetId: 5a1923d0-66ea-4818-af22-574beed814e8
+      DataSetId: !Join [ '' , [ 'S3View' ,  !Ref Suffix ] ]
       AwsAccountId: !Ref AWS::AccountId
-      Name: s3_view
+      Name: !Join [ '' , [ 's3_view' ,  !Ref Suffix ] ] 
       ImportMode: SPICE
       LogicalTableMap:
         2fe94612-14c3-42e5-ac52-1c8d4bfdfdea:
@@ -1621,9 +1624,9 @@ Resources:
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
     Properties:
-      DataSetId: 66f12c29-6e03-4237-845a-b62ac3fb9540
+      DataSetId: !Join [ '' , [ 'EC2RunningCost' ,  !Ref Suffix ] ]
       AwsAccountId: !Ref AWS::AccountId
-      Name: ec2_running_cost
+      Name: !Join [ '' , [ 'ec2_running_cost' ,  !Ref Suffix ] ] 
       ImportMode: SPICE
       LogicalTableMap:
         4e8bbd2f-80d9-4121-8b62-afa565c477fc:
@@ -1713,9 +1716,9 @@ Resources:
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
     Properties:
-      DataSetId: c5c2a97b-e903-4ede-a919-a0e091e843a4
+      DataSetId: !Join [ '' , [ 'SummaryView' ,  !Ref Suffix ] ]
       AwsAccountId: !Ref AWS::AccountId
-      Name: summary_view
+      Name: !Join [ '' , [ 'summary_view' ,  !Ref Suffix ] ] 
       ImportMode: SPICE
       LogicalTableMap:
         2af1581c-abc8-4f82-9f4f-4cebb089cefa:
@@ -1946,8 +1949,8 @@ Resources:
     Type: AWS::QuickSight::Dashboard
     Properties:
       AwsAccountId: !Ref AWS::AccountId
-      DashboardId: cudos
-      Name: CUDOS
+      DashboardId: !Join [ '' , [ 'cudos' ,  !Ref Suffix ] ] 
+      Name: !Join [ '' , [ 'CUDOS' ,  !Ref Suffix ] ] 
       DashboardPublishOptions:
         AdHocFilteringOption:
           AvailabilityStatus: DISABLED
@@ -1986,8 +1989,8 @@ Resources:
     Type: AWS::QuickSight::Dashboard
     Properties:
       AwsAccountId: !Ref AWS::AccountId
-      DashboardId: cost_intelligence_dashboard
-      Name: Cost Intelligence Dashboard
+      DashboardId: !Join [ '' , [ 'cost_intelligence_dashboard' ,  !Ref Suffix ] ] 
+      Name: !Join [ '' , [ 'Cost Intelligence DashboardCost Intelligence Dashboard' ,  !Ref Suffix ] ] 
       DashboardPublishOptions:
         AdHocFilteringOption:
           AvailabilityStatus: DISABLED
