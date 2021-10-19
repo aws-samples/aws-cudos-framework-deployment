@@ -51,7 +51,9 @@ Parameters:
 
 
 Resources:
-  QSCURExecRole:
+  QSCURExecRole: #Execution role for the custom resource lambda QSCURBuildViewsLambdaCreator. 
+                 #It needs to log access to cloudwatch, and needs to execute athena queries against the CUR bucket. 
+                 # This is a minimal permission that allows this lambda to perform these api calls
     Type: AWS::IAM::Role
     Properties:
       Path: /
@@ -175,7 +177,8 @@ Resources:
                     - ':key/*'
 
 
-  QSCURBuildViewsLambdaCreator:
+  QSCURBuildViewsLambdaCreator: #custom lambda resource that is tasked to inerogate the CUR for RI and SP and execute the appropriate SQL views
+                                #The views code is pulled from aws-cudos-framework-deployment git repo
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.7
@@ -319,7 +322,7 @@ Resources:
               response = athena.get_query_results(QueryExecutionId=queryId)
               return int(response['ResultSet']['Rows'][1]['Data'][0]['VarCharValue'])
 
-  QSCURBuildViewsLambdaExecutor:
+  QSCURBuildViewsLambdaExecutor: #Executes the cusotm resource above as part of the CFN template 
     Type: Custom::QSCURBuildViewsLambdaExecutor
     Properties:
       ServiceToken: !GetAtt QSCURBuildViewsLambdaCreator.Arn
@@ -329,7 +332,7 @@ Resources:
         - - QSCURBuildViewsLambdaExecutor
           - !Ref Suffix
 
-  QSCURDataSource:
+  QSCURDataSource: # quicksight data source to athena and related permissions are given to the user quicksight user provided as parameter above
     Type: AWS::QuickSight::DataSource
     Properties:
       Type: ATHENA
@@ -355,7 +358,8 @@ Resources:
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
 
-  CudosCurDataset:
+  CudosCurDataset: # this is the "customer_all" dataset but names it based on the customer's CUR table name. 
+                   #It allso provides associated permissions for the quicksight user defined in parameter section to this dataset
     Type: AWS::QuickSight::DataSet
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
@@ -1417,7 +1421,7 @@ Resources:
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
 
-  ComputeSavinsPlanEligibleSpendDataset:
+  ComputeSavinsPlanEligibleSpendDataset: #compute savings plan eligible spend dataset and associated permissions
     Type: AWS::QuickSight::DataSet
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
@@ -1503,7 +1507,7 @@ Resources:
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
 
-  S3ViewDataset:
+  S3ViewDataset: # s3 view dataset and associated permissions
     Type: AWS::QuickSight::DataSet
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
@@ -1619,7 +1623,7 @@ Resources:
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
 
-  EC2RunningCostDataset:
+  EC2RunningCostDataset: #EC2 running cost dataset and associated permissions
     Type: AWS::QuickSight::DataSet
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
@@ -1711,7 +1715,7 @@ Resources:
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
 
-  SummaryViewDataset:
+  SummaryViewDataset: #Summary view dataset and associated permissions
     Type: AWS::QuickSight::DataSet
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
@@ -1945,7 +1949,7 @@ Resources:
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
 
-  CUDOSDashboard:
+  CUDOSDashboard: # cudos dashboard from template and associated permissions
     Type: AWS::QuickSight::Dashboard
     Properties:
       AwsAccountId: !Ref AWS::AccountId
@@ -1985,12 +1989,12 @@ Resources:
 
       VersionDescription: "1"
 
-  CIDDashboard:
+  CIDDashboard: #CID dashboard from template and associated permissions
     Type: AWS::QuickSight::Dashboard
     Properties:
       AwsAccountId: !Ref AWS::AccountId
       DashboardId: !Join [ '' , [ 'cost_intelligence_dashboard' ,  !Ref Suffix ] ] 
-      Name: !Join [ '' , [ 'Cost Intelligence DashboardCost Intelligence Dashboard' ,  !Ref Suffix ] ] 
+      Name: !Join [ '' , [ 'Cost Intelligence Dashboard' ,  !Ref Suffix ] ] 
       DashboardPublishOptions:
         AdHocFilteringOption:
           AvailabilityStatus: DISABLED
@@ -2023,7 +2027,7 @@ Resources:
 
       VersionDescription: "1"
 
-  SpiceRefreshExecutionRole:
+  SpiceRefreshExecutionRole: #role needed to schedule spice ingestion for the datasets
     Type: AWS::IAM::Role
     Properties:
       Path: /
@@ -2068,7 +2072,7 @@ Resources:
                 Resource:
                   - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*
 
-  SpiceRefreshLambdaCreator:
+  SpiceRefreshLambdaCreator: #Function for dataset refresh
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.7
@@ -2079,17 +2083,21 @@ Resources:
       Handler: index.lambda_handler
       MemorySize: 128
       Role: !GetAtt SpiceRefreshExecutionRole.Arn
-      Timeout: 600
+      Timeout: 60
+      Environment:
+        Variables:
+          suffix: !Ref Suffix
       Code:
         ZipFile: |
           import boto3
           from datetime import datetime
+          import os
           
           DATASETS_TO_REFRESH = [
-              "ec2_running_cost",
-              "s3_view",
-              "summary_view",
-              "compute_savings_plan_eligible_spend",
+              "ec2_running_cost" + os.environ['suffix'],
+              "s3_view" + os.environ['suffix'] , 
+              "summary_view" + os.environ['suffix'],
+              "compute_savings_plan_eligible_spend" + os.environ['suffix'],
           ]
 
           def get_account_id():
@@ -2103,14 +2111,14 @@ Resources:
               datasets = quicksight.list_data_sets(AwsAccountId=account_id)
               for dataset in datasets['DataSetSummaries']:
                   name = dataset['Name']
-                  if dataset['ImportMode'] == 'SPICE' and name in DATASETS_TO_REFRESH:
+                  if dataset['ImportMode'] == 'SPICE' and name in DATASETS_TO_REFRESH:               
                       ingestion_id = datetime.now().strftime("%d%m%y-%H%M%S-%f")
                       print("Refreshing dataset {0}".format(name))
                       res = quicksight.create_ingestion(
                           AwsAccountId=account_id,
                           DataSetId=dataset['DataSetId'],
                           IngestionId=ingestion_id
-                      )
+                        )
                       print(res)
 
           def lambda_handler(event, context):
