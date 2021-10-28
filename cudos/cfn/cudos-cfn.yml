@@ -1,0 +1,2146 @@
+Parameters:
+  1stReadMe:
+    Type: String
+    Default: README
+    Description: >
+              Prerequisites met:
+              1. https://cudos.workshop.aws/prerequisites/prepare-cur.html
+              2. https://cudos.workshop.aws/prerequisites/prepare-athena.html
+              3. https://cudos.workshop.aws/prerequisites/prepare-cur-athena.html
+              4. https://cudos.workshop.aws/prerequisites/prepare-quicksight.html
+              5. Run the crawler or wait up to 1 day so that new CUR delivery would invoke the crawler which would create the tables
+
+  QuickSightUser:
+    Type: String
+    MinLength: 1
+    Default: REPLACE WITH QuickSight USER
+    Description: REQUIRED - User name of QuickSight user from default namespace (as displayed in QuickSight admin panel). Dashboard created by this template with be shared with this user.
+  QuicksightIdentityRegion:
+    Type: String
+    MinLength: 8
+    Description: Quicksight Identity region(can be different than the region you deploy the dashboard, typically us-east-1)
+    Default: us-east-1
+  BucketFolderPath:
+    Type: String
+    MinLength: 3
+    Default: REPLACE WITH CUR FOLDER AND PATH
+    Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName
+  AthenaQueryResultsBucket:
+    Type: String
+    MinLength: 3
+    Default: REPLACE WITH Athena S3 Bucket configured for athena query results(do not add a trailing slash)
+    Description: REQUIRED - Name of the s3 bucket configured for athena query results(do not add a trailing slash)
+  CURDatabaseName:
+    Type:  String
+    MinLength: 1
+    Description: 'REQUIRED - Athena CUR Database name'
+    Default: REPLACE WITH Athena CUR DATABASE
+  CURTableName:
+    Type:  String
+    MinLength: 1
+    Default: REPLACE WITH Athena CUR TABLE
+    Description: 'REQUIRED - Athena CUR Table name'
+  QuickSightDataSetRefreshSchedule:
+    Type: String
+    MinLength: 3
+    Default: cron(0 4 * * ? *)
+    Description: 'REQUIRED - cron expression on when to refresh spice datasets daily outside of business hours. Default is 4 AM utc, this should work for most customers in US and EU time zones' 
+  Suffix:
+    Type: String
+    Description: OPTIONAL - If you need to create multiple instances of embedding sample on same aws account, add a short NUMERIC suffix here.
+
+
+Resources:
+  QSCURExecRole: #Execution role for the custom resource lambda QSCURBuildViewsLambdaCreator. 
+                 #It needs to log access to cloudwatch, and needs to execute athena queries against the CUR bucket. 
+                 # This is a minimal permission that allows this lambda to perform these api calls
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Join
+        - ''
+        - - QSCURExecRole
+          - !Ref Suffix
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Join
+          - ''
+          - - QSCURExecPolicy
+            - !Ref Suffix
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:GetWorkGroup
+                  - athena:GetQueryResults
+                  - athena:GetQueryExecution
+                Resource: !Join
+                  - ''
+                  - - 'arn:aws:athena:'
+                    - !Ref AWS::Region
+                    - ':'
+                    - !Ref AWS::AccountId
+                    - ':workgroup/primary'
+              - Effect: Allow
+                Action:
+                  - glue:GetDatabase
+                  - glue:GetTable
+                  - glue:UpdateTable
+                  - glue:GetTables
+                  - glue:GetPartitions
+                  - glue:CreateTable
+                Resource:
+                  - !Join
+                    - ''
+                    - - 'arn:aws:glue:'
+                      - !Ref AWS::Region
+                      - ':'
+                      - !Ref AWS::AccountId
+                      - ':database/'
+                      - !Ref CURDatabaseName
+                  - !Join
+                    - ''
+                    - - 'arn:aws:glue:'
+                      - !Ref AWS::Region
+                      - ':'
+                      - !Ref AWS::AccountId
+                      - ':table/'
+                      - !Ref CURDatabaseName
+                      - '/*'
+                  - !Join
+                    - ''
+                    - - 'arn:aws:glue:'
+                      - !Ref AWS::Region
+                      - ':'
+                      - !Ref AWS::AccountId
+                      - ':catalog'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                Resource:
+                  - !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Select [0, !Split [ "/" , !Ref BucketFolderPath ]]
+                  - !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref BucketFolderPath
+                      - '/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:ListMultipartUploadParts
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref AthenaQueryResultsBucket
+                  - !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref AthenaQueryResultsBucket
+                      - '/*'
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:DescribeKey
+                  - kms:Encrypt
+                Resource: !Join
+                  - ''
+                  - - 'arn:aws:kms:'
+                    - !Ref AWS::Region
+                    - ':'
+                    - !Ref AWS::AccountId
+                    - ':key/*'
+
+
+  QSCURBuildViewsLambdaCreator: #custom lambda resource that is tasked to inerogate the CUR for RI and SP and execute the appropriate SQL views
+                                #The views code is pulled from aws-cudos-framework-deployment git repo
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.7
+      FunctionName: !Join
+        - ''
+        - - QSCURBuildViews
+          - !Ref Suffix
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt QSCURExecRole.Arn
+      Timeout: 60
+      Environment:
+        Variables:
+          DatabaseName: !Ref CURDatabaseName
+          TableName: !Ref CURTableName
+          ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cudos/view-templates'
+      Code:
+        ZipFile: |
+          import os
+          #import re
+          import json
+          import time
+          import boto3
+          import urllib3
+          import logging
+          #from urllib.parse import urlencode
+          import cfnresponse
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)  
+          http = urllib3.PoolManager()
+
+          glue = boto3.client('glue')
+          athena = boto3.client('athena')
+
+          database_name = os.environ["DatabaseName"]
+          table_name = os.environ["TableName"]
+          view_templates_uri = os.environ["ViewTemplatesUri"]
+
+          def lambda_handler(event, context):
+              logger.info(f"Cloud formation {event['RequestType']} event,"
+                  f" using database {database_name},"
+                  f" cur table {table_name}"
+              )
+              if event['RequestType'] == 'Create':
+                  res, reason = create_views()
+              elif event['RequestType'] == 'Update':
+                  res, reason = create_views()
+              elif event['RequestType'] == 'Delete':
+                  res, reason = (True, "Delete method not implemented")
+              else:
+                  res = False
+                  reason = "Unknown operation: " + event['RequestType']
+              response_data = {'Reason': reason}
+              print(response_data)
+              if res:
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              else:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+          
+          def create_views():
+              key = 'No View'
+              step = 'Identify RI SP configuration'
+              logger.info('Trying to %s', step)
+              try:
+                  response = glue.get_table(DatabaseName=database_name, Name=table_name)
+                  savings_plan_present = False
+                  reserved_instance_present = False
+                  for column in response['Table']['StorageDescriptor']['Columns']:
+                      if column['Name'] == 'savings_plan_savings_plan_a_r_n':
+                          if distinct_count(column['Name'], table_name, database_name) > 0:
+                              savings_plan_present = True
+                      if column['Name'] == 'reservation_reservation_a_r_n':
+                          if distinct_count(column['Name'], table_name, database_name) > 0:
+                              reserved_instance_present = True
+                  if savings_plan_present and reserved_instance_present:
+                      query_mode = "spriFile"
+                  elif savings_plan_present:
+                      query_mode = 'spFile'
+                  elif reserved_instance_present:
+                      query_mode = 'riFile'
+                  else:
+                      query_mode = 'File'
+                  logger.info(f"Step {step} completed, query mode is '{query_mode}'")
+                  step="Download View Metadata"
+
+                  logger.info(f"Trying to {step}")
+                  view_dict=json.loads(str(http.request('GET', f'{view_templates_uri}/views.json').data.decode('utf-8')))
+                  logger.info (f"Step '{step}' completed, the view metadata is: {view_dict}")
+                  
+                  for key in view_dict["view_templates"]:
+                      sql_file_uri = view_templates_uri + '/' + view_dict["view_templates"][key][query_mode]
+                      step = "Downloading view " + sql_file_uri
+                      logger.info(step)
+                      view_template = str(http.request('GET', sql_file_uri).data.decode('utf-8'))
+                      view_code = view_template.replace('${athena_cur_table_name}',table_name)
+                      logger.info('Completed %s', step)
+                      step = "Running athena query for view" + view_dict["view_templates"][key][query_mode] 
+                      logger.info(step)
+                      response = athena.start_query_execution(
+                          QueryString=view_code,
+                          QueryExecutionContext={'Database': database_name},
+                          WorkGroup='primary'
+                      )
+                      logger.info('Completed step %s',step)
+                  # Create a dummy account map. Can be modified later        
+                  account_map_query = f"""
+                      CREATE OR REPLACE VIEW account_map 
+                      AS SELECT DISTINCT 
+                          line_item_usage_account_id account_id, 
+                          line_item_usage_account_id account_name
+                      FROM {table_name}
+                  """  
+                  step = f"Executing account map query: {repr(account_map_query)}" 
+                  logger.info(step)
+                  response = athena.start_query_execution(
+                      QueryString=account_map_query,
+                      QueryExecutionContext={'Database': database_name},
+                      WorkGroup='primary',
+                  )
+                  logger.info("Completed %s", step)
+                  return(True, "Views created successfully")
+              except Exception as exc:
+                  logger.error(exc, exc_info=True)
+                  return (False, f"Step: '{step}' Exception: [{type(exc)}] {str(exc)}")
+
+          def distinct_count(fieldName, table_name, database_name):
+              queryState = 'QUEUED'
+              queryId = athena.start_query_execution(
+                  QueryString=f"""
+                      SELECT COUNT(distinct {fieldName}) 
+                      FROM {database_name}.{table_name} 
+                      WHERE {fieldName} <> ''
+                  """.strip(),
+                  QueryExecutionContext={'Database': database_name},
+                  WorkGroup='primary'
+              )['QueryExecutionId']
+              while queryState in ['QUEUED','RUNNING']:
+                  time.sleep(10)
+                  queryState = athena.get_query_execution(QueryExecutionId=queryId)['QueryExecution']['Status']['State']
+              response = athena.get_query_results(QueryExecutionId=queryId)
+              return int(response['ResultSet']['Rows'][1]['Data'][0]['VarCharValue'])
+
+  QSCURBuildViewsLambdaExecutor: #Executes the cusotm resource above as part of the CFN template 
+    Type: Custom::QSCURBuildViewsLambdaExecutor
+    Properties:
+      ServiceToken: !GetAtt QSCURBuildViewsLambdaCreator.Arn
+      Region: !Ref "AWS::Region"
+      Name: !Join
+        - ''
+        - - QSCURBuildViewsLambdaExecutor
+          - !Ref Suffix
+
+  QSCURDataSource: # quicksight data source to athena and related permissions are given to the user quicksight user provided as parameter above
+    Type: AWS::QuickSight::DataSource
+    Properties:
+      Type: ATHENA
+      DataSourceId: !Join 
+        - ''
+        - - 'QSCURDataSource' 
+          - !Ref Suffix 
+      AwsAccountId: !Ref AWS::AccountId
+      Name: !Join [ '' , [ 'QSCURDataSource' ,  !Ref Suffix ] ]
+      DataSourceParameters:
+        AthenaParameters:
+          WorkGroup: primary
+      Permissions:
+        - Actions:
+            - 'quicksight:DescribeDataSource'
+            - 'quicksight:DescribeDataSourcePermissions'
+            - 'quicksight:PassDataSource'
+            - 'quicksight:UpdateDataSource'
+            - 'quicksight:DeleteDataSource'
+            - 'quicksight:UpdateDataSourcePermissions'
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+  CudosCurDataset: # this is the "customer_all" dataset but names it based on the customer's CUR table name. 
+                   #It allso provides associated permissions for the quicksight user defined in parameter section to this dataset
+    Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
+    Properties:
+      DataSetId: !Join [ '' , [ !Ref CURTableName ,  !Ref Suffix ] ]
+      AwsAccountId: !Ref AWS::AccountId
+      ImportMode: DIRECT_QUERY
+      Name: !Join [ '' , [ !Ref CURTableName ,  !Ref Suffix ] ]
+      LogicalTableMap:
+        018196f9-eb08-4428-a1ba-0a34d36bd8ce:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - identity_line_item_id
+              - identity_time_interval
+              - bill_invoice_id
+              - bill_billing_entity
+              - bill_bill_type
+              - bill_payer_account_id
+              - bill_billing_period_start_date
+              - bill_billing_period_end_date
+              - line_item_usage_account_id
+              - line_item_line_item_type
+              - line_item_usage_start_date
+              - line_item_usage_end_date
+              - line_item_product_code
+              - line_item_usage_type
+              - line_item_operation
+              - line_item_availability_zone
+              - line_item_resource_id
+              - line_item_usage_amount
+              - line_item_normalization_factor
+              - line_item_normalized_usage_amount
+              - line_item_currency_code
+              - line_item_unblended_rate
+              - line_item_unblended_cost
+              - line_item_blended_rate
+              - line_item_blended_cost
+              - line_item_line_item_description
+              - line_item_tax_type
+              - line_item_net_unblended_rate
+              - line_item_net_unblended_cost
+              - line_item_legal_entity
+              - product_product_name
+              - product_activity_type
+              - product_alarm_type
+              - product_availability
+              - product_availability_zone
+              - product_bundle
+              - product_cache_engine
+              - product_cache_memory_size_gb
+              - product_capacitystatus
+              - product_category
+              - product_clock_speed
+              - product_compute_family
+              - product_compute_type
+              - product_content_type
+              - product_cputype
+              - product_current_generation
+              - product_database_edition
+              - product_database_engine
+              - product_dedicated_ebs_throughput
+              - product_deployment_option
+              - product_description
+              - product_direct_connect_location
+              - product_directory_size
+              - product_directory_type
+              - product_directory_type_description
+              - product_durability
+              - product_ecu
+              - product_edition
+              - product_endpoint_type
+              - product_engine_code
+              - product_enhanced_networking_supported
+              - product_event_type
+              - product_execution_frequency
+              - product_execution_location
+              - product_fee_code
+              - product_fee_description
+              - product_free_query_types
+              - product_free_trial
+              - product_free_usage_included
+              - product_frequency_mode
+              - product_from_location
+              - product_from_location_type
+              - product_georegioncode
+              - product_gpu
+              - product_gpu_memory
+              - product_group
+              - product_group_description
+              - product_instance
+              - product_instance_family
+              - product_instance_function
+              - product_instance_type
+              - product_instance_type_family
+              - product_intel_avx2_available
+              - product_intel_avx_available
+              - product_io
+              - product_license
+              - product_license_model
+              - product_location
+              - product_location_type
+              - product_logs_source
+              - product_logs_type
+              - product_machine_learning_process
+              - product_max_iops_burst_performance
+              - product_max_iopsvolume
+              - product_max_throughputvolume
+              - product_max_volume_size
+              - product_maximum_extended_storage
+              - product_maximum_storage_volume
+              - product_memory
+              - product_memory_gib
+              - product_memorytype
+              - product_message_delivery_frequency
+              - product_message_delivery_order
+              - product_metering_type
+              - product_min_volume_size
+              - product_minimum_storage_volume
+              - product_network_performance
+              - product_normalization_size_factor
+              - product_operating_system
+              - product_operation
+              - product_origin
+              - product_os_license_model
+              - product_physical_cpu
+              - product_physical_gpu
+              - product_physical_processor
+              - product_plan_type
+              - product_port_speed
+              - product_pre_installed_sw
+              - product_processor_architecture
+              - product_processor_features
+              - product_product_family
+              - product_protocol
+              - product_provisioned
+              - product_queue_type
+              - product_recipient
+              - product_region
+              - product_request_description
+              - product_request_type
+              - product_resource_endpoint
+              - product_resource_type
+              - product_rootvolume
+              - product_routing_target
+              - product_routing_type
+              - product_running_mode
+              - product_servicecode
+              - product_servicename
+              - product_sku
+              - product_snowball_type
+              - product_software_included
+              - product_software_type
+              - product_standard_storage_retention_included
+              - product_storage
+              - product_storage_class
+              - product_storage_media
+              - product_storage_type
+              - product_subscription_type
+              - product_tenancy
+              - product_to_location
+              - product_to_location_type
+              - product_transfer_type
+              - product_type
+              - product_usage_family
+              - product_usagetype
+              - product_uservolume
+              - product_vcpu
+              - product_version
+              - product_video_memory_gib
+              - product_virtual_interface_type
+              - product_volume_type
+              - product_with_active_users
+              - pricing_lease_contract_length
+              - pricing_offering_class
+              - pricing_purchase_option
+              - pricing_rate_id
+              - pricing_public_on_demand_cost
+              - pricing_public_on_demand_rate
+              - pricing_term
+              - pricing_unit
+              - reservation_amortized_upfront_cost_for_usage
+              - reservation_amortized_upfront_fee_for_billing_period
+              - reservation_effective_cost
+              - reservation_end_time
+              - reservation_modification_status
+              - reservation_net_amortized_upfront_cost_for_usage
+              - reservation_net_amortized_upfront_fee_for_billing_period
+              - reservation_net_effective_cost
+              - reservation_net_recurring_fee_for_usage
+              - reservation_net_unused_amortized_upfront_fee_for_billing_period
+              - reservation_net_unused_recurring_fee
+              - reservation_net_upfront_value
+              - reservation_normalized_units_per_reservation
+              - reservation_number_of_reservations
+              - reservation_recurring_fee_for_usage
+              - reservation_reservation_a_r_n
+              - reservation_start_time
+              - reservation_subscription_id
+              - reservation_total_reserved_normalized_units
+              - reservation_total_reserved_units
+              - reservation_units_per_reservation
+              - reservation_unused_amortized_upfront_fee_for_billing_period
+              - reservation_unused_normalized_unit_quantity
+              - reservation_unused_quantity
+              - reservation_unused_recurring_fee
+              - reservation_upfront_value
+              - discount_edp_discount
+              - discount_total_discount
+              - resource_tags_aws_created_by
+              - resource_tags_user_applicationid
+              - resource_tags_user_businessowner
+              - resource_tags_user_chargecode
+              - resource_tags_user_dataclassification
+              - resource_tags_user_informationmgt
+              - resource_tags_user_techowner
+              - product_attachment_type
+              - product_steps
+              - product_awsresource
+              - product_data
+              - product_endpoint
+              - product_counts_against_quota
+              - product_data_transfer_quota
+              - product_free_overage
+              - product_overage_type
+              - product_storagetype
+              - product_tiertype
+              - product_datatransferout
+              - product_graphqloperation
+              - product_indexing_source
+              - product_input_mode
+              - product_output_mode
+              - product_realtimeoperation
+              - product_jobnshipp
+              - product_release_type
+              - product_supported_modes
+              - product_feature
+              - product_automatic_label
+              - product_intel_turbo_available
+              - product_labeling_task_type
+              - product_readtype
+              - product_workforce_type
+              - pricing_restriction
+              - product_cloud_search_version
+              - product_describes
+              - product_framework_type
+              - product_gets
+              - product_ops_items
+              - product_updates
+              - product_offer
+              - product_parameter_type
+              - product_tenancy_support
+              - product_throughput
+              - product_finding_group
+              - product_finding_source
+              - product_finding_storage
+              - product_standard_group
+              - product_standard_source
+              - product_standard_storage
+              - product_storage_family
+              - product_io_request_type
+              - savings_plan_total_commitment_to_date
+              - savings_plan_savings_plan_a_r_n
+              - savings_plan_savings_plan_rate
+              - savings_plan_used_commitment
+              - savings_plan_savings_plan_effective_cost
+              - savings_plan_amortized_upfront_commitment_for_billing_period
+              - savings_plan_recurring_commitment_for_billing_period
+              - product_volume_api_name
+              - resource_tags_user_managedby
+              - product_insightstype
+              - product_newcode
+              - savings_plan_region
+              - savings_plan_purchase_term
+              - savings_plan_payment_option
+              - savings_plan_end_time
+              - savings_plan_start_time
+              - savings_plan_offering_type
+              - resource_tags_user_applicationname
+              - resource_tags_user_environment
+              - product_api_type
+              - product_client_location
+              - product_dominantnondominant
+              - product_entity_type
+              - product_file_system_type
+              - product_group_details
+              - product_traffic_direction
+              - resource_tags_user_division
+              - resource_tags_user_name
+              - resource_tags_user_backup
+              - resource_tags_user_riskdomain
+              - resource_tags_user_team
+              - product_throughput_capacity
+              - pricing_currency
+              - resource_tags_user_department
+              - product_data_type
+              - product_product_schema_description
+              - product_component
+              - product_instance_name
+              - product_pricing_unit
+              - product_bundle_description
+              - product_bundle_group
+              - product_cachememorysize
+              - product_broker_engine
+              - product_cache_type
+              - product_enhanced_networking_support
+              - product_logs_destination
+              - resource_tags_user_aws_migration_project_id
+              - resource_tags_user_map_migrated
+              - resource_tags_user_map_migrated_app
+              - product_capacity
+              - product_connection_type
+              - product_disableactivationconfirmationemail
+              - product_purchase_option
+              - product_purchaseterm
+              - product_access_type
+              - product_account_assistance
+              - product_architectural_review
+              - product_architecture_support
+              - product_best_practices
+              - product_case_severityresponse_times
+              - product_customer_service_and_communities
+              - product_data_transfer
+              - product_flow
+              - product_included_services
+              - product_launch_support
+              - product_operations_support
+              - product_proactive_guidance
+              - product_programmatic_case_management
+              - product_ratetype
+              - product_technical_support
+              - product_thirdparty_software_support
+              - product_throughput_class
+              - product_training
+              - product_who_can_open_cases
+              - product_device_description
+              - product_extra_day_fee
+              - product_free_days
+              - product_job_fee
+              - payer
+              - year
+              - month
+              - account_id
+              - account_name
+          - TagColumnOperation:
+              ColumnName: product_region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - TagColumnOperation:
+              ColumnName: savings_plan_region
+              Tags:
+              - ColumnGeographicRole: STATE
+          Source:
+            JoinInstruction:
+              LeftOperand: 2e2e2f8e-d47a-401c-bf26-ce59fb0b040c
+              OnClause: '{line_item_usage_account_id} = {account_id}'
+              RightOperand: 3363357f-d798-480a-b3d3-784c3fd1a34b
+              Type: LEFT
+        2e2e2f8e-d47a-401c-bf26-ce59fb0b040c:
+          Alias: !Ref CURTableName
+          Source:
+            PhysicalTableId: 6495b89d-dcdf-48df-96db-9fd11cb86bad
+        3363357f-d798-480a-b3d3-784c3fd1a34b:
+          Alias: account_map
+          Source:
+            PhysicalTableId: e88c6aef-56d2-43e6-a858-3e7ae0ea9211
+      PhysicalTableMap:
+        6495b89d-dcdf-48df-96db-9fd11cb86bad:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: product_updates
+                Type: STRING
+              - Name: product_thirdparty_software_support
+                Type: STRING
+              - Name: product_case_severityresponse_times
+                Type: STRING
+              - Name: product_release_type
+                Type: STRING
+              - Name: year
+                Type: STRING
+              - Name: bill_billing_period_end_date
+                Type: DATETIME
+              - Name: product_enhanced_networking_supported
+                Type: STRING
+              - Name: product_io
+                Type: STRING
+              - Name: product_maximum_storage_volume
+                Type: STRING
+              - Name: product_flow
+                Type: STRING
+              - Name: product_operating_system
+                Type: STRING
+              - Name: product_storage
+                Type: STRING
+              - Name: product_content_type
+                Type: STRING
+              - Name: product_endpoint
+                Type: STRING
+              - Name: product_overage_type
+                Type: STRING
+              - Name: product_finding_storage
+                Type: STRING
+              - Name: resource_tags_user_applicationid
+                Type: STRING
+              - Name: line_item_line_item_description
+                Type: STRING
+              - Name: reservation_amortized_upfront_fee_for_billing_period
+                Type: DECIMAL
+              - Name: line_item_normalization_factor
+                Type: DECIMAL
+              - Name: line_item_net_unblended_cost
+                Type: DECIMAL
+              - Name: reservation_start_time
+                Type: STRING
+              - Name: product_maximum_extended_storage
+                Type: STRING
+              - Name: resource_tags_user_name
+                Type: STRING
+              - Name: product_entity_type
+                Type: STRING
+              - Name: discount_total_discount
+                Type: DECIMAL
+              - Name: product_logs_type
+                Type: STRING
+              - Name: product_cache_memory_size_gb
+                Type: STRING
+              - Name: product_throughput_class
+                Type: STRING
+              - Name: savings_plan_used_commitment
+                Type: DECIMAL
+              - Name: line_item_blended_cost
+                Type: DECIMAL
+              - Name: product_free_trial
+                Type: STRING
+              - Name: product_input_mode
+                Type: STRING
+              - Name: product_os_license_model
+                Type: STRING
+              - Name: product_gpu
+                Type: STRING
+              - Name: product_directory_type_description
+                Type: STRING
+              - Name: product_physical_processor
+                Type: STRING
+              - Name: discount_edp_discount
+                Type: DECIMAL
+              - Name: resource_tags_user_businessowner
+                Type: STRING
+              - Name: product_from_location
+                Type: STRING
+              - Name: product_product_name
+                Type: STRING
+              - Name: product_describes
+                Type: STRING
+              - Name: product_memory
+                Type: STRING
+              - Name: resource_tags_aws_created_by
+                Type: STRING
+              - Name: resource_tags_user_chargecode
+                Type: STRING
+              - Name: resource_tags_user_riskdomain
+                Type: STRING
+              - Name: product_capacitystatus
+                Type: STRING
+              - Name: product_video_memory_gib
+                Type: STRING
+              - Name: product_bundle_group
+                Type: STRING
+              - Name: reservation_net_amortized_upfront_cost_for_usage
+                Type: DECIMAL
+              - Name: product_free_days
+                Type: STRING
+              - Name: reservation_recurring_fee_for_usage
+                Type: DECIMAL
+              - Name: product_normalization_size_factor
+                Type: STRING
+              - Name: pricing_public_on_demand_rate
+                Type: STRING
+              - Name: line_item_resource_id
+                Type: STRING
+              - Name: product_origin
+                Type: STRING
+              - Name: pricing_lease_contract_length
+                Type: STRING
+              - Name: line_item_legal_entity
+                Type: STRING
+              - Name: product_directory_type
+                Type: STRING
+              - Name: product_deployment_option
+                Type: STRING
+              - Name: reservation_net_effective_cost
+                Type: DECIMAL
+              - Name: product_snowball_type
+                Type: STRING
+              - Name: product_resource_type
+                Type: STRING
+              - Name: product_automatic_label
+                Type: STRING
+              - Name: resource_tags_user_informationmgt
+                Type: STRING
+              - Name: resource_tags_user_applicationname
+                Type: STRING
+              - Name: product_category
+                Type: STRING
+              - Name: product_architectural_review
+                Type: STRING
+              - Name: product_disableactivationconfirmationemail
+                Type: STRING
+              - Name: product_edition
+                Type: STRING
+              - Name: product_port_speed
+                Type: STRING
+              - Name: product_data
+                Type: STRING
+              - Name: product_directory_size
+                Type: STRING
+              - Name: line_item_tax_type
+                Type: STRING
+              - Name: product_instance_name
+                Type: STRING
+              - Name: product_storage_class
+                Type: STRING
+              - Name: product_standard_storage_retention_included
+                Type: STRING
+              - Name: product_plan_type
+                Type: STRING
+              - Name: product_dominantnondominant
+                Type: STRING
+              - Name: product_datatransferout
+                Type: STRING
+              - Name: product_compute_type
+                Type: STRING
+              - Name: product_architecture_support
+                Type: STRING
+              - Name: resource_tags_user_aws_migration_project_id
+                Type: STRING
+              - Name: product_physical_cpu
+                Type: STRING
+              - Name: product_ops_items
+                Type: STRING
+              - Name: reservation_effective_cost
+                Type: DECIMAL
+              - Name: product_graphqloperation
+                Type: STRING
+              - Name: product_volume_api_name
+                Type: STRING
+              - Name: product_fee_description
+                Type: STRING
+              - Name: product_metering_type
+                Type: STRING
+              - Name: product_request_type
+                Type: STRING
+              - Name: product_database_engine
+                Type: STRING
+              - Name: reservation_net_recurring_fee_for_usage
+                Type: DECIMAL
+              - Name: savings_plan_savings_plan_a_r_n
+                Type: STRING
+              - Name: product_queue_type
+                Type: STRING
+              - Name: product_readtype
+                Type: STRING
+              - Name: product_cache_type
+                Type: STRING
+              - Name: product_software_included
+                Type: STRING
+              - Name: reservation_net_amortized_upfront_fee_for_billing_period
+                Type: DECIMAL
+              - Name: savings_plan_end_time
+                Type: STRING
+              - Name: product_request_description
+                Type: STRING
+              - Name: line_item_availability_zone
+                Type: STRING
+              - Name: bill_billing_entity
+                Type: STRING
+              - Name: product_feature
+                Type: STRING
+              - Name: product_technical_support
+                Type: STRING
+              - Name: resource_tags_user_backup
+                Type: STRING
+              - Name: product_programmatic_case_management
+                Type: STRING
+              - Name: month
+                Type: STRING
+              - Name: product_bundle_description
+                Type: STRING
+              - Name: product_cachememorysize
+                Type: STRING
+              - Name: line_item_usage_account_id
+                Type: STRING
+              - Name: product_io_request_type
+                Type: STRING
+              - Name: product_processor_features
+                Type: STRING
+              - Name: product_vcpu
+                Type: STRING
+              - Name: product_enhanced_networking_support
+                Type: STRING
+              - Name: product_component
+                Type: STRING
+              - Name: product_proactive_guidance
+                Type: STRING
+              - Name: savings_plan_purchase_term
+                Type: STRING
+              - Name: product_region
+                Type: STRING
+              - Name: product_finding_source
+                Type: STRING
+              - Name: line_item_usage_type
+                Type: STRING
+              - Name: product_direct_connect_location
+                Type: STRING
+              - Name: product_included_services
+                Type: STRING
+              - Name: product_intel_avx_available
+                Type: STRING
+              - Name: product_dedicated_ebs_throughput
+                Type: STRING
+              - Name: product_with_active_users
+                Type: STRING
+              - Name: product_standard_storage
+                Type: STRING
+              - Name: product_sku
+                Type: STRING
+              - Name: product_free_usage_included
+                Type: STRING
+              - Name: product_max_iopsvolume
+                Type: STRING
+              - Name: identity_line_item_id
+                Type: STRING
+              - Name: product_routing_target
+                Type: STRING
+              - Name: product_product_schema_description
+                Type: STRING
+              - Name: resource_tags_user_map_migrated_app
+                Type: STRING
+              - Name: line_item_line_item_type
+                Type: STRING
+              - Name: reservation_total_reserved_units
+                Type: STRING
+              - Name: product_group
+                Type: STRING
+              - Name: savings_plan_payment_option
+                Type: STRING
+              - Name: product_data_transfer
+                Type: STRING
+              - Name: resource_tags_user_department
+                Type: STRING
+              - Name: line_item_currency_code
+                Type: STRING
+              - Name: product_servicename
+                Type: STRING
+              - Name: pricing_term
+                Type: STRING
+              - Name: savings_plan_amortized_upfront_commitment_for_billing_period
+                Type: DECIMAL
+              - Name: savings_plan_savings_plan_effective_cost
+                Type: DECIMAL
+              - Name: reservation_end_time
+                Type: STRING
+              - Name: product_type
+                Type: STRING
+              - Name: product_client_location
+                Type: STRING
+              - Name: product_max_throughputvolume
+                Type: STRING
+              - Name: product_memory_gib
+                Type: STRING
+              - Name: product_to_location
+                Type: STRING
+              - Name: product_cloud_search_version
+                Type: STRING
+              - Name: product_purchase_option
+                Type: STRING
+              - Name: product_usage_family
+                Type: STRING
+              - Name: reservation_unused_quantity
+                Type: DECIMAL
+              - Name: product_labeling_task_type
+                Type: STRING
+              - Name: product_awsresource
+                Type: STRING
+              - Name: product_indexing_source
+                Type: STRING
+              - Name: savings_plan_start_time
+                Type: STRING
+              - Name: product_ratetype
+                Type: STRING
+              - Name: payer
+                Type: STRING
+              - Name: product_clock_speed
+                Type: STRING
+              - Name: pricing_public_on_demand_cost
+                Type: DECIMAL
+              - Name: reservation_normalized_units_per_reservation
+                Type: STRING
+              - Name: product_supported_modes
+                Type: STRING
+              - Name: product_who_can_open_cases
+                Type: STRING
+              - Name: line_item_net_unblended_rate
+                Type: STRING
+              - Name: product_broker_engine
+                Type: STRING
+              - Name: product_product_family
+                Type: STRING
+              - Name: product_tiertype
+                Type: STRING
+              - Name: product_access_type
+                Type: STRING
+              - Name: product_training
+                Type: STRING
+              - Name: product_availability_zone
+                Type: STRING
+              - Name: product_instance_function
+                Type: STRING
+              - Name: product_description
+                Type: STRING
+              - Name: product_file_system_type
+                Type: STRING
+              - Name: product_processor_architecture
+                Type: STRING
+              - Name: line_item_blended_rate
+                Type: STRING
+              - Name: product_rootvolume
+                Type: STRING
+              - Name: product_endpoint_type
+                Type: STRING
+              - Name: product_free_overage
+                Type: STRING
+              - Name: product_routing_type
+                Type: STRING
+              - Name: pricing_rate_id
+                Type: STRING
+              - Name: product_logs_source
+                Type: STRING
+              - Name: product_max_iops_burst_performance
+                Type: STRING
+              - Name: product_capacity
+                Type: STRING
+              - Name: product_transfer_type
+                Type: STRING
+              - Name: product_fee_code
+                Type: STRING
+              - Name: reservation_upfront_value
+                Type: DECIMAL
+              - Name: product_account_assistance
+                Type: STRING
+              - Name: resource_tags_user_environment
+                Type: STRING
+              - Name: product_gpu_memory
+                Type: STRING
+              - Name: line_item_operation
+                Type: STRING
+              - Name: line_item_unblended_cost
+                Type: DECIMAL
+              - Name: reservation_number_of_reservations
+                Type: STRING
+              - Name: product_purchaseterm
+                Type: STRING
+              - Name: savings_plan_savings_plan_rate
+                Type: DECIMAL
+              - Name: product_best_practices
+                Type: STRING
+              - Name: bill_payer_account_id
+                Type: STRING
+              - Name: product_memorytype
+                Type: STRING
+              - Name: product_logs_destination
+                Type: STRING
+              - Name: product_database_edition
+                Type: STRING
+              - Name: reservation_unused_amortized_upfront_fee_for_billing_period
+                Type: DECIMAL
+              - Name: product_pricing_unit
+                Type: STRING
+              - Name: product_network_performance
+                Type: STRING
+              - Name: product_servicecode
+                Type: STRING
+              - Name: product_group_description
+                Type: STRING
+              - Name: product_steps
+                Type: STRING
+              - Name: product_newcode
+                Type: STRING
+              - Name: reservation_modification_status
+                Type: STRING
+              - Name: reservation_total_reserved_normalized_units
+                Type: STRING
+              - Name: product_compute_family
+                Type: STRING
+              - Name: product_extra_day_fee
+                Type: STRING
+              - Name: product_message_delivery_frequency
+                Type: STRING
+              - Name: product_intel_turbo_available
+                Type: STRING
+              - Name: reservation_unused_normalized_unit_quantity
+                Type: DECIMAL
+              - Name: product_offer
+                Type: STRING
+              - Name: reservation_unused_recurring_fee
+                Type: DECIMAL
+              - Name: product_traffic_direction
+                Type: STRING
+              - Name: product_availability
+                Type: STRING
+              - Name: product_api_type
+                Type: STRING
+              - Name: product_georegioncode
+                Type: STRING
+              - Name: product_throughput_capacity
+                Type: STRING
+              - Name: product_ecu
+                Type: STRING
+              - Name: product_standard_source
+                Type: STRING
+              - Name: product_execution_location
+                Type: STRING
+              - Name: product_gets
+                Type: STRING
+              - Name: product_insightstype
+                Type: STRING
+              - Name: product_counts_against_quota
+                Type: STRING
+              - Name: product_intel_avx2_available
+                Type: STRING
+              - Name: product_connection_type
+                Type: STRING
+              - Name: reservation_units_per_reservation
+                Type: STRING
+              - Name: savings_plan_offering_type
+                Type: STRING
+              - Name: pricing_purchase_option
+                Type: STRING
+              - Name: reservation_amortized_upfront_cost_for_usage
+                Type: DECIMAL
+              - Name: product_jobnshipp
+                Type: STRING
+              - Name: line_item_usage_amount
+                Type: DECIMAL
+              - Name: product_instance_type
+                Type: STRING
+              - Name: product_standard_group
+                Type: STRING
+              - Name: product_event_type
+                Type: STRING
+              - Name: product_job_fee
+                Type: STRING
+              - Name: line_item_usage_end_date
+                Type: DATETIME
+              - Name: product_pre_installed_sw
+                Type: STRING
+              - Name: product_alarm_type
+                Type: STRING
+              - Name: product_location
+                Type: STRING
+              - Name: product_current_generation
+                Type: STRING
+              - Name: savings_plan_total_commitment_to_date
+                Type: DECIMAL
+              - Name: bill_bill_type
+                Type: STRING
+              - Name: product_output_mode
+                Type: STRING
+              - Name: product_data_type
+                Type: STRING
+              - Name: resource_tags_user_managedby
+                Type: STRING
+              - Name: bill_billing_period_start_date
+                Type: DATETIME
+              - Name: product_operation
+                Type: STRING
+              - Name: product_max_volume_size
+                Type: STRING
+              - Name: reservation_net_unused_amortized_upfront_fee_for_billing_period
+                Type: DECIMAL
+              - Name: product_running_mode
+                Type: STRING
+              - Name: product_launch_support
+                Type: STRING
+              - Name: product_customer_service_and_communities
+                Type: STRING
+              - Name: line_item_normalized_usage_amount
+                Type: DECIMAL
+              - Name: product_license
+                Type: STRING
+              - Name: product_attachment_type
+                Type: STRING
+              - Name: savings_plan_recurring_commitment_for_billing_period
+                Type: DECIMAL
+              - Name: resource_tags_user_map_migrated
+                Type: STRING
+              - Name: line_item_usage_start_date
+                Type: DATETIME
+              - Name: product_physical_gpu
+                Type: STRING
+              - Name: product_instance
+                Type: STRING
+              - Name: product_instance_family
+                Type: STRING
+              - Name: product_engine_code
+                Type: STRING
+              - Name: bill_invoice_id
+                Type: STRING
+              - Name: product_storage_type
+                Type: STRING
+              - Name: product_data_transfer_quota
+                Type: STRING
+              - Name: product_parameter_type
+                Type: STRING
+              - Name: pricing_restriction
+                Type: STRING
+              - Name: product_recipient
+                Type: STRING
+              - Name: product_storage_family
+                Type: STRING
+              - Name: product_storage_media
+                Type: STRING
+              - Name: product_device_description
+                Type: STRING
+              - Name: identity_time_interval
+                Type: STRING
+              - Name: product_cache_engine
+                Type: STRING
+              - Name: product_framework_type
+                Type: STRING
+              - Name: product_group_details
+                Type: STRING
+              - Name: product_provisioned
+                Type: STRING
+              - Name: product_volume_type
+                Type: STRING
+              - Name: pricing_offering_class
+                Type: STRING
+              - Name: product_license_model
+                Type: STRING
+              - Name: product_instance_type_family
+                Type: STRING
+              - Name: line_item_product_code
+                Type: STRING
+              - Name: resource_tags_user_division
+                Type: STRING
+              - Name: product_location_type
+                Type: STRING
+              - Name: product_resource_endpoint
+                Type: STRING
+              - Name: product_usagetype
+                Type: STRING
+              - Name: product_subscription_type
+                Type: STRING
+              - Name: reservation_net_upfront_value
+                Type: DECIMAL
+              - Name: product_operations_support
+                Type: STRING
+              - Name: product_activity_type
+                Type: STRING
+              - Name: line_item_unblended_rate
+                Type: STRING
+              - Name: product_frequency_mode
+                Type: STRING
+              - Name: product_bundle
+                Type: STRING
+              - Name: product_virtual_interface_type
+                Type: STRING
+              - Name: product_protocol
+                Type: STRING
+              - Name: product_message_delivery_order
+                Type: STRING
+              - Name: reservation_subscription_id
+                Type: STRING
+              - Name: reservation_net_unused_recurring_fee
+                Type: DECIMAL
+              - Name: product_storagetype
+                Type: STRING
+              - Name: product_cputype
+                Type: STRING
+              - Name: product_durability
+                Type: STRING
+              - Name: product_software_type
+                Type: STRING
+              - Name: reservation_reservation_a_r_n
+                Type: STRING
+              - Name: product_execution_frequency
+                Type: STRING
+              - Name: product_uservolume
+                Type: STRING
+              - Name: product_from_location_type
+                Type: STRING
+              - Name: product_to_location_type
+                Type: STRING
+              - Name: product_version
+                Type: STRING
+              - Name: pricing_currency
+                Type: STRING
+              - Name: product_machine_learning_process
+                Type: STRING
+              - Name: product_minimum_storage_volume
+                Type: STRING
+              - Name: savings_plan_region
+                Type: STRING
+              - Name: product_tenancy
+                Type: STRING
+              - Name: product_finding_group
+                Type: STRING
+              - Name: resource_tags_user_team
+                Type: STRING
+              - Name: product_min_volume_size
+                Type: STRING
+              - Name: product_workforce_type
+                Type: STRING
+              - Name: product_realtimeoperation
+                Type: STRING
+              - Name: resource_tags_user_dataclassification
+                Type: STRING
+              - Name: resource_tags_user_techowner
+                Type: STRING
+              - Name: product_throughput
+                Type: STRING
+              - Name: product_free_query_types
+                Type: STRING
+              - Name: product_tenancy_support
+                Type: STRING
+              - Name: pricing_unit
+                Type: STRING
+            Name: !Ref CURTableName
+            Schema: !Ref CURDatabaseName
+            Catalog: AwsDataCatalog
+        e88c6aef-56d2-43e6-a858-3e7ae0ea9211:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: account_id
+                Type: STRING
+              - Name: account_name
+                Type: STRING
+            Name: account_map
+            Schema: !Ref CURDatabaseName
+            Catalog: AwsDataCatalog
+      Permissions:
+        - Actions:
+            - quicksight:UpdateDataSetPermissions
+            - quicksight:DescribeDataSet
+            - quicksight:DescribeDataSetPermissions
+            - quicksight:PassDataSet
+            - quicksight:DescribeIngestion
+            - quicksight:ListIngestions
+            - quicksight:UpdateDataSet
+            - quicksight:DeleteDataSet
+            - quicksight:CreateIngestion
+            - quicksight:CancelIngestion
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+  ComputeSavinsPlanEligibleSpendDataset: #compute savings plan eligible spend dataset and associated permissions
+    Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
+    Properties:
+      DataSetId: !Join [ '' , [ 'ComputeSavinsPlanEligibleSpend' ,  !Ref Suffix ] ]
+      AwsAccountId: !Ref AWS::AccountId
+      Name: !Join [ '' , [ 'compute_savings_plan_eligible_spend' ,  !Ref Suffix ] ] 
+      ImportMode: SPICE
+      LogicalTableMap:
+        6fad7bcd-2e08-4891-ba11-1d171b1b5a0d:
+          Alias: account_map
+          Source:
+            PhysicalTableId: fbbeea98-82d2-4fbe-be8d-da609c5dfd85
+        e60de416-6b63-4d41-ad61-a4d580113768:
+          Alias: compute_savings_plan_eligible_spend
+          Source:
+            PhysicalTableId: ccfb48ab-c46c-4945-9578-a19393594a8c
+        f0128bee-0dd8-4c7f-b789-b743b8ded841:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - year
+              - month
+              - payer_account_id
+              - linked_account_id
+              - billing_period
+              - usage_date
+              - unblended_cost
+              - account_id
+              - account_name
+          Source:
+            JoinInstruction:
+              LeftOperand: e60de416-6b63-4d41-ad61-a4d580113768
+              OnClause: '{linked_account_id} = {account_id}'
+              RightOperand: 6fad7bcd-2e08-4891-ba11-1d171b1b5a0d
+              Type: LEFT
+      PhysicalTableMap:
+          ccfb48ab-c46c-4945-9578-a19393594a8c:
+            RelationalTable:
+              DataSourceArn: !GetAtt QSCURDataSource.Arn
+              InputColumns:
+                - Name: billing_period
+                  Type: DATETIME
+                - Name: month
+                  Type: STRING
+                - Name: year
+                  Type: STRING
+                - Name: payer_account_id
+                  Type: STRING
+                - Name: unblended_cost
+                  Type: DECIMAL
+                - Name: linked_account_id
+                  Type: STRING
+                - Name: usage_date
+                  Type: DATETIME
+              Name: compute_savings_plan_eligible_spend
+              Schema: !Ref CURDatabaseName
+          fbbeea98-82d2-4fbe-be8d-da609c5dfd85:
+            RelationalTable:
+              DataSourceArn: !GetAtt QSCURDataSource.Arn
+              InputColumns:
+                - Name: account_id
+                  Type: STRING
+                - Name: account_name
+                  Type: STRING
+              Name: account_map
+              Schema: !Ref CURDatabaseName
+      Permissions:
+        - Actions:
+            - quicksight:UpdateDataSetPermissions
+            - quicksight:DescribeDataSet
+            - quicksight:DescribeDataSetPermissions
+            - quicksight:PassDataSet
+            - quicksight:DescribeIngestion
+            - quicksight:ListIngestions
+            - quicksight:UpdateDataSet
+            - quicksight:DeleteDataSet
+            - quicksight:CreateIngestion
+            - quicksight:CancelIngestion
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+  S3ViewDataset: # s3 view dataset and associated permissions
+    Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
+    Properties:
+      DataSetId: !Join [ '' , [ 'S3View' ,  !Ref Suffix ] ]
+      AwsAccountId: !Ref AWS::AccountId
+      Name: !Join [ '' , [ 's3_view' ,  !Ref Suffix ] ] 
+      ImportMode: SPICE
+      LogicalTableMap:
+        2fe94612-14c3-42e5-ac52-1c8d4bfdfdea:
+          Alias: s3_view
+          Source:
+            PhysicalTableId: 8ecd5e14-7c3e-409b-96f4-9ae646d638bd
+        7774caae-d855-4896-93cd-ce56e918f083:
+          Alias: accounts_map
+          Source:
+            PhysicalTableId: a90347a6-1123-41a3-a6f0-4ff55504400e
+        d3bc7803-e19b-4eca-a718-9941d0a3ef2f:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+                - year
+                - month
+                - billing_period
+                - usage_date
+                - payer_account_id
+                - linked_account_id
+                - resource_id
+                - product_code
+                - operation
+                - region
+                - charge_type
+                - pricing_unit
+                - usage_quantity
+                - unblended_cost
+                - public_cost
+                - account_id
+                - account_name
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          Source:
+            JoinInstruction:
+              LeftOperand: 2fe94612-14c3-42e5-ac52-1c8d4bfdfdea
+              OnClause: '{linked_account_id} = {account_id}'
+              RightOperand: 7774caae-d855-4896-93cd-ce56e918f083
+              Type: LEFT
+      PhysicalTableMap:
+        8ecd5e14-7c3e-409b-96f4-9ae646d638bd:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: billing_period
+                Type: DATETIME
+              - Name: charge_type
+                Type: STRING
+              - Name: year
+                Type: STRING
+              - Name: payer_account_id
+                Type: STRING
+              - Name: usage_date
+                Type: DATETIME
+              - Name: product_code
+                Type: STRING
+              - Name: month
+                Type: STRING
+              - Name: public_cost
+                Type: DECIMAL
+              - Name: unblended_cost
+                Type: DECIMAL
+              - Name: linked_account_id
+                Type: STRING
+              - Name: resource_id
+                Type: STRING
+              - Name: usage_quantity
+                Type: DECIMAL
+              - Name: region
+                Type: STRING
+              - Name: operation
+                Type: STRING
+              - Name: pricing_unit
+                Type: STRING
+            Name: s3_view
+            Schema: !Ref CURDatabaseName
+            Catalog: AwsDataCatalog
+        a90347a6-1123-41a3-a6f0-4ff55504400e:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: account_id
+                Type: STRING
+              - Name: account_name
+                Type: STRING
+            Name: account_map
+            Schema: !Ref CURDatabaseName
+            Catalog: AwsDataCatalog
+      Permissions:
+        - Actions:
+            - quicksight:UpdateDataSetPermissions
+            - quicksight:DescribeDataSet
+            - quicksight:DescribeDataSetPermissions
+            - quicksight:PassDataSet
+            - quicksight:DescribeIngestion
+            - quicksight:ListIngestions
+            - quicksight:UpdateDataSet
+            - quicksight:DeleteDataSet
+            - quicksight:CreateIngestion
+            - quicksight:CancelIngestion
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+  EC2RunningCostDataset: #EC2 running cost dataset and associated permissions
+    Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
+    Properties:
+      DataSetId: !Join [ '' , [ 'EC2RunningCost' ,  !Ref Suffix ] ]
+      AwsAccountId: !Ref AWS::AccountId
+      Name: !Join [ '' , [ 'ec2_running_cost' ,  !Ref Suffix ] ] 
+      ImportMode: SPICE
+      LogicalTableMap:
+        4e8bbd2f-80d9-4121-8b62-afa565c477fc:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 02826237-9ffc-492e-ae8d-3dc2bd1eff29
+        640622fd-c998-424e-9f03-00861c72aa26:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - year
+              - month
+              - billing_period
+              - usage_date
+              - payer_account_id
+              - linked_account_id
+              - purchase_option
+              - amortized_cost
+              - usage_quantity
+              - account_id
+              - account_name
+          Source:
+            JoinInstruction:
+              LeftOperand: cb133c2d-f1b1-460d-9813-99b99f743eaa
+              OnClause: '{linked_account_id} = {account_id}'
+              RightOperand: 4e8bbd2f-80d9-4121-8b62-afa565c477fc
+              Type: LEFT
+        cb133c2d-f1b1-460d-9813-99b99f743eaa:
+          Alias: ec2_running_cost
+          Source:
+            PhysicalTableId: ecb79e5e-1428-4f43-80bc-e547a93da21a
+      PhysicalTableMap:
+        02826237-9ffc-492e-ae8d-3dc2bd1eff29:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: account_id
+                Type: STRING
+              - Name: account_name
+                Type: STRING
+            Name: account_map
+            Schema: !Ref CURDatabaseName
+        ecb79e5e-1428-4f43-80bc-e547a93da21a:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: billing_period
+                Type: DATETIME
+              - Name: purchase_option
+                Type: STRING
+              - Name: month
+                Type: STRING
+              - Name: year
+                Type: STRING
+              - Name: payer_account_id
+                Type: STRING
+              - Name: linked_account_id
+                Type: STRING
+              - Name: usage_date
+                Type: DATETIME
+              - Name: amortized_cost
+                Type: DECIMAL
+              - Name: usage_quantity
+                Type: DECIMAL
+            Name: ec2_running_cost
+            Schema: !Ref CURDatabaseName
+      Permissions:
+        - Actions:
+            - quicksight:UpdateDataSetPermissions
+            - quicksight:DescribeDataSet
+            - quicksight:DescribeDataSetPermissions
+            - quicksight:PassDataSet
+            - quicksight:DescribeIngestion
+            - quicksight:ListIngestions
+            - quicksight:UpdateDataSet
+            - quicksight:DeleteDataSet
+            - quicksight:CreateIngestion
+            - quicksight:CancelIngestion
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+  SummaryViewDataset: #Summary view dataset and associated permissions
+    Type: AWS::QuickSight::DataSet
+    DependsOn:
+      - QSCURBuildViewsLambdaExecutor
+    Properties:
+      DataSetId: !Join [ '' , [ 'SummaryView' ,  !Ref Suffix ] ]
+      AwsAccountId: !Ref AWS::AccountId
+      Name: !Join [ '' , [ 'summary_view' ,  !Ref Suffix ] ] 
+      ImportMode: SPICE
+      LogicalTableMap:
+        2af1581c-abc8-4f82-9f4f-4cebb089cefa:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 743ef98d-d1be-4e0a-9d5b-302619c92361
+        637cc109-06d6-4cd2-bc17-1e1adbb0c2bf:
+          Alias: Intermediate Table 2
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+                - year
+                - month
+                - billing_period
+                - usage_date
+                - payer_account_id
+                - linked_account_id
+                - invoice_id
+                - charge_type
+                - charge_category
+                - purchase_option
+                - ri_sp_arn
+                - product_code
+                - product_name
+                - service
+                - product_family
+                - usage_type
+                - operation
+                - item_description
+                - availability_zone
+                - region
+                - instance_type
+                - instance_type_family
+                - platform
+                - tenancy
+                - processor
+                - processor_features
+                - database_engine
+                - product_group
+                - product_from_location
+                - product_to_location
+                - current_generation
+                - legal_entity
+                - billing_entity
+                - pricing_unit
+                - resource_id_count
+                - usage_quantity
+                - unblended_cost
+                - amortized_cost
+                - ri_sp_trueup
+                - ri_sp_upfront_fees
+                - public_cost
+                - billing_period_mapping
+                - payer_account_id_mapping
+                - ri_sp_arn_mapping
+                - ri_sp_end_date
+                - ri_sp_term
+                - ri_sp_offering
+                - ri_sp_payment
+                - account_id
+                - account_name
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          Source:
+            JoinInstruction:
+              LeftOperand: 7d2bff67-7548-42dc-a208-ed708c659848
+              OnClause: '{linked_account_id} = {account_id}'
+              RightOperand: 2af1581c-abc8-4f82-9f4f-4cebb089cefa
+              Type: LEFT
+        7d2bff67-7548-42dc-a208-ed708c659848:
+          Alias: Intermediate Table
+          Source:
+            JoinInstruction:
+              LeftOperand: 8e1f2eec-bbcc-43aa-9f3a-22ab03811c7c
+              OnClause: '{ri_sp_arn} = {ri_sp_arn_mapping} AND {payer_account_id} = {payer_account_id_mapping} AND {billing_period} = {billing_period_mapping}'
+              RightOperand: 9da61e8f-0610-4d2e-9f92-7e59799f0b53
+              Type: LEFT
+        8e1f2eec-bbcc-43aa-9f3a-22ab03811c7c:
+          Alias: summary_view
+          Source:
+            PhysicalTableId: b8a2c186-48b4-44a7-b0fd-d94bc161ebc7
+        9da61e8f-0610-4d2e-9f92-7e59799f0b53:
+          Alias: ri_sp_mapping
+          Source:
+            PhysicalTableId: 8d5f8ef0-3f67-43ed-b332-a9fd0d40269c
+      PhysicalTableMap:
+        743ef98d-d1be-4e0a-9d5b-302619c92361:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: account_id
+                Type: STRING
+              - Name: account_name
+                Type: STRING
+            Name: account_map
+            Schema: !Ref CURDatabaseName
+            Catalog: AwsDataCatalog
+        8d5f8ef0-3f67-43ed-b332-a9fd0d40269c:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: ri_sp_offering
+                Type: STRING
+              - Name: payer_account_id_mapping
+                Type: STRING
+              - Name: ri_sp_payment
+                Type: STRING
+              - Name: billing_period_mapping
+                Type: DATETIME
+              - Name: ri_sp_arn_mapping
+                Type: STRING
+              - Name: ri_sp_term
+                Type: STRING
+              - Name: ri_sp_end_date
+                Type: DATETIME
+            Name: ri_sp_mapping
+            Schema: !Ref CURDatabaseName
+            Catalog: AwsDataCatalog
+        b8a2c186-48b4-44a7-b0fd-d94bc161ebc7:
+          RelationalTable:
+            DataSourceArn: !GetAtt QSCURDataSource.Arn
+            InputColumns:
+              - Name: billing_period
+                Type: DATETIME
+              - Name: purchase_option
+                Type: STRING
+              - Name: product_to_location
+                Type: STRING
+              - Name: charge_type
+                Type: STRING
+              - Name: current_generation
+                Type: STRING
+              - Name: year
+                Type: STRING
+              - Name: payer_account_id
+                Type: STRING
+              - Name: product_from_location
+                Type: STRING
+              - Name: usage_date
+                Type: DATETIME
+              - Name: ri_sp_trueup
+                Type: DECIMAL
+              - Name: amortized_cost
+                Type: DECIMAL
+              - Name: product_code
+                Type: STRING
+              - Name: platform
+                Type: STRING
+              - Name: usage_type
+                Type: STRING
+              - Name: linked_account_id
+                Type: STRING
+              - Name: invoice_id
+                Type: STRING
+              - Name: ri_sp_arn
+                Type: STRING
+              - Name: legal_entity
+                Type: STRING
+              - Name: product_group
+                Type: STRING
+              - Name: ri_sp_upfront_fees
+                Type: DECIMAL
+              - Name: processor_features
+                Type: STRING
+              - Name: product_family
+                Type: STRING
+              - Name: availability_zone
+                Type: STRING
+              - Name: billing_entity
+                Type: STRING
+              - Name: tenancy
+                Type: STRING
+              - Name: database_engine
+                Type: STRING
+              - Name: product_name
+                Type: STRING
+              - Name: processor
+                Type: STRING
+              - Name: instance_type_family
+                Type: STRING
+              - Name: charge_category
+                Type: STRING
+              - Name: month
+                Type: STRING
+              - Name: resource_id_count
+                Type: INTEGER
+              - Name: public_cost
+                Type: DECIMAL
+              - Name: unblended_cost
+                Type: DECIMAL
+              - Name: service
+                Type: STRING
+              - Name: usage_quantity
+                Type: DECIMAL
+              - Name: item_description
+                Type: STRING
+              - Name: region
+                Type: STRING
+              - Name: operation
+                Type: STRING
+              - Name: instance_type
+                Type: STRING
+              - Name: pricing_unit
+                Type: STRING
+            Name: summary_view
+            Schema: !Ref CURDatabaseName
+            Catalog: AwsDataCatalog
+      Permissions:
+        - Actions:
+            - quicksight:UpdateDataSetPermissions
+            - quicksight:DescribeDataSet
+            - quicksight:DescribeDataSetPermissions
+            - quicksight:PassDataSet
+            - quicksight:DescribeIngestion
+            - quicksight:ListIngestions
+            - quicksight:UpdateDataSet
+            - quicksight:DeleteDataSet
+            - quicksight:CreateIngestion
+            - quicksight:CancelIngestion
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+  CUDOSDashboard: # cudos dashboard from template and associated permissions
+    Type: AWS::QuickSight::Dashboard
+    Properties:
+      AwsAccountId: !Ref AWS::AccountId
+      DashboardId: !Join [ '' , [ 'cudos' ,  !Ref Suffix ] ] 
+      Name: !Join [ '' , [ 'CUDOS' ,  !Ref Suffix ] ] 
+      DashboardPublishOptions:
+        AdHocFilteringOption:
+          AvailabilityStatus: DISABLED
+      SourceEntity:
+        SourceTemplate:
+          DataSetReferences:
+            - DataSetArn: !GetAtt SummaryViewDataset.Arn
+              DataSetPlaceholder: summary_view
+            - DataSetArn: !GetAtt EC2RunningCostDataset.Arn
+              DataSetPlaceholder: ec2_running_cost
+            - DataSetArn: !GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn
+              DataSetPlaceholder: compute_savings_plan_eligible_spend
+            - DataSetArn: !GetAtt S3ViewDataset.Arn
+              DataSetPlaceholder: s3_view
+            - DataSetArn: !GetAtt CudosCurDataset.Arn
+              DataSetPlaceholder: customer_all
+          Arn: arn:aws:quicksight:us-east-1:223485597511:template/cudos_dashboard_v3
+      Permissions:
+        - Actions:
+            - quicksight:DescribeDashboard
+            - quicksight:ListDashboardVersions
+            - quicksight:UpdateDashboardPermissions
+            - quicksight:QueryDashboard
+            - quicksight:UpdateDashboard
+            - quicksight:DeleteDashboard
+            - quicksight:DescribeDashboardPermissions
+            - quicksight:UpdateDashboardPublishedVersion
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+      VersionDescription: "1"
+
+  CIDDashboard: #CID dashboard from template and associated permissions
+    Type: AWS::QuickSight::Dashboard
+    Properties:
+      AwsAccountId: !Ref AWS::AccountId
+      DashboardId: !Join [ '' , [ 'cost_intelligence_dashboard' ,  !Ref Suffix ] ] 
+      Name: !Join [ '' , [ 'Cost Intelligence Dashboard' ,  !Ref Suffix ] ] 
+      DashboardPublishOptions:
+        AdHocFilteringOption:
+          AvailabilityStatus: DISABLED
+      SourceEntity:
+        SourceTemplate:
+          DataSetReferences:
+            - DataSetArn: !GetAtt SummaryViewDataset.Arn
+              DataSetPlaceholder: summary_view
+            - DataSetArn: !GetAtt EC2RunningCostDataset.Arn
+              DataSetPlaceholder: ec2_running_cost
+            - DataSetArn: !GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn
+              DataSetPlaceholder: compute_savings_plan_eligible_spend
+            - DataSetArn: !GetAtt S3ViewDataset.Arn
+              DataSetPlaceholder: s3_view
+          Arn: arn:aws:quicksight:us-east-1:869004330191:template/cost-intelligence-dashboard
+      Permissions:
+        - Actions:
+            - quicksight:DescribeDashboard
+            - quicksight:ListDashboardVersions
+            - quicksight:UpdateDashboardPermissions
+            - quicksight:QueryDashboard
+            - quicksight:UpdateDashboard
+            - quicksight:DeleteDashboard
+            - quicksight:DescribeDashboardPermissions
+            - quicksight:UpdateDashboardPublishedVersion
+          Principal: !Sub
+            - 'arn:aws:quicksight:${Region}:${AWS::AccountId}:user/default/${Username}'
+            - Username: !Ref QuickSightUser
+              Region: !Ref QuicksightIdentityRegion
+
+      VersionDescription: "1"
+
+  SpiceRefreshExecutionRole: #role needed to schedule spice ingestion for the datasets
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Join
+        - ''
+        - - SpiceRefreshExecutionRole
+          - !Ref Suffix
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Join
+          - ''
+          - - SpiceRefreshExecutionPolicy
+            - !Ref Suffix
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - quicksight:CreateIngestion
+                Resource:
+                  - Fn::Join: [ "/", [!GetAtt SummaryViewDataset.Arn , "ingestion", "*" ] ]
+                  - Fn::Join: [ "/", [!GetAtt EC2RunningCostDataset.Arn , "ingestion" , "*" ] ]
+                  - Fn::Join: [ "/", [!GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn , "ingestion" , "*" ] ]
+                  - Fn::Join: [ "/", [!GetAtt S3ViewDataset.Arn, "ingestion" , "*" ] ]
+              - Effect: Allow
+                Action:
+                  - quicksight:ListDatasets
+                Resource:
+                  - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*
+
+  SpiceRefreshLambdaCreator: #Function for dataset refresh
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.7
+      FunctionName: !Join
+        - ''
+        - - QSCUDOSRefreshDatasets
+          - !Ref Suffix
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SpiceRefreshExecutionRole.Arn
+      Timeout: 60
+      Environment:
+        Variables:
+          suffix: !Ref Suffix
+      Code:
+        ZipFile: |
+          import boto3
+          from datetime import datetime
+          import os
+          
+          DATASETS_TO_REFRESH = [
+              "ec2_running_cost" + os.environ['suffix'],
+              "s3_view" + os.environ['suffix'] , 
+              "summary_view" + os.environ['suffix'],
+              "compute_savings_plan_eligible_spend" + os.environ['suffix'],
+          ]
+
+          def get_account_id():
+              sts = boto3.client('sts')
+              account_id = sts.get_caller_identity()['Account']
+              print('account_id = ', account_id)
+              return account_id
+          
+          def refresh_datasets(account_id):
+              quicksight = boto3.client('quicksight')
+              datasets = quicksight.list_data_sets(AwsAccountId=account_id)
+              for dataset in datasets['DataSetSummaries']:
+                  name = dataset['Name']
+                  if dataset['ImportMode'] == 'SPICE' and name in DATASETS_TO_REFRESH:               
+                      ingestion_id = datetime.now().strftime("%d%m%y-%H%M%S-%f")
+                      print("Refreshing dataset {0}".format(name))
+                      res = quicksight.create_ingestion(
+                          AwsAccountId=account_id,
+                          DataSetId=dataset['DataSetId'],
+                          IngestionId=ingestion_id
+                        )
+                      print(res)
+
+          def lambda_handler(event, context):
+              account_id = get_account_id()
+              refresh_datasets(account_id)
+
+
+  SpiceRefreshRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: !Ref QuickSightDataSetRefreshSchedule
+      Targets:
+        - Id: SpiceRefreshScheduler
+          Arn: !GetAtt SpiceRefreshLambdaCreator.Arn
+
+
+  InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt SpiceRefreshLambdaCreator.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SpiceRefreshRule.Arn
+
+
