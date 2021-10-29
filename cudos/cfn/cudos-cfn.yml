@@ -358,13 +358,13 @@ Resources:
             - Username: !Ref QuickSightUser
               Region: !Ref QuicksightIdentityRegion
 
-  CudosCurDataset: # this is the "customer_all" dataset but names it based on the customer's CUR table name. 
-                   #It allso provides associated permissions for the quicksight user defined in parameter section to this dataset
+  CudosCurDataset: # this is the "customer_all" dataset. 
+                   #It also provides associated permissions for the quicksight user defined in parameter section to this dataset
     Type: AWS::QuickSight::DataSet
     DependsOn:
       - QSCURBuildViewsLambdaExecutor
     Properties:
-      DataSetId: !Join [ '' , [ !Ref CURTableName ,  !Ref Suffix ] ]
+      DataSetId: !Join [ '' , [ customer_all ,  !Ref Suffix ] ]
       AwsAccountId: !Ref AWS::AccountId
       ImportMode: DIRECT_QUERY
       Name: !Join [ '' , [ customer_all ,  !Ref Suffix ] ]
