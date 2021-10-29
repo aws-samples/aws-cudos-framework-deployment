@@ -1,5 +1,13 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.60.5
+
+* Databases: Fixed daily filters to last 90 days and updated visual names. 
+
+## CUDOS - 4.60.4
+
+* About: Updated the About tab. 
+
 ## CUDOS - 4.60.3
 
 * DataTransfer: Added classification "Other" for all unclassified datatransfer. 
