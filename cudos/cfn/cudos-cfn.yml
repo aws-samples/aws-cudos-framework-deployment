@@ -367,7 +367,7 @@ Resources:
       DataSetId: !Join [ '' , [ !Ref CURTableName ,  !Ref Suffix ] ]
       AwsAccountId: !Ref AWS::AccountId
       ImportMode: DIRECT_QUERY
-      Name: !Join [ '' , [ !Ref CURTableName ,  !Ref Suffix ] ]
+      Name: !Join [ '' , [ customer_all ,  !Ref Suffix ] ]
       LogicalTableMap:
         018196f9-eb08-4428-a1ba-0a34d36bd8ce:
           Alias: Intermediate Table
