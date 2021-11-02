@@ -7,7 +7,7 @@ export AWS_PAGER=
 
 # Expose required variables
 declare workpath="work/${account}"
-export sourceAccountId="${CUDOS_SOURCE_ACCOUNT_ID:-231641308695}"
+export sourceAccountId="${CUDOS_SOURCE_ACCOUNT_ID:-223485597511}"
 declare myName="${0}"
 
 # Default values
