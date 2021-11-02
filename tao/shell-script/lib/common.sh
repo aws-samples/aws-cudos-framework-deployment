@@ -35,7 +35,6 @@ function config() {
     echo "----"
     cat work/${account}/config
     echo "----"
-    return 0
   fi
   if [ -z "${s3FolderPath}" ]; then
     get_s3FolderPath
@@ -56,6 +55,7 @@ function config() {
   echo "export region=${region}
 export databaseName=${databaseName}
 export s3FolderPath=${s3FolderPath}
+export aws_identity_region=${aws_identity_region}
 export user_arn=$user_arn
 export AWS_DEFAULT_REGION=${region}" > work/${account}/config
   echo "
@@ -123,9 +123,13 @@ function get_aws_account() {
 }
 
 function get_s3FolderPath() {
-    echo -n "Enter S3 bucket name with TA organizational view reports:"
+    echo -n "Enter S3 bucket name or URI path to TA reports:"
     read bucket_name
-    export s3FolderPath="s3://${bucket_name}/reports/"
+    if [[ "${bucket_name}" == "s3://"* ]]; then
+      export s3FolderPath="${bucket_name}"
+    else
+      export s3FolderPath="s3://${bucket_name}/reports/"
+    fi
 }
 
 function get_region() {
@@ -162,7 +166,8 @@ function print_help(){
         delete - deletes Athena table and QuickSight datasource, dataset and dashboard
         update - updates QuickSight dashboard to latest available version
         status - display status of dashboard creation
-        refresh-data - refreshes dataset in QuickSight SPICE"
+        refresh-data - refreshes dataset in QuickSight SPICE
+        change-source-location - changes path to s3 bucket with Trusted Advisor reports"
         
   exit 1
 }
@@ -239,6 +244,38 @@ function status() {
 
 function refresh-data() {
   aws quicksight create-ingestion --ingestion-id `date +%Y_%m_%H_%M` --aws-account-id ${account} --data-set-id ${dataSetId}
+  echo "Refresh of dataset ${dataSetId} initiated"
+}
+
+function change-source-location() { 
+  if [ -e work/${account}/config ]; then
+    source "work/${account}/config"
+    echo "
+    Config file detected work/${account}/config"
+  else
+    echo "ERROR: No config detected. Please run ${myName} --action=prepare"
+    return 1
+  fi
+  echo -n "Enter S3 URI path to new location of TA reports:"
+  read bucket_name
+  export s3FolderPath="${bucket_name}"
+  echo "export region=${region}
+export databaseName=${databaseName}
+export s3FolderPath=${s3FolderPath}
+export aws_identity_region=${aws_identity_region}
+export user_arn=$user_arn
+export AWS_DEFAULT_REGION=${region}" > work/${account}/config
+  echo "
+  config file stored in \"work/${account}/config\"
+  "
+  { echo "cat <<EOF"
+    cat "templates/athena-table.json"
+    echo "EOF"
+  } | sh > "${cli_input_json_dir}/athena-table.json"
+  echo "New S3 URI path added to ${cli_input_json_dir}/athena-table.json"
+  aws glue update-table --cli-input-json file://${cli_input_json_dir}/athena-table.json
+  echo "Athena table pointed to new S3 URI path"
+  refresh-data
 }
 function update() {
   echo "Checking for updates..."
