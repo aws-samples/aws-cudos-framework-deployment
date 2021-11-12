@@ -1,6 +1,6 @@
 # What's new in CUDOS Dashboard
 
-## CUDOS - 4.61
+## CUDOS - 4.61.1
 
 * DynamoDB: Renamed Visual "DynamoDB PayPerRequestThroughput Usage and Cost Last 3 Months" to "DynamoDB PayPerRequestThroughput(OnDemand) Usage and Cost Last 90 Days" and reapplied filters
  
