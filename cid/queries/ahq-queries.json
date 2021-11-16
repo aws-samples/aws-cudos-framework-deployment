@@ -1,0 +1,12 @@
+{
+	"query_templates": {
+		"hasReservations": {
+			"__description__": "Check if the customer has Reserved Instances",
+			"File": "ri_present.sql"
+		},
+		"hasSavingsPlans": {
+			"__description__": "Check if the customer has Savings Plans",
+			"File": "sp_present.sql"
+		}
+	}
+}

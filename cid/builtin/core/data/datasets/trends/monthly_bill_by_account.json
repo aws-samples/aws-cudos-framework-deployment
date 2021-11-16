@@ -1,0 +1,149 @@
+{
+    "DataSetId": "60e746ae-5781-4352-9752-dc9c633e21e4",
+    "Name": "monthly-bill-by-account",
+    "PhysicalTableMap": {
+        "47da7096-571a-48a5-94f4-ba03339c9193": {
+            "RelationalTable": {
+                "DataSourceArn": "${athena_datasource_arn}",
+                "Schema": "${athena_database_name}",
+                "Name": "monthly_bill_by_account",
+                "InputColumns": [
+                    {
+                        "Name": "bill_billing_period_start_date",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "bill_payer_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "line_item_usage_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "charge_type",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "product_product_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "product_region",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "line_item_product_code",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "unblended_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "amortized_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "account_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "payer_account_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "region_latitude",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "region_longitude",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "aws_service_category",
+                        "Type": "STRING"
+                    }
+                ]
+            }
+        }
+    },
+    "LogicalTableMap": {
+        "47da7096-571a-48a5-94f4-ba03339c9193": {
+            "Alias": "monthly_bill_by_account",
+            "DataTransforms": [
+                {
+                    "TagColumnOperation": {
+                        "ColumnName": "product_region",
+                        "Tags": [
+                            {
+                                "ColumnGeographicRole": "STATE"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "TagColumnOperation": {
+                        "ColumnName": "region_latitude",
+                        "Tags": [
+                            {
+                                "ColumnGeographicRole": "LATITUDE"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "TagColumnOperation": {
+                        "ColumnName": "region_longitude",
+                        "Tags": [
+                            {
+                                "ColumnGeographicRole": "LONGITUDE"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "ProjectOperation": {
+                        "ProjectedColumns": [
+                            "bill_billing_period_start_date",
+                            "bill_payer_account_id",
+                            "line_item_usage_account_id",
+                            "charge_type",
+                            "product_product_name",
+                            "product_region",
+                            "line_item_product_code",
+                            "unblended_cost",
+                            "amortized_cost",
+                            "account_name",
+                            "payer_account_name",
+                            "region_latitude",
+                            "region_longitude",
+                            "aws_service_category"
+                        ]
+                    }
+                }
+            ],
+            "Source": {
+                "PhysicalTableId": "47da7096-571a-48a5-94f4-ba03339c9193"
+            }
+        }
+    },
+    "ImportMode": "SPICE",
+    "Permissions": [
+        {
+            "Principal": "${user_arn}",
+            "Actions": [
+                "quicksight:UpdateDataSetPermissions",
+                "quicksight:DescribeDataSet",
+                "quicksight:DescribeDataSetPermissions",
+                "quicksight:PassDataSet",
+                "quicksight:DescribeIngestion",
+                "quicksight:ListIngestions",
+                "quicksight:UpdateDataSet",
+                "quicksight:DeleteDataSet",
+                "quicksight:CreateIngestion",
+                "quicksight:CancelIngestion"
+            ]
+        }
+    ]
+}

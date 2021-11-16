@@ -1,0 +1,79 @@
+{
+    "DataSetId": "0f11c81d-536a-405f-8de0-d0dc247627ad",
+    "Name": "monthly-anomaly-detection",
+    "PhysicalTableMap": {
+        "a55c68b9-9677-4c31-9464-392a3e97d984": {
+            "RelationalTable": {
+                "DataSourceArn": "${athena_datasource_arn}",
+                "Schema": "${athena_database_name}",
+                "Name": "monthly_anomaly_detection",
+                "InputColumns": [
+                    {
+                        "Name": "bill_billing_period_start_date",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "line_item_usage_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "account_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "product_product_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "unblended_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "line_item_usage_amount",
+                        "Type": "DECIMAL"
+                    }
+                ]
+            }
+        }
+    },
+    "LogicalTableMap": {
+        "a55c68b9-9677-4c31-9464-392a3e97d984": {
+            "Alias": "monthly_anomaly_detection",
+            "DataTransforms": [
+                {
+                    "ProjectOperation": {
+                        "ProjectedColumns": [
+                            "bill_billing_period_start_date",
+                            "line_item_usage_account_id",
+                            "account_name",
+                            "product_product_name",
+                            "unblended_cost",
+                            "line_item_usage_amount"
+                        ]
+                    }
+                }
+            ],
+            "Source": {
+                "PhysicalTableId": "a55c68b9-9677-4c31-9464-392a3e97d984"
+            }
+        }
+    },
+    "ImportMode": "SPICE",
+    "Permissions": [
+        {
+            "Principal": "${user_arn}",
+            "Actions": [
+                "quicksight:UpdateDataSetPermissions",
+                "quicksight:DescribeDataSet",
+                "quicksight:DescribeDataSetPermissions",
+                "quicksight:PassDataSet",
+                "quicksight:DescribeIngestion",
+                "quicksight:ListIngestions",
+                "quicksight:UpdateDataSet",
+                "quicksight:DeleteDataSet",
+                "quicksight:CreateIngestion",
+                "quicksight:CancelIngestion"
+            ]
+        }
+    ]
+}
