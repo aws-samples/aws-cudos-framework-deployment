@@ -1,0 +1,1185 @@
+{
+  "DataSetId": "595c66b7-08b6-46ad-87ed-b74fe34dd333",
+  "Name": "customer_all",
+  "PhysicalTableMap": {
+    "6e0cf97c-e45a-4824-939f-98d27612efb5": {
+      "RelationalTable": {
+        "DataSourceArn": "${athena_datasource_arn}",
+        "Schema": "${athena_database_name}",
+        "Name": "account_map",
+        "InputColumns": [
+          {
+            "Name": "account_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "account_name",
+            "Type": "STRING"
+          }
+        ]
+      }
+    },
+    "b163ad4b-f459-4b01-b2f3-54a168088640": {
+      "RelationalTable": {
+        "DataSourceArn": "${athena_datasource_arn}",
+        "Schema": "${athena_database_name}",
+        "Name": "${cur_table_name}",
+        "InputColumns": [
+          {
+            "Name": "product_updates",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_aws_ec2spot_fleet_request_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_application_department",
+            "Type": "STRING"
+          },
+          {
+            "Name": "year",
+            "Type": "STRING"
+          },
+          {
+            "Name": "bill_billing_period_end_date",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "product_enhanced_networking_supported",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_maximum_storage_volume",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_operating_system",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_storage",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_workload_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_content_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_finding_storage",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_line_item_description",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_amortized_upfront_fee_for_billing_period",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "line_item_normalization_factor",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "reservation_start_time",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_maximum_extended_storage",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_name",
+            "Type": "STRING"
+          },
+          {
+            "Name": "savings_plan_used_commitment",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "line_item_blended_cost",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "product_free_trial",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_input_mode",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_gpu",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_physical_processor",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_workload",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_directory_type_description",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_from_location",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_product_name",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_describes",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_memory",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_aws_created_by",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_capacitystatus",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_bundle_group",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_recurring_fee_for_usage",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "product_normalization_size_factor",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_public_on_demand_rate",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_resource_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_lease_contract_length",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_origin",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_legal_entity",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_directory_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_deployment_option",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_resource_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_application_cost_center",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_category",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_edition",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_directory_size",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_tax_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_instance_name",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_storage_class",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_standard_storage_retention_included",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_dominantnondominant",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_datatransferout",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_compute_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_physical_cpu",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_ops_items",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_effective_cost",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "product_volume_api_name",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_fee_description",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_request_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_database_engine",
+            "Type": "STRING"
+          },
+          {
+            "Name": "savings_plan_savings_plan_a_r_n",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_queue_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_software_included",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_application",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_request_description",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_availability_zone",
+            "Type": "STRING"
+          },
+          {
+            "Name": "bill_billing_entity",
+            "Type": "STRING"
+          },
+          {
+            "Name": "month",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_bundle_description",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_usage_account_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_processor_features",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_vcpu",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_enhanced_networking_support",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_component",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_region",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_finding_source",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_usage_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_intel_avx_available",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_dedicated_ebs_throughput",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_standard_storage",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_sku",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_free_usage_included",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_max_iopsvolume",
+            "Type": "STRING"
+          },
+          {
+            "Name": "identity_line_item_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_routing_target",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_line_item_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_total_reserved_units",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_group",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_department",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_currency_code",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_servicename",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_term",
+            "Type": "STRING"
+          },
+          {
+            "Name": "savings_plan_amortized_upfront_commitment_for_billing_period",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "savings_plan_savings_plan_effective_cost",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "reservation_end_time",
+            "Type": "STRING"
+          },
+          {
+            "Name": "cost_category_demo",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_owner",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_client_location",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_max_throughputvolume",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_memory_gib",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_to_location",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_unused_quantity",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "resource_tags_aws_autoscaling_group_name",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_granularity",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_ratetype",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_clock_speed",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_public_on_demand_cost",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "reservation_normalized_units_per_reservation",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_instances",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_broker_engine",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_product_family",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_availability_zone",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_description",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_processor_architecture",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_blended_rate",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_rootvolume",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_endpoint_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_routing_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_rate_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_max_iops_burst_performance",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_transfer_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_fee_code",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_upfront_value",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "resource_tags_user_environment",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_gpu_memory",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_operation",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_unblended_cost",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "reservation_number_of_reservations",
+            "Type": "STRING"
+          },
+          {
+            "Name": "savings_plan_savings_plan_rate",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "bill_payer_account_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_memorytype",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_logs_destination",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_unused_amortized_upfront_fee_for_billing_period",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "product_pricing_unit",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_network_performance",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_servicecode",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_group_description",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_steps",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_modification_status",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_total_reserved_normalized_units",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_application_owner",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_compute_family",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_message_delivery_frequency",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_intel_turbo_available",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_unused_normalized_unit_quantity",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "cost_category_env",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_unused_recurring_fee",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "product_traffic_direction",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_availability",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_ecu",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_insightstype",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_gets",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_intel_avx2_available",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_units_per_reservation",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_purchase_option",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_amortized_upfront_cost_for_usage",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "line_item_usage_amount",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "product_instance_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_standard_group",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_event_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_usage_end_date",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "product_pre_installed_sw",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_alarm_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_location",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_current_generation",
+            "Type": "STRING"
+          },
+          {
+            "Name": "savings_plan_total_commitment_to_date",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "resource_tags_user_cost_center",
+            "Type": "STRING"
+          },
+          {
+            "Name": "bill_bill_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_output_mode",
+            "Type": "STRING"
+          },
+          {
+            "Name": "cost_category_team",
+            "Type": "STRING"
+          },
+          {
+            "Name": "bill_billing_period_start_date",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "product_operation",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_max_volume_size",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_running_mode",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_normalized_usage_amount",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "product_license",
+            "Type": "STRING"
+          },
+          {
+            "Name": "savings_plan_recurring_commitment_for_billing_period",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "line_item_usage_start_date",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "product_physical_gpu",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_instance_family",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_instance",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_engine_code",
+            "Type": "STRING"
+          },
+          {
+            "Name": "bill_invoice_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_storage_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_recipient",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_storage_media",
+            "Type": "STRING"
+          },
+          {
+            "Name": "identity_time_interval",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_cache_engine",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_volume_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_offering_class",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_provisioned",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_license_model",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_instance_type_family",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_product_code",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_location_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_usagetype",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_subscription_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "line_item_unblended_rate",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_bundle",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_message_delivery_order",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_subscription_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_cputype",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_durability",
+            "Type": "STRING"
+          },
+          {
+            "Name": "reservation_reservation_a_r_n",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_uservolume",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_from_location_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_to_location_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_version",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_currency",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_minimum_storage_volume",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_tenancy",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_finding_group",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_min_volume_size",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_tags_user_application_name",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_free_query_types",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_unit",
+            "Type": "STRING"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {
+    "0628f91f-8d1b-4936-b141-f2cd828af18e": {
+      "Alias": "account_map",
+      "Source": {
+        "PhysicalTableId": "6e0cf97c-e45a-4824-939f-98d27612efb5"
+      }
+    },
+    "2f69dc70-9487-4f34-9120-e5f40660b257": {
+      "Alias": "${cur_table_name}",
+      "Source": {
+        "PhysicalTableId": "b163ad4b-f459-4b01-b2f3-54a168088640"
+      }
+    },
+    "faad660a-8f70-4660-af84-8ab3c8a9474f": {
+      "Alias": "Intermediate Table",
+      "DataTransforms": [
+        {
+          "ProjectOperation": {
+            "ProjectedColumns": [
+              "identity_line_item_id",
+              "identity_time_interval",
+              "bill_invoice_id",
+              "bill_billing_entity",
+              "bill_bill_type",
+              "bill_payer_account_id",
+              "bill_billing_period_start_date",
+              "bill_billing_period_end_date",
+              "line_item_usage_account_id",
+              "line_item_line_item_type",
+              "line_item_usage_start_date",
+              "line_item_usage_end_date",
+              "line_item_product_code",
+              "line_item_usage_type",
+              "line_item_operation",
+              "line_item_availability_zone",
+              "line_item_resource_id",
+              "line_item_usage_amount",
+              "line_item_normalization_factor",
+              "line_item_normalized_usage_amount",
+              "line_item_currency_code",
+              "line_item_unblended_rate",
+              "line_item_unblended_cost",
+              "line_item_blended_rate",
+              "line_item_blended_cost",
+              "line_item_line_item_description",
+              "line_item_tax_type",
+              "line_item_legal_entity",
+              "product_product_name",
+              "product_availability",
+              "product_capacitystatus",
+              "product_clock_speed",
+              "product_current_generation",
+              "product_database_engine",
+              "product_dedicated_ebs_throughput",
+              "product_deployment_option",
+              "product_description",
+              "product_durability",
+              "product_ecu",
+              "product_edition",
+              "product_engine_code",
+              "product_enhanced_networking_supported",
+              "product_event_type",
+              "product_free_query_types",
+              "product_from_location",
+              "product_from_location_type",
+              "product_group",
+              "product_group_description",
+              "product_instance_family",
+              "product_instance_type",
+              "product_instance_type_family",
+              "product_license_model",
+              "product_location",
+              "product_location_type",
+              "product_max_iops_burst_performance",
+              "product_max_iopsvolume",
+              "product_max_throughputvolume",
+              "product_max_volume_size",
+              "product_memory",
+              "product_message_delivery_frequency",
+              "product_message_delivery_order",
+              "product_min_volume_size",
+              "product_network_performance",
+              "product_normalization_size_factor",
+              "product_operating_system",
+              "product_operation",
+              "product_physical_processor",
+              "product_pre_installed_sw",
+              "product_processor_architecture",
+              "product_processor_features",
+              "product_product_family",
+              "product_queue_type",
+              "product_region",
+              "product_servicecode",
+              "product_servicename",
+              "product_sku",
+              "product_storage",
+              "product_storage_class",
+              "product_storage_media",
+              "product_subscription_type",
+              "product_tenancy",
+              "product_to_location",
+              "product_to_location_type",
+              "product_transfer_type",
+              "product_usagetype",
+              "product_vcpu",
+              "product_version",
+              "product_volume_type",
+              "pricing_lease_contract_length",
+              "pricing_offering_class",
+              "pricing_purchase_option",
+              "pricing_rate_id",
+              "pricing_public_on_demand_cost",
+              "pricing_public_on_demand_rate",
+              "pricing_term",
+              "pricing_unit",
+              "reservation_amortized_upfront_cost_for_usage",
+              "reservation_amortized_upfront_fee_for_billing_period",
+              "reservation_effective_cost",
+              "reservation_end_time",
+              "reservation_modification_status",
+              "reservation_normalized_units_per_reservation",
+              "reservation_number_of_reservations",
+              "reservation_recurring_fee_for_usage",
+              "reservation_reservation_a_r_n",
+              "reservation_start_time",
+              "reservation_subscription_id",
+              "reservation_total_reserved_normalized_units",
+              "reservation_total_reserved_units",
+              "reservation_units_per_reservation",
+              "reservation_unused_amortized_upfront_fee_for_billing_period",
+              "reservation_unused_normalized_unit_quantity",
+              "reservation_unused_quantity",
+              "reservation_unused_recurring_fee",
+              "reservation_upfront_value",
+              "resource_tags_aws_autoscaling_group_name",
+              "resource_tags_aws_created_by",
+              "resource_tags_aws_ec2spot_fleet_request_id",
+              "resource_tags_user_cost_center",
+              "resource_tags_user_department",
+              "resource_tags_user_environment",
+              "resource_tags_user_name",
+              "resource_tags_user_workload",
+              "resource_tags_user_workload_type",
+              "product_alarm_type",
+              "product_compute_family",
+              "product_compute_type",
+              "product_content_type",
+              "product_cputype",
+              "product_intel_avx2_available",
+              "product_intel_avx_available",
+              "product_intel_turbo_available",
+              "product_maximum_extended_storage",
+              "product_memory_gib",
+              "product_memorytype",
+              "product_origin",
+              "product_recipient",
+              "product_routing_target",
+              "product_routing_type",
+              "product_standard_storage_retention_included",
+              "product_volume_api_name",
+              "savings_plan_total_commitment_to_date",
+              "savings_plan_savings_plan_a_r_n",
+              "savings_plan_savings_plan_rate",
+              "savings_plan_used_commitment",
+              "savings_plan_savings_plan_effective_cost",
+              "savings_plan_amortized_upfront_commitment_for_billing_period",
+              "savings_plan_recurring_commitment_for_billing_period",
+              "product_availability_zone",
+              "product_broker_engine",
+              "product_bundle",
+              "product_bundle_description",
+              "product_bundle_group",
+              "product_category",
+              "product_client_location",
+              "product_component",
+              "product_datatransferout",
+              "product_directory_size",
+              "product_directory_type",
+              "product_directory_type_description",
+              "product_dominantnondominant",
+              "product_endpoint_type",
+              "product_enhanced_networking_support",
+              "product_fee_description",
+              "product_finding_group",
+              "product_finding_source",
+              "product_finding_storage",
+              "product_free_trial",
+              "product_free_usage_included",
+              "product_gpu",
+              "product_gpu_memory",
+              "product_granularity",
+              "product_insightstype",
+              "product_instance_name",
+              "product_license",
+              "product_logs_destination",
+              "product_maximum_storage_volume",
+              "product_minimum_storage_volume",
+              "product_physical_cpu",
+              "product_physical_gpu",
+              "product_pricing_unit",
+              "product_provisioned",
+              "product_ratetype",
+              "product_resource_type",
+              "product_rootvolume",
+              "product_running_mode",
+              "product_software_included",
+              "product_standard_group",
+              "product_standard_storage",
+              "product_steps",
+              "product_storage_type",
+              "product_traffic_direction",
+              "product_type",
+              "product_uservolume",
+              "pricing_currency",
+              "resource_tags_user_application_department",
+              "resource_tags_user_application",
+              "cost_category_demo",
+              "cost_category_env",
+              "cost_category_team",
+              "product_cache_engine",
+              "product_describes",
+              "product_gets",
+              "product_ops_items",
+              "product_updates",
+              "resource_tags_user_owner",
+              "resource_tags_user_application_cost_center",
+              "resource_tags_user_application_name",
+              "resource_tags_user_application_owner",
+              "product_instances",
+              "product_request_description",
+              "product_request_type",
+              "product_input_mode",
+              "product_output_mode",
+              "product_instance",
+              "product_fee_code",
+              "year",
+              "month",
+              "account_id",
+              "account_name"
+            ]
+          }
+        },
+        {
+          "TagColumnOperation": {
+            "ColumnName": "product_region",
+            "Tags": [
+              {
+                "ColumnGeographicRole": "STATE"
+              }
+            ]
+          }
+        }
+      ],
+      "Source": {
+        "JoinInstruction": {
+          "LeftOperand": "2f69dc70-9487-4f34-9120-e5f40660b257",
+          "RightOperand": "0628f91f-8d1b-4936-b141-f2cd828af18e",
+          "Type": "LEFT",
+          "OnClause": "{line_item_usage_account_id} = {account_id}"
+        }
+      }
+    }
+  },
+  "ImportMode": "DIRECT_QUERY",
+  "Permissions": [
+    {
+      "Principal": "${user_arn}",
+      "Actions": [
+        "quicksight:UpdateDataSetPermissions",
+        "quicksight:DescribeDataSet",
+        "quicksight:DescribeDataSetPermissions",
+        "quicksight:PassDataSet",
+        "quicksight:DescribeIngestion",
+        "quicksight:ListIngestions",
+        "quicksight:UpdateDataSet",
+        "quicksight:DeleteDataSet",
+        "quicksight:CreateIngestion",
+        "quicksight:CancelIngestion"
+      ]
+    }
+  ]
+}
