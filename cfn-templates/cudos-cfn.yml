@@ -4,10 +4,9 @@ Parameters:
     Default: README
     Description: >
               Prerequisites met:
-              1. https://cudos.workshop.aws/prerequisites/prepare-cur.html
-              2. https://cudos.workshop.aws/prerequisites/prepare-athena.html
-              3. https://cudos.workshop.aws/prerequisites/prepare-cur-athena.html
-              4. https://cudos.workshop.aws/prerequisites/prepare-quicksight.html
+              1. https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/#prepare-cost--usage-report
+              3. https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/#enable-your-cost--usage-reports-in-athena
+              4. https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/#enable-quicksight
               5. Run the crawler or wait up to 1 day so that new CUR delivery would invoke the crawler which would create the tables
 
   QuickSightUser:
@@ -194,7 +193,7 @@ Resources:
         Variables:
           DatabaseName: !Ref CURDatabaseName
           TableName: !Ref CURTableName
-          ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cudos/view-templates'
+          ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/legacy/cudos/view-templates'
       Code:
         ZipFile: |
           import os
