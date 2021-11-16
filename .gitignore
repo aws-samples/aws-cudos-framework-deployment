@@ -1,8 +1,37 @@
+# Working files for legacy (bash) automation
 */work/
 
 *~
 *#
 *.swp
+
+# Python specific
+build/
+dist/
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+/.coverage
+/.coverage.*
+/.cache
+/.pytest_cache
+/.mypy_cache
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode
+.idea/
 
 # Files that might appear in the root of a volume
 .DS_Store
