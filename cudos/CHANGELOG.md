@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.61.3
+
+* Storage Summary: Renaming "EBS Unit Cost" to "EBS Storage Unit Cost"
+
 ## CUDOS - 4.61.2
 
 * RI/SP Summary: "Savings Option for Compute by Owner / Consumer Previous Month" now applies "Amazon Elastic Container Service filter" 
