@@ -1,5 +1,21 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.61.3
+
+* Storage Summary: Renaming "EBS Unit Cost" to "EBS Storage Unit Cost"
+
+## CUDOS - 4.61.2
+
+* RI/SP Summary: "Savings Option for Compute by Owner / Consumer Previous Month" now applies "Amazon Elastic Container Service filter" 
+
+## CUDOS - 4.61.1
+
+* DynamoDB: Renamed Visual "DynamoDB PayPerRequestThroughput Usage and Cost Last 3 Months" to "DynamoDB PayPerRequestThroughput(OnDemand) Usage and Cost Last 90 Days" and reapplied filters
+ 
+## CUDOS - 4.61
+
+* S3: New visual TOP 5 Accounts for Glacier Vault migration to Glacier Deep Archive Savings Opportunity 
+
 ## CUDOS - 4.60.5
 
 * Databases: Fixed daily filters to last 90 days and updated visual names. 
