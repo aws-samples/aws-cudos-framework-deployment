@@ -1,5 +1,16 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.63.1
+
+* DynamoDB: New visual “TOP 15 Candidates for IA Tables Previous Month”
+* DynamoDB: Renamed “Ondemand” to “Commited Throughput” on “DynamoDB Provisioned Capacity Hourly Usage by Purchase Option Last 30 Days” visual
+
+## CUDOS - 4.62
+
+* DynamoDB: “Total Reservations Cost Previous Month” renamed to “Total Reservations Savings Previous Month” and now shows reservation type breakdown
+* DynamoDB: New recommendations for IA Table Class
+* DynamoDB: Renamed “DynamoDB MoM Unused Cost” to “DynamoDB MoM Reservations Unused Cost” and added additional controls for more fine grained visualisation
+
 ## CUDOS - 4.61.3
 
 * Storage Summary: Renaming "EBS Unit Cost" to "EBS Storage Unit Cost"
