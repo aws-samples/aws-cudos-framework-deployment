@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.63.2
+
+* DynamoDB: Including replication costs now in “TOP 15 Candidates for IA Tables Previous Month”
+
 ## CUDOS - 4.63.1
 
 * DynamoDB: New visual “TOP 15 Candidates for IA Tables Previous Month”
