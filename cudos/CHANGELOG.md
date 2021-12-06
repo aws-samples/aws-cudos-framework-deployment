@@ -2,6 +2,10 @@
 
 ## CUDOS - 4.63.1
 
+* DynamoDB: Including replication costs now in “TOP 15 Candidates for IA Tables Previous Month”
+
+## CUDOS - 4.63.1
+
 * DynamoDB: New visual “TOP 15 Candidates for IA Tables Previous Month”
 * DynamoDB: Renamed “Ondemand” to “Commited Throughput” on “DynamoDB Provisioned Capacity Hourly Usage by Purchase Option Last 30 Days” visual
 
