@@ -35,13 +35,15 @@ function config() {
     echo "----"
     cat work/${account}/config
     echo "----"
-    return 0
   fi
   if [ -z "${s3FolderPath}" ]; then
     get_s3FolderPath
   fi
   if [ -z "${region}" ]; then
     get_region
+  fi
+  if [ -z "${aws_identity_region}" ]; then
+    get_qs_identity_region
   fi
   if [ -z "${user_arn}" ]; then
     get_user_arn
@@ -53,6 +55,7 @@ function config() {
   echo "export region=${region}
 export databaseName=${databaseName}
 export s3FolderPath=${s3FolderPath}
+export aws_identity_region=${aws_identity_region}
 export user_arn=$user_arn
 export AWS_DEFAULT_REGION=${region}" > work/${account}/config
   echo "
@@ -74,7 +77,7 @@ function transform_templates() {
 }
 function get_user_arn() {
     echo "Fetching QuickSight User ARNs..."
-    alias=$(aws quicksight list-users --aws-account-id ${account} --namespace default --region ${region} --query 'UserList[*].Arn' --output text)
+    alias=$(aws quicksight list-users --aws-account-id ${account} --namespace default --region ${aws_identity_region} --query 'UserList[*].Arn' --output text)
     echo "Discovered QuickSight User ARNs. Please select which one to use:"
     select qs_user_arn in $alias
     do
@@ -120,9 +123,13 @@ function get_aws_account() {
 }
 
 function get_s3FolderPath() {
-    echo -n "Enter S3 bucket name with TA organizational view reports:"
+    echo -n "Enter S3 bucket name or URI path to TA reports:"
     read bucket_name
-    export s3FolderPath="s3://${bucket_name}/reports/"
+    if [[ "${bucket_name}" == "s3://"* ]]; then
+      export s3FolderPath="${bucket_name}"
+    else
+      export s3FolderPath="s3://${bucket_name}/reports/"
+    fi
 }
 
 function get_region() {
@@ -131,6 +138,16 @@ function get_region() {
     export region=${aws_region}
     export AWS_DEFAULT_REGION=${aws_region}
 }
+
+function get_qs_identity_region() {
+    echo -n "Enter QuickSight Identity region [default : ${region}]: "
+    read aws_qs_identity_region
+    if  [ "${aws_qs_identity_region}" = "" ]; then
+      export aws_qs_identity_region=${region}
+    fi
+    export aws_identity_region=${aws_qs_identity_region}
+}
+
 function get_deployment_mode() {
   echo "Please select deployment mode:"
   select deployment in manual automated
@@ -150,6 +167,7 @@ function print_help(){
         update - updates QuickSight dashboard to latest available version
         status - display status of dashboard creation
         refresh_data - refreshes dataset in QuickSight SPICE"
+        change-source-location - changes path to s3 bucket with Trusted Advisor reports"
         
   exit 1
 }
@@ -165,11 +183,13 @@ function deploy() {
     aws quicksight create-data-set --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/data-set-input.json
     echo "aws quicksight create-dashboard --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/dashboard-input.json"
     aws quicksight create-dashboard --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/dashboard-input.json
+    
     if [ $? -ne 0 ]
     then
        echo \"Something went wrong\"
        exit
     fi
+    sleep 20
     status
   else
        echo "Please run the following commands to deploy dashboard:
@@ -224,12 +244,44 @@ function status() {
 
 function refresh_data() {
   aws quicksight create-ingestion --ingestion-id `date +%Y_%m_%H_%M` --aws-account-id ${account} --data-set-id ${dataSetId}
+  echo "Refresh of dataset ${dataSetId} initiated"
+}
+
+function change-source-location() { 
+  if [ -e work/${account}/config ]; then
+    source "work/${account}/config"
+    echo "
+    Config file detected work/${account}/config"
+  else
+    echo "ERROR: No config detected. Please run ${myName} --action=prepare"
+    return 1
+  fi
+  echo -n "Enter S3 URI path to new location of TA reports:"
+  read bucket_name
+  export s3FolderPath="${bucket_name}"
+  echo "export region=${region}
+export databaseName=${databaseName}
+export s3FolderPath=${s3FolderPath}
+export aws_identity_region=${aws_identity_region}
+export user_arn=$user_arn
+export AWS_DEFAULT_REGION=${region}" > work/${account}/config
+  echo "
+  config file stored in \"work/${account}/config\"
+  "
+  { echo "cat <<EOF"
+    cat "templates/athena-table.json"
+    echo "EOF"
+  } | sh > "${cli_input_json_dir}/athena-table.json"
+  echo "New S3 URI path added to ${cli_input_json_dir}/athena-table.json"
+  aws glue update-table --cli-input-json file://${cli_input_json_dir}/athena-table.json
+  echo "Athena table pointed to new S3 URI path"
+  refresh-data
 }
 function update() {
   echo "Checking for updates..."
   echo -n "Getting latest available source template version..."
   latest_template_version=$(aws quicksight describe-template --query 'Template.Version.VersionNumber' \
-      --aws-account-id ${sourceAccountId} --template-id ${sourceTemplateId})
+      --aws-account-id ${sourceAccountId} --template-id ${sourceTemplateId} --region us-east-1)
   if [ $? -ne 0 ]
   then
      echo "unable to retreive latest template version number, please check you have requested accesss."
@@ -245,21 +297,21 @@ function update() {
      echo "unable to retreive version number, please check you have dashboard deployed."
      exit
   fi
-  echo "latest available template version is ${current_dashboard_source_version}"
-  if [ ${current_dashboard_source_version} -eq ${latest_template_version} ]; then
+  echo "current deployed template version is ${current_dashboard_source_version}"
+  if [[ "${current_dashboard_source_version}" -eq "${latest_template_version}" ]]; then
       echo "You have the latest version deployed, no update required, exiting"
       exit
-  elif [ ${current_dashboard_source_version} -gt ${latest_template_version} ]; then
+  elif [[ "${current_dashboard_source_version}" -gt "${latest_template_version}" ]]; then
       echo "Error: Your deployed version is newer than the latest template, please check your installation, exiting"
       exit
   fi
 
-  echo "Update available ( ${current_dashboard_source_version} > ${latest_template_version} ), proceeding"
+  echo "Update available ( ${current_dashboard_source_version} < ${latest_template_version} ), proceeding"
 
   if [[ "$deploymentMode" != "auto" ]] ; then
     echo "Please run following commands to get updates:
       1. aws quicksight update-dashboard --aws-account-id ${account} --cli-input-json file://${cli_input_json_dir}/update-dashboard-input.json
-      2. aws quicksight list-dashboard-versions --aws-account-id ${account}  --dashboard-id $dashboardId --query "DashboardVersionSummaryList[-1].VersionNumber" | xargs -I {} aws quicksight update-dashboard-published-version --aws-account-id ${account} --dashboard-id $dashboardId --version-number {}
+      2. aws quicksight list-dashboard-versions --aws-account-id ${account}  --dashboard-id $dashboardId --query 'DashboardVersionSummaryList[-1].VersionNumber' | xargs -I {} aws quicksight update-dashboard-published-version --aws-account-id ${account} --dashboard-id $dashboardId --version-number {}
     " 
     exit
   fi

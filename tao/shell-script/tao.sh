@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/bin/bash
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -77,6 +76,9 @@ case "$action" in
   refresh_data)
     config
     refresh_data
+  ;;
+  change-source-location)
+    change-source-location  
   ;;
   *)
   printf "$action is not valid action\n"
