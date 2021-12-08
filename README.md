@@ -1,47 +1,78 @@
 # Cloud Intelligence Dashboards (CUDOS Framework)
 
-## Welcome to customer automation for Cloud Intelligence Dashboards (CUDOS Framework) repository
+[![PyPI version](https://badge.fury.io/py/cid-cmd.svg)](https://badge.fury.io/py/cid-cmd)
 
-### The scripts in this repo have been succesfully tested in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home)
+## Welcome to Cloud Intelligence Dashboards (CUDOS Framework) automation repository
 
-In the [**cudos**](./cudos/) subdirectory you will find a set of scripts automate some parts of the [CUDOS Dashboard Well Architected Lab](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2b_cudos_dashboard/), specifically parts of:
-  - creating Athena views
-  - creating Amazon QuickSight datasource
-  - creating Amazon QuickSight datasets
-  - deploying the CUDOS dashboard to Amazon QuickSight
-  - creating proper account mapping from account id's to account names
+### The scripts in this repo have been succesfully tested in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home) (`recommended`)
 
-In the [**tao**](./tao/) subdirectory you will find a set of scripts automate [Trusted Advisor Organisation view dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed) deployment, specifically parts of:
-  - creating AWS Glue Data Catalog
-  - creating Amazon QuickSight datasource
-  - creating Amazon QuickSight datasets
-  - deploying the TAO dashboard to Amazon QuickSight
+## Supported dashboards
+- [CUDOS Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=cudos)
+- [Cost Intelligence Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=cost_intelligence_dashboard)
+- [Trusted Advisor Organisation (TAO) Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=e1799d0d-166c-4e61-8fa6-5c927f70c799)
+- [Trends Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=tao-dashboard?dashboard=trends-dashboard)
 
-In the [**trends**](./trends/) subdirectory you will find a set of scripts automate some parts of the [CUDOS workshop](https://cudos.workshop.aws/workshop-trends.html), specifically parts of:
-  - creating Athena views
-  - creating Amazon QuickSight datasource
-  - creating Amazon QuickSight datasets
-  - deploying the Trends dashboard to Amazon QuickSight
-  - creating proper account mapping from account id's to account names
+:white_check_mark: *Is* compatible with [Cloudformation deployment](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2b_cudos_dashboard/#option-3-cloudformation-deployment)
 
-## How to use this repo
+:heavy_exclamation_mark: :x: *Is not* compatible with [legacy automation](./legacy)
 
-##### Important: Complete the [Prerequisites](https://cudos.workshop.aws/prerequisites.html)
-##### Important: [Specifying a Query Result Location Using a Workgroup](https://docs.aws.amazon.com/athena/latest/ug/querying.html#query-results-specify-location-workgroup)
+## Before you start
+1. :heavy_exclamation_mark: Complete the prerequisites for respective dashboard
+    - [CUDOS Dashboard](https://cudos.workshop.aws/prerequisites.html)
+    - [Cost Intelligence Dashboard](https://cudos.workshop.aws/prerequisites.html)
+    - [Trusted Advisor (TAO) Dashboard](https://tao.workshop.aws/prerequisites.html)
+    - [Trends Dashboard](https://cudos.workshop.aws/prerequisites.html)
 
-1. Launch [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home)
-2. Clone the repo
+2. :heavy_exclamation_mark: [Specifying a Query Result Location Using a Workgroup](https://docs.aws.amazon.com/athena/latest/ug/querying.html#query-results-specify-location-workgroup)
 
-  ```bash
-  git clone https://github.com/aws-samples/aws-cudos-framework-deployment
-  ```
+## How to use
 
-3. Change directory to the respectful dashboard deployment. Run the setup scripts per the instructions in the repo
+1. Launch [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home) or your local shell
 
-  ```bash
-  cd cudos
-  ./shell-script/customer-cudos.sh
-  ```
+    Automation requires Python 3
+
+2. Make sure you have latest pip package installed
+    ```bash
+    python3 -m ensurepip --upgrade
+    ```
+
+4. Install CID Python automation PyPI package
+    ```bash
+    pip3 install --upgrade cid-cmd
+    ```
+
+5. List of supported commands  
+    ```bash
+    cid-cmd --help
+    ```
+
+### Example output
+
+<pre>CLOUD INTELLIGENCE DASHBOARDS (CID) aka Cid CLI 1.0 Beta
+
+Loading plugins...
+  Core loaded
+done
+
+Usage: Cid_cmd [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --profile_name TEXT           AWS Profile name to use
+  --region_name TEXT            AWS Region (default:'us-east-1')
+  --aws_access_key_id TEXT
+  --aws_secret_access_key TEXT
+  --aws_session_token TEXT
+  -v, --verbose
+  --help                        Show this message and exit.
+
+Commands:
+  delete  Delete Dashboard
+  deploy  Deploy Dashboard
+  map     Create account mapping
+  open    Open Dashboard in browser
+  status  Show Dashboard status
+  update  Update Dashboard
+</pre>
 
 
-
+## Legacy (bash) automation has been moved under [**legacy**](./legacy/) directory

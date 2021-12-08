@@ -1,0 +1,201 @@
+---
+# QuickSight Dashboards definitions
+dashboards:
+  CUDOS:
+    name: CUDOS Dashboard
+    templateId: cudos_dashboard_v3
+    dashboardId: cudos
+    localConfigs: ["update-dashboard.json"]
+    dependsOn:
+      datasets:
+        - summary_view
+        - ec2_running_cost
+        - compute_savings_plan_eligible_spend
+        - s3_view
+        - customer_all
+
+  CID:
+    name: Cost Intelligence Dashboard
+    templateId: cost-intelligence-dashboard
+    sourceAccountId: '869004330191'
+    dashboardId: cost_intelligence_dashboard
+    dependsOn:
+      datasets:
+        - summary_view
+        - ec2_running_cost
+        - compute_savings_plan_eligible_spend
+        - s3_view
+
+  TAO:
+    name: Trusted Advisor Organizational View
+    templateId: ta-organizational-view
+    dashboardId: ta-organizational-view
+    dependsOn:
+      datasets:
+        - ta-organizational-view
+
+  Trends:
+    name: Trends Dashboard
+    templateId: cudos-trends-dashboard-template
+    dashboardId: trends-dashboard
+    dependsOn:
+      datasets:
+        - monthly-bill-by-account
+        - monthly-anomaly-detection
+        - daily-anomaly-detection
+
+# QuickSight DataSets definitions
+datasets:
+  # CID Shared DataSets
+  summary_view:
+    File: cid/summary_view.json
+    dependsOn:
+      cur: true
+      views:
+        - summary_view
+        - ri_sp_mapping
+  ec2_running_cost:
+    File: cid/ec2_running_cost.json
+    dependsOn:
+      views:
+        - ec2_running_cost
+  compute_savings_plan_eligible_spend:
+    File: cid/compute.json
+    dependsOn:
+      views:
+        - compute_savings_plan_eligible_spend
+  s3_view:
+    File: cid/s3_view.json
+    dependsOn:
+      views:
+        - s3_view
+        - account_map
+  
+  # Shared DataSets
+  customer_all:
+    File: shared/customer_all.json
+    dependsOn:
+      cur: true
+      views:
+        - ${cur_table_name}
+
+  # Trusted Advisor (TAO)
+  ta-organizational-view:
+    File: tao/dataset.json
+    dependsOn:
+      views:
+        - ta-organizational-view
+
+  # Trends
+  daily-anomaly-detection:
+    File: trends/daily_anomaly_detection.json
+    dependsOn:
+      views:
+        - daily_anomaly_detection
+  monthly-anomaly-detection:
+    File: trends/monthly_anomaly_detection.json
+    dependsOn:
+      views:
+        - monthly_anomaly_detection
+  monthly-bill-by-account:
+    spriFile: trends/monthly_bill_by_account_sp_ri.json
+    spFile: trends/monthly_bill_by_account_sp.json
+    riFile: trends/monthly_bill_by_account_ri.json
+    File: trends/monthly_bill_by_account.json
+    dependsOn:
+      views:
+        - monthly_bill_by_account
+
+
+# Athena views definitions
+views:
+  # CID Shared Views
+  summary_view:
+    spriFile: cid/summary_view_sp_ri.sql
+    spFile: cid/summary_view_sp.sql
+    riFile: cid/summary_view_ri.sql
+    File: cid/summary_view.sql
+    dependsOn:
+      cur: true
+
+  ec2_running_cost:
+    spriFile: cid/ec2_running_cost_sp_ri.sql
+    spFile: cid/ec2_running_cost_sp.sql
+    riFile: cid/ec2_running_cost_ri.sql
+    File: cid/ec2_running_cost.sql
+    dependsOn:
+      cur: true
+
+  compute_savings_plan_eligible_spend:
+    File: cid/compute_savings_plan_eligible_spend.sql
+    dependsOn:
+      cur: true
+
+  s3_view:
+    File: cid/s3.sql
+    dependsOn:
+      cur: true
+
+  ri_sp_mapping:
+    spriFile: cid/ri_sp_mapping_sp_ri.sql
+    spFile: cid/ri_sp_mapping_sp.sql
+    riFile: cid/ri_sp_mapping_ri.sql
+    File: cid/ri_sp_mapping.sql
+    dependsOn:
+      cur: true
+
+  # Trends
+  daily_anomaly_detection:
+    File: trends/daily_anomaly_detection.sql
+    dependsOn:
+      cur: true
+      views:
+        - aws_accounts
+  monthly_anomaly_detection:
+    File: trends/monthly_anomaly_detection.sql
+    dependsOn:
+      cur: true
+      views:
+        - aws_accounts
+  monthly_bill_by_account:
+    riFile: trends/monthly_bill_by_account_ri.sql
+    spriFile: trends/monthly_bill_by_account_sp_ri.sql
+    spFile: trends/monthly_bill_by_account_sp.sql
+    File: trends/monthly_bill_by_account.sql
+    dependsOn:
+      cur: true
+      views:
+        - aws_accounts
+        - aws_regions
+        - aws_service_category_map
+        - payer_account_name_map
+
+  # Trusted Advisor (TAO)
+  ta-organizational-view:
+    type: Glue_Table
+    File: tao/glue_table.json
+    parameters:
+      athenaDatabaseName:
+      athenaTableName:
+        value: ta_organizational_view_reports
+      s3FolderPath:
+        description: Trusted Advisor Organization View report S3 folder path
+
+  # Shared views
+  account_map:
+    File: shared/account_map.sql
+  aws_accounts:
+    File: shared/aws_accounts.sql
+    dependsOn:
+      cur: true
+  aws_regions:
+    File: shared/aws_regions.sql
+  aws_service_category_map:
+    File: shared/aws_service_category_map.sql
+  payer_account_name_map:
+    File: shared/payer_account_name_map.sql
+    dependsOn:
+      views:
+        - aws_accounts
+  ta_descriptions:
+    File: shared/ta_descriptions.sql

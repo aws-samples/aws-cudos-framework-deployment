@@ -1,0 +1,361 @@
+{
+  "DataSetId": "d01a936f-2b8f-49dd-8f95-d9c7130c5e46",
+  "Name": "summary_view",
+  "PhysicalTableMap": {
+    "ae9f61a5-d48a-42ed-8b9c-e9f87a9f37fa": {
+      "RelationalTable": {
+        "DataSourceArn": "${athena_datasource_arn}",
+        "Schema": "${athena_database_name}",
+        "Name": "summary_view",
+        "InputColumns": [
+          {
+            "Name": "billing_period",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "purchase_option",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_to_location",
+            "Type": "STRING"
+          },
+          {
+            "Name": "charge_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "current_generation",
+            "Type": "STRING"
+          },
+          {
+            "Name": "year",
+            "Type": "STRING"
+          },
+          {
+            "Name": "payer_account_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_from_location",
+            "Type": "STRING"
+          },
+          {
+            "Name": "usage_date",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "ri_sp_trueup",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "amortized_cost",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "product_code",
+            "Type": "STRING"
+          },
+          {
+            "Name": "platform",
+            "Type": "STRING"
+          },
+          {
+            "Name": "usage_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "linked_account_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "invoice_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "ri_sp_arn",
+            "Type": "STRING"
+          },
+          {
+            "Name": "legal_entity",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_group",
+            "Type": "STRING"
+          },
+          {
+            "Name": "ri_sp_upfront_fees",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "processor_features",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_family",
+            "Type": "STRING"
+          },
+          {
+            "Name": "availability_zone",
+            "Type": "STRING"
+          },
+          {
+            "Name": "billing_entity",
+            "Type": "STRING"
+          },
+          {
+            "Name": "tenancy",
+            "Type": "STRING"
+          },
+          {
+            "Name": "database_engine",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_name",
+            "Type": "STRING"
+          },
+          {
+            "Name": "processor",
+            "Type": "STRING"
+          },
+          {
+            "Name": "instance_type_family",
+            "Type": "STRING"
+          },
+          {
+            "Name": "charge_category",
+            "Type": "STRING"
+          },
+          {
+            "Name": "month",
+            "Type": "STRING"
+          },
+          {
+            "Name": "resource_id_count",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "public_cost",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "unblended_cost",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "service",
+            "Type": "STRING"
+          },
+          {
+            "Name": "usage_quantity",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "item_description",
+            "Type": "STRING"
+          },
+          {
+            "Name": "region",
+            "Type": "STRING"
+          },
+          {
+            "Name": "operation",
+            "Type": "STRING"
+          },
+          {
+            "Name": "instance_type",
+            "Type": "STRING"
+          },
+          {
+            "Name": "pricing_unit",
+            "Type": "STRING"
+          }
+        ]
+      }
+    },
+    "c0420538-7a33-4234-af0f-697600127f78": {
+      "RelationalTable": {
+        "DataSourceArn": "${athena_datasource_arn}",
+        "Schema": "${athena_database_name}",
+        "Name": "account_map",
+        "InputColumns": [
+          {
+            "Name": "account_id",
+            "Type": "STRING"
+          },
+          {
+            "Name": "account_name",
+            "Type": "STRING"
+          }
+        ]
+      }
+    },
+    "f756ee81-056c-4b8d-8bdb-fbce0eff48ba": {
+      "RelationalTable": {
+        "DataSourceArn": "${athena_datasource_arn}",
+        "Schema": "${athena_database_name}",
+        "Name": "ri_sp_mapping",
+        "InputColumns": [
+          {
+            "Name": "ri_sp_offering",
+            "Type": "STRING"
+          },
+          {
+            "Name": "payer_account_id_mapping",
+            "Type": "STRING"
+          },
+          {
+            "Name": "ri_sp_payment",
+            "Type": "STRING"
+          },
+          {
+            "Name": "billing_period_mapping",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "ri_sp_arn_mapping",
+            "Type": "STRING"
+          },
+          {
+            "Name": "ri_sp_term",
+            "Type": "STRING"
+          },
+          {
+            "Name": "ri_sp_end_date",
+            "Type": "DATETIME"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {
+    "51531464-4b4b-4d8c-b511-96ea6955c085": {
+      "Alias": "Intermediate Table (2)",
+      "DataTransforms": [
+        {
+          "ProjectOperation": {
+            "ProjectedColumns": [
+              "year",
+              "month",
+              "billing_period",
+              "usage_date",
+              "payer_account_id",
+              "linked_account_id",
+              "invoice_id",
+              "charge_type",
+              "charge_category",
+              "purchase_option",
+              "ri_sp_arn",
+              "product_code",
+              "product_name",
+              "service",
+              "product_family",
+              "usage_type",
+              "operation",
+              "item_description",
+              "availability_zone",
+              "region",
+              "instance_type_family",
+              "instance_type",
+              "platform",
+              "tenancy",
+              "processor",
+              "processor_features",
+              "database_engine",
+              "product_group",
+              "product_from_location",
+              "product_to_location",
+              "current_generation",
+              "legal_entity",
+              "billing_entity",
+              "pricing_unit",
+              "resource_id_count",
+              "usage_quantity",
+              "unblended_cost",
+              "amortized_cost",
+              "ri_sp_trueup",
+              "ri_sp_upfront_fees",
+              "public_cost",
+              "billing_period_mapping",
+              "payer_account_id_mapping",
+              "ri_sp_arn_mapping",
+              "ri_sp_end_date",
+              "ri_sp_term",
+              "ri_sp_offering",
+              "ri_sp_payment",
+              "account_id",
+              "account_name"
+            ]
+          }
+        },
+        {
+          "TagColumnOperation": {
+            "ColumnName": "region",
+            "Tags": [
+              {
+                "ColumnGeographicRole": "STATE"
+              }
+            ]
+          }
+        }
+      ],
+      "Source": {
+        "JoinInstruction": {
+          "LeftOperand": "7d020d65-42ca-4372-a64e-a98a4d104267",
+          "RightOperand": "d1f4ffc2-73e3-425a-b5fe-40fc44c89555",
+          "Type": "LEFT",
+          "OnClause": "{linked_account_id} = {account_id}"
+        }
+      }
+    },
+    "736681fc-66e6-4652-833a-acbae2a1c73b": {
+      "Alias": "ri_sp_mapping",
+      "Source": {
+        "PhysicalTableId": "f756ee81-056c-4b8d-8bdb-fbce0eff48ba"
+      }
+    },
+    "7d020d65-42ca-4372-a64e-a98a4d104267": {
+      "Alias": "Intermediate Table",
+      "Source": {
+        "JoinInstruction": {
+          "LeftOperand": "f211f5c0-a896-4932-80a0-73cd7f0e2ac8",
+          "RightOperand": "736681fc-66e6-4652-833a-acbae2a1c73b",
+          "Type": "LEFT",
+          "OnClause": "{billing_period} = {billing_period_mapping} AND {payer_account_id} = {payer_account_id_mapping} AND {ri_sp_arn} = {ri_sp_arn_mapping}"
+        }
+      }
+    },
+    "d1f4ffc2-73e3-425a-b5fe-40fc44c89555": {
+      "Alias": "account_map",
+      "Source": {
+        "PhysicalTableId": "c0420538-7a33-4234-af0f-697600127f78"
+      }
+    },
+    "f211f5c0-a896-4932-80a0-73cd7f0e2ac8": {
+      "Alias": "summary_view",
+      "Source": {
+        "PhysicalTableId": "ae9f61a5-d48a-42ed-8b9c-e9f87a9f37fa"
+      }
+    }
+  },
+  "ImportMode": "SPICE",
+  "Permissions": [
+    {
+      "Principal": "${user_arn}",
+      "Actions": [
+        "quicksight:UpdateDataSetPermissions",
+        "quicksight:DescribeDataSet",
+        "quicksight:DescribeDataSetPermissions",
+        "quicksight:PassDataSet",
+        "quicksight:DescribeIngestion",
+        "quicksight:ListIngestions",
+        "quicksight:UpdateDataSet",
+        "quicksight:DeleteDataSet",
+        "quicksight:CreateIngestion",
+        "quicksight:CancelIngestion"
+      ]
+    }
+  ]
+}
