@@ -45,6 +45,14 @@
     ```bash
     cid-cmd --help
     ```
+6. Deploy a dashbaord  
+    ```bash
+    cid-cmd deploy
+    ```
+7. Update a dashbaord  
+    ```bash
+    cid-cmd update
+    ```
 
 ### Example output
 
@@ -54,7 +62,7 @@ Loading plugins...
   Core loaded
 done
 
-Usage: Cid_cmd [OPTIONS] COMMAND [ARGS]...
+Usage: cid-cmd [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --profile_name TEXT           AWS Profile name to use
