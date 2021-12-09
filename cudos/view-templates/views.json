@@ -1,0 +1,40 @@
+{
+	"view_templates": {
+		"compute_savings_plan_eligible_spend": {
+			"__description__": "",
+			"spriFile": "compute_savings_plan_eligible_spend_sp_ri.sql",
+			"spFile": "compute_savings_plan_eligible_spend_sp.sql",
+			"riFile": "compute_savings_plan_eligible_spend_ri.sql",
+			"File": "compute_savings_plan_eligible_spend.sql"
+		},
+		"ec2_running_cost": {
+			"__description__": "",
+			"spriFile": "ec2_running_cost_sp_ri.sql",
+			"spFile": "ec2_running_cost_sp.sql",
+			"riFile": "ec2_running_cost_ri.sql",
+			"File": "ec2_running_cost.sql"
+		},
+		"ri_sp_mapping": {
+			"__description__": "",
+			"spriFile": "ri_sp_mapping_sp_ri.sql",
+			"spFile": "ri_sp_mapping_sp.sql",
+			"riFile": "ri_sp_mapping_ri.sql",
+			"File": "ri_sp_mapping.sql"
+		},
+		
+		"s3_view": {
+			"__description__": "",
+			"spriFile": "s3_sp_ri.sql",
+			"spFile": "s3_sp.sql",
+			"riFile": "s3_ri.sql",
+			"File": "s3.sql"
+		},
+		"summary_view": {
+			"__description__": "",
+			"spriFile": "summary_view_sp_ri.sql",
+			"spFile": "summary_view_sp.sql",
+			"riFile": "summary_view_ri.sql",
+			"File": "summary_view.sql"
+		}
+	}
+}
