@@ -12,16 +12,16 @@
 - [Trusted Advisor Organisation (TAO) Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=e1799d0d-166c-4e61-8fa6-5c927f70c799)
 - [Trends Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=tao-dashboard?dashboard=trends-dashboard)
 
-:white_check_mark: *Is* compatible with [Cloudformation deployment](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2b_cudos_dashboard/#option-3-cloudformation-deployment)
+:white_check_mark: means that the step you are reading below *Is* compatible with a deployment of the dashboards that used the [Cloudformation deployment method](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2b_cudos_dashboard/#option-3-cloudformation-deployment)
 
-:heavy_exclamation_mark: :x: *Is not* compatible with [legacy automation](./legacy)
+:heavy_exclamation_mark: means that the step you are reading *Is not* compatible with a deployment of the dashboards that used the [legacy automation](./legacy)
 
 ## Before you start
 1. :heavy_exclamation_mark: Complete the prerequisites for respective dashboard
-    - [CUDOS Dashboard](https://cudos.workshop.aws/prerequisites.html)
-    - [Cost Intelligence Dashboard](https://cudos.workshop.aws/prerequisites.html)
+    - [CUDOS Dashboard](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/)
+    - [Cost Intelligence Dashboard](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/)
     - [Trusted Advisor (TAO) Dashboard](https://tao.workshop.aws/prerequisites.html)
-    - [Trends Dashboard](https://cudos.workshop.aws/prerequisites.html)
+    - [Trends Dashboard](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/trusted-advisor-dashboards/dashboards/1_prerequistes/)
 
 2. :heavy_exclamation_mark: [Specifying a Query Result Location Using a Workgroup](https://docs.aws.amazon.com/athena/latest/ug/querying.html#query-results-specify-location-workgroup)
 
