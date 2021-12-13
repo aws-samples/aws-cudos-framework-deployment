@@ -1,4 +1,8 @@
 # What's new in TAO Dashboard
+
+## TAO Dashboard v1.5:
+Added Account and IsSuppressed controls to the Performance and Fault Tolerance tabs
+
 ## TAO Dashboard v1.4:
 **New tab Performance:** Added visuals with detailed view for Trusted Advisor Performance checks:
 * High Utilization Amazon EC2 Instances
