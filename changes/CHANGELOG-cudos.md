@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.63.3
+
+* GameTech: Renamed "GameLift OnDemand Instance Types"(Monthly) to GameLift Costs by Instance Types; renamed "GameLift OnDemand Instance Types"(Daily) to "GameLift Instance Types Last 90 Days" and adjusted filters
+
 ## CUDOS - 4.63.2
 
 * DynamoDB: Including replication costs now in “TOP 15 Candidates for IA Tables Previous Month”
