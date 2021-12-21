@@ -5,6 +5,23 @@ class CUR:
     defaults = {
         'TableName': 'customer_all'
     }
+    requiredColumns = [
+        'identity_line_item_id',
+        'identity_time_interval',
+        'bill_invoice_id',
+        'bill_billing_entity',
+        'bill_bill_type',
+        'bill_payer_account_id',
+        'bill_billing_period_start_date',
+        'bill_billing_period_end_date',
+        'line_item_usage_account_id',
+        'line_item_line_item_type',
+        'line_item_usage_start_date',
+        'line_item_usage_end_date',
+        'line_item_product_code',
+        'line_item_usage_type',
+        'line_item_operation',
+    ]
     _tableName = None
     _metadata = None
     _clients = dict()
@@ -89,12 +106,11 @@ class CUR:
                     tables = self.athena.list_table_metadata()
                     tables = [v for v in tables if v.get('TableType') == 'EXTERNAL_TABLE']
                     for table in tables:
-                        if table.get('Name') in self.athena.DatabaseName:
-                            self._metadata = self.athena.get_table_metadata(table.get('Name'))
+                        _metadata = self.athena.get_table_metadata(table.get('Name'))
+                        if all(v in self.requiredColumns for v in _metadata.get('Columns')):
+                            self._metadata = _metadata
                             self._tableName = table.get('Name')
                             break
-                    # self._metadata = self.athena.get_table_metadata(self.athena._DatabaseName.rpartition('_')[2])
-                    # self._tableName = self.athena._DatabaseName.rpartition('_')[2]
                 except self.athena.client.exceptions.MetadataException:
                     # TODO: ask user
                     print('Error: CUR metadata not found')
