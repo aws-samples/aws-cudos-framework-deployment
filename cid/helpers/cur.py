@@ -1,10 +1,8 @@
 import json
+import questionary
 from cid.helpers import Athena
 
 class CUR:
-    defaults = {
-        'TableName': 'customer_all'
-    }
     requiredColumns = [
         'identity_line_item_id',
         'identity_time_interval',
@@ -63,20 +61,20 @@ class CUR:
         return self._configured
 
     @property
-    def tableName(self):
+    def tableName(self) -> str:
         if self.metadata is None:
             print('Error: CUR not detected')
             exit(1)
         return self.metadata.get('Name')
 
     @property
-    def hasResourceIDs(self):
+    def hasResourceIDs(self) -> bool:
         if self._configured and self._hasResourceIDs is None:
             self._hasResourceIDs = 'line_item_resource_id' in self.fields
         return self._hasResourceIDs
 
     @property
-    def hasReservations(self):
+    def hasReservations(self) -> bool:
         if self._configured and self._hasReservations is None:
             kwargs = {
                 'cur_table_name': self._tableName
@@ -85,7 +83,7 @@ class CUR:
         return self._hasReservations
 
     @property
-    def hasSavingsPlans(self):
+    def hasSavingsPlans(self) -> bool:
         if self._configured and self._hasSavingsPlans is None:
             kwargs = {
                 'cur_table_name': self._tableName
@@ -97,23 +95,24 @@ class CUR:
     def metadata(self) -> dict:
         if not self._metadata:
             try:
-                # Look for default CUR table
-                self._metadata = self.athena.get_table_metadata(self.defaults.get('TableName'))
-                self._tableName = self.defaults.get('TableName')
-            except self.athena.client.exceptions.MetadataException:
-                # Look based on CUR Athena database name
-                try:
-                    tables = self.athena.list_table_metadata()
-                    tables = [v for v in tables if v.get('TableType') == 'EXTERNAL_TABLE']
-                    for table in tables:
-                        _metadata = self.athena.get_table_metadata(table.get('Name'))
-                        if all(v in self.requiredColumns for v in _metadata.get('Columns')):
-                            self._metadata = _metadata
-                            self._tableName = table.get('Name')
-                            break
-                except self.athena.client.exceptions.MetadataException:
-                    # TODO: ask user
-                    print('Error: CUR metadata not found')
+                # Look other tables
+                tables = self.athena.list_table_metadata()
+                # Filter tables with type = 'EXTERNAL_TABLE'
+                tables = [v for v in tables if v.get('TableType') == 'EXTERNAL_TABLE']
+                # Filter tables having CUR structure
+                for table in tables.copy():
+                    columns = [c.get('Name') for c in table.get('Columns')]                    
+                    if not all([c in columns for c in self.requiredColumns]):
+                        tables.remove(table)
+                if len(tables) == 1:
+                    self._metadata = tables[0]
+                    self._tableName = self._metadata.get('Name')
+                elif len(tables) > 1:
+                    self._tableName=questionary.select(
+                        "Multiple CUR tables found, please select one",
+                        choices=[v.get('Name') for v in tables]
+                    ).ask()
+                    self._metadata = self.athena.get_table_metadata(self._tableName)
             except Exception as e:
                 # For other errors dump the message
                 print(json.dumps(e, indent=4, sort_keys=True, default=str))
