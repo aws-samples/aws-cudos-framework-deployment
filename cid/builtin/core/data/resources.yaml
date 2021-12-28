@@ -16,8 +16,7 @@ dashboards:
 
   CID:
     name: Cost Intelligence Dashboard
-    templateId: cost-intelligence-dashboard
-    sourceAccountId: '869004330191'
+    templateId: Cost_Intelligence_Dashboard
     dashboardId: cost_intelligence_dashboard
     dependsOn:
       datasets:
