@@ -111,9 +111,11 @@ class Cid:
         plugins = dict()
         _entry_points = entry_points().get('cid.plugins')
         print('Loading plugins...')
+        logger.info('Loading plugins...')
         for ep in _entry_points:
             plugin = Plugin(ep.value)
             print(f"\t{ep.name} loaded")
+            logger.info(f'Plugin "{ep.name}" loaded')
             plugins.update({ep.value: plugin})
             try:
                 self.resources = always_merger.merge(
@@ -121,6 +123,7 @@ class Cid:
             except AttributeError:
                 pass
         print('done\n')
+        logger.info('Finished loading plugins')
         return plugins
 
     def getPlugin(self, plugin) -> dict:
@@ -133,16 +136,21 @@ class Cid:
             if kwargs.get('profile_name'):
                 print('\tprofile name: {name}'.format(
                     name=kwargs.get('profile_name')))
+                logger.info(f'AWS profile name: {kwargs.get("profile_name")}')
             sts = utils.get_boto_client(service_name='sts', **kwargs)
             self.awsIdentity = sts.get_caller_identity()
         except NoCredentialsError:
             print('Error: Not authenticated, please check AWS credentials')
+            logger.info('Not authenticated, exiting')
             exit()
         print('\taccountId: {}\n\tAWS userId: {}'.format(
             self.awsIdentity.get('Account'),
             self.awsIdentity.get('Arn').split(':')[5]
         ))
+        logger.info(f'AWS accountId: {self.awsIdentity.get("Account")}')
+        logger.info(f'AWS userId: {self.awsIdentity.get("Arn").split(":")[5]}')
         print('\tRegion: {}'.format(kwargs.get('region_name')))
+        logger.info(f'AWS region: {kwargs.get("region_name")}')
         print('done\n')
 
 
@@ -159,7 +167,7 @@ class Cid:
             )
         try:
             selected_dashboard = questionary.select(
-                "\nPlease select dashboard to install",
+                "Please select dashboard to install",
                 choices=selection
             ).ask()
         except:
@@ -274,11 +282,7 @@ class Cid:
             dashboard = self.qs.dashboards.get(dashboard_id)
         else:
             # Describe dashboard by the ID given, no discovery
-            result = self.qs.describe_dashboard(DashboardId=dashboard_id)
-            if result:
-                dashboard = Dashboard(result.get('Dashboard'))
-            else:
-                dashboard = None
+            dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
 
         click.echo('Getting dashboard status...', nl=False)
         if dashboard is not None:
@@ -547,15 +551,18 @@ class Cid:
         # Read dataset definition from template
         dataset_file = dataset_definition.get('File')
         if dataset_file:
-            athena_datasources = {
-                k: v for (k, v) in self.qs.datasources.items() if v.get('Type') == 'ATHENA'}
-            if not len(athena_datasources):
-                return False
+            
+            if not len(self.qs.athena_datasources):
+                logger.info('No Athena datasources found, attempting to create one')
+                self.qs.create_data_source()
+                if not len(self.qs.athena_datasources):
+                    logger.error('No Athena datasources available, failing')
+                    return False
             # Load TPL file
             columns_tpl = dict()
             columns_tpl.update({
                 'cur_table_name': self.cur.tableName if dataset_definition.get('dependsOn').get('cur') else None,
-                'athena_datasource_arn': next(iter(athena_datasources)),
+                'athena_datasource_arn': next(iter(self.qs.athena_datasources)),
                 'athena_database_name': self.athena.DatabaseName,
                 'user_arn': self.qs.user.get('Arn')
             })
