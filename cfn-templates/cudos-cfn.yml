@@ -2008,7 +2008,7 @@ Resources:
               DataSetPlaceholder: compute_savings_plan_eligible_spend
             - DataSetArn: !GetAtt S3ViewDataset.Arn
               DataSetPlaceholder: s3_view
-          Arn: arn:aws:quicksight:us-east-1:869004330191:template/cost-intelligence-dashboard
+          Arn: arn:aws:quicksight:us-east-1:223485597511:template/Cost_Intelligence_Dashboard
       Permissions:
         - Actions:
             - quicksight:DescribeDashboard
