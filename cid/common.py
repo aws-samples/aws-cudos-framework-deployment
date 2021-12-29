@@ -139,6 +139,10 @@ class Cid:
                 logger.info(f'AWS profile name: {kwargs.get("profile_name")}')
             sts = utils.get_boto_client(service_name='sts', **kwargs)
             self.awsIdentity = sts.get_caller_identity()
+            self.qs_url_params = {
+                'account_id': self.awsIdentity.get('Account'),
+                'region': self.session.region_name
+            }
         except NoCredentialsError:
             print('Error: Not authenticated, please check AWS credentials')
             logger.info('Not authenticated, exiting')
@@ -217,9 +221,7 @@ class Cid:
             f"Latest template: {latest_template.get('Arn')}/version/{latest_template.get('Version').get('VersionNumber')}")
         click.echo('\nDeploying...', nl=False)
         _url = self.qs_url.format(
-            account_id=self.awsIdentity.get('Account'),
-            region=self.session.region_name,
-            dashboard_id=dashboard_definition.get('dashboardId')
+            dashboard_id=dashboard_definition.get('dashboardId'), **self.qs_url_params
         )
         try:
             self.qs.create_dashboard(dashboard_definition, **kwargs)
@@ -259,13 +261,8 @@ class Cid:
                       indent=4, sort_keys=True, default=str))
                 click.echo(
                     f'\nDashboard is unhealthy, please check errors above.')
-            _url = self.qs_url.format(
-                account_id=self.awsIdentity.get('Account'),
-                region=self.session.region_name,
-                dashboard_id=dashboard_id
-            )
             click.echo('healthy, opening...')
-            click.launch(_url)
+            click.launch(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
         else:
             click.echo('not deployed.')
         
@@ -284,24 +281,9 @@ class Cid:
             # Describe dashboard by the ID given, no discovery
             dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
 
-        click.echo('Getting dashboard status...', nl=False)
         if dashboard is not None:
-            print('\n'+json.dumps(dashboard.dashboard,
-                  indent=4, sort_keys=True, default=str))
-            if dashboard.version.get('Status') in ['CREATION_SUCCESSFUL']:
-                click.echo(f'\nDashboard is healthy.')
-            else:
-                print(json.dumps(dashboard.version.get('Errors'),
-                      indent=4, sort_keys=True, default=str))
-                click.echo(
-                    f'\nDashboard is unhealthy, please check errors above.')
-            _url = self.qs_url.format(
-                account_id=self.awsIdentity.get('Account'),
-                region=self.session.region_name,
-                dashboard_id=dashboard_id
-            )
-            click.echo(
-                f"#######\n####### {dashboard.name} is available at: " + _url + "\n#######")
+            dashboard.display_status()
+            dashboard.display_url(self.qs_url, **self.qs_url_params)
         else:
             click.echo('not deployed.')
 
@@ -379,14 +361,7 @@ class Cid:
         try:
             self.qs.update_dashboard(dashboard, **kwargs)
             click.echo('completed')
-            _url = self.qs_url.format(
-                account_id=self.awsIdentity.get('Account'),
-                region=self.session.region_name,
-                dashboard_id=dashboard_id
-            )
-            print(f"#######\n####### {dashboard.name} is available at: {_url}\n#######")
-            if click.confirm('Do you wish to open it in your browser?'):
-                click.launch(_url)
+            dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)          
         except Exception as e:
             # Catch exception and dump a reason
             click.echo('failed, dumping error message')

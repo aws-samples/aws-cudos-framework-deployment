@@ -9,7 +9,6 @@ import os
 
 import logging
 
-from questionary.constants import NO
 logger = logging.getLogger(__name__)
 
 class Dashboard():
@@ -78,6 +77,10 @@ class Dashboard():
                 self._status = 'broken'
                 logger.info(f"Found datasets: {self.datasets}")
                 logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
+            # Deployment failed
+            if self.version.get('Status') not in ['CREATION_SUCCESSFUL']:
+                self._status = 'broken'
+                self.status_detail = f"{self.version.get('Status')}: {self.version.get('Errors')}"
             # Source Template has changed
             if not self.deployed_arn.startswith(self.sourceTemplate.get('Arn')):
                 self._status = 'legacy'
@@ -131,6 +134,30 @@ class Dashboard():
             except:
                 logger.info(f'Failed to load local config file {file_path}')
 
+    def display_status(self):
+        print('\nDashboard status:')
+        print(f"  Name (id): {self.name} ({self.id})")
+        print(f"  Status: {self.status}")
+        print(f"  Health: {'healthy' if self.health else 'unhealthy'}")
+        if self.status_detail:
+            print(f"  Status detail: {self.status_detail}")
+        if self.latest:
+            print(f"  Latest version: {self.latest_version}")
+        if self.deployed_version:
+            print(f"  Deployed version: {self.deployed_version}")
+        if self.localConfig:
+            print(f"  Local config: {self.localConfig.get('SourceEntity').get('SourceTemplate').get('Name')}")
+        if self.datasets:
+            print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
+        print('\n')
+        if click.confirm('Display dashboard raw data?'):
+            print(json.dumps(self.dashboard, indent=4, sort_keys=True, default=str))
+    
+    def display_url(self, url_template: str, launch: bool = False, **kwargs):
+        url = url_template.format(dashboard_id=self.id, **kwargs)
+        print(f"#######\n####### {self.name} is available at: " + url + "\n#######")
+        if launch and click.confirm('Do you wish to open it in your browser?'):
+                click.launch(url)
 
 class QuickSight():
     # Define defaults
