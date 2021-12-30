@@ -44,3 +44,6 @@ venv.bak/
 .Trashes
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
+
+#Local dev and testing files
+cfn-templates/parameters.local
