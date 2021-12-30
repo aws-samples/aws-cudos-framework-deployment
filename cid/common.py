@@ -2,7 +2,7 @@ from pkg_resources import resource_string
 import questionary
 
 from cid import utils
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard
+from cid.helpers import Athena, CUR, Glue, QuickSight
 from cid.helpers.account_map import AccountMap
 from cid.plugin import Plugin
 
@@ -111,11 +111,11 @@ class Cid:
         plugins = dict()
         _entry_points = entry_points().get('cid.plugins')
         print('Loading plugins...')
-        logger.info('Loading plugins...')
+        logger.info(f'Located {len(_entry_points)} plugin(s)')
         for ep in _entry_points:
+            logger.info(f'Loading plugin: {ep.name} ({ep.value})')
             plugin = Plugin(ep.value)
             print(f"\t{ep.name} loaded")
-            logger.info(f'Plugin "{ep.name}" loaded')
             plugins.update({ep.value: plugin})
             try:
                 self.resources = always_merger.merge(

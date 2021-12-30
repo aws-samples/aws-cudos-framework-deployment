@@ -297,7 +297,7 @@ class QuickSight():
         try:
             logger.info(f'Creating data source {params}')
             create_status = self.client.create_data_source(**params)
-            logger.info(f'Data source createtion status {create_status}')
+            logger.debug(f'Data source creation result {create_status}')
             current_status = create_status['CreationStatus']
             logger.info(f'Data source creation status {current_status}')
             # Poll for the current status of query as long as its not finished
