@@ -29,6 +29,8 @@ class Cid:
     }
 
     def __init__(self, **kwargs) -> None:
+        self.__setupLogging(verbosity=kwargs.pop('verbose'))
+        logger.info('Initializing CID')
         # Defined resources
         self.resources = dict()
         self.dashboards = dict()
@@ -156,6 +158,30 @@ class Cid:
         print('\tRegion: {}'.format(kwargs.get('region_name')))
         logger.info(f'AWS region: {kwargs.get("region_name")}')
         print('done\n')
+
+
+    def __setupLogging(self, verbosity: int=0, log_filename: str='cid.log') -> None:
+        _logger = logging.getLogger('cid')
+        # create formatter
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s')
+        # File handler logs everything down to DEBUG level
+        fh = logging.FileHandler(log_filename)
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+        # Console handler logs everything down to ERROR level
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.ERROR)
+        # create formatter and add it to the handlers
+        ch.setFormatter(formatter)
+        # add the handlers to logger
+        _logger.addHandler(ch)
+        _logger.addHandler(fh)
+        if verbosity:
+            # Limit Logging level to DEBUG, base level is WARNING
+            verbosity = 2 if verbosity > 2 else verbosity
+            _logger.setLevel(logger.getEffectiveLevel()-10*verbosity)
+            # Logging application start here due to logging configuration
+            print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
 
 
     def deploy(self, **kwargs):
