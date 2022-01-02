@@ -173,7 +173,8 @@ class QuickSight():
         self._resources = resources
 
         # QuickSight client
-        self.client = session.client('quicksight', region_name=self.region)
+        logger.info(f'Creating QuickSight client')
+        self.client = session.client('quicksight')
         self.use1Client = session.client('quicksight', region_name='us-east-1')
 
     @property

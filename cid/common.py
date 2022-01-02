@@ -135,11 +135,10 @@ class Cid:
         print('Checking AWS environment...')
         try:
             self.session = utils.get_boto_session(**kwargs)
-            if kwargs.get('profile_name'):
-                print('\tprofile name: {name}'.format(
-                    name=kwargs.get('profile_name')))
-                logger.info(f'AWS profile name: {kwargs.get("profile_name")}')
-            sts = utils.get_boto_client(service_name='sts', **kwargs)
+            if self.session.profile_name:
+                print(f'\tprofile name: {self.session.profile_name}')
+                logger.info(f'AWS profile name: {self.session.profile_name}')
+            sts = self.session.client('sts')
             self.awsIdentity = sts.get_caller_identity()
             self.qs_url_params = {
                 'account_id': self.awsIdentity.get('Account'),
@@ -155,8 +154,8 @@ class Cid:
         ))
         logger.info(f'AWS accountId: {self.awsIdentity.get("Account")}')
         logger.info(f'AWS userId: {self.awsIdentity.get("Arn").split(":")[5]}')
-        print('\tRegion: {}'.format(kwargs.get('region_name')))
-        logger.info(f'AWS region: {kwargs.get("region_name")}')
+        print('\tRegion: {}'.format(self.session.region_name))
+        logger.info(f'AWS region: {self.session.region_name}')
         print('done\n')
 
 
