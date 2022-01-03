@@ -77,15 +77,12 @@ class Cid:
                     "Error: please ensure CUR is enabled, if yes allow it some time to propagate")
                 exit(1)
             print(f'\tAthena table: {_cur.tableName}')
-            print('\tResource IDs: {}'.format(
-                'yes' if _cur.hasResourceIDs else 'no'))
+            print(f"\tResource IDs: {'yes' if _cur.hasResourceIDs else 'no'}")
             if not _cur.hasResourceIDs:
                 print("Error: CUR has to be created with Resource IDs")
                 exit(1)
-            print('\tSavingsPlans: {}'.format(
-                'yes' if _cur.hasSavingsPlans else 'no'))
-            print('\tReserved Instances: {}'.format(
-                'yes' if _cur.hasReservations else 'no'))
+            print(f"\tSavingsPlans: {'yes' if _cur.hasSavingsPlans else 'no'}")
+            print(f"\tReserved Instances: {'yes' if _cur.hasReservations else 'no'}")
             print('done')
             self._clients.update({
                 'cur': _cur
@@ -215,8 +212,9 @@ class Cid:
             dashboard_definition.update({'datasets': {}})
         dashboard_datasets = dashboard_definition.get('datasets')
         for dataset_name in required_datasets:
+            arn = next(v.get('Arn') for v in self.qs._datasets.values() if v.get('Name') == dataset_name)
             dashboard_datasets.update(
-                {dataset_name: self.qs._datasets.get(dataset_name).get('Arn')})
+                {dataset_name: arn})
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard_definition.get("dashboardId")}.json'

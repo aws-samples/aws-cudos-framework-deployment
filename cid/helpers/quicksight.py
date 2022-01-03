@@ -12,19 +12,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Dashboard():
-    # Initialize properties
-    datasets = dict()
-    _status = None
-    status_detail = None
-    # Source template in origin account
-    sourceTemplate = None
-    # Dashboard definition
-    definition = None
-    # Locally saved deployment
-    localConfig = None
-
-    def __init__(self, dashboard) -> None:
-        self.dashboard = dashboard
+    def __init__(self, dashboard: dict) -> None:
+        self.dashboard: dict = dashboard
+        # Initialize properties
+        self.datasets = dict()
+        self._status = str()
+        self.status_detail = str()
+        # Source template in origin account
+        self.sourceTemplate = dict()
+        # Dashboard definition
+        self.definition = dict()
+        # Locally saved deployment
+        self.localConfig = dict()
 
     @property
     def id(self) -> str:
@@ -39,6 +38,10 @@ class Dashboard():
         return self.get_property('Arn')
 
     @property
+    def account_id(self) -> str:
+        return self.get_property('Arn').split(':')[4]
+
+    @property
     def version(self) -> dict:
         return self.get_property('Version')
 
@@ -48,7 +51,7 @@ class Dashboard():
 
     @property
     def latest_version(self) -> int:
-        return int(self.sourceTemplate.get('Version').get('VersionNumber'))
+        return int(self.sourceTemplate.get('Version', dict()).get('VersionNumber', -1))
     
     @property
     def deployed_arn(self) -> str:
@@ -63,26 +66,26 @@ class Dashboard():
  
     @property
     def health(self) -> bool:
-        return self.status not in ['broken', 'unsupported']
+        return self.status not in ['broken']
 
     @property
     def status(self) -> str:
         if not self._status:
-            # Unsupported
+            # Not dicovered yet
             if not self.definition:
-                self._status = 'unsupported'
+                self._status = 'undiscovered'
             # Missing dataset
-            if not self.datasets or (len(self.datasets) < len(self.definition.get('dependsOn').get('datasets'))):
+            elif not self.datasets or (len(self.datasets) < len(self.definition.get('dependsOn').get('datasets'))):
                 self.status_detail = 'missing dataset(s)'
                 self._status = 'broken'
                 logger.info(f"Found datasets: {self.datasets}")
                 logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
             # Deployment failed
-            if self.version.get('Status') not in ['CREATION_SUCCESSFUL']:
+            elif self.version.get('Status') not in ['CREATION_SUCCESSFUL']:
                 self._status = 'broken'
                 self.status_detail = f"{self.version.get('Status')}: {self.version.get('Errors')}"
             # Source Template has changed
-            if not self.deployed_arn.startswith(self.sourceTemplate.get('Arn')):
+            elif self.deployed_arn and self.sourceTemplate.get('Arn') and not self.deployed_arn.startswith(self.sourceTemplate.get('Arn')):
                 self._status = 'legacy'
             else:
                 if self.latest_version > self.deployed_version:
@@ -98,7 +101,7 @@ class Dashboard():
     def get_property(self, property: str) -> str:
         return self.dashboard.get(property)
     
-    def find_local_config(self, account_id):
+    def find_local_config(self) -> Union[dict, None]:
 
         if self.localConfig:
             return self.localConfig
@@ -108,13 +111,12 @@ class Dashboard():
         # Load TPL file
         file_path = None
         files_to_find = [
-            f'work/{account_id}/{self.id.lower()}-update-dashboard.json',
-            f'work/{account_id}/{self.id.lower()}-create-dashboard.json',
-            f'work/{account_id}/{self.id.lower()}-update-dashboard-{account_id}.json',
-            f'work/{account_id}/{self.id.lower()}-create-dashboard-{account_id}.json',
+            f'work/{self.account_id}/{self.id.lower()}-update-dashboard.json',
+            f'work/{self.account_id}/{self.id.lower()}-create-dashboard.json',
+            f'work/{self.account_id}/{self.id.lower()}-update-dashboard-{self.account_id}.json',
+            f'work/{self.account_id}/{self.id.lower()}-create-dashboard-{self.account_id}.json',
         ]
-        for localConfig in self.definition.get('localConfigs', list()):
-            files_to_find.append(f'work/{account_id}/{localConfig.lower()}')
+        files_to_find += [f'work/{self.account_id}/{f.lower()}' for f in self.definition.get('localConfigs', list())]
         for file in files_to_find:
             logger.info(f'Checking local config file {file}')
             if os.path.isfile(os.path.join(abs_path, file)):
@@ -142,9 +144,9 @@ class Dashboard():
         if self.status_detail:
             print(f"  Status detail: {self.status_detail}")
         if self.latest:
-            print(f"  Latest version: {self.latest_version}")
-        if self.deployed_version:
-            print(f"  Deployed version: {self.deployed_version}")
+            print(f"  Version: {self.deployed_version}")
+        else:
+            print(f"  Version (deployed, latest): {self.deployed_version}, {self.latest_version}")
         if self.localConfig:
             print(f"  Local config: {self.localConfig.get('SourceEntity').get('SourceTemplate').get('Name')}")
         if self.datasets:
@@ -162,10 +164,10 @@ class Dashboard():
 class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
-    _dashboards = dict()
+    _dashboards: dict[Dashboard] = {}
     _datasets = dict()
-    _datasources = dict()
-    _user = None
+    _datasources: dict() = {}
+    _user: dict = None
 
     def __init__(self, session, awsIdentity, resources=None):        
         self.region = session.region_name
@@ -182,7 +184,7 @@ class QuickSight():
         return self.awsIdentity.get('Account')
 
     @property
-    def user(self):
+    def user(self) -> dict:
         if not self._user:
             self._user =  self.describe_user('/'.join(self.awsIdentity.get('Arn').split('/')[-2:]))
             if not self._user:
@@ -208,7 +210,7 @@ class QuickSight():
         return self._resources.get('dashboards')
 
     @property
-    def dashboards(self) -> dict:
+    def dashboards(self) -> dict[Dashboard]:
         """Returns a list of deployed dashboards"""
         if not self._dashboards:
             self.discover_dashboards()
@@ -251,12 +253,11 @@ class QuickSight():
                         dashboard.datasets.update({dataset_id: 'missing'})
                         logger.info(f'Dataset "{dataset_id}" is missing')
                     else:
-                        logger.info('Using dataset "{name}" ({id})'.format(name=_dataset.get('Name'), id=_dataset.get('DataSetId')))
+                        logger.info(f"Using dataset \"{_dataset.get('Name')}\" ({_dataset.get('DataSetId')} for {dashboard.name})")
                         dashboard.datasets.update({_dataset.get('Name'): _dataset.get('Arn')})
-                        self._datasets.update({_dataset.get('Name'): _dataset})
                 except self.client.exceptions.AccessDeniedException:
                     logger.info(f'Looking local config for {dashboardId}')
-                    dashboard.find_local_config(self.account_id)
+                    dashboard.find_local_config()
                 except self.client.exceptions.InvalidParameterValueException:
                     logger.info(f'Invalid dataset {dataset_id}')
             templateAccountId = _definition.get('sourceAccountId')
@@ -266,6 +267,7 @@ class QuickSight():
             except:
                 logger.info(f'Unable to describe template {dashboard.templateId} in {templateAccountId}')
             self._dashboards.update({dashboardId: dashboard})
+            logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
             logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
 
     def create_data_source(self) -> bool:
@@ -322,7 +324,7 @@ class QuickSight():
             for v in self.list_data_sources():
                 self.describe_data_source(v.get('DataSourceId'))
         except:
-            for _,v in self._datasets.items():
+            for _,v in self.datasets.items():
                 for _,map in v.get('PhysicalTableMap').items():
                     self.describe_data_source(map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
 
@@ -389,7 +391,7 @@ class QuickSight():
         except:
             return list()
 
-    def select_dashboard(self, force=False):
+    def select_dashboard(self, force=False) -> str:
         """ Select from a list of discovered dashboards """
         selection = list()
         dashboard_id = None
@@ -432,20 +434,40 @@ class QuickSight():
         except:
             return None
 
-    def describe_dashboard(self, **kwargs) -> Union[None, Dashboard]:
+    def describe_dashboard(self, poll: bool=False, **kwargs) -> Union[None, Dashboard]:
         """ Describes an AWS QuickSight dashboard
         Keyword arguments:
         DashboardId
 
         """
-
+        poll_interval = kwargs.get('poll_interval', 1)
         try:
-            return Dashboard(self.client.describe_dashboard(AwsAccountId=self.account_id, **kwargs).get('Dashboard'))
+            dashboard: Dashboard = None
+            current_status = None
+            # Poll for the current status of query as long as its not finished
+            while current_status in [None, 'CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
+                if current_status:
+                    logger.info(f'Dashboard {dashboard.name} status is {current_status}, waiting for {poll_interval} seconds')
+                    # Sleep before polling again
+                    time.sleep(poll_interval)
+                elif poll:
+                    logger.info(f'Polling for dashboard {kwargs.get("DashboardId")}')
+                response = self.client.describe_dashboard(AwsAccountId=self.account_id, **kwargs).get('Dashboard')
+                logger.debug(response)
+                dashboard = Dashboard(response)
+                current_status = dashboard.version.get('Status')
+                if not poll:
+                    break
+            logger.info(f'Dashboard {dashboard.name} status is {current_status}')
+            return dashboard
         except self.client.exceptions.ResourceNotFoundException:
             return None
         except self.client.exceptions.UnsupportedUserEditionException:
             print('Error: AWS QuickSight Enterprise Edition is required')
             exit(1)
+        except Exception as e:
+            print(f'Error: {e}')
+            raise
 
     def delete_dashboard(self, dashboard_id):
         """ Deletes an AWS QuickSight dashboard """
@@ -457,18 +479,19 @@ class QuickSight():
 
     def describe_dataset(self, id) -> dict:
         """ Describes an AWS QuickSight dataset """
-        try:
-            _dataset = self.client.describe_data_set(AwsAccountId=self.account_id,DataSetId=id).get('DataSet')
-            if not self._datasets.get(_dataset.get('Name')):
+        if not self._datasets.get(id):
+            logger.info(f'Describing dataset {id}')
+            try:
+                _dataset = self.client.describe_data_set(AwsAccountId=self.account_id,DataSetId=id).get('DataSet')
                 logger.info(f'Saving dataset details "{_dataset.get("Name")}" ({_dataset.get("DataSetId")})')
-                self._datasets.update({_dataset.get('Name'): _dataset})
-        except self.client.exceptions.ResourceNotFoundException:
-            logger.info(f'DataSetId {id} do not exist')
-            raise
-        except self.client.exceptions.AccessDeniedException:
-            logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
-            raise
-        return _dataset
+                self._datasets.update({_dataset.get('DataSetId'): _dataset})
+            except self.client.exceptions.ResourceNotFoundException:
+                logger.info(f'DataSetId {id} do not exist')
+                raise
+            except self.client.exceptions.AccessDeniedException:
+                logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
+                raise
+        return self._datasets.get(id)
 
     def describe_data_source(self, id):
         """ Describes an AWS QuickSight data source """
@@ -527,10 +550,11 @@ class QuickSight():
             logger.info(f'Dataset {dataset.get("Name")} already exists')
         self.describe_dataset(response.get('DataSetId'))
 
-    def create_dashboard(self, dashboard, sleep_duration=1, **kwargs) -> Dashboard:
+
+    def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
         """ Creates an AWS QuickSight dashboard """
         DataSetReferences = list()
-        for k, v in dashboard.get('datasets', dict()).items():
+        for k, v in definition.get('datasets', dict()).items():
             DataSetReferences.append({
                 'DataSetPlaceholder': k,
                 'DataSetArn': v
@@ -538,8 +562,8 @@ class QuickSight():
         
         create_parameters = {
             'AwsAccountId': self.account_id,
-            'DashboardId': dashboard.get('dashboardId'),
-            'Name': dashboard.get('name'),
+            'DashboardId': definition.get('dashboardId'),
+            'Name': definition.get('name'),
             'Permissions': [
                 {
                     "Principal": self.user.get('Arn'),
@@ -557,7 +581,7 @@ class QuickSight():
             ],
             'SourceEntity': {
                 'SourceTemplate': {
-                    'Arn': f"{dashboard.get('sourceTemplate').get('Arn')}/version/{dashboard.get('sourceTemplate').get('Version').get('VersionNumber')}",
+                    'Arn': f"{definition.get('sourceTemplate').get('Arn')}/version/{definition.get('sourceTemplate').get('Version').get('VersionNumber')}",
                     'DataSetReferences': DataSetReferences
                 }
             }
@@ -566,6 +590,7 @@ class QuickSight():
         create_parameters = always_merger.merge(create_parameters, kwargs)
         try:
             create_status = self.client.create_dashboard(**create_parameters)
+            logger.debug(create_status)
         except self.client.exceptions.ResourceExistsException:
             raise
         created_version = int(create_status['VersionArn'].split('/')[-1])
@@ -573,21 +598,18 @@ class QuickSight():
 
         # Poll for the current status of query as long as its not finished
         describe_parameters = {
-            'DashboardId': dashboard.get('dashboardId'),
+            'DashboardId': definition.get('dashboardId'),
             'VersionNumber': created_version
         }
-        while current_status in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
-            response = self.describe_dashboard(**describe_parameters)
-            current_status = response.version.get('Status')
-
-        if (current_status != "CREATION_SUCCESSFUL"):
-            failure_reason = response.version.get('Errors')
+        dashboard = self.describe_dashboard(poll=True, **describe_parameters)
+        if not dashboard.health:
+            failure_reason = dashboard.version.get('Errors')
             raise Exception(failure_reason)
 
-        return response.dashboard
+        return dashboard
 
 
-    def update_dashboard(self, dashboard, sleep_duration=1, **kwargs):
+    def update_dashboard(self, dashboard: Dashboard, **kwargs):
         """ Updates an AWS QuickSight dashboard """
         DataSetReferences = list()
         for k, v in dashboard.datasets.items():
@@ -602,26 +624,20 @@ class QuickSight():
             'Name': dashboard.name,
             'SourceEntity': {
                 'SourceTemplate': {
-                    'Arn': dashboard.sourceTemplate.get('Arn'),
+                    'Arn': f"{dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}",
                     'DataSetReferences': DataSetReferences
                 }
             }
         }
 
         update_parameters = always_merger.merge(update_parameters, kwargs)
+        logger.debug(f"Update parameters: {update_parameters}")
         update_status = self.client.update_dashboard(**update_parameters)
+        logger.debug(update_status)
         updated_version = int(update_status['VersionArn'].split('/')[-1])
-        current_status = update_status['CreationStatus']
 
-        # Poll for the current status of query as long as its not finished
-        while current_status in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
-            # Sleep before polling again
-            time.sleep(sleep_duration)
-            dashboard = self.describe_dashboard(DashboardId=dashboard.id, VersionNumber=updated_version)
-            current_status = dashboard.version.get('Status')
-
-
-        if (current_status != "CREATION_SUCCESSFUL"):
+        dashboard = self.describe_dashboard(poll=True, DashboardId=dashboard.id, VersionNumber=updated_version)
+        if not dashboard.health:
             failure_reason = dashboard.version.get('Errors')
             raise Exception(failure_reason)
 
