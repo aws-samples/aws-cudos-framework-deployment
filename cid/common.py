@@ -348,18 +348,13 @@ class Cid:
             return
 
         print(f'\nChecking for updates...')
-        try:
-            deployed_template = dashboard.version.get('SourceEntityArn')
-        except AttributeError:
-            click.echo(f'not deployed')
-            return
         click.echo(f'Deployed template: {dashboard.deployed_arn}')
         click.echo(
             f"Latest template: {dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}")
-        if not deployed_template.startswith(dashboard.sourceTemplate.get('Arn')):
+        if dashboard.status == 'legacy':
             click.confirm(
                 "\nDashboard template changed, update it anyway?", abort=True)
-        elif not (dashboard.deployed_version < dashboard.latest_version):
+        elif dashboard.latest:
             click.confirm(
                 "\nNo updates available, should I update it anyway?", abort=True)
 
