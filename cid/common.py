@@ -15,7 +15,7 @@ from string import Template
 import json
 
 from pathlib import Path
-from botocore.exceptions import NoCredentialsError
+from botocore.exceptions import NoCredentialsError, CredentialRetrievalError
 
 from deepmerge import always_merger
 
@@ -144,7 +144,7 @@ class Cid:
                 'account_id': self.awsIdentity.get('Account'),
                 'region': self.session.region_name
             }
-        except NoCredentialsError:
+        except (NoCredentialsError, CredentialRetrievalError):
             print('Error: Not authenticated, please check AWS credentials')
             logger.info('Not authenticated, exiting')
             exit()
