@@ -162,7 +162,7 @@ class Cid:
     def __setupLogging(self, verbosity: int=0, log_filename: str='cid.log') -> None:
         _logger = logging.getLogger('cid')
         # create formatter
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s:%(funcName)s:%(lineno)d - %(message)s')
         # File handler logs everything down to DEBUG level
         fh = logging.FileHandler(log_filename)
         fh.setLevel(logging.DEBUG)
