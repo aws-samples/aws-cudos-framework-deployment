@@ -1,9 +1,10 @@
 import click
-from os import environ as env
 
 from cid import Cid
 
-version = '1.0 Beta'
+__version__ = '0.1.6'
+
+version = f'{__version__} Beta'
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
 
