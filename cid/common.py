@@ -267,8 +267,8 @@ class Cid:
     def open(self, dashboard_id):
         """Open QuickSight dashboard in browser"""
 
-        if os.environ.get('AWS_EXECUTION_ENV') == 'CloudShell':
-            print('Operation is not supported in CloudShell')
+        if os.environ.get('AWS_EXECUTION_ENV') in ['CloudShell', 'AWS_Lambda']:
+            print(f"Operation is not supported in {os.environ.get('AWS_EXECUTION_ENV')}")
             return dashboard_id
         if not dashboard_id:
             dashboard_id = self.qs.select_dashboard(force=True)
