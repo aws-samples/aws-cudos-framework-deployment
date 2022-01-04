@@ -1,5 +1,5 @@
 import time
-from typing import Union
+from typing import Dict, Union
 import click
 import json
 from deepmerge import always_merger
@@ -164,7 +164,7 @@ class Dashboard():
 class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
-    _dashboards: dict[Dashboard] = {}
+    _dashboards: Dict[str, Dashboard] = {}
     _datasets = dict()
     _datasources: dict() = {}
     _user: dict = None
@@ -210,7 +210,7 @@ class QuickSight():
         return self._resources.get('dashboards')
 
     @property
-    def dashboards(self) -> dict[Dashboard]:
+    def dashboards(self) -> Dict[str, Dashboard]:
         """Returns a list of deployed dashboards"""
         if not self._dashboards:
             self.discover_dashboards()
