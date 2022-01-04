@@ -22,6 +22,9 @@ class Athena():
     _DatabaseName = None
     ahq_queries = None
     _metadata = dict()
+    _resources = dict()
+    _client = None
+    region: str = None
 
     def __init__(self, session, resources: dict=None):        
         self.region = session.region_name
@@ -53,7 +56,7 @@ class Athena():
                         "Select AWS DataCatalog to use",
                         choices=glue_data_catalogs
                     ).ask()
-        logging.debug(f'Using datacatalog: {self._CatalogName}')
+            logger.info(f'Using datacatalog: {self._CatalogName}')
         return self._CatalogName
 
     @property
@@ -85,7 +88,7 @@ class Athena():
                         "Select AWS Athena database to use",
                         choices=[d['Name'] for d in athena_databases]
                     ).ask()
-        logging.debug(f'Using Athena database: {self._DatabaseName}')
+            logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
 
     def list_data_catalogs(self) -> list:
@@ -168,14 +171,7 @@ class Athena():
         # Return result, either positive or negative
         if (current_status == "SUCCEEDED"):
             return query_id
-        elif (current_status == "FAILED") or (current_status == "CANCELLED"):
-            failure_reason = response['QueryExecution']['Status']['StateChangeReason']
-            logger.error('Athena query failed: {}'.format(failure_reason))
-            logger.error('Full query: {}'.format(sql_query))
-            
-            raise Exception(failure_reason)
         else:
-            failure_reason = response['QueryExecution']['Status']['StateChangeReason']
             failure_reason = response['QueryExecution']['Status']['StateChangeReason']
             logger.error('Athena query failed: {}'.format(failure_reason))
             logger.error('Full query: {}'.format(sql_query))
