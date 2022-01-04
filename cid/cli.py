@@ -2,7 +2,7 @@ import click
 
 from cid import Cid
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
 version = f'{__version__} Beta'
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
