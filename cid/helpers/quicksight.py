@@ -261,11 +261,12 @@ class QuickSight():
                 except self.client.exceptions.InvalidParameterValueException:
                     logger.info(f'Invalid dataset {dataset_id}')
             templateAccountId = _definition.get('sourceAccountId')
+            templateId = _definition.get('templateId')
             try:
-                template = self.describe_template(dashboard.templateId, account_id=templateAccountId)
+                template = self.describe_template(templateId, account_id=templateAccountId)
                 dashboard.sourceTemplate = template
             except:
-                logger.info(f'Unable to describe template {dashboard.templateId} in {templateAccountId}')
+                logger.info(f'Unable to describe template {templateId} in {templateAccountId}')
             self._dashboards.update({dashboardId: dashboard})
             logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
             logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
