@@ -633,16 +633,21 @@ class Cid:
             return
         # Create a view
         print(f'\nCreating view: {view_name}')
+        logger.info(f'Creating view: {view_name}')
+        logger.info(f'Getting view definition')
         view_definition = self.resources.get('views').get(view_name, dict())
+        logger.debug(f'View definition: {view_definition}')
         # Discover dependency views (may not be discovered earlier)
         dependency_views = view_definition.get(
             'dependsOn', dict()).get('views', list())
+        logger.info(f"Dependency views: {', '.join(dependency_views)}" if dependency_views else 'No dependency views')
         self.athena.discover_views(dependency_views)
         while dependency_views:
             dep = dependency_views.copy().pop()
         # for dep in dependency_views:
             if dep not in self.athena._metadata.keys():
                 print(f'Missing dependency view: {dep}, trying to create')
+                logger.info(f'Missing dependency view: {dep}, trying to create')
                 self.create_view(dep)
             dependency_views.remove(dep)
         view_query = self.get_view_query(view_name=view_name)
@@ -702,6 +707,6 @@ class Cid:
 
     def map(self):
         """Create account mapping Athena views"""
+        for v in ['account_map', 'aws_accounts']:
+            self.accountMap.create(v)
 
-        self.accountMap.create('account_map')
-        self.accountMap.create('aws_accounts')

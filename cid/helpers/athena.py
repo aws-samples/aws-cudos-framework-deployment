@@ -22,6 +22,9 @@ class Athena():
     _DatabaseName = None
     ahq_queries = None
     _metadata = dict()
+    _resources = dict()
+    _client = None
+    region: str = None
 
     def __init__(self, session, resources: dict=None):        
         self.region = session.region_name
