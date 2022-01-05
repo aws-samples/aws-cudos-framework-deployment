@@ -302,6 +302,7 @@ class Cid:
             dashboard = self.qs.dashboards.get(dashboard_id)
         else:
             # Describe dashboard by the ID given, no discovery
+            self.qs.discover_dashboard(dashboardId=dashboard_id)
             dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
 
         if dashboard is not None:
