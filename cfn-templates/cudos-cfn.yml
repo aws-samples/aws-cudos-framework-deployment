@@ -193,7 +193,9 @@ Resources:
         Variables:
           DatabaseName: !Ref CURDatabaseName
           TableName: !Ref CURTableName
-          ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/legacy/cudos/view-templates'
+          ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cid/builtin/core/data/queries'
+          ViewMetadataUri:  'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cfn-templates'
+                            
       Code:
         ZipFile: |
           import os
@@ -216,6 +218,7 @@ Resources:
           database_name = os.environ["DatabaseName"]
           table_name = os.environ["TableName"]
           view_templates_uri = os.environ["ViewTemplatesUri"]
+          view_metadata_uri = os.environ["ViewMetadataUri"]
 
           def lambda_handler(event, context):
               logger.info(f"Cloud formation {event['RequestType']} event,"
@@ -262,10 +265,10 @@ Resources:
                   else:
                       query_mode = 'File'
                   logger.info(f"Step {step} completed, query mode is '{query_mode}'")
-                  step="Download View Metadata"
+                  step="Download View Metadata from " + f'{view_metadata_uri}/views_cid.json'
 
                   logger.info(f"Trying to {step}")
-                  view_dict=json.loads(str(http.request('GET', f'{view_templates_uri}/views.json').data.decode('utf-8')))
+                  view_dict=json.loads(str(http.request('GET', f'{view_metadata_uri}/views_cid.json').data.decode('utf-8')))
                   logger.info (f"Step '{step}' completed, the view metadata is: {view_dict}")
                   
                   for key in view_dict["view_templates"]:
@@ -273,7 +276,7 @@ Resources:
                       step = "Downloading view " + sql_file_uri
                       logger.info(step)
                       view_template = str(http.request('GET', sql_file_uri).data.decode('utf-8'))
-                      view_code = view_template.replace('${athena_cur_table_name}',table_name)
+                      view_code = view_template.replace('${cur_table_name}',table_name)
                       logger.info('Completed %s', step)
                       step = "Running athena query for view" + view_dict["view_templates"][key][query_mode] 
                       logger.info(step)
