@@ -1,6 +1,6 @@
 import boto3
 
-from botocore.exceptions import NoCredentialsError, CredentialRetrievalError
+from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -16,10 +16,19 @@ def get_boto_session(**kwargs):
     :return: Boto3 Client
     """
     try:
-        return boto3.session.Session(**kwargs)
+        session = boto3.session.Session(**kwargs)
+        logger.info('Boto3 session created')
+        logger.debug(session)
+        if not session.region_name:
+            raise NoRegionError
+        return session
     except (NoCredentialsError, CredentialRetrievalError):
         print('Error: unable to initialize session, please check your AWS credentials, exiting')
         exit(1)
+    except NoRegionError:
+        logger.info('No AWS region set, defaulting to us-east-1')
+        kwargs.update({'region_name': 'us-east-1'})
+        return get_boto_session(**kwargs)
     except:
         raise
 

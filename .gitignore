@@ -4,6 +4,7 @@
 *~
 *#
 *.swp
+*.log
 
 # Python specific
 build/
