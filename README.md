@@ -40,16 +40,19 @@
     ```bash
     pip3 install --upgrade cid-cmd
     ```
+5. Prepare AWS access 
 
-5. List of supported commands  
+    ``` aws configure ```
+
+6. List of supported commands  
     ```bash
     cid-cmd --help
     ```
-6. Deploy a dashbaord  
+7. Deploy a dashbaord  
     ```bash
     cid-cmd deploy
     ```
-7. Update a dashbaord  
+8. Update a dashbaord  
     ```bash
     cid-cmd update
     ```
