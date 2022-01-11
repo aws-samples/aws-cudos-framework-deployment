@@ -492,7 +492,7 @@ class QuickSight():
                 logger.info(f'DataSetId {id} do not exist')
             except self.client.exceptions.AccessDeniedException:
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
-        return self._datasets.get(id)
+        return self._datasets.get(id, dict())
 
     def describe_data_source(self, id):
         """ Describes an AWS QuickSight data source """
