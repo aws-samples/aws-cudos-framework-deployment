@@ -389,7 +389,8 @@ class QuickSight():
             else:
                 return result.get('DataSources')
         except self.client.exceptions.AccessDeniedException:
-            raise
+            logger.info('Access denied listing data sources')
+            return list()
         except:
             return list()
 
@@ -489,10 +490,8 @@ class QuickSight():
                 self._datasets.update({_dataset.get('DataSetId'): _dataset})
             except self.client.exceptions.ResourceNotFoundException:
                 logger.info(f'DataSetId {id} do not exist')
-                raise
             except self.client.exceptions.AccessDeniedException:
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
-                raise
         return self._datasets.get(id)
 
     def describe_data_source(self, id):
