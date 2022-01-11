@@ -276,8 +276,10 @@ class AccountMap():
             template = Template(template_str)
             accounts_sql = list()
             for account in self.accounts:
+                acc = account.copy()
+                account_name = acc.pop('account_name').replace("'", "''")
                 accounts_sql.append(
-                    "ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')".format(**account))
+                    """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')""".format(account_name=account_name, **acc))
             
             # Fill in TPLs
             columns_tpl = dict()
