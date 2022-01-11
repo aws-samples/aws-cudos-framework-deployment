@@ -389,7 +389,8 @@ class QuickSight():
             else:
                 return result.get('DataSources')
         except self.client.exceptions.AccessDeniedException:
-            raise
+            logger.info('Access denied listing data sources')
+            return list()
         except:
             return list()
 
