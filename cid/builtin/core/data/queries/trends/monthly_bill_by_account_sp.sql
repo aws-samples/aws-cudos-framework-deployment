@@ -17,7 +17,7 @@ WITH
      WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN 0
      ELSE "line_item_unblended_cost" END), 2) "amortized_cost"
    FROM
-     ${cur_table_name}
+     "${cur_table_name}"
    GROUP BY 1, 2, 3, 4, 5, 6, 7
 )
 , t2 AS (

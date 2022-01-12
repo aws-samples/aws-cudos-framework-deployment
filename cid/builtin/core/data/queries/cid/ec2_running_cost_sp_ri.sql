@@ -14,6 +14,6 @@
      ELSE 0 END) "amortized_cost"
  , "round"("sum"("line_item_usage_amount"), 2) "usage_quantity"
  FROM
-    ${cur_table_name}
+    "${cur_table_name}"
  WHERE (((((("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '1' MONTH)) AND ("line_item_product_code" = 'AmazonEC2')) AND ("product_servicecode" <> 'AWSDataTransfer')) AND ("line_item_operation" LIKE '%RunInstances%')) AND ("line_item_usage_type" NOT LIKE '%DataXfer%')) AND ((("line_item_line_item_type" = 'Usage') OR ("line_item_line_item_type" = 'SavingsPlanCoveredUsage')) OR ("line_item_line_item_type" = 'DiscountedUsage')))
  GROUP BY 1, 2, 3, 4,5,6,7
