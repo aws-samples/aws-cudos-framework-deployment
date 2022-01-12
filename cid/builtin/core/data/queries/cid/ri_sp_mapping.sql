@@ -24,7 +24,7 @@
      WHEN ("line_item_line_item_type" = 'Usage') THEN ' '
     ELSE NULL END AS timestamp) "ri_sp_end_date"
     FROM
-     ${cur_table_name}
+     "${cur_table_name}"
  WHERE (
   ("line_item_line_item_type" <> 'Usage') 
  -- OR
@@ -59,7 +59,7 @@
   WHEN ("line_item_line_item_type" = 'Usage') THEN ' '
      ELSE '' END "ri_sp_Payment"
     FROM
-      ${cur_table_name}
+      "${cur_table_name}"
  WHERE (
   ("line_item_line_item_type" <> 'Usage') 
   -- OR

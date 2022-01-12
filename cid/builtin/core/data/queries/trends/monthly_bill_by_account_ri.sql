@@ -15,7 +15,7 @@ WITH
      WHEN ("line_item_line_item_type" = 'RIFee') THEN ("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee")
      WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE "line_item_unblended_cost" END) , 2) "amortized_cost"
    FROM
-     ${cur_table_name}
+     "${cur_table_name}"
    GROUP BY 1, 2, 3, 4, 5, 6, 7
 )
 , t2 AS (

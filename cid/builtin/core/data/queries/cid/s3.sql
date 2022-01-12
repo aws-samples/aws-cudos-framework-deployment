@@ -19,7 +19,7 @@ SELECT DISTINCT "year",
     ) "usage_quantity",
     "sum"("line_item_unblended_cost") "unblended_cost",
     "sum"("pricing_public_on_demand_cost") "public_cost"
-FROM ${cur_table_name}
+FROM "${cur_table_name}"
 WHERE (
         (
             (
