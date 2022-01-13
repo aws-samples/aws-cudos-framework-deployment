@@ -1,0 +1,259 @@
+{
+    "DataSetId": "07c385e2-a43c-401c-abf4-fd54baed26a2",
+    "Name": "kpi_s3_storage_all",
+    "PhysicalTableMap": {
+        "99dd8380-97f3-4a26-b32c-79446aafb95e": {
+            "RelationalTable": {
+                "DataSourceArn": "${athena_datasource_arn}",
+                "Schema": "${athena_database_name}",
+                "Name": "kpi_s3_storage_all",
+                "InputColumns": [
+                    {
+                        "Name": "billing_period",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "usage_date",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "payer_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "linked_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "account_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "resource_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "bucket_name_keywords",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "last_requests",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "s3_standard_underutilized_optimization",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "s3_replication_bucket_optimization",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "s3_standard_only_bucket",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "s3_archive_in_use",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "s3_inventory_in_use",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "s3_analytics_in_use",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "s3_int_in_use",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "s3_standard_storage_potential_savings",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_all_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_all_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_all_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_standard_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_standard_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_intelligent-tiering_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_intelligent-tiering_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_standard-ia_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_standard-ia_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_onezone-ia_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_onezone-ia_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_reduced_redundancy_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_reduced_redundancy_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_instant_retrieval_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_instant_retrieval_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_flexible_retrieval_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_flexible_retrieval_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_deep_archive_storage_storage_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_deep_archive_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_early_delete_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_transition_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_put_object_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_put_object_replication_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_get_object_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_copy_object_usage_quantity",
+                        "Type": "DECIMAL"
+                    }
+                ]
+            }
+        }
+    },
+    "LogicalTableMap": {
+        "99dd8380-97f3-4a26-b32c-79446aafb95e": {
+            "Alias": "kpi_s3_storage_all",
+            "DataTransforms": [
+                {
+                    "ProjectOperation": {
+                        "ProjectedColumns": [
+                            "billing_period",
+                            "usage_date",
+                            "payer_account_id",
+                            "linked_account_id",
+                            "account_id",
+                            "account_name",
+                            "resource_id",
+                            "bucket_name_keywords",
+                            "last_requests",
+                            "s3_standard_underutilized_optimization",
+                            "s3_replication_bucket_optimization",
+                            "s3_standard_only_bucket",
+                            "s3_archive_in_use",
+                            "s3_inventory_in_use",
+                            "s3_analytics_in_use",
+                            "s3_int_in_use",
+                            "s3_standard_storage_potential_savings",
+                            "s3_all_cost",
+                            "s3_all_storage_cost",
+                            "s3_all_storage_usage_quantity",
+                            "s3_standard_storage_cost",
+                            "s3_standard_storage_usage_quantity",
+                            "s3_intelligent-tiering_storage_cost",
+                            "s3_intelligent-tiering_storage_usage_quantity",
+                            "s3_standard-ia_storage_cost",
+                            "s3_standard-ia_storage_usage_quantity",
+                            "s3_onezone-ia_storage_cost",
+                            "s3_onezone-ia_storage_usage_quantity",
+                            "s3_reduced_redundancy_storage_cost",
+                            "s3_reduced_redundancy_storage_usage_quantity",
+                            "s3_glacier_instant_retrieval_storage_cost",
+                            "s3_glacier_instant_retrieval_storage_usage_quantity",
+                            "s3_glacier_flexible_retrieval_storage_cost",
+                            "s3_glacier_flexible_retrieval_storage_usage_quantity",
+                            "s3_glacier_deep_archive_storage_storage_cost",
+                            "s3_glacier_deep_archive_storage_usage_quantity",
+                            "s3_early_delete_cost",
+                            "s3_transition_usage_quantity",
+                            "s3_put_object_usage_quantity",
+                            "s3_put_object_replication_usage_quantity",
+                            "s3_get_object_usage_quantity",
+                            "s3_copy_object_usage_quantity"
+                        ]
+                    }
+                }
+            ],
+            "Source": {
+                "PhysicalTableId": "99dd8380-97f3-4a26-b32c-79446aafb95e"
+            }
+        }
+    },
+    "ImportMode": "SPICE",
+    "Permissions": [
+        {
+            "Principal": "${user_arn}",
+            "Actions": [
+                "quicksight:UpdateDataSetPermissions",
+                "quicksight:DescribeDataSet",
+                "quicksight:DescribeDataSetPermissions",
+                "quicksight:PassDataSet",
+                "quicksight:DescribeIngestion",
+                "quicksight:ListIngestions",
+                "quicksight:UpdateDataSet",
+                "quicksight:DeleteDataSet",
+                "quicksight:CreateIngestion",
+                "quicksight:CancelIngestion"
+            ]
+        }
+    ]
+}
