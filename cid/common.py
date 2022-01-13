@@ -458,9 +458,14 @@ class Cid:
                         if ds.get('Name') == dataset_name:
                             missing_datasets.remove(dataset_name)
                         print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
+                except FileNotFoundError:
+                    logger.info(f'File "{dataset_file}" not found')
+                    pass
                 except self.qs.client.exceptions.ResourceNotFoundException:
+                    logger.info(f'Dataset "{dataset_name}" not found')
                     pass
                 except self.qs.client.exceptions.AccessDeniedException:
+                    logger.info(f'Access denied trying to find dataset "{dataset_name}"')
                     pass
                 except:
                     raise
@@ -550,7 +555,7 @@ class Cid:
                 logger.info('No Athena datasources found, attempting to create one')
                 self.qs.create_data_source()
                 if not len(self.qs.athena_datasources):
-                    logger.error('No Athena datasources available, failing')
+                    logger.info('No Athena datasources available, failing')
                     return False
             # Load TPL file
             columns_tpl = dict()

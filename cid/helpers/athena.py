@@ -174,7 +174,7 @@ class Athena():
         else:
             failure_reason = response['QueryExecution']['Status']['StateChangeReason']
             logger.error('Athena query failed: {}'.format(failure_reason))
-            logger.error('Full query: {}'.format(sql_query))
+            logger.info('Full query: {}'.format(sql_query))
             
             raise Exception(failure_reason)
 
