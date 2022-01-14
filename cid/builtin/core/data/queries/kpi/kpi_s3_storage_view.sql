@@ -1,4 +1,4 @@
-/*Replace customer_all in row 41 with your CUR table name */
+/*Replace customer_all in row 42 with your CUR table name */
 		CREATE OR REPLACE VIEW kpi_s3_storage_all AS 
 		-- Step 1: Enter S3 standard savings savings assumption. Default is set to 0.3 for 30% savings 
 		WITH inputs AS (
@@ -21,6 +21,7 @@
 			, line_item_resource_id AS resource_id
 			, s3_standard_savings
 			, line_item_operation AS operation
+			, line_item_usage_type AS usage_type
 			, CASE 
 				WHEN line_item_usage_type LIKE '%EarlyDelete%' THEN 'EarlyDelete' ELSE line_item_operation END "early_delete_adjusted_operation" 
 			, CASE
@@ -29,6 +30,7 @@
 				  WHEN line_item_product_code = 'AmazonS3' AND product_volume_type LIKE '%Intelligent-Tiering%' AND line_item_operation LIKE '%IntelligentTiering%' THEN 'Intelligent-Tiering'			  
 				  ELSE product_volume_type
 			  END AS storage_class_type
+			, pricing_unit  
 			, sum(line_item_usage_amount) AS usage_quantity
 			, sum(line_item_unblended_cost) unblended_cost
 			, sum(CASE
@@ -44,7 +46,7 @@
 			  AND line_item_resource_id <> ''
 			  AND line_item_line_item_type LIKE '%Usage%'
 			  AND (line_item_product_code LIKE '%AmazonGlacier%' OR line_item_product_code LIKE '%AmazonS3%')
-			GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11
+			GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13
 		),
 
 		-- Step 4: Return most recent request date to understand if bucket is in active use
@@ -54,7 +56,7 @@
 			, max(usage_start_date) AS last_request_date
 			FROM s3_usage_all_time
 			WHERE usage_quantity > 0
-			  AND operation IN ('PutObject', 'PutObjectForRepl', 'GetObject', 'CopyObject')
+			  AND operation IN ('PutObject', 'PutObjectForRepl', 'GetObject', 'CopyObject') AND pricing_unit = 'Requests'
 			GROUP BY 1
 		),
 
@@ -79,6 +81,9 @@
 			-- S3 Standard Infrequent Access
 			, sum(CASE WHEN storage_class_type = 'Standard - Infrequent Access' THEN s3_all_storage_cost ELSE 0 END) AS "s3_standard-ia_storage_cost"
 			, sum(CASE WHEN storage_class_type = 'Standard - Infrequent Access' THEN s3_all_storage_usage_quantity ELSE 0 END) AS "s3_standard-ia_storage_usage_quantity"
+			, sum(CASE WHEN usage_type LIKE '%Requests-SIA-Tier1%' THEN unblended_cost ELSE 0 END) AS "s3_standard-ia_tier1_cost"
+			, sum(CASE WHEN usage_type LIKE '%Requests-SIA-Tier2%' THEN unblended_cost ELSE 0 END) AS "s3_standard-ia_tier2_cost"	
+			, sum(CASE WHEN usage_type LIKE '%Retrieval-SIA%' THEN unblended_cost ELSE 0 END) AS "s3_standard-ia_retrieval_cost"				
 		   -- S3 One Zone Infrequent Access
 			, sum(CASE WHEN storage_class_type = 'One Zone - Infrequent Access' THEN s3_all_storage_cost ELSE 0 END) AS "s3_onezone-ia_storage_cost"
 			, sum(CASE WHEN storage_class_type = 'One Zone - Infrequent Access' THEN s3_all_storage_usage_quantity ELSE 0 END) AS "s3_onezone-ia_storage_usage_quantity"
@@ -90,18 +95,21 @@
 			, sum(CASE WHEN storage_class_type LIKE '%Intelligent%' THEN s3_all_storage_usage_quantity ELSE 0 END) AS "s3_intelligent-tiering_storage_usage_quantity"
 		   -- S3 Glacier Instant Retrieval   
 			, sum(CASE WHEN storage_class_type LIKE '%Instant%' AND storage_class_type NOT LIKE '%Intelligent%' THEN s3_all_storage_cost ELSE 0 END) AS "s3_glacier_instant_retrieval_storage_cost"
-			, sum(CASE WHEN storage_class_type LIKE '%Instant%' AND storage_class_type NOT LIKE '%Intelligent%' THEN  s3_all_storage_usage_quantity ELSE 0 END) AS "s3_glacier_instant_retrieval_storage_usage_quantity"			
+			, sum(CASE WHEN storage_class_type LIKE '%Instant%' AND storage_class_type NOT LIKE '%Intelligent%' THEN  s3_all_storage_usage_quantity ELSE 0 END) AS "s3_glacier_instant_retrieval_storage_usage_quantity"	
+			, sum(CASE WHEN usage_type LIKE '%Requests-GIR-Tier1%' THEN unblended_cost ELSE 0 END) AS "s3_glacier_instant_retrieval_tier1_cost"
+			, sum(CASE WHEN usage_type LIKE '%Requests-GIR-Tier2%' THEN unblended_cost ELSE 0 END) AS "s3_glacier_instant_retrieval_tier2_cost"
+			, sum(CASE WHEN usage_type LIKE '%Retrieval-SIA-GIR%' THEN unblended_cost ELSE 0 END) AS "s3_glacier_instant_retrieval_retrieval_cost"			
 		   -- S3 Glacier Flexible Retrieval
 			, sum(CASE WHEN storage_class_type = 'Amazon Glacier' THEN s3_all_storage_cost ELSE 0 END) AS "s3_glacier_flexible_retrieval_storage_cost"
 			, sum(CASE WHEN storage_class_type = 'Amazon Glacier' THEN s3_all_storage_usage_quantity ELSE 0 END) AS "s3_glacier_flexible_retrieval_storage_usage_quantity"
 		   -- Glacier Deep Archive
 			, sum(CASE WHEN storage_class_type = 'Glacier Deep Archive' THEN s3_all_storage_cost ELSE 0 END) AS "s3_glacier_deep_archive_storage_storage_cost"
-			, sum(CASE WHEN storage_class_type = 'Glacier Deep Archive' THEN s3_all_storage_usage_quantity ELSE 0 END) AS "s3_glacier_deep_archive_storage_usage_quantity"
+			, sum(CASE WHEN storage_class_type = 'Glacier Deep Archive' THEN s3_all_storage_usage_quantity ELSE 0 END) AS "s3_glacier_deep_archive_storage_usage_quantity"	
 		   -- Operations
-			, sum(CASE WHEN operation = 'PutObject' THEN usage_quantity ELSE 0 END) AS "s3_put_object_usage_quantity"
-			, sum(CASE WHEN operation = 'PutObjectForRepl' THEN usage_quantity ELSE 0 END) AS "s3_put_object_replication_usage_quantity"
-			, sum(CASE WHEN operation = 'GetObject' THEN usage_quantity ELSE 0 END) AS "s3_get_object_usage_quantity"
-			, sum(CASE WHEN operation = 'CopyObject' THEN usage_quantity ELSE 0 END) AS "s3_copy_object_usage_quantity"
+			, sum(CASE WHEN operation = 'PutObject' AND pricing_unit = 'Requests' THEN usage_quantity ELSE 0 END) AS "s3_put_object_usage_quantity"
+			, sum(CASE WHEN operation = 'PutObjectForRepl' AND pricing_unit = 'Requests' THEN usage_quantity ELSE 0 END) AS "s3_put_object_replication_usage_quantity"
+			, sum(CASE WHEN operation = 'GetObject' AND pricing_unit = 'Requests' THEN usage_quantity ELSE 0 END) AS "s3_get_object_usage_quantity"
+			, sum(CASE WHEN operation = 'CopyObject' AND pricing_unit = 'Requests' THEN usage_quantity ELSE 0 END) AS "s3_copy_object_usage_quantity"
 			, sum(CASE WHEN operation = 'Inventory' THEN usage_quantity ELSE 0 END) AS "s3_inventory_usage_quantity"
 			, sum(CASE WHEN operation = 'S3.STORAGE_CLASS_ANALYSIS.OBJECT' THEN usage_quantity ELSE 0 END) AS "s3_analytics_usage_quantity"
 			,sum(CASE WHEN operation like '%Transition%' THEN usage_quantity ELSE 0 END) AS "s3_transition_usage_quantity"
@@ -164,12 +172,18 @@
 		, "s3_intelligent-tiering_storage_usage_quantity"		
 		, "s3_standard-ia_storage_cost"
 		, "s3_standard-ia_storage_usage_quantity"
+		, "s3_standard-ia_tier1_cost"
+		, "s3_standard-ia_tier2_cost"
+		, "s3_standard-ia_retrieval_cost"
 		, "s3_onezone-ia_storage_cost"
 		, "s3_onezone-ia_storage_usage_quantity"
 		, s3_reduced_redundancy_storage_cost
 		, s3_reduced_redundancy_storage_usage_quantity
 		, s3_glacier_instant_retrieval_storage_cost
 		, s3_glacier_instant_retrieval_storage_usage_quantity
+		, s3_glacier_instant_retrieval_tier1_cost
+		, s3_glacier_instant_retrieval_tier2_cost
+		, s3_glacier_instant_retrieval_retrieval_cost
 		, s3_glacier_flexible_retrieval_storage_cost
 		, s3_glacier_flexible_retrieval_storage_usage_quantity
 		, s3_glacier_deep_archive_storage_storage_cost

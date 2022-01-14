@@ -567,7 +567,7 @@ class Cid:
             })
             template = Template(resource_string(dataset_definition.get(
                 'providedBy'), f'data/datasets/{dataset_file}').decode('utf-8'))
-            compiled_dataset = json.loads(template.substitute(columns_tpl))
+            compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
             self.qs.create_dataset(compiled_dataset)
         else:
             print(f"Error: {dataset_definition.get('Name')} definition is broken")
@@ -707,7 +707,7 @@ class Cid:
             # Add parameter
             columns_tpl.update(param)
         # Compile template
-        compiled_query = template.substitute(columns_tpl)
+        compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query
 
