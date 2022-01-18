@@ -547,9 +547,9 @@ class QuickSight():
         try:
             response = self.client.create_data_set(**dataset)
             logger.info(f'Created dataset {dataset.get("Name")} ({response.get("DataSetId")})')
+            self.describe_dataset(response.get('DataSetId'))
         except self.client.exceptions.ResourceExistsException:
             logger.info(f'Dataset {dataset.get("Name")} already exists')
-        self.describe_dataset(response.get('DataSetId'))
 
 
     def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
