@@ -1,4 +1,4 @@
-# What's new in Cost Intelligence Dashboard (CID) 
+# What's new in the Cost Intelligence Dashboard (CID) 
 
 ## CID - 3
 * All 
