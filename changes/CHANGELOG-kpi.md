@@ -1,4 +1,4 @@
-# What's new in KPI Dashboard
+# What's new in the KPI Dashboard
 
 
 ## KPI - 1
