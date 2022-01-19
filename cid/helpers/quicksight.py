@@ -312,7 +312,8 @@ class QuickSight():
 
             if (current_status != "CREATION_SUCCESSFUL"):
                 failure_reason = response.get('Errors')
-                raise Exception(failure_reason)
+                logger.info(f'Data source creation failed with reason {failure_reason}')
+                return False
             return True
         except self.client.exceptions.ResourceExistsException:
             logger.error('Data source already exists')
@@ -547,9 +548,9 @@ class QuickSight():
         try:
             response = self.client.create_data_set(**dataset)
             logger.info(f'Created dataset {dataset.get("Name")} ({response.get("DataSetId")})')
+            self.describe_dataset(response.get('DataSetId'))
         except self.client.exceptions.ResourceExistsException:
             logger.info(f'Dataset {dataset.get("Name")} already exists')
-        self.describe_dataset(response.get('DataSetId'))
 
 
     def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
