@@ -152,11 +152,13 @@ class Athena():
 
             # Get Query Status
             query_status = self.client.get_query_execution(QueryExecutionId=query_id)
+        except self.client.exceptions.InvalidRequestException as e:
+            logger.error(f'InvalidRequestException: {e}')
+            exit(1)
         except Exception as e:
             logger.error('Athena query failed: {}'.format(e))
             logger.error('Full query: {}'.format(sql_query))
-            
-            raise Exception
+            exit(1)
 
         current_status = query_status['QueryExecution']['Status']['State']
 
@@ -174,9 +176,9 @@ class Athena():
         else:
             failure_reason = response['QueryExecution']['Status']['StateChangeReason']
             logger.error('Athena query failed: {}'.format(failure_reason))
+            logger.error(f'Failure reason: {failure_reason}')
             logger.info('Full query: {}'.format(sql_query))
-            
-            raise Exception(failure_reason)
+            exit(1)
 
     def get_query_results(self, query_id):
         return self.client.get_query_results(QueryExecutionId=query_id)

@@ -312,7 +312,8 @@ class QuickSight():
 
             if (current_status != "CREATION_SUCCESSFUL"):
                 failure_reason = response.get('Errors')
-                raise Exception(failure_reason)
+                logger.info(f'Data source creation failed with reason {failure_reason}')
+                return False
             return True
         except self.client.exceptions.ResourceExistsException:
             logger.error('Data source already exists')
