@@ -212,9 +212,9 @@ class Cid:
             dashboard_definition.update({'datasets': {}})
         dashboard_datasets = dashboard_definition.get('datasets')
         for dataset_name in required_datasets:
-            arn = next(v.get('Arn') for v in self.qs._datasets.values() if v.get('Name') == dataset_name)
-            dashboard_datasets.update(
-                {dataset_name: arn})
+            arn = next((v.get('Arn') for v in self.qs._datasets.values() if v.get('Name') == dataset_name), None)
+            if arn:
+                dashboard_datasets.update({dataset_name: arn})
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard_definition.get("dashboardId")}.json'
@@ -410,7 +410,7 @@ class Cid:
             print('complete')
 
         found_datasets = sorted(
-            set(required_datasets).intersection(self.qs._datasets.keys()))
+            set(required_datasets).intersection([v.get('Name') for v in self.qs._datasets.values()]))
         missing_datasets = sorted(
             list(set(required_datasets).difference(found_datasets)))
 
@@ -457,7 +457,7 @@ class Cid:
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if ds.get('Name') == dataset_name:
                             missing_datasets.remove(dataset_name)
-                        print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
+                            print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
                 except FileNotFoundError:
                     logger.info(f'File "{dataset_file}" not found')
                     pass
