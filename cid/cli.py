@@ -76,5 +76,13 @@ def open(App, **kwargs):
     App.open(dashboard_id=kwargs.get('dashboard_id'))
 
 
+@main.command()
+@click.pass_obj
+def cleanup(App: Cid):
+    """Delete unused resources (QuickSight datasets, Athena views)"""
+    
+    App.cleanup()
+
+
 if __name__ == '__main__':
     main()
