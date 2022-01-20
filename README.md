@@ -40,9 +40,14 @@
     ```bash
     pip3 install --upgrade cid-cmd
     ```
-5. Prepare AWS access 
+5. Prepare AWS access  ( optional )
+
+   You can preconfigure access in a safe way using AWS cli https://aws.amazon.com/cli/
+   
 
     ``` aws configure ```
+
+   More on AWS CLI Configuration https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html 
 
 6. List of supported commands  
     ```bash
