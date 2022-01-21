@@ -494,8 +494,8 @@ class Cid:
                         print('created')
                     else:
                         print('failed')
-                except self.qs.client.exceptions.AccessDeniedException:
-                    print(f'unable to create, missing permissions')
+                except self.qs.client.exceptions.AccessDeniedException as AccessDeniedException:
+                    print('unable to create, missing permissions: {}'.format(AccessDeniedException))
 
         # Last chance to enter DataSetIds manually by user
         if len(missing_datasets):
