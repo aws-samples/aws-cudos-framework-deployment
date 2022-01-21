@@ -44,6 +44,11 @@ Parameters:
     MinLength: 3
     Default: cron(0 4 * * ? *)
     Description: 'REQUIRED - cron expression on when to refresh spice datasets daily outside of business hours. Default is 4 AM utc, this should work for most customers in US and EU time zones' 
+  CIDLogCaptureAccountID:
+    Type: String
+    MinLength: 2
+    Description: 'Required - we would like to keep a log of the accounts that deploy CID dashboards for usage metrics , we will only capture the account number, dashboard ids deployed and deployment/update time. If you are not comfortable with us capturing the account number we could store a unique hash that identifies the account, in this case please fill in false for this parameter'
+    Default: Yes
   Suffix:
     Type: String
     Description: OPTIONAL - If you need to create multiple instances of embedding sample on same aws account, add a short NUMERIC suffix here.
@@ -2145,4 +2150,130 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt SpiceRefreshRule.Arn
 
+  CidLoggerRole: #Execution role for the custom resource CidLoggerExecutor
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Join
+        - ''
+        - - CidLoggerRole
+          - !Ref Suffix
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Join
+          - ''
+          - - CidLoggerPolicy
+            - !Ref Suffix
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+  CIDLoggerLambdaCreator: #custom lambda resource that is tasked to record deployments for CID team internal adoption tracking purposes
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      FunctionName: !Join
+        - ''
+        - - CIDLogger
+          - !Ref Suffix
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt CidLoggerRole.Arn
+      Timeout: 15
+      Environment:
+        Variables:
+          ALLOW_ACCOUNT_ID: !Ref CIDLogCaptureAccountID
+          API_ENDPOINT: https://dj8jjwlhm3.execute-api.us-east-2.amazonaws.com/cid
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          import cfnresponse
+          import hashlib
+          import urllib3
+
+          http = urllib3.PoolManager()
+          endpoint=os.environ["API_ENDPOINT"]
+          account_id=boto3.client("sts").get_caller_identity()["Account"]
+          if os.environ["ALLOW_ACCOUNT_ID"] in ["NO","No","no","False","FALSE","false"]:
+              account_id=hashlib.sha256(account_id.encode('utf-8')).hexdigest()
+              
+          def execute_request(action,dashboard_id,via_key):
+              try:
+                  message=None
+                  payload={'dashboard_id': dashboard_id, 'account_id': account_id, via_key: 'CFN'}
+                  encoded_data = json.dumps(payload).encode('utf-8')
+                  r = http.request(action,endpoint,body=encoded_data,headers={'Content-Type': 'application/json'})
+                  if r.status!=200:
+                      message=f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {r.status}, response data {r.data.decode('utf-8')}. This issue will be ignored"
+              except urllib3.exceptions.HTTPError as e:
+                message=f"Issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, due to a urllib3 exception {str(e)} . This issue will be ignored"
+              return message
+              
+
+          def register_deployment(action,dashboards):
+              message=f"Succesfully logged  {action} for {dashboards}"
+              for dashboard_id in dashboards:
+                  if action == 'CREATE':
+                      message=execute_request('PUT',dashboard_id,'created_via')
+                  elif action == 'UPDATE':
+                      message=execute_request('PATCH',dashboard_id,'updated_via')
+                  elif action == 'DELETE':
+                      message=execute_request('DELETE',dashboard_id,'deleted_via')
+                  if message is None:
+                      message=f"Succesfully logged  {action} for {dashboards} "
+              #Do not stop deployment if we're not able to succesfully record this deployment, still return true
+              return ("True",message)
+
+
+          def lambda_handler(event, context):
+              if event['RequestType'] == 'Create':
+                  res, reason = register_deployment('CREATE',event['ResourceProperties']['dashboards'])
+              elif event['RequestType'] == 'Update':
+                  res, reason = register_deployment('UPDATE',event['ResourceProperties']['dashboards'])
+              elif event['RequestType'] == 'Delete':
+                  res, reason = register_deployment('DELETE',event['ResourceProperties']['dashboards'])
+              else:
+                  res = False
+                  reason = "Unknown operation: " + event['RequestType']
+              
+              response_data = {'Reason': reason}
+              print(response_data)
+              
+              if res:
+                  print("Success")
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              else:
+                  print("Error")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+
+
+  CIDLoggerLambdaExecutor: #Executes the custom resource above as part of the CFN template 
+    Type: Custom::CIDLoggerLambdaExecutor
+    DependsOn: SpiceRefreshRule
+    Properties:
+      ServiceToken: !GetAtt CIDLoggerLambdaCreator.Arn
+      Region: !Ref "AWS::Region"
+      Name: !Join
+        - ''
+        - - CIDLoggerLambdaExecutor
+          - !Ref Suffix
+      dashboards:
+        - cudos
+        - cost_intelligence_dashboard
 
