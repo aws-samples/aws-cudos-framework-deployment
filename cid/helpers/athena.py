@@ -112,10 +112,17 @@ class Athena():
             'CatalogName': self.CatalogName,
             'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName
         }
+        table_metadata = list()
         try:
-            table_metadata = self.client.list_table_metadata(**params).get('TableMetadataList')
-        except:
-            table_metadata = list()
+            paginator = self.client.get_paginator('list_table_metadata')
+            response_iterator = paginator.paginate(**params)
+            for page in response_iterator:
+                table_metadata.extend(page.get('TableMetadataList'))
+            logger.debug(f'Table metadata: {table_metadata}')
+            logger.info(f'Found {len(table_metadata)} tables in {DatabaseName if DatabaseName else self.DatabaseName}')
+        except Exception as e:
+            logger.error(f'Failed to list tables in {DatabaseName if DatabaseName else self.DatabaseName}')
+            logger.error(e)
             
         return table_metadata
 
