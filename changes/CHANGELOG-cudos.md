@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.63.4
+
+* Databases: Fixed a filter on "Database Instance Daily Elasticity by Purchase Option" to include OpenSearch Instances
+
 ## CUDOS - 4.63.3
 
 * GameTech: Renamed "GameLift OnDemand Instance Types"(Monthly) to GameLift Costs by Instance Types; renamed "GameLift OnDemand Instance Types"(Daily) to "GameLift Instance Types Last 90 Days" and adjusted filters
