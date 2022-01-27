@@ -297,7 +297,7 @@ Resources:
                       AS SELECT DISTINCT 
                           line_item_usage_account_id account_id, 
                           line_item_usage_account_id account_name
-                      FROM {table_name}
+                      FROM  \"{table_name}\"
                   """  
                   step = f"Executing account map query: {repr(account_map_query)}" 
                   logger.info(step)
@@ -317,7 +317,7 @@ Resources:
               queryId = athena.start_query_execution(
                   QueryString=f"""
                       SELECT COUNT(distinct {fieldName}) 
-                      FROM {database_name}.{table_name} 
+                      FROM \"{database_name}\".\"{table_name}\"
                       WHERE {fieldName} <> ''
                   """.strip(),
                   QueryExecutionContext={'Database': database_name},
