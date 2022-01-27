@@ -47,7 +47,7 @@ Parameters:
   CIDLogCaptureAccountID:
     Type: String
     MinLength: 2
-    Description: 'Required - we would like to keep a log of the accounts that deploy CID dashboards for usage metrics , we will only capture the account number, dashboard ids deployed and deployment/update time. If you are not comfortable with us capturing the account number we could store a unique hash that identifies the account, in this case please fill in false for this parameter'
+    Description: 'Required - we would like to keep a log of the accounts that deploy CID dashboards for usage metrics , we will only capture the account number, dashboard ids deployed and deployment/update time. If you are not comfortable with us capturing the account number we will store a unique uuid'
     Default: Yes
   Suffix:
     Type: String
@@ -2204,14 +2204,14 @@ Resources:
           import boto3
           import os
           import cfnresponse
-          import hashlib
           import urllib3
+          import uuid
 
           http = urllib3.PoolManager()
           endpoint=os.environ["API_ENDPOINT"]
           account_id=boto3.client("sts").get_caller_identity()["Account"]
           if os.environ["ALLOW_ACCOUNT_ID"] in ["NO","No","no","False","FALSE","false"]:
-              account_id=hashlib.sha256(account_id.encode('utf-8')).hexdigest()
+              account_id= str(uuid.uuid1())
               
           def execute_request(action,dashboard_id,via_key):
               try:
@@ -2265,7 +2265,7 @@ Resources:
 
   CIDLoggerLambdaExecutor: #Executes the custom resource above as part of the CFN template 
     Type: Custom::CIDLoggerLambdaExecutor
-    DependsOn: SpiceRefreshRule
+    DependsOn: "SpiceRefreshRule" 
     Properties:
       ServiceToken: !GetAtt CIDLoggerLambdaCreator.Arn
       Region: !Ref "AWS::Region"
@@ -2276,4 +2276,6 @@ Resources:
       dashboards:
         - cudos
         - cost_intelligence_dashboard
+      
+      
 
