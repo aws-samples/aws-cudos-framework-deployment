@@ -1,0 +1,32 @@
+{
+	"view_templates": {
+		"kpi_instance_mapping": {
+			"__description__": "",
+			"File": "first_kpi_instance_mapping_view.sql"
+		},
+		"kpi_ebs_snap": {
+			"__description__": "",
+			"File": "kpi_ebs_snap_view.sql"
+		},
+		"kpi_ebs_storage_all": {
+			"__description__": "",
+			"File": "kpi_ebs_storage_view.sql"
+		},
+		
+		"kpi_s3_storage_all": {
+			"__description__": "",
+			"File": "kpi_s3_storage_view.sql"
+		},
+		"kpi_tracker": {
+			"__description__": "",
+			"File": "last_kpi_tracker_view.sql"
+		},
+		"kpi_instance_all": {
+			"__description__": "",
+			"spriFile": "kpi_instance_all_view.sql",
+			"spFile": "kpi_instance_all_view_noRI.sql",
+			"riFile": "kpi_instance_all_view_noSP.sql",
+			"File": "kpi_instance_all_view_noRISP.sql"
+		}
+	}
+}
