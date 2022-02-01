@@ -97,10 +97,6 @@
                         "Type": "STRING"
                     },
                     {
-                        "Name": "database_edition",
-                        "Type": "STRING"
-                    },
-                    {
                         "Name": "deployment_option",
                         "Type": "STRING"
                     },
@@ -447,7 +443,6 @@
                             "processor",
                             "adjusted_processor",
                             "database_engine",
-                            "database_edition",
                             "deployment_option",
                             "license_model",
                             "cache_engine",

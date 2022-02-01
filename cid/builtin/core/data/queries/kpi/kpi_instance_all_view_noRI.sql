@@ -46,7 +46,6 @@
 			WHEN line_item_usage_type LIKE '%Fargate%' AND line_item_usage_type LIKE '%ARM%' THEN 'Graviton'
 		   ELSE 'Other' END) "adjusted_processor"
 		   , product_database_engine "database_engine"
-		   , product_database_edition "database_edition"
 		   , product_deployment_option "deployment_option" 
 		   , product_license_model "license_model"
 		   , product_cache_engine "cache_engine"
@@ -88,7 +87,7 @@
 				OR ("line_item_product_code" = 'MachineLearningSavingsPlans')				
 			)) 					
 
-		   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,17,18,19,20,21,22,23,24,25,26
+		   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,17,18,19,20,21,22,23,24,25
 		   )
 		SELECT  
 			cur_all.*  
