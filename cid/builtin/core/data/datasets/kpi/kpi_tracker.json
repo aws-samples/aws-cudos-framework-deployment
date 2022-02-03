@@ -378,7 +378,7 @@
             }
         }
     },
-    "ImportMode": "DIRECT_QUERY",
+    "ImportMode": "SPICE",
     "Permissions": [
         {
             "Principal": "${user_arn}",
