@@ -82,5 +82,12 @@ Commands:
   update  Update Dashboard
 </pre>
 
+## Troubleshooting 
+
+If you experience unexpected behaviour of the cid-cmd script please run cid-cmd in debug mode 
+    ```bash
+    cid-cmd --vv deploy|update
+    ```
+This will produce a log file in the same directory that were at the tile of launch of cid-cmd. We encourage you to open [new issue](https://github.com/aws-samples/aws-cudos-framework-deployment/issues/new) with description of the problem and attached debug log file.
 
 ## Legacy (bash) automation has been moved under [**legacy**](./legacy/) directory
