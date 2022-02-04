@@ -3,7 +3,7 @@
 ## CUDOS - 4.64
 
 * Compute Summary: Excluded charges for Dedicated Hosts from EC2 instance family and instance types visuals
-* Compute Summary: New visual ‘Total Spot Savings for EC2 and Fargate’
+* Compute Summary: New visual ‘EC2 Spot Savings’
 * End User Computing: Updated recommendations for Workspaces Cost Optimizer solution new capability to delete unused workspaces which will reduce costs for customers by terminating the workspaces which have not been used for a month
 
 ## CUDOS - 4.63.4
