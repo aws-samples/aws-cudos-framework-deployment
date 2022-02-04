@@ -20,7 +20,7 @@ Resources:
       RoleName: !Join
         - ''
         - - SpiceRefreshExecutionRole
-          - { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } }
+          - !Select [1 , !Split [ '-' , { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } } ] ]
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:

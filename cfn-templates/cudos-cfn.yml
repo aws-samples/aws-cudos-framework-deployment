@@ -2027,7 +2027,8 @@ Resources:
 Outputs:
   Suffix:
     Description: Suffix
-    Value: !Ref Suffix
+    #In case suffix is empty set suffix to _. In the import template, we need to select the second split value with delimiter  - 
+    Value: !Join [ "-" , [ "_",!Ref Suffix ] ]
     Export: 
       Name: !Sub '${AWS::StackName}-suffix'
 
