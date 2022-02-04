@@ -39,11 +39,6 @@ Parameters:
     MinLength: 1
     Default: REPLACE WITH Athena CUR TABLE
     Description: 'REQUIRED - Athena CUR Table name'
-  QuickSightDataSetRefreshSchedule:
-    Type: String
-    MinLength: 3
-    Default: cron(0 4 * * ? *)
-    Description: 'REQUIRED - cron expression on when to refresh spice datasets daily outside of business hours. Default is 4 AM utc, this should work for most customers in US and EU time zones' 
   Suffix:
     Type: String
     Description: OPTIONAL - If you need to create multiple instances of embedding sample on same aws account, add a short NUMERIC suffix here.
@@ -2029,120 +2024,33 @@ Resources:
 
       VersionDescription: "1"
 
-  SpiceRefreshExecutionRole: #role needed to schedule spice ingestion for the datasets
-    Type: AWS::IAM::Role
-    Properties:
-      Path: /
-      RoleName: !Join
-        - ''
-        - - SpiceRefreshExecutionRole
-          - !Ref Suffix
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Policies:
-        - PolicyName: !Join
-          - ''
-          - - SpiceRefreshExecutionPolicy
-            - !Ref Suffix
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - quicksight:CreateIngestion
-                Resource:
-                  - Fn::Join: [ "/", [!GetAtt SummaryViewDataset.Arn , "ingestion", "*" ] ]
-                  - Fn::Join: [ "/", [!GetAtt EC2RunningCostDataset.Arn , "ingestion" , "*" ] ]
-                  - Fn::Join: [ "/", [!GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn , "ingestion" , "*" ] ]
-                  - Fn::Join: [ "/", [!GetAtt S3ViewDataset.Arn, "ingestion" , "*" ] ]
-              - Effect: Allow
-                Action:
-                  - quicksight:ListDatasets
-                Resource:
-                  - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*
+Outputs:
+  Suffix:
+    Description: Suffix
+    Value: !Ref Suffix
+    Export: 
+      Name: !Sub '${AWS::StackName}-suffix'
 
-  SpiceRefreshLambdaCreator: #Function for dataset refresh
-    Type: AWS::Lambda::Function
-    Properties:
-      Runtime: python3.7
-      FunctionName: !Join
-        - ''
-        - - QSCUDOSRefreshDatasets
-          - !Ref Suffix
-      Handler: index.lambda_handler
-      MemorySize: 128
-      Role: !GetAtt SpiceRefreshExecutionRole.Arn
-      Timeout: 60
-      Environment:
-        Variables:
-          suffix: !Ref Suffix
-      Code:
-        ZipFile: |
-          import boto3
-          from datetime import datetime
-          import os
-          
-          DATASETS_TO_REFRESH = [
-              "ec2_running_cost" + os.environ['suffix'],
-              "s3_view" + os.environ['suffix'] , 
-              "summary_view" + os.environ['suffix'],
-              "compute_savings_plan_eligible_spend" + os.environ['suffix'],
-          ]
+  SummaryViewDatasetArn: 
+    Description: The summary view dataset ARN
+    Value: !GetAtt SummaryViewDataset.Arn
+    Export: 
+      Name: !Sub '${AWS::StackName}-SummaryViewDatasetArn'
+  EC2RunningCostDatasetArn: 
+    Description: The EC2RunningCost dataset ARN
+    Value: !GetAtt EC2RunningCostDataset.Arn
+    Export: 
+      Name: !Sub '${AWS::StackName}-EC2RunningCostDatasetArn'
+  ComputeSavinsPlanEligibleSpendDatasetArn: 
+    Description: The ComputeSavinsPlanEligibleSpendDataset view dataset ARN
+    Value: !GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn
+    Export: 
+      Name: !Sub '${AWS::StackName}-ComputeSavinsPlanEligibleSpendDatasetArn'
+  S3ViewDatasetArn: 
+    Description: The S3 view dataset ARN
+    Value: !GetAtt S3ViewDataset.Arn
+    Export: 
+      Name: !Sub '${AWS::StackName}-S3ViewDatasetArn'
 
-          def get_account_id():
-              sts = boto3.client('sts')
-              account_id = sts.get_caller_identity()['Account']
-              print('account_id = ', account_id)
-              return account_id
-          
-          def refresh_datasets(account_id):
-              quicksight = boto3.client('quicksight')
-              datasets = quicksight.list_data_sets(AwsAccountId=account_id)
-              for dataset in datasets['DataSetSummaries']:
-                  name = dataset['Name']
-                  if dataset['ImportMode'] == 'SPICE' and name in DATASETS_TO_REFRESH:               
-                      ingestion_id = datetime.now().strftime("%d%m%y-%H%M%S-%f")
-                      print("Refreshing dataset {0}".format(name))
-                      res = quicksight.create_ingestion(
-                          AwsAccountId=account_id,
-                          DataSetId=dataset['DataSetId'],
-                          IngestionId=ingestion_id
-                        )
-                      print(res)
-
-          def lambda_handler(event, context):
-              account_id = get_account_id()
-              refresh_datasets(account_id)
-
-
-  SpiceRefreshRule:
-    Type: AWS::Events::Rule
-    Properties:
-      ScheduleExpression: !Ref QuickSightDataSetRefreshSchedule
-      Targets:
-        - Id: SpiceRefreshScheduler
-          Arn: !GetAtt SpiceRefreshLambdaCreator.Arn
-
-
-  InvokeLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt SpiceRefreshLambdaCreator.Arn
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt SpiceRefreshRule.Arn
-
-
+  
+  
