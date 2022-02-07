@@ -104,6 +104,8 @@ class CUR:
                     columns = [c.get('Name') for c in table.get('Columns')]                    
                     if not all([c in columns for c in self.requiredColumns]):
                         tables.remove(table)
+                # Sort tables by name (desc)
+                tables.sort(key=lambda x: x.get('Name'), reverse=True)
                 if len(tables) == 1:
                     self._metadata = tables[0]
                     self._tableName = self._metadata.get('Name')
