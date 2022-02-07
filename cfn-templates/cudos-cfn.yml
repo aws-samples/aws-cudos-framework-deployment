@@ -23,12 +23,17 @@ Parameters:
     Type: String
     MinLength: 3
     Default: REPLACE WITH CUR FOLDER AND PATH
-    Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName
+    Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName. Make sure quicksight has rad access to the CUR bucket
+  AthenaWorkgroup:
+    Type: String
+    MinLength: 3
+    Default: primary
+    Description: Athena workgroup to use, if you'd like a custom worgroup for athena queries please modify accordingly, this does not create a workgroup it attempts to use an existing workroup already defined in athena. 
   AthenaQueryResultsBucket:
     Type: String
     MinLength: 3
     Default: REPLACE WITH Athena S3 Bucket configured for athena query results(do not add a trailing slash)
-    Description: REQUIRED - Name of the s3 bucket configured for athena query results(do not add a trailing slash)
+    Description: REQUIRED - Name of the s3 bucket configured for athena query results for the workgroup defined above (do not add a trailing slash) . Make sure quicksight has read and right access to this bucket. 
   CURDatabaseName:
     Type:  String
     MinLength: 1
@@ -90,7 +95,8 @@ Resources:
                     - !Ref AWS::Region
                     - ':'
                     - !Ref AWS::AccountId
-                    - ':workgroup/primary'
+                    - ':workgroup/'
+                    - !Ref AthenaWorkgroup
               - Effect: Allow
                 Action:
                   - glue:GetDatabase
@@ -188,6 +194,7 @@ Resources:
         Variables:
           DatabaseName: !Ref CURDatabaseName
           TableName: !Ref CURTableName
+          AthenaWorkgroup: !Ref AthenaWorkgroup
           ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cid/builtin/core/data/queries'
           ViewMetadataUri:  'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cfn-templates'
                             
@@ -214,6 +221,7 @@ Resources:
           table_name = os.environ["TableName"]
           view_templates_uri = os.environ["ViewTemplatesUri"]
           view_metadata_uri = os.environ["ViewMetadataUri"]
+          athena_workgroup = os.environ["AthenaWorkgroup"]
 
           def lambda_handler(event, context):
               logger.info(f"Cloud formation {event['RequestType']} event,"
@@ -278,7 +286,7 @@ Resources:
                       response = athena.start_query_execution(
                           QueryString=view_code,
                           QueryExecutionContext={'Database': database_name},
-                          WorkGroup='primary'
+                          WorkGroup=athena_workgroup
                       )
                       logger.info('Completed step %s',step)
                   # Create a dummy account map. Can be modified later        
@@ -294,7 +302,7 @@ Resources:
                   response = athena.start_query_execution(
                       QueryString=account_map_query,
                       QueryExecutionContext={'Database': database_name},
-                      WorkGroup='primary',
+                      WorkGroup=athena_workgroup,
                   )
                   logger.info("Completed %s", step)
                   return(True, "Views created successfully")
@@ -311,7 +319,7 @@ Resources:
                       WHERE {fieldName} <> ''
                   """.strip(),
                   QueryExecutionContext={'Database': database_name},
-                  WorkGroup='primary'
+                  WorkGroup=athena_workgroup
               )['QueryExecutionId']
               while queryState in ['QUEUED','RUNNING']:
                   time.sleep(10)
@@ -341,7 +349,7 @@ Resources:
       Name: !Join [ '' , [ 'QSCURDataSource' ,  !Ref Suffix ] ]
       DataSourceParameters:
         AthenaParameters:
-          WorkGroup: primary
+          WorkGroup: !Ref AthenaWorkgroup
       Permissions:
         - Actions:
             - 'quicksight:DescribeDataSource'
