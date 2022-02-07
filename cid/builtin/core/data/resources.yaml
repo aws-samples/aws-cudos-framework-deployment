@@ -25,6 +25,19 @@ dashboards:
         - compute_savings_plan_eligible_spend
         - s3_view
 
+  KPI:
+    name: KPI Dashboard
+    templateId: kpi_dashboard
+    dashboardId: kpi_dashboard
+    dependsOn:
+      datasets:
+        - kpi_ebs_storage_all
+        - kpi_ebs_snap
+        - kpi_instance_all
+        - kpi_s3_storage_all
+        - kpi_tracker
+        - summary_view
+
   TAO:
     name: Trusted Advisor Organizational View
     templateId: ta-organizational-view
@@ -77,6 +90,34 @@ datasets:
       cur: true
       views:
         - ${cur_table_name}
+
+  # KPI DataSets
+  kpi_ebs_snap:
+    File: kpi/kpi_ebs_snap.json
+    dependsOn:
+      views:
+        - kpi_ebs_snap
+  kpi_ebs_storage_all:
+    File: kpi/kpi_ebs_storage_all.json
+    dependsOn:
+      views:
+       - kpi_ebs_storage_all
+  kpi_instance_all:
+    File: kpi/kpi_instance_all.json
+    dependsOn:
+      views:
+        - kpi_instance_all
+  kpi_s3_storage_all:
+    File: kpi/kpi_s3_storage_all.json
+    dependsOn:
+      views:
+        - kpi_s3_storage_all
+  kpi_tracker:
+    File: kpi/kpi_tracker.json
+    dependsOn:
+      views:
+        - kpi_tracker
+
 
   # Trusted Advisor (TAO)
   ta-organizational-view:
@@ -168,6 +209,55 @@ views:
         - aws_regions
         - aws_service_category_map
         - payer_account_name_map
+
+  # KPI Views
+  kpi_instance_mapping:
+    File: kpi/first_kpi_instance_mapping_view.sql
+
+  kpi_ebs_snap:
+    File: kpi/kpi_ebs_snap_view.sql
+    dependsOn:
+      cur: true
+      views:
+        - account_map
+
+  kpi_ebs_storage_all:
+    File: kpi/kpi_ebs_storage_view.sql
+    dependsOn:
+      cur: true
+      views:
+        - account_map
+
+  kpi_instance_all:
+    spriFile: kpi/kpi_instance_all_view.sql
+    spFile: kpi/kpi_instance_all_view_noRI.sql
+    riFile: kpi/kpi_instance_all_view_noSP.sql
+    File: kpi/kpi_instance_all_view_noRISP.sql
+    dependsOn:
+      cur: true
+      views:
+        - account_map
+        - kpi_instance_mapping
+
+  kpi_s3_storage_all:
+      File: kpi/kpi_s3_storage_view.sql
+      dependsOn:
+        cur: true
+        views:
+          - account_map
+
+
+  kpi_tracker:
+      File: kpi/last_kpi_tracker_view.sql
+      dependsOn:
+        cur: true
+        views:
+          - account_map
+          - kpi_ebs_snap
+          - kpi_ebs_storage_all
+          - kpi_instance_all
+          - kpi_s3_storage_all
+          - summary_view
 
   # Trusted Advisor (TAO)
   ta-organizational-view:

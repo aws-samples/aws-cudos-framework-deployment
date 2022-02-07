@@ -1,0 +1,159 @@
+{
+    "DataSetId": "7cc2766d-3009-403e-996f-f54c7f332e0d",
+    "Name": "kpi_ebs_storage_all",
+    "PhysicalTableMap": {
+        "23c71fa5-4992-4c85-b267-07d05b4eb69b": {
+            "RelationalTable": {
+                "DataSourceArn": "${athena_datasource_arn}",
+                "Schema": "${athena_database_name}",
+                "Name": "kpi_ebs_storage_all",
+                "InputColumns": [
+                    {
+                        "Name": "billing_period",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "payer_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "linked_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "account_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "resource_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "volume_api_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "usage_storage_gb_mo",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "usage_iops_mo",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "usage_throughput_gibps_mo",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "storage_summary",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "gp2_usage_added_iops_mo",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "gp2_usage_added_throughput_gibps_mo",
+                        "Type": "INTEGER"
+                    },
+                    {
+                        "Name": "ebs_all_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_sc1_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_st1_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_standard_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_io1_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_io2_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_gp2_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_gp3_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_gp3_potential_savings",
+                        "Type": "DECIMAL"
+                    }
+                ]
+            }
+        }
+    },
+    "LogicalTableMap": {
+        "23c71fa5-4992-4c85-b267-07d05b4eb69b": {
+            "Alias": "kpi_ebs_storage_all",
+            "DataTransforms": [
+                {
+                    "ProjectOperation": {
+                        "ProjectedColumns": [
+                            "billing_period",
+                            "payer_account_id",
+                            "linked_account_id",
+                            "account_id",
+                            "account_name",
+                            "resource_id",
+                            "volume_api_name",
+                            "usage_storage_gb_mo",
+                            "usage_iops_mo",
+                            "usage_throughput_gibps_mo",
+                            "storage_summary",
+                            "gp2_usage_added_iops_mo",
+                            "gp2_usage_added_throughput_gibps_mo",
+                            "ebs_all_cost",
+                            "ebs_sc1_cost",
+                            "ebs_st1_cost",
+                            "ebs_standard_cost",
+                            "ebs_io1_cost",
+                            "ebs_io2_cost",
+                            "ebs_gp2_cost",
+                            "ebs_gp3_cost",
+                            "ebs_gp3_potential_savings"
+                        ]
+                    }
+                }
+            ],
+            "Source": {
+                "PhysicalTableId": "23c71fa5-4992-4c85-b267-07d05b4eb69b"
+            }
+        }
+    },
+    "ImportMode": "SPICE",
+    "Permissions": [
+        {
+            "Principal": "${user_arn}",
+            "Actions": [
+                "quicksight:UpdateDataSetPermissions",
+                "quicksight:DescribeDataSet",
+                "quicksight:DescribeDataSetPermissions",
+                "quicksight:PassDataSet",
+                "quicksight:DescribeIngestion",
+                "quicksight:ListIngestions",
+                "quicksight:UpdateDataSet",
+                "quicksight:DeleteDataSet",
+                "quicksight:CreateIngestion",
+                "quicksight:CancelIngestion"
+            ]
+        }
+    ]
+}

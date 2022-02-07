@@ -22,6 +22,9 @@ class Athena():
     _DatabaseName = None
     ahq_queries = None
     _metadata = dict()
+    _resources = dict()
+    _client = None
+    region: str = None
 
     def __init__(self, session, resources: dict=None):        
         self.region = session.region_name
@@ -53,7 +56,7 @@ class Athena():
                         "Select AWS DataCatalog to use",
                         choices=glue_data_catalogs
                     ).ask()
-        logging.debug(f'Using datacatalog: {self._CatalogName}')
+            logger.info(f'Using datacatalog: {self._CatalogName}')
         return self._CatalogName
 
     @property
@@ -85,7 +88,7 @@ class Athena():
                         "Select AWS Athena database to use",
                         choices=[d['Name'] for d in athena_databases]
                     ).ask()
-        logging.debug(f'Using Athena database: {self._DatabaseName}')
+            logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
 
     def list_data_catalogs(self) -> list:
@@ -109,10 +112,17 @@ class Athena():
             'CatalogName': self.CatalogName,
             'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName
         }
+        table_metadata = list()
         try:
-            table_metadata = self.client.list_table_metadata(**params).get('TableMetadataList')
-        except:
-            table_metadata = list()
+            paginator = self.client.get_paginator('list_table_metadata')
+            response_iterator = paginator.paginate(**params)
+            for page in response_iterator:
+                table_metadata.extend(page.get('TableMetadataList'))
+            logger.debug(f'Table metadata: {table_metadata}')
+            logger.info(f'Found {len(table_metadata)} tables in {DatabaseName if DatabaseName else self.DatabaseName}')
+        except Exception as e:
+            logger.error(f'Failed to list tables in {DatabaseName if DatabaseName else self.DatabaseName}')
+            logger.error(e)
             
         return table_metadata
 
@@ -149,11 +159,13 @@ class Athena():
 
             # Get Query Status
             query_status = self.client.get_query_execution(QueryExecutionId=query_id)
+        except self.client.exceptions.InvalidRequestException as e:
+            logger.error(f'InvalidRequestException: {e}')
+            exit(1)
         except Exception as e:
             logger.error('Athena query failed: {}'.format(e))
             logger.error('Full query: {}'.format(sql_query))
-            
-            raise Exception
+            exit(1)
 
         current_status = query_status['QueryExecution']['Status']['State']
 
@@ -168,19 +180,12 @@ class Athena():
         # Return result, either positive or negative
         if (current_status == "SUCCEEDED"):
             return query_id
-        elif (current_status == "FAILED") or (current_status == "CANCELLED"):
-            failure_reason = response['QueryExecution']['Status']['StateChangeReason']
-            logger.error('Athena query failed: {}'.format(failure_reason))
-            logger.error('Full query: {}'.format(sql_query))
-            
-            raise Exception(failure_reason)
         else:
             failure_reason = response['QueryExecution']['Status']['StateChangeReason']
-            failure_reason = response['QueryExecution']['Status']['StateChangeReason']
             logger.error('Athena query failed: {}'.format(failure_reason))
-            logger.error('Full query: {}'.format(sql_query))
-            
-            raise Exception(failure_reason)
+            logger.error(f'Failure reason: {failure_reason}')
+            logger.info('Full query: {}'.format(sql_query))
+            exit(1)
 
     def get_query_results(self, query_id):
         return self.client.get_query_results(QueryExecutionId=query_id)

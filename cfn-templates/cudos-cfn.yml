@@ -23,12 +23,17 @@ Parameters:
     Type: String
     MinLength: 3
     Default: REPLACE WITH CUR FOLDER AND PATH
-    Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName
+    Description: REQUIRED - Path to the s3 bucket folder that hosts the year partitions of CUR data. NOTE- Do not add trailing / . eg - BucketName/FolderName/.../FolderName. Make sure quicksight has rad access to the CUR bucket
+  AthenaWorkgroup:
+    Type: String
+    MinLength: 3
+    Default: primary
+    Description: Athena workgroup to use, if you'd like a custom worgroup for athena queries please modify accordingly, this does not create a workgroup it attempts to use an existing workroup already defined in athena. 
   AthenaQueryResultsBucket:
     Type: String
     MinLength: 3
     Default: REPLACE WITH Athena S3 Bucket configured for athena query results(do not add a trailing slash)
-    Description: REQUIRED - Name of the s3 bucket configured for athena query results(do not add a trailing slash)
+    Description: REQUIRED - Name of the s3 bucket configured for athena query results for the workgroup defined above (do not add a trailing slash) . Make sure quicksight has read and right access to this bucket. 
   CURDatabaseName:
     Type:  String
     MinLength: 1
@@ -39,11 +44,6 @@ Parameters:
     MinLength: 1
     Default: REPLACE WITH Athena CUR TABLE
     Description: 'REQUIRED - Athena CUR Table name'
-  QuickSightDataSetRefreshSchedule:
-    Type: String
-    MinLength: 3
-    Default: cron(0 4 * * ? *)
-    Description: 'REQUIRED - cron expression on when to refresh spice datasets daily outside of business hours. Default is 4 AM utc, this should work for most customers in US and EU time zones' 
   CIDLogCaptureAccountID:
     Type: String
     MinLength: 2
@@ -100,7 +100,8 @@ Resources:
                     - !Ref AWS::Region
                     - ':'
                     - !Ref AWS::AccountId
-                    - ':workgroup/primary'
+                    - ':workgroup/'
+                    - !Ref AthenaWorkgroup
               - Effect: Allow
                 Action:
                   - glue:GetDatabase
@@ -198,6 +199,7 @@ Resources:
         Variables:
           DatabaseName: !Ref CURDatabaseName
           TableName: !Ref CURTableName
+          AthenaWorkgroup: !Ref AthenaWorkgroup
           ViewTemplatesUri: 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cid/builtin/core/data/queries'
           ViewMetadataUri:  'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cfn-templates'
                             
@@ -224,6 +226,7 @@ Resources:
           table_name = os.environ["TableName"]
           view_templates_uri = os.environ["ViewTemplatesUri"]
           view_metadata_uri = os.environ["ViewMetadataUri"]
+          athena_workgroup = os.environ["AthenaWorkgroup"]
 
           def lambda_handler(event, context):
               logger.info(f"Cloud formation {event['RequestType']} event,"
@@ -288,7 +291,7 @@ Resources:
                       response = athena.start_query_execution(
                           QueryString=view_code,
                           QueryExecutionContext={'Database': database_name},
-                          WorkGroup='primary'
+                          WorkGroup=athena_workgroup
                       )
                       logger.info('Completed step %s',step)
                   # Create a dummy account map. Can be modified later        
@@ -304,7 +307,7 @@ Resources:
                   response = athena.start_query_execution(
                       QueryString=account_map_query,
                       QueryExecutionContext={'Database': database_name},
-                      WorkGroup='primary',
+                      WorkGroup=athena_workgroup,
                   )
                   logger.info("Completed %s", step)
                   return(True, "Views created successfully")
@@ -321,7 +324,7 @@ Resources:
                       WHERE {fieldName} <> ''
                   """.strip(),
                   QueryExecutionContext={'Database': database_name},
-                  WorkGroup='primary'
+                  WorkGroup=athena_workgroup
               )['QueryExecutionId']
               while queryState in ['QUEUED','RUNNING']:
                   time.sleep(10)
@@ -351,7 +354,7 @@ Resources:
       Name: !Join [ '' , [ 'QSCURDataSource' ,  !Ref Suffix ] ]
       DataSourceParameters:
         AthenaParameters:
-          WorkGroup: primary
+          WorkGroup: !Ref AthenaWorkgroup
       Permissions:
         - Actions:
             - 'quicksight:DescribeDataSource'
@@ -2034,13 +2037,13 @@ Resources:
 
       VersionDescription: "1"
 
-  SpiceRefreshExecutionRole: #role needed to schedule spice ingestion for the datasets
+  CidLoggerRole: #Execution role for the custom resource CidLoggerExecutor
     Type: AWS::IAM::Role
     Properties:
       Path: /
       RoleName: !Join
         - ''
-        - - SpiceRefreshExecutionRole
+        - - CidLoggerRole
           - !Ref Suffix
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -2054,7 +2057,7 @@ Resources:
       Policies:
         - PolicyName: !Join
           - ''
-          - - SpiceRefreshExecutionPolicy
+          - - CidLoggerPolicy
             - !Ref Suffix
           PolicyDocument:
             Version: 2012-10-17
@@ -2065,90 +2068,101 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: '*'
-              - Effect: Allow
-                Action:
-                  - quicksight:CreateIngestion
-                Resource:
-                  - Fn::Join: [ "/", [!GetAtt SummaryViewDataset.Arn , "ingestion", "*" ] ]
-                  - Fn::Join: [ "/", [!GetAtt EC2RunningCostDataset.Arn , "ingestion" , "*" ] ]
-                  - Fn::Join: [ "/", [!GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn , "ingestion" , "*" ] ]
-                  - Fn::Join: [ "/", [!GetAtt S3ViewDataset.Arn, "ingestion" , "*" ] ]
-              - Effect: Allow
-                Action:
-                  - quicksight:ListDatasets
-                Resource:
-                  - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*
 
-  SpiceRefreshLambdaCreator: #Function for dataset refresh
+  CIDLoggerLambdaCreator: #custom lambda resource that is tasked to record deployments for CID team internal adoption tracking purposes
     Type: AWS::Lambda::Function
     Properties:
-      Runtime: python3.7
+      Runtime: python3.9
       FunctionName: !Join
         - ''
-        - - QSCUDOSRefreshDatasets
+        - - CIDLogger
           - !Ref Suffix
       Handler: index.lambda_handler
       MemorySize: 128
-      Role: !GetAtt SpiceRefreshExecutionRole.Arn
-      Timeout: 60
+      Role: !GetAtt CidLoggerRole.Arn
+      Timeout: 15
       Environment:
         Variables:
-          suffix: !Ref Suffix
+          ALLOW_ACCOUNT_ID: !Ref CIDLogCaptureAccountID
+          API_ENDPOINT: https://dj8jjwlhm3.execute-api.us-east-2.amazonaws.com/cid
       Code:
         ZipFile: |
+          import json
           import boto3
-          from datetime import datetime
           import os
-          
-          DATASETS_TO_REFRESH = [
-              "ec2_running_cost" + os.environ['suffix'],
-              "s3_view" + os.environ['suffix'] , 
-              "summary_view" + os.environ['suffix'],
-              "compute_savings_plan_eligible_spend" + os.environ['suffix'],
-          ]
+          import cfnresponse
+          import urllib3
+          import uuid
 
-          def get_account_id():
-              sts = boto3.client('sts')
-              account_id = sts.get_caller_identity()['Account']
-              print('account_id = ', account_id)
-              return account_id
-          
-          def refresh_datasets(account_id):
-              quicksight = boto3.client('quicksight')
-              datasets = quicksight.list_data_sets(AwsAccountId=account_id)
-              for dataset in datasets['DataSetSummaries']:
-                  name = dataset['Name']
-                  if dataset['ImportMode'] == 'SPICE' and name in DATASETS_TO_REFRESH:               
-                      ingestion_id = datetime.now().strftime("%d%m%y-%H%M%S-%f")
-                      print("Refreshing dataset {0}".format(name))
-                      res = quicksight.create_ingestion(
-                          AwsAccountId=account_id,
-                          DataSetId=dataset['DataSetId'],
-                          IngestionId=ingestion_id
-                        )
-                      print(res)
+          http = urllib3.PoolManager()
+          endpoint=os.environ["API_ENDPOINT"]
+          account_id=boto3.client("sts").get_caller_identity()["Account"]
+          if os.environ["ALLOW_ACCOUNT_ID"] in ["NO","No","no","False","FALSE","false"]:
+              account_id= str(uuid.uuid1())
+              
+          def execute_request(action,dashboard_id,via_key):
+              try:
+                  message=None
+                  payload={'dashboard_id': dashboard_id, 'account_id': account_id, via_key: 'CFN'}
+                  encoded_data = json.dumps(payload).encode('utf-8')
+                  r = http.request(action,endpoint,body=encoded_data,headers={'Content-Type': 'application/json'})
+                  if r.status!=200:
+                      message=f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {r.status}, response data {r.data.decode('utf-8')}. This issue will be ignored"
+              except urllib3.exceptions.HTTPError as e:
+                message=f"Issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, due to a urllib3 exception {str(e)} . This issue will be ignored"
+              return message
+              
+
+          def register_deployment(action,dashboards):
+              message=f"Succesfully logged  {action} for {dashboards}"
+              for dashboard_id in dashboards:
+                  if action == 'CREATE':
+                      message=execute_request('PUT',dashboard_id,'created_via')
+                  elif action == 'UPDATE':
+                      message=execute_request('PATCH',dashboard_id,'updated_via')
+                  elif action == 'DELETE':
+                      message=execute_request('DELETE',dashboard_id,'deleted_via')
+                  if message is None:
+                      message=f"Succesfully logged  {action} for {dashboards} "
+              #Do not stop deployment if we're not able to succesfully record this deployment, still return true
+              return ("True",message)
+
 
           def lambda_handler(event, context):
-              account_id = get_account_id()
-              refresh_datasets(account_id)
+              if event['RequestType'] == 'Create':
+                  res, reason = register_deployment('CREATE',event['ResourceProperties']['dashboards'])
+              elif event['RequestType'] == 'Update':
+                  res, reason = register_deployment('UPDATE',event['ResourceProperties']['dashboards'])
+              elif event['RequestType'] == 'Delete':
+                  res, reason = register_deployment('DELETE',event['ResourceProperties']['dashboards'])
+              else:
+                  res = False
+                  reason = "Unknown operation: " + event['RequestType']
+              
+              response_data = {'Reason': reason}
+              print(response_data)
+              
+              if res:
+                  print("Success")
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              else:
+                  print("Error")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
 
 
-  SpiceRefreshRule:
-    Type: AWS::Events::Rule
+  CIDLoggerLambdaExecutor: #Executes the custom resource above as part of the CFN template 
+    Type: Custom::CIDLoggerLambdaExecutor
+    DependsOn: "CIDDashboard" 
     Properties:
-      ScheduleExpression: !Ref QuickSightDataSetRefreshSchedule
-      Targets:
-        - Id: SpiceRefreshScheduler
-          Arn: !GetAtt SpiceRefreshLambdaCreator.Arn
-
-
-  InvokeLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt SpiceRefreshLambdaCreator.Arn
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt SpiceRefreshRule.Arn
+      ServiceToken: !GetAtt CIDLoggerLambdaCreator.Arn
+      Region: !Ref "AWS::Region"
+      Name: !Join
+        - ''
+        - - CIDLoggerLambdaExecutor
+          - !Ref Suffix
+      dashboards:
+        - cudos
+        - cost_intelligence_dashboard          
 
   CidLoggerRole: #Execution role for the custom resource CidLoggerExecutor
     Type: AWS::IAM::Role
@@ -2265,7 +2279,7 @@ Resources:
 
   CIDLoggerLambdaExecutor: #Executes the custom resource above as part of the CFN template 
     Type: Custom::CIDLoggerLambdaExecutor
-    DependsOn: "SpiceRefreshRule" 
+    DependsOn: "CIDDashboard" 
     Properties:
       ServiceToken: !GetAtt CIDLoggerLambdaCreator.Arn
       Region: !Ref "AWS::Region"
@@ -2277,5 +2291,34 @@ Resources:
         - cudos
         - cost_intelligence_dashboard
       
-      
 
+Outputs:
+  Suffix:
+    Description: Suffix
+    #In case suffix is empty set suffix to _. In the import template, we need to select the second split value with delimiter  - 
+    Value: !Join [ "-" , [ "_",!Ref Suffix ] ]
+    Export: 
+      Name: !Sub '${AWS::StackName}-suffix'
+  SummaryViewDatasetArn: 
+    Description: The summary view dataset ARN
+    Value: !GetAtt SummaryViewDataset.Arn
+    Export: 
+      Name: !Sub '${AWS::StackName}-SummaryViewDatasetArn'
+  EC2RunningCostDatasetArn: 
+    Description: The EC2RunningCost dataset ARN
+    Value: !GetAtt EC2RunningCostDataset.Arn
+    Export: 
+      Name: !Sub '${AWS::StackName}-EC2RunningCostDatasetArn'
+  ComputeSavinsPlanEligibleSpendDatasetArn: 
+    Description: The ComputeSavinsPlanEligibleSpendDataset view dataset ARN
+    Value: !GetAtt ComputeSavinsPlanEligibleSpendDataset.Arn
+    Export: 
+      Name: !Sub '${AWS::StackName}-ComputeSavinsPlanEligibleSpendDatasetArn'
+  S3ViewDatasetArn: 
+    Description: The S3 view dataset ARN
+    Value: !GetAtt S3ViewDataset.Arn
+    Export: 
+      Name: !Sub '${AWS::StackName}-S3ViewDatasetArn'  
+
+  
+  

@@ -12,7 +12,7 @@ WITH
    , "round"("sum"("line_item_unblended_cost"), 2) "unblended_cost"
    , "round"(sum("line_item_unblended_cost") , 2) "amortized_cost"
    FROM
-     ${cur_table_name}
+     "${cur_table_name}"
    GROUP BY 1, 2, 3, 4, 5, 6, 7
 )
 , t2 AS (

@@ -1,4 +1,5 @@
 import csv
+import logging
 from pathlib import Path
 import questionary
 import click
@@ -6,21 +7,28 @@ from pkg_resources import resource_string
 from string import Template
 from cid.helpers import Athena, CUR
 
+logger = logging.getLogger(__name__)
+
 class AccountMap():
     defaults = {
-        'AthenaTableName': 'acc_metadata_details'
-    }
+        'MetadataTableNames': ['acc_metadata_details', 'organisation_data']
+    } 
     _clients = dict()
     _accounts = list()
+    _metadata_source: str = None
+    _AthenaTableName: str = None
     mappings = {
         'account_map': {
-            'metadata_fields': 'account_id, account_name'
+            'acc_metadata_details': {'account_id': 'account_id', 'account_name': 'account_name'},
+            'organisation_data': {'account_id': 'id', 'account_name': 'name', 'email': 'email'}
         },
         'aws_accounts': {
-            'metadata_fields': 'account_id, account_name, email',
-            'cur_fields': 'bill_payer_account_id'
+            'acc_metadata_details': {'account_id': 'account_id', 'account_name': 'account_name', 'email': 'email'},
+            'organisation_data': { 'account_id': 'id', 'account_name': 'name', 'email': 'email', 'status': 'status'},
+            'cur_fields': ['bill_payer_account_id']
         }
     }
+    session = None
 
     def __init__(self, session=None) -> None:
         self.session = session
@@ -55,45 +63,7 @@ class AccountMap():
 
     @property
     def accounts(self) -> dict:
-        if not self._accounts:
-            # Ask user which method to use to retreive account list
-            selection = list()
-            account_map_sources = {
-                'csv': 'CSV file (relative path required)',
-                'organization': 'AWS Organizations (one time account listing)',
-                'dummy': 'Dummy (creates dummy account mapping)'
-            }
-            for k,v in account_map_sources.items():
-                selection.append(
-                        questionary.Choice(
-                            title=f'{v}',
-                            value=k
-                        )
-                    )
-            selected_source=questionary.select(
-                "\nWhich method would you like to use for collecting an account list ?",
-                choices=selection
-            ).ask()
-
-            # Collect account list from different sources of user choice
-            if selected_source == 'csv':
-                finished = False
-                while not finished:
-                    mapping_file = click.prompt("Enter file path", type=str)
-                    finished = self.check_file_exists(mapping_file)
-                    if not finished:
-                        click.echo('File not found, ', nl=False)
-                click.echo('\nCollecting account info...', nl=False)
-                self._accounts = self.get_csv_accounts(mapping_file)
-            elif selected_source == 'organization':
-                click.echo('\nCollecting account info...', nl=False)
-                self._accounts = self.get_organization_accounts()
-            elif selected_source == 'dummy':
-                click.echo('Notice: Dummy account mapping will be created')
-            else:
-                raise Exception('Unsupported selection')
-            
-            click.echo(f'collected accounts: {len(self._accounts)}')
+        if self._accounts:            
             # Required keys mapping, used in renaming below
             key_mapping = {
                 'accountid': 'account_id',
@@ -113,21 +83,42 @@ class AccountMap():
                 })
         return self._accounts
     
-    def create(self, map_name= str) -> bool:
+    def create(self, name) -> bool:
         """Create account map"""
         
-        print(f'\nCreating {map_name}...')
+        print(f'\nCreating {name}...')
+        logger.info(f'Creating account mapping "{name}"...')
         try:
-            # Autodiscover
-            print('\tautodiscovering...', end='')
-            accounts = self.athena.get_table_metadata(self.defaults.get('AthenaTableName')).get('Columns')
-            field_found = [v.get('Name') for v in accounts]
-            field_required = self.mappings.get(map_name).get('metadata_fields').replace(" ", "").split(',')
-            # Check if we have all the required fields
-            if all(v in field_found for v in field_required):
-                self._AthenaTableName = self.defaults.get('AthenaTableName')
+            if self.accounts:
+                logger.info('Account information found, skipping autodiscovery')
+                raise Exception
+            if not self._AthenaTableName:
+                # Autodiscover
+                print('\tautodiscovering...', end='')
+                logger.info('Autodiscovering metadata table...')
+                tables = self.athena.list_table_metadata()
+                tables = [t for t in tables if t.get('TableType') == 'EXTERNAL_TABLE']
+                tables = [t for t in tables if t.get('Name') in self.defaults.get('MetadataTableNames')]
+                if not len(tables):
+                    logger.info('Metadata table not found')
+                    print('account metadata not detected')
+                    raise Exception
+                table = next(iter(tables))
+                logger.info(f"Detected metadata table {table.get('Name')}")
+                accounts = table.get('Columns')
+                field_found = [v.get('Name') for v in accounts]
+                field_required = list(self.mappings.get(name).get(table.get('Name')).values())
+                logger.info(f"Detected fields: {field_found}")
+                logger.info(f"Required fields: {field_required}")
+                # Check if we have all the required fields
+                if all(v in field_found for v in field_required):
+                    logger.info('All required fields found')
+                    self._AthenaTableName = table.get('Name')
+                else:
+                    logger.info('Missing required fields')
+            if self._AthenaTableName:
                 # Query path
-                view_definition = self.athena._resources.get('views').get(map_name, dict())
+                view_definition = self.athena._resources.get('views').get(name, dict())
                 view_file = view_definition.get('File')
 
                 template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
@@ -135,18 +126,21 @@ class AccountMap():
                 # Fill in TPLs
                 columns_tpl = dict()
                 parameters = {
-                    'metadata_table_name': self.defaults.get('AthenaTableName'),
+                    'metadata_table_name': self._AthenaTableName,
                     'cur_table_name': self.cur.tableName
                 }
                 columns_tpl.update(**parameters)
+                for k,v in self.mappings.get(name).get(self._AthenaTableName).items():
+                    logger.info(f'Mapping field {k} to {v}')
+                    columns_tpl.update({k: v})
                 compiled_query = template.safe_substitute(columns_tpl)
                 print('compiled view.')
             else:
-                print('failed, continuing..')
-                compiled_query = self.create_account_mapping_sql(map_name)
+                logger.info('Metadata table not found')
+                print('account metadata not detected')
+                raise Exception
         except:
-            print('failed, continuing..')
-            compiled_query = self.create_account_mapping_sql(map_name)
+            compiled_query = self.create_account_mapping_sql(name)
         finally:
             # Execute query
             click.echo('\tcreating view...', nl=False)
@@ -155,6 +149,27 @@ class AccountMap():
             response = self.athena.get_query_results(query_id)
             click.echo('done')
 
+    def get_dummy_account_mapping_sql(self, name) -> list:
+        """Create dummy account mapping"""
+        logger.info(f'Creating dummy account mapping for {name}')
+        template_str = '''CREATE OR REPLACE VIEW  ${athena_view_name} AS SELECT DISTINCT
+            line_item_usage_account_id account_id, bill_payer_account_id parent_account_id,
+            line_item_usage_account_id account_name, line_item_usage_account_id account_email_id
+            FROM
+                ${cur_table_name}
+        '''
+        template = Template(template_str)        
+        # Fill in TPLs
+        columns_tpl = dict()
+        parameters = {
+            'athena_view_name': name,
+            'cur_table_name': self.cur.tableName
+        }
+        columns_tpl.update(**parameters)
+        compiled_query = template.safe_substitute(columns_tpl)
+        
+        return compiled_query
+        
 
     def get_organization_accounts(self) -> list:
         """ Retreive AWS Organization account """
@@ -197,9 +212,53 @@ class AccountMap():
         return accounts
 
 
-    def create_account_mapping_sql(self, mapping_name) -> str:
+    def select_metadata_collection_method(self) -> str:
+        """ Selects the method to collect metadata """
+        logger.info('Metadata source selection')
+        # Ask user which method to use to retreive account list
+        selection = list()
+        account_map_sources = {
+            'csv': 'CSV file (relative path required)',
+            'organization': 'AWS Organizations (one time account listing)',
+            'dummy': 'Dummy (CUR account data, no names)'
+        }
+        for k,v in account_map_sources.items():
+            selection.append(
+                    questionary.Choice(title=f'{v}', value=k)
+                )
+        selected_source=questionary.select(
+            "Please select account metadata collection method",
+            choices=selection
+        ).ask()
+        if selected_source in account_map_sources.keys():
+            logger.info(f'Selected {selected_source}')
+            self._metadata_source = selected_source
+
+        # Collect account list from different sources of user choice
+        if self._metadata_source == 'csv':
+            finished = False
+            while not finished:
+                mapping_file = click.prompt("Enter file path", type=str)
+                finished = self.check_file_exists(mapping_file)
+                if not finished:
+                    click.echo('File not found, ', nl=False)
+            click.echo('\nCollecting account info...', nl=False)
+            self._accounts = self.get_csv_accounts(mapping_file)
+            logger.info(f'Found {len(self._accounts)} accounts')
+            click.echo(f' {len(self.accounts)} collected')
+        elif self._metadata_source == 'organization':
+            click.echo('\nCollecting account info...', nl=False)
+            self._accounts = self.get_organization_accounts()
+            logger.info(f'Found {len(self._accounts)} accounts')
+            click.echo(f' {len(self.accounts)} collected')
+        elif self._metadata_source == 'dummy':
+            click.echo('Notice: Dummy account mapping will be created')
+        else:
+            print('Unsupported selection')
+            return False
+
+    def create_account_mapping_sql(self, name) -> str:
         """ Returns account mapping Athena query """
-        
         template_str = '''CREATE OR REPLACE VIEW  ${athena_view_name} AS
             SELECT
                 *
@@ -207,22 +266,28 @@ class AccountMap():
                 ( VALUES ${rows} )
             ignored_table_name (account_id, account_name, parent_account_id, account_status, account_email)
         '''
-        # Wait for account list
-        while not self.accounts:
-            pass
-        template = Template(template_str)
-        accounts_sql = list()
-        for account in self.accounts:
-            accounts_sql.append(
-                "ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')".format(**account))
         
-        # Fill in TPLs
-        columns_tpl = dict()
-        parameters = {
-            'athena_view_name': mapping_name,
-            'rows': ','.join(accounts_sql)
-        }
-        columns_tpl.update(**parameters)
-        compiled_query = template.safe_substitute(columns_tpl)
+        while not self.accounts and self._metadata_source != 'dummy':
+            self.select_metadata_collection_method()
+            
+        if self._metadata_source == 'dummy':
+            compiled_query = self.get_dummy_account_mapping_sql(name)        
+        else:
+            template = Template(template_str)
+            accounts_sql = list()
+            for account in self.accounts:
+                acc = account.copy()
+                account_name = acc.pop('account_name').replace("'", "''")
+                accounts_sql.append(
+                    """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')""".format(account_name=account_name, **acc))
+            
+            # Fill in TPLs
+            columns_tpl = dict()
+            parameters = {
+                'athena_view_name': name,
+                'rows': ','.join(accounts_sql)
+            }
+            columns_tpl.update(**parameters)
+            compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query

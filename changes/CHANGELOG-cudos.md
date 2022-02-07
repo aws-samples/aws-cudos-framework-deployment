@@ -1,5 +1,15 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.64
+
+* Compute Summary: Excluded charges for Dedicated Hosts from EC2 instance family and instance types visuals
+* Compute Summary: New visual ‘EC2 Spot Savings’
+* End User Computing: Updated recommendations for Workspaces Cost Optimizer solution new capability to delete unused workspaces which will reduce costs for customers by terminating the workspaces which have not been used for a month
+
+## CUDOS - 4.63.4
+
+* Databases: Fixed a filter on "Database Instance Daily Elasticity by Purchase Option" to include OpenSearch Instances
+
 ## CUDOS - 4.63.3
 
 * GameTech: Renamed "GameLift OnDemand Instance Types"(Monthly) to GameLift Costs by Instance Types; renamed "GameLift OnDemand Instance Types"(Daily) to "GameLift Instance Types Last 90 Days" and adjusted filters

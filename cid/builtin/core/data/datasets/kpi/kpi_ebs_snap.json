@@ -1,0 +1,114 @@
+{
+    "DataSetId": "0e7cd1a6-e38d-4ca8-af6f-9256577d651e",
+    "Name": "kpi_ebs_snap",
+    "PhysicalTableMap": {
+        "f224e706-8cd3-4c2f-b4e8-d8470368782f": {
+            "RelationalTable": {
+                "DataSourceArn": "${athena_datasource_arn}",
+                "Schema": "${athena_database_name}",
+                "Name": "kpi_ebs_snap",
+                "InputColumns": [
+                    {
+                        "Name": "billing_period",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "start_date",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "payer_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "linked_account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "account_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "resource_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "snapshot_type",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_snapshot_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "public_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_snapshots_under_1yr_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "ebs_snapshots_over_1yr_cost",
+                        "Type": "DECIMAL"
+                    }
+                ]
+            }
+        }
+    },
+    "LogicalTableMap": {
+        "f224e706-8cd3-4c2f-b4e8-d8470368782f": {
+            "Alias": "kpi_ebs_snap",
+            "DataTransforms": [
+                {
+                    "ProjectOperation": {
+                        "ProjectedColumns": [
+                            "billing_period",
+                            "start_date",
+                            "payer_account_id",
+                            "linked_account_id",
+                            "account_id",
+                            "account_name",
+                            "resource_id",
+                            "snapshot_type",
+                            "usage_quantity",
+                            "ebs_snapshot_cost",
+                            "public_cost",
+                            "ebs_snapshots_under_1yr_cost",
+                            "ebs_snapshots_over_1yr_cost"
+                        ]
+                    }
+                }
+            ],
+            "Source": {
+                "PhysicalTableId": "f224e706-8cd3-4c2f-b4e8-d8470368782f"
+            }
+        }
+    },
+    "ImportMode": "SPICE",
+    "Permissions": [
+        {
+            "Principal": "${user_arn}",
+            "Actions": [
+                "quicksight:UpdateDataSetPermissions",
+                "quicksight:DescribeDataSet",
+                "quicksight:DescribeDataSetPermissions",
+                "quicksight:PassDataSet",
+                "quicksight:DescribeIngestion",
+                "quicksight:ListIngestions",
+                "quicksight:UpdateDataSet",
+                "quicksight:DeleteDataSet",
+                "quicksight:CreateIngestion",
+                "quicksight:CancelIngestion"
+            ]
+        }
+    ]
+}
