@@ -47,9 +47,9 @@ class Athena():
                 self._status = 'AWS DataCatog of type GLUE not found'
             if len(glue_data_catalogs) == 1:
                 self._CatalogName = glue_data_catalogs.pop().get('CatalogName')
-            elif len(glue_data_catalogs) > 2:
+            elif len(glue_data_catalogs) > 1:
                 # Select default catalog if present
-                default_catalog = [d for d in glue_data_catalogs if d['CatalogName'] == self.defaults.get('_CatalogName')]
+                default_catalog = [d for d in glue_data_catalogs if d['CatalogName'] == self.defaults.get('CatalogName')]
                 if not len(default_catalog):
                     # Ask user
                     self._CatalogName = questionary.select(
