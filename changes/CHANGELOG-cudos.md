@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.64.1
+
+* Databases: Updated filters on all Database visuals to match edge cases for Refunds and Credits 
+
 ## CUDOS - 4.64
 
 * Compute Summary: Excluded charges for Dedicated Hosts from EC2 instance family and instance types visuals
