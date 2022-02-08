@@ -251,7 +251,6 @@ class QuickSight():
                 try:
                     _dataset = self.describe_dataset(id=dataset_id)
                     if not _dataset:
-                        dashboard.datasets.update({dataset_id: 'missing'})
                         logger.info(f'Dataset "{dataset_id}" is missing')
                     else:
                         logger.info(f"Using dataset \"{_dataset.get('Name')}\" ({_dataset.get('DataSetId')} for {dashboard.name})")

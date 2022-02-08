@@ -15,7 +15,7 @@ from string import Template
 import json
 
 from pathlib import Path
-from botocore.exceptions import NoCredentialsError, CredentialRetrievalError
+from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
 from deepmerge import always_merger
 
@@ -144,6 +144,10 @@ class Cid:
         except (NoCredentialsError, CredentialRetrievalError):
             print('Error: Not authenticated, please check AWS credentials')
             logger.info('Not authenticated, exiting')
+            exit()
+        except ClientError as e:
+            print(f'Error: {e}')
+            logger.info(f'Error: {e}')
             exit()
         print('\taccountId: {}\n\tAWS userId: {}'.format(
             self.awsIdentity.get('Account'),
@@ -479,9 +483,7 @@ class Cid:
             for dataset_name in missing_datasets[:]:
                 print(f'Creating dataset: {dataset_name}...', end='')
                 try:
-                    dataset_definition = self.resources.get(
-                        'datasets').get(dataset_name)
-
+                    dataset_definition = self.resources.get('datasets').get(dataset_name)
                 except:
                     logger.critical(
                         'dashboard definition is broken, unable to proceed.')
@@ -491,9 +493,9 @@ class Cid:
                 try:
                     if self.create_dataset(dataset_definition):
                         missing_datasets.remove(dataset_name)
-                        print('created')
+                        print(f'DataSet "{dataset_name}" creation created')
                     else:
-                        print('failed')
+                        print(f'DataSet "{dataset_name}" creation failed, collect debug log for more info')
                 except self.qs.client.exceptions.AccessDeniedException as AccessDeniedException:
                     print('unable to create, missing permissions: {}'.format(AccessDeniedException))
 
@@ -665,6 +667,7 @@ class Cid:
                 exit(1)
         else:
             self.athena.execute_query(view_query)
+        print(f'\nView "{view_name}" created')
 
 
     def get_view_query(self, view_name: str) -> str:
