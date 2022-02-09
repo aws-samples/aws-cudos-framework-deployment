@@ -43,7 +43,7 @@
 
 ### Usage Demo
 
-    [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
+   [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
 
 ## Troubleshooting 
 
