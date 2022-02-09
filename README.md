@@ -41,46 +41,9 @@
     pip3 install --upgrade cid-cmd
     ```
 
-5. List of supported commands  
-    ```bash
-    cid-cmd --help
-    ```
-6. Deploy a dashbaord  
-    ```bash
-    cid-cmd deploy
-    ```
-7. Update a dashbaord  
-    ```bash
-    cid-cmd update
-    ```
+### Usage Demo
 
-### Example output
-
-<pre>CLOUD INTELLIGENCE DASHBOARDS (CID) aka Cid CLI 1.0 Beta
-
-Loading plugins...
-  Core loaded
-done
-
-Usage: cid-cmd [OPTIONS] COMMAND [ARGS]...
-
-Options:
-  --profile_name TEXT           AWS Profile name to use
-  --region_name TEXT            AWS Region (default:'us-east-1')
-  --aws_access_key_id TEXT
-  --aws_secret_access_key TEXT
-  --aws_session_token TEXT
-  -v, --verbose
-  --help                        Show this message and exit.
-
-Commands:
-  delete  Delete Dashboard
-  deploy  Deploy Dashboard
-  map     Create account mapping
-  open    Open Dashboard in browser
-  status  Show Dashboard status
-  update  Update Dashboard
-</pre>
+   [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
 
 ## Troubleshooting 
 
