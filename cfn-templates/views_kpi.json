@@ -15,7 +15,6 @@
 			"Path": "https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cid/builtin/core/data/queries/kpi",
 			"File": "kpi_ebs_storage_view.sql"
 		},
-		
 		"kpi_s3_storage_all": {
 			"__description__": "",
 			"Path": "https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cid/builtin/core/data/queries/kpi",
@@ -46,6 +45,14 @@
 			"spFile": "summary_view_sp.sql",
 			"riFile": "summary_view_ri.sql",
 			"File": "summary_view.sql"
+		},
+		"ri_sp_mapping": {
+			"__description__": "",
+			"Path": "https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cid/builtin/core/data/queries/cid",
+			"spriFile": "ri_sp_mapping_sp_ri.sql",
+			"spFile": "ri_sp_mapping_sp.sql",
+			"riFile": "ri_sp_mapping_ri.sql",
+			"File": "ri_sp_mapping.sql"
 		}
 	}
 }
