@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.65
+
+* Data Transfer: Amazon CloudFront is now a separate Data Transfer Type category; New multi-select list for Data Transfer Types
+
 ## CUDOS - 4.64.2
 
 * MoM Trends: Updated filters on all MoM trends visuals to match edge cases for Refunds and Credits 
