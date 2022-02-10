@@ -263,6 +263,7 @@ class Cid:
             # Catch exception and dump a reason
             click.echo('failed, dumping error message')
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
+            self.delete(dashboard_definition.get('dashboardId'))
             exit(1)
 
         return dashboard.get('dashboardId')
