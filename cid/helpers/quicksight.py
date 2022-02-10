@@ -71,8 +71,12 @@ class Dashboard():
     @property
     def status(self) -> str:
         if not self._status:
+            # Deployment failed
+            if self.version.get('Status') not in ['CREATION_SUCCESSFUL']:
+                self._status = 'broken'
+                self.status_detail = f"{self.version.get('Status')}: {self.version.get('Errors')}"
             # Not dicovered yet
-            if not self.definition:
+            elif not self.definition:
                 self._status = 'undiscovered'
             # Missing dataset
             elif not self.datasets or (len(self.datasets) < len(self.definition.get('dependsOn').get('datasets'))):
@@ -80,10 +84,6 @@ class Dashboard():
                 self._status = 'broken'
                 logger.info(f"Found datasets: {self.datasets}")
                 logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
-            # Deployment failed
-            elif self.version.get('Status') not in ['CREATION_SUCCESSFUL']:
-                self._status = 'broken'
-                self.status_detail = f"{self.version.get('Status')}: {self.version.get('Errors')}"
             # Source Template has changed
             elif self.deployed_arn and self.sourceTemplate.get('Arn') and not self.deployed_arn.startswith(self.sourceTemplate.get('Arn')):
                 self._status = 'legacy'
@@ -478,6 +478,7 @@ class QuickSight():
             'AwsAccountId': self.account_id,
             'DashboardId': dashboard_id
         }
+        logger.info(f'Deleting dashboard {dashboard_id}')
         return self.client.delete_dashboard(**paramaters)
 
     def describe_dataset(self, id) -> dict:
@@ -595,7 +596,6 @@ class QuickSight():
         except self.client.exceptions.ResourceExistsException:
             raise
         created_version = int(create_status['VersionArn'].split('/')[-1])
-        current_status = create_status['CreationStatus']
 
         # Poll for the current status of query as long as its not finished
         describe_parameters = {
@@ -603,6 +603,7 @@ class QuickSight():
             'VersionNumber': created_version
         }
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
+        dashboard.definition = definition
         if not dashboard.health:
             failure_reason = dashboard.version.get('Errors')
             raise Exception(failure_reason)
