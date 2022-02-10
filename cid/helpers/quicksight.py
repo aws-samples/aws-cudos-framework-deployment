@@ -637,7 +637,7 @@ class QuickSight():
             'VersionNumber': created_version
         }
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
-        dashboard.definition = definition
+        self.discover_dashboard(dashboard.id)
         if not dashboard.health:
             failure_reason = dashboard.version.get('Errors')
             raise Exception(failure_reason)
