@@ -339,6 +339,22 @@ class Cid:
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
 
 
+    def cleanup(self):
+        """Delete unused resources (QuickSight datasets, Athena views)"""
+
+        self.qs.discover_dashboards()
+        self.qs.discover_datasets()
+        used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
+        for v in list(self.qs._datasets.values()):
+            if v.get('Arn') not in used_datasets:
+                logger.info(f'Deleting dataset {v.get("Name")} ({v.get("Arn")})')
+                self.qs.delete_dataset(v.get('DataSetId'))
+                logger.info(f'Deleted dataset {v.get("Name")} ({v.get("Arn")})')
+                print(f'Deleted dataset {v.get("Name")} ({v.get("Arn")})')
+            else:
+                print(f'Dataset {v.get("Name")} ({v.get("Arn")}) is in use')
+
+
     def update(self, dashboard_id, **kwargs):
         """Update Dashboard"""
 
@@ -400,11 +416,7 @@ class Cid:
         print('\nRequired datasets: \n - {}'.format('\n - '.join(required_datasets)))
         try:
             print('\nDetecting existing datasets...', end='')
-            for dataset in self.qs.list_data_sets():
-                try:
-                    self.qs.describe_dataset(dataset.get('DataSetId'))
-                except:
-                    continue
+            self.qs.discover_datasets()
         except self.qs.client.exceptions.AccessDeniedException:
             print('no permissions, performing full discrovery...', end='')
             self.qs.dashboards

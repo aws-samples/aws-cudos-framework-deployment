@@ -481,6 +481,24 @@ class QuickSight():
         logger.info(f'Deleting dashboard {dashboard_id}')
         return self.client.delete_dashboard(**paramaters)
 
+    def delete_dataset(self, id: str) -> bool:
+        """ Deletes an AWS QuickSight dataset """
+
+        logger.info(f'Deleting dataset {id}')
+        try:
+            self.client.delete_data_set(
+                AwsAccountId=self.account_id,
+                DataSetId=id
+            )
+            self._datasets.pop(id)
+        except self.client.exceptions.AccessDeniedException:
+            logger.info('Access denied deleting dataset')
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.info('Dataset does not exist')
+        else:
+            logger.info(f'Deleted dataset {id}')
+
+
     def describe_dataset(self, id) -> dict:
         """ Describes an AWS QuickSight dataset """
         if not self._datasets.get(id):
@@ -494,6 +512,22 @@ class QuickSight():
             except self.client.exceptions.AccessDeniedException:
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
         return self._datasets.get(id, dict())
+
+    def discover_datasets(self):
+        """ Discover datasets in the account """
+
+        logger.info('Discovering datasets')
+        try:
+            for dataset in self.list_data_sets():
+                try:
+                    self.describe_dataset(dataset.get('DataSetId'))
+                except:
+                    continue
+        except self.client.exceptions.AccessDeniedException:
+            logger.info('Access denied listing datasets')
+        except:
+            logger.info('No datasets found')
+
 
     def describe_data_source(self, id):
         """ Describes an AWS QuickSight data source """
