@@ -187,7 +187,7 @@ class QuickSight():
     @property
     def user(self) -> dict:
         if not self._user:
-            self._user =  self.describe_user('/'.join(self.awsIdentity.get('Arn').split('/')[-2:]))
+            self._user =  self.describe_user('/'.join(self.awsIdentity.get('Arn').split('/')[1:]))
             if not self._user:
                 # If no user match, ask
                 userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
