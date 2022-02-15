@@ -7,8 +7,6 @@ from pkg_resources import resource_string
 from string import Template
 import json
 
-import yaspin
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -299,28 +297,3 @@ class Athena():
                 self.get_table_metadata(TableName=view_name)
             except self.client.exceptions.MetadataException:
                 pass
-
-
-    def update_views(self):
-        """ Update Athena views """
-        # TODO: check if needed
-        print('Loading views definitions', end='')
-        view_list = self.get_views(self.hasReservations, self.hasSavingsPlans)
-        print('done')
-        print('Updating views')
-        
-        for view in view_list.get('views'):
-            sp = yaspin(text=view.get('label'))
-            # Load query
-            sql_query = self.get_view(view.get('id')).get('query')
-            # Execute query
-            try:
-                query_id = self.athena.execute_query(sql_query=sql_query)
-                # Get results as list
-                response = self.athena.get_query_results(query_id)
-                # result = athena.parse_response_as_list(response)
-                sp.ok("✔")
-            except:
-                sp.fail("query failed")
-        
-        return True
