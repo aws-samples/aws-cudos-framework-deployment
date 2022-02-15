@@ -61,7 +61,8 @@ class Dashboard():
     def deployed_version(self) -> int:
         try:
             return int(self.deployed_arn.split('/')[-1])
-        except:
+        except Exception as e:
+            logger.debug(e, stack_info=True)
             return 0
  
     @property
@@ -265,7 +266,8 @@ class QuickSight():
             try:
                 template = self.describe_template(templateId, account_id=templateAccountId)
                 dashboard.sourceTemplate = template
-            except:
+            except Exception as e:
+                logger.debug(e, stack_info=True)
                 logger.info(f'Unable to describe template {templateId} in {templateAccountId}')
             self._dashboards.update({dashboardId: dashboard})
             logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
@@ -325,7 +327,8 @@ class QuickSight():
         try:
             for v in self.list_data_sources():
                 self.describe_data_source(v.get('DataSourceId'))
-        except:
+        except Exception as e:
+            logger.debug(e, stack_info=True)
             for _,v in self.datasets.items():
                 for _,map in v.get('PhysicalTableMap').items():
                     self.describe_data_source(map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
@@ -374,7 +377,8 @@ class QuickSight():
             else:
                 logger.debug(result)
                 return result.get('DashboardSummaryList')
-        except:
+        except Exception as e:
+            logger.debug(e, stack_info=True)
             return list()
 
     def list_data_sources(self) -> list:
@@ -391,7 +395,8 @@ class QuickSight():
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing data sources')
             return list()
-        except:
+        except Exception as e:
+            logger.debug(e, stack_info=True)
             return list()
 
     def select_dashboard(self, force=False) -> str:
@@ -416,11 +421,14 @@ class QuickSight():
                 "Please select installation(s) from the list",
                 choices=selection
             ).ask()
-        except:
-            print('\nNo updates available or dashboard(s) is/are broken, use --force to allow selection\n')
+        except AttributeError as e:
+            # No updatable dashboards (selection is disabled)
+            logger.debug(e, exc_info=True, stack_info=True)
+        except Exception as e:
+            logger.exception(e)
         finally:
             return dashboard_id
-        
+
     def list_data_sets(self):
         parameters = {
             'AwsAccountId': self.account_id
@@ -434,7 +442,8 @@ class QuickSight():
                 return result.get('DataSetSummaries')
         except self.client.exceptions.AccessDeniedException:
             raise
-        except:
+        except Exception as e:
+            logger.debug(e, stack_info=True)
             return None
 
     def describe_dashboard(self, poll: bool=False, **kwargs) -> Union[None, Dashboard]:
@@ -521,11 +530,13 @@ class QuickSight():
             for dataset in self.list_data_sets():
                 try:
                     self.describe_dataset(dataset.get('DataSetId'))
-                except:
+                except Exception as e:
+                    logger.debug(e, stack_info=True)
                     continue
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing datasets')
-        except:
+        except Exception as e:
+            logger.debug(e, stack_info=True)
             logger.info('No datasets found')
 
 
@@ -553,7 +564,8 @@ class QuickSight():
         try:
             result = self.use1Client.describe_template(AwsAccountId=account_id,TemplateId=template_id)
             logger.debug(result)
-        except:
+        except Exception as e:
+            logger.debug(e, stack_info=True)
             print(f'Error: Template {template_id} is not available in account {account_id}')
             exit(1)
         return result.get('Template')

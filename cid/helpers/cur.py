@@ -2,6 +2,10 @@ import json
 import questionary
 from cid.helpers import Athena
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 class CUR:
     requiredColumns = [
         'identity_line_item_id',

@@ -104,7 +104,8 @@ class Athena():
         try:
             self.client.get_database(CatalogName=self.CatalogName, DatabaseName=DatabaseName).get('Database')
             return True
-        except:
+        except Exception as e:
+            logger.debug(e, stack_info=True)
             return False
 
     def list_table_metadata(self, DatabaseName: str=None) -> dict:

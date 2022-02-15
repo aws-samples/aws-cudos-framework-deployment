@@ -484,8 +484,8 @@ class Cid:
                 except self.qs.client.exceptions.AccessDeniedException:
                     logger.info(f'Access denied trying to find dataset "{dataset_name}"')
                     pass
-                except:
-                    raise
+                except Exception as e:
+                    logger.debug(e, stack_info=True)
             print('complete')
 
         # If there still datasets missing try automatic creation
@@ -497,11 +497,10 @@ class Cid:
                 print(f'Creating dataset: {dataset_name}...', end='')
                 try:
                     dataset_definition = self.resources.get('datasets').get(dataset_name)
-                except:
-                    logger.critical(
-                        'dashboard definition is broken, unable to proceed.')
-                    logger.critical(
-                        f'dataset definition not found: {dataset_name}')
+                except Exception as e:
+                    logger.critical('dashboard definition is broken, unable to proceed.')
+                    logger.critical(f'dataset definition not found: {dataset_name}')
+                    logger.critical(e, stack_info=True)
                     raise
                 try:
                     if self.create_dataset(dataset_definition):
@@ -511,6 +510,9 @@ class Cid:
                         print(f'DataSet "{dataset_name}" creation failed, collect debug log for more info')
                 except self.qs.client.exceptions.AccessDeniedException as AccessDeniedException:
                     print('unable to create, missing permissions: {}'.format(AccessDeniedException))
+                except Exception as e:
+                    logger.debug(e, stack_info=True)
+                    raise
 
         # Last chance to enter DataSetIds manually by user
         if len(missing_datasets):
@@ -534,7 +536,8 @@ class Cid:
                     self.qs._datasets.update({dataset_name: _dataset})
                     missing_datasets.remove(dataset_name)
                     print(f'\tFound, using it')
-                except:
+                except Exception as e:
+                    logger.debug(e, stack_info=True)
                     print(f"\tProvided DataSetId '{id}' can't be found\n")
                     continue
 
@@ -606,9 +609,9 @@ class Cid:
                     if dataset.get('DataSetPlaceholder') in datasets:
                         # check if the dataset exists by describing it
                         try:
-                            _dataset = self.qs.describe_dataset(
-                                dataset.get('DataSetArn').split('/')[1])
-                        except:
+                            _dataset = self.qs.describe_dataset(dataset.get('DataSetArn').split('/')[1])
+                        except Exception as e:
+                            logger.debug(e, stack_info=True)
                             continue
                         # Create a list of found datasets per dataset name
                         if not found_datasets.get(_dataset.get('Name')):
