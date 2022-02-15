@@ -140,6 +140,7 @@ class AccountMap():
                 print('account metadata not detected')
                 raise Exception
         except:
+            # TODO: Handle exceptions
             compiled_query = self.create_account_mapping_sql(name)
         finally:
             # Execute query

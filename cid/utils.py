@@ -29,7 +29,8 @@ def get_boto_session(**kwargs):
         logger.info('No AWS region set, defaulting to us-east-1')
         kwargs.update({'region_name': 'us-east-1'})
         return get_boto_session(**kwargs)
-    except:
+    except Exception as e:
+        logger.debug(e, stack_info=True)
         raise
 
 def get_boto_client(service_name, **kwargs):
@@ -46,5 +47,6 @@ def get_boto_client(service_name, **kwargs):
     except (NoCredentialsError, CredentialRetrievalError):
         print('Error: unable to initialize boto client, please check your AWS credentials, exiting')
         exit(1)
-    except:
+    except Exception as e:
+        logger.debug(e, stack_info=True)
         raise
