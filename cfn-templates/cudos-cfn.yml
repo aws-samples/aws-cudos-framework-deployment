@@ -2092,7 +2092,7 @@ Resources:
       Timeout: 15
       Environment:
         Variables:
-          API_ENDPOINT: https://dj8jjwlhm3.execute-api.us-east-2.amazonaws.com/cid
+          API_ENDPOINT: https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/
       Code:
         ZipFile: |
           import json
