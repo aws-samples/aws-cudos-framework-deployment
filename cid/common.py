@@ -491,8 +491,7 @@ class Cid:
         # If there still datasets missing try automatic creation
         if len(missing_datasets):
             missing_str = ', '.join(missing_datasets)
-            print(
-                f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
+            print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
             for dataset_name in missing_datasets[:]:
                 print(f'Creating dataset: {dataset_name}...', end='')
                 try:
@@ -615,12 +614,10 @@ class Cid:
                             continue
                         # Create a list of found datasets per dataset name
                         if not found_datasets.get(_dataset.get('Name')):
-                            found_datasets.update(
-                                {_dataset.get('Name'): dict()})
+                            found_datasets.update({_dataset.get('Name'): dict()})
                         # Add datasets using Arn as a key
                         if not found_datasets.get(_dataset.get('Name')).get(_dataset.get('Arn')):
-                            found_datasets.get(_dataset.get('Name')).update(
-                                {_dataset.get('Arn'): _dataset})
+                            found_datasets.get(_dataset.get('Name')).update({_dataset.get('Arn'): _dataset})
             except AttributeError:
                 # move to next saved deployment if the key is not present
                 continue
