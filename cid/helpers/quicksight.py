@@ -187,6 +187,7 @@ class QuickSight():
 
     @property
     def user(self) -> dict:
+        # TODO: Refactor QuickSight dynamic identity region detection
         if not self._user:
             self._user =  self.describe_user('/'.join(self.awsIdentity.get('Arn').split('/')[1:]))
             if not self._user:
@@ -200,10 +201,7 @@ class QuickSight():
                             value=user
                         )
                     )
-                try:
-                    self._user =  questionary.select("Please select QuickSight to use", choices=selection).ask()
-                except:
-                    return None
+                self._user =  questionary.select("Please select QuickSight user to use", choices=selection).ask()
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
         return self._user
 
