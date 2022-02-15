@@ -401,11 +401,10 @@ class QuickSight():
         """ Select from a list of discovered dashboards """
         selection = list()
         dashboard_id = None
+        if not self.dashboards:
+            return None
         for dashboard in self.dashboards.values():
-            if dashboard.health:
-                health = 'healthy' 
-            else:
-                health = 'unhealthy'
+            health = 'healthy' if dashboard.health else 'unhealthy'
             selection.append(
                 questionary.Choice(
                     title=f'{dashboard.name} ({dashboard.arn}, {health}, {dashboard.status})',
