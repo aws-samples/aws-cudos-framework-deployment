@@ -190,20 +190,20 @@ class Cid:
         selection = list()
         for k, dashboard in self.resources.get('dashboards').items():
             selection.append(
-                questionary.Choice(
-                    title=f"{dashboard.get('name')}",
-                    value=k
-                )
+                questionary.Choice(title=f"{dashboard.get('name')}", value=k)
             )
         try:
             selected_dashboard = questionary.select(
                 "Please select dashboard to install",
                 choices=selection
             ).ask()
-        except:
-            print('\nEnd: No updates available or dashboard(s) is/are broken\n')
+        except Exception as e:
+            logger.debug(e, stack_info=True)
+            print(f'\nEnd: {e}\n')
             return
-
+        if not selected_dashboard:
+            print('No dashboard selected')
+            return
         # Get selected dashboard definition
         dashboard_definition = self.resources.get(
             'dashboards').get(selected_dashboard)
@@ -300,10 +300,13 @@ class Cid:
         """Check QuickSight dashboard status"""
 
         if not dashboard_id:
-            dashboard_id = self.qs.select_dashboard(force=True)
-            if not dashboard_id:
-                click.echo('No deployed dashboard found')
-                return
+            if not self.qs.dashboards:
+                print('\nNo deployed dashboards found')
+                exit()
+            else:
+                dashboard_id = self.qs.select_dashboard(force=True)
+                if not dashboard_id:
+                    exit()
             dashboard = self.qs.dashboards.get(dashboard_id)
         else:
             # Describe dashboard by the ID given, no discovery
@@ -321,10 +324,13 @@ class Cid:
         """Delete QuickSight dashboard"""
 
         if not dashboard_id:
-            dashboard_id = self.qs.select_dashboard(force=True)
-        if not dashboard_id:
-            click.echo('No selection, exiting.')
-            exit()
+            if not self.qs.dashboards:
+                print('\nNo deployed dashboards found')
+                exit()
+            else:
+                dashboard_id = self.qs.select_dashboard(force=True)
+                if not dashboard_id:
+                    exit()
         try:
             # Execute query
             click.echo('Deleting dashboard...', nl=False)
@@ -359,9 +365,15 @@ class Cid:
         """Update Dashboard"""
 
         if not dashboard_id:
-            dashboard_id = self.qs.select_dashboard(force=kwargs.get('force'))
-        if not dashboard_id:
-            exit()
+            if not self.qs.dashboards:
+                print('\nNo deployed dashboards found')
+                exit()
+            else:
+                dashboard_id = self.qs.select_dashboard(force=kwargs.get('force'))
+                if not dashboard_id:
+                    if not kwargs.get('force'):
+                        print('\nNo updates available or dashboard(s) is/are broken, use --force to allow selection\n')
+                    exit()
         dashboard = self.qs.dashboards.get(dashboard_id)
         if not dashboard:
             click.echo(f'Dashboard "{dashboard_id}" is not deployed')
