@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.66
+
+* MoM Trends: Additional visibility and control in to billing entity origin AWS vs AWS Marketplace
+
 ## CUDOS - 4.65
 
 * Data Transfer: Amazon CloudFront is now a separate Data Transfer Type category; New multi-select list for Data Transfer Types
