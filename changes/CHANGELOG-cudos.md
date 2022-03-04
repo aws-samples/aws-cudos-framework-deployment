@@ -1,5 +1,10 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.66.2
+
+* RI/SP Summary: Changed grouping behaviour for "On Demand Compute Savings Plan Eligible Spend (Select Payer in Controls)
+" visual 
+
 ## CUDOS - 4.66.1
 
 * MoM Trends: Removed billing entity field from visual "MoM Trends by Product Code (AWS Marketplace items use product_name)", control left as is
