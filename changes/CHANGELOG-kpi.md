@@ -1,8 +1,8 @@
 # What's new in the KPI Dashboard
 
 ## KPI - 1.2
-* Added EC2 Unit Cost to Metrics Summary
-* Update product_volume_type case statement in S3 query to key off only '%Intelligent%' to meet AIA formating
+* Metrics Summary: Added EC2 Unit Cost to EC2 section
+* KPI S3 Storage All Athena view: Updated product_volume_type case when statement to key off only '%Intelligent%' for Intelligent Tiering to meet AIA formatting
 
 ## KPI - 1.1
 * Calculated field correction for Normalized Usage Quantity in the summary_view and kpi_instance_all data sets. 
