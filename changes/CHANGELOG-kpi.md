@@ -1,5 +1,9 @@
 # What's new in the KPI Dashboard
 
+## KPI - 1.2
+* Added EC2 Unit Cost to Metrics Summary
+* Update product_volume_type case statement in S3 query to key off only '%Intelligent%' to meet AIA formating
+
 ## KPI - 1.1
 * Calculated field correction for Normalized Usage Quantity in the summary_view and kpi_instance_all data sets. 
     ```bash
