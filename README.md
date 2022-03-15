@@ -44,6 +44,22 @@
     pip3 install --upgrade cid-cmd
     ```
 
+5. Deploy the Dashboards
+    ```bash
+    cid-cmd deploy
+    ```
+#### Optional Commands
+
+6. Update existing Dashboards
+    ```bash
+    cid-cmd update
+    ```
+
+7. See available commands
+    ```
+    cid-cmd --help
+    ```
+
 ### Usage Demo
 
    [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
