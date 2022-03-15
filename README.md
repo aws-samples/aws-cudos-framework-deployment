@@ -48,6 +48,7 @@
     ```bash
     cid-cmd deploy
     ```
+#### Optional Commands
 
 6. Update existing Dashboards
     ```bash
