@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.66.3
+
+* Monitomring and Observability: New recommendations
+
 ## CUDOS - 4.66.1
 
 * MoM Trends: Removed billing entity field from visual "MoM Trends by Product Code (AWS Marketplace items use product_name)", control left as is
