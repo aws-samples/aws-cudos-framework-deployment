@@ -1,13 +1,14 @@
 import click
 
 from cid.common import Cid
+from cid.tracker import track
 
 from cid._version import __version__
 
 version = f'{__version__} Beta'
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
-
+analitycs_data = dict()
 
 @click.group()
 @click.option('--profile_name', help='AWS Profile name to use', default=None)
@@ -24,7 +25,12 @@ def main(ctx, **kwargs):
     App = Cid(**params)
     App.run(**kwargs)
     ctx.obj = App
-
+    if click.get_current_context().invoked_subcommand:
+        analitycs_data.update( {
+            'dashboard_id': None,
+            'account_id': App.awsIdentity.get('Account'),
+            'operation': click.get_current_context().invoked_subcommand,
+        })
 
 @main.command()
 @click.pass_obj
@@ -38,7 +44,9 @@ def map(App):
 def deploy(App):
     """Deploy Dashboard"""
 
-    App.deploy()
+    id = App.deploy()
+    analitycs_data['dashboard_id'] = id
+    track(**analitycs_data)
 
 
 @main.command()
@@ -55,7 +63,9 @@ def status(App, **kwargs):
 def delete(App, **kwargs):
     """Delete Dashboard"""
 
-    App.delete(dashboard_id=kwargs.get('dashboard_id'))
+    id = App.delete(dashboard_id=kwargs.get('dashboard_id'))
+    analitycs_data['dashboard_id'] = id
+    track(**analitycs_data)
 
 @main.command()
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
@@ -64,7 +74,9 @@ def delete(App, **kwargs):
 def update(App, **kwargs):
     """Update Dashboard"""
 
-    App.update(dashboard_id=kwargs.get('dashboard_id'), force=kwargs.get('force'))
+    id = App.update(dashboard_id=kwargs.get('dashboard_id'), force=kwargs.get('force'))
+    analitycs_data['dashboard_id'] = id
+    track(**analitycs_data)
 
 
 @main.command()
