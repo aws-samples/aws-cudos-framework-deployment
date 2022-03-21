@@ -365,8 +365,8 @@ class Cid:
             click.echo('Deleting dashboard...', nl=False)
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print('deleted')
-            return dashboard_id
             self.log('deleted', dashboard_id)
+            return dashboard_id
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
         except Exception as e:
