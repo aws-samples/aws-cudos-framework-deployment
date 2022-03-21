@@ -2061,16 +2061,13 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
-       - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
   CIDLoggerLambdaCreator: 
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.9
-      FunctionName: !Join
-        - ''
-        - - CIDLogger
-          - !Ref Suffix
+      FunctionName: !Join ['', ["CIDLogger", !Ref Suffix] ]
       Handler: index.lambda_handler
       MemorySize: 128
       Role: !GetAtt CidLoggerRole.Arn
@@ -2085,7 +2082,7 @@ Resources:
           import uuid
           import urllib3
 
-          import boto3s
+          import boto3
           import cfnresponse
 
           http = urllib3.PoolManager()
@@ -2117,25 +2114,18 @@ Resources:
               print(resp)
               cfnresponse.send(event, context, cfnresponse.SUCCESS if res else cfnresponse.FAILED, resp, event.get('PhysicalResourceId', None) or str(uuid.uuid1()))
 
-
   CIDLoggerLambdaExecutor:  
     Type: Custom::CIDLoggerLambdaExecutor
     DependsOn: [ "CIDDashboard" , "CUDOSDashboard" ]
     Properties:
       ServiceToken: !GetAtt CIDLoggerLambdaCreator.Arn
       Region: !Ref "AWS::Region"
-      Name: !Join
-        - ''
-        - - CIDLoggerLambdaExecutor
-          - !Ref Suffix
+      Name: !Join ['', ["CIDLoggerLambdaExecutor", !Ref Suffix] ]
       dashboards:
         - cudos
         - cost_intelligence_dashboard
       buildviews_uuid:
         - !GetAtt QSCURBuildViewsLambdaExecutor.views_execution_uuid
-
-
-
       
 
 Outputs:
