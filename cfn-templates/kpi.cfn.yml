@@ -430,10 +430,10 @@ Resources:
             reserved_instance_present = False
             for column in response['Table']['StorageDescriptor']['Columns']:
                 if column['Name'] == 'savings_plan_savings_plan_a_r_n':
-                    if distinct_count(column['Name'], table_name, database_name) > 0:
+                    if distinct_count(column['Name'], table_name, database_name, athena_workgroup) > 0:
                         savings_plan_present = True
                 if column['Name'] == 'reservation_reservation_a_r_n':
-                    if distinct_count(column['Name'], table_name, database_name) > 0:
+                    if distinct_count(column['Name'], table_name, database_name, athena_workgroup) > 0:
                         reserved_instance_present = True
             if savings_plan_present and reserved_instance_present:
                 return 'spriFile'
@@ -454,7 +454,7 @@ Resources:
               # If no different values exist for RI/SP specific cases, use the default value
               return view_dict["view_templates"][view_name]["Path"] + '/' + view_dict["view_templates"][view_name]["File"]
           
-          def distinct_count(fieldName, table_name, database_name):
+          def distinct_count(fieldName, table_name, database_name, work_group):
             queryState = 'QUEUED'
             queryId = athena_client.start_query_execution(
                 QueryString=f"""
@@ -463,7 +463,7 @@ Resources:
                     WHERE {fieldName} <> ''
                 """.strip(),
                 QueryExecutionContext={'Database': database_name},
-                WorkGroup='primary'
+                WorkGroup=work_group
             )['QueryExecutionId']
             while queryState in ['QUEUED','RUNNING']:
               time.sleep(10)
@@ -1941,7 +1941,7 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt kpiSpiceRefreshRule.Arn
 
- kpiLoggerRole: #Execution role for the custom resource kpiLoggerExecutor
+  kpiLoggerRole: #Execution role for the custom resource kpiLoggerExecutor
     Type: AWS::IAM::Role
     Properties:
       Path: /
