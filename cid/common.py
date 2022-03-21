@@ -8,6 +8,7 @@ from cid.plugin import Plugin
 
 import os
 import sys
+import urllib3
 
 import click
 from string import Template
@@ -184,6 +185,33 @@ class Cid:
             print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
 
 
+    def log(self, action, dashboard_id):
+        """ Log dashboard action """
+        method = {'created':'PUT', 'updated':'PATCH', 'deleted': 'DELETE'}.get(action, None)
+        if not method:
+            logger.debug(f"This will not fail the deployment. Logging action {action} is not supported. This issue will be ignored")
+            return
+        http = urllib3.PoolManager()
+        endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/'
+        payload = {
+            'dashboard_id': dashboard_id,
+            'account_id': self.awsIdentity.get('Account'),
+            action + '_via': 'CID',
+        }
+        try:
+            res = http.request(
+                method=method,
+                url=endpoint,
+                body=json.dumps(payload).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
+            if res.status != 200:
+                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {res.status}, response data {res.data.decode('utf-8')}. This issue will be ignored")
+        except urllib3.exceptions.HTTPError as e:
+            logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
+
+
+
     def deploy(self, **kwargs):
         """ Deploy Dashboard """
 
@@ -255,6 +283,7 @@ class Cid:
             click.echo('completed')
             click.echo(
                 f"#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
+            self.log('created', dashboard.get('dashboardId'))
         except self.qs.client.exceptions.ResourceExistsException:
             click.echo('error, already exists')
             click.echo(
@@ -337,12 +366,14 @@ class Cid:
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print('deleted')
             return dashboard_id
+            self.log('deleted', dashboard_id)
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
         except Exception as e:
             # Catch exception and dump a reason
             click.echo('failed, dumping error message')
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
+
 
 
     def cleanup(self):
@@ -414,6 +445,7 @@ class Cid:
             self.qs.update_dashboard(dashboard, **kwargs)
             click.echo('completed')
             dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)          
+            self.log('updated', dashboard_id)
         except Exception as e:
             # Catch exception and dump a reason
             click.echo('failed, dumping error message')
