@@ -430,10 +430,10 @@ Resources:
             reserved_instance_present = False
             for column in response['Table']['StorageDescriptor']['Columns']:
                 if column['Name'] == 'savings_plan_savings_plan_a_r_n':
-                    if distinct_count(column['Name'], table_name, database_name) > 0:
+                    if distinct_count(column['Name'], table_name, database_name, athena_workgroup) > 0:
                         savings_plan_present = True
                 if column['Name'] == 'reservation_reservation_a_r_n':
-                    if distinct_count(column['Name'], table_name, database_name) > 0:
+                    if distinct_count(column['Name'], table_name, database_name, athena_workgroup) > 0:
                         reserved_instance_present = True
             if savings_plan_present and reserved_instance_present:
                 return 'spriFile'
@@ -454,7 +454,7 @@ Resources:
               # If no different values exist for RI/SP specific cases, use the default value
               return view_dict["view_templates"][view_name]["Path"] + '/' + view_dict["view_templates"][view_name]["File"]
           
-          def distinct_count(fieldName, table_name, database_name):
+          def distinct_count(fieldName, table_name, database_name, work_group):
             queryState = 'QUEUED'
             queryId = athena_client.start_query_execution(
                 QueryString=f"""
@@ -463,7 +463,7 @@ Resources:
                     WHERE {fieldName} <> ''
                 """.strip(),
                 QueryExecutionContext={'Database': database_name},
-                WorkGroup='primary'
+                WorkGroup=work_group
             )['QueryExecutionId']
             while queryState in ['QUEUED','RUNNING']:
               time.sleep(10)
@@ -1940,3 +1940,81 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt kpiSpiceRefreshRule.Arn
+
+  kpiLoggerRole: #Execution role for the custom resource kpiLoggerExecutor
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Join ['', ["kpiLoggerRole", !Ref Suffix] ]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  kpiLoggerLambdaCreator:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      FunctionName: !Join ['', ["kpiLogger", !Ref Suffix] ]
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt kpiLoggerRole.Arn
+      Timeout: 15
+      Environment:
+        Variables:
+          API_ENDPOINT: https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/
+      Code:
+        ZipFile: |
+          import os
+          import json
+          import uuid
+          import urllib3
+
+          import boto3
+          import cfnresponse
+
+          http = urllib3.PoolManager()
+          endpoint = os.environ["API_ENDPOINT"]
+          account_id = boto3.client("sts").get_caller_identity()["Account"]
+          
+          def request(action, dashboard_id):
+              message = f"Succesfully logged  {action} for {dashboard_id}"
+              via_key = {'Create':'created_via', 'Update':'updated_via', 'Delete': 'deleted_via'}.get(action)
+              verb = {'Create':'PUT', 'Update':'PATCH', 'Delete': 'DELETE'}.get(action)
+              payload = {'dashboard_id': dashboard_id, 'account_id': account_id, via_key: 'CFN'}
+              try:
+                  r = http.request(verb, endpoint, body=json.dumps(payload).encode('utf-8'),headers={'Content-Type': 'application/json'})
+                  if r.status!=200:
+                      message = f"This will not fail the deployment. There has been an issue logging action {action} for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {r.status}, response data {r.data.decode('utf-8')}. This issue will be ignored"
+              except urllib3.exceptions.HTTPError as e:
+                  message = f"Issue logging action {action} for dashboard {dashboard_id} and account {account_id}, due to a urllib3 exception {str(e)} . This issue will be ignored"
+              return message
+          
+          def lambda_handler(event, context):
+              if event['RequestType'] in ('Create', 'Update', 'Delete'):
+                  dashboards = event['ResourceProperties']['dashboards']
+                  action = event['RequestType']
+                  #Do not stop deployment if we're not able to succesfully record this deployment, still return true
+                  res, reason = True, '\n'.join([request(action, dashboard_id) for dashboard_id in dashboards])
+              else:
+                  res, reason = False,  f"Unknown operation: {event['RequestType']}"
+              resp = {'Reason': reason}
+              print(resp)
+              cfnresponse.send(event, context, cfnresponse.SUCCESS if res else cfnresponse.FAILED, resp, event.get('PhysicalResourceId', None) or str(uuid.uuid1()))
+
+  kpiLoggerLambdaExecutor:
+    Type: Custom::kpiLoggerLambdaExecutor
+    DependsOn: [ "kpiQuickSightDashboard" ]
+    Properties:
+      ServiceToken: !GetAtt kpiLoggerLambdaCreator.Arn
+      Region: !Ref "AWS::Region"
+      Name: !Join ['', ["kpiLoggerLambdaExecutor", !Ref Suffix] ]
+      dashboards:
+        - kpi
