@@ -1,13 +1,13 @@
 import click
 
 from cid.common import Cid
+from cid.tracker import track
 
 from cid._version import __version__
 
 version = f'{__version__} Beta'
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
-
 
 @click.group()
 @click.option('--profile_name', help='AWS Profile name to use', default=None)
@@ -24,7 +24,7 @@ def main(ctx, **kwargs):
     App = Cid(**params)
     App.run(**kwargs)
     ctx.obj = App
-
+ 
 
 @main.command()
 @click.pass_obj
@@ -39,7 +39,6 @@ def deploy(App):
     """Deploy Dashboard"""
 
     App.deploy()
-
 
 @main.command()
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
@@ -56,6 +55,7 @@ def delete(App, **kwargs):
     """Delete Dashboard"""
 
     App.delete(dashboard_id=kwargs.get('dashboard_id'))
+
 
 @main.command()
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)

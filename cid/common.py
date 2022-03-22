@@ -1,34 +1,28 @@
+import os
+import sys
+import json
+import logging
+from string import Template
 from pkg_resources import resource_string
+from pathlib import Path
+
+import requests
+import click
 import questionary
+from deepmerge import always_merger
+from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
 from cid import utils
 from cid.helpers import Athena, CUR, Glue, QuickSight
 from cid.helpers.account_map import AccountMap
 from cid.plugin import Plugin
 
-import os
-import sys
-import urllib3
 
-import click
-from string import Template
-
-import json
-
-from pathlib import Path
-from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
-
-from deepmerge import always_merger
-
-import logging
 logger = logging.getLogger(__name__)
 
 
 class Cid:
-    defaults = {
-        'quicksight_url': 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
-    }
-
+    """ Cost Intelegent Dashboard installer"""
     def __init__(self, **kwargs) -> None:
         self.__setupLogging(verbosity=kwargs.pop('verbose'))
         logger.info('Initializing CID')
@@ -39,8 +33,7 @@ class Cid:
         self._clients = dict()
         self.awsIdentity = None
         self.session = None
-        self.qs_url = kwargs.get(
-            'quicksight_url', self.defaults.get('quicksight_url'))
+        self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
 
     @property
     def qs(self) -> QuickSight:
@@ -191,7 +184,6 @@ class Cid:
         if not method:
             logger.debug(f"This will not fail the deployment. Logging action {action} is not supported. This issue will be ignored")
             return
-        http = urllib3.PoolManager()
         endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/'
         payload = {
             'dashboard_id': dashboard_id,
@@ -199,15 +191,15 @@ class Cid:
             action + '_via': 'CID',
         }
         try:
-            res = http.request(
+            res = requests.request(
                 method=method,
                 url=endpoint,
-                body=json.dumps(payload).encode('utf-8'),
+                data=json.dumps(payload).encode('utf-8'),
                 headers={'Content-Type': 'application/json'}
             )
-            if res.status != 200:
-                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {res.status}, response data {res.data.decode('utf-8')}. This issue will be ignored")
-        except urllib3.exceptions.HTTPError as e:
+            if res.status_code != 200:
+                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
+        except Exception as e:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
 
