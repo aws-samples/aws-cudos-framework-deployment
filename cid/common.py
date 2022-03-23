@@ -197,7 +197,7 @@ class Cid:
             res = requests.request(
                 method=method,
                 url=endpoint,
-                data=payload,
+                data=json.dumps(payload),
                 headers={'Content-Type': 'application/json'}
             )
             if res.status_code != 200:
@@ -277,7 +277,7 @@ class Cid:
             click.echo('completed')
             click.echo(
                 f"#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
-            self.trace('created', dashboard.get('dashboardId'))
+            self.trace('created', dashboard_definition.get('dashboardId'))
         except self.qs.client.exceptions.ResourceExistsException:
             click.echo('error, already exists')
             click.echo(
