@@ -10,6 +10,7 @@ import os
 import sys
 
 import click
+import requests
 from string import Template
 
 import json
@@ -24,9 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 class Cid:
-    defaults = {
-        'quicksight_url': 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
-    }
 
     def __init__(self, **kwargs) -> None:
         self.__setupLogging(verbosity=kwargs.pop('verbose'))
@@ -38,8 +36,7 @@ class Cid:
         self._clients = dict()
         self.awsIdentity = None
         self.session = None
-        self.qs_url = kwargs.get(
-            'quicksight_url', self.defaults.get('quicksight_url'))
+        self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
 
     @property
     def qs(self) -> QuickSight:
@@ -184,6 +181,31 @@ class Cid:
             print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
 
 
+    def trace(self, action, dashboard_id):
+        """ Send dashboard_id and account_id to adoption tracker """
+        method = {'created':'PUT', 'updated':'PATCH', 'deleted': 'DELETE'}.get(action, None)
+        if not method:
+            logger.debug(f"This will not fail the deployment. Logging action {action} is not supported. This issue will be ignored")
+            return
+        endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/'
+        payload = {
+            'dashboard_id': dashboard_id,
+            'account_id': self.awsIdentity.get('Account'),
+            action + '_via': 'CID',
+        }
+        try:
+            res = requests.request(
+                method=method,
+                url=endpoint,
+                data=payload,
+                headers={'Content-Type': 'application/json'}
+            )
+            if res.status_code != 200:
+                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
+        except Exception as e:
+            logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
+
+
     def deploy(self, **kwargs):
         """ Deploy Dashboard """
 
@@ -255,6 +277,7 @@ class Cid:
             click.echo('completed')
             click.echo(
                 f"#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
+            self.trace('created', dashboard.get('dashboardId'))
         except self.qs.client.exceptions.ResourceExistsException:
             click.echo('error, already exists')
             click.echo(
@@ -336,6 +359,7 @@ class Cid:
             click.echo('Deleting dashboard...', nl=False)
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print('deleted')
+            self.trace('deleted', dashboard_id)
             return dashboard_id
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
@@ -414,6 +438,7 @@ class Cid:
             self.qs.update_dashboard(dashboard, **kwargs)
             click.echo('completed')
             dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)          
+            self.trace('updated', dashboard_id)
         except Exception as e:
             # Catch exception and dump a reason
             click.echo('failed, dumping error message')
