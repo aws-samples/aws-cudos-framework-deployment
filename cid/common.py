@@ -181,7 +181,7 @@ class Cid:
             print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
 
 
-    def trace(self, action, dashboard_id):
+    def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """
         method = {'created':'PUT', 'updated':'PATCH', 'deleted': 'DELETE'}.get(action, None)
         if not method:
@@ -277,7 +277,7 @@ class Cid:
             click.echo('completed')
             click.echo(
                 f"#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
-            self.trace('created', dashboard_definition.get('dashboardId'))
+            self.track('created', dashboard_definition.get('dashboardId'))
         except self.qs.client.exceptions.ResourceExistsException:
             click.echo('error, already exists')
             click.echo(
@@ -359,7 +359,7 @@ class Cid:
             click.echo('Deleting dashboard...', nl=False)
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print('deleted')
-            self.trace('deleted', dashboard_id)
+            self.track('deleted', dashboard_id)
             return dashboard_id
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
@@ -438,7 +438,7 @@ class Cid:
             self.qs.update_dashboard(dashboard, **kwargs)
             click.echo('completed')
             dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)          
-            self.trace('updated', dashboard_id)
+            self.track('updated', dashboard_id)
         except Exception as e:
             # Catch exception and dump a reason
             click.echo('failed, dumping error message')
