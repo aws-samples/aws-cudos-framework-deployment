@@ -2,11 +2,11 @@
 
 ## CUDOS - 4.67
 
-* Monitomring and Observability: New visual "TOP 10 CloudWatch Log Resources Previous Month"; Various improvements to actions on cloudwatch visuals; removed Operation from "TOP 10 CloudWatch Resources Previous Month" visual
+* Monitoring and Observability: New visual "TOP 10 CloudWatch Log Resources Previous Month"; Various improvements to actions on cloudwatch visuals; removed Operation from "TOP 10 CloudWatch Resources Previous Month" visual
 
 ## CUDOS - 4.66.3
 
-* Monitomring and Observability: New recommendations
+* Monitoring and Observability: New recommendations
 
 ## CUDOS - 4.66.1
 
