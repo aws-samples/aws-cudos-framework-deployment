@@ -713,6 +713,7 @@ class Cid:
         if view_definition.get('type') == 'Glue_Table':
             try:
                 self.glue.create_table(json.loads(view_query))
+                time.sleep(5) # table is not visible right after creation
             except self.glue.client.exceptions.AlreadyExistsException:
                 print(f'\nError: Glue table "{view_name}" exists but not found, please check your configuration, exiting')
                 exit(1)
@@ -724,7 +725,6 @@ class Cid:
     def get_view_query(self, view_name: str) -> str:
         """ Returns a fully compiled AHQ """
         # View path
-        from IPython import embed; embed()
         view_definition = self.resources.get('views').get(view_name, dict())
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
         if cur_required and self.cur.hasSavingsPlans and self.cur.hasReservations and view_definition.get('spriFile'):
@@ -757,7 +757,11 @@ class Cid:
             else:
                 value = None
                 while not value:
-                    value = click.prompt(f"Required parameter: {k} ({v.get('description')})", default=v.get('value'), show_default=True)
+                    value = click.prompt(
+                        f"Required parameter: {k} ({v.get('description')})",
+                        default=v.get('value').format(account_id=self.awsIdentity.get('Account')),
+                        show_default=True
+                    )
                 param = {k:value}
             # Add parameter
             columns_tpl.update(param)
