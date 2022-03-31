@@ -113,6 +113,18 @@
                         "Type": "DECIMAL"
                     },
                     {
+                        "Name": "s3_standard-ia_tier1_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_standard-ia_tier2_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_standard-ia_retrieval_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
                         "Name": "s3_onezone-ia_storage_cost",
                         "Type": "DECIMAL"
                     },
@@ -134,6 +146,18 @@
                     },
                     {
                         "Name": "s3_glacier_instant_retrieval_storage_usage_quantity",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_instant_retrieval_tier1_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_instant_retrieval_tier2_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "s3_glacier_instant_retrieval_retrieval_cost",
                         "Type": "DECIMAL"
                     },
                     {
@@ -213,12 +237,18 @@
                             "s3_intelligent-tiering_storage_usage_quantity",
                             "s3_standard-ia_storage_cost",
                             "s3_standard-ia_storage_usage_quantity",
+                            "s3_standard-ia_tier1_cost",
+                            "s3_standard-ia_tier2_cost",
+                            "s3_standard-ia_retrieval_cost",
                             "s3_onezone-ia_storage_cost",
                             "s3_onezone-ia_storage_usage_quantity",
                             "s3_reduced_redundancy_storage_cost",
                             "s3_reduced_redundancy_storage_usage_quantity",
                             "s3_glacier_instant_retrieval_storage_cost",
                             "s3_glacier_instant_retrieval_storage_usage_quantity",
+                            "s3_glacier_instant_retrieval_tier1_cost",
+                            "s3_glacier_instant_retrieval_tier2_cost",
+                            "s3_glacier_instant_retrieval_retrieval_cost",
                             "s3_glacier_flexible_retrieval_storage_cost",
                             "s3_glacier_flexible_retrieval_storage_usage_quantity",
                             "s3_glacier_deep_archive_storage_storage_cost",
