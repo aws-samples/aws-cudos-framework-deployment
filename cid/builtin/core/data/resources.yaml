@@ -56,6 +56,15 @@ dashboards:
         - monthly-anomaly-detection
         - daily-anomaly-detection
 
+  Compute Optimizer:
+    name: Compute Optimizer Dashboard
+    templateId: co_dashboard
+    dashboardId: co-dashboard
+    dependsOn:
+      datasets:
+        - compute_optimizer_all
+
+
 # QuickSight DataSets definitions
 datasets:
   # CID Shared DataSets
@@ -146,6 +155,22 @@ datasets:
       views:
         - monthly_bill_by_account
 
+
+  # Compute Optimiser (CO)
+  compute_optimizer_all:
+    File: co/dataset.json
+    dependsOn:
+      views:
+        - compute_optimizer_ec2_instances
+        - compute_optimizer_auto_scale
+        - compute_optimizer_ebs_instances
+        - compute_optimizer_lambda
+        - compute_optimizer_ec2_instances_options
+        - compute_optimizer_auto_scale_options
+        - compute_optimizer_ebs_instances_options
+        - compute_optimizer_lambda_options
+        - compute_optimizer_all_options
+        - business_units_map
 
 # Athena views definitions
 views:
@@ -270,9 +295,64 @@ views:
       s3FolderPath:
         description: Trusted Advisor Organization View report S3 folder path
 
+  # Compute Optimiser (CO)
+  compute_optimizer_ec2_instances:
+    type: Glue_Table
+    File: co/ec2_instances.json
+    parameters:
+      athenaDatabaseName:
+      athenaTableName:
+        value: compute_optimizer_ec2_instances
+      s3FolderPath:
+        description: Compute Optimiser report S3 folder path
+
+  compute_optimizer_auto_scale:
+    type: Glue_Table
+    File: co/auto_scale.json
+    parameters:
+      athenaDatabaseName:
+      athenaTableName:
+        value: compute_optimizer_auto_scale
+      s3FolderPath:
+        description: Compute Optimiser report S3 folder path
+
+  compute_optimizer_ebs_volume:
+    type: Glue_Table
+    File: co/ebs_volume.json
+    parameters:
+      athenaDatabaseName:
+      athenaTableName:
+        value: compute_optimizer_ebs_volume
+      s3FolderPath:
+        description: Compute Optimiser report S3 folder path
+
+  compute_optimizer_lambda:
+    type: Glue_Table
+    File: co/lambda.json
+    parameters:
+      athenaDatabaseName:
+      athenaTableName:
+        value: compute_optimizer_lambda
+      s3FolderPath:
+        description: Compute Optimiser report S3 folder path
+
+  compute_optimizer_ec2_instances_options:
+    File: co/ec2_instances_options.sql
+  compute_optimizer_auto_scale_options:
+    File: co/auto_scale_options.sql
+  compute_optimizer_ebs_instances_options:
+    File: co/ebs_instances_options.sql
+  compute_optimizer_lambda_options:
+    File: co/lambda_options.sql
+  compute_optimizer_all_options:
+    File: co/all_options.sql
+
+
   # Shared views
   account_map:
     File: shared/account_map.sql
+  business_units_map:
+    File: shared/business_units_map.sql
   aws_accounts:
     File: shared/aws_accounts.sql
     dependsOn:

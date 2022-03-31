@@ -109,6 +109,7 @@ class Cid:
         print('Loading plugins...')
         logger.info(f'Located {len(_entry_points)} plugin(s)')
         for ep in _entry_points:
+            print(ep)
             logger.info(f'Loading plugin: {ep.name} ({ep.value})')
             plugin = Plugin(ep.value)
             print(f"\t{ep.name} loaded")
@@ -723,6 +724,7 @@ class Cid:
     def get_view_query(self, view_name: str) -> str:
         """ Returns a fully compiled AHQ """
         # View path
+        from IPython import embed; embed()
         view_definition = self.resources.get('views').get(view_name, dict())
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
         if cur_required and self.cur.hasSavingsPlans and self.cur.hasReservations and view_definition.get('spriFile'):
@@ -734,8 +736,8 @@ class Cid:
         elif view_definition.get('File'):
             view_file = view_definition.get('File')
         else:
-            logger.critical(
-                f'\n"{view_name}" view information is incorrect, skipping')
+            logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
+            exit(1)
 
         # Load TPL file
         template = Template(resource_string(view_definition.get(
