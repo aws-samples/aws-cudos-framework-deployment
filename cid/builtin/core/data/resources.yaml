@@ -58,11 +58,12 @@ dashboards:
 
   Compute Optimizer:
     name: Compute Optimizer Dashboard
-    templateId: co_dashboard
-    dashboardId: co-dashboard
+    sourceAccountId: "597214020902"
+    templateId: compute_optimizer
+    dashboardId: compute-optimizer-dashboard
     dependsOn:
       datasets:
-        - compute_optimizer_all
+        - compute_optimizer_all_options
 
 
 # QuickSight DataSets definitions
@@ -157,17 +158,17 @@ datasets:
 
 
   # Compute Optimiser (CO)
-  compute_optimizer_all:
+  compute_optimizer_all_options:
     File: co/dataset.json
     dependsOn:
       views:
-        - compute_optimizer_ec2_instances
-        - compute_optimizer_auto_scale
-        - compute_optimizer_ebs_instances
-        - compute_optimizer_lambda
-        - compute_optimizer_ec2_instances_options
+        - compute_optimizer_ec2_instance_lines
+        - compute_optimizer_auto_scale_lines
+        - compute_optimizer_ebs_volume_lines
+        - compute_optimizer_lambda_lines
+        - compute_optimizer_ec2_instance_options
         - compute_optimizer_auto_scale_options
-        - compute_optimizer_ebs_instances_options
+        - compute_optimizer_ebs_volume_options
         - compute_optimizer_lambda_options
         - compute_optimizer_all_options
         - business_units_map
@@ -296,56 +297,82 @@ views:
         description: Trusted Advisor Organization View report S3 folder path
 
   # Compute Optimiser (CO)
-  compute_optimizer_ec2_instances:
+  compute_optimizer_ec2_instance_lines:
     type: Glue_Table
-    File: co/ec2_instances.json
+    File: co/ec2_instance.json
     parameters:
       athenaDatabaseName:
       athenaTableName:
-        value: compute_optimizer_ec2_instances
+        value: compute_optimizer_ec2_instance_lines
       s3FolderPath:
+        default: 's3://costoptimizationdata{account_id}'
         description: Compute Optimiser report S3 folder path
 
-  compute_optimizer_auto_scale:
+  compute_optimizer_auto_scale_lines:
     type: Glue_Table
     File: co/auto_scale.json
     parameters:
       athenaDatabaseName:
       athenaTableName:
-        value: compute_optimizer_auto_scale
+        value: compute_optimizer_auto_scale_lines
       s3FolderPath:
+        default: 's3://costoptimizationdata{account_id}'
         description: Compute Optimiser report S3 folder path
 
-  compute_optimizer_ebs_volume:
+  compute_optimizer_ebs_volume_lines:
     type: Glue_Table
     File: co/ebs_volume.json
     parameters:
       athenaDatabaseName:
       athenaTableName:
-        value: compute_optimizer_ebs_volume
+        value: compute_optimizer_ebs_volume_lines
       s3FolderPath:
+        default: 's3://costoptimizationdata{account_id}'
         description: Compute Optimiser report S3 folder path
 
-  compute_optimizer_lambda:
+  compute_optimizer_lambda_lines:
     type: Glue_Table
     File: co/lambda.json
     parameters:
       athenaDatabaseName:
       athenaTableName:
-        value: compute_optimizer_lambda
+        value: compute_optimizer_lambda_lines
       s3FolderPath:
+        default: 's3://costoptimizationdata{account_id}'
         description: Compute Optimiser report S3 folder path
 
-  compute_optimizer_ec2_instances_options:
-    File: co/ec2_instances_options.sql
+  compute_optimizer_ec2_instance_options:
+    File: co/ec2_instance_options.sql
+    dependsOn:
+      views:
+        - compute_optimizer_ec2_instance_lines
+      
   compute_optimizer_auto_scale_options:
     File: co/auto_scale_options.sql
-  compute_optimizer_ebs_instances_options:
-    File: co/ebs_instances_options.sql
+    dependsOn:
+      views:
+        - compute_optimizer_auto_scale_lines
+      
+  compute_optimizer_ebs_volume_options:
+    File: co/ebs_volume_options.sql
+    dependsOn:
+      views:
+        - compute_optimizer_ebs_volume_lines
+      
   compute_optimizer_lambda_options:
     File: co/lambda_options.sql
+    dependsOn:
+      views:
+        - compute_optimizer_lambda_lines
+      
   compute_optimizer_all_options:
     File: co/all_options.sql
+    dependsOn:
+      views:
+        - compute_optimizer_ec2_instance_options
+        - compute_optimizer_auto_scale_options
+        - compute_optimizer_ebs_volume_options
+        - compute_optimizer_lambda_options
 
 
   # Shared views
