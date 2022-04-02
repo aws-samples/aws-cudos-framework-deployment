@@ -1,7 +1,6 @@
 import json
-import questionary
 from cid.helpers import Athena
-
+from cid.utils import get_parameter
 import logging
 logger = logging.getLogger(__name__)
 
@@ -129,10 +128,11 @@ class CUR:
                     self._metadata = tables[0]
                     self._tableName = self._metadata.get('Name')
                 elif len(tables) > 1:
-                    self._tableName=questionary.select(
-                        "Multiple CUR tables found, please select one",
-                        choices=[v.get('Name') for v in tables]
-                    ).ask()
+                    self._tableName =  get_parameter(
+                        param_name='cur-table-name',
+                        message="Multiple CUR tables found, please select one",
+                        choices=[v.get('Name') for v in tables],
+                    )
                     self._metadata = self.athena.get_table_metadata(self._tableName)
             except Exception as e:
                 # For other errors dump the message

@@ -1,10 +1,10 @@
 from pkg_resources import resource_string
-import questionary
 
 from cid import utils
 from cid.helpers import Athena, CUR, Glue, QuickSight
 from cid.helpers.account_map import AccountMap
 from cid.plugin import Plugin
+from cid.utils import get_parameter
 
 import os
 import sys
@@ -209,26 +209,21 @@ class Cid:
     def deploy(self, **kwargs):
         """ Deploy Dashboard """
 
-        selection = list()
-        for k, dashboard in self.resources.get('dashboards').items():
-            selection.append(
-                questionary.Choice(title=f"{dashboard.get('name')}", value=k)
-            )
-        try:
-            selected_dashboard = questionary.select(
-                "Please select dashboard to install",
-                choices=selection
-            ).ask()
-        except Exception as e:
-            logger.debug(e, stack_info=True)
-            print(f'\nEnd: {e}\n')
-            return
+        selected_dashboard = get_parameter(
+            param_name='dashboard-ressource-id', 
+            message="Please select dashboard to install",
+            choices={ 
+               f"{dashboard.get('name')}" : k 
+               for k, dashboard in self.resources.get('dashboards').items()
+            },
+        )
         if not selected_dashboard:
             print('No dashboard selected')
             return
         # Get selected dashboard definition
         dashboard_definition = self.resources.get(
             'dashboards').get(selected_dashboard)
+        assert dashboard_definition, f'Cannot find Dashboard {repr(selected_dashboard)}, please check your input or ressources file'
         required_datasets = dashboard_definition.get(
             'dependsOn', dict()).get('datasets', list())
         self.create_datasets(required_datasets)
@@ -483,10 +478,12 @@ class Cid:
                 print(f'\tfound: {k}', end='')
                 if len(v.keys()) > 1:
                     # Multiple datasets
-                    selected = questionary.select(
-                        f'Multiple "{k}" datasets detected, please select one',
-                        choices=v.keys()
-                    ).ask()
+                    print()
+                    selected = get_parameter(
+                        param_name=f'dataset-{k}',
+                        message=f'Multiple "{k}" datasets detected, please select one',
+                        choices=v.keys(),
+                    )
                     self.qs._datasets.update({k: v.get(selected)})
                     missing_datasets.remove(k)
                 elif len(v.keys()):
@@ -561,8 +558,10 @@ class Cid:
             while len(missing_datasets):
                 # Make a copy and then get an item from the list
                 dataset_name = missing_datasets.copy().pop()
-                _id = click.prompt(
-                    f'\tDataSetId/Arn for {dataset_name}', type=str)
+                _id = get_parameter(
+                    param_name=f'{dataset_name}-dataset-id',
+                    message=f'DataSetId/Arn for {dataset_name}'
+                )
                 id = _id.split('/')[-1]
                 try:
                     _dataset = self.qs.describe_dataset(id)
@@ -755,10 +754,11 @@ class Cid:
             else:
                 value = None
                 while not value:
-                    value = click.prompt(
-                        f"Required parameter: {k} ({v.get('description')})",
-                        default=v.get('value').format(account_id=self.awsIdentity.get('Account')),
-                        show_default=True
+                    value = get_parameter(
+                        param_name=f'view-{view_name}-{k}',
+                        message=f"Required parameter: {k} ({v.get('description')})",
+                        default=v.get('value'),
+                        template_variables=dict(account_id=self.awsIdentity.get('Account')),
                     )
                 param = {k:value}
             # Add parameter
