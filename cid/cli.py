@@ -21,7 +21,7 @@ def update_params(ctx):
         print(f"Unknown extra argument, or an option without value {ctx.args}")
         exit(-1)
     for i in range(0, len(ctx.args), 2):
-        params [ctx.args[i][2:]] = ctx.args[i+1]
+        params[ctx.args[i][2:]] = ctx.args[i+1]
 
 @click.group()
 @click.option('--profile_name', help='AWS Profile name to use', default=None)
@@ -63,17 +63,16 @@ def deploy(ctx):
     
     \b
     Command options:
-     --dashboard-ressource-id TEXT       (CUDOS, CID, TAO, CO, etc). It is not dashboard-id
-     --athena-database TEXT              some text here
-     --glue-data-catalog                 some text here
-     --cur-table-name TEXT               CUR table name
-     --dataset-{k} TEXT                  some text here
-     --{dataset_name}-dataset-id TEXT    some text here
-     --view-{view_name}-{parameter} TEXT some text here
-     --quicksight-user TEXT              some text here
-     --dashboard_id TEXT                 some text here
-     --account_map_source TEXT           some text here
-     --account_map_file TEXT             some text here
+     --dashboard-ressource-id TEXT         (CUDOS, CID, TAO, CO, etc). It is not dashboard-id
+     --athena-database TEXT                Athena database
+     --glue-data-catalog                   Glue data catalog
+     --cur-table-name TEXT                 CUR table name
+     --{dataset_name}-dataset-id TEXT      QuickSight dataset id for a specific dataset
+     --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
+     --quicksight-user TEXT                QuickSight user
+     --dashboard-id TEXT                   QuickSight dashboard id
+     --account-map-source TEXT             csv, dummy, organization 
+     --account-map-file TEXT               csv file path relative to current directory
     """
     update_params(ctx)
     app = ctx.obj

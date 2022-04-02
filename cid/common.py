@@ -480,7 +480,7 @@ class Cid:
                     # Multiple datasets
                     print()
                     selected = get_parameter(
-                        param_name=f'dataset-{k}',
+                        param_name=f'{k}-dataset-id',
                         message=f'Multiple "{k}" datasets detected, please select one',
                         choices=v.keys(),
                     )
