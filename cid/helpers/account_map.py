@@ -223,7 +223,7 @@ class AccountMap():
             'Dummy (CUR account data, no names)': 'dummy',
         }
         selected_source = get_parameter(
-            param_name='account_map_source',
+            param_name='account-map-source',
             message="Please select account metadata collection method",
             choices=account_map_sources,
         )
@@ -235,7 +235,7 @@ class AccountMap():
             finished = False
             while not finished:
                 mapping_file = get_parameter(
-                    param_name='account_map_file',
+                    param_name='account-map-file',
                     message="Enter file path",
                 )
                 finished = self.check_file_exists(mapping_file)

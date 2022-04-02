@@ -33,11 +33,6 @@ def update_params(ctx):
 @click.pass_context
 def main(ctx, **kwargs):
 
-    if len(ctx.args) % 2 != 0:
-        print(f"Unknown extra argument, or an option without value {ctx.args}")
-        exit(-1)
-    for i in range(0, len(ctx.args), 2):
-        params [ctx.args[i][2:]] = ctx.args[i+1]
     App = Cid(
         verbose = kwargs.get('verbose')
     )
@@ -64,7 +59,22 @@ def map(ctx):
 @main.command(**command_params)
 @click.pass_context
 def deploy(ctx):
-    """Deploy Dashboard"""
+    """Deploy Dashboard
+    
+    \b
+    Command options:
+     --dashboard-ressource-id TEXT       (CUDOS, CID, TAO, CO, etc). It is not dashboard-id
+     --athena-database TEXT              some text here
+     --glue-data-catalog                 some text here
+     --cur-table-name TEXT               CUR table name
+     --dataset-{k} TEXT                  some text here
+     --{dataset_name}-dataset-id TEXT    some text here
+     --view-{view_name}-{parameter} TEXT some text here
+     --quicksight-user TEXT              some text here
+     --dashboard_id TEXT                 some text here
+     --account_map_source TEXT           some text here
+     --account_map_file TEXT             some text here
+    """
     update_params(ctx)
     app = ctx.obj
     app.deploy()

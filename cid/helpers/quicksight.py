@@ -195,7 +195,7 @@ class QuickSight():
                 # If no user match, ask
                 userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
                 self._user = get_parameter(
-                    param_name='quicksight_user',
+                    param_name='quicksight-user',
                     message="Please select QuickSight user to use",
                     choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user for user in userList}
                 )
@@ -410,7 +410,7 @@ class QuickSight():
                 choices[key] = dashboard.id
         try:
             dashboard_id = get_parameter(
-                param_name='dashboard_id',
+                param_name='dashboard-id',
                 message="Please select installation(s) from the list",
                 choices=choices,
                 none_as_disabled=True,
