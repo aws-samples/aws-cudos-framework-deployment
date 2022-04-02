@@ -755,7 +755,11 @@ class Cid:
             else:
                 value = None
                 while not value:
-                    value = click.prompt(f"Required parameter: {k} ({v.get('description')})", default=v.get('value'), show_default=True)
+                    value = click.prompt(
+                        f"Required parameter: {k} ({v.get('description')})",
+                        default=v.get('value').format(account_id=self.awsIdentity.get('Account')),
+                        show_default=True
+                    )
                 param = {k:value}
             # Add parameter
             columns_tpl.update(param)
