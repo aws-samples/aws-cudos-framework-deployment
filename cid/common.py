@@ -734,8 +734,8 @@ class Cid:
         elif view_definition.get('File'):
             view_file = view_definition.get('File')
         else:
-            logger.critical(
-                f'\n"{view_name}" view information is incorrect, skipping')
+            logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
+            raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
         template = Template(resource_string(view_definition.get(
