@@ -32,8 +32,6 @@ def update_params(ctx):
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
 def main(ctx, **kwargs):
-    print (ctx.args)
-    print (kwargs)
 
     if len(ctx.args) % 2 != 0:
         print(f"Unknown extra argument, or an option without value {ctx.args}")
