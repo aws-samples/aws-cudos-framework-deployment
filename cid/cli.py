@@ -122,7 +122,7 @@ def open(ctx, **kwargs):
 
 @main.command(**command_params)
 @click.pass_context
-def cleanup(ctx: Cid):
+def cleanup(ctx):
     """Delete unused resources (QuickSight datasets, Athena views)"""
     update_params(ctx)
     app = ctx.obj
