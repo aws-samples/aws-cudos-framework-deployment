@@ -14,10 +14,8 @@ def cid_command(func):
         if len(ctx.args) % 2 != 0:
             print(f"Unknown extra argument, or an option without value {ctx.args}")
             exit(-1)
-        print(kwargs)
         for i in range(0, len(ctx.args), 2):
             kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
-        print(kwargs)
         res = func(ctx, **kwargs)
         params = get_parameters()
         print('Next time you can use following command:')
