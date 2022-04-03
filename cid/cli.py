@@ -1,27 +1,41 @@
 import click
-
 from cid.common import Cid
-from cid.utils import params
-
+from cid.utils import get_parameters
 from cid._version import __version__
 
 version = f'{__version__} Beta'
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
 
-command_params = dict(
-    context_settings=dict(
-        ignore_unknown_options=True,
-        allow_extra_args=True,
-    )
-)
 
-def update_params(ctx):
-    if len(ctx.args) % 2 != 0:
-        print(f"Unknown extra argument, or an option without value {ctx.args}")
-        exit(-1)
-    for i in range(0, len(ctx.args), 2):
-        params[ctx.args[i][2:]] = ctx.args[i+1]
+def cid_command(func):
+    def wrapper(ctx, **kwargs):
+        # Complete kwargs with other parameters
+        if len(ctx.args) % 2 != 0:
+            print(f"Unknown extra argument, or an option without value {ctx.args}")
+            exit(-1)
+        print(kwargs)
+        for i in range(0, len(ctx.args), 2):
+            kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
+        print(kwargs)
+        res = func(ctx, **kwargs)
+        params = get_parameters()
+        print('Next time you can use following command:')
+        print('   ' + ctx.info_name
+            + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
+            + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool)])
+            + ''.join([f" --{k} '{v}' " for k, v in params.items()])
+        )
+        return res
+    wrapper.__doc__ = func.__doc__
+    wrapper.__name__ = func.__name__
+    return main.command(
+        context_settings=dict(
+            ignore_unknown_options=True,
+            allow_extra_args=True,
+        )
+    )(click.pass_context(wrapper))
+
 
 @click.group()
 @click.option('--profile_name', help='AWS Profile name to use', default=None)
@@ -33,100 +47,83 @@ def update_params(ctx):
 @click.pass_context
 def main(ctx, **kwargs):
 
-    App = Cid(
+    app = Cid(
         verbose = kwargs.get('verbose')
     )
 
-    App.run(
+    app.run(
         profile_name=kwargs.get('profile_name', None),
         region_name=kwargs.get('region_name', None),
         aws_access_key_id=kwargs.get('aws_access_key_id', None),
         aws_secret_access_key=kwargs.get('aws_secret_access_key', None),
         aws_session_token=kwargs.get('aws_session_token', None)
     )
-    ctx.obj = App
+    ctx.obj = app
 
 
-@main.command(**command_params)
-@click.pass_context
-def map(ctx):
-    """Create account mapping"""
-    update_params(ctx)
-    app = ctx.obj
-    app.map()
+@cid_command
+def map(ctx, **kwargs):
+    """Create account mapping
+
+    \b
+    Command options:
+     --cur-table-name TEXT                 CUR table name
+     --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
+     --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
+    """
+    ctx.obj.map(**kwargs)
 
 
-@main.command(**command_params)
-@click.pass_context
-def deploy(ctx):
+@cid_command
+def deploy(ctx, **kwargs):
     """Deploy Dashboard
     
     \b
     Command options:
-     --dashboard-ressource-id TEXT         (CUDOS, CID, TAO, CO, etc). It is not dashboard-id
+     --dashboard-id TEXT                   QuickSight dashboard id (cudos, cost_intelligence_dashboard, kpi_dashboard, ta-organizational-view, trends-dashboard etc)
      --athena-database TEXT                Athena database
      --glue-data-catalog                   Glue data catalog
      --cur-table-name TEXT                 CUR table name
+     --quicksight-user TEXT                QuickSight user
      --{dataset_name}-dataset-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
-     --quicksight-user TEXT                QuickSight user
-     --dashboard-id TEXT                   QuickSight dashboard id
-     --account-map-source TEXT             csv, dummy, organization 
-     --account-map-file TEXT               csv file path relative to current directory
     """
-    update_params(ctx)
-    app = ctx.obj
-    app.deploy()
+    ctx.obj.deploy(**kwargs)
 
 
-@main.command(**command_params)
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.pass_context
-def status(ctx, **kwargs):
+@cid_command
+def status(ctx, dashboard_id):
     """Show Dashboard status"""
-    update_params(ctx)
-    app = ctx.obj
-    app.status(dashboard_id=kwargs.get('dashboard_id'))
+    ctx.obj.status(dashboard_id)
 
 
-@main.command(**command_params)
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.pass_context
-def delete(ctx, **kwargs):
+@cid_command
+def delete(ctx, dashboard_id):
     """Delete Dashboard"""
-    update_params(ctx)
-    app = ctx.obj
-    app.delete(dashboard_id=kwargs.get('dashboard_id'))
+    ctx.obj.delete(dashboard_id)
 
 
-@main.command(**command_params)
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.option('--force', help='Allow force update', is_flag=True)
-@click.pass_context
-def update(ctx, **kwargs):
+@click.option('--force/--noforce', help='Allow force update', default=False)
+@cid_command
+def update(ctx, dashboard_id, force):
     """Update Dashboard"""
-    update_params(ctx)
-    app = ctx.obj
-    app.update(dashboard_id=kwargs.get('dashboard_id'), force=kwargs.get('force'))
+    ctx.obj.update(dashboard_id, force=force)
 
 
-@main.command(**command_params)
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.pass_context
-def open(ctx, **kwargs):
+@cid_command
+def open(ctx, dashboard_id):
     """Open Dashboard in browser"""
-    update_params(ctx)
-    app = ctx.obj
-    app.open(dashboard_id=kwargs.get('dashboard_id'))
+    ctx.obj.open(dashboard_id)
 
 
-@main.command(**command_params)
-@click.pass_context
+@cid_command
 def cleanup(ctx):
     """Delete unused resources (QuickSight datasets, Athena views)"""
-    update_params(ctx)
-    app = ctx.obj
-    app.cleanup()
+    ctx.obj.cleanup()
 
 
 if __name__ == '__main__':

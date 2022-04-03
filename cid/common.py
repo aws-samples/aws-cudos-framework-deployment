@@ -4,7 +4,7 @@ from cid import utils
 from cid.helpers import Athena, CUR, Glue, QuickSight
 from cid.helpers.account_map import AccountMap
 from cid.plugin import Plugin
-from cid.utils import get_parameter
+from cid.utils import get_parameter, set_parameters
 
 import os
 import sys
@@ -208,7 +208,7 @@ class Cid:
 
     def deploy(self, **kwargs):
         """ Deploy Dashboard """
-
+        set_parameters(kwargs)
         dashboard_id = get_parameter(
             param_name='dashboard-id',
             message="Please select dashboard to install",
@@ -758,7 +758,7 @@ class Cid:
                     value = get_parameter(
                         param_name=f'view-{view_name}-{k}',
                         message=f"Required parameter: {k} ({v.get('description')})",
-                        default=v.get('value'),
+                        default=v.get('default'),
                         template_variables=dict(account_id=self.awsIdentity.get('Account')),
                     )
                 param = {k:value}
@@ -769,8 +769,9 @@ class Cid:
 
         return compiled_query
 
-    def map(self):
+    def map(self, **kwargs):
         """Create account mapping Athena views"""
+        set_parameters(kwargs)
         for v in ['account_map', 'aws_accounts']:
             self.accountMap.create(v)
 

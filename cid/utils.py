@@ -54,6 +54,13 @@ def get_boto_client(service_name, **kwargs):
         logger.debug(e, stack_info=True)
         raise
 
+def set_parameters(parameters):
+    for k, v in parameters.items():
+        params[k.replace('_', '-')] = v
+
+def get_parameters():
+    return dict(params)
+
 def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True):
     """ 
     Check if parameters are provided in the command line and if not, ask user 
@@ -67,6 +74,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
 
     :returns: a value choosed by user or provided in command line    
     """
+    param_name = param_name.replace('_', '-')
     if param_name in params:
         value = params[param_name]
         logger.info(f'Using {param_name}={value}, from parameters')
@@ -104,4 +112,5 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     if (break_on_ctrl_c and result is None):
         exit(1)
     print(f"(Use \033[1m --{param_name} '{result}'\033[0m next time you run this)")
+    params[param_name] = result
     return result
