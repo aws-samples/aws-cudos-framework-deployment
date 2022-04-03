@@ -209,21 +209,23 @@ class Cid:
     def deploy(self, **kwargs):
         """ Deploy Dashboard """
 
-        selected_dashboard = get_parameter(
-            param_name='dashboard-ressource-id', 
+        dashboard_id = get_parameter(
+            param_name='dashboard-id',
             message="Please select dashboard to install",
             choices={ 
-               f"{dashboard.get('name')}" : k 
+               f"[{dashboard.get('dashboardId')}]{dashboard.get('name')}" : dashboard.get('dashboardId')
                for k, dashboard in self.resources.get('dashboards').items()
             },
         )
-        if not selected_dashboard:
+        if not dashboard_id:
             print('No dashboard selected')
             return
         # Get selected dashboard definition
-        dashboard_definition = self.resources.get(
-            'dashboards').get(selected_dashboard)
-        assert dashboard_definition, f'Cannot find Dashboard {repr(selected_dashboard)}, please check your input or ressources file'
+        for dashboard_definition in self.resources.get('dashboards').values():
+            if dashboard_definition.get('dashboardId') == dashboard_id:
+                break
+        else:
+            raise ValueError(f'Cannot find dashboard with id={dashboard_id} in ressources file.')
         required_datasets = dashboard_definition.get(
             'dependsOn', dict()).get('datasets', list())
         self.create_datasets(required_datasets)
