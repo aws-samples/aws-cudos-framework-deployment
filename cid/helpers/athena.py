@@ -52,7 +52,7 @@ class Athena():
                     # Ask user
 
                     self._CatalogName = get_parameter(
-                        param_name = 'glue_data_catalog',
+                        param_name='glue-data-catalog',
                         message="Select AWS DataCatalog to use",
                         choices=glue_data_catalogs
                     )
@@ -85,7 +85,7 @@ class Athena():
                 else:
                     # Ask user
                     self._DatabaseName = get_parameter(
-                        param_name = 'athena_database',
+                        param_name='athena-database',
                         message="Select AWS Athena database to use",
                         choices=[d['Name'] for d in athena_databases],
                     )

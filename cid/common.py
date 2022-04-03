@@ -478,7 +478,6 @@ class Cid:
                 print(f'\tfound: {k}', end='')
                 if len(v.keys()) > 1:
                     # Multiple datasets
-                    print()
                     selected = get_parameter(
                         param_name=f'{k}-dataset-id',
                         message=f'Multiple "{k}" datasets detected, please select one',

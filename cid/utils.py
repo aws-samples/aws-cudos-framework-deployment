@@ -69,7 +69,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     """
     if param_name in params:
         value = params[param_name]
-        print(f'Using {param_name}={value}, from parameters')
+        logger.info(f'Using {param_name}={value}, from parameters')
         return value.format(**template_variables) 
 
     if choices is not None:
