@@ -286,7 +286,7 @@ class Cid:
             self.delete(dashboard_definition.get('dashboardId'))
             exit(1)
 
-        return dashboard.get('dashboardId')
+        return dashboard_definition.get('dashboardId')
 
 
     def open(self, dashboard_id):
