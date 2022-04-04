@@ -66,6 +66,8 @@ def map(ctx, **kwargs):
     \b
     Command options:
      --cur-table-name TEXT                 CUR table name
+     --athena-database TEXT                Athena database
+     --glue-data-catalog TEXT              Glue data catalog
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
     """
@@ -80,11 +82,13 @@ def deploy(ctx, **kwargs):
     Command options:
      --dashboard-id TEXT                   QuickSight dashboard id (cudos, cost_intelligence_dashboard, kpi_dashboard, ta-organizational-view, trends-dashboard etc)
      --athena-database TEXT                Athena database
-     --glue-data-catalog                   Glue data catalog
+     --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
      --quicksight-user TEXT                QuickSight user
-     --{dataset_name}-dataset-id TEXT      QuickSight dataset id for a specific dataset
+     --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
+     --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
+     --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
     """
     ctx.obj.deploy(**kwargs)
 

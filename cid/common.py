@@ -213,7 +213,7 @@ class Cid:
             param_name='dashboard-id',
             message="Please select dashboard to install",
             choices={ 
-               f"[{dashboard.get('dashboardId')}]{dashboard.get('name')}" : dashboard.get('dashboardId')
+               f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
                for k, dashboard in self.resources.get('dashboards').items()
             },
         )
@@ -267,14 +267,14 @@ class Cid:
             f"Latest template: {latest_template.get('Arn')}/version/{latest_template.get('Version').get('VersionNumber')}")
         click.echo('\nDeploying...', nl=False)
         _url = self.qs_url.format(
-            dashboard_id=dashboard_definition.get('dashboardId'), **self.qs_url_params
+            dashboard_id=dashboard_id, **self.qs_url_params
         )
         try:
             self.qs.create_dashboard(dashboard_definition, **kwargs)
             click.echo('completed')
             click.echo(
                 f"#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
-            self.track('created', dashboard_definition.get('dashboardId'))
+            self.track('created', dashboard_id)
         except self.qs.client.exceptions.ResourceExistsException:
             click.echo('error, already exists')
             click.echo(
@@ -283,10 +283,10 @@ class Cid:
             # Catch exception and dump a reason
             click.echo('failed, dumping error message')
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
-            self.delete(dashboard_definition.get('dashboardId'))
+            self.delete(dashboard_id)
             exit(1)
 
-        return dashboard_definition.get('dashboardId')
+        return dashboard_id
 
 
     def open(self, dashboard_id):
@@ -481,7 +481,7 @@ class Cid:
                 if len(v.keys()) > 1:
                     # Multiple datasets
                     selected = get_parameter(
-                        param_name=f'{k}-dataset-id',
+                        param_name=f'dataset-{k}-id',
                         message=f'Multiple "{k}" datasets detected, please select one',
                         choices=v.keys(),
                     )
