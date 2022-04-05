@@ -23,7 +23,7 @@ def cid_command(func):
         res = func(ctx, **kwargs)
         params = get_parameters()
         logger.info('Next time you can use following command:')
-        logger.info('   ctx-cmd ' + ctx.info_name
+        logger.info('   cid-cmd ' + ctx.info_name
             + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
             + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool)])
             + ''.join([f" --{k} '{v}' " for k, v in params.items()])
