@@ -1,0 +1,242 @@
+{
+    "DataSetId": "compute_optimizer_all_options",
+    "Name": "compute_optimizer_all_options",
+    "ImportMode": "SPICE",
+    "Permissions": [
+        {
+            "Principal": "${user_arn}",
+            "Actions": [
+                "quicksight:UpdateDataSetPermissions",
+                "quicksight:DescribeDataSet",
+                "quicksight:DescribeDataSetPermissions",
+                "quicksight:PassDataSet",
+                "quicksight:DescribeIngestion",
+                "quicksight:ListIngestions",
+                "quicksight:UpdateDataSet",
+                "quicksight:DeleteDataSet",
+                "quicksight:CreateIngestion",
+                "quicksight:CancelIngestion"
+            ]
+        }
+    ],
+    "LogicalTableMap": {
+        "3ac94581-80b1-4ae5-a18f-af42ff4b61ad": {
+            "Alias": "business_units_map",
+            "Source": {
+                "PhysicalTableId": "5da8f118-fdc0-47ee-aaa0-b633cbf8f9c9"
+            }
+        },
+        "695b2749-bcfd-4923-afcc-e0db1252c9cc": {
+            "Alias": "Intermediate Table",
+            "DataTransforms": [
+                {
+                    "ProjectOperation": {
+                        "ProjectedColumns": [
+                            "lastrefreshtimestamp_utc",
+                            "accountid",
+                            "arn",
+                            "region",
+                            "service",
+                            "name",
+                            "module",
+                            "recommendationsourcetype",
+                            "finding",
+                            "reason",
+                            "lookbackperiodindays",
+                            "currentperformancerisk",
+                            "errorcode",
+                            "errormessage",
+                            "ressouce_details",
+                            "utilizationmetrics",
+                            "option_name",
+                            "option_from",
+                            "option_to",
+                            "currency",
+                            "monthlyprice",
+                            "hourlyprice",
+                            "estimatedmonthlysavings_value",
+                            "estimatedmonthly_ondemand_cost_change",
+                            "max_estimatedmonthlysavings_value_very_low",
+                            "max_estimatedmonthlysavings_value_low",
+                            "max_estimatedmonthlysavings_value_medium",
+                            "option_details",
+                            "account_id",
+                            "account_name",
+                            "bu"
+                        ]
+                    }
+                },
+                {
+                    "TagColumnOperation": {
+                        "ColumnName": "region",
+                        "Tags": [
+                            {
+                                "ColumnGeographicRole": "STATE"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "Source": {
+                "JoinInstruction": {
+                    "LeftOperand": "d46182de-be7b-4e56-926b-090ecb93df7d",
+                    "OnClause": "{accountid} = {account_id}",
+                    "RightOperand": "3ac94581-80b1-4ae5-a18f-af42ff4b61ad",
+                    "Type": "LEFT"
+                }
+            }
+        },
+        "d46182de-be7b-4e56-926b-090ecb93df7d": {
+            "Alias": "compute_optimizer_all_options",
+            "Source": {
+                "PhysicalTableId": "22291301-8e81-41bf-9270-56eb59692e55"
+            }
+        }
+    },
+    "PhysicalTableMap": {
+        "22291301-8e81-41bf-9270-56eb59692e55": {
+            "RelationalTable": {
+                "Catalog": "AwsDataCatalog",
+                "DataSourceArn": "${athena_datasource_arn}",
+                "Schema": "${athena_database_name}",
+                "Name": "compute_optimizer_all_options",
+                "InputColumns": [
+                    {
+                        "Name": "errormessage",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "ressouce_details",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "reason",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "utilizationmetrics",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "option_details",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "option_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "estimatedmonthlysavings_value",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "recommendationsourcetype",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "monthlyprice",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "accountid",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "currency",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "arn",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "lastrefreshtimestamp_utc",
+                        "Type": "DATETIME"
+                    },
+                    {
+                        "Name": "lookbackperiodindays",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "errorcode",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "estimatedmonthly_ondemand_cost_change",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "module",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "option_from",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "max_estimatedmonthlysavings_value_medium",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "max_estimatedmonthlysavings_value_very_low",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "finding",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "currentperformancerisk",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "hourlyprice",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "service",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "option_to",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "region",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "max_estimatedmonthlysavings_value_low",
+                        "Type": "DECIMAL"
+                    }
+                ]
+            }
+        },
+        "5da8f118-fdc0-47ee-aaa0-b633cbf8f9c9": {
+            "RelationalTable": {
+                "Catalog": "AwsDataCatalog",
+                "DataSourceArn": "${athena_datasource_arn}",
+                "Schema": "${athena_database_name}",
+                "Name": "business_units_map",
+                "InputColumns": [
+                    {
+                        "Name": "account_id",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "account_name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "bu",
+                        "Type": "STRING"
+                    }
+                ]
+            }
+        }
+    }
+}
