@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.67.1 
+
+* Amazon S3: Minor calculation accuracy fix for "TOP 5 Accounts for Glacier Vault migration to Glacier Deep Archive Savings Opportunity" via "S3 Glacier Deep Archive Estimated Cost" calculated field
+
 ## CUDOS - 4.67
 
 * Monitoring and Observability: New visual "TOP 10 CloudWatch Log Resources Previous Month"; Various improvements to actions on cloudwatch visuals; removed Operation from "TOP 10 CloudWatch Resources Previous Month" visual
