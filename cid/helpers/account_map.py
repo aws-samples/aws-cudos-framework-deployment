@@ -1,11 +1,11 @@
 import csv
 import logging
 from pathlib import Path
-import questionary
 import click
 from pkg_resources import resource_string
 from string import Template
 from cid.helpers import Athena, CUR
+from cid.utils import get_parameter
 
 logger = logging.getLogger(__name__)
 
@@ -217,29 +217,27 @@ class AccountMap():
         """ Selects the method to collect metadata """
         logger.info('Metadata source selection')
         # Ask user which method to use to retreive account list
-        selection = list()
         account_map_sources = {
-            'csv': 'CSV file (relative path required)',
-            'organization': 'AWS Organizations (one time account listing)',
-            'dummy': 'Dummy (CUR account data, no names)'
+            'CSV file (relative path required)': 'csv',
+            'AWS Organizations (one time account listing)': 'organization',
+            'Dummy (CUR account data, no names)': 'dummy',
         }
-        for k,v in account_map_sources.items():
-            selection.append(
-                    questionary.Choice(title=f'{v}', value=k)
-                )
-        selected_source=questionary.select(
-            "Please select account metadata collection method",
-            choices=selection
-        ).ask()
-        if selected_source in account_map_sources.keys():
-            logger.info(f'Selected {selected_source}')
-            self._metadata_source = selected_source
+        selected_source = get_parameter(
+            param_name='account-map-source',
+            message="Please select account metadata collection method",
+            choices=account_map_sources,
+        )
+        logger.info(f'Selected {selected_source}')
+        self._metadata_source = selected_source
 
         # Collect account list from different sources of user choice
         if self._metadata_source == 'csv':
             finished = False
             while not finished:
-                mapping_file = click.prompt("Enter file path", type=str)
+                mapping_file = get_parameter(
+                    param_name='account-map-file',
+                    message="Enter file path",
+                )
                 finished = self.check_file_exists(mapping_file)
                 if not finished:
                     click.echo('File not found, ', nl=False)

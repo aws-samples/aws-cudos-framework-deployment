@@ -1,10 +1,10 @@
 from pkg_resources import resource_string
-import questionary
 
 from cid import utils
 from cid.helpers import Athena, CUR, Glue, QuickSight
 from cid.helpers.account_map import AccountMap
 from cid.plugin import Plugin
+from cid.utils import get_parameter, set_parameters
 
 import os
 import sys
@@ -208,27 +208,24 @@ class Cid:
 
     def deploy(self, **kwargs):
         """ Deploy Dashboard """
-
-        selection = list()
-        for k, dashboard in self.resources.get('dashboards').items():
-            selection.append(
-                questionary.Choice(title=f"{dashboard.get('name')}", value=k)
-            )
-        try:
-            selected_dashboard = questionary.select(
-                "Please select dashboard to install",
-                choices=selection
-            ).ask()
-        except Exception as e:
-            logger.debug(e, stack_info=True)
-            print(f'\nEnd: {e}\n')
-            return
-        if not selected_dashboard:
+        set_parameters(kwargs)
+        dashboard_id = get_parameter(
+            param_name='dashboard-id',
+            message="Please select dashboard to install",
+            choices={ 
+               f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
+               for k, dashboard in self.resources.get('dashboards').items()
+            },
+        )
+        if not dashboard_id:
             print('No dashboard selected')
             return
         # Get selected dashboard definition
-        dashboard_definition = self.resources.get(
-            'dashboards').get(selected_dashboard)
+        for dashboard_definition in self.resources.get('dashboards').values():
+            if dashboard_definition.get('dashboardId') == dashboard_id:
+                break
+        else:
+            raise ValueError(f'Cannot find dashboard with id={dashboard_id} in ressources file.')
         required_datasets = dashboard_definition.get(
             'dependsOn', dict()).get('datasets', list())
         self.create_datasets(required_datasets)
@@ -270,14 +267,14 @@ class Cid:
             f"Latest template: {latest_template.get('Arn')}/version/{latest_template.get('Version').get('VersionNumber')}")
         click.echo('\nDeploying...', nl=False)
         _url = self.qs_url.format(
-            dashboard_id=dashboard_definition.get('dashboardId'), **self.qs_url_params
+            dashboard_id=dashboard_id, **self.qs_url_params
         )
         try:
             self.qs.create_dashboard(dashboard_definition, **kwargs)
             click.echo('completed')
             click.echo(
                 f"#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
-            self.track('created', dashboard_definition.get('dashboardId'))
+            self.track('created', dashboard_id)
         except self.qs.client.exceptions.ResourceExistsException:
             click.echo('error, already exists')
             click.echo(
@@ -286,10 +283,10 @@ class Cid:
             # Catch exception and dump a reason
             click.echo('failed, dumping error message')
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
-            self.delete(dashboard_definition.get('dashboardId'))
+            self.delete(dashboard_id)
             exit(1)
 
-        return dashboard.get('dashboardId')
+        return dashboard_id
 
 
     def open(self, dashboard_id):
@@ -483,10 +480,11 @@ class Cid:
                 print(f'\tfound: {k}', end='')
                 if len(v.keys()) > 1:
                     # Multiple datasets
-                    selected = questionary.select(
-                        f'Multiple "{k}" datasets detected, please select one',
-                        choices=v.keys()
-                    ).ask()
+                    selected = get_parameter(
+                        param_name=f'dataset-{k}-id',
+                        message=f'Multiple "{k}" datasets detected, please select one',
+                        choices=v.keys(),
+                    )
                     self.qs._datasets.update({k: v.get(selected)})
                     missing_datasets.remove(k)
                 elif len(v.keys()):
@@ -561,8 +559,10 @@ class Cid:
             while len(missing_datasets):
                 # Make a copy and then get an item from the list
                 dataset_name = missing_datasets.copy().pop()
-                _id = click.prompt(
-                    f'\tDataSetId/Arn for {dataset_name}', type=str)
+                _id = get_parameter(
+                    param_name=f'{dataset_name}-dataset-id',
+                    message=f'DataSetId/Arn for {dataset_name}'
+                )
                 id = _id.split('/')[-1]
                 try:
                     _dataset = self.qs.describe_dataset(id)
@@ -734,8 +734,8 @@ class Cid:
         elif view_definition.get('File'):
             view_file = view_definition.get('File')
         else:
-            logger.critical(
-                f'\n"{view_name}" view information is incorrect, skipping')
+            logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
+            raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
         template = Template(resource_string(view_definition.get(
@@ -755,7 +755,12 @@ class Cid:
             else:
                 value = None
                 while not value:
-                    value = click.prompt(f"Required parameter: {k} ({v.get('description')})", default=v.get('value'), show_default=True)
+                    value = get_parameter(
+                        param_name=f'view-{view_name}-{k}',
+                        message=f"Required parameter: {k} ({v.get('description')})",
+                        default=v.get('default'),
+                        template_variables=dict(account_id=self.awsIdentity.get('Account')),
+                    )
                 param = {k:value}
             # Add parameter
             columns_tpl.update(param)
@@ -764,8 +769,9 @@ class Cid:
 
         return compiled_query
 
-    def map(self):
+    def map(self, **kwargs):
         """Create account mapping Athena views"""
+        set_parameters(kwargs)
         for v in ['account_map', 'aws_accounts']:
             self.accountMap.create(v)
 

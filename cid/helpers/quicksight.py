@@ -3,9 +3,10 @@ from typing import Dict, Union
 import click
 import json
 from deepmerge import always_merger
-import questionary
 from pathlib import Path
 import os
+
+from cid.utils import get_parameter
 
 import logging
 
@@ -193,15 +194,11 @@ class QuickSight():
             if not self._user:
                 # If no user match, ask
                 userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
-                selection = list()
-                for user in userList:
-                    selection.append(
-                        questionary.Choice(
-                            title=f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})",
-                            value=user
-                        )
-                    )
-                self._user =  questionary.select("Please select QuickSight user to use", choices=selection).ask()
+                self._user = get_parameter(
+                    param_name='quicksight-user',
+                    message="Please select QuickSight user to use",
+                    choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user for user in userList}
+                )
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
         return self._user
 
@@ -403,21 +400,21 @@ class QuickSight():
         dashboard_id = None
         if not self.dashboards:
             return None
+        choices = {}
         for dashboard in self.dashboards.values():
             health = 'healthy' if dashboard.health else 'unhealthy'
-            selection.append(
-                questionary.Choice(
-                    title=f'{dashboard.name} ({dashboard.arn}, {health}, {dashboard.status})',
-                    value=dashboard.id,
-                    # Disable if broken or no update available and not forced
-                    disabled=((dashboard.latest or not dashboard.health) and not force)
-                )
-            )
+            key = f'{dashboard.name} ({dashboard.arn}, {health}, {dashboard.status})'
+            if ((dashboard.latest or not dashboard.health) and not force):
+                choices[key] = None
+            else:
+                choices[key] = dashboard.id
         try:
-            dashboard_id = questionary.select(
-                "Please select installation(s) from the list",
-                choices=selection
-            ).ask()
+            dashboard_id = get_parameter(
+                param_name='dashboard-id',
+                message="Please select installation(s) from the list",
+                choices=choices,
+                none_as_disabled=True,
+            )
         except AttributeError as e:
             # No updatable dashboards (selection is disabled)
             logger.debug(e, exc_info=True, stack_info=True)

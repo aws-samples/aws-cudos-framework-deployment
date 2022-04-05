@@ -1,6 +1,6 @@
 import time, csv
 
-import questionary
+from cid.utils import get_parameter
 from io import StringIO
 
 from pkg_resources import resource_string
@@ -50,10 +50,12 @@ class Athena():
                 default_catalog = [d for d in glue_data_catalogs if d['CatalogName'] == self.defaults.get('CatalogName')]
                 if not len(default_catalog):
                     # Ask user
-                    self._CatalogName = questionary.select(
-                        "Select AWS DataCatalog to use",
+
+                    self._CatalogName = get_parameter(
+                        param_name='glue-data-catalog',
+                        message="Select AWS DataCatalog to use",
                         choices=glue_data_catalogs
-                    ).ask()
+                    )
             logger.info(f'Using datacatalog: {self._CatalogName}')
         return self._CatalogName
 
@@ -82,10 +84,11 @@ class Athena():
                     self._DatabaseName = default_database.pop().get('Name')
                 else:
                     # Ask user
-                    self._DatabaseName = questionary.select(
-                        "Select AWS Athena database to use",
-                        choices=[d['Name'] for d in athena_databases]
-                    ).ask()
+                    self._DatabaseName = get_parameter(
+                        param_name='athena-database',
+                        message="Select AWS Athena database to use",
+                        choices=[d['Name'] for d in athena_databases],
+                    )
             logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
 
