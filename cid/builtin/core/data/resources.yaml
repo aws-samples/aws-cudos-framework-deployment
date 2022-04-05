@@ -305,7 +305,7 @@ views:
       athenaTableName:
         value: compute_optimizer_ec2_instance_lines
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}'
+        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
         description: Compute Optimiser report S3 folder path
 
   compute_optimizer_auto_scale_lines:
@@ -316,7 +316,7 @@ views:
       athenaTableName:
         value: compute_optimizer_auto_scale_lines
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}'
+        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer_auto_scale'
         description: Compute Optimiser report S3 folder path
 
   compute_optimizer_ebs_volume_lines:
@@ -327,7 +327,7 @@ views:
       athenaTableName:
         value: compute_optimizer_ebs_volume_lines
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}'
+        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer_ebs_volume'
         description: Compute Optimiser report S3 folder path
 
   compute_optimizer_lambda_lines:
@@ -338,7 +338,7 @@ views:
       athenaTableName:
         value: compute_optimizer_lambda_lines
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}'
+        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_lambda'
         description: Compute Optimiser report S3 folder path
 
   compute_optimizer_ec2_instance_options:

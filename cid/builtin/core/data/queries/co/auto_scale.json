@@ -3,7 +3,7 @@
     "TableInput": {
         "Name": "${athenaTableName}",
         "StorageDescriptor": {
-            "Location": "${s3FolderPath}/Compute_Optimizer_auto_scale",
+            "Location": "${s3FolderPath}",
             "Columns": [
                 {
                     "Name": "accountid",
