@@ -584,13 +584,30 @@ class QuickSight():
 
     def create_dataset(self, dataset: dict) -> dict:
         """ Creates an AWS QuickSight dataset """
+        poll_interval = 1
+        max_timeout = 60
         dataset.update({'AwsAccountId': self.account_id})
+        dataset_id = None
         try:
             response = self.client.create_data_set(**dataset)
-            logger.info(f'Created dataset {dataset.get("Name")} ({response.get("DataSetId")})')
-            self.describe_dataset(response.get('DataSetId'))
+            dataset_id = response.get('DataSetId')
+            logger.info(f'Creating dataset {dataset.get("Name")} ({dataset_id})')
         except self.client.exceptions.ResourceExistsException:
             logger.info(f'Dataset {dataset.get("Name")} already exists')
+
+        logger.info(f'Waiting for {dataset.get("Name")} to be created')
+        deadline = time.time() + 60
+        while time.time() < deadline:
+            _dataset = self.describe_dataset(dataset_id)
+            if 'Arn' in _dataset:
+                break
+            else:
+                time.sleep(poll_interval)
+        else:
+            logger.info(f'Dataset {dataset.get("Name")} is not created before timeout.')
+            return None
+        logger.info(f'Dataset {_dataset.get("Name")} is created')
+        return dataset_id
 
 
     def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
