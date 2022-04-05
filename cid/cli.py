@@ -1,8 +1,12 @@
+import logging
+
 import click
+
 from cid.common import Cid
 from cid.utils import get_parameters
 from cid._version import __version__
 
+logger = logging.getLogger(__name__)
 version = f'{__version__} Beta'
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
@@ -18,8 +22,8 @@ def cid_command(func):
             kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
         res = func(ctx, **kwargs)
         params = get_parameters()
-        print('Next time you can use following command:')
-        print('   ' + ctx.info_name
+        logger.info('Next time you can use following command:')
+        logger.info('   ctx-cmd ' + ctx.info_name
             + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
             + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool)])
             + ''.join([f" --{k} '{v}' " for k, v in params.items()])

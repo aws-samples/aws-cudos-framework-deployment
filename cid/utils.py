@@ -84,7 +84,6 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         if isinstance(choices, dict):
             _choices = []
             for key, value in choices.items():
-                print(key, value)
                 _choices.append(
                     questionary.Choice(
                         title=key,
@@ -111,6 +110,6 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             result = result.format(**template_variables)
     if (break_on_ctrl_c and result is None):
         exit(1)
-    print(f"(Use \033[1m --{param_name} '{result}'\033[0m next time you run this)")
+    logger.info(f"(Use \033[1m --{param_name} '{result}'\033[0m next time you run this)")
     params[param_name] = result
     return result
