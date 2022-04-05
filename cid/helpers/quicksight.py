@@ -599,7 +599,7 @@ class QuickSight():
         deadline = time.time() + 60
         while time.time() < deadline:
             _dataset = self.describe_dataset(dataset_id)
-            if 'arn' in _dataset:
+            if 'Arn' in _dataset:
                 break
             else:
                 time.sleep(poll_interval)
