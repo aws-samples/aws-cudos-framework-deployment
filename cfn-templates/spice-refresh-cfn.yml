@@ -20,7 +20,7 @@ Resources:
       RoleName: !Join
         - ''
         - - SpiceRefreshExecutionRole
-          - !Select [1 , !Split [ '-' , { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } } ] ]
+          - !Select [1 , !Split [ '_-' , { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } } ] ]
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -34,7 +34,7 @@ Resources:
         - PolicyName: !Join
           - ''
           - - SpiceRefreshExecutionPolicy
-            - { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } }
+            - !Select [1 , !Split [ '_-' , { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } } ] ]
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -65,14 +65,14 @@ Resources:
       FunctionName: !Join
         - ''
         - - QSCUDOSRefreshDatasets
-          - { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } }
+          - !Select [1 , !Split [ '_-' , { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } } ] ]
       Handler: index.lambda_handler
       MemorySize: 128
       Role: !GetAtt SpiceRefreshExecutionRole.Arn
       Timeout: 60
       Environment:
         Variables:
-          suffix: { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } }
+          suffix: !Select [1 , !Split [ '_-' , { "Fn::ImportValue" : {"Fn::Sub": "${cidTemplateName}-suffix" } } ] ]
       Code:
         ZipFile: |
           import boto3
