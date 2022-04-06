@@ -37,12 +37,15 @@ class Cid:
         self.awsIdentity = None
         self.session = None
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
+        self.qs_region = kwargs.pop('quicksight_region')
+        if self.qs_region is None:
+            self.qs_region = 'us-east-1'
 
     @property
     def qs(self) -> QuickSight:
         if not self._clients.get('quicksight'):
             self._clients.update({
-                'quicksight': QuickSight(self.session, self.awsIdentity, resources=self.resources)
+                'quicksight': QuickSight(self.session, self.awsIdentity, self.qs_region, resources=self.resources)
             })
         return self._clients.get('quicksight')
 
@@ -154,6 +157,7 @@ class Cid:
         logger.info(f'AWS userId: {self.awsIdentity.get("Arn").split(":")[5]}')
         print('\tRegion: {}'.format(self.session.region_name))
         logger.info(f'AWS region: {self.session.region_name}')
+        logger.info(f'QuickSight region: {self.qs_region}')
         print('done\n')
 
 

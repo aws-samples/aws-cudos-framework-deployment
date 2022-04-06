@@ -15,11 +15,13 @@ print(f'{prog_name} {version}\n')
 @click.option('--aws_access_key_id', help='', default=None)
 @click.option('--aws_secret_access_key', help='', default=None)
 @click.option('--aws_session_token', help='', default=None)
+@click.option('--quicksight_region', help="QuickSight Region (default:'us-east-1')", default=None)
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
 def main(ctx, **kwargs):
     params = {
         'verbose': kwargs.pop('verbose'),
+        'quicksight_region': kwargs.pop('quicksight_region'),
     }
     App = Cid(**params)
     App.run(**kwargs)

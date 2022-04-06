@@ -171,14 +171,15 @@ class QuickSight():
     _datasources: dict() = {}
     _user: dict = None
 
-    def __init__(self, session, awsIdentity, resources=None):        
+    def __init__(self, session, awsIdentity, qs_region, resources=None):        
         self.region = session.region_name
         self.awsIdentity = awsIdentity
+        self.qs_region = qs_region
         self._resources = resources
 
         # QuickSight client
         logger.info(f'Creating QuickSight client')
-        self.client = session.client('quicksight')
+        self.client = session.client('quicksight', region_name=qs_region)
         self.use1Client = session.client('quicksight', region_name='us-east-1')
 
     @property
@@ -192,7 +193,7 @@ class QuickSight():
             self._user =  self.describe_user('/'.join(self.awsIdentity.get('Arn').split('/')[1:]))
             if not self._user:
                 # If no user match, ask
-                userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
+                userList = self.client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
                 selection = list()
                 for user in userList:
                     selection.append(
@@ -568,7 +569,7 @@ class QuickSight():
         return result.get('Template')
 
     def describe_user(self, username: str) -> dict:
-        """ Describes an AWS QuickSight template """
+        """ Describes an AWS QuickSight user """
         parameters = {
             'AwsAccountId': self.account_id,
             'UserName': username,
@@ -579,7 +580,7 @@ class QuickSight():
         except self.client.exceptions.ResourceNotFoundException:
             return None
         except self.client.exceptions.AccessDeniedException:
-            userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
+            userList = self.client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
             for user in userList:
                 if username.endswith(user.get('UserName')):
                     return user
