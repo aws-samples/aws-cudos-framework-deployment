@@ -133,5 +133,17 @@ def cleanup(ctx):
     ctx.obj.cleanup()
 
 
+@click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
+@click.option('--share-method', help='Sharing method', default=None, type=click.Choice(['folder', 'user']))
+@click.option('--folder-method', help='Folder to use', default=None, type=click.Choice(['new', 'existing']))
+@click.option('--folder-id', help='QuickSight folder id (existing)', default=None)
+@click.option('--folder-name', help='QuickSight folder name (new)', default=None)
+@click.option('--quicksight-user', help='QuickSight user', default=None)
+@cid_command
+def share(ctx, dashboard_id, **kwargs):
+    """Share QuickSight resources (Dashboard, Datasets, DataSource)"""
+    
+    ctx.obj.share(dashboard_id)
+
 if __name__ == '__main__':
     main()

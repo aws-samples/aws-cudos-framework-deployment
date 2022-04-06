@@ -201,7 +201,7 @@ class Cid:
                 headers={'Content-Type': 'application/json'}
             )
             if res.status_code != 200:
-                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
+                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {self.awsIdentity.get('Account')}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
         except Exception as e:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
@@ -372,13 +372,164 @@ class Cid:
         self.qs.discover_datasets()
         used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
         for v in list(self.qs._datasets.values()):
-            if v.get('Arn') not in used_datasets:
+            if v.get('Arn') not in used_datasets and click.confirm(f'Delete unused dataset {v.get("Name")}?'):
                 logger.info(f'Deleting dataset {v.get("Name")} ({v.get("Arn")})')
                 self.qs.delete_dataset(v.get('DataSetId'))
                 logger.info(f'Deleted dataset {v.get("Name")} ({v.get("Arn")})')
                 print(f'Deleted dataset {v.get("Name")} ({v.get("Arn")})')
             else:
                 print(f'Dataset {v.get("Name")} ({v.get("Arn")}) is in use')
+
+
+    def share(self, dashboard_id, **kwargs):
+        """Share resources (QuickSight datasets, dashboards)"""
+
+        if not dashboard_id:
+            if not self.qs.dashboards:
+                print('\nNo deployed dashboards found')
+                exit()
+            else:
+                dashboard_id = self.qs.select_dashboard(force=True)
+                if not dashboard_id:
+                    exit()
+        else:
+            # Describe dashboard by the ID given, no discovery
+            self.qs.discover_dashboard(dashboardId=dashboard_id)
+        
+        dashboard = self.qs.dashboards.get(dashboard_id)
+
+        if dashboard is None:
+            print('not deployed.')
+            exit(1)
+
+        share_methods = {
+            'Shared Folder (except datasource)': 'folder',
+            'Specific User only': 'user'
+        }
+        share_method = get_parameter(
+            param_name='share-method',
+            message="Please select sharing method",
+            choices=share_methods,
+        )
+        if share_method == 'folder':
+            folder_methods = {
+                'Select Existing folder': 'existing',
+                'Create New folder': 'new'
+            }
+            folder_method = get_parameter(
+                param_name='folder-method',
+                message="Please select folder method",
+                choices=folder_methods,
+            )
+            if folder_method == 'existing':
+                try:
+                    folder = self.qs.select_folder()
+                except self.qs.client.exceptions.AccessDeniedException:
+                    # If user is not allowed to select folder, prompt for it
+                    print('\nYou are not allowed to select folder, please enter folder ID')
+                    while not folder:
+                        folder_id = get_parameter(
+                            param_name='folder-id',
+                            message='Please enter the folder Id to use'
+                        )
+                        folder = self.qs.describe_folder(folder_id)
+                    print(f'Selected folder {folder.get("Name")} ({folder.get("FolderId")})')
+            elif folder_method == 'new' or not folder:
+                # If user is allowed to select folder, but there is no folder exists, prompt to create one
+                if folder != 'new':
+                    print("No folders found, creating one...")
+                while not folder:
+                    try:
+                        folder_name = get_parameter(
+                            param_name='folder-name',
+                            message='Please enter the folder name to create'
+                        )
+                        folder = self.qs.create_folder(folder_name)
+                    except self.qs.client.exceptions.AccessDeniedException:
+                        print('\nYou are not allowed to create folder, unable to proceed')
+                        exit(1)
+
+            self.qs.create_folder_membership(folder.get('FolderId'), dashboard.id, 'DASHBOARD')
+            for ds in dashboard.datasets.values():
+                _id = ds.split('/')[-1]
+                self.qs.create_folder_membership(folder.get('FolderId'), _id, 'DATASET')
+            print(f'Sharing complete')
+        elif share_method == 'user':
+            user = self.qs.select_user()
+            while not user:
+                user_name = get_parameter(
+                    param_name='quicksight-user',
+                    message='Please enter the folder name to create'
+                )
+                user = self.qs.describe_user(user_name)
+            dashboard_permissions ={
+                'GrantPermissions': [{
+                    'Principal': user.get('Arn'),
+                    'Actions': [
+                        'quicksight:DescribeDashboard',
+                        'quicksight:ListDashboardVersions',
+                        'quicksight:UpdateDashboardPermissions',
+                        'quicksight:QueryDashboard',
+                        'quicksight:UpdateDashboard',
+                        'quicksight:DeleteDashboard',
+                        'quicksight:UpdateDashboardPublishedVersion',
+                        'quicksight:DescribeDashboardPermissions'
+                    ]
+                }]
+            }
+            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
+            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_permissions)
+            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
+
+            data_set_permissions = {
+                'GrantPermissions': [{
+                    'Principal': user.get('Arn'),
+                    'Actions': [
+                        'quicksight:UpdateDataSetPermissions',
+                        'quicksight:DescribeDataSet',
+                        'quicksight:DescribeDataSetPermissions',
+                        'quicksight:PassDataSet',
+                        'quicksight:DescribeIngestion',
+                        'quicksight:ListIngestions',
+                        'quicksight:UpdateDataSet',
+                        'quicksight:DeleteDataSet',
+                        'quicksight:CreateIngestion',
+                        'quicksight:CancelIngestion'
+                    ]
+                }]
+            }
+            data_source_permissions = {
+                'GrantPermissions': [{
+                    'Principal': user.get('Arn'),
+                    'Actions': [
+                        'quicksight:UpdateDataSourcePermissions',
+                        'quicksight:DescribeDataSource',
+                        'quicksight:DescribeDataSourcePermissions',
+                        'quicksight:PassDataSource',
+                        'quicksight:UpdateDataSource',
+                        'quicksight:DeleteDataSource'
+                    ]
+                }]
+            }
+            _datasources = {}
+            for ds in dashboard.datasets.values():
+                _id = ds.split('/')[-1]
+                logger.info(f'Sharing dataset {_id}')
+                self.qs.update_data_set_permissions(DataSetId=_id, **data_set_permissions)
+                logger.info(f'Sharing dataset {_id} complete')
+                _dataset = self.qs.describe_dataset(_id)
+                # Extract DataSources from DataSet
+                for _,map in _dataset.get('PhysicalTableMap').items():
+                    _datasource = self.qs.describe_data_source(map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
+                    if not _datasources.get(_datasource.get('DataSourceId')):
+                        _datasources.update({_datasource.get('DataSourceId'): _datasource})
+            
+            for k, v in _datasources.items():
+                logger.info(f'Sharing data source "{v.get("Name")}" ({k})')
+                self.qs.update_data_source_permissions(DataSourceId=k, **data_source_permissions)
+                logger.info(f'Sharing data source "{v.get("Name")}" ({k}) complete')
+
+            print(f'Sharing complete')
 
 
     def update(self, dashboard_id, **kwargs):
