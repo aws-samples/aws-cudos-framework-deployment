@@ -75,7 +75,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     :returns: a value choosed by user or provided in command line    
     """
     param_name = param_name.replace('_', '-')
-    if param_name in params:
+    if params.get(param_name):
         value = params[param_name]
         logger.info(f'Using {param_name}={value}, from parameters')
         return value.format(**template_variables) 
