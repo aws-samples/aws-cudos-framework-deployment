@@ -412,6 +412,7 @@ class Cid:
             choices=share_methods,
         )
         if share_method == 'folder':
+            folder = None
             folder_methods = {
                 'Select Existing folder': 'existing',
                 'Create New folder': 'new'
@@ -436,7 +437,7 @@ class Cid:
                     print(f'Selected folder {folder.get("Name")} ({folder.get("FolderId")})')
             elif folder_method == 'new' or not folder:
                 # If user is allowed to select folder, but there is no folder exists, prompt to create one
-                if folder != 'new':
+                if folder_method != 'new':
                     print("No folders found, creating one...")
                 while not folder:
                     try:
