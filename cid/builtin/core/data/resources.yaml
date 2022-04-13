@@ -327,7 +327,7 @@ views:
       athenaTableName:
         value: compute_optimizer_ebs_volume_lines
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}//Compute_Optimizer/Compute_Optimizer_ebs_volume'
+        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ebs_volume'
         description: Compute Optimiser report S3 folder path
 
   compute_optimizer_lambda_lines:
