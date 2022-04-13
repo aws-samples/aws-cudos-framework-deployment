@@ -5,6 +5,7 @@ import json
 from deepmerge import always_merger
 from pathlib import Path
 import os
+import uuid
 
 from cid.utils import get_parameter
 
@@ -193,12 +194,7 @@ class QuickSight():
             self._user =  self.describe_user('/'.join(self.awsIdentity.get('Arn').split('/')[1:]))
             if not self._user:
                 # If no user match, ask
-                userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
-                self._user = get_parameter(
-                    param_name='quicksight-user',
-                    message="Please select QuickSight user to use",
-                    choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user for user in userList}
-                )
+                self._user = self.select_user()
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
         return self._user
 
@@ -317,6 +313,56 @@ class QuickSight():
             logger.info('Access denied creating data source')
         return False
 
+
+    def create_folder(self, folder_name: str) -> dict:
+        """Create a new folder"""
+        logger.info('Creating QuickSight folder')
+        params = {
+            "AwsAccountId": self.account_id,
+            "FolderId": str(uuid.uuid4()),
+            "Name": folder_name,
+            "FolderType": "SHARED",
+        }
+        try:
+            logger.info(f'Creating folder {params}')
+            result = self.client.create_folder(**params)
+            logger.debug(f'Folder creation result {result}')
+            if (result.get('Status') != 200):
+                logger.info(f'Folder creation failed with status {result.get("Status")}')
+                return None
+            folder = self.describe_folder(result['FolderId'])
+            return folder
+        except self.client.exceptions.ResourceExistsException:
+            logger.error('Folder already exists')
+        except self.client.exceptions.AccessDeniedException:
+            logger.info('Access denied creating folder')
+            raise
+        return None
+
+    def create_folder_membership(self, folder_id: str, member_id: str, member_type: str) -> bool:
+        """Create a new folder membership"""
+        logger.info(f'Creating folder membership for {member_type}: {member_id}')
+        params = {
+            "AwsAccountId": self.account_id,
+            "FolderId": folder_id,
+            "MemberId": member_id,
+            "MemberType": member_type
+        }
+        try:
+            logger.info(f'Creating folder membership {params}')
+            result = self.client.create_folder_membership(**params)
+            logger.debug(f'Folder membership creation result {result}')
+            logger.info(f'Folder membership creation status {result.get("Status")}')
+            if (result['Status'] != 200):
+                logger.info(f'Folder membership creation failed with code {result.get("Status")}')
+                return False
+            return True
+        except self.client.exceptions.ResourceExistsException:
+            logger.error('Folder membership already exists')
+        except self.client.exceptions.AccessDeniedException:
+            logger.info('Access denied creating folder membership')
+        return False
+
     def discover_data_sources(self) -> None:
         """ Discover existing datasources"""
         try:
@@ -423,6 +469,25 @@ class QuickSight():
         finally:
             return dashboard_id
 
+    def select_user(self):
+        """ Select a user from the list of users """
+        try:
+            userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
+        except self.client.exceptions.AccessDeniedException:
+            logger.info('Access denied listing users')
+            return None
+
+        _user = get_parameter(
+            param_name='quicksight-user',
+            message="Please select QuickSight user to use",
+            choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user.get('UserName') for user in userList}
+        )
+        for u in userList:
+            if u.get('UserName') == _user:
+                return u
+        else:
+            return None
+
     def list_data_sets(self):
         parameters = {
             'AwsAccountId': self.account_id
@@ -439,6 +504,63 @@ class QuickSight():
         except Exception as e:
             logger.debug(e, stack_info=True)
             return None
+
+
+    def list_folders(self) -> list:
+        parameters = {
+            'AwsAccountId': self.account_id
+        }
+        try:
+            result = self.client.list_folders(**parameters)
+            if result.get('Status') != 200:
+                print(f'Error, {result}')
+                exit()
+            else:
+                logger.debug(f"FolderList: {result.get('FolderSummaryList')}")
+                return result.get('FolderSummaryList')
+        except self.client.exceptions.AccessDeniedException:
+            logger.info('Access denied listing folders')
+            raise
+        except Exception as e:
+            logger.debug(e, stack_info=True)
+            return None
+
+
+    def describe_folder(self, folder_id: str) -> dict:
+        parameters = {
+            'AwsAccountId': self.account_id,
+            'FolderId': folder_id
+        }
+        try:
+            result = self.client.describe_folder(**parameters)
+            logger.debug(f"DescribeFolder: {result}")
+            if result.get('Status') != 200:
+                print(f'Error, {result}')
+                exit()
+            else:
+                logger.debug(result.get('Folder'))
+                return result.get('Folder')
+        except Exception as e:
+            logger.debug(e, stack_info=True)
+            return None
+
+
+    def select_folder(self):
+        """ Select a folder from the list of folders """
+        try:
+            folderList = self.list_folders()
+            if not folderList:
+                return None
+        except self.client.exceptions.AccessDeniedException:
+            raise
+
+        _folder = get_parameter(
+            param_name='folder-id',
+            message="Please select QuickSight folder to use",
+            choices={f"{folder.get('Name')} ({folder.get('FolderId')})":folder for folder in folderList}
+        )
+        return _folder
+
 
     def describe_dashboard(self, poll: bool=False, **kwargs) -> Union[None, Dashboard]:
         """ Describes an AWS QuickSight dashboard
@@ -710,3 +832,30 @@ class QuickSight():
             raise Exception(result)
 
         return result
+
+
+    def update_dashboard_permissions(self, **update_parameters):
+        """ Updates an AWS QuickSight dashboard permissions """
+        logger.debug(f"Updating Dashboard permissions: {update_parameters}")
+        update_parameters.update({'AwsAccountId': self.account_id})
+        update_status = self.client.update_dashboard_permissions(**update_parameters)
+        logger.debug(update_status)
+        return update_status
+
+
+    def update_data_set_permissions(self, **update_parameters):
+        """ Updates an AWS QuickSight dataset permissions """
+        logger.debug(f"Updating DataSet permissions: {update_parameters}")
+        update_parameters.update({'AwsAccountId': self.account_id})
+        update_status = self.client.update_data_set_permissions(**update_parameters)
+        logger.debug(update_status)
+        return update_status
+
+
+    def update_data_source_permissions(self, **update_parameters):
+        """ Updates an AWS QuickSight data source permissions """
+        logger.debug(f"Updating DataSource permissions: {update_parameters}")
+        update_parameters.update({'AwsAccountId': self.account_id})
+        update_status = self.client.update_data_source_permissions(**update_parameters)
+        logger.debug(update_status)
+        return update_status

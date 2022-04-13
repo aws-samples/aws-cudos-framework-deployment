@@ -3,7 +3,7 @@ import logging
 import click
 
 from cid.common import Cid
-from cid.utils import get_parameters
+from cid.utils import get_parameters, set_parameters
 from cid._version import __version__
 
 logger = logging.getLogger(__name__)
@@ -20,13 +20,14 @@ def cid_command(func):
             exit(-1)
         for i in range(0, len(ctx.args), 2):
             kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
+        set_parameters(kwargs)
         res = func(ctx, **kwargs)
         params = get_parameters()
         logger.info('Next time you can use following command:')
         logger.info('   cid-cmd ' + ctx.info_name
             + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
-            + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool)])
-            + ''.join([f" --{k} '{v}' " for k, v in params.items()])
+            + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
+            + ''.join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
         )
         return res
     wrapper.__doc__ = func.__doc__
@@ -131,6 +132,18 @@ def cleanup(ctx):
     """Delete unused resources (QuickSight datasets, Athena views)"""
     ctx.obj.cleanup()
 
+
+@click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
+@click.option('--share-method', help='Sharing method', default=None, type=click.Choice(['folder', 'user']))
+@click.option('--folder-method', help='Folder to use', default=None, type=click.Choice(['new', 'existing']))
+@click.option('--folder-id', help='QuickSight folder id (existing)', default=None)
+@click.option('--folder-name', help='QuickSight folder name (new)', default=None)
+@click.option('--quicksight-user', help='QuickSight user', default=None)
+@cid_command
+def share(ctx, dashboard_id, **kwargs):
+    """Share QuickSight resources (Dashboard, Datasets, DataSource)"""
+    
+    ctx.obj.share(dashboard_id)
 
 if __name__ == '__main__':
     main()
