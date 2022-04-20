@@ -1,0 +1,497 @@
+{
+    "DatabaseName": "${athena_database_name}",
+    "TableInput": {
+        "Name": "${athenaTableName}",
+        "StorageDescriptor": {
+            "Location": "${s3FolderPath}",
+            "Columns": [
+                {
+                    "Name": "accountid",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instancearn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instancename",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentinstancetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "finding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_cpu_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_memory_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "lookbackperiodindays",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_vcpus",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_storage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_network",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_ondemandprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_standardoneyearnoupfrontreservedprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_standardthreeyearnoupfrontreservedprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendations_count",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_instancetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_instancetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_instancetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_projectedutilizationmetrics_cpu_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_projectedutilizationmetrics_cpu_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_projectedutilizationmetrics_cpu_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_projectedutilizationmetrics_memory_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_projectedutilizationmetrics_memory_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_projectedutilizationmetrics_memory_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_performancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_performancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_performancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_vcpus",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_vcpus",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_vcpus",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_storage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_storage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_storage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_network",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_network",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_network",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_ondemandprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_ondemandprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_ondemandprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_standardoneyearnoupfrontreservedprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_standardoneyearnoupfrontreservedprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_standardoneyearnoupfrontreservedprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_standardthreeyearnoupfrontreservedprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_standardthreeyearnoupfrontreservedprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_standardthreeyearnoupfrontreservedprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationssources_1_recommendationsourcearn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationssources_1_recommendationsourcetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "lastrefreshtimestamp_utc",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errorcode",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errormessage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_ebs_read_ops_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_ebs_write_ops_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_ebs_read_bytes_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_ebs_write_bytes_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_platformdifferences_ishypervisordifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_platformdifferences_isnetworkinterfacedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_platformdifferences_isstorageinterfacedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_platformdifferences_isinstancestoreavailabilitydifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_platformdifferences_isvirtualizationtypedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_platformdifferences_ishypervisordifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_platformdifferences_isnetworkinterfacedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_platformdifferences_isstorageinterfacedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_platformdifferences_isinstancestoreavailabilitydifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_platformdifferences_isvirtualizationtypedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_platformdifferences_ishypervisordifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_platformdifferences_isnetworkinterfacedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_platformdifferences_isstorageinterfacedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_platformdifferences_isinstancestoreavailabilitydifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_platformdifferences_isvirtualizationtypedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_iscpuoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_iscpuunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_ismemoryoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_ismemoryunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isebsthroughputoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isebsthroughputunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isebsiopsoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isebsiopsunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isnetworkbandwidthoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isnetworkbandwidthunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isnetworkppsoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isnetworkppsunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isdiskiopsoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isdiskiopsunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isdiskthroughputoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_isdiskthroughputunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_network_in_bytes_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_network_out_bytes_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_network_packets_in_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_network_packets_out_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_disk_read_ops_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_disk_write_ops_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_disk_read_bytes_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_disk_write_bytes_per_second_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_platformdifferences_isarchitecturedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_platformdifferences_isarchitecturedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_platformdifferences_isarchitecturedifferent",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentperformancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_savingsopportunitypercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_estimatedmonthlysavings_currency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_estimatedmonthlysavings_value",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_savingsopportunitypercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_estimatedmonthlysavings_currency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_estimatedmonthlysavings_value",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_savingsopportunitypercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_estimatedmonthlysavings_currency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_estimatedmonthlysavings_value",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiverecommendationpreferencescpuvendorarchitectures",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiverecommendationpreferencesenhancedinfrastructuremetrics",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiverecommendationpreferencesinferredworkloadtypes",
+                    "Type": "string"
+                },
+                {
+                    "Name": "inferredworkloadtypes",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_migrationeffort",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_migrationeffort",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_migrationeffort",
+                    "Type": "string"
+                }
+            ],
+            "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+            "NumberOfBuckets": -1,
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            "Parameters": {},
+            "SerdeInfo": {
+                "Parameters": {
+                    "quoteChar": "\"",
+                    "separatorChar": ",",
+                    "serialization.format": "1"
+                },
+                "SerializationLibrary": "org.apache.hadoop.hive.serde2.OpenCSVSerde"
+            }
+        },
+        "Parameters": {
+            "EXTERNAL": "TRUE",
+            "skip.header.line.count": "1"
+        },
+        "PartitionKeys": [],
+        "TableType": "EXTERNAL_TABLE"
+    }
+}

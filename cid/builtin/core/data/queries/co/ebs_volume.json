@@ -1,0 +1,242 @@
+{
+    "DatabaseName": "${athena_database_name}",
+    "TableInput": {
+        "Name": "${athenaTableName}",
+        "StorageDescriptor": {
+            "Location": "${s3FolderPath}",
+            "Columns": [
+                {
+                    "Name": "accountid",
+                    "Type": "string"
+                },
+                {
+                    "Name": "volumearn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "finding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "lookbackperiodindays",
+                    "Type": "string"
+                },
+                {
+                    "Name": "lastrefreshtimestamp_utc",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentconfiguration_volumetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentconfiguration_volumesize",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentconfiguration_volumebaselineiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentconfiguration_volumebaselinethroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentconfiguration_volumeburstiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentconfiguration_volumeburstthroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_monthlyprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendations_count",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_configuration_volumetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_configuration_volumesize",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_configuration_volumebaselineiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_configuration_volumebaselinethroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_configuration_volumeburstiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_configuration_volumeburstthroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_monthlyprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_performancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_configuration_volumetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_configuration_volumesize",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_configuration_volumebaselineiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_configuration_volumebaselinethroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_configuration_volumeburstiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_configuration_volumeburstthroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_monthlyprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_performancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_configuration_volumetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_configuration_volumesize",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_configuration_volumebaselineiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_configuration_volumebaselinethroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_configuration_volumeburstiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_configuration_volumeburstthroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_monthlyprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_performancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_volumereadopspersecondmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_volumewriteopspersecondmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_volumereadbytespersecondmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_volumewritebytespersecondmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errorcode",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errormessage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentperformancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_savingsopportunitypercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_estimatedmonthlysavings_currency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_estimatedmonthlysavings_value",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_savingsopportunitypercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_estimatedmonthlysavings_currency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_2_estimatedmonthlysavings_value",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_savingsopportunitypercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_estimatedmonthlysavings_currency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_3_estimatedmonthlysavings_value",
+                    "Type": "string"
+                }
+            ],
+            "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+            "NumberOfBuckets": -1,
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            "Parameters": {},
+            "SerdeInfo": {
+                "Parameters": {
+                    "quoteChar": "\"",
+                    "separatorChar": ",",
+                    "serialization.format": "1"
+                },
+                "SerializationLibrary": "org.apache.hadoop.hive.serde2.OpenCSVSerde"
+            }
+        },
+        "Parameters": {
+            "EXTERNAL": "TRUE",
+            "skip.header.line.count": "1"
+        },
+        "PartitionKeys": [],
+        "Retention": 0,
+        "TableType": "EXTERNAL_TABLE"
+    }
+}
