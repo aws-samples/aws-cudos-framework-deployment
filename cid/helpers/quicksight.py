@@ -1,3 +1,4 @@
+import re
 import time
 from typing import Dict, Union
 import click
@@ -178,10 +179,39 @@ class QuickSight():
         self.awsIdentity = awsIdentity
         self._resources = resources
 
-        # QuickSight client
+        # QuickSight clients
         logger.info(f'Creating QuickSight client')
         self.client = session.client('quicksight')
         self.use1Client = session.client('quicksight', region_name='us-east-1')
+        try:
+            logger.info(f'Detecting QuickSight identity region, trying {self.region}')
+            parameters = {
+                'AwsAccountId': self.account_id,
+                'UserName': '/'.join(self.awsIdentity.get('Arn').split('/')[1:]),
+                'Namespace': 'default'
+            }
+            self.client.describe_user(**parameters)
+        except self.client.exceptions.AccessDeniedException as e:
+            logger.debug(e)
+            pattern = f'Operation is being called from endpoint {self.region}, but your identity region is (.*). Please use the (.*) endpoint.'
+            match = re.search(pattern, e.response['Error']['Message'])
+            if match:
+                logger.info(f'Switching QuickSight identity region to {match.group(1)}')
+                self.identityRegion = match.group(1)
+                self.identityClient = session.client('quicksight', region_name=self.identityRegion)
+            else:
+                raise
+        except Exception as e:
+            logger.info('QuickSight identity region detection failed')
+            logger.debug(e, stack_info=True)
+            self.identityRegion = self.region
+            self.identityClient = self.client
+        else:
+            self.identityRegion = self.region
+            self.identityClient = self.client
+        finally:
+            logger.info(f'Using QuickSight identity region: {self.identityRegion}')
+            
 
     @property
     def account_id(self) -> str:
@@ -189,7 +219,6 @@ class QuickSight():
 
     @property
     def user(self) -> dict:
-        # TODO: Refactor QuickSight dynamic identity region detection
         if not self._user:
             self._user =  self.describe_user('/'.join(self.awsIdentity.get('Arn').split('/')[1:]))
             if not self._user:
@@ -472,7 +501,7 @@ class QuickSight():
     def select_user(self):
         """ Select a user from the list of users """
         try:
-            userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
+            userList = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing users')
             return None
@@ -694,11 +723,11 @@ class QuickSight():
             'Namespace': 'default'
         }
         try:
-            return self.client.describe_user(**parameters).get('User')
+            return self.identityClient.describe_user(**parameters).get('User')
         except self.client.exceptions.ResourceNotFoundException:
             return None
         except self.client.exceptions.AccessDeniedException:
-            userList = self.use1Client.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
+            userList = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
             for user in userList:
                 if username.endswith(user.get('UserName')):
                     return user
