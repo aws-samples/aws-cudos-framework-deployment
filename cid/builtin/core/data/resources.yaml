@@ -58,7 +58,6 @@ dashboards:
 
   Compute Optimizer:
     name: Compute Optimizer Dashboard
-    sourceAccountId: "597214020902"
     templateId: compute_optimizer
     dashboardId: compute-optimizer-dashboard
     dependsOn:
