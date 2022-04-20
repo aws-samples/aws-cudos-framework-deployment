@@ -861,14 +861,31 @@ class Cid:
             dependency_views.remove(dep)
         view_query = self.get_view_query(view_name=view_name)
         if view_definition.get('type') == 'Glue_Table':
-            try:
-                self.glue.create_table(json.loads(view_query))
-            except self.glue.client.exceptions.AlreadyExistsException:
-                print(f'\nError: Glue table "{view_name}" exists but not found, please check your configuration, exiting')
-                exit(1)
+            self.create_glue_table(view_name, view_query)
         else:
             self.athena.execute_query(view_query)
-        print(f'\nView "{view_name}" created')
+            print(f'\nView "{view_name}" created')
+
+
+    def create_glue_table(self, view_name: str, view_query: str) -> None:
+        poll_interval = 1
+        max_timeout = 60
+        try:
+            self.glue.create_table(json.loads(view_query))
+        except self.glue.client.exceptions.AlreadyExistsException:
+            logger.critical(f'Error: Glue table "{view_name}" exists but not found, please check your configuration, exiting')
+            exit(1)
+        deadline = time.time() + max_timeout
+        while time.time() < deadline:
+            self.athena.discover_views([view_name])
+            if view_name in self.athena._metadata.keys():
+                logger.info(f'Glue table {view_name} is created')
+                break
+            else:
+                time.sleep(poll_interval)
+        else:
+            logger.error(f'Glue table {view_name} is not created before timeout')
+        return None
 
 
     def get_view_query(self, view_name: str) -> str:
