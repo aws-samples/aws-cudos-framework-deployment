@@ -300,3 +300,17 @@ class Athena():
                 self.get_table_metadata(TableName=view_name)
             except self.client.exceptions.MetadataException:
                 pass
+
+
+    def wait_for_view(self, view_name: str, poll_interval=1, timeout=60) -> None:
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            self.discover_views([view_name])
+            if view_name in self._metadata.keys():
+                logger.info(f'view {view_name} exists')
+                return True
+            else:
+                time.sleep(poll_interval)
+        else:
+            logger.info(f'view {view_name} exists')
+            return False
