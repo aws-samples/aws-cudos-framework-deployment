@@ -8,6 +8,7 @@ from cid.utils import get_parameter
 
 import os
 import sys
+import time
 
 import click
 import requests
@@ -867,18 +868,19 @@ class Cid:
             print(f'\nView "{view_name}" created')
 
 
-    def create_glue_table(self, view_name: str, view_query: str) -> None:
+    def create_glue_table(self, view_name: str, view_query: str, fore_recreate=False) -> None:
         poll_interval = 1
         max_timeout = 60
         try:
             self.glue.create_table(json.loads(view_query))
         except self.glue.client.exceptions.AlreadyExistsException:
-            logger.critical(f'Error: Glue table "{view_name}" exists but not found, please check your configuration, exiting')
-            exit(1)
+            print(f'Glue table "{view_name}" exists')
+            logger.error(f'Glue table "{view_name}" exists')
         deadline = time.time() + max_timeout
         while time.time() < deadline:
             self.athena.discover_views([view_name])
             if view_name in self.athena._metadata.keys():
+                print(f'Glue table {view_name} is created')
                 logger.info(f'Glue table {view_name} is created')
                 break
             else:
