@@ -8,7 +8,6 @@ from cid.utils import get_parameter
 
 import os
 import sys
-import time
 
 import click
 import requests
@@ -842,7 +841,6 @@ class Cid:
             self.accountMap.create(view_name)
             return
         # Create a view
-        print(f'\nCreating view: {view_name}')
         logger.info(f'Creating view: {view_name}')
         logger.info(f'Getting view definition')
         view_definition = self.resources.get('views').get(view_name, dict())
@@ -856,38 +854,22 @@ class Cid:
             dep = dependency_views.copy().pop()
         # for dep in dependency_views:
             if dep not in self.athena._metadata.keys():
-                print(f'Missing dependency view: {dep}, trying to create')
-                logger.info(f'Missing dependency view: {dep}, trying to create')
+                print(f'Missing dependency view: {dep}, creating')
+                logger.info(f'Missing dependency view: {dep}, creating')
                 self.create_view(dep)
             dependency_views.remove(dep)
         view_query = self.get_view_query(view_name=view_name)
-        if view_definition.get('type') == 'Glue_Table':
-            self.create_glue_table(view_name, view_query)
+        if view_name in self.athena._metadata.keys():
+            logger.debug(f'View "{view_name}" exists')
+            return
         else:
-            self.athena.execute_query(view_query)
-            print(f'\nView "{view_name}" created')
-
-
-    def create_glue_table(self, view_name: str, view_query: str, fore_recreate=False) -> None:
-        poll_interval = 1
-        max_timeout = 60
-        try:
-            self.glue.create_table(json.loads(view_query))
-        except self.glue.client.exceptions.AlreadyExistsException:
-            print(f'Glue table "{view_name}" exists')
-            logger.error(f'Glue table "{view_name}" exists')
-        deadline = time.time() + max_timeout
-        while time.time() < deadline:
-            self.athena.discover_views([view_name])
-            if view_name in self.athena._metadata.keys():
-                print(f'Glue table {view_name} is created')
-                logger.info(f'Glue table {view_name} is created')
-                break
+            logger.info(f'Creating view: {view_name}')
+            if view_definition.get('type') == 'Glue_Table':
+                self.glue.ensure_glue_table_created(view_name, view_query)
             else:
-                time.sleep(poll_interval)
-        else:
-            logger.error(f'Glue table {view_name} is not created before timeout')
-        return None
+                self.athena.execute_query(view_query)
+            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+            logger.info(f'View "{view_name}" created')
 
 
     def get_view_query(self, view_name: str) -> str:
