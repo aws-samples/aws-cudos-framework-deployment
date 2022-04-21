@@ -112,7 +112,7 @@ CREATE OR REPLACE VIEW compute_optimizer_ec2_instance_options AS
          utilizationmetrics_memory_maximum, ';'
        ) option_details
    FROM
-     "optimization_data"."compute_optimizer_ec2_instance_lines"
+     compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
 UNION SELECT
      TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
@@ -202,7 +202,7 @@ UNION SELECT
          recommendationoptions_1_projectedutilizationmetrics_memory_maximum, ';'
        ) option_details
    FROM
-     "optimization_data"."compute_optimizer_ec2_instance_lines"
+     compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
 UNION SELECT
      TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
@@ -292,7 +292,7 @@ UNION SELECT
          recommendationoptions_2_projectedutilizationmetrics_memory_maximum, ';'
    ) option_details
    FROM
-     "optimization_data"."compute_optimizer_ec2_instance_lines"
+     compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
    AND recommendationoptions_2_estimatedmonthlysavings_currency <> ''
 
@@ -384,7 +384,7 @@ UNION SELECT
          recommendationoptions_3_projectedutilizationmetrics_memory_maximum, ';'
        ) option_details
    FROM
-     "optimization_data"."compute_optimizer_ec2_instance_lines"
+     compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
      AND recommendationoptions_3_estimatedmonthlysavings_currency <> ''
 

@@ -66,7 +66,7 @@ CREATE OR REPLACE VIEW compute_optimizer_lambda_options AS
 
        ) option_details
    FROM
-     "optimization_data"."compute_optimizer_lambda_lines"
+     compute_optimizer_lambda_lines
    WHERE (functionarn LIKE '%arn:%')
 UNION SELECT
      TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
@@ -120,7 +120,7 @@ UNION SELECT
 
 
     FROM
-        "optimization_data"."compute_optimizer_lambda_lines"
+        compute_optimizer_lambda_lines
     WHERE
         functionarn LIKE '%arn:%'
 
@@ -176,7 +176,7 @@ UNION SELECT
 
 
     FROM
-        "optimization_data"."compute_optimizer_lambda_lines"
+        compute_optimizer_lambda_lines
     WHERE
         functionarn LIKE '%arn:%'
        AND recommendationoptions_2_estimatedmonthlysavings_currency <> ''
@@ -234,7 +234,7 @@ UNION SELECT
 
 
     FROM
-        "optimization_data"."compute_optimizer_lambda_lines"
+        compute_optimizer_lambda_lines
     WHERE
         functionarn LIKE '%arn:%'
        AND recommendationoptions_3_estimatedmonthlysavings_currency <> ''

@@ -104,7 +104,7 @@ SELECT * FROM (
        ) option_details
 
     FROM
-        "optimization_data"."compute_optimizer_auto_scale_lines"
+        compute_optimizer_auto_scale_lines
     WHERE
         autoscalinggrouparn LIKE '%arn:%'
 
@@ -209,7 +209,7 @@ UNION SELECT
        ) option_details
 
     FROM
-        "optimization_data"."compute_optimizer_auto_scale_lines"
+        compute_optimizer_auto_scale_lines
     WHERE
         autoscalinggrouparn LIKE '%arn:%'
 
@@ -316,7 +316,7 @@ UNION SELECT
        ) option_details
 
     FROM
-        "optimization_data"."compute_optimizer_auto_scale_lines"
+        compute_optimizer_auto_scale_lines
     WHERE
         autoscalinggrouparn LIKE '%arn:%'
     AND recommendationoptions_2_estimatedmonthlysavings_currency <> ''
@@ -423,7 +423,7 @@ UNION SELECT
        ) option_details
 
     FROM
-        "optimization_data"."compute_optimizer_auto_scale_lines"
+        compute_optimizer_auto_scale_lines
     WHERE
         autoscalinggrouparn LIKE '%arn:%'
     AND recommendationoptions_3_estimatedmonthlysavings_currency <> ''
