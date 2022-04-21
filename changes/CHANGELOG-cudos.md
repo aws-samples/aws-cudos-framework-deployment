@@ -1,5 +1,10 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.67.2 
+
+* Storage Summary: Filters applied to daily visuals changed to last 90 days fron last 3 months
+* Payer and Account Name/ID controls now show only relevant values for respective control
+
 ## CUDOS - 4.67.1 
 
 * Amazon S3: Minor calculation accuracy fix for "TOP 5 Accounts for Glacier Vault migration to Glacier Deep Archive Savings Opportunity" via "S3 Glacier Deep Archive Estimated Cost" calculated field
