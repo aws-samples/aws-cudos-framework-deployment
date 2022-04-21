@@ -4,6 +4,7 @@
 
 * Storage Summary: Filters applied to daily visuals changed to last 90 days fron last 3 months
 * Payer and Account Name/ID controls now show only relevant values for respective control
+* OPTICS Explorer: Relative dates filter instead of Start/End dates
 
 ## CUDOS - 4.67.1 
 
