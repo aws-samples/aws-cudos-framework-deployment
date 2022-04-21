@@ -77,7 +77,7 @@ SELECT
     ) as option_details
 
 FROM
-    "optimization_data"."compute_optimizer_ebs_volume_lines"
+    compute_optimizer_ebs_volume_lines
 WHERE
     volumearn LIKE '%arn:%'
 
@@ -153,7 +153,7 @@ UNION SELECT
     ) as option_details
 
 FROM
-    "optimization_data"."compute_optimizer_ebs_volume_lines"
+    compute_optimizer_ebs_volume_lines
 WHERE
     volumearn LIKE '%arn:%'
   AND recommendationoptions_1_estimatedmonthlysavings_currency <> ''
@@ -232,7 +232,7 @@ UNION SELECT
     ) as option_details
 
 FROM
-    "optimization_data"."compute_optimizer_ebs_volume_lines"
+    compute_optimizer_ebs_volume_lines
 WHERE
     volumearn LIKE '%arn:%'
   AND recommendationoptions_2_estimatedmonthlysavings_currency <> ''
@@ -310,7 +310,7 @@ WHERE
     ) as option_details
 
 FROM
-    "optimization_data"."compute_optimizer_ebs_volume_lines"
+    compute_optimizer_ebs_volume_lines
 WHERE
     volumearn LIKE '%arn:%'
   AND recommendationoptions_3_estimatedmonthlysavings_currency <> ''
