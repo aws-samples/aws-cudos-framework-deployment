@@ -141,12 +141,18 @@ class Athena():
 
         return table_metadata
 
+    def purge_cache(self):
+        """ clean up metadata """
+        self._metadata = dict()
 
-    def execute_query(self, sql_query, sleep_duration=1) -> str:
+    def execute_query(self, sql_query, sleep_duration=1, database: str=None, catalog: str=None) -> str:
         """ Executes an AWS Athena Query """
 
         # Set execution context
-        execution_context = {'Database': self.DatabaseName}
+        execution_context = {
+            'Database': database or self.DatabaseName,
+            'Catalog': catalog or self.CatalogName,
+        }
 
         try:
             # Start Athena query

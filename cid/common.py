@@ -356,29 +356,83 @@ class Cid:
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print('deleted')
             self.track('deleted', dashboard_id)
+
+            for dashboard_definition in self.resources['dashboards'].values():
+                if dashboard_id == dashboard_definition.get('dashboardId'):
+                    break
+            else:
+                return dashboard_id
+
+            for dependency_dataset in list(set(dashboard_definition.get('dependsOn',{}).get('datasets'))):
+                self.delete_dataset(dependency_dataset)
+
             return dashboard_id
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
         except Exception as e:
             # Catch exception and dump a reason
-            click.echo('failed, dumping error message')
+            click.echo('deletion of dashboard failed, dumping error message')
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
 
+    def delete_dataset(self, dataset_name):
+        used_datasets = self.qs.get_used_datasets()
+        if dataset_name not in self.resources['datasets']:
+            return False
+        self.qs.discover_datasets()
+        for dataset in list(self.qs._datasets.values()):
+            if dataset.get("Name") == dataset_name:
+                if dataset.get("Arn") in used_datasets:
+                    if not click.confirm(f'dataset is still used {dataset.get("Name")} delete?'):
+                        continue
+                self.qs.delete_dataset(dataset.get('DataSetId'))
+                break
+        else:
+            print(f'not found dataset for deletion {dataset_name}')
+        for view_name in self.resources['datasets'][dataset_name].get('dependsOn', {}).get('views', []):
+            self.delete_view(view_name)
+        return True
+
+    def delete_view(self, view_name):
+        if view_name not in self.resources['views']:
+            return False
+        definition = self.resources['views'].get(view_name)
+        if definition.get('File', '').startswith('shared/'):
+            logger.info(f'views {view_name} is shared. Skipping.')
+            return False
+
+        self.athena.purge_cache()
+        self.athena.discover_views([view_name])
+        found_views = self.athena._metadata.keys()
+        if view_name not in found_views:
+            return False
+
+
+        if definition.get('type', '') == 'Glue_Table':
+            if click.confirm(f'Delete athena table {view_name}?'):
+                self.athena.execute_query(f'DROP TABLE IF EXISTS {view_name};')
+                print(f'{view_name} deleted')
+
+        else:
+            if click.confirm(f'Delete athena view {view_name}?'):
+                self.athena.execute_query(f'DROP VIEW  IF EXISTS {view_name};')
+                print(f'{view_name} deleted')
+
+        # manage dependancies
+        for dependancy_view in definition.get('dependsOn', {}).get('views', []):
+            self.delete_view(dependancy_view)
+
+        return True
 
     def cleanup(self):
         """Delete unused resources (QuickSight datasets, Athena views)"""
 
-        self.qs.discover_dashboards()
-        self.qs.discover_datasets()
-        used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
-        for v in list(self.qs._datasets.values()):
-            if v.get('Arn') not in used_datasets and click.confirm(f'Delete unused dataset {v.get("Name")}?'):
-                logger.info(f'Deleting dataset {v.get("Name")} ({v.get("Arn")})')
-                self.qs.delete_dataset(v.get('DataSetId'))
-                logger.info(f'Deleted dataset {v.get("Name")} ({v.get("Arn")})')
-                print(f'Deleted dataset {v.get("Name")} ({v.get("Arn")})')
-            else:
-                print(f'Dataset {v.get("Name")} ({v.get("Arn")}) is in use')
+        used_datasets = self.qs.get_used_datasets()
+        for dataset in list(self.qs._datasets.values()):
+            if dataset.get('Arn') not in used_datasets and click.confirm(f'Delete unused dataset {dataset.get("Name")}?'):
+                logger.info(f'Deleting dataset {dataset.get("Name")} ({dataset.get("Arn")})')
+                self.qs.delete_dataset(dataset.get('DataSetId'))
+                logger.info(f'Deleted dataset {dataset.get("Name")} ({dataset.get("Arn")})')
+                print(f'Deleted dataset {dataset.get("Name")} ({dataset.get("Arn")})')
 
 
     def share(self, dashboard_id, **kwargs):

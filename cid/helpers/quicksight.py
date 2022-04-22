@@ -888,3 +888,9 @@ class QuickSight():
         update_status = self.client.update_data_source_permissions(**update_parameters)
         logger.debug(update_status)
         return update_status
+
+    def get_used_datasets(self):
+        """ Get a list of datasets used in dashboards """
+        self.discover_dashboards()
+        self.discover_datasets()
+        return [dataset for dashboard in self.dashboards.values() for dataset in dashboard.datasets.values() ]

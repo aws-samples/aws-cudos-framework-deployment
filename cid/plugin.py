@@ -23,6 +23,7 @@ class Plugin():
             if not resource_isdir(self.name, f'data/{pkg_resource}'):
                 logger.info(f'Located data file: {pkg_resource}')
                 ext = pkg_resource.rsplit('.', -1)[-1].lower()
+                content = None
                 if ext == 'json':
                     content = json.loads(resource_string(self.name, f'data/{pkg_resource}'))
                     logger.info(f'Loaded {pkg_resource} as JSON')
