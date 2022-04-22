@@ -356,17 +356,6 @@ class Cid:
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print('deleted')
             self.track('deleted', dashboard_id)
-
-            for dashboard_definition in self.resources['dashboards'].values():
-                if dashboard_id == dashboard_definition.get('dashboardId'):
-                    break
-            else:
-                return dashboard_id
-
-            for dependency_dataset in list(set(dashboard_definition.get('dependsOn',{}).get('datasets'))):
-                self.delete_dataset(dependency_dataset)
-
-            return dashboard_id
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
         except Exception as e:
@@ -374,16 +363,54 @@ class Cid:
             click.echo('deletion of dashboard failed, dumping error message')
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
 
+
+        #Manage dependancies
+        for dashboard_definition in self.resources['dashboards'].values():
+            if dashboard_id == dashboard_definition.get('dashboardId'):
+                break
+        else:
+            return dashboard_id
+
+
+        self.detect_managed_views()
+        for dependency_dataset in list(set(dashboard_definition.get('dependsOn',{}).get('datasets'))):
+            self.delete_dataset(dependency_dataset)
+
+        return dashboard_id
+
+    def detect_managed_views(self):
+        self._managed_views = []
+        self.qs.discover_dashboards(refresh=True)
+        for dashboard in self.qs.dashboards:
+            dashboard_id = dashboard.get('dashboardId')
+            for dashboard_definition in self.resources['dashboards'].values():
+                if dashboard_id == dashboard_definition.get('dashboardId'):
+                    break
+            else:
+                continue # dataset not managed by us
+
+            for dependency_dataset in list(set(dashboard_definition.get('dependsOn',{}).get('datasets'))):
+                for view_name in dependency_dataset.get('dependsOn', {}).get('views', []):
+                    self.add_view_to_the_managed_views_list(view_name)
+        return self._managed_views
+
+    def add_view_to_the_managed_views_list(self, view_name):
+        self._managed_views.append(view_name)
+        for dep_view in self.resources['views'].get('dependsOn',{}).get('views'):
+            self.add_view_to_the_managed_views_list(dep_view)
+
+
     def delete_dataset(self, dataset_name):
-        used_datasets = self.qs.get_used_datasets()
         if dataset_name not in self.resources['datasets']:
+            logger.info(f'{dataset_name} is not managed by CID. Skipping.')
             return False
         self.qs.discover_datasets()
+        used_datasets = self.qs.get_used_datasets()
         for dataset in list(self.qs._datasets.values()):
             if dataset.get("Name") == dataset_name:
                 if dataset.get("Arn") in used_datasets:
-                    if not click.confirm(f'dataset is still used {dataset.get("Name")} delete?'):
-                        continue
+                    logger.error(f'dataset is still used {dataset.get("Name")}. Skipping.')
+                    continue
                 self.qs.delete_dataset(dataset.get('DataSetId'))
                 break
         else:
@@ -400,22 +427,60 @@ class Cid:
             logger.info(f'views {view_name} is shared. Skipping.')
             return False
 
-        self.athena.purge_cache()
         self.athena.discover_views([view_name])
-        found_views = self.athena._metadata.keys()
-        if view_name not in found_views:
+        if view_name not in self.athena._metadata.keys():
             return False
 
+        view = self.athena._metadata[view_name]
+
+        if view_name in self._managed_views:
+            print(f'{view_name} is used by other dashboards. Skipping')
+            return False
 
         if definition.get('type', '') == 'Glue_Table':
-            if click.confirm(f'Delete athena table {view_name}?'):
-                self.athena.execute_query(f'DROP TABLE IF EXISTS {view_name};')
-                print(f'{view_name} deleted')
+
+            if get_parameter(
+                param_name=f'confirm-{view_name}',
+                message=f'Delete athena table {view_name}?',
+                choices=['yes', 'no'],
+                default='no') == 'yes':
+                try:
+                    # self.glue.ensure_table_deleted(
+                    #     name=view_name,
+                    #     catalog=self.athena.CatalogName,
+                    #     database=self.athena.DatabaseName,
+                    # )
+                    self.athena.execute_query(
+                        f'DROP TABLE IF EXISTS {view_name};',
+                        catalog=self.athena.CatalogName,
+                        database=self.athena.DatabaseName,
+                    )
+                except Exception as exc:
+                    logger.error(exc)
+                    print(f'Table {view_name} cannot be deleted: {exc}')
+                else:
+                    print(f'Table {view_name} deleted')
 
         else:
-            if click.confirm(f'Delete athena view {view_name}?'):
-                self.athena.execute_query(f'DROP VIEW  IF EXISTS {view_name};')
-                print(f'{view_name} deleted')
+            if get_parameter(
+                param_name=f'confirm-{view_name}',
+                message=f'Delete athena view {view_name}?',
+                choices=['yes', 'no'],
+                default='no') == 'yes':
+                try:
+                    self.athena.execute_query(
+                        f'DROP VIEW IF EXISTS {view_name};',
+                        catalog=self.athena.CatalogName,
+                        database=self.athena.DatabaseName,
+                    )
+                except Exception as exc:
+                    logger.debug(exc)
+                    logger.error(f'View {view_name} cannot be deleted: {exc}')
+                else:
+                    logger.info(f'View {view_name} deleted')
+                    print(f'View {view_name} deleted')
+
+        del self.athena._metadata[view_name]
 
         # manage dependancies
         for dependancy_view in definition.get('dependsOn', {}).get('views', []):

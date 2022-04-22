@@ -403,8 +403,10 @@ class QuickSight():
                 for _,map in v.get('PhysicalTableMap').items():
                     self.describe_data_source(map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
 
-    def discover_dashboards(self, display: bool=False) -> None:
+    def discover_dashboards(self, display: bool=False, refresh: bool=False) -> None:
         """ Discover deployed dashboards """
+        if refresh:
+            self._dashboards = {}
         logger.info('Discovering deployed dashboards')
         deployed_dashboards=self.list_dashboards()
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
@@ -890,7 +892,7 @@ class QuickSight():
         return update_status
 
     def get_used_datasets(self):
-        """ Get a list of datasets used in dashboards """
+        """ Get a list of ARNS of datasets used in dashboards """
         self.discover_dashboards()
         self.discover_datasets()
         return [dataset for dashboard in self.dashboards.values() for dataset in dashboard.datasets.values() ]

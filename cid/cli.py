@@ -107,9 +107,9 @@ def status(ctx, dashboard_id):
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @cid_command
-def delete(ctx, dashboard_id):
+def delete(ctx, dashboard_id, **kwargs):
     """Delete Dashboard"""
-    ctx.obj.delete(dashboard_id)
+    ctx.obj.delete(dashboard_id, **kwargs)
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
