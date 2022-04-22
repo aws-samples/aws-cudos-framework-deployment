@@ -353,6 +353,7 @@ class Cid:
         try:
             # Execute query
             click.echo('Deleting dashboard...', nl=False)
+            dashboard = self.qs.dashboards.get(dashboard_id) # save for later
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print('deleted')
             self.track('deleted', dashboard_id)
@@ -362,49 +363,17 @@ class Cid:
             # Catch exception and dump a reason
             click.echo('deletion of dashboard failed, dumping error message')
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
-
-
-        #Manage dependancies
-        for dashboard_definition in self.resources['dashboards'].values():
-            if dashboard_id == dashboard_definition.get('dashboardId'):
-                break
         else:
-            return dashboard_id
-
-
-        self.detect_managed_views()
-        for dependency_dataset in list(set(dashboard_definition.get('dependsOn',{}).get('datasets'))):
-            self.delete_dataset(dependency_dataset)
-
+            #Manage dependancies
+            for dataset in dashboard.datasets:
+                self.delete_dataset(dataset)
         return dashboard_id
-
-    def detect_managed_views(self):
-        self._managed_views = []
-        self.qs.discover_dashboards(refresh=True)
-        for dashboard in self.qs.dashboards:
-            dashboard_id = dashboard.get('dashboardId')
-            for dashboard_definition in self.resources['dashboards'].values():
-                if dashboard_id == dashboard_definition.get('dashboardId'):
-                    break
-            else:
-                continue # dataset not managed by us
-
-            for dependency_dataset in list(set(dashboard_definition.get('dependsOn',{}).get('datasets'))):
-                for view_name in dependency_dataset.get('dependsOn', {}).get('views', []):
-                    self.add_view_to_the_managed_views_list(view_name)
-        return self._managed_views
-
-    def add_view_to_the_managed_views_list(self, view_name):
-        self._managed_views.append(view_name)
-        for dep_view in self.resources['views'].get('dependsOn',{}).get('views'):
-            self.add_view_to_the_managed_views_list(dep_view)
-
 
     def delete_dataset(self, dataset_name):
         if dataset_name not in self.resources['datasets']:
             logger.info(f'{dataset_name} is not managed by CID. Skipping.')
             return False
-        self.qs.discover_datasets()
+        #self.qs.discover_datasets()
         used_datasets = self.qs.get_used_datasets()
         for dataset in list(self.qs._datasets.values()):
             if dataset.get("Name") == dataset_name:
@@ -433,7 +402,8 @@ class Cid:
 
         view = self.athena._metadata[view_name]
 
-        if view_name in self._managed_views:
+        used_views = sum([dashboard.views for dashboard in self.qs.dashboards], [])
+        if view_name in used_views:
             print(f'{view_name} is used by other dashboards. Skipping')
             return False
 
@@ -459,6 +429,8 @@ class Cid:
                     logger.error(exc)
                     print(f'Table {view_name} cannot be deleted: {exc}')
                 else:
+                    del self.athena._metadata[view_name]
+                    logger.info(f'View {view_name} deleted')
                     print(f'Table {view_name} deleted')
 
         else:
@@ -477,10 +449,9 @@ class Cid:
                     logger.debug(exc)
                     logger.error(f'View {view_name} cannot be deleted: {exc}')
                 else:
+                    del self.athena._metadata[view_name]
                     logger.info(f'View {view_name} deleted')
                     print(f'View {view_name} deleted')
-
-        del self.athena._metadata[view_name]
 
         # manage dependancies
         for dependancy_view in definition.get('dependsOn', {}).get('views', []):
@@ -683,8 +654,7 @@ class Cid:
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard.id}.json'
-        print(
-            f'Looking for local overrides file "{local_overrides}"...', end='')
+        logger.debug(f'Looking for local overrides file "{local_overrides}"')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
                 try:

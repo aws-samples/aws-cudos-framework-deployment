@@ -7,6 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 params = {} # parameters from command line
+_all_yes = False # parameters from command line
 
 def get_aws_region():
     return get_boto_session().region_name
@@ -54,15 +55,17 @@ def get_boto_client(service_name, **kwargs):
         logger.debug(e, stack_info=True)
         raise
 
-def set_parameters(parameters):
+def set_parameters(parameters: dict, all_yes: bool=False) -> None:
     for k, v in parameters.items():
         params[k.replace('_', '-')] = v
+    global _all_yes
+    _all_yes = all_yes
 
 def get_parameters():
     return dict(params)
 
 def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True):
-    """ 
+    """
     Check if parameters are provided in the command line and if not, ask user 
 
     :param message: text message for user
@@ -78,9 +81,11 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     if params.get(param_name):
         value = params[param_name]
         logger.info(f'Using {param_name}={value}, from parameters')
-        return value.format(**template_variables) 
+        return value.format(**template_variables)
 
     if choices is not None:
+        if 'yes' in choices and _all_yes:
+            return 'yes'
         if isinstance(choices, dict):
             _choices = []
             for key, value in choices.items():
@@ -92,6 +97,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
                     )
                 )
                 choices = _choices
+
         print()
         result = questionary.select(
             message=f'[{param_name}] {message}:',

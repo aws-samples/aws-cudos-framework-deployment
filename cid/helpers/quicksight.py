@@ -19,6 +19,7 @@ class Dashboard():
         self.dashboard: dict = dashboard
         # Initialize properties
         self.datasets = dict()
+        self.views = []
         self._status = str()
         self.status_detail = str()
         # Source template in origin account
@@ -169,7 +170,7 @@ class Dashboard():
 class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
-    _dashboards: Dict[str, Dashboard] = {}
+    _dashboards: Dict[str, Dashboard] = None
     _datasets = dict()
     _datasources: dict() = {}
     _user: dict = None
@@ -232,9 +233,17 @@ class QuickSight():
         return self._resources.get('dashboards')
 
     @property
+    def supported_datasets(self) -> list:
+        return self._resources.get('datasets')
+
+    @property
+    def supported_views(self) -> list:
+        return self._resources.get('views')
+
+    @property
     def dashboards(self) -> Dict[str, Dashboard]:
         """Returns a list of deployed dashboards"""
-        if not self._dashboards:
+        if self._dashboards is None:
             self.discover_dashboards()
         return self._dashboards
 
@@ -289,9 +298,22 @@ class QuickSight():
             except Exception as e:
                 logger.debug(e, stack_info=True)
                 logger.info(f'Unable to describe template {templateId} in {templateAccountId}')
+
+            # recoursively add views
+            all_views = []
+            def _recoursive_add_view(view):
+                all_views.append(view)
+                for dep_view in self.supported_views.get(view, {}).get('dependsOn',{}).get('views', []):
+                    _recoursive_add_view(dep_view)
+            for dataset_name in dashboard.datasets.keys():
+                for view in self.supported_datasets.get(dataset_name).get('dependsOn',{}).get('views', []):
+                    _recoursive_add_view(view)
+            dashboard.views = all_views
+            self._dashboards = self._dashboards or {}
             self._dashboards.update({dashboardId: dashboard})
             logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
             logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
+            return dashboard
 
     def create_data_source(self) -> bool:
         """Create a new data source"""
@@ -635,7 +657,9 @@ class QuickSight():
             'DashboardId': dashboard_id
         }
         logger.info(f'Deleting dashboard {dashboard_id}')
-        return self.client.delete_dashboard(**paramaters)
+        result = self.client.delete_dashboard(**paramaters)
+        del self._dashboards[dashboard_id]
+        return result
 
     def delete_dataset(self, id: str) -> bool:
         """ Deletes an AWS QuickSight dataset """
@@ -893,6 +917,4 @@ class QuickSight():
 
     def get_used_datasets(self):
         """ Get a list of ARNS of datasets used in dashboards """
-        self.discover_dashboards()
-        self.discover_datasets()
         return [dataset for dashboard in self.dashboards.values() for dataset in dashboard.datasets.values() ]
