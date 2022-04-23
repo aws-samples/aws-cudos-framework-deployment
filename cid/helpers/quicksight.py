@@ -917,4 +917,4 @@ class QuickSight():
 
     def get_used_datasets(self):
         """ Get a list of ARNS of datasets used in dashboards """
-        return [dataset for dashboard in self.dashboards.values() for dataset in dashboard.datasets.values() ]
+        return [dataset for dashboard in (self.dashboards or {}).values() for dataset in dashboard.datasets.values() ]
