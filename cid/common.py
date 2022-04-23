@@ -240,8 +240,7 @@ class Cid:
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard_definition.get("dashboardId")}.json'
-        print(
-            f'Looking for local overrides file "{local_overrides}"...', end='')
+        logger.debug(f'Looking for local overrides file "{local_overrides}"...')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
                 try:
@@ -254,7 +253,7 @@ class Cid:
                     click.echo('failed to load, dumping error message')
                     print(json.dumps(e, indent=4, sort_keys=True, default=str))
         except FileNotFoundError:
-            print('not found')
+            logger.debug('local overrides file not found')
 
         # Get QuickSight template details
         latest_template = self.qs.describe_template(template_id=dashboard_definition.get(
@@ -350,12 +349,17 @@ class Cid:
                 dashboard_id = self.qs.select_dashboard(force=True)
                 if not dashboard_id:
                     exit()
+
+        if self.qs.dashboards and dashboard_id in self.qs.dashboards:
+            datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
+        else:
+            datasets = next((d.get('dependsOn', {}).get('datasets', []) for d in self.resources.get('dashboards').values() if d.get('dashboardId') == dashboard_id ), None)
+
         try:
             # Execute query
             click.echo('Deleting dashboard...', nl=False)
-            dashboard = self.qs.dashboards.get(dashboard_id) # save for later
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
-            print('deleted')
+            print(f'Dashboard {dashboard_id} deleted')
             self.track('deleted', dashboard_id)
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
@@ -363,28 +367,32 @@ class Cid:
             # Catch exception and dump a reason
             click.echo('deletion of dashboard failed, dumping error message')
             print(json.dumps(e, indent=4, sort_keys=True, default=str))
-        else:
-            #Manage dependancies
-            for dataset in dashboard.datasets:
-                self.delete_dataset(dataset)
+            logger.exception(e)
+            return dashboard_id
+
+        print('Processing dependencies')
+        for dataset in datasets:
+            self.delete_dataset(dataset)
+
+        print('Done')
         return dashboard_id
 
     def delete_dataset(self, dataset_name):
         if dataset_name not in self.resources['datasets']:
             logger.info(f'{dataset_name} is not managed by CID. Skipping.')
             return False
-        #self.qs.discover_datasets()
         used_datasets = self.qs.get_used_datasets()
         for dataset in list(self.qs._datasets.values()):
             if dataset.get("Name") == dataset_name:
                 if dataset.get("Arn") in used_datasets:
                     logger.error(f'dataset is still used {dataset.get("Name")}. Skipping.')
                     continue
+                print(f'Deleting dataset {dataset.get("Name")}')
                 self.qs.delete_dataset(dataset.get('DataSetId'))
                 break
         else:
             print(f'not found dataset for deletion {dataset_name}')
-        for view_name in self.resources['datasets'][dataset_name].get('dependsOn', {}).get('views', []):
+        for view_name in list(set(self.resources['datasets'][dataset_name].get('dependsOn', {}).get('views', []))):
             self.delete_view(view_name)
         return True
 
@@ -396,65 +404,24 @@ class Cid:
             logger.info(f'views {view_name} is shared. Skipping.')
             return False
 
-        self.athena.discover_views([view_name])
-        if view_name not in self.athena._metadata.keys():
-            return False
-
-        view = self.athena._metadata[view_name]
-
-        used_views = sum([dashboard.views for dashboard in self.qs.dashboards], [])
+        used_views = sum([dashboard.views for dashboard in self.qs.dashboards or {}], [])
         if view_name in used_views:
             print(f'{view_name} is used by other dashboards. Skipping')
             return False
 
+        # self.athena.discover_views([view_name])
+        # if view_name not in self.athena._metadata.keys():
+        #     return False
+
         if definition.get('type', '') == 'Glue_Table':
-
-            if get_parameter(
-                param_name=f'confirm-{view_name}',
-                message=f'Delete athena table {view_name}?',
-                choices=['yes', 'no'],
-                default='no') == 'yes':
-                try:
-                    # self.glue.ensure_table_deleted(
-                    #     name=view_name,
-                    #     catalog=self.athena.CatalogName,
-                    #     database=self.athena.DatabaseName,
-                    # )
-                    self.athena.execute_query(
-                        f'DROP TABLE IF EXISTS {view_name};',
-                        catalog=self.athena.CatalogName,
-                        database=self.athena.DatabaseName,
-                    )
-                except Exception as exc:
-                    logger.error(exc)
-                    print(f'Table {view_name} cannot be deleted: {exc}')
-                else:
-                    del self.athena._metadata[view_name]
-                    logger.info(f'View {view_name} deleted')
-                    print(f'Table {view_name} deleted')
-
+            print(f'Deleting table {view_name}')
+            self.athena.delete_table(view_name)
         else:
-            if get_parameter(
-                param_name=f'confirm-{view_name}',
-                message=f'Delete athena view {view_name}?',
-                choices=['yes', 'no'],
-                default='no') == 'yes':
-                try:
-                    self.athena.execute_query(
-                        f'DROP VIEW IF EXISTS {view_name};',
-                        catalog=self.athena.CatalogName,
-                        database=self.athena.DatabaseName,
-                    )
-                except Exception as exc:
-                    logger.debug(exc)
-                    logger.error(f'View {view_name} cannot be deleted: {exc}')
-                else:
-                    del self.athena._metadata[view_name]
-                    logger.info(f'View {view_name} deleted')
-                    print(f'View {view_name} deleted')
+            print(f'Deleting view  {view_name}')
+            self.athena.delete_view(view_name)
 
         # manage dependancies
-        for dependancy_view in definition.get('dependsOn', {}).get('views', []):
+        for dependancy_view in list(set(definition.get('dependsOn', {}).get('views', []))):
             self.delete_view(dependancy_view)
 
         return True
@@ -667,7 +634,7 @@ class Cid:
                     click.echo('failed to load, dumping error message')
                     print(json.dumps(e, indent=4, sort_keys=True, default=str))
         except FileNotFoundError:
-            print('not found')
+            logger.debug('local overrides file not found')
 
         # Update dashboard
         click.echo('\nUpdating...', nl=False)
