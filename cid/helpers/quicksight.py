@@ -745,6 +745,7 @@ class QuickSight():
             logger.info(f'Creating dataset {dataset.get("Name")} ({dataset_id})')
         except self.client.exceptions.ResourceExistsException:
             logger.info(f'Dataset {dataset.get("Name")} already exists')
+            return None #FXIME: add wait for dataset to be discoverable
 
         logger.info(f'Waiting for {dataset.get("Name")} to be created')
         deadline = time.time() + 60
