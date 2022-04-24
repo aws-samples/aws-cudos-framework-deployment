@@ -740,23 +740,23 @@ class QuickSight():
         dataset.update({'AwsAccountId': self.account_id})
         dataset_id = dataset.get('DataSetId')
         try:
+            logger.info(f'Creating dataset {dataset.get("Name")} ({dataset_id})')
             response = self.client.create_data_set(**dataset)
             dataset_id = response.get('DataSetId')
-            logger.info(f'Creating dataset {dataset.get("Name")} ({dataset_id})')
         except self.client.exceptions.ResourceExistsException:
-            logger.info(f'Dataset {dataset.get("Name")} already exists')
+            logger.error(f'Dataset {dataset.get("Name")} already exists')
 
         logger.info(f'Waiting for {dataset.get("Name")} to be created')
         deadline = time.time() + 60
         while time.time() < deadline:
             _dataset = self.describe_dataset(dataset_id)
-            if 'Arn' in _dataset:
+            if _dataset and 'Arn' in _dataset:
                 break
             else:
                 time.sleep(poll_interval)
         else:
-            logger.error(f'Dataset {dataset.get("Name")} is not discoverable. Retry, or identify and delete the dataset with dashboard_id={dataset_id} and then Retry')
-            return None
+            logger.critical(f'Dataset {dataset.get("Name")} is not discoverable. Retry, or identify and delete the dataset with dashboard_id={dataset_id} and then Retry')
+            exit(1)
         logger.info(f'Dataset {_dataset.get("Name")} is created')
         return dataset_id
 
