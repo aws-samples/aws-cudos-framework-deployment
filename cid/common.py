@@ -404,21 +404,21 @@ class Cid:
             logger.info(f'views {view_name} is shared. Skipping.')
             return False
 
-        used_views = sum([dashboard.views for dashboard in self.qs.dashboards or {}], [])
+        used_views = sum([dashboard.views for dashboard in (self.qs.dashboards or {}).values()], [])
         if view_name in used_views:
             print(f'{view_name} is used by other dashboards. Skipping')
             return False
 
         # self.athena.discover_views([view_name])
-        # if view_name not in self.athena._metadata.keys():
-        #     return False
-
-        if definition.get('type', '') == 'Glue_Table':
-            print(f'Deleting table {view_name}')
-            self.athena.delete_table(view_name)
+        if view_name not in self.athena._metadata.keys():
+            print(f'not found table for deletion {view_name}')
         else:
-            print(f'Deleting view  {view_name}')
-            self.athena.delete_view(view_name)
+            if definition.get('type', '') == 'Glue_Table':
+                print(f'Deleting table {view_name}')
+                self.athena.delete_table(view_name)
+            else:
+                print(f'Deleting view  {view_name}')
+                self.athena.delete_view(view_name)
 
         # manage dependancies
         for dependancy_view in list(set(definition.get('dependsOn', {}).get('views', []))):
