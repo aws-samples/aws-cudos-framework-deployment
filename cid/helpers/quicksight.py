@@ -738,14 +738,13 @@ class QuickSight():
         poll_interval = 1
         max_timeout = 60
         dataset.update({'AwsAccountId': self.account_id})
-        dataset_id = None
+        dataset_id = dataset.get('DataSetId')
         try:
             response = self.client.create_data_set(**dataset)
             dataset_id = response.get('DataSetId')
             logger.info(f'Creating dataset {dataset.get("Name")} ({dataset_id})')
         except self.client.exceptions.ResourceExistsException:
             logger.info(f'Dataset {dataset.get("Name")} already exists')
-            return None #FXIME: add wait for dataset to be discoverable
 
         logger.info(f'Waiting for {dataset.get("Name")} to be created')
         deadline = time.time() + 60
@@ -756,7 +755,7 @@ class QuickSight():
             else:
                 time.sleep(poll_interval)
         else:
-            logger.info(f'Dataset {dataset.get("Name")} is not created before timeout.')
+            logger.error(f'Dataset {dataset.get("Name")} is not discoverable. Retry, or identify and delete the dataset with dashboard_id={dataset_id} and then Retry')
             return None
         logger.info(f'Dataset {_dataset.get("Name")} is created')
         return dataset_id
