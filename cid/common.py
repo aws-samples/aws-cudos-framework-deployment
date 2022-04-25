@@ -353,7 +353,7 @@ class Cid:
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
             datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
         else:
-            datasets = next((d.get('dependsOn', {}).get('datasets', []) for d in self.resources.get('dashboards').values() if d.get('dashboardId') == dashboard_id ), None)
+            datasets = next((d.get('dependsOn', {}).get('datasets', []) for d in self.qs.supported_dashboards.values() if d.get('dashboardId') == dashboard_id ), None)
 
         try:
             # Execute query
@@ -400,16 +400,14 @@ class Cid:
         if view_name not in self.resources['views']:
             return False
         definition = self.resources['views'].get(view_name)
-        if definition.get('File', '').startswith('shared/'):
-            logger.info(f'views {view_name} is shared. Skipping.')
-            return False
 
+        # TODO show dashboard name here
         used_views = sum([dashboard.views for dashboard in (self.qs.dashboards or {}).values()], [])
         if view_name in used_views:
             print(f'{view_name} is used by other dashboards. Skipping')
             return False
-
-        # self.athena.discover_views([view_name])
+        
+        self.athena.discover_views([view_name])
         if view_name not in self.athena._metadata.keys():
             print(f'not found table for deletion {view_name}')
         else:
@@ -714,7 +712,7 @@ class Cid:
                         raw_template = json.loads(resource_string(dataset_definition.get(
                             'providedBy'), f'data/datasets/{dataset_file}').decode('utf-8'))
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
-                        if ds.get('Name') == dataset_name:
+                        if ds and ds.get('Name') == dataset_name:
                             missing_datasets.remove(dataset_name)
                             print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
                 except FileNotFoundError:

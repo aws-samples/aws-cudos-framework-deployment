@@ -23,7 +23,7 @@ class Glue():
         except self.glue.client.exceptions.AlreadyExistsException:
             logger.info(f'Glue table "{view_name}" exists')
 
-    def ensure_table_deleted(self, name, catalog, database):
+    def delete_table(self, name, catalog, database):
         """ Delete an AWS Glue table """
         try:
             return self.client.delete_table(

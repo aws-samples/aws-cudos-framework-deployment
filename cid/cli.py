@@ -15,21 +15,13 @@ print(f'{prog_name} {version}\n')
 def cid_command(func):
     def wrapper(ctx, **kwargs):
         # Complete kwargs with other parameters
-        all_yes = kwargs.pop('yes', None)
-        if '-y' in ctx.args:
-            all_yes = True
-            ctx.args.remove('-y')
-        if '--yes' in ctx.args:
-            all_yes = True
-            ctx.args.remove('--yes')
-
         if len(ctx.args) % 2 != 0:
             print(f"Unknown extra argument, or an option without value {ctx.args}")
             exit(-1)
         for i in range(0, len(ctx.args), 2):
             kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
 
-        set_parameters(kwargs, all_yes=all_yes)
+        set_parameters(kwargs, all_yes=ctx.obj.all_yes)
         res = func(ctx, **kwargs)
         params = get_parameters()
         logger.info('Next time you can use following command:')
@@ -56,6 +48,7 @@ def cid_command(func):
 @click.option('--aws_secret_access_key', help='', default=None)
 @click.option('--aws_session_token', help='', default=None)
 @click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.pass_context
 def main(ctx, **kwargs):
 
@@ -71,6 +64,7 @@ def main(ctx, **kwargs):
         aws_session_token=kwargs.get('aws_session_token', None)
     )
     ctx.obj = app
+    ctx.obj.all_yes = kwargs.get('yes')
 
 
 @cid_command

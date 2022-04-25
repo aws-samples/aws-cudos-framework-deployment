@@ -229,15 +229,15 @@ class QuickSight():
         return self._user
 
     @property
-    def supported_dashboards(self) -> list:
+    def supported_dashboards(self) -> dict:
         return self._resources.get('dashboards')
 
     @property
-    def supported_datasets(self) -> list:
+    def supported_datasets(self) -> dict:
         return self._resources.get('datasets')
 
     @property
-    def supported_views(self) -> list:
+    def supported_views(self) -> dict:
         return self._resources.get('views')
 
     @property
@@ -303,10 +303,10 @@ class QuickSight():
             all_views = []
             def _recoursive_add_view(view):
                 all_views.append(view)
-                for dep_view in self.supported_views.get(view, {}).get('dependsOn',{}).get('views', []):
+                for dep_view in self.supported_views.get(view, {}).get('dependsOn', {}).get('views', []):
                     _recoursive_add_view(dep_view)
             for dataset_name in dashboard.datasets.keys():
-                for view in self.supported_datasets.get(dataset_name).get('dependsOn',{}).get('views', []):
+                for view in self.supported_datasets.get(dataset_name).get('dependsOn', {}).get('views', []):
                     _recoursive_add_view(view)
             dashboard.views = all_views
             self._dashboards = self._dashboards or {}
@@ -427,7 +427,7 @@ class QuickSight():
 
     def discover_dashboards(self, display: bool=False, refresh: bool=False) -> None:
         """ Discover deployed dashboards """
-        if refresh:
+        if refresh or self._dashboards is None:
             self._dashboards = {}
         logger.info('Discovering deployed dashboards')
         deployed_dashboards=self.list_dashboards()
@@ -679,19 +679,29 @@ class QuickSight():
             logger.info(f'Deleted dataset {id}')
 
 
-    def describe_dataset(self, id) -> dict:
+    def describe_dataset(self, id, timeout: int=1) -> dict:
         """ Describes an AWS QuickSight dataset """
-        if not self._datasets.get(id):
-            logger.info(f'Describing dataset {id}')
+        if id in self._datasets:
+            return self._datasets.get(id)
+        poll_interval = 1
+        _dataset = None
+        deadline = time.time() + timeout
+        while time.time() <= deadline:
             try:
+                logger.info(f'Describing dataset {id}')
                 _dataset = self.client.describe_data_set(AwsAccountId=self.account_id,DataSetId=id).get('DataSet')
                 logger.info(f'Saving dataset details "{_dataset.get("Name")}" ({_dataset.get("DataSetId")})')
                 self._datasets.update({_dataset.get('DataSetId'): _dataset})
+                break
             except self.client.exceptions.ResourceNotFoundException:
-                logger.info(f'DataSetId {id} do not exist')
+                logger.info(f'DataSetId {id} not found')
+                time.sleep(poll_interval)
+                continue
             except self.client.exceptions.AccessDeniedException:
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
-        return self._datasets.get(id, dict())
+                return None
+
+        return self._datasets.get(id, None)
 
     def discover_datasets(self):
         """ Discover datasets in the account """
@@ -759,30 +769,24 @@ class QuickSight():
                     return user
             return None
 
-    def create_dataset(self, dataset: dict) -> dict:
+    def create_dataset(self, definition: dict) -> dict:
         """ Creates an AWS QuickSight dataset """
         poll_interval = 1
-        max_timeout = 60
-        dataset.update({'AwsAccountId': self.account_id})
-        dataset_id = dataset.get('DataSetId')
+        max_timeout = 5
+        definition.update({'AwsAccountId': self.account_id})
+        dataset_id = definition.get('DataSetId')
         try:
-            logger.info(f'Creating dataset {dataset.get("Name")} ({dataset_id})')
-            response = self.client.create_data_set(**dataset)
-            dataset_id = response.get('DataSetId')
+            logger.info(f'Creating dataset {definition.get("Name")} ({dataset_id})')
+            response = self.client.create_data_set(**definition)
+            #assert response.get('Arn'), f'Failed to create datasets {definition.get("Name")}. response={response}'
         except self.client.exceptions.ResourceExistsException:
-            logger.error(f'Dataset {dataset.get("Name")} already exists')
-
-        logger.info(f'Waiting for {dataset.get("Name")} to be created')
-        deadline = time.time() + 60
-        while time.time() < deadline:
-            _dataset = self.describe_dataset(dataset_id)
-            if _dataset and 'Arn' in _dataset:
-                break
-            else:
-                time.sleep(poll_interval)
-        else:
-            logger.critical(f'Dataset {dataset.get("Name")} is not discoverable. Retry, or identify and delete the dataset with dashboard_id={dataset_id} and then Retry')
+            logger.info(f'Dataset {definition.get("Name")} already exists')
+        logger.info(f'Waiting for {definition.get("Name")} to be created')
+        _dataset = self.describe_dataset(dataset_id, timeout=5)
+        if not _dataset or 'Arn' not in _dataset:
+            logger.critical(f'Dataset {definition.get("Name")} is not discoverable. Retry, or identify and delete the dataset with id={dataset_id} and retry.')
             exit(1)
+
         logger.info(f'Dataset {_dataset.get("Name")} is created')
         return dataset_id
 

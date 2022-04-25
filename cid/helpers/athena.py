@@ -310,7 +310,7 @@ class Athena():
 
     def wait_for_view(self, view_name: str, poll_interval=1, timeout=60) -> None:
         deadline = time.time() + timeout
-        while time.time() < deadline:
+        while time.time() <= deadline:
             self.discover_views([view_name])
             if view_name in self._metadata.keys():
                 logger.info(f'view {view_name} exists')
@@ -337,8 +337,8 @@ class Athena():
                 database=database,
             )
         except Exception as exc:
-            logger.debug(exc)
-            logger.error(f'Table {name} cannot be deleted: {exc}')
+            logger.debug(exc, stack_info=True)
+            logger.info(f'Table {name} cannot be deleted: {exc}')
             return False
         else:
             if name in self._metadata: del self._metadata[name]
@@ -360,8 +360,8 @@ class Athena():
                 database=database,
             )
         except Exception as exc:
-            logger.debug(exc)
-            logger.error(f'View {name} cannot be deleted: {exc}')
+            logger.debug(exc, stack_info=True)
+            logger.info(f'View {name} cannot be deleted: {exc}')
             return False
         else:
             if name in self._metadata: del self._metadata[name]
