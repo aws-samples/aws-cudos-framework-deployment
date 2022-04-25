@@ -240,7 +240,7 @@ class Cid:
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard_definition.get("dashboardId")}.json'
-        logger.debug(f'Looking for local overrides file "{local_overrides}"...')
+        logger.info(f'Looking for local overrides file "{local_overrides}"...')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
                 try:
@@ -253,7 +253,7 @@ class Cid:
                     click.echo('failed to load, dumping error message')
                     print(json.dumps(e, indent=4, sort_keys=True, default=str))
         except FileNotFoundError:
-            logger.debug('local overrides file not found')
+            logger.info('local overrides file not found')
 
         # Get QuickSight template details
         latest_template = self.qs.describe_template(template_id=dashboard_definition.get(
@@ -619,7 +619,7 @@ class Cid:
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard.id}.json'
-        logger.debug(f'Looking for local overrides file "{local_overrides}"')
+        logger.info(f'Looking for local overrides file "{local_overrides}"')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
                 try:
@@ -632,7 +632,7 @@ class Cid:
                     click.echo('failed to load, dumping error message')
                     print(json.dumps(e, indent=4, sort_keys=True, default=str))
         except FileNotFoundError:
-            logger.debug('local overrides file not found')
+            logger.info('local overrides file not found')
 
         # Update dashboard
         click.echo('\nUpdating...', nl=False)
