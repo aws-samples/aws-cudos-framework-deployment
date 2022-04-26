@@ -1,6 +1,6 @@
 CREATE OR REPLACE VIEW compute_optimizer_ebs_volume_options AS (
 SELECT
-    TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %h:%i:%s')) as lastrefreshtimestamp_utc,
+    TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %H:%i:%s')) as lastrefreshtimestamp_utc,
     accountid as accountid,
     volumearn as arn,
     try(split_part(volumearn, ':', 4)) as region,
@@ -82,7 +82,7 @@ WHERE
     volumearn LIKE '%arn:%'
 
 UNION SELECT
-    TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %h:%i:%s')) as lastrefreshtimestamp_utc,
+    TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %H:%i:%s')) as lastrefreshtimestamp_utc,
     accountid as accountid,
     volumearn as arn,
     try(split_part(volumearn, ':', 4)) as region,
@@ -160,7 +160,7 @@ WHERE
 
 
 UNION SELECT
-    TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %h:%i:%s')) as lastrefreshtimestamp_utc,
+    TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %H:%i:%s')) as lastrefreshtimestamp_utc,
     accountid as accountid,
     volumearn as arn,
     try(split_part(volumearn, ':', 4)) as region,
@@ -238,7 +238,7 @@ WHERE
   AND recommendationoptions_2_estimatedmonthlysavings_currency <> ''
 
   UNION SELECT
-    TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %h:%i:%s')) as lastrefreshtimestamp_utc,
+    TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %H:%i:%s')) as lastrefreshtimestamp_utc,
     accountid as accountid,
     volumearn as arn,
     try(split_part(volumearn, ':', 4)) as region,

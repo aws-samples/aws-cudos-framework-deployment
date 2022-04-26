@@ -4,7 +4,7 @@ SELECT * FROM (
 
     SELECT
 
-     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , autoscalinggrouparn arn
    , TRY("split_part"(autoscalinggrouparn, ':', 4)) region
@@ -110,7 +110,7 @@ SELECT * FROM (
 
 UNION SELECT
 
-     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , autoscalinggrouparn arn
    , TRY("split_part"(autoscalinggrouparn, ':', 4)) region
@@ -216,7 +216,7 @@ UNION SELECT
 
 UNION SELECT
 
-     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , autoscalinggrouparn arn
    , TRY("split_part"(autoscalinggrouparn, ':', 4)) region
@@ -324,7 +324,7 @@ UNION SELECT
 
 UNION SELECT
 
-     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , autoscalinggrouparn arn
    , TRY("split_part"(autoscalinggrouparn, ':', 4)) region

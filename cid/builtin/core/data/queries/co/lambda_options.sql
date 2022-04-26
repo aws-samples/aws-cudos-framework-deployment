@@ -1,7 +1,7 @@
 CREATE OR REPLACE VIEW compute_optimizer_lambda_options AS
 (
    SELECT
-     TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , functionarn arn
    , TRY("split_part"(functionarn, ':', 4)) region
@@ -69,7 +69,7 @@ CREATE OR REPLACE VIEW compute_optimizer_lambda_options AS
      compute_optimizer_lambda_lines
    WHERE (functionarn LIKE '%arn:%')
 UNION SELECT
-     TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , functionarn arn
    , TRY("split_part"(functionarn, ':', 4)) region
@@ -125,7 +125,7 @@ UNION SELECT
         functionarn LIKE '%arn:%'
 
 UNION SELECT
-     TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , functionarn arn
    , TRY("split_part"(functionarn, ':', 4)) region
@@ -183,7 +183,7 @@ UNION SELECT
 
 
 UNION SELECT
-     TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY(date_parse(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , functionarn arn
    , TRY("split_part"(functionarn, ':', 4)) region
