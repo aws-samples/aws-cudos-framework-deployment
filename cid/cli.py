@@ -112,7 +112,7 @@ def status(ctx, dashboard_id):
 @click.option('-y', '--yes', help='Answer Yes to all confirmation questions', default=False, is_flag=True)
 @cid_command
 def delete(ctx, dashboard_id, **kwargs):
-    """Delete Dashboard"""
+    """Delete Dashboard and all dependancies unused by other CID-managed dasboards (including datasets, views and tables)"""
     ctx.obj.delete(dashboard_id, **kwargs)
 
 
