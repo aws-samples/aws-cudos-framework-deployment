@@ -1,7 +1,7 @@
 CREATE OR REPLACE VIEW compute_optimizer_ec2_instance_options AS
 (
    SELECT
-     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , instancearn arn
    , TRY("split_part"(instancearn, ':', 4)) region
@@ -115,7 +115,7 @@ CREATE OR REPLACE VIEW compute_optimizer_ec2_instance_options AS
      compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
 UNION SELECT
-     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , instancearn arn
    , TRY("split_part"(instancearn, ':', 4)) region
@@ -205,7 +205,7 @@ UNION SELECT
      compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
 UNION SELECT
-     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , instancearn arn
    , TRY("split_part"(instancearn, ':', 4)) region
@@ -297,7 +297,7 @@ UNION SELECT
    AND recommendationoptions_2_estimatedmonthlysavings_currency <> ''
 
 UNION SELECT
-     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %h:%i:%s')) lastrefreshtimestamp_utc
+     TRY("date_parse"(lastrefreshtimestamp_utc, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , instancearn arn
    , TRY("split_part"(instancearn, ':', 4)) region
