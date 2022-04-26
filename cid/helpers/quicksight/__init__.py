@@ -2,175 +2,22 @@ import re
 import time
 from typing import Dict, Union
 import click
-import json
 from deepmerge import always_merger
-from pathlib import Path
-import os
 import uuid
 
 from cid.utils import get_parameter
+from cid.helpers.quicksight.dashboard import Dashboard
+from cid.helpers.quicksight.dataset import Dataset
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-class Dashboard():
-    def __init__(self, dashboard: dict) -> None:
-        self.dashboard: dict = dashboard
-        # Initialize properties
-        self.datasets = dict()
-        self._status = str()
-        self.status_detail = str()
-        # Source template in origin account
-        self.sourceTemplate = dict()
-        # Dashboard definition
-        self.definition = dict()
-        # Locally saved deployment
-        self.localConfig = dict()
-
-    @property
-    def id(self) -> str:
-        return self.get_property('DashboardId')
-
-    @property
-    def name(self) -> str:
-        return self.get_property('Name')
-    
-    @property
-    def arn(self) -> str:
-        return self.get_property('Arn')
-
-    @property
-    def account_id(self) -> str:
-        return self.get_property('Arn').split(':')[4]
-
-    @property
-    def version(self) -> dict:
-        return self.get_property('Version')
-
-    @property
-    def latest(self) -> bool:
-        return self.latest_version == self.deployed_version
-
-    @property
-    def latest_version(self) -> int:
-        return int(self.sourceTemplate.get('Version', dict()).get('VersionNumber', -1))
-    
-    @property
-    def deployed_arn(self) -> str:
-        return self.version.get('SourceEntityArn')
-    
-    @property
-    def deployed_version(self) -> int:
-        try:
-            return int(self.deployed_arn.split('/')[-1])
-        except Exception as e:
-            logger.debug(e, stack_info=True)
-            return 0
- 
-    @property
-    def health(self) -> bool:
-        return self.status not in ['broken']
-
-    @property
-    def status(self) -> str:
-        if not self._status:
-            # Deployment failed
-            if self.version.get('Status') not in ['CREATION_SUCCESSFUL']:
-                self._status = 'broken'
-                self.status_detail = f"{self.version.get('Status')}: {self.version.get('Errors')}"
-            # Not dicovered yet
-            elif not self.definition:
-                self._status = 'undiscovered'
-            # Missing dataset
-            elif not self.datasets or (len(self.datasets) < len(self.definition.get('dependsOn').get('datasets'))):
-                self.status_detail = 'missing dataset(s)'
-                self._status = 'broken'
-                logger.info(f"Found datasets: {self.datasets}")
-                logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
-            # Source Template has changed
-            elif self.deployed_arn and self.sourceTemplate.get('Arn') and not self.deployed_arn.startswith(self.sourceTemplate.get('Arn')):
-                self._status = 'legacy'
-            else:
-                if self.latest_version > self.deployed_version:
-                    self._status = f'update available {self.deployed_version}->{self.latest_version}'
-                elif self.latest:
-                    self._status = 'up to date'
-        return self._status
-
-    @property
-    def templateId(self) -> str:
-        return str(self.version.get('SourceEntityArn').split('/')[1])
-
-    def get_property(self, property: str) -> str:
-        return self.dashboard.get(property)
-    
-    def find_local_config(self) -> Union[dict, None]:
-
-        if self.localConfig:
-            return self.localConfig
-        # Set base paths
-        abs_path = Path().absolute()
-
-        # Load TPL file
-        file_path = None
-        files_to_find = [
-            f'work/{self.account_id}/{self.id.lower()}-update-dashboard.json',
-            f'work/{self.account_id}/{self.id.lower()}-create-dashboard.json',
-            f'work/{self.account_id}/{self.id.lower()}-update-dashboard-{self.account_id}.json',
-            f'work/{self.account_id}/{self.id.lower()}-create-dashboard-{self.account_id}.json',
-        ]
-        files_to_find += [f'work/{self.account_id}/{f.lower()}' for f in self.definition.get('localConfigs', list())]
-        for file in files_to_find:
-            logger.info(f'Checking local config file {file}')
-            if os.path.isfile(os.path.join(abs_path, file)):
-                file_path = os.path.join(abs_path, file)
-                logger.info(f'Found local config file {file}, using it')
-                break
-            
-        if file_path:
-            try:
-                with open(file_path) as f:
-                    self.localConfig = json.loads(f.read())
-                    if self.localConfig:
-                        for dataset in self.localConfig.get('SourceEntity').get('SourceTemplate').get('DataSetReferences'):
-                            if not self.datasets.get(dataset.get('DataSetPlaceholder')):    
-                                logger.info(f"Using dataset {dataset.get('DataSetPlaceholder')} ({dataset.get('DataSetId')})")
-                                self.datasets.update({dataset.get('DataSetPlaceholder'): dataset.get('DataSetArn')})
-            except:
-                logger.info(f'Failed to load local config file {file_path}')
-
-    def display_status(self):
-        print('\nDashboard status:')
-        print(f"  Name (id): {self.name} ({self.id})")
-        print(f"  Status: {self.status}")
-        print(f"  Health: {'healthy' if self.health else 'unhealthy'}")
-        if self.status_detail:
-            print(f"  Status detail: {self.status_detail}")
-        if self.latest:
-            print(f"  Version: {self.deployed_version}")
-        else:
-            print(f"  Version (deployed, latest): {self.deployed_version}, {self.latest_version}")
-        if self.localConfig:
-            print(f"  Local config: {self.localConfig.get('SourceEntity').get('SourceTemplate').get('Name')}")
-        if self.datasets:
-            print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
-        print('\n')
-        if click.confirm('Display dashboard raw data?'):
-            print(json.dumps(self.dashboard, indent=4, sort_keys=True, default=str))
-    
-    def display_url(self, url_template: str, launch: bool = False, **kwargs):
-        url = url_template.format(dashboard_id=self.id, **kwargs)
-        print(f"#######\n####### {self.name} is available at: " + url + "\n#######")
-        _supported_env = os.environ.get('AWS_EXECUTION_ENV') not in ['CloudShell', 'AWS_Lambda']
-        if _supported_env and launch and click.confirm('Do you wish to open it in your browser?'):
-                click.launch(url)
-
 class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
     _dashboards: Dict[str, Dashboard] = {}
-    _datasets = dict()
+    _datasets: Dict[str, Dataset] = {}
     _datasources: dict() = {}
     _user: dict = None
 
@@ -271,11 +118,11 @@ class QuickSight():
                 dataset_id = dataset.split('/')[-1]
                 try:
                     _dataset = self.describe_dataset(id=dataset_id)
-                    if not _dataset:
+                    if not isinstance(_dataset, Dataset):
                         logger.info(f'Dataset "{dataset_id}" is missing')
                     else:
-                        logger.info(f"Using dataset \"{_dataset.get('Name')}\" ({_dataset.get('DataSetId')} for {dashboard.name})")
-                        dashboard.datasets.update({_dataset.get('Name'): _dataset.get('Arn')})
+                        logger.info(f"Using dataset \"{_dataset.name}\" ({_dataset.id} for {dashboard.name})")
+                        dashboard.datasets.update({_dataset.name: _dataset.arn})
                 except self.client.exceptions.AccessDeniedException:
                     logger.info(f'Looking local config for {dashboardId}')
                     dashboard.find_local_config()
@@ -399,9 +246,10 @@ class QuickSight():
                 self.describe_data_source(v.get('DataSourceId'))
         except Exception as e:
             logger.debug(e, stack_info=True)
-            for _,v in self.datasets.items():
-                for _,map in v.get('PhysicalTableMap').items():
-                    self.describe_data_source(map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
+            for _,v in self._datasets.items():
+                for d in v.datasources:
+                    logger.info(f'Discovering data source {d}')
+                    self.describe_data_source(d)
 
     def discover_dashboards(self, display: bool=False) -> None:
         """ Discover deployed dashboards """
@@ -647,25 +495,28 @@ class QuickSight():
             self._datasets.pop(id)
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied deleting dataset')
+            return False
         except self.client.exceptions.ResourceNotFoundException:
             logger.info('Dataset does not exist')
+            return False
         else:
             logger.info(f'Deleted dataset {id}')
+            return True
 
 
-    def describe_dataset(self, id) -> dict:
+    def describe_dataset(self, id: str) -> Dataset:
         """ Describes an AWS QuickSight dataset """
         if not self._datasets.get(id):
             logger.info(f'Describing dataset {id}')
             try:
-                _dataset = self.client.describe_data_set(AwsAccountId=self.account_id,DataSetId=id).get('DataSet')
-                logger.info(f'Saving dataset details "{_dataset.get("Name")}" ({_dataset.get("DataSetId")})')
-                self._datasets.update({_dataset.get('DataSetId'): _dataset})
+                _dataset = Dataset(self.client.describe_data_set(AwsAccountId=self.account_id,DataSetId=id).get('DataSet'))
+                logger.info(f'Saving dataset details "{_dataset.name}" ({_dataset.id})')
+                self._datasets.update({_dataset.id: _dataset})
             except self.client.exceptions.ResourceNotFoundException:
                 logger.info(f'DataSetId {id} do not exist')
             except self.client.exceptions.AccessDeniedException:
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
-        return self._datasets.get(id, dict())
+        return self._datasets.get(id, None)
 
     def discover_datasets(self):
         """ Discover datasets in the account """
@@ -733,31 +584,31 @@ class QuickSight():
                     return user
             return None
 
-    def create_dataset(self, dataset: dict) -> dict:
+    def create_dataset(self, definition: dict) -> str:
         """ Creates an AWS QuickSight dataset """
         poll_interval = 1
         max_timeout = 60
-        dataset.update({'AwsAccountId': self.account_id})
+        definition.update({'AwsAccountId': self.account_id})
         dataset_id = None
         try:
-            response = self.client.create_data_set(**dataset)
+            logger.info(f'Creating dataset {definition.get("Name")} ({dataset_id})')
+            response = self.client.create_data_set(**definition)
             dataset_id = response.get('DataSetId')
-            logger.info(f'Creating dataset {dataset.get("Name")} ({dataset_id})')
         except self.client.exceptions.ResourceExistsException:
-            logger.info(f'Dataset {dataset.get("Name")} already exists')
+            logger.info(f'Dataset {definition.get("Name")} already exists')
 
-        logger.info(f'Waiting for {dataset.get("Name")} to be created')
-        deadline = time.time() + 60
+        logger.info(f'Waiting for {definition.get("Name")} to be created')
+        deadline = time.time() + max_timeout
         while time.time() < deadline:
             _dataset = self.describe_dataset(dataset_id)
-            if 'Arn' in _dataset:
+            if isinstance(_dataset, Dataset):
                 break
             else:
                 time.sleep(poll_interval)
         else:
-            logger.info(f'Dataset {dataset.get("Name")} is not created before timeout.')
+            logger.info(f'Dataset {definition.get("Name")} is not created before timeout.')
             return None
-        logger.info(f'Dataset {_dataset.get("Name")} is created')
+        logger.info(f'Dataset {_dataset.name} is created')
         return dataset_id
 
 

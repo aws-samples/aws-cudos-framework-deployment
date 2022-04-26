@@ -234,7 +234,7 @@ class Cid:
             dashboard_definition.update({'datasets': {}})
         dashboard_datasets = dashboard_definition.get('datasets')
         for dataset_name in required_datasets:
-            arn = next((v.get('Arn') for v in self.qs._datasets.values() if v.get('Name') == dataset_name), None)
+            arn = next((v.arn for v in self.qs._datasets.values() if v.name == dataset_name), None)
             if arn:
                 dashboard_datasets.update({dataset_name: arn})
 
@@ -280,8 +280,8 @@ class Cid:
                 f"#######\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
         except Exception as e:
             # Catch exception and dump a reason
-            click.echo('failed, dumping error message')
-            print(json.dumps(e, indent=4, sort_keys=True, default=str))
+            logger.debug(e, stack_info=True)
+            print(f'failed with an error message: {e}')
             self.delete(dashboard_id)
             exit(1)
 
@@ -361,8 +361,8 @@ class Cid:
             print('not found')
         except Exception as e:
             # Catch exception and dump a reason
-            click.echo('failed, dumping error message')
-            print(json.dumps(e, indent=4, sort_keys=True, default=str))
+            logger.debug(e, stack_info=True)
+            print(f'failed with an error message: {e}')
 
 
     def cleanup(self):
@@ -372,13 +372,13 @@ class Cid:
         self.qs.discover_datasets()
         used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
         for v in list(self.qs._datasets.values()):
-            if v.get('Arn') not in used_datasets and click.confirm(f'Delete unused dataset {v.get("Name")}?'):
-                logger.info(f'Deleting dataset {v.get("Name")} ({v.get("Arn")})')
-                self.qs.delete_dataset(v.get('DataSetId'))
-                logger.info(f'Deleted dataset {v.get("Name")} ({v.get("Arn")})')
-                print(f'Deleted dataset {v.get("Name")} ({v.get("Arn")})')
+            if v.arn not in used_datasets and click.confirm(f'Delete unused dataset {v.name}?'):
+                logger.info(f'Deleting dataset {v.name} ({v.arn})')
+                self.qs.delete_dataset(v.id)
+                logger.info(f'Deleted dataset {v.name} ({v.arn})')
+                print(f'Deleted dataset {v.name} ({v.arn})')
             else:
-                print(f'Dataset {v.get("Name")} ({v.get("Arn")}) is in use')
+                print(f'Dataset {v.name} ({v.arn}) is in use')
 
 
     def share(self, dashboard_id, **kwargs):
@@ -513,18 +513,17 @@ class Cid:
                 }]
             }
             _datasources = {}
-            for ds in dashboard.datasets.values():
-                _id = ds.split('/')[-1]
+            for _id in dashboard.datasets.values():
                 logger.info(f'Sharing dataset {_id}')
                 self.qs.update_data_set_permissions(DataSetId=_id, **data_set_permissions)
                 logger.info(f'Sharing dataset {_id} complete')
-                _dataset = self.qs.describe_dataset(_id)
+                _dataset = self.qs._datasets.get(_id)
                 # Extract DataSources from DataSet
-                for _,map in _dataset.get('PhysicalTableMap').items():
-                    _datasource = self.qs.describe_data_source(map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
+                for v in _dataset.datasources:
+                    _datasource = self.qs.describe_data_source(v)
                     if not _datasources.get(_datasource.get('DataSourceId')):
                         _datasources.update({_datasource.get('DataSourceId'): _datasource})
-            
+
             for k, v in _datasources.items():
                 logger.info(f'Sharing data source "{v.get("Name")}" ({k})')
                 self.qs.update_data_source_permissions(DataSourceId=k, **data_source_permissions)
@@ -589,8 +588,8 @@ class Cid:
             self.track('updated', dashboard_id)
         except Exception as e:
             # Catch exception and dump a reason
-            click.echo('failed, dumping error message')
-            print(json.dumps(e, indent=4, sort_keys=True, default=str))
+            logger.debug(e, stack_info=True)
+            print(f'failed with an error message: {e}')
 
         return dashboard_id
 
@@ -612,7 +611,7 @@ class Cid:
             print('complete')
 
         found_datasets = sorted(
-            set(required_datasets).intersection([v.get('Name') for v in self.qs._datasets.values()]))
+            set(required_datasets).intersection([v.name for v in self.qs._datasets.values()]))
         missing_datasets = sorted(
             list(set(required_datasets).difference(found_datasets)))
 
@@ -717,8 +716,8 @@ class Cid:
                 id = _id.split('/')[-1]
                 try:
                     _dataset = self.qs.describe_dataset(id)
-                    if _dataset.get('Name') != dataset_name:
-                        print(f"\tFound dataset with a different name: {_dataset.get('Name')}, please provide another one")
+                    if _dataset.name != dataset_name:
+                        print(f"\tFound dataset with a different name: {_dataset.name}, please provide another one")
                         continue
                     self.qs._datasets.update({dataset_name: _dataset})
                     missing_datasets.remove(dataset_name)
@@ -729,7 +728,7 @@ class Cid:
                     continue
 
 
-    def create_dataset(self, dataset_definition) -> bool:
+    def create_dataset(self, dataset_definition: dict) -> bool:
 
         # Check for required views
         _views = dataset_definition.get('dependsOn').get('views')
@@ -801,11 +800,11 @@ class Cid:
                             logger.debug(e, stack_info=True)
                             continue
                         # Create a list of found datasets per dataset name
-                        if not found_datasets.get(_dataset.get('Name')):
-                            found_datasets.update({_dataset.get('Name'): dict()})
+                        if not found_datasets.get(_dataset.name):
+                            found_datasets.update({_dataset.name: dict()})
                         # Add datasets using Arn as a key
-                        if not found_datasets.get(_dataset.get('Name')).get(_dataset.get('Arn')):
-                            found_datasets.get(_dataset.get('Name')).update({_dataset.get('Arn'): _dataset})
+                        if not found_datasets.get(_dataset.name).get(_dataset.arn):
+                            found_datasets.get(_dataset.name).update({_dataset.arn: _dataset})
             except AttributeError:
                 # move to next saved deployment if the key is not present
                 continue

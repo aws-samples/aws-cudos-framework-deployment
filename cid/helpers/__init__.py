@@ -1,7 +1,7 @@
 from cid.helpers.athena import Athena
 from cid.helpers.cur import CUR
 from cid.helpers.glue import Glue
-from cid.helpers.quicksight import QuickSight, Dashboard
+from cid.helpers.quicksight import QuickSight, Dashboard, Dataset
 
 
-__all__ = ["Athena", "CUR", "Glue", "QuickSight", "Dashboard"]
+__all__ = ["Athena", "CUR", "Glue", "QuickSight", "Dashboard", "Dataset"]
