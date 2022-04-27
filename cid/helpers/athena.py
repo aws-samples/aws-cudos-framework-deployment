@@ -141,9 +141,6 @@ class Athena():
 
         return table_metadata
 
-    def purge_cache(self):
-        """ clean up metadata """
-        self._metadata = dict()
 
     def execute_query(self, sql_query, sleep_duration=1, database: str=None, catalog: str=None) -> str:
         """ Executes an AWS Athena Query """
