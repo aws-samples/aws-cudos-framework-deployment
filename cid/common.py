@@ -378,16 +378,21 @@ class Cid:
 
     def delete_dataset(self, dataset_name):
         if dataset_name not in self.resources['datasets']:
-            logger.info(f'{dataset_name} is not managed by CID. Skipping.')
+            logger.info(f'Dataset {dataset_name} is not managed by CID. Skipping.')
+            print(f'Dataset {dataset_name} is not managed by CID. Skipping.')
             return False
         used_datasets = self.qs.get_used_datasets()
         for dataset in list(self.qs._datasets.values()):
             if dataset.name == dataset_name:
-                if dataset.arn in used_datasets:
-                    logger.error(f'dataset is still used {dataset.get("Name")}. Skipping.')
-                    continue
-                print(f'Deleting dataset {dataset.name}')
-                self.qs.delete_dataset(dataset.id)
+                # Check if dataset is used in some other dashboard
+                for dashboard in (self.qs.dashboards or {}).values():
+                    if dataset.arn in dashboard.datasets.values():
+                        logger.info(f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
+                        print      (f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
+                        break
+                else:
+                    print(f'Deleting dataset {dataset.name}')
+                    self.qs.delete_dataset(dataset.id)
                 break
         else:
             print(f'not found dataset for deletion {dataset_name}')
@@ -400,11 +405,10 @@ class Cid:
             return False
         definition = self.resources['views'].get(view_name)
 
-        # TODO show dashboard name here
-        used_views = sum([dashboard.views for dashboard in (self.qs.dashboards or {}).values()], [])
-        if view_name in used_views:
-            print(f'{view_name} is used by other dashboards. Skipping')
-            return False
+        for dashboard in (self.qs.dashboards or {}).values():
+            if view_name in dashboard.views:
+                print(f'View {view_name} is used by dashboard "{dashboard.id}". Skipping')
+                return False
 
         self.athena.discover_views([view_name])
         if view_name not in self.athena._metadata.keys():
