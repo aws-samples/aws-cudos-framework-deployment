@@ -613,11 +613,19 @@ class Cid:
         click.echo(
             f"Latest template: {dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}")
         if dashboard.status == 'legacy':
-            click.confirm(
-                "\nDashboard template changed, update it anyway?", abort=True)
+            if get_parameter(
+                param_name=f'confirm-update',
+                message=f'Dashboard template changed, update it anyway?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+                exit()
         elif dashboard.latest:
-            click.confirm(
-                "\nNo updates available, should I update it anyway?", abort=True)
+            if get_parameter(
+                param_name=f'confirm-update',
+                message=f'No updates available, should I update it anyway?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+                exit()
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard.id}.json'
