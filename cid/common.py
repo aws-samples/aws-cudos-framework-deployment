@@ -367,7 +367,6 @@ class Cid:
             # Catch exception and dump a reason
             logger.debug(e, stack_info=True)
             print(f'failed with an error message: {e}')
-            logger.exception(e)
             return dashboard_id
 
         print('Processing dependencies')
@@ -426,6 +425,7 @@ class Cid:
 
     def cleanup(self):
         """Delete unused resources (QuickSight datasets, Athena views)"""
+
         self.qs.discover_dashboards()
         self.qs.discover_datasets()
         used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]

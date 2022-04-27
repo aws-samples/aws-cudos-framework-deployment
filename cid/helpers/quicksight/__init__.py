@@ -17,7 +17,7 @@ class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
     _dashboards: Dict[str, Dashboard] = None
-    _datasets = dict()
+    _datasets: Dict[str, Dataset] = {}
     _datasources: dict() = {}
     _user: dict = None
 
