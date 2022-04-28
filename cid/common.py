@@ -1,7 +1,7 @@
 from pkg_resources import resource_string
 
 from cid import utils
-from cid.helpers import Athena, CUR, Glue, QuickSight
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dataset
 from cid.helpers.account_map import AccountMap
 from cid.plugin import Plugin
 from cid.utils import get_parameter
@@ -381,7 +381,6 @@ class Cid:
             logger.info(f'Dataset {dataset_name} is not managed by CID. Skipping.')
             print(f'Dataset {dataset_name} is not managed by CID. Skipping.')
             return False
-        used_datasets = self.qs.get_used_datasets()
         for dataset in list(self.qs._datasets.values()):
             if dataset.name == dataset_name:
                 # Check if dataset is used in some other dashboard
@@ -726,7 +725,7 @@ class Cid:
                         raw_template = json.loads(resource_string(dataset_definition.get(
                             'providedBy'), f'data/datasets/{dataset_file}').decode('utf-8'))
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
-                        if ds and ds.get('Name') == dataset_name:
+                        if isinstance(ds, Dataset) and ds.name == dataset_name:
                             missing_datasets.remove(dataset_name)
                             print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
                 except FileNotFoundError:
