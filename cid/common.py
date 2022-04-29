@@ -24,6 +24,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def intersection(a, b):
+    return sorted(set(a).intersection(b))
+
+def difference(a, b):
+    return sorted(list(set(a).difference(b)))
+
 class Cid:
 
     def __init__(self, **kwargs) -> None:
@@ -206,7 +212,7 @@ class Cid:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
 
-    def deploy(self, **kwargs):
+    def deploy(self, recoursive=True, **kwargs):
         """ Deploy Dashboard """
         dashboard_id = get_parameter(
             param_name='dashboard-id',
@@ -227,7 +233,8 @@ class Cid:
             raise ValueError(f'Cannot find dashboard with id={dashboard_id} in ressources file.')
         required_datasets = dashboard_definition.get(
             'dependsOn', dict()).get('datasets', list())
-        self.create_datasets(required_datasets)
+        if recoursive:
+            self.create_datasets(required_datasets, recursive)
 
         # Prepare API parameters
         if not dashboard_definition.get('datasets'):
@@ -593,8 +600,10 @@ class Cid:
             print(f'Sharing complete')
 
 
-    def update(self, dashboard_id, **kwargs):
+    def update(self, dashboard_id, recursive, **kwargs):
         """Update Dashboard"""
+
+        return self.deploy(dashboard_id, recursive, **kwargs)
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -662,7 +671,7 @@ class Cid:
         return dashboard_id
 
 
-    def create_datasets(self, _datasets: list) -> dict:
+    def create_datasets(self, _datasets: list, recursive: bool=True) -> dict:
         # Check dependencies
         required_datasets = sorted(_datasets)
         print('\nRequired datasets: \n - {}'.format('\n - '.join(required_datasets)))
@@ -673,15 +682,12 @@ class Cid:
             print('no permissions, performing full discrovery...', end='')
             self.qs.dashboards
             for dataset in required_datasets:
-                dataset_definition = self.resources.get(
-                    'datasets').get(dataset)
+                dataset_definition = self.resources.get('datasets').get(dataset)
         finally:
             print('complete')
 
-        found_datasets = sorted(
-            set(required_datasets).intersection([v.name for v in self.qs._datasets.values()]))
-        missing_datasets = sorted(
-            list(set(required_datasets).difference(found_datasets)))
+        found_datasets = intersection(required_datasets, [v.name for v in self.qs._datasets.values()])
+        missing_datasets = difference(required_datasets, found_datasets)
 
         # If we miss required datasets look in saved deployments
         if len(missing_datasets):
@@ -717,13 +723,13 @@ class Cid:
             print('\nLooking by DataSetId defined in template...', end='')
             for dataset_name in missing_datasets[:]:
                 try:
-                    dataset_definition = self.resources.get(
-                        'datasets').get(dataset_name)
+                    dataset_definition = self.resources.get('datasets').get(dataset_name)
                     dataset_file = dataset_definition.get('File')
                     # Load TPL file
                     if dataset_file:
-                        raw_template = json.loads(resource_string(dataset_definition.get(
-                            'providedBy'), f'data/datasets/{dataset_file}').decode('utf-8'))
+                        raw_template = json.loads(resource_string(
+                            dataset_definition.get('providedBy'), f'data/datasets/{dataset_file}'
+                        ).decode('utf-8'))
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
                             missing_datasets.remove(dataset_name)
@@ -755,7 +761,7 @@ class Cid:
                     logger.critical(e, stack_info=True)
                     raise
                 try:
-                    if self.create_dataset(dataset_definition):
+                    if self.create_dataset(dataset_definition, recursive):
                         missing_datasets.remove(dataset_name)
                         print(f'DataSet "{dataset_name}" creation created')
                     else:
@@ -769,10 +775,8 @@ class Cid:
         # Last chance to enter DataSetIds manually by user
         if len(missing_datasets):
             missing_str = '\n - '.join(missing_datasets)
-            print(
-                f'\nThere are still {len(missing_datasets)} datasets missing: \n - {missing_str}')
-            print(
-                f"\nCan't move forward without full list, please manually create datasets and provide DataSetIds")
+            print(f'\nThere are still {len(missing_datasets)} datasets missing: \n - {missing_str}')
+            print(f"\nCan't move forward without full list, please manually create datasets and provide DataSetIds")
             # Loop over the list unless we get it empty
             while len(missing_datasets):
                 # Make a copy and then get an item from the list
@@ -796,24 +800,22 @@ class Cid:
                     continue
 
 
-    def create_dataset(self, dataset_definition: dict) -> bool:
+    def create_dataset(self, dataset_definition: dict, recursive: bool=True) -> bool:
 
         # Check for required views
         _views = dataset_definition.get('dependsOn').get('views')
-        required_views = [self.cur.tableName if name ==
-                          '${cur_table_name}' else name for name in _views]
-        self.athena.discover_views(required_views)
-        found_views = sorted(set(required_views).intersection(
-            self.athena._metadata.keys()))
-        missing_views = sorted(
-            list(set(required_views).difference(found_views)))
-        # try discovering missing views
-        self.athena.discover_views(missing_views)
-        # repeat comparison
-        found_views = sorted(set(required_views).intersection(
-            self.athena._metadata.keys()))
-        missing_views = sorted(
-            list(set(required_views).difference(found_views)))
+        required_views = [(self.cur.tableName if name =='${cur_table_name}' else name) for name in _views]
+
+        for _ in range(2):
+            self.athena.discover_views(required_views)
+            found_views = intersection(required_views, self.athena._metadata.keys())
+            missing_views = difference(required_views, found_views)
+            existing_views = difference(required_views, missing_views)
+
+        if recoursive:
+            for view_name in existing_views:
+                self.update_view(view_name, recursive)
+
         # create missing views
         if len(missing_views):
             print(f'\tmissing Athena views: {missing_views}')
@@ -924,6 +926,7 @@ class Cid:
                 print(f'Missing dependency view: {dep}, creating')
                 logger.info(f'Missing dependency view: {dep}, creating')
                 self.create_view(dep)
+            if
             dependency_views.remove(dep)
         view_query = self.get_view_query(view_name=view_name)
         if view_name in self.athena._metadata.keys():
