@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
-    _dashboards: Dict[str, Dashboard] = {}
+    _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = {}
     _datasources: dict() = {}
     _user: dict = None
@@ -75,13 +75,21 @@ class QuickSight():
         return self._user
 
     @property
-    def supported_dashboards(self) -> list:
+    def supported_dashboards(self) -> dict:
         return self._resources.get('dashboards')
+
+    @property
+    def supported_datasets(self) -> dict:
+        return self._resources.get('datasets')
+
+    @property
+    def supported_views(self) -> dict:
+        return self._resources.get('views')
 
     @property
     def dashboards(self) -> Dict[str, Dashboard]:
         """Returns a list of deployed dashboards"""
-        if not self._dashboards:
+        if self._dashboards is None:
             self.discover_dashboards()
         return self._dashboards
 
@@ -136,9 +144,22 @@ class QuickSight():
             except Exception as e:
                 logger.debug(e, stack_info=True)
                 logger.info(f'Unable to describe template {templateId} in {templateAccountId}')
+
+            # recoursively add views
+            all_views = []
+            def _recoursive_add_view(view):
+                all_views.append(view)
+                for dep_view in self.supported_views.get(view, {}).get('dependsOn', {}).get('views', []):
+                    _recoursive_add_view(dep_view)
+            for dataset_name in dashboard.datasets.keys():
+                for view in self.supported_datasets.get(dataset_name).get('dependsOn', {}).get('views', []):
+                    _recoursive_add_view(view)
+            dashboard.views = all_views
+            self._dashboards = self._dashboards or {}
             self._dashboards.update({dashboardId: dashboard})
             logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
             logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
+            return dashboard
 
     def create_data_source(self) -> bool:
         """Create a new data source"""
@@ -251,8 +272,10 @@ class QuickSight():
                     logger.info(f'Discovering data source {d}')
                     self.describe_data_source(d)
 
-    def discover_dashboards(self, display: bool=False) -> None:
+    def discover_dashboards(self, display: bool=False, refresh: bool=False) -> None:
         """ Discover deployed dashboards """
+        if refresh or self._dashboards is None:
+            self._dashboards = {}
         logger.info('Discovering deployed dashboards')
         deployed_dashboards=self.list_dashboards()
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
@@ -481,7 +504,9 @@ class QuickSight():
             'DashboardId': dashboard_id
         }
         logger.info(f'Deleting dashboard {dashboard_id}')
-        return self.client.delete_dashboard(**paramaters)
+        result = self.client.delete_dashboard(**paramaters)
+        del self._dashboards[dashboard_id]
+        return result
 
     def delete_dataset(self, id: str) -> bool:
         """ Deletes an AWS QuickSight dataset """
@@ -504,18 +529,27 @@ class QuickSight():
             return True
 
 
-    def describe_dataset(self, id: str) -> Dataset:
+    def describe_dataset(self, id, timeout: int=1) -> dict:
         """ Describes an AWS QuickSight dataset """
-        if not self._datasets.get(id):
-            logger.info(f'Describing dataset {id}')
+        if id in self._datasets:
+            return self._datasets.get(id)
+        poll_interval = 1
+        _dataset = None
+        deadline = time.time() + timeout
+        while time.time() <= deadline:
             try:
                 _dataset = Dataset(self.client.describe_data_set(AwsAccountId=self.account_id,DataSetId=id).get('DataSet'))
                 logger.info(f'Saving dataset details "{_dataset.name}" ({_dataset.id})')
                 self._datasets.update({_dataset.id: _dataset})
+                break
             except self.client.exceptions.ResourceNotFoundException:
-                logger.info(f'DataSetId {id} do not exist')
+                logger.info(f'DataSetId {id} not found')
+                time.sleep(poll_interval)
+                continue
             except self.client.exceptions.AccessDeniedException:
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
+                return None
+
         return self._datasets.get(id, None)
 
     def discover_datasets(self):

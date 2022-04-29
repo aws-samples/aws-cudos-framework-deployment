@@ -1,7 +1,7 @@
 from pkg_resources import resource_string
 
 from cid import utils
-from cid.helpers import Athena, CUR, Glue, QuickSight
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dataset
 from cid.helpers.account_map import AccountMap
 from cid.plugin import Plugin
 from cid.utils import get_parameter
@@ -240,8 +240,7 @@ class Cid:
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard_definition.get("dashboardId")}.json'
-        print(
-            f'Looking for local overrides file "{local_overrides}"...', end='')
+        logger.info(f'Looking for local overrides file "{local_overrides}"...')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
                 try:
@@ -254,7 +253,7 @@ class Cid:
                     click.echo('failed to load, dumping error message')
                     print(json.dumps(e, indent=4, sort_keys=True, default=str))
         except FileNotFoundError:
-            print('not found')
+            logger.info('local overrides file not found')
 
         # Get QuickSight template details
         latest_template = self.qs.describe_template(template_id=dashboard_definition.get(
@@ -350,20 +349,82 @@ class Cid:
                 dashboard_id = self.qs.select_dashboard(force=True)
                 if not dashboard_id:
                     exit()
+
+        if self.qs.dashboards and dashboard_id in self.qs.dashboards:
+            datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
+        else:
+            datasets = next((d.get('dependsOn', {}).get('datasets', []) for d in self.qs.supported_dashboards.values() if d.get('dashboardId') == dashboard_id ), None)
+
         try:
             # Execute query
             click.echo('Deleting dashboard...', nl=False)
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
-            print('deleted')
+            print(f'Dashboard {dashboard_id} deleted')
             self.track('deleted', dashboard_id)
-            return dashboard_id
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
         except Exception as e:
             # Catch exception and dump a reason
             logger.debug(e, stack_info=True)
             print(f'failed with an error message: {e}')
+            return dashboard_id
 
+        print('Processing dependencies')
+        for dataset in datasets:
+            self.delete_dataset(dataset)
+
+        print('Done')
+        return dashboard_id
+
+    def delete_dataset(self, dataset_name):
+        if dataset_name not in self.resources['datasets']:
+            logger.info(f'Dataset {dataset_name} is not managed by CID. Skipping.')
+            print(f'Dataset {dataset_name} is not managed by CID. Skipping.')
+            return False
+        for dataset in list(self.qs._datasets.values()):
+            if dataset.name == dataset_name:
+                # Check if dataset is used in some other dashboard
+                for dashboard in (self.qs.dashboards or {}).values():
+                    if dataset.arn in dashboard.datasets.values():
+                        logger.info(f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
+                        print      (f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
+                        break
+                else:
+                    print(f'Deleting dataset {dataset.name}')
+                    self.qs.delete_dataset(dataset.id)
+                break
+        else:
+            print(f'not found dataset for deletion {dataset_name}')
+        for view_name in list(set(self.resources['datasets'][dataset_name].get('dependsOn', {}).get('views', []))):
+            self.delete_view(view_name)
+        return True
+
+    def delete_view(self, view_name):
+        if view_name not in self.resources['views']:
+            return False
+        definition = self.resources['views'].get(view_name)
+
+        for dashboard in (self.qs.dashboards or {}).values():
+            if view_name in dashboard.views:
+                print(f'View {view_name} is used by dashboard "{dashboard.id}". Skipping')
+                return False
+
+        self.athena.discover_views([view_name])
+        if view_name not in self.athena._metadata.keys():
+            print(f'not found table for deletion {view_name}')
+        else:
+            if definition.get('type', '') == 'Glue_Table':
+                print(f'Deleting table {view_name}')
+                self.athena.delete_table(view_name)
+            else:
+                print(f'Deleting view  {view_name}')
+                self.athena.delete_view(view_name)
+
+        # manage dependancies
+        for dependancy_view in list(set(definition.get('dependsOn', {}).get('views', []))):
+            self.delete_view(dependancy_view)
+
+        return True
 
     def cleanup(self):
         """Delete unused resources (QuickSight datasets, Athena views)"""
@@ -555,16 +616,23 @@ class Cid:
         click.echo(
             f"Latest template: {dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}")
         if dashboard.status == 'legacy':
-            click.confirm(
-                "\nDashboard template changed, update it anyway?", abort=True)
+            if get_parameter(
+                param_name=f'confirm-update',
+                message=f'Dashboard template changed, update it anyway?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+                exit()
         elif dashboard.latest:
-            click.confirm(
-                "\nNo updates available, should I update it anyway?", abort=True)
+            if get_parameter(
+                param_name=f'confirm-update',
+                message=f'No updates available, should I update it anyway?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+                exit()
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard.id}.json'
-        print(
-            f'Looking for local overrides file "{local_overrides}"...', end='')
+        logger.info(f'Looking for local overrides file "{local_overrides}"')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
                 try:
@@ -577,7 +645,7 @@ class Cid:
                     click.echo('failed to load, dumping error message')
                     print(json.dumps(e, indent=4, sort_keys=True, default=str))
         except FileNotFoundError:
-            print('not found')
+            logger.info('local overrides file not found')
 
         # Update dashboard
         click.echo('\nUpdating...', nl=False)
@@ -657,7 +725,7 @@ class Cid:
                         raw_template = json.loads(resource_string(dataset_definition.get(
                             'providedBy'), f'data/datasets/{dataset_file}').decode('utf-8'))
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
-                        if ds.get('Name') == dataset_name:
+                        if isinstance(ds, Dataset) and ds.name == dataset_name:
                             missing_datasets.remove(dataset_name)
                             print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
                 except FileNotFoundError:
