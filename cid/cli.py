@@ -127,7 +127,7 @@ def delete(ctx, dashboard_id, **kwargs):
 @click.option('--force/--noforce', help='Allow force update', default=False)
 @click.option('--recoursive/--norecoursive', help='Recoursive update all Datasets and views', default=False)
 @cid_command
-def update(ctx, dashboard_id, force, recoursive):
+def update(ctx, dashboard_id, force, recoursive, **kwargs):
     """Update Dashboard"""
     ctx.obj.update(dashboard_id, force=force, recoursive=recoursive)
 
