@@ -20,7 +20,8 @@ def cid_command(func):
             exit(-1)
         for i in range(0, len(ctx.args), 2):
             kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
-        set_parameters(kwargs)
+
+        set_parameters(kwargs, all_yes=ctx.obj.all_yes)
         res = func(ctx, **kwargs)
         params = get_parameters()
         logger.info('Next time you can use following command:')
@@ -47,6 +48,7 @@ def cid_command(func):
 @click.option('--aws_secret_access_key', help='', default=None)
 @click.option('--aws_session_token', help='', default=None)
 @click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.pass_context
 def main(ctx, **kwargs):
 
@@ -62,6 +64,7 @@ def main(ctx, **kwargs):
         aws_session_token=kwargs.get('aws_session_token', None)
     )
     ctx.obj = app
+    ctx.obj.all_yes = kwargs.get('yes')
 
 
 @cid_command
@@ -106,10 +109,18 @@ def status(ctx, dashboard_id):
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
+@click.option('-y', '--yes', help='Answer Yes to all confirmation questions', default=False, is_flag=True)
 @cid_command
-def delete(ctx, dashboard_id):
-    """Delete Dashboard"""
-    ctx.obj.delete(dashboard_id)
+def delete(ctx, dashboard_id, **kwargs):
+    """Delete Dashboard and all dependencies unused by other CID-managed dasboards
+    (including QuickSight datasets, Athena views and tables)
+
+    \b
+    Command options:
+     --dashboard-id TEXT                   QuickSight dashboard id (cudos, cost_intelligence_dashboard, kpi_dashboard, ta-organizational-view, trends-dashboard etc)
+     --athena-database TEXT                Athena database
+     """
+    ctx.obj.delete(dashboard_id, **kwargs)
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
