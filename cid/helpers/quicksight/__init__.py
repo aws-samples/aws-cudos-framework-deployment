@@ -646,6 +646,19 @@ class QuickSight():
         return dataset_id
 
 
+    def update_dataset(self, definition: dict) -> str:
+        """ Creates an AWS QuickSight dataset """
+        definition.update({'AwsAccountId': self.account_id})
+        logger.info(f'Updating dataset {definition.get("Name")}')
+
+        if "Permissions" in definition:
+            logger.info('Ignoring permissions for dataset update.')
+            del definition['Permissions']
+        response = self.client.update_data_set(**definition)
+        logger.info(f'Dataset {definition.get("Name")} is updated')
+        return True
+
+
     def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
         """ Creates an AWS QuickSight dashboard """
         DataSetReferences = list()

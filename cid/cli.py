@@ -125,10 +125,11 @@ def delete(ctx, dashboard_id, **kwargs):
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @click.option('--force/--noforce', help='Allow force update', default=False)
+@click.option('--recoursive/--norecoursive', help='Recoursive update all Datasets and views', default=False)
 @cid_command
-def update(ctx, dashboard_id, force):
+def update(ctx, dashboard_id, force, recoursive):
     """Update Dashboard"""
-    ctx.obj.update(dashboard_id, force=force)
+    ctx.obj.update(dashboard_id, force=force, recoursive=recoursive)
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
