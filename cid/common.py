@@ -847,6 +847,9 @@ class Cid:
         if recoursive:
             print(f'\tExisting Athena views: {found_views}')
             for view_name in found_views:
+                if view_name == self.cur.tableName:
+                    logger.debug(f'Dependancy view {view_name} is a CUR. Skip.')
+                    continue
                 self.create_or_update_view(view_name, recoursive=recoursive, update=update)
 
         # create missing views
@@ -951,6 +954,7 @@ class Cid:
         logger.info(f'Processing view: {view_name}')
         if recoursive:
             dependency_views = view_definition.get('dependsOn', dict()).get('views', list())
+            if 'cur' in dependency_views: dependency_views.remove('cur')
             # Discover dependency views (may not be discovered earlier)
             self.athena.discover_views(dependency_views)
             logger.info(f"Dependency views: {', '.join(dependency_views)}" if dependency_views else 'No dependency views')
