@@ -42,6 +42,7 @@ class Cid:
         self._clients = dict()
         self.awsIdentity = None
         self.session = None
+        self._visited_views = [] # Views updated in the current session
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
 
     @property
@@ -232,7 +233,6 @@ class Cid:
         if not dashboard_definition:
             raise ValueError(f'Cannot find dashboard with id={dashboard_id} in ressources file.')
 
-        print(dashboard_definition)
         required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
         # Prepare API parameters
@@ -405,6 +405,10 @@ class Cid:
                         print      (f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
                         break
                 else:
+                    # Get default database and Catalog for athena
+                    schema = next(iter(dataset.schemas), None) # FIXME: manage choice if multiple data sources
+                    self.athena.DatabaseName = schema
+
                     print(f'Deleting dataset {dataset.name}')
                     self.qs.delete_dataset(dataset.id)
                 break
@@ -834,6 +838,51 @@ class Cid:
 
 
     def create_or_update_dataset(self, dataset_definition: dict, recoursive: bool=True, update: bool=False) -> bool:
+        # Read dataset definition from template
+        dataset_file = dataset_definition.get('File')
+        if not dataset_file:
+            logger.critical(f"Error: {dataset_definition.get('Name')} definition is broken")
+            exit(1)
+
+        if not len(self.qs.athena_datasources):
+            logger.info('No Athena datasources found, attempting to create one')
+            self.qs.create_data_source()
+            if not len(self.qs.athena_datasources):
+                logger.info('No Athena datasources available, failing')
+                return False
+        
+        template = Template(resource_string(
+            package_or_requirement=dataset_definition.get('providedBy'),
+            resource_name=f'data/datasets/{dataset_file}',
+        ).decode('utf-8'))
+
+        # Render template file the first time (we do not know the athena datasources yet)
+        columns_tpl = {
+            'cur_table_name': 'NotKnownYet',
+            'athena_datasource_arn': 'NotKnownYet',
+            'athena_database_name': 'NotKnownYet',
+            'user_arn': 'NotKnownYet'
+        }
+        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
+
+        # Detect Athena Database Name and Catalog
+        found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
+        if found_dataset:
+            schema = next(iter(found_dataset.schemas), None) # FIXME: manage choice if multiple data sources
+            self.athena.DatabaseName = schema
+
+        # Render template file the 2nd time (Witth known datasources)
+        columns_tpl = {
+            'athena_datasource_arn': next(iter(self.qs.athena_datasources)),
+            'athena_database_name': self.athena.DatabaseName,
+            'user_arn': self.qs.user.get('Arn')
+        }
+        if dataset_definition.get('dependsOn').get('cur'):
+            columns_tpl['cur_table_name'] = self.cur.tableName
+
+        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
+
+
 
         # Check for required views
         _views = dataset_definition.get('dependsOn').get('views')
@@ -847,7 +896,7 @@ class Cid:
         if recoursive:
             print(f'\tExisting Athena views: {found_views}')
             for view_name in found_views:
-                if view_name == self.cur.tableName:
+                if self._clients.get('cur') and view_name == self.cur.tableName:
                     logger.debug(f'Dependancy view {view_name} is a CUR. Skip.')
                     continue
                 self.create_or_update_view(view_name, recoursive=recoursive, update=update)
@@ -858,35 +907,12 @@ class Cid:
             for view_name in missing_views:
                 self.create_or_update_view(view_name, recoursive=recoursive, update=update)
 
-        # Read dataset definition from template
-        dataset_file = dataset_definition.get('File')
-        if not dataset_file:
-            logger.critical(f"Error: {dataset_definition.get('Name')} definition is broken")
-            exit(1)
-
-        if not len(self.qs.athena_datasources):
-            logger.info('No Athena datasources found, attempting to create one')
-            self.qs.create_data_source()
-            if not len(self.qs.athena_datasources):
-                logger.info('No Athena datasources available, failing')
-                return False
-        # Load TPL file
-        columns_tpl = {
-            'cur_table_name': self.cur.tableName if dataset_definition.get('dependsOn').get('cur') else None,
-            'athena_datasource_arn': next(iter(self.qs.athena_datasources)),
-            'athena_database_name': self.athena.DatabaseName,
-            'user_arn': self.qs.user.get('Arn')
-        }
-        template = Template(resource_string(
-            package_or_requirement=dataset_definition.get('providedBy'),
-            resource_name=f'data/datasets/{dataset_file}',
-        ).decode('utf-8'))
-        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
-
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
         if found_dataset:
             if update:
                self.qs.update_dataset(compiled_dataset)
+            else:
+                print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')
         else:
             self.qs.create_dataset(compiled_dataset)
 
@@ -944,9 +970,14 @@ class Cid:
 
     def create_or_update_view(self, view_name: str, recoursive: bool=True, update: bool=False) -> None:
         # For account mappings create a view using a special helper
+        if view_name in self._visited_views: # avoid checking a views multiple times in one cid session
+            return
+        self._visited_views.append(view_name)
+
         if view_name in ['account_map', 'aws_accounts']:
             self.accountMap.create(view_name) #FIXME: add or_update
             return
+
         # Create a view
         logger.info(f'Getting view definition')
         view_definition = self.resources.get('views').get(view_name, dict())
@@ -969,13 +1000,15 @@ class Cid:
             if update:
                 logger.info(f'Updating view: {view_name}')
                 if view_definition.get('type') == 'Glue_Table':
+                    print(f'Updating table {view_name}')
                     self.glue.ensure_glue_table_created(view_name, view_query)
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
+                        print(f'Updating view {view_name}')
                         self.athena.execute_query(view_query)
                     else:
                         print(f'View {view_name} is not compatible with update. Skipping.')
-                assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+                assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
                 logger.info(f'View "{view_name}" created')
             else:
                 return
@@ -1007,15 +1040,16 @@ class Cid:
             raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        template = Template(resource_string(view_definition.get(
-            'providedBy'), f'data/queries/{view_file}').decode('utf-8'))
+        template = Template(resource_string(
+            view_definition.get('providedBy'),
+            f'data/queries/{view_file}'
+        ).decode('utf-8'))
 
         # Prepare template parameters
-        columns_tpl = dict()
-        columns_tpl.update({
+        columns_tpl = {
             'cur_table_name': self.cur.tableName if cur_required else None,
             'athena_database_name': self.athena.DatabaseName if view_definition.get('parameters', dict()).get('athenaDatabaseName') else None
-        })
+        }
         for k,v in view_definition.get('parameters', dict()).items():
             if k == 'athenaDatabaseName':
                 param = {'athena_database_name': self.athena.DatabaseName}

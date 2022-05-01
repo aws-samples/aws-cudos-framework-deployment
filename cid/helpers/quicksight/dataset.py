@@ -14,8 +14,20 @@ class Dataset(CidQsResource):
     def datasources(self) -> list:
         _datasources = []
         try:
-            for _,map in self.raw.get('PhysicalTableMap').items():
-                _datasources.append(map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
+            for table_map in self.raw.get('PhysicalTableMap').values():
+                _datasources.append(table_map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
         except Exception as e:
             logger.debug(e, stack_info=True)
         return _datasources
+
+    @property
+    def schemas (self) -> list:
+        schemas = []
+        try:
+            for table_map in self.raw.get('PhysicalTableMap').values():
+                schema = table_map.get('RelationalTable', {}).get('Schema', None)
+                if schema:
+                    schemas.append(schema)
+        except Exception as e:
+            logger.debug(e, stack_info=True)
+        return schemas
