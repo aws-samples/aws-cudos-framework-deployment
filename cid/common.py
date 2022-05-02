@@ -388,10 +388,19 @@ class Cid:
                     if dataset.arn in dashboard.datasets.values():
                         logger.info(f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
                         print      (f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
-                        break
+                        return False
                 else:
-                    print(f'Deleting dataset {dataset.name}')
-                    self.qs.delete_dataset(dataset.id)
+                    if get_parameter(
+                        param_name=f'confirm-{dataset.name}',
+                        message=f'Delete QuickSight Dataset {dataset.name}?',
+                        choices=['yes', 'no'],
+                        default='no') == 'yes':
+                        print(f'Deleting dataset {dataset.name}')
+                        self.qs.delete_dataset(dataset.id)
+                    else:
+                        logger.info(f'Skipping dataset {dataset.name}')
+                        print      (f'Skipping dataset {dataset.name}')
+                        return False
                 break
         else:
             print(f'not found dataset for deletion {dataset_name}')
