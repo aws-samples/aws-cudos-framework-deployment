@@ -213,7 +213,7 @@ class Cid:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
 
-    def deploy(self, recoursive=True, update=False, **kwargs):
+    def deploy(self, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
         dashboard_id = get_parameter(
             param_name='dashboard-id',
@@ -240,8 +240,8 @@ class Cid:
             dashboard_definition.update({'datasets': {}})
         dashboard_datasets = dashboard_definition.get('datasets')
 
-        if recoursive:
-            self.create_datasets(required_datasets, recoursive=recoursive, update=update)
+        if recursive:
+            self.create_datasets(required_datasets, recursive=recursive, update=update)
 
         for dataset_name in required_datasets:
             arn = next((v.arn for v in self.qs._datasets.values() if v.name == dataset_name), None)
@@ -612,7 +612,7 @@ class Cid:
             print(f'Sharing complete')
 
 
-    def update(self, dashboard_id, recoursive=False, **kwargs):
+    def update(self, dashboard_id, recursive=False, **kwargs):
         """Update Dashboard"""
 
         if not dashboard_id:
@@ -629,7 +629,7 @@ class Cid:
         return self.deploy(dashboard_id, update=True, **kwargs)
 
 
-    def update_dashboard(self, dashboard_id, recoursive=False, **kwargs):
+    def update_dashboard(self, dashboard_id, recursive=False, **kwargs):
 
         dashboard = self.qs.dashboards.get(dashboard_id)
         if not dashboard:
@@ -686,7 +686,7 @@ class Cid:
         return dashboard_id
 
 
-    def create_datasets(self, _datasets: list, recoursive: bool=True, update: bool=False) -> dict:
+    def create_datasets(self, _datasets: list, recursive: bool=True, update: bool=False) -> dict:
         # Check dependencies
         required_datasets = sorted(_datasets)
         print('\nRequired datasets: \n - {}'.format('\n - '.join(required_datasets)))
@@ -716,7 +716,7 @@ class Cid:
                     logger.critical(e, stack_info=True)
                     raise
                 try:
-                    if self.create_or_update_dataset(dataset_definition, recoursive=recoursive, update=update):
+                    if self.create_or_update_dataset(dataset_definition, recursive=recursive, update=update):
                         print(f'DataSet "{dataset_name}" update')
                     else:
                         print(f'DataSet "{dataset_name}" update failed, collect debug log for more info')
@@ -798,7 +798,7 @@ class Cid:
                     logger.critical(e, stack_info=True)
                     raise
                 try:
-                    if self.create_or_update_dataset(dataset_definition, recoursive=recoursive, update=update):
+                    if self.create_or_update_dataset(dataset_definition, recursive=recursive, update=update):
                         missing_datasets.remove(dataset_name)
                         print(f'DataSet "{dataset_name}" created')
                     else:
@@ -837,7 +837,7 @@ class Cid:
                     continue
 
 
-    def create_or_update_dataset(self, dataset_definition: dict, recoursive: bool=True, update: bool=False) -> bool:
+    def create_or_update_dataset(self, dataset_definition: dict, recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
         dataset_file = dataset_definition.get('File')
         if not dataset_file:
@@ -893,19 +893,19 @@ class Cid:
             found_views = intersection(required_views, self.athena._metadata.keys())
             missing_views = difference(required_views, found_views)
 
-        if recoursive:
+        if recursive:
             print(f'\tExisting Athena views: {found_views}')
             for view_name in found_views:
                 if self._clients.get('cur') and view_name == self.cur.tableName:
                     logger.debug(f'Dependancy view {view_name} is a CUR. Skip.')
                     continue
-                self.create_or_update_view(view_name, recoursive=recoursive, update=update)
+                self.create_or_update_view(view_name, recursive=recursive, update=update)
 
         # create missing views
         if len(missing_views):
             print(f'\tMissing Athena views: {missing_views}')
             for view_name in missing_views:
-                self.create_or_update_view(view_name, recoursive=recoursive, update=update)
+                self.create_or_update_view(view_name, recursive=recursive, update=update)
 
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
         if found_dataset:
@@ -968,7 +968,7 @@ class Cid:
         return found_deployments
 
 
-    def create_or_update_view(self, view_name: str, recoursive: bool=True, update: bool=False) -> None:
+    def create_or_update_view(self, view_name: str, recursive: bool=True, update: bool=False) -> None:
         # For account mappings create a view using a special helper
         if view_name in self._visited_views: # avoid checking a views multiple times in one cid session
             return
@@ -983,7 +983,7 @@ class Cid:
         view_definition = self.resources.get('views').get(view_name, dict())
         logger.debug(f'View definition: {view_definition}')
         logger.info(f'Processing view: {view_name}')
-        if recoursive:
+        if recursive:
             dependency_views = view_definition.get('dependsOn', dict()).get('views', list())
             if 'cur' in dependency_views: dependency_views.remove('cur')
             # Discover dependency views (may not be discovered earlier)
@@ -993,7 +993,7 @@ class Cid:
                 if dep_view_name not in self.athena._metadata.keys():
                     print(f'Missing dependency view: {dep_view_name}, creating')
                     logger.info(f'Missing dependency view: {dep_view_name}, creating')
-                self.create_or_update_view(dep_view_name, recoursive=recoursive, update=update)
+                self.create_or_update_view(dep_view_name, recursive=recursive, update=update)
         view_query = self.get_view_query(view_name=view_name)
         if view_name in self.athena._metadata.keys():
             logger.debug(f'View "{view_name}" exists')
