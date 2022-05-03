@@ -152,7 +152,7 @@ class QuickSight():
                 for dep_view in self.supported_views.get(view, {}).get('dependsOn', {}).get('views', []):
                     _recoursive_add_view(dep_view)
             for dataset_name in dashboard.datasets.keys():
-                for view in self.supported_datasets.get(dataset_name).get('dependsOn', {}).get('views', []):
+                for view in self.supported_datasets.get(dataset_name, {}).get('dependsOn', {}).get('views', []):
                     _recoursive_add_view(view)
             dashboard.views = all_views
             self._dashboards = self._dashboards or {}
