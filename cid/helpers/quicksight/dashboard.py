@@ -83,7 +83,12 @@ class Dashboard(CidQsResource):
 
     @property
     def templateId(self) -> str:
-        return str(self.version.get('SourceEntityArn','/').split('/')[1])
+        if 'SourceEntityArn' not in self.version:
+            return ''
+        arn = self.version.get('SourceEntityArn')
+        if ":template/" not in arn:
+            return ''
+        return str(arn.split('/')[1])
     
     def find_local_config(self) -> Union[dict, None]:
 
