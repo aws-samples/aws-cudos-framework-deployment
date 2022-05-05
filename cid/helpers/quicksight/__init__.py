@@ -17,7 +17,7 @@ class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
     _dashboards: Dict[str, Dashboard] = None
-    _datasets: Dict[str, Dataset] = {}
+    _datasets: Dict[str, Dataset] = None
     _datasources: dict() = {}
     _user: dict = None
 
@@ -94,6 +94,13 @@ class QuickSight():
         return self._dashboards
 
     @property
+    def datasets(self) -> Dict[str, Dataset]:
+        """Returns a list of deployed dashboards"""
+        if self._datasets is None:
+            self.discover_datasets()
+        return self._datasets
+
+    @property
     def athena_datasources(self) -> dict:
         """Returns a list of existing athena datasources"""
         return {k: v for (k, v) in self.datasources.items() if v.get('Type') == 'ATHENA'}
@@ -125,7 +132,7 @@ class QuickSight():
             for dataset in dashboard.version.get('DataSetArns'):
                 dataset_id = dataset.split('/')[-1]
                 try:
-                    _dataset = self.describe_dataset(id=dataset_id)
+                    _dataset = self.datasets.get(dataset_id)
                     if not isinstance(_dataset, Dataset):
                         logger.info(f'Dataset "{dataset_id}" is missing')
                     else:
@@ -267,7 +274,7 @@ class QuickSight():
                 self.describe_data_source(v.get('DataSourceId'))
         except Exception as e:
             logger.debug(e, stack_info=True)
-            for _,v in self._datasets.items():
+            for _,v in self.datasets.items():
                 for d in v.datasources:
                     logger.info(f'Discovering data source {d}')
                     self.describe_data_source(d)
@@ -517,7 +524,7 @@ class QuickSight():
                 AwsAccountId=self.account_id,
                 DataSetId=id
             )
-            self._datasets.pop(id)
+            self.datasets.pop(id)
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied deleting dataset')
             return False
@@ -529,10 +536,24 @@ class QuickSight():
             return True
 
 
+    def get_datasets(self, id: str=None, name: str=None) -> Dataset:
+        """ get dataset that match parameters """
+        result = []
+        for dataset in self.datasets.values():
+            if id is not None and dataset.id != id:
+                continue
+            if name is not None and dataset.name != name:
+                continue
+            result.append(dataset)
+        return result
+
+
+
     def describe_dataset(self, id, timeout: int=1) -> dict:
         """ Describes an AWS QuickSight dataset """
-        if id in self._datasets:
+        if self._datasets and id in self._datasets:
             return self._datasets.get(id)
+        self._datasets = self._datasets or {}
         poll_interval = 1
         _dataset = None
         deadline = time.time() + timeout

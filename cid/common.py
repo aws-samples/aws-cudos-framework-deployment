@@ -1,34 +1,24 @@
-from pkg_resources import resource_string
-
-from cid import utils
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dataset
-from cid.helpers.account_map import AccountMap
-from cid.plugin import Plugin
-from cid.utils import get_parameter
-
 import os
 import sys
+import json
+import logging
+from pathlib import Path
+from string import Template
+from pkg_resources import resource_string
 
 import click
 import requests
-from string import Template
-
-import json
-
-from pathlib import Path
+from deepmerge import always_merger
 from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
-from deepmerge import always_merger
+from cid import utils
+from cid.plugin import Plugin
+from cid.utils import get_parameter
+from cid.helpers.account_map import AccountMap
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dataset
 
-import logging
+
 logger = logging.getLogger(__name__)
-
-
-def intersection(a, b):
-    return sorted(set(a).intersection(b))
-
-def difference(a, b):
-    return sorted(list(set(a).difference(b)))
 
 class Cid:
 
@@ -188,6 +178,21 @@ class Cid:
             print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
 
 
+    def get_definition(self, type: str, name: str=None, id: str=None):
+        """ return resource definition that matches parameters """
+        if type == 'dashboard':
+            for dashboard in self.resources.get('dashboards').values():
+                if name is not None and dashboard.get('name') != name:
+                    continue
+                if id is not None and dashboard.get('dashboardId') != id:
+                    continue
+                return dashboard
+        else:
+            raise NotImplemented(f'get_definition for type {type} is not implemented')
+
+        return None
+
+
     def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """
         method = {'created':'PUT', 'updated':'PATCH', 'deleted': 'DELETE'}.get(action, None)
@@ -228,9 +233,8 @@ class Cid:
             print('No dashboard selected')
             return
 
-
         # Get selected dashboard definition
-        dashboard_definition = next((v for v in self.resources.get('dashboards').values() if v.get('dashboardId') == dashboard_id), None)
+        dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
         if not dashboard_definition:
             raise ValueError(f'Cannot find dashboard with id={dashboard_id} in ressources file.')
 
@@ -241,8 +245,10 @@ class Cid:
             dashboard_definition.update({'datasets': {}})
         dashboard_datasets = dashboard_definition.get('datasets')
 
+        known_datasets = self.qs.dashboards.get(dashboard_id).datasets if self.qs.dashboards.get(dashboard_id) else {}
+
         if recursive:
-            self.create_datasets(required_datasets, recursive=recursive, update=update)
+            self.create_datasets(required_datasets, known_datasets, recursive=recursive, update=update)
 
         for dataset_name in required_datasets:
             arn = next((v.arn for v in self.qs._datasets.values() if v.name == dataset_name), None)
@@ -273,7 +279,6 @@ class Cid:
 
         # Create dashboard
         print(f"Latest template: {latest_template.get('Arn')}/version/{latest_template.get('Version').get('VersionNumber')}")
-
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
@@ -367,7 +372,8 @@ class Cid:
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
             datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
         else:
-            datasets = next((d.get('dependsOn', {}).get('datasets', []) for d in self.qs.supported_dashboards.values() if d.get('dashboardId') == dashboard_id ), None)
+            dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
+            datasets = (dashboard_definition or {}).get('dependsOn', {}).get('datasets', [])
 
         try:
             # Execute query
@@ -678,7 +684,7 @@ class Cid:
         try:
             self.qs.update_dashboard(dashboard, **kwargs)
             print('completed')
-            dashboard.display_url(self.qs_url, **self.qs_url_params)
+            dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)
             self.track('updated', dashboard_id)
         except Exception as e:
             # Catch exception and dump a reason
@@ -688,10 +694,10 @@ class Cid:
         return dashboard_id
 
 
-    def create_datasets(self, _datasets: list, recursive: bool=True, update: bool=False) -> dict:
+    def create_datasets(self, _datasets: list, known_datasets: dict={}, recursive: bool=True, update: bool=False) -> dict:
         # Check dependencies
         required_datasets = sorted(_datasets)
-        print('\nRequired datasets: \n - {}'.format('\n - '.join(required_datasets)))
+        print('\nRequired datasets: \n - {}'.format('\n - '.join(list(set(required_datasets)))))
         try:
             print('\nDetecting existing datasets...', end='')
             self.qs.discover_datasets()
@@ -703,12 +709,13 @@ class Cid:
         finally:
             print('complete')
 
-        found_datasets = intersection(required_datasets, [v.name for v in self.qs._datasets.values()])
-        missing_datasets = difference(required_datasets, found_datasets)
+        found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs._datasets.values()])
+        missing_datasets = utils.difference(required_datasets, found_datasets)
 
         # Update existing datasets
         if update:
             for dataset_name in found_datasets[:]:
+                arn = known_datasets.get(dataset_name)
                 print(f'Updating dataset: {dataset_name}.')
                 try:
                     dataset_definition = self.resources.get('datasets').get(dataset_name)
@@ -718,12 +725,12 @@ class Cid:
                     logger.critical(e, stack_info=True)
                     raise
                 try:
-                    if self.create_or_update_dataset(dataset_definition, recursive=recursive, update=update):
+                    if self.create_or_update_dataset(dataset_definition, arn, recursive=recursive, update=update):
                         print(f'DataSet "{dataset_name}" update')
                     else:
                         print(f'DataSet "{dataset_name}" update failed, collect debug log for more info')
-                except self.qs.client.exceptions.AccessDeniedException as AccessDeniedException:
-                    print('Unable to update, missing permissions: {}'.format(AccessDeniedException))
+                except self.qs.client.exceptions.AccessDeniedException as exc:
+                    print(f'Unable to update, missing permissions: {exc}')
                 except Exception as e:
                     logger.debug(e, stack_info=True)
                     raise
@@ -791,6 +798,7 @@ class Cid:
             missing_str = ', '.join(missing_datasets)
             print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
             for dataset_name in missing_datasets[:]:
+                arn = known_datasets.get(dataset_name)
                 print(f'Creating dataset: {dataset_name}...', end='')
                 try:
                     dataset_definition = self.resources.get('datasets').get(dataset_name)
@@ -800,13 +808,13 @@ class Cid:
                     logger.critical(e, stack_info=True)
                     raise
                 try:
-                    if self.create_or_update_dataset(dataset_definition, recursive=recursive, update=update):
+                    if self.create_or_update_dataset(dataset_definition, arn, recursive=recursive, update=update):
                         missing_datasets.remove(dataset_name)
                         print(f'DataSet "{dataset_name}" created')
                     else:
                         print(f'DataSet "{dataset_name}" creation failed, collect debug log for more info')
-                except self.qs.client.exceptions.AccessDeniedException as AccessDeniedException:
-                    print('unable to create, missing permissions: {}'.format(AccessDeniedException))
+                except self.qs.client.exceptions.AccessDeniedException as exc:
+                    print(f'unable to create, missing permissions: {exc}')
                 except Exception as e:
                     logger.debug(e, stack_info=True)
                     raise
@@ -839,7 +847,7 @@ class Cid:
                     continue
 
 
-    def create_or_update_dataset(self, dataset_definition: dict, recursive: bool=True, update: bool=False) -> bool:
+    def create_or_update_dataset(self, dataset_definition: dict, arn: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
         dataset_file = dataset_definition.get('File')
         if not dataset_file:
@@ -852,28 +860,26 @@ class Cid:
             if not len(self.qs.athena_datasources):
                 logger.info('No Athena datasources available, failing')
                 return False
-        
+
         template = Template(resource_string(
             package_or_requirement=dataset_definition.get('providedBy'),
             resource_name=f'data/datasets/{dataset_file}',
         ).decode('utf-8'))
 
-        # Render template file the first time (we do not know the athena datasources yet)
-        columns_tpl = {
-            'cur_table_name': 'NotKnownYet',
-            'athena_datasource_arn': 'NotKnownYet',
-            'athena_database_name': 'NotKnownYet',
-            'user_arn': 'NotKnownYet'
-        }
-        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
+        # let's find the schema/database name
+        schemas = []
+        if arn:
+            dataset_id = arn.split('/')[-1]
+            schemas = list(set(self.qs.get_datasets(id=dataset_id)[0].schemas))
+        else: # try to find dataset and get athena database
+            found_datasets = self.qs.get_datasets(name=dataset_definition.get('Name'))
+            if found_datasets:
+                schemas = list(set(sum([d.schemas for d in found_datasets], [])))
 
-        # Detect Athena Database Name and Catalog
-        found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
-        if found_dataset:
-            schema = next(iter(found_dataset.schemas), None) # FIXME: manage choice if multiple data sources
-            self.athena.DatabaseName = schema
+        if len(schemas) == 1:
+            self.athena.DatabaseName = schemas[0]
+        # else user will be suggested to choose database
 
-        # Render template file the 2nd time (Witth known datasources)
         columns_tpl = {
             'athena_datasource_arn': next(iter(self.qs.athena_datasources)),
             'athena_database_name': self.athena.DatabaseName,
@@ -885,15 +891,14 @@ class Cid:
         compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
 
 
-
         # Check for required views
         _views = dataset_definition.get('dependsOn').get('views')
         required_views = [(self.cur.tableName if name =='${cur_table_name}' else name) for name in _views]
 
         for _ in range(2):
             self.athena.discover_views(required_views)
-            found_views = intersection(required_views, self.athena._metadata.keys())
-            missing_views = difference(required_views, found_views)
+            found_views = utils.intersection(required_views, self.athena._metadata.keys())
+            missing_views = utils.difference(required_views, found_views)
 
         if recursive:
             print(f'\tExisting Athena views: {found_views}')
@@ -977,7 +982,10 @@ class Cid:
         self._visited_views.append(view_name)
 
         if view_name in ['account_map', 'aws_accounts']:
-            self.accountMap.create(view_name) #FIXME: add or_update
+            if view_name in self.athena._metadata.keys():
+                print(f'Account map {view_name} exists. Skipping.')
+            else:
+                self.accountMap.create(view_name) #FIXME: add or_update
             return
 
         # Create a view
@@ -1003,7 +1011,7 @@ class Cid:
                 logger.info(f'Updating view: {view_name}')
                 if view_definition.get('type') == 'Glue_Table':
                     print(f'Updating table {view_name}')
-                    self.glue.ensure_glue_table_created(view_name, view_query)
+                    self.glue.create_or_upate_table_created(view_name, view_query)
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
                         print(f'Updating view {view_name}')
@@ -1017,7 +1025,7 @@ class Cid:
         else:
             logger.info(f'Creating view: {view_name}')
             if view_definition.get('type') == 'Glue_Table':
-                self.glue.ensure_glue_table_created(view_name, view_query)
+                self.glue.create_or_upate_table_created(view_name, view_query)
             else:
                 self.athena.execute_query(view_query)
             assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"

@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 
 from cid.helpers.quicksight.resource import CidQsResource
+from cid.utils import is_unattendent_mode
 
 import logging
 
@@ -142,5 +143,5 @@ class Dashboard(CidQsResource):
         url = url_template.format(dashboard_id=self.id, **kwargs)
         print(f"#######\n####### {self.name} is available at: " + url + "\n#######")
         _supported_env = os.environ.get('AWS_EXECUTION_ENV') not in ['CloudShell', 'AWS_Lambda']
-        if _supported_env and launch and click.confirm('Do you wish to open it in your browser?'):
+        if _supported_env and not is_unattendent_mode() and launch and click.confirm('Do you wish to open it in your browser?'):
                 click.launch(url)

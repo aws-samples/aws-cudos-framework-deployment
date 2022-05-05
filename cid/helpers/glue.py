@@ -13,7 +13,7 @@ class Glue():
         self.client = session.client('glue', region_name=self.region)
 
 
-    def ensure_glue_table_created(self, view_name: str, view_query: str) -> None:
+    def create_or_upate_table_created(self, view_name: str, view_query: str) -> None:
         table = json.loads(view_query)
         try:
             self.client.create_table(**table)
