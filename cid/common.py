@@ -213,16 +213,17 @@ class Cid:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
 
-    def deploy(self, recursive=True, update=False, **kwargs):
+    def deploy(self, dashboard_id=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
-        dashboard_id = get_parameter(
-            param_name='dashboard-id',
-            message="Please select dashboard to install",
-            choices={ 
-               f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
-               for k, dashboard in self.resources.get('dashboards').items()
-            },
-        )
+        if dashboard_id is None:
+            dashboard_id = get_parameter(
+                param_name='dashboard-id',
+                message="Please select dashboard to install",
+                choices={
+                   f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
+                   for k, dashboard in self.resources.get('dashboards').items()
+                },
+            )
         if not dashboard_id:
             print('No dashboard selected')
             return
@@ -336,10 +337,9 @@ class Cid:
             if not self.qs.dashboards:
                 print('\nNo deployed dashboards found')
                 exit()
-            else:
-                dashboard_id = self.qs.select_dashboard(force=True)
-                if not dashboard_id:
-                    exit()
+            dashboard_id = self.qs.select_dashboard(force=True)
+            if not dashboard_id:
+                exit()
             dashboard = self.qs.dashboards.get(dashboard_id)
         else:
             # Describe dashboard by the ID given, no discovery
@@ -360,10 +360,9 @@ class Cid:
             if not self.qs.dashboards:
                 print('\nNo deployed dashboards found')
                 exit()
-            else:
-                dashboard_id = self.qs.select_dashboard(force=True)
-                if not dashboard_id:
-                    exit()
+            dashboard_id = self.qs.select_dashboard(force=True)
+            if not dashboard_id:
+                exit()
 
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
             datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
@@ -468,10 +467,9 @@ class Cid:
             if not self.qs.dashboards:
                 print('\nNo deployed dashboards found')
                 exit()
-            else:
-                dashboard_id = self.qs.select_dashboard(force=True)
-                if not dashboard_id:
-                    exit()
+            dashboard_id = self.qs.select_dashboard(force=True)
+            if not dashboard_id:
+                exit()
         else:
             # Describe dashboard by the ID given, no discovery
             self.qs.discover_dashboard(dashboardId=dashboard_id)
@@ -612,21 +610,25 @@ class Cid:
             print(f'Sharing complete')
 
 
-    def update(self, dashboard_id, recursive=False, **kwargs):
-        """Update Dashboard"""
+    def update(self, dashboard_id, recursive=False, force=False, **kwargs):
+        """Update Dashboard
+
+        :param dashboard_id: dashboard_id, if None user will be asked to choose
+        :param recursive: Update Datasets and Views as well
+        :param force: allow selection of already updated dashboards in the manual selection mode
+        """
 
         if not dashboard_id:
             if not self.qs.dashboards:
                 print('\nNo deployed dashboards found')
                 exit()
-            else:
-                dashboard_id = self.qs.select_dashboard(force=kwargs.get('force'))
-                if not dashboard_id:
-                    if not kwargs.get('force'):
-                        print('\nNo updates available or dashboard(s) is/are broken, use --force to allow selection\n')
-                    exit()
+            dashboard_id = self.qs.select_dashboard(force)
+            if not dashboard_id:
+                if not force:
+                    print('\nNo updates available or dashboard(s) is/are broken, use --force to allow selection\n')
+                exit()
 
-        return self.deploy(dashboard_id, update=True, **kwargs)
+        return self.deploy(dashboard_id, recursive=recursive, update=True)
 
 
     def update_dashboard(self, dashboard_id, recursive=False, **kwargs):
@@ -676,7 +678,7 @@ class Cid:
         try:
             self.qs.update_dashboard(dashboard, **kwargs)
             print('completed')
-            dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)
+            dashboard.display_url(self.qs_url, **self.qs_url_params)
             self.track('updated', dashboard_id)
         except Exception as e:
             # Catch exception and dump a reason
