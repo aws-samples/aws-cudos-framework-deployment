@@ -181,17 +181,16 @@ class Cid:
             print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
 
 
-    def get_definition(self, type: str, name: str=None, id: str=None):
+    def get_definition(self, type: str, name: str=None, id: str=None) -> dict:
         """ return resource definition that matches parameters """
-        if type == 'dashboard':
-            for dashboard in self.resources.get('dashboards').values():
-                if name is not None and dashboard.get('name') != name:
-                    continue
-                if id is not None and dashboard.get('dashboardId') != id:
-                    continue
-                return dashboard
-        else:
-            raise NotImplemented(f'get_definition for type {type} is not implemented')
+        if type not in ['dashboard', 'dataset', 'view']:
+            print(f'Error: {type} is not a valid type')
+            raise ValueError(f'{type} is not a valid definition type')
+        for definition in self.resources.get(f'{type}s').values():
+            if name is not None and definition.get('name') == name:
+                return definition
+            if id is not None and definition.get('dashboardId') == id:
+                return definition
 
         return None
 
@@ -440,7 +439,7 @@ class Cid:
     def delete_view(self, view_name):
         if view_name not in self.resources['views']:
             return False
-        definition = self.resources['views'].get(view_name)
+        definition = self.get_definition("view", name=view_name)
 
         for dashboard in (self.qs.dashboards or {}).values():
             if view_name in dashboard.views:
@@ -719,7 +718,7 @@ class Cid:
             print('no permissions, performing full discrovery...', end='')
             self.qs.dashboards
             for dataset in required_datasets:
-                dataset_definition = self.resources.get('datasets').get(dataset)
+                dataset_definition = self.get_definition("dataset", name=dataset)
         finally:
             print('complete')
 
@@ -732,7 +731,7 @@ class Cid:
                 arn = known_datasets.get(dataset_name)
                 print(f'Updating dataset: {dataset_name}.')
                 try:
-                    dataset_definition = self.resources.get('datasets').get(dataset_name)
+                    dataset_definition = self.get_definition("dataset", name=dataset_name)
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
@@ -783,7 +782,7 @@ class Cid:
             print('\nLooking by DataSetId defined in template...', end='')
             for dataset_name in missing_datasets[:]:
                 try:
-                    dataset_definition = self.resources.get('datasets').get(dataset_name)
+                    dataset_definition = self.get_definition("dataset", name=dataset_name)
                     dataset_file = dataset_definition.get('File')
                     # Load TPL file
                     if dataset_file:
@@ -815,7 +814,7 @@ class Cid:
                 arn = known_datasets.get(dataset_name)
                 print(f'Creating dataset: {dataset_name}...', end='')
                 try:
-                    dataset_definition = self.resources.get('datasets').get(dataset_name)
+                    dataset_definition = self.get_definition("dataset", name=dataset_name)
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
@@ -1003,7 +1002,7 @@ class Cid:
 
         # Create a view
         logger.info(f'Getting view definition')
-        view_definition = self.resources.get('views').get(view_name, dict())
+        view_definition = self.get_definition("view", name=view_name)
         logger.debug(f'View definition: {view_definition}')
         logger.info(f'Processing view: {view_name}')
         if recursive:
@@ -1048,7 +1047,7 @@ class Cid:
     def get_view_query(self, view_name: str) -> str:
         """ Returns a fully compiled AHQ """
         # View path
-        view_definition = self.resources.get('views').get(view_name, dict())
+        view_definition = self.get_definition("view", name=view_name)
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
         if cur_required and self.cur.hasSavingsPlans and self.cur.hasReservations and view_definition.get('spriFile'):
             view_file = view_definition.get('spriFile')
