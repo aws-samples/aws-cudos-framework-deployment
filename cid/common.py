@@ -187,10 +187,11 @@ class Cid:
             print(f'Error: {type} is not a valid type')
             raise ValueError(f'{type} is not a valid definition type')
         for definition in self.resources.get(f'{type}s').values():
-            if name is not None and definition.get('name') == name:
-                return definition
-            if id is not None and definition.get('dashboardId') == id:
-                return definition
+            if name is not None and definition.get('name') != name:
+                continue
+            if id is not None and definition.get('dashboardId') != id:
+                continue    
+            return definition
 
         return None
 
@@ -711,16 +712,8 @@ class Cid:
         # Check dependencies
         required_datasets = sorted(_datasets)
         print('\nRequired datasets: \n - {}'.format('\n - '.join(list(set(required_datasets)))))
-        try:
-            print('\nDetecting existing datasets...', end='')
-            self.qs.discover_datasets()
-        except self.qs.client.exceptions.AccessDeniedException:
-            print('no permissions, performing full discrovery...', end='')
-            self.qs.dashboards
-            for dataset in required_datasets:
-                dataset_definition = self.get_definition("dataset", name=dataset)
-        finally:
-            print('complete')
+        print('\nDetecting existing datasets')
+        self.qs.discover_datasets()
 
         found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs._datasets.values()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
@@ -732,6 +725,9 @@ class Cid:
                 print(f'Updating dataset: {dataset_name}.')
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
+                    if not dataset_definition:
+                        print(f'Dataset definition not found, skipping {dataset_name}')
+                        continue
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
