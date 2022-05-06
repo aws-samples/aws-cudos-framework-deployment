@@ -245,20 +245,18 @@ class Cid:
 
         required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
-        # Prepare API parameters
-        if not dashboard_definition.get('datasets'):
-            dashboard_definition.update({'datasets': {}})
-        dashboard_datasets = dashboard_definition.get('datasets')
-
         known_datasets = self.qs.dashboards.get(dashboard_id).datasets if self.qs.dashboards.get(dashboard_id) else {}
 
         if recursive:
             self.create_datasets(required_datasets, known_datasets, recursive=recursive, update=update)
 
+        # Prepare API parameters
+        if not dashboard_definition.get('datasets'):
+            dashboard_definition.update({'datasets': {}})
         for dataset_name in required_datasets:
             arn = next((v.arn for v in self.qs._datasets.values() if v.name == dataset_name), None)
             if arn:
-                dashboard_datasets.update({dataset_name: arn})
+                dashboard_definition.get('datasets').update({dataset_name: arn})
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard_definition.get("dashboardId")}.json'
