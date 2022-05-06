@@ -186,13 +186,15 @@ class Cid:
         if type not in ['dashboard', 'dataset', 'view']:
             print(f'Error: {type} is not a valid type')
             raise ValueError(f'{type} is not a valid definition type')
-        for definition in self.resources.get(f'{type}s').values():
-            if name is not None and definition.get('name') != name:
-                continue
-            if id is not None and definition.get('dashboardId') != id:
-                continue    
-            return definition
-
+        if type in  ['dataset', 'view'] and name:
+            return self.resources.get(f'{type}s').get(name)
+        elif type in ['dashboard']:
+            for definition in self.resources.get(f'{type}s').values():
+                if name is not None and definition.get('name') != name:
+                    continue
+                if id is not None and definition.get('dashboardId') != id:
+                    continue
+                return definition
         return None
 
 
@@ -432,7 +434,7 @@ class Cid:
                         return False
                 break
         else:
-            print(f'not found dataset for deletion {dataset_name}')
+            print(f'Not found dataset for deletion: {dataset_name}')
         for view_name in list(set(self.resources['datasets'][dataset_name].get('dependsOn', {}).get('views', []))):
             self.delete_view(view_name)
         return True
@@ -441,6 +443,9 @@ class Cid:
         if view_name not in self.resources['views']:
             return False
         definition = self.get_definition("view", name=view_name)
+        if not definition:
+            print(f"Definition not found for view: {view_name}")
+            return False
 
         for dashboard in (self.qs.dashboards or {}).values():
             if view_name in dashboard.views:
@@ -449,13 +454,13 @@ class Cid:
 
         self.athena.discover_views([view_name])
         if view_name not in self.athena._metadata.keys():
-            print(f'not found table for deletion {view_name}')
+            print(f'Table for deletion not found: {view_name}')
         else:
             if definition.get('type', '') == 'Glue_Table':
-                print(f'Deleting table {view_name}')
+                print(f'Deleting table: {view_name}')
                 self.athena.delete_table(view_name)
             else:
-                print(f'Deleting view  {view_name}')
+                print(f'Deleting view:  {view_name}')
                 self.athena.delete_view(view_name)
 
         # manage dependancies
@@ -1033,7 +1038,7 @@ class Cid:
         else:
             logger.info(f'Creating view: {view_name}')
             if view_definition.get('type') == 'Glue_Table':
-                self.glue.create_or_upate_table_created(view_name, view_query)
+                self.glue.create_or_upate_table(view_name, view_query)
             else:
                 self.athena.execute_query(view_query)
             assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
