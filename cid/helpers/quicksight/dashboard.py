@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 
 from cid.helpers.quicksight.resource import CidQsResource
+from cid.utils import is_unattendent_mode
 
 import logging
 
@@ -65,7 +66,7 @@ class Dashboard(CidQsResource):
             elif not self.definition:
                 self._status = 'undiscovered'
             # Missing dataset
-            elif not self.datasets or (len(self.datasets) < len(self.definition.get('dependsOn').get('datasets'))):
+            elif not self.datasets or (len(set(self.datasets)) < len(set(self.definition.get('dependsOn').get('datasets')))):
                 self.status_detail = 'missing dataset(s)'
                 self._status = 'broken'
                 logger.info(f"Found datasets: {self.datasets}")
@@ -82,7 +83,12 @@ class Dashboard(CidQsResource):
 
     @property
     def templateId(self) -> str:
-        return str(self.version.get('SourceEntityArn').split('/')[1])
+        if 'SourceEntityArn' not in self.version:
+            return ''
+        arn = self.version.get('SourceEntityArn')
+        if ":template/" not in arn:
+            return ''
+        return str(arn.split('/')[1])
     
     def find_local_config(self) -> Union[dict, None]:
 
@@ -136,11 +142,11 @@ class Dashboard(CidQsResource):
             print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
         print('\n')
         if click.confirm('Display dashboard raw data?'):
-            print(json.dumps(self.dashboard, indent=4, sort_keys=True, default=str))
+            print(json.dumps(self.raw, indent=4, sort_keys=True, default=str))
     
     def display_url(self, url_template: str, launch: bool = False, **kwargs) -> None:
         url = url_template.format(dashboard_id=self.id, **kwargs)
         print(f"#######\n####### {self.name} is available at: " + url + "\n#######")
         _supported_env = os.environ.get('AWS_EXECUTION_ENV') not in ['CloudShell', 'AWS_Lambda']
-        if _supported_env and launch and click.confirm('Do you wish to open it in your browser?'):
+        if _supported_env and not is_unattendent_mode() and launch and click.confirm('Do you wish to open it in your browser?'):
                 click.launch(url)

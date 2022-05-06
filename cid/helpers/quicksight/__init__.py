@@ -17,7 +17,7 @@ class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
     _dashboards: Dict[str, Dashboard] = None
-    _datasets: Dict[str, Dataset] = {}
+    _datasets: Dict[str, Dataset] = None
     _datasources: dict() = {}
     _user: dict = None
 
@@ -94,6 +94,13 @@ class QuickSight():
         return self._dashboards
 
     @property
+    def datasets(self) -> Dict[str, Dataset]:
+        """Returns a list of deployed dashboards"""
+        if self._datasets is None:
+            self.discover_datasets()
+        return self._datasets or {}
+
+    @property
     def athena_datasources(self) -> dict:
         """Returns a list of existing athena datasources"""
         return {k: v for (k, v) in self.datasources.items() if v.get('Type') == 'ATHENA'}
@@ -109,7 +116,6 @@ class QuickSight():
 
     def discover_dashboard(self, dashboardId: str):
         """Discover single dashboard"""
-        
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
@@ -152,7 +158,7 @@ class QuickSight():
                 for dep_view in self.supported_views.get(view, {}).get('dependsOn', {}).get('views', []):
                     _recoursive_add_view(dep_view)
             for dataset_name in dashboard.datasets.keys():
-                for view in self.supported_datasets.get(dataset_name).get('dependsOn', {}).get('views', []):
+                for view in self.supported_datasets.get(dataset_name, {}).get('dependsOn', {}).get('views', []):
                     _recoursive_add_view(view)
             dashboard.views = all_views
             self._dashboards = self._dashboards or {}
@@ -267,7 +273,7 @@ class QuickSight():
                 self.describe_data_source(v.get('DataSourceId'))
         except Exception as e:
             logger.debug(e, stack_info=True)
-            for _,v in self._datasets.items():
+            for _,v in self.datasets.items():
                 for d in v.datasources:
                     logger.info(f'Discovering data source {d}')
                     self.describe_data_source(d)
@@ -517,7 +523,7 @@ class QuickSight():
                 AwsAccountId=self.account_id,
                 DataSetId=id
             )
-            self._datasets.pop(id)
+            self.datasets.pop(id)
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied deleting dataset')
             return False
@@ -529,10 +535,24 @@ class QuickSight():
             return True
 
 
+    def get_datasets(self, id: str=None, name: str=None) -> Dataset:
+        """ get dataset that match parameters """
+        result = []
+        for dataset in self.datasets.values():
+            if id is not None and dataset.id != id:
+                continue
+            if name is not None and dataset.name != name:
+                continue
+            result.append(dataset)
+        return result
+
+
+
     def describe_dataset(self, id, timeout: int=1) -> dict:
         """ Describes an AWS QuickSight dataset """
-        if id in self._datasets:
+        if self._datasets and id in self._datasets:
             return self._datasets.get(id)
+        self._datasets = self._datasets or {}
         poll_interval = 1
         _dataset = None
         deadline = time.time() + timeout
@@ -556,6 +576,7 @@ class QuickSight():
         """ Discover datasets in the account """
 
         logger.info('Discovering datasets')
+        self._datasets =  self._datasets or {}
         try:
             for dataset in self.list_data_sets():
                 try:
@@ -626,6 +647,7 @@ class QuickSight():
         dataset_id = None
         try:
             logger.info(f'Creating dataset {definition.get("Name")} ({dataset_id})')
+            logger.debug(f'Dataset definition: {definition}')
             response = self.client.create_data_set(**definition)
             dataset_id = response.get('DataSetId')
         except self.client.exceptions.ResourceExistsException:
@@ -644,6 +666,19 @@ class QuickSight():
             return None
         logger.info(f'Dataset {_dataset.name} is created')
         return dataset_id
+
+
+    def update_dataset(self, definition: dict) -> str:
+        """ Creates an AWS QuickSight dataset """
+        definition.update({'AwsAccountId': self.account_id})
+        logger.info(f'Updating dataset {definition.get("Name")}')
+
+        if "Permissions" in definition:
+            logger.info('Ignoring permissions for dataset update.')
+            del definition['Permissions']
+        response = self.client.update_data_set(**definition)
+        logger.info(f'Dataset {definition.get("Name")} is updated')
+        return True
 
 
     def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
@@ -684,9 +719,12 @@ class QuickSight():
         
         create_parameters = always_merger.merge(create_parameters, kwargs)
         try:
+            logger.info(f'Creating dashboard "{definition.get("name")}"')
+            logger.debug(create_parameters)
             create_status = self.client.create_dashboard(**create_parameters)
             logger.debug(create_status)
         except self.client.exceptions.ResourceExistsException:
+            logger.info(f'Dashboard {definition.get("name")} already exists')
             raise
         created_version = int(create_status['VersionArn'].split('/')[-1])
 
@@ -726,6 +764,7 @@ class QuickSight():
         }
 
         update_parameters = always_merger.merge(update_parameters, kwargs)
+        logger.info(f'Updating dashboard "{dashboard.name}"')
         logger.debug(f"Update parameters: {update_parameters}")
         update_status = self.client.update_dashboard(**update_parameters)
         logger.debug(update_status)
@@ -742,6 +781,7 @@ class QuickSight():
             'VersionNumber': updated_version
         }
         result = self.client.update_dashboard_published_version(**update_params)
+        logger.debug(result)
         if result['Status'] != 200:
             raise Exception(result)
 

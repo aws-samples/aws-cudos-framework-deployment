@@ -59,6 +59,10 @@ class Athena():
             logger.info(f'Using datacatalog: {self._CatalogName}')
         return self._CatalogName
 
+    @CatalogName.setter
+    def set_catalog_name(self, catalog):
+        self._CatalogName = catalog
+
     @property
     def DatabaseName(self) -> str:
         """ Check if Athena database exist """
@@ -91,6 +95,11 @@ class Athena():
                     )
             logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
+
+    @DatabaseName.setter
+    def DatabaseName(self, database):
+        self._DatabaseName = database
+
 
     def list_data_catalogs(self) -> list:
         return self.client.list_data_catalogs().get('DataCatalogsSummary')
@@ -322,7 +331,7 @@ class Athena():
     def delete_table(self, name: str, catalog: str=None, database: str=None):
         if get_parameter(
                 param_name=f'confirm-{name}',
-                message=f'Delete athena table {name}?',
+                message=f'Delete Athena table {name}?',
                 choices=['yes', 'no'],
                 default='no') != 'yes':
             return False
@@ -345,7 +354,7 @@ class Athena():
     def delete_view(self, name: str, catalog: str=None, database: str=None):
         if get_parameter(
                 param_name=f'confirm-{name}',
-                message=f'Delete athena view {name}?',
+                message=f'Delete Athena view {name}?',
                 choices=['yes', 'no'],
                 default='no') != 'yes':
             return False

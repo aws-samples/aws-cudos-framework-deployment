@@ -1,13 +1,21 @@
-import questionary
-import boto3
+import logging
+from collections.abc import Iterable
 
+import boto3
+import questionary
 from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError
 
-import logging
 logger = logging.getLogger(__name__)
 
 params = {} # parameters from command line
 _all_yes = False # parameters from command line
+
+
+def intersection(a: Iterable, b: Iterable) -> Iterable:
+    return sorted(set(a).intersection(b))
+
+def difference(a: Iterable, b: Iterable) -> Iterable:
+    return sorted(list(set(a).difference(b)))
 
 def get_aws_region():
     return get_boto_session().region_name
@@ -60,6 +68,9 @@ def set_parameters(parameters: dict, all_yes: bool=False) -> None:
         params[k.replace('_', '-')] = v
     global _all_yes
     _all_yes = all_yes
+
+def is_unattendent_mode() -> bool:
+    return _all_yes
 
 def get_parameters():
     return dict(params)
