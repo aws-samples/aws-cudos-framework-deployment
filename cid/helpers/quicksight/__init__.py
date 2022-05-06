@@ -647,6 +647,7 @@ class QuickSight():
         dataset_id = None
         try:
             logger.info(f'Creating dataset {definition.get("Name")} ({dataset_id})')
+            logger.debug(f'Dataset definition: {definition}')
             response = self.client.create_data_set(**definition)
             dataset_id = response.get('DataSetId')
         except self.client.exceptions.ResourceExistsException:
@@ -718,9 +719,12 @@ class QuickSight():
         
         create_parameters = always_merger.merge(create_parameters, kwargs)
         try:
+            logger.info(f'Creating dashboard "{definition.get("name")}"')
+            logger.debug(create_parameters)
             create_status = self.client.create_dashboard(**create_parameters)
             logger.debug(create_status)
         except self.client.exceptions.ResourceExistsException:
+            logger.info(f'Dashboard {definition.get("name")} already exists')
             raise
         created_version = int(create_status['VersionArn'].split('/')[-1])
 
@@ -760,6 +764,7 @@ class QuickSight():
         }
 
         update_parameters = always_merger.merge(update_parameters, kwargs)
+        logger.info(f'Updating dashboard "{dashboard.name}"')
         logger.debug(f"Update parameters: {update_parameters}")
         update_status = self.client.update_dashboard(**update_parameters)
         logger.debug(update_status)
@@ -776,6 +781,7 @@ class QuickSight():
             'VersionNumber': updated_version
         }
         result = self.client.update_dashboard_published_version(**update_params)
+        logger.debug(result)
         if result['Status'] != 200:
             raise Exception(result)
 

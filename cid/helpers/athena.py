@@ -331,7 +331,7 @@ class Athena():
     def delete_table(self, name: str, catalog: str=None, database: str=None):
         if get_parameter(
                 param_name=f'confirm-{name}',
-                message=f'Delete athena table {name}?',
+                message=f'Delete Athena table {name}?',
                 choices=['yes', 'no'],
                 default='no') != 'yes':
             return False
@@ -354,7 +354,7 @@ class Athena():
     def delete_view(self, name: str, catalog: str=None, database: str=None):
         if get_parameter(
                 param_name=f'confirm-{name}',
-                message=f'Delete athena view {name}?',
+                message=f'Delete Athena view {name}?',
                 choices=['yes', 'no'],
                 default='no') != 'yes':
             return False

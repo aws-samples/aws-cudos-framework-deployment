@@ -813,7 +813,7 @@ class Cid:
             print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
             for dataset_name in missing_datasets[:]:
                 arn = known_datasets.get(dataset_name)
-                print(f'Creating dataset: {dataset_name}...', end='')
+                print(f'Creating dataset: {dataset_name}')
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
                 except Exception as e:
