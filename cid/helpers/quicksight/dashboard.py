@@ -57,6 +57,7 @@ class Dashboard(CidQsResource):
 
     @property
     def status(self) -> str:
+        from IPython import embed; embed()
         if not self._status:
             # Deployment failed
             if self.version.get('Status') not in ['CREATION_SUCCESSFUL']:

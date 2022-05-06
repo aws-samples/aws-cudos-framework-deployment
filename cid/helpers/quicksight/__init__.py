@@ -116,7 +116,8 @@ class QuickSight():
 
     def discover_dashboard(self, dashboardId: str):
         """Discover single dashboard"""
-        
+        from IPython import embed; embed()
+
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
