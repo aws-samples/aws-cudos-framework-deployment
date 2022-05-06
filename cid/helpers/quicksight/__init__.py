@@ -131,7 +131,7 @@ class QuickSight():
             for dataset in dashboard.version.get('DataSetArns'):
                 dataset_id = dataset.split('/')[-1]
                 try:
-                    _dataset = self.datasets.get(dataset_id)
+                    _dataset = self.describe_dataset(dataset_id)
                     if not isinstance(_dataset, Dataset):
                         logger.info(f'Dataset "{dataset_id}" is missing')
                     else:
