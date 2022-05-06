@@ -142,7 +142,7 @@ class Dashboard(CidQsResource):
             print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
         print('\n')
         if click.confirm('Display dashboard raw data?'):
-            print(json.dumps(self.dashboard, indent=4, sort_keys=True, default=str))
+            print(json.dumps(self.raw, indent=4, sort_keys=True, default=str))
     
     def display_url(self, url_template: str, launch: bool = False, **kwargs) -> None:
         url = url_template.format(dashboard_id=self.id, **kwargs)
