@@ -577,6 +577,7 @@ class QuickSight():
         """ Discover datasets in the account """
 
         logger.info('Discovering datasets')
+        self._datasets =  self._datasets or {}
         try:
             for dataset in self.list_data_sets():
                 try:
