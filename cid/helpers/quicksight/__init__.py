@@ -98,7 +98,7 @@ class QuickSight():
         """Returns a list of deployed dashboards"""
         if self._datasets is None:
             self.discover_datasets()
-        return self._datasets
+        return self._datasets or {}
 
     @property
     def athena_datasources(self) -> dict:
