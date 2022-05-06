@@ -290,11 +290,11 @@ class QuickSight():
                 dashboardName = dashboard.get('Name')
                 dashboardId = dashboard.get('DashboardId')
                 # Update progress bar
-                bar.update(0, f'"{dashboardName}" ({dashboardId})')
+                bar.update(1, f'"{dashboardName}" ({dashboardId})')
                 logger.info(f'Discovering dashboard "{dashboardName}" ({dashboardId})')
                 self.discover_dashboard(dashboardId)
                 # Update progress bar
-                bar.update(1, 'Complete')
+                bar.update(0, 'Complete')
         # print('Discovered dashboards:')
         if not display:
             return
