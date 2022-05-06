@@ -105,9 +105,9 @@ class Cid:
         _entry_points = entry_points().get('cid.plugins')
         print('Loading plugins...')
         logger.info(f'Located {len(_entry_points)} plugin(s)')
-        loaded = []
         for ep in _entry_points:
-            if ep.value in loaded:
+            if ep.value in plugins.keys():
+                logger.info(f'Plugin {ep.value} already loaded, skipping')
                 continue
             logger.info(f'Loading plugin: {ep.name} ({ep.value})')
             plugin = Plugin(ep.value)
@@ -118,7 +118,6 @@ class Cid:
                     self.resources, plugin.provides())
             except AttributeError:
                 pass
-            loaded.append(ep.value)
         print('done\n')
         logger.info('Finished loading plugins')
         return plugins
