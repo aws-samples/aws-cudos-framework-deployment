@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.67.3
+
+* MoM Trends: Updated charge_type filter
+
 ## CUDOS - 4.67.2 
 
 * Storage Summary: Filters applied to daily visuals changed to last 90 days fron last 3 months

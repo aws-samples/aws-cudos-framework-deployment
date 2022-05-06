@@ -408,14 +408,25 @@ class Cid:
                     if dataset.arn in dashboard.datasets.values():
                         logger.info(f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
                         print      (f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
-                        break
-                else:
-                    # Get default database and Catalog for athena
-                    schema = next(iter(dataset.schemas), None) # FIXME: manage choice if multiple data sources
-                    self.athena.DatabaseName = schema
+                        return False
+                else: #not used
 
-                    print(f'Deleting dataset {dataset.name}')
-                    self.qs.delete_dataset(dataset.id)
+                    # try to get the database name from the dataset (might need this for later)
+                    schema = next(iter(list(set(dataset.schemas))), None) # FIXME: manage choice if multiple data sources
+                    if schema:
+                        self.athena.DatabaseName = schema
+
+                    if get_parameter(
+                        param_name=f'confirm-{dataset.name}',
+                        message=f'Delete QuickSight Dataset {dataset.name}?',
+                        choices=['yes', 'no'],
+                        default='no') == 'yes':
+                        print(f'Deleting dataset {dataset.name}')
+                        self.qs.delete_dataset(dataset.id)
+                    else:
+                        logger.info(f'Skipping dataset {dataset.name}')
+                        print      (f'Skipping dataset {dataset.name}')
+                        return False
                 break
         else:
             print(f'not found dataset for deletion {dataset_name}')

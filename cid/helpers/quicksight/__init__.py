@@ -289,20 +289,20 @@ class QuickSight():
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
         logger.debug(deployed_dashboards)
         with click.progressbar(
-            deployed_dashboards,
+            length=len(deployed_dashboards),
             label='Discovering deployed dashboards...',
-            item_show_func=lambda a: a
+            item_show_func=lambda a: str(a)[:50]
         ) as bar:
-            for index, dashboard in enumerate(deployed_dashboards, start=1):
+            for dashboard in deployed_dashboards:
                 # Discover found dashboards
                 dashboardName = dashboard.get('Name')
                 dashboardId = dashboard.get('DashboardId')
                 # Update progress bar
-                bar.update(index, f'"{dashboardName}" ({dashboardId})')
+                bar.update(1, f'"{dashboardName}" ({dashboardId})')
                 logger.info(f'Discovering dashboard "{dashboardName}" ({dashboardId})')
                 self.discover_dashboard(dashboardId)
                 # Update progress bar
-                bar.update(index, 'Complete')
+                bar.update(0, 'Complete')
         # print('Discovered dashboards:')
         if not display:
             return
