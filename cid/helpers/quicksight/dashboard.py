@@ -57,7 +57,6 @@ class Dashboard(CidQsResource):
 
     @property
     def status(self) -> str:
-        from IPython import embed; embed()
         if not self._status:
             # Deployment failed
             if self.version.get('Status') not in ['CREATION_SUCCESSFUL']:
@@ -67,7 +66,7 @@ class Dashboard(CidQsResource):
             elif not self.definition:
                 self._status = 'undiscovered'
             # Missing dataset
-            elif not self.datasets or (len(self.datasets) < len(self.definition.get('dependsOn').get('datasets'))):
+            elif not self.datasets or (len(set(self.datasets)) < len(set(self.definition.get('dependsOn').get('datasets')))):
                 self.status_detail = 'missing dataset(s)'
                 self._status = 'broken'
                 logger.info(f"Found datasets: {self.datasets}")

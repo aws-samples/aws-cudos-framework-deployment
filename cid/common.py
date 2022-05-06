@@ -105,7 +105,10 @@ class Cid:
         _entry_points = entry_points().get('cid.plugins')
         print('Loading plugins...')
         logger.info(f'Located {len(_entry_points)} plugin(s)')
+        loaded = []
         for ep in _entry_points:
+            if ep.value in loaded:
+                continue
             logger.info(f'Loading plugin: {ep.name} ({ep.value})')
             plugin = Plugin(ep.value)
             print(f"\t{ep.name} loaded")
@@ -115,6 +118,7 @@ class Cid:
                     self.resources, plugin.provides())
             except AttributeError:
                 pass
+            loaded.append(ep.value)
         print('done\n')
         logger.info('Finished loading plugins')
         return plugins
@@ -236,7 +240,7 @@ class Cid:
         # Get selected dashboard definition
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
         if not dashboard_definition:
-            raise ValueError(f'Cannot find dashboard with id={dashboard_id} in ressources file.')
+            raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
         required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
@@ -906,10 +910,9 @@ class Cid:
         _views = dataset_definition.get('dependsOn').get('views')
         required_views = [(self.cur.tableName if name =='${cur_table_name}' else name) for name in _views]
 
-        for _ in range(2):
-            self.athena.discover_views(required_views)
-            found_views = utils.intersection(required_views, self.athena._metadata.keys())
-            missing_views = utils.difference(required_views, found_views)
+        self.athena.discover_views(required_views)
+        found_views = utils.intersection(required_views, self.athena._metadata.keys())
+        missing_views = utils.difference(required_views, found_views)
 
         if recursive:
             print(f'\tExisting Athena views: {found_views}')
@@ -1022,7 +1025,7 @@ class Cid:
                 logger.info(f'Updating view: {view_name}')
                 if view_definition.get('type') == 'Glue_Table':
                     print(f'Updating table {view_name}')
-                    self.glue.create_or_upate_table_created(view_name, view_query)
+                    self.glue.create_or_upate_table(view_name, view_query)
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
                         print(f'Updating view {view_name}')
