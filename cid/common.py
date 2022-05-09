@@ -865,7 +865,7 @@ class Cid:
         # Read dataset definition from template
         dataset_file = dataset_definition.get('File')
         if not dataset_file:
-            logger.critical(f"Error: {dataset_definition.get('Name')} definition is broken")
+            logger.critical("Error: definition is broken. Check resources file.")
             exit(1)
 
         if not len(self.qs.athena_datasources):
@@ -880,13 +880,16 @@ class Cid:
             resource_name=f'data/datasets/{dataset_file}',
         ).decode('utf-8'))
 
+        pre_compiled_dataset = json.loads(template.safe_substitute())
+        dataset_name = pre_compiled_dataset.get('Name')
+
         # let's find the schema/database name
         schemas = []
         if arn:
             dataset_id = arn.split('/')[-1]
             schemas = list(set(self.qs.get_datasets(id=dataset_id)[0].schemas))
         else: # try to find dataset and get athena database
-            found_datasets = self.qs.get_datasets(name=dataset_definition.get('Name'))
+            found_datasets = self.qs.get_datasets(name=dataset_name)
             if found_datasets:
                 schemas = list(set(sum([d.schemas for d in found_datasets], [])))
 
@@ -931,8 +934,8 @@ class Cid:
         if isinstance(found_dataset, Dataset):
             if update:
                 self.qs.update_dataset(compiled_dataset)
-            elif found_dataset.name != dataset_definition.get('Name'):
-                print(f'Dataset found with name {found_dataset.name}, but {dataset_definition.get('Name')} expected. Updating.')
+            elif found_dataset.name != dataset_name:
+                print(f"Dataset found with name {found_dataset.name}, but {dataset_name} expected. Updating.")
                 self.qs.update_dataset(compiled_dataset)
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')
