@@ -928,9 +928,12 @@ class Cid:
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
 
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
-        if found_dataset:
+        if isinstance(found_dataset, Dataset):
             if update:
-               self.qs.update_dataset(compiled_dataset)
+                self.qs.update_dataset(compiled_dataset)
+            elif found_dataset.name != dataset_definition.get('Name'):
+                print(f'Dataset found with name {found_dataset.name}, but {dataset_definition.get('Name')} expected. Updating.')
+                self.qs.update_dataset(compiled_dataset)
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')
         else:
