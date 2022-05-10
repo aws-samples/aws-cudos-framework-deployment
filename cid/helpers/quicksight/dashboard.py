@@ -120,8 +120,8 @@ class Dashboard(CidQsResource):
                     if self.localConfig:
                         for dataset in self.localConfig.get('SourceEntity').get('SourceTemplate').get('DataSetReferences'):
                             if not self.datasets.get(dataset.get('DataSetPlaceholder')):    
-                                logger.info(f"Using dataset {dataset.get('DataSetPlaceholder')} ({dataset.get('DataSetId')})")
-                                self.datasets.update({dataset.get('DataSetPlaceholder'): dataset.get('DataSetArn')})
+                                logger.info(f'Saving dataset {dataset.get("DataSetPlaceholder")} ({dataset.get("DataSetId")} for "{self.name}")')
+                                self.datasets.update({dataset.get('DataSetPlaceholder'): dataset.get('DataSetId')})
             except:
                 logger.info(f'Failed to load local config file {file_path}')
 

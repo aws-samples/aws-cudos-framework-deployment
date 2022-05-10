@@ -130,3 +130,10 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     logger.info(f"(Use \033[1m --{param_name} '{result}'\033[0m next time you run this)")
     params[param_name] = result
     return result
+
+def unset_parameter(param_name):
+    param_name = param_name.replace('_', '-')
+    if params.get(param_name):
+        value = params[param_name]
+        del params[param_name]
+        logger.info(f'Cleared {param_name}={value}, from parameters')
