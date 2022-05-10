@@ -8,6 +8,7 @@ import uuid
 from cid.utils import get_parameter
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
+from cid.helpers.quicksight.datasource import Datasource
 
 import logging
 
@@ -18,7 +19,7 @@ class QuickSight():
     cidAccountId = '223485597511'
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
-    _datasources: dict() = {}
+    _datasources: Dict[str, Datasource] = None
     _user: dict = None
 
     def __init__(self, session, awsIdentity, resources=None):        
@@ -101,14 +102,14 @@ class QuickSight():
         return self._datasets or {}
 
     @property
-    def athena_datasources(self) -> dict:
+    def athena_datasources(self) -> Dict[str, Datasource]:
         """Returns a list of existing athena datasources"""
-        return {k: v for (k, v) in self.datasources.items() if v.get('Type') == 'ATHENA'}
+        return {k: v for (k, v) in self.datasources.items() if v.type == 'ATHENA'}
 
     @property
-    def datasources(self) -> dict:
+    def datasources(self) -> Dict[str, Datasource]:
         """Returns a list of existing datasources"""
-        if not self._datasources:
+        if self._datasources is None:
             logger.info(f"Discovering datasources for account {self.account_id}")
             self.discover_data_sources()
 
@@ -135,8 +136,8 @@ class QuickSight():
                     if not isinstance(_dataset, Dataset):
                         logger.info(f'Dataset "{dataset_id}" is missing')
                     else:
-                        logger.info(f"Using dataset \"{_dataset.name}\" ({_dataset.id} for {dashboard.name})")
-                        dashboard.datasets.update({_dataset.name: _dataset.arn})
+                        logger.info(f"Detected dataset: \"{_dataset.name}\" ({_dataset.id} in {dashboard.name})")
+                        dashboard.datasets.update({_dataset.name: _dataset.id})
                 except self.client.exceptions.AccessDeniedException:
                     logger.info(f'Looking local config for {dashboardId}')
                     dashboard.find_local_config()
@@ -268,15 +269,25 @@ class QuickSight():
 
     def discover_data_sources(self) -> None:
         """ Discover existing datasources"""
+        if self._datasources is None:
+            self._datasources = {}
+        logger.info('Discovering existing datasources')
         try:
             for v in self.list_data_sources():
-                self.describe_data_source(v.get('DataSourceId'))
-        except Exception as e:
-            logger.debug(e, stack_info=True)
-            for _,v in self.datasets.items():
+                _datasource = Datasource(v)
+                logger.info(f'Found datasource {_datasource.name} (_{_datasource.id})')
+                logger.debug(f'Datasource {_datasource.name} (_{_datasource.id}) details: {_datasource.__dict__}')
+                if not _datasource.id in self._datasources:
+                    logger.info(f'Saving datasource {_datasource.name} (_{_datasource.id})')
+                    self._datasources.update({_datasource.id: _datasource})
+        except self.client.exceptions.AccessDeniedException:
+            logger.info('Access denied discovering data sources')
+            for v in self.datasets.values():
                 for d in v.datasources:
                     logger.info(f'Discovering data source {d}')
                     self.describe_data_source(d)
+        except Exception as e:
+            logger.debug(e, stack_info=True)
 
     def discover_dashboards(self, display: bool=False, refresh: bool=False) -> None:
         """ Discover deployed dashboards """
@@ -341,7 +352,7 @@ class QuickSight():
                 return result.get('DataSources')
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing data sources')
-            return list()
+            raise
         except Exception as e:
             logger.debug(e, stack_info=True)
             return list()
@@ -548,7 +559,7 @@ class QuickSight():
 
 
 
-    def describe_dataset(self, id, timeout: int=1) -> dict:
+    def describe_dataset(self, id, timeout: int=1) -> Dataset:
         """ Describes an AWS QuickSight dataset """
         if self._datasets and id in self._datasets:
             return self._datasets.get(id)
@@ -572,11 +583,14 @@ class QuickSight():
 
         return self._datasets.get(id, None)
 
-    def discover_datasets(self):
+    def discover_datasets(self, _datasets: list=None):
         """ Discover datasets in the account """
 
         logger.info('Discovering datasets')
         self._datasets =  self._datasets or {}
+        if _datasets:
+            for dataset in _datasets:
+                self.describe_dataset(dataset)
         try:
             for dataset in self.list_data_sets():
                 try:
@@ -591,21 +605,31 @@ class QuickSight():
             logger.info('No datasets found')
 
 
-    def describe_data_source(self, id):
+    def describe_data_source(self, id: str) -> Datasource:
         """ Describes an AWS QuickSight data source """
+        if self.datasources and id in self.datasources:
+            return self.datasources.get(id)
         try:
             result = self.client.describe_data_source(AwsAccountId=self.account_id,DataSourceId=id)
             logger.debug(result)
-            _described_data_source = self._datasources.get(result.get('DataSource').get('Arn'))
-            if not _described_data_source or _described_data_source.get('Status') in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
-                self._datasources.update({result.get('DataSource').get('Arn'): result.get('DataSource')})
+            _datasource = Datasource(result.get('DataSource'))
+            if _datasource.status not in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
+                logger.info(f'Data source {_datasource.name} status is {_datasource.status}, saving details')
+                self._datasources.update({_datasource.id: _datasource})
+            else:
+                logger.info(f'Data source {_datasource.name} status is {_datasource.status}, skipping')
         except self.client.exceptions.ResourceNotFoundException:
             logger.info(f'DataSource {id} do not exist')
             raise
         except self.client.exceptions.AccessDeniedException:
             logger.info(f'No quicksight:DescribeDataSource permission or missing DataSetId {id}')
             raise
-        return result.get('DataSource')
+        except Exception as e:
+            logger.info(e)
+            logger.debug(e, stack_info=True)
+            return None
+        else:
+            return _datasource
 
 
     def describe_template(self, template_id: str, account_id: str=None ):
@@ -748,7 +772,7 @@ class QuickSight():
         for k, v in dashboard.datasets.items():
             DataSetReferences.append({
                 'DataSetPlaceholder': k,
-                'DataSetArn': v
+                'DataSetArn': self.datasets.get(v).arn
             })
 
         update_parameters = {
