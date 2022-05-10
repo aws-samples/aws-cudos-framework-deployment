@@ -920,7 +920,7 @@ class Cid:
 
         # create missing views
         if len(missing_views):
-            print(f"Missing views: {', '.joinmissing_views}")
+            print(f"Missing views: {', '.join(missing_views)}")
             for view_name in missing_views:
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
 
