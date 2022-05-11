@@ -17,6 +17,7 @@ from cid.plugin import Plugin
 from cid.utils import get_parameter, unset_parameter
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dataset
+from cid._version import __version__
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class Cid:
 
     def __init__(self, **kwargs) -> None:
         self.__setupLogging(verbosity=kwargs.pop('verbose'))
-        logger.info('Initializing CID')
+        logger.info(f'Initializing CID {__version__}')
         # Defined resources
         self.resources = dict()
         self.dashboards = dict()
