@@ -818,8 +818,10 @@ class Cid:
                         print(f'Dataset "{dataset_name}" created')
                     else:
                         print(f'Dataset "{dataset_name}" creation failed, collect debug log for more info')
-                except self.qs.client.exceptions.AccessDeniedException as exc:
-                    print(f'unable to create, missing permissions: {exc}')
+                except self.qs.client.exceptions.AccessDeniedException as e:
+                    print(f'Unable to create dataset  "{dataset_name}", missing permissions')
+                    logger.info(f'Unable to create dataset  "{dataset_name}", missing permissions')
+                    logger.debug(e, stack_info=True)
                 except Exception as e:
                     logger.debug(e, stack_info=True)
                     raise
