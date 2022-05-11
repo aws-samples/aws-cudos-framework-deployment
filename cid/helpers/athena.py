@@ -14,10 +14,12 @@ class Athena():
     # Define defaults
     defaults = {
         'CatalogName': 'AwsDataCatalog',
-        'DatabaseName': 'customer_cur_data'
+        'DatabaseName': 'customer_cur_data',
+        'WorkGroup': 'primary'
     }
     _CatalogName = None
     _DatabaseName = None
+    _WorkGroup = None
     ahq_queries = None
     _metadata = dict()
     _resources = dict()
@@ -100,6 +102,33 @@ class Athena():
     def DatabaseName(self, database):
         self._DatabaseName = database
 
+    @property
+    def WorkGroup(self) -> str:
+        """ Select AWS Athena workgroup """
+        if not self._WorkGroup:
+            logger.info('Selecting Athena workgroup...')
+            workgroups = self.list_work_groups()
+            logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
+            if len(workgroups) == 1:
+                self._WorkGroup = workgroups.pop().get('Name')
+            elif len(workgroups) > 1:
+                # Select default workgroup if present
+                default_workgroup = next(iter([wg.get('Name') for wg in workgroups if wg['Name'] == self.defaults.get('WorkGroup')]), None)
+                if default_workgroup: logger.info(f'Found "{default_workgroup}" as a default workgroup')
+                # Ask user
+                self._WorkGroup = get_parameter(
+                    param_name='athena-workgroup',
+                    message="Select AWS Athena workgroup to use",
+                    choices=[d['Name'] for d in workgroups],
+                    default=default_workgroup
+                )
+            logger.info(f'Selected workgroup: "{self._WorkGroup}"')
+        return self._WorkGroup
+
+    @WorkGroup.setter
+    def WorkGroup(self, name: str):
+        self._WorkGroup = name
+        logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
     def list_data_catalogs(self) -> list:
         return self.client.list_data_catalogs().get('DataCatalogsSummary')
@@ -137,6 +166,12 @@ class Athena():
             
         return table_metadata
 
+    def list_work_groups(self) -> list:
+        """ List AWS Athena workgroups """
+        result = self.client.list_work_groups()
+        logger.debug(f'Workgroups: {result.get("WorkGroups")}')
+        return result.get('WorkGroups')
+
     def get_table_metadata(self, TableName: str) -> dict:
         table_metadata = self._metadata.get(TableName)
         params = {
@@ -165,7 +200,7 @@ class Athena():
             response = self.client.start_query_execution(
                 QueryString=sql_query, 
                 QueryExecutionContext=execution_context, 
-                WorkGroup='primary'
+                WorkGroup=self.WorkGroup
             )
 
             # Get Query ID

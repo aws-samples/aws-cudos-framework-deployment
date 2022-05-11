@@ -721,7 +721,7 @@ class Cid:
         # Look for previously saved deployment info
         saved_datasets = self.find_saved_datasets()
 
-        found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs._datasets.values()])
+        found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
         # Update existing datasets
@@ -848,10 +848,12 @@ class Cid:
                         continue
                     self.qs._datasets.update({dataset_name: _dataset})
                     missing_datasets.remove(dataset_name)
-                    print(f'\tFound, using it')
+                    print(f'\tFound valid "{_dataset.name}" dataset, using')
+                    logger.info(f'\tFound valid "{_dataset.name}" ({_dataset.id}) dataset, using')
                 except Exception as e:
                     logger.debug(e, stack_info=True)
                     print(f"\tProvided DataSetId '{id}' can't be found\n")
+                    unset_parameter(f'{dataset_name}-dataset-id')
                     continue
             print('\n')
 
@@ -865,6 +867,7 @@ class Cid:
 
         if not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
+            self.qs.AthenaWorkGroup = self.athena.WorkGroup
             self.qs.create_data_source()
             if not len(self.qs.athena_datasources):
                 logger.info('No Athena datasources available, failing')
@@ -878,21 +881,31 @@ class Cid:
         pre_compiled_dataset = json.loads(template.safe_substitute())
         dataset_name = pre_compiled_dataset.get('Name')
 
-        # let's find the schema/database name
+        # let's find the schema/database and workgroup name
         schemas = []
+        datasources = []
+        athena_datasource = None
         if dataset_id:
             schemas = list(set(self.qs.get_datasets(id=dataset_id)[0].schemas))
+            datasources = list(set(self.qs.get_datasets(id=dataset_id)[0].datasources))
         else: # try to find dataset and get athena database
             found_datasets = self.qs.get_datasets(name=dataset_name)
             if found_datasets:
                 schemas = list(set(sum([d.schemas for d in found_datasets], [])))
+                datasources = list(set(sum([d.datasources for d in found_datasets], [])))
 
         if len(schemas) == 1:
             self.athena.DatabaseName = schemas[0]
         # else user will be suggested to choose database
+        if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
+            athena_datasource = self.qs.datasources.get(datasources[0])
+            self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+        else:
+            athena_datasource = next(iter(v for v in self.qs.athena_datasources.values()))
+        # else user will be suggested to choose WorkGroup
 
         columns_tpl = {
-            'athena_datasource_arn': next(iter(v.arn for v in self.qs.athena_datasources.values())),
+            'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
             'user_arn': self.qs.user.get('Arn')
         }

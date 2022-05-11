@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class QuickSight():
     # Define defaults
     cidAccountId = '223485597511'
+    _AthenaWorkGroup: str = None
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
     _datasources: Dict[str, Datasource] = None
@@ -64,6 +65,14 @@ class QuickSight():
     @property
     def account_id(self) -> str:
         return self.awsIdentity.get('Account')
+
+    @property
+    def AthenaWorkGroup(self) -> str:
+        return self._AthenaWorkGroup
+    
+    @AthenaWorkGroup.setter
+    def AthenaWorkGroup(self, value):
+        self._AthenaWorkGroup = value
 
     @property
     def user(self) -> dict:
@@ -173,12 +182,12 @@ class QuickSight():
         logger.info('Creating Athena data source')
         params = {
             "AwsAccountId": self.account_id,
-            "DataSourceId": "95aa6f18-abb4-436f-855f-182b199a961f",
+            "DataSourceId": str(uuid.uuid4()),
             "Name": "Athena",
             "Type": "ATHENA",
             "DataSourceParameters": {
                 "AthenaParameters": {
-                    "WorkGroup": "primary"
+                    "WorkGroup": self.AthenaWorkGroup
                 }
             },
             "Permissions": [
@@ -204,7 +213,7 @@ class QuickSight():
             # Poll for the current status of query as long as its not finished
             while current_status in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
                 response = self.describe_data_source(create_status['DataSourceId'])
-                current_status = response.get('Status')
+                current_status = response.status
 
             if (current_status != "CREATION_SUCCESSFUL"):
                 failure_reason = response.get('Errors')
@@ -275,16 +284,14 @@ class QuickSight():
         try:
             for v in self.list_data_sources():
                 _datasource = Datasource(v)
-                logger.info(f'Found datasource {_datasource.name} (_{_datasource.id})')
-                logger.debug(f'Datasource {_datasource.name} (_{_datasource.id}) details: {_datasource.__dict__}')
+                logger.info(f'Found datasource "{_datasource.name}" ({_datasource.id})')
                 if not _datasource.id in self._datasources:
-                    logger.info(f'Saving datasource {_datasource.name} (_{_datasource.id})')
+                    logger.info(f'Saving datasource "{_datasource.name}" ({_datasource.id})')
                     self._datasources.update({_datasource.id: _datasource})
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied discovering data sources')
             for v in self.datasets.values():
                 for d in v.datasources:
-                    logger.info(f'Discovering data source {d}')
                     self.describe_data_source(d)
         except Exception as e:
             logger.debug(e, stack_info=True)
@@ -345,6 +352,7 @@ class QuickSight():
         }
         try:
             result = self.client.list_data_sources(**parameters)
+            logger.debug(result)
             if result.get('Status') != 200:
                 print(f'Error, {result}')
                 exit()
@@ -546,7 +554,7 @@ class QuickSight():
             return True
 
 
-    def get_datasets(self, id: str=None, name: str=None) -> Dataset:
+    def get_datasets(self, id: str=None, name: str=None) -> list[Dataset]:
         """ get dataset that match parameters """
         result = []
         for dataset in self.datasets.values():
@@ -606,18 +614,19 @@ class QuickSight():
 
 
     def describe_data_source(self, id: str) -> Datasource:
-        """ Describes an AWS QuickSight data source """
+        """ Describes an AWS QuickSight DataSource """
         if self.datasources and id in self.datasources:
             return self.datasources.get(id)
         try:
+            logger.info(f'Discovering DataSource {id}')
             result = self.client.describe_data_source(AwsAccountId=self.account_id,DataSourceId=id)
             logger.debug(result)
             _datasource = Datasource(result.get('DataSource'))
             if _datasource.status not in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
-                logger.info(f'Data source {_datasource.name} status is {_datasource.status}, saving details')
+                logger.info(f'DataSource "{_datasource.name}" status is {_datasource.status}, saving details')
                 self._datasources.update({_datasource.id: _datasource})
             else:
-                logger.info(f'Data source {_datasource.name} status is {_datasource.status}, skipping')
+                logger.info(f'DataSource "{_datasource.name}" status is {_datasource.status}, skipping')
         except self.client.exceptions.ResourceNotFoundException:
             logger.info(f'DataSource {id} do not exist')
             raise

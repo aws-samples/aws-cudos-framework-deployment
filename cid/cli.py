@@ -90,6 +90,7 @@ def deploy(ctx, **kwargs):
     Command options:
      --dashboard-id TEXT                   QuickSight dashboard id (cudos, cost_intelligence_dashboard, kpi_dashboard, ta-organizational-view, trends-dashboard etc)
      --athena-database TEXT                Athena database
+     --athena-workgroup TEXT               Athena workgroup
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
      --quicksight-user TEXT                QuickSight user
