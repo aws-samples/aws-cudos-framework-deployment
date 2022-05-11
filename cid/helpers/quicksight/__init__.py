@@ -222,8 +222,9 @@ class QuickSight():
             return True
         except self.client.exceptions.ResourceExistsException:
             logger.error('Data source already exists')
-        except self.client.exceptions.AccessDeniedException:
-            logger.info('Access denied creating data source')
+        except self.client.exceptions.AccessDeniedException as e:
+            logger.info('Access denied creating Athena datasource')
+            logger.debug(e, stack_info=True)
         return False
 
 
