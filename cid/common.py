@@ -381,7 +381,7 @@ class Cid:
             datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
         else:
             dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
-            datasets = (dashboard_definition or {}).get('dependsOn', {}).get('datasets', [])
+            datasets = {d: None for d in (dashboard_definition or {}).get('dependsOn', {}).get('datasets', [])}
 
         try:
             # Execute query
@@ -398,23 +398,23 @@ class Cid:
             return dashboard_id
 
         print('Processing dependencies')
-        for dataset in datasets:
-            self.delete_dataset(dataset)
+        for dataset_name, dataset_id in datasets.items():
+            self.delete_dataset(name=dataset_name, id=dataset_id)
 
         return dashboard_id
 
-    def delete_dataset(self, dataset_name: str):
-        if dataset_name not in self.resources['datasets']:
-            logger.info(f'Dataset {dataset_name} is not managed by CID. Skipping.')
-            print(f'Dataset {dataset_name} is not managed by CID. Skipping.')
+    def delete_dataset(self, name: str, id: str=None):
+        if name not in self.resources['datasets']:
+            logger.info(f'Dataset {name} is not managed by CID. Skipping.')
+            print(f'Dataset {name} is not managed by CID. Skipping.')
             return False
         for dataset in list(self.qs._datasets.values()):
-            if dataset.name == dataset_name:
+            if dataset.id == id or dataset.name == name:
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
                     if dataset.id in dashboard.datasets.values():
-                        logger.info(f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
-                        print      (f'Dataset {dataset.name} is still used by dashboard "{dashboard.id}". Skipping.')
+                        logger.info(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
+                        print      (f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
                         return False
                 else: #not used
 
@@ -428,25 +428,30 @@ class Cid:
                         message=f'Delete QuickSight Dataset {dataset.name}?',
                         choices=['yes', 'no'],
                         default='no') == 'yes':
-                        print(f'Deleting dataset {dataset.name}')
+                        print(f'Deleting dataset {dataset.name} ({dataset.id})')
                         self.qs.delete_dataset(dataset.id)
                     else:
                         logger.info(f'Skipping dataset {dataset.name}')
                         print      (f'Skipping dataset {dataset.name}')
                         return False
+                datasources = list(set(self.qs.get_datasets(id=dataset.id)[0].datasources))
+                athena_datasource = self.qs.datasources.get(datasources[0])
+                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
                 break
         else:
-            print(f'Not found dataset for deletion: {dataset_name}')
-        for view_name in list(set(self.resources['datasets'][dataset_name].get('dependsOn', {}).get('views', []))):
+            logger.info(f'Dataset not found for deletion: {name} ({id})')
+        for view_name in list(set(self.resources['datasets'][name].get('dependsOn', {}).get('views', []))):
             self.delete_view(view_name)
         return True
 
     def delete_view(self, view_name):
         if view_name not in self.resources['views']:
+            logger.info(f'View {view_name} is not managed by CID. Skipping.')
             return False
+        logger.info(f'Deleting view "{view_name}"')
         definition = self.get_definition("view", name=view_name)
         if not definition:
-            print(f"Definition not found for view: {view_name}")
+            logger.info(f'Definition not found for view: "{view_name}"')
             return False
 
         for dashboard in (self.qs.dashboards or {}).values():
@@ -1003,6 +1008,7 @@ class Cid:
         # For account mappings create a view using a special helper
         if view_name in self._visited_views: # avoid checking a views multiple times in one cid session
             return
+        logger.info(f'Processing view: {view_name}')
         self._visited_views.append(view_name)
 
         if view_name in ['account_map', 'aws_accounts']:
@@ -1015,8 +1021,11 @@ class Cid:
         # Create a view
         logger.info(f'Getting view definition')
         view_definition = self.get_definition("view", name=view_name)
+        if not view_definition and view_name in self.athena._metadata.keys():
+            logger.info(f"Definition is unavailable but view exists: {view_name}, skipping")
+            return
         logger.debug(f'View definition: {view_definition}')
-        logger.info(f'Processing view: {view_name}')
+
         if recursive:
             dependency_views = view_definition.get('dependsOn', dict()).get('views', list())
             if 'cur' in dependency_views: dependency_views.remove('cur')

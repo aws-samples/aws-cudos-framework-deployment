@@ -186,7 +186,7 @@ class Athena():
         return table_metadata
 
 
-    def execute_query(self, sql_query, sleep_duration=1, database: str=None, catalog: str=None) -> str:
+    def execute_query(self, sql_query, sleep_duration=1, database: str=None, catalog: str=None, fail: bool=True) -> str:
         """ Executes an AWS Athena Query """
 
         # Set execution context
@@ -229,6 +229,8 @@ class Athena():
         # Return result, either positive or negative
         if (current_status == "SUCCEEDED"):
             return query_id
+        elif not fail:
+            return False
         else:
             failure_reason = response['QueryExecution']['Status']['StateChangeReason']
             logger.error('Athena query failed: {}'.format(failure_reason))
@@ -376,6 +378,7 @@ class Athena():
                 f'DROP TABLE IF EXISTS {name};',
                 catalog=catalog,
                 database=database,
+                fail=False
             )
         except Exception as exc:
             logger.debug(exc, stack_info=True)
@@ -399,6 +402,7 @@ class Athena():
                 f'DROP VIEW IF EXISTS {name};',
                 catalog=catalog,
                 database=database,
+                fail=False
             )
         except Exception as exc:
             logger.debug(exc, stack_info=True)
