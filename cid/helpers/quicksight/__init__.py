@@ -1,6 +1,6 @@
 import re
 import time
-from typing import Dict, Union
+from typing import Dict, Union, List
 import click
 from deepmerge import always_merger
 import uuid
@@ -555,7 +555,7 @@ class QuickSight():
             return True
 
 
-    def get_datasets(self, id: str=None, name: str=None) -> list[Dataset]:
+    def get_datasets(self, id: str=None, name: str=None) -> List[Dataset]:
         """ get dataset that match parameters """
         result = []
         for dataset in self.datasets.values():
