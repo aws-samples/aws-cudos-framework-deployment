@@ -2,7 +2,7 @@
 
 ## CUDOS - 4.68
 
-* Databses: Replaced "Database Instance Daily Elasticity by Purchase Option" with "Database Instance Hours Daily Elasticity by Purchase Option" and added a unit metric to the visual 
+* Databases: Replaced "Database Instance Daily Elasticity by Purchase Option" with "Database Instance Hours Daily Elasticity by Purchase Option" and added a unit metric to the visual 
 
 ## CUDOS - 4.67.3
 
