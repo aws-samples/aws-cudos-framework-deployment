@@ -329,7 +329,7 @@ views:
       athenaTableName:
         value: compute_optimizer_lambda_lines
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_lambda'
+        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_lambda'
         description: Compute Optimiser report S3 folder path
 
   compute_optimizer_ec2_instance_options:
