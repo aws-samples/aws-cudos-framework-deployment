@@ -285,6 +285,7 @@ views:
       athenaTableName:
         value: ta_organizational_view_reports
       s3FolderPath:
+        default: 's3://costoptimizationdata{account_id}/optics-data-collector/ta-data'
         description: Trusted Advisor Organization View report S3 folder path
 
   # Compute Optimiser (CO)
