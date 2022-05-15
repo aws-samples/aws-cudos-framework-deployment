@@ -1047,13 +1047,14 @@ class Cid:
                     table_name = view_definition.get('parameters', {}).get('athenaTableName', {}).get('value', None) or view_name
                     print(f'Updating table {table_name}')
                     self.glue.create_or_upate_table(table_name, view_query)
+                    assert self.athena.wait_for_view(table_name), f"Failed to update a table {table_name}"
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
                         print(f'Updating view: "{view_name}"')
                         self.athena.execute_query(view_query)
                     else:
                         print(f'View "{view_name}" is not compatible with update. Skipping.')
-                assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
+                    assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
                 logger.info(f'View "{view_name}" updated')
             else:
                 return
@@ -1063,9 +1064,10 @@ class Cid:
                 table_name = view_definition.get('parameters', {}).get('athenaTableName', {}).get('value', None) or view_name
                 print(f'Creating table {table_name}')
                 self.glue.create_or_upate_table(table_name, view_query)
+                assert self.athena.wait_for_view(table_name), f"Failed to create a table {table_name}"
             else:
                 self.athena.execute_query(view_query)
-            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+                assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
             logger.info(f'View "{view_name}" created')
 
 
