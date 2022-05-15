@@ -464,8 +464,9 @@ class Cid:
             print(f'Table for deletion not found: {view_name}')
         else:
             if definition.get('type', '') == 'Glue_Table':
-                print(f'Deleting table: {view_name}')
-                self.athena.delete_table(view_name)
+                table_name = definition.get('parameters', {}).get('athenaTableName', {}).get('value', None) or view_name
+                print(f'Deleting table: {table_name}')
+                self.athena.delete_table(table_name)
             else:
                 print(f'Deleting view:  {view_name}')
                 self.athena.delete_view(view_name)
@@ -1043,8 +1044,9 @@ class Cid:
             if update:
                 logger.info(f'Updating view: "{view_name}"')
                 if view_definition.get('type') == 'Glue_Table':
-                    print(f'Updating table {view_name}')
-                    self.glue.create_or_upate_table(view_name, view_query)
+                    table_name = view_definition.get('parameters', {}).get('athenaTableName', {}).get('value', None) or view_name
+                    print(f'Updating table {table_name}')
+                    self.glue.create_or_upate_table(table_name, view_query)
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
                         print(f'Updating view: "{view_name}"')
@@ -1058,7 +1060,9 @@ class Cid:
         else:
             logger.info(f'Creating view: "{view_name}"')
             if view_definition.get('type') == 'Glue_Table':
-                self.glue.create_or_upate_table(view_name, view_query)
+                table_name = view_definition.get('parameters', {}).get('athenaTableName', {}).get('value', None) or view_name
+                print(f'Creating table {table_name}')
+                self.glue.create_or_upate_table(table_name, view_query)
             else:
                 self.athena.execute_query(view_query)
             assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
