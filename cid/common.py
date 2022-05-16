@@ -434,10 +434,9 @@ class Cid:
                         logger.info(f'Skipping dataset {dataset.name}')
                         print      (f'Skipping dataset {dataset.name}')
                         return False
-                datasets = self.qs.get_datasets(id=dataset.id)
-                if not datasets:
+                if not dataset.datasources:
                     continue
-                datasources = list(set(datasets[0].datasources))
+                datasources = list(set(dataset.datasources))
                 athena_datasource = self.qs.datasources.get(datasources[0])
                 self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
                 break
