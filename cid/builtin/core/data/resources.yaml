@@ -316,7 +316,7 @@ views:
     parameters:
       s3FolderPath:
         default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_lambda'
-        description: Compute Optimiser Lambderreport S3 path
+        description: Compute Optimiser Lambda report S3 path
 
   compute_optimizer_ec2_instance_options:
     File: co/ec2_instance_options.sql
