@@ -419,7 +419,7 @@ class Cid:
                 else: #not used
 
                     # try to get the database name from the dataset (might need this for later)
-                    schema = next(iter(list(set(dataset.schemas))), None) # FIXME: manage choice if multiple data sources
+                    schema = next(iter(dataset.schemas), None) # FIXME: manage choice if multiple data sources
                     if schema:
                         self.athena.DatabaseName = schema
 
@@ -436,7 +436,7 @@ class Cid:
                         return False
                 if not dataset.datasources:
                     continue
-                datasources = list(set(dataset.datasources))
+                datasources = dataset.datasources
                 athena_datasource = self.qs.datasources.get(datasources[0])
                 self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
                 break
@@ -895,8 +895,8 @@ class Cid:
         datasources = []
         athena_datasource = None
         if dataset_id:
-            schemas = list(set(self.qs.get_datasets(id=dataset_id)[0].schemas))
-            datasources = list(set(self.qs.get_datasets(id=dataset_id)[0].datasources))
+            schemas = self.qs.get_datasets(id=dataset_id)[0].schemas
+            datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
         else: # try to find dataset and get athena database
             found_datasets = self.qs.get_datasets(name=dataset_name)
             if found_datasets:
