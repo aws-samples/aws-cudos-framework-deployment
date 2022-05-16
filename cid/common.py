@@ -1091,11 +1091,11 @@ class Cid:
         ).decode('utf-8'))
 
         # Prepare template parameters
-        columns_tpl = {}
-        if cur_required:
-            columns_tpl["cur_table_name"] = self.cur.tableName
-        columns_tpl["athenaTableName"] = view_name
-        columns_tpl["athena_database_name"] = self.athena.DatabaseName
+        columns_tpl = {
+            'cur_table_name': self.cur.tableName if cur_required else None,
+            'athenaTableName': view_name,
+            'athena_database_name': self.athena.DatabaseName,
+        }
 
         for k, v in view_definition.get('parameters', dict()).items():
             if isinstance(v, str):
