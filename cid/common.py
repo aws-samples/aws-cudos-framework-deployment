@@ -1100,10 +1100,8 @@ class Cid:
         for k, v in view_definition.get('parameters', dict()).items():
             if isinstance(v, str):
                 param = {k:v}
-            elif isinstance(v, dict) and v.get('value'):
-                param = {k:v.get('value')}
             elif isinstance(v, dict):
-                value = None
+                value = v.get('value')
                 while not value:
                     value = get_parameter(
                         param_name=f'view-{view_name}-{k}',
