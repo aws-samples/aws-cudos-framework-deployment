@@ -1093,12 +1093,17 @@ class Cid:
             'cur_table_name': self.cur.tableName if cur_required else None,
             'athena_database_name': self.athena.DatabaseName if view_definition.get('parameters', dict()).get('athenaDatabaseName') else None
         }
-        for k,v in view_definition.get('parameters', dict()).items():
-            if k == 'athenaDatabaseName':
-                param = {'athena_database_name': self.athena.DatabaseName}
-            elif v.get('value'):
+
+        #Typical vars for glue tables
+        columns_tpl["athenaTableName"] = view_name
+        columns_tpl["athenaDatabaseName"] = columns_tpl["athena_database_name"]
+
+        for k, v in view_definition.get('parameters', dict()).items():
+            if isinstance(v, str):
+                param = {k:v}
+            elif isinstance(v, dict) and v.get('value'):
                 param = {k:v.get('value')}
-            else:
+            elif isinstance(v, dict):
                 value = None
                 while not value:
                     value = get_parameter(
@@ -1108,6 +1113,9 @@ class Cid:
                         template_variables=dict(account_id=self.awsIdentity.get('Account')),
                     )
                 param = {k:value}
+            else:
+                logger.critical(f'Unknown parameter type for "{k}". Must be a string or a dict with value or with default key')
+                exit(1)
             # Add parameter
             columns_tpl.update(param)
         # Compile template

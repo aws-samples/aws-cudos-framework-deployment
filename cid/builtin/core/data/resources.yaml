@@ -133,7 +133,7 @@ datasets:
     File: tao/dataset.json
     dependsOn:
       views:
-        - ta-organizational-view
+        - ta_organizational_view_reports
 
   # Trends
   daily-anomaly-detection:
@@ -277,60 +277,46 @@ views:
           - summary_view
 
   # Trusted Advisor (TAO)
-  ta-organizational-view:
+  ta_organizational_view_reports:
     type: Glue_Table
     File: tao/glue_table.json
     parameters:
-      athenaDatabaseName:
-      athenaTableName:
-        value: ta_organizational_view_reports
       s3FolderPath:
-        description: Trusted Advisor Organization View report S3 folder path
+        default: 's3://costoptimizationdata{account_id}/optics-data-collector/ta-data'
+        description: Trusted Advisor Organization View report S3 path
 
   # Compute Optimiser (CO)
   compute_optimizer_ec2_instance_lines:
     type: Glue_Table
     File: co/ec2_instance.json
     parameters:
-      athenaDatabaseName:
-      athenaTableName:
-        value: compute_optimizer_ec2_instance_lines
       s3FolderPath:
         default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
-        description: Compute Optimiser report S3 folder path
+        description: Compute Optimiser EC2 report S3 path
 
   compute_optimizer_auto_scale_lines:
     type: Glue_Table
     File: co/auto_scale.json
     parameters:
-      athenaDatabaseName:
-      athenaTableName:
-        value: compute_optimizer_auto_scale_lines
       s3FolderPath:
         default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_auto_scale'
-        description: Compute Optimiser report S3 folder path
+        description: Compute Optimiser auto_scale report S3 path
 
   compute_optimizer_ebs_volume_lines:
     type: Glue_Table
     File: co/ebs_volume.json
     parameters:
-      athenaDatabaseName:
-      athenaTableName:
-        value: compute_optimizer_ebs_volume_lines
       s3FolderPath:
         default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ebs_volume'
-        description: Compute Optimiser report S3 folder path
+        description: Compute Optimiser EBS report S3 path
 
   compute_optimizer_lambda_lines:
     type: Glue_Table
     File: co/lambda.json
     parameters:
-      athenaDatabaseName:
-      athenaTableName:
-        value: compute_optimizer_lambda_lines
       s3FolderPath:
         default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_lambda'
-        description: Compute Optimiser report S3 folder path
+        description: Compute Optimiser Lambderreport S3 path
 
   compute_optimizer_ec2_instance_options:
     File: co/ec2_instance_options.sql
