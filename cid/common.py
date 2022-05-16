@@ -1094,10 +1094,8 @@ class Cid:
         columns_tpl = {}
         if cur_required:
             columns_tpl["cur_table_name"] = self.cur.tableName
-
-        if view_definition.get('type') == 'Glue_Table':
-            columns_tpl["athenaTableName"] = view_name
-            columns_tpl["athena_database_name"] = self.athena.DatabaseName
+        columns_tpl["athenaTableName"] = view_name
+        columns_tpl["athena_database_name"] = self.athena.DatabaseName
 
         for k, v in view_definition.get('parameters', dict()).items():
             if isinstance(v, str):
