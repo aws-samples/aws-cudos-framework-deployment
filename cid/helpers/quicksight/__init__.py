@@ -81,6 +81,9 @@ class QuickSight():
             if not self._user:
                 # If no user match, ask
                 self._user = self.select_user()
+            if not self._user:
+                logger.critical('Cannot get QuickSight. Please provide correct QuickSight user as --quicksight-user parameter.')
+                exit(1)
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
         return self._user
 
@@ -401,7 +404,6 @@ class QuickSight():
             userList = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing users')
-            return None
 
         _user = get_parameter(
             param_name='quicksight-user',
