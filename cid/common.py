@@ -261,8 +261,12 @@ class Cid:
             dashboard_definition.update({'datasets': {}})
         for dataset_name in required_datasets:
             arn = next((v.arn for v in self.qs._datasets.values() if v.name == dataset_name), None)
+
             if arn:
                 dashboard_definition.get('datasets').update({dataset_name: arn})
+            else:
+                logger.critical(f'Dataset {dataset_name} is not found in {[v.name for v in self.qs._datasets.values()]}')
+                exit(1)
 
         kwargs = dict()
         local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard_definition.get("dashboardId")}.json'
@@ -436,8 +440,12 @@ class Cid:
                         return False
                 if not dataset.datasources:
                     continue
-                datasources = dataset.datasources
-                athena_datasource = self.qs.datasources.get(datasources[0])
+
+                athena_datasource = self.qs.datasources.get(dataset.datasources[0])
+
+                if not athena_datasource or not athena_datasource.AthenaParameters.get('WorkGroup'):
+                    print(f'In datasets {name} datasources = {dataset.datasources}. Skipping' )
+                    continue
                 self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
                 break
         else:
