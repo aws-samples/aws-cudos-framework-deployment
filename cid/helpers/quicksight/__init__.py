@@ -404,6 +404,7 @@ class QuickSight():
             userList = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing users')
+            return None
 
         _user = get_parameter(
             param_name='quicksight-user',
