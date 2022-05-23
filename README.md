@@ -3,20 +3,23 @@
 [![PyPI version](https://badge.fury.io/py/cid-cmd.svg)](https://badge.fury.io/py/cid-cmd)
 
 ## Welcome to Cloud Intelligence Dashboards (CUDOS Framework) automation repository
+This repository contains CloudFormation templates and Command Line tool (cid-cmd) for managing various dashboards provided in AWS Well Architected LAB [Cloud Intelligence Dashboards](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/).
 
-### The scripts in this repo have been succesfully tested in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home) (`recommended`)
+There are several ways we can manage dashboards:
+1. Manual (2 hours) 
+2. CloudFormation Tempalte (30 mins)
+3. (`recommended`) Using cid-cmd tool. (5 mins) 
+
+We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home).
 
 ## Supported dashboards
-- [CUDOS Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=cudos)
-- [Cost Intelligence Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=cost_intelligence_dashboard)
-- [Trusted Advisor Organisation (TAO) Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=e1799d0d-166c-4e61-8fa6-5c927f70c799)
-- [Trends Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=trends-dashboard)
-- [KPI Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=kpi)
-- [Compute Optimizer Dashboard](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=compute-optimizer-dashboard)
+- [CUDOS Dashboard](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2b_cudos_dashboard/) [demo](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=cudos)
+- [Cost Intelligence Dashboard](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2a_cost_intelligence_dashboard/) [demo](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=cost_intelligence_dashboard)
+- [Trusted Advisor Organisation (TAO) Dashboard](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/trusted-advisor-dashboards/) [demo](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=e1799d0d-166c-4e61-8fa6-5c927f70c799)
+- [Trends Dashboard](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/3_additional_dashboards/#trends-dashboard) [demo](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=trends-dashboard)
+- [KPI Dashboard](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2c_kpi_dashboard/) [demo](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=kpi)
+- [Compute Optimizer Dashboard](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/compute-optimizer-dashboards/) [demo](https://d1s0yx3p3y3rah.cloudfront.net/anonymous-embed?dashboard=compute-optimizer-dashboard)
 
-:white_check_mark: means that the step you are reading below *Is* compatible with a deployment of the dashboards that used the [Cloudformation deployment method](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/2b_cudos_dashboard/#option-3-cloudformation-deployment)
-
-:heavy_exclamation_mark: means that the step you are reading *Is not* compatible with a deployment of the dashboards that used the [legacy automation](./legacy)
 
 ## Before you start
 1. :heavy_exclamation_mark: Complete the prerequisites for respective dashboard
@@ -26,7 +29,6 @@
     - [Trends Dashboard](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/)
     - [KPI Dashboard](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/)
     - [Compute Optimizer Dashboard](https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
-
 
 
 2. :heavy_exclamation_mark: [Specifying a Query Result Location Using a Workgroup](https://docs.aws.amazon.com/athena/latest/ug/querying.html#query-results-specify-location-workgroup)
@@ -80,5 +82,3 @@ This will produce a log file in the same directory that were at the tile of laun
 :heavy_exclamation_mark:Inspect the produced debug log for any sensitive information and anonimise it.
 
 We encourage you to open [new issue](https://github.com/aws-samples/aws-cudos-framework-deployment/issues/new) with description of the problem and attached debug log file.
-
-## Legacy (bash) automation has been moved under [**legacy**](./legacy/) directory
