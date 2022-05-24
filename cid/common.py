@@ -16,7 +16,7 @@ from cid import utils
 from cid.plugin import Plugin
 from cid.utils import get_parameter, unset_parameter
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dataset
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset
 from cid._version import __version__
 
 
@@ -243,7 +243,11 @@ class Cid:
         # Get selected dashboard definition
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
         if not dashboard_definition:
-            raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
+            dashboard = self.qs.dashboards.get(dashboard_id)
+            if isinstance(dashboard, Dashboard):
+                dashboard_definition = dashboard.definition
+            else:
+                raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
         required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
