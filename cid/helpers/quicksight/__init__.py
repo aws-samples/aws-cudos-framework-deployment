@@ -651,7 +651,7 @@ class QuickSight():
             logger.debug(result)
         except Exception as e:
             logger.debug(e, stack_info=True)
-            print(f'Error: Template {template_id} is not available in account {account_id}')
+            print(f'Error: Template {template_id} is not available in account {account_id}. Please check if you have Enterprise Edition of QuickSight.')
             exit(1)
         return result.get('Template')
 
