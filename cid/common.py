@@ -892,6 +892,7 @@ class Cid:
         if not len(self.qs.athena_datasources):
             logger.info('No Athena datasources available, failing')
             print('No Athena datasources detected and unable to create one. Please create at least one dataset manually if it fails.')
+            # Not failing here to let views creation below
         else:
             pre_compiled_dataset = json.loads(template.safe_substitute())
             dataset_name = pre_compiled_dataset.get('Name')
@@ -912,11 +913,12 @@ class Cid:
                 self.athena.DatabaseName = schemas[0]
             # else user will be suggested to choose database
             if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
-                athena_datasource = self.qs.datasources.get(datasources[0])
-                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+                athena_datasource = self.qs.get_datasources(id=datasources[0])
             else:
                 # FIXME: add user choice
                 athena_datasource = next(iter(v for v in self.qs.athena_datasources.values()))
+                logger.info(f'Found {len(datasources)} Athena datasources, using the first one {athena_datasource.id}')
+            self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
 
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn if athena_datasource else None,
