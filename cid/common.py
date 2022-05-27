@@ -884,7 +884,6 @@ class Cid:
             if not len(self.qs.athena_datasources):
                 logger.info('No Athena datasources available, failing')
                 print('No Athena datasources detected and unable to create one. Please create at least one dataset manually if it fails.')
-                return False
 
         template = Template(resource_string(
             package_or_requirement=dataset_definition.get('providedBy'),
