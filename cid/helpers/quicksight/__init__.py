@@ -649,9 +649,15 @@ class QuickSight():
         try:
             result = self.use1Client.describe_template(AwsAccountId=account_id,TemplateId=template_id)
             logger.debug(result)
+        except self.client.exceptions.UnsupportedUserEditionException:
+            logger.critical('AWS QuickSight Enterprise Edition is required')
+            exit(1)
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.critical(f'Error: Template {template_id} is not available in account {account_id}.')
+            exit(1)
         except Exception as e:
             logger.debug(e, stack_info=True)
-            print(f'Error: Template {template_id} is not available in account {account_id}. Please check if you have Enterprise Edition of QuickSight.')
+            logger.critical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
             exit(1)
         return result.get('Template')
 
