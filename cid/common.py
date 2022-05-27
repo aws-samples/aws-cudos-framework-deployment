@@ -877,47 +877,49 @@ class Cid:
             logger.critical("Error: definition is broken. Check resources file.")
             exit(1)
 
-        if not len(self.qs.athena_datasources):
-            logger.info('No Athena datasources found, attempting to create one')
-            self.qs.AthenaWorkGroup = self.athena.WorkGroup
-            self.qs.create_data_source()
-            if not len(self.qs.athena_datasources):
-                logger.info('No Athena datasources available, failing')
-                print('No Athena datasources detected and unable to create one. Please create at least one dataset manually if it fails.')
-
         template = Template(resource_string(
             package_or_requirement=dataset_definition.get('providedBy'),
             resource_name=f'data/datasets/{dataset_file}',
         ).decode('utf-8'))
-
-        pre_compiled_dataset = json.loads(template.safe_substitute())
-        dataset_name = pre_compiled_dataset.get('Name')
-
-        # let's find the schema/database and workgroup name
-        schemas = []
-        datasources = []
         athena_datasource = None
-        if dataset_id:
-            schemas = self.qs.get_datasets(id=dataset_id)[0].schemas
-            datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
-        else: # try to find dataset and get athena database
-            found_datasets = self.qs.get_datasets(name=dataset_name)
-            if found_datasets:
-                schemas = list(set(sum([d.schemas for d in found_datasets], [])))
-                datasources = list(set(sum([d.datasources for d in found_datasets], [])))
 
-        if len(schemas) == 1:
-            self.athena.DatabaseName = schemas[0]
-        # else user will be suggested to choose database
-        if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
-            athena_datasource = self.qs.datasources.get(datasources[0])
-            self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+
+        if not len(self.qs.athena_datasources):
+            logger.info('No Athena datasources found, attempting to create one')
+            self.qs.AthenaWorkGroup = self.athena.WorkGroup
+            self.qs.create_data_source()
+
+        if not len(self.qs.athena_datasources):
+            logger.info('No Athena datasources available, failing')
+            print('No Athena datasources detected and unable to create one. Please create at least one dataset manually if it fails.')
         else:
-            athena_datasource = next(iter(v for v in self.qs.athena_datasources.values()))
-        # else user will be suggested to choose WorkGroup
+            pre_compiled_dataset = json.loads(template.safe_substitute())
+            dataset_name = pre_compiled_dataset.get('Name')
+
+            # let's find the schema/database and workgroup name
+            schemas = []
+            datasources = []
+            if dataset_id:
+                schemas = self.qs.get_datasets(id=dataset_id)[0].schemas
+                datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
+            else: # try to find dataset and get athena database
+                found_datasets = self.qs.get_datasets(name=dataset_name)
+                if found_datasets:
+                    schemas = list(set(sum([d.schemas for d in found_datasets], [])))
+                    datasources = list(set(sum([d.datasources for d in found_datasets], [])))
+
+            if len(schemas) == 1:
+                self.athena.DatabaseName = schemas[0]
+            # else user will be suggested to choose database
+            if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
+                athena_datasource = self.qs.datasources.get(datasources[0])
+                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+            else:
+                # FIXME: add user choice
+                athena_datasource = next(iter(v for v in self.qs.athena_datasources.values()))
 
         columns_tpl = {
-            'athena_datasource_arn': athena_datasource.arn,
+            'athena_datasource_arn': athena_datasource.arn if athena_datasource else None,
             'athena_database_name': self.athena.DatabaseName,
             'user_arn': self.qs.user.get('Arn')
         }
