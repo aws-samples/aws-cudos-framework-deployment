@@ -113,7 +113,7 @@ class QuickSight():
     @property
     def athena_datasources(self) -> Dict[str, Datasource]:
         """Returns a list of existing athena datasources"""
-        return {k: v for (k, v) in self.datasources.items() if v.type == 'ATHENA'}
+        return {d.id: d for d in self.get_datasources(type='ATHENA')}
 
     @property
     def datasources(self) -> Dict[str, Datasource]:
@@ -567,6 +567,21 @@ class QuickSight():
         return result
 
 
+    def get_datasources(self, id: str=None, name: str=None, type: str=None, athena_workgroup_name: str=None) -> List[Datasource]:
+        """ get datasource that matches parameters """
+        result = []
+        for datasource in self.datasources.values():
+            if id is not None and datasource.id != id:
+                continue
+            if name is not None and datasource.name != name:
+                continue
+            if type is not None and datasource.type != type:
+                continue
+            if athena_workgroup_name is not None and datasource.AthenaParameters.get('WorkGroup') != athena_workgroup_name:
+                continue
+            result.append(datasource)
+        return result
+
 
     def describe_dataset(self, id, timeout: int=1) -> Dataset:
         """ Describes an AWS QuickSight dataset """
@@ -623,7 +638,7 @@ class QuickSight():
             result = self.client.describe_data_source(AwsAccountId=self.account_id,DataSourceId=id)
             logger.debug(result)
             _datasource = Datasource(result.get('DataSource'))
-            if _datasource.status not in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
+            if _datasource.status not in ['CREATION_IN_PROGRESS', 'CREATION_FAILED']:
                 logger.info(f'DataSource "{_datasource.name}" status is {_datasource.status}, saving details')
                 self._datasources.update({_datasource.id: _datasource})
             else:
