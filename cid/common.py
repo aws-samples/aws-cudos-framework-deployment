@@ -835,8 +835,8 @@ class Cid:
                     logger.info(f'Unable to create dataset  "{dataset_name}", missing permissions')
                     logger.debug(e, stack_info=True)
                 except Exception as e:
+                    logger.info(f'Unable to create dataset  "{dataset_name}", {e}')
                     logger.debug(e, stack_info=True)
-                    raise
 
         # Last chance to enter DataSetIds manually by user
         if len(missing_datasets):
