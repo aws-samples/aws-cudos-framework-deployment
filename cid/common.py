@@ -834,9 +834,17 @@ class Cid:
                     print(f'Unable to create dataset  "{dataset_name}", missing permissions')
                     logger.info(f'Unable to create dataset  "{dataset_name}", missing permissions')
                     logger.debug(e, stack_info=True)
+
+                except self.qs.client.exceptions.ClientError as e:
+                    logger.info(f'Unable to create dataset  "{dataset_name}"')
+                    if error.response['Error']['Code'] == 'ValidationException':
+                        logger.debug('Skipping for ValidationException')
+                    else:
+                        raise
                 except Exception as e:
                     logger.info(f'Unable to create dataset  "{dataset_name}", {e}')
                     logger.debug(e, stack_info=True)
+                    raise
 
         # Last chance to enter DataSetIds manually by user
         if len(missing_datasets):
