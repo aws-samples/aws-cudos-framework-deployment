@@ -16,7 +16,7 @@ from cid import utils
 from cid.plugin import Plugin
 from cid.utils import get_parameter, unset_parameter
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
 
 
@@ -881,6 +881,7 @@ class Cid:
             package_or_requirement=dataset_definition.get('providedBy'),
             resource_name=f'data/datasets/{dataset_file}',
         ).decode('utf-8'))
+        cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
 
 
@@ -913,29 +914,17 @@ class Cid:
                 self.athena.DatabaseName = schemas[0]
             # else user will be suggested to choose database
             if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
-                athena_datasource = self.qs.get_datasources(id=datasources[0])
+                athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
             else:
                 # FIXME: add user choice
                 athena_datasource = next(iter(v for v in self.qs.athena_datasources.values()))
                 logger.info(f'Found {len(datasources)} Athena datasources, using the first one {athena_datasource.id}')
-            self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
-
-        columns_tpl = {
-            'athena_datasource_arn': athena_datasource.arn if athena_datasource else None,
-            'athena_database_name': self.athena.DatabaseName,
-            'user_arn': self.qs.user.get('Arn')
-        }
-        if dataset_definition.get('dependsOn').get('cur'):
-            columns_tpl['cur_table_name'] = self.cur.tableName
-
-        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
-        if dataset_id:
-            compiled_dataset.update({'DataSetId': dataset_id})
-
+            if isinstance(athena_datasource, Datasource):
+                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
 
         # Check for required views
         _views = dataset_definition.get('dependsOn').get('views')
-        required_views = [(self.cur.tableName if name =='${cur_table_name}' else name) for name in _views]
+        required_views = [(self.cur.tableName if cur_required and name =='${cur_table_name}' else name) for name in _views]
 
         self.athena.discover_views(required_views)
         found_views = utils.intersection(required_views, self.athena._metadata.keys())
@@ -944,7 +933,7 @@ class Cid:
         if recursive:
             print(f"Detected views: {', '.join(found_views)}")
             for view_name in found_views:
-                if self._clients.get('cur') and view_name == self.cur.tableName:
+                if cur_required and view_name == self.cur.tableName:
                     logger.debug(f'Dependancy view {view_name} is a CUR. Skip.')
                     continue
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
@@ -954,6 +943,19 @@ class Cid:
             print(f"Missing views: {', '.join(missing_views)}")
             for view_name in missing_views:
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
+
+        if not isinstance(athena_datasource, Datasource): return False
+        # Proceed only if all the parameters are set
+        columns_tpl = {
+            'athena_datasource_arn': athena_datasource.arn,
+            'athena_database_name': self.athena.DatabaseName,
+            'cur_table_name': self.cur.tableName if cur_required else None,
+            'user_arn': self.qs.user.get('Arn')
+        }
+
+        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
+        if dataset_id:
+            compiled_dataset.update({'DataSetId': dataset_id})
 
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
         if isinstance(found_dataset, Dataset):
