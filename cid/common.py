@@ -955,6 +955,9 @@ class Cid:
             for view_name in missing_views:
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
 
+        if not athena_datasource:
+            return False # we were not able to get athena datasources. Cannot create or update dataset
+
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
         if isinstance(found_dataset, Dataset):
             if update:
