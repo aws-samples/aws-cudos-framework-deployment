@@ -1055,7 +1055,7 @@ class Cid:
                 logger.info(f'Updating view: "{view_name}"')
                 if view_definition.get('type') == 'Glue_Table':
                     print(f'Updating table {view_name}')
-                    self.glue.create_or_upate_table(view_name, view_query)
+                    self.glue.create_or_update_table(view_name, view_query)
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
                         print(f'Updating view: "{view_name}"')
@@ -1069,7 +1069,7 @@ class Cid:
         else:
             logger.info(f'Creating view: "{view_name}"')
             if view_definition.get('type') == 'Glue_Table':
-                self.glue.create_or_upate_table(view_name, view_query)
+                self.glue.create_or_update_table(view_name, view_query)
             else:
                 self.athena.execute_query(view_query)
             assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
