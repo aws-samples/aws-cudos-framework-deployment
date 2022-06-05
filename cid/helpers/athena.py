@@ -361,7 +361,7 @@ class Athena():
             else:
                 time.sleep(poll_interval)
         else:
-            logger.info(f'view {view_name} exists')
+            logger.info(f'View {view_name} does not exist, or not discoverable')
             return False
 
 
