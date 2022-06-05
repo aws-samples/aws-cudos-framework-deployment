@@ -1049,6 +1049,7 @@ class Cid:
                     logger.info(f'Missing dependency view: {dep_view_name}, creating')
                 self.create_or_update_view(dep_view_name, recursive=recursive, update=update)
         view_query = self.get_view_query(view_name=view_name)
+        logger.debug(f'view_query: {view_query}')
         if view_name in self.athena._metadata.keys():
             logger.debug(f'View "{view_name}" exists')
             if update:
