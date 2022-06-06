@@ -17,14 +17,14 @@ Others: see https://bats-core.readthedocs.io/en/latest/installation.html
 
 Non-parallel (each test runs in 1-3 min)
 
-	bats cid/test/bats/cudos.bats \
+	bats cid/test/bats/ \
 		--print-output-on-failure \
 		--recursive  \
 		--timing \
 		--trace
 
 
-Parallel (All test test run in 3 min)
+Experemental parallel run (All tests run in 3 min, this run is flaky)
 
 	bats cid/test/bats/ \
 		--jobs 5 \
