@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.68.1
+
+* RI/SP Summary: Fix filters for "Amortised Spend by Purchase Option and Savings (Potential Savings Eligible Workloads Only)" vizual to exclude services which can't be covered by RIs or SPs 
+
 ## CUDOS - 4.68
 
 * Databases: Replaced "Database Instance Daily Elasticity by Purchase Option" with "Database Instance Hours Daily Elasticity by Purchase Option" and added a unit metric to the visual 
