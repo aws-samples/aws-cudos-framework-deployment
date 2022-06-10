@@ -220,7 +220,7 @@ class QuickSight():
 
             if (current_status != "CREATION_SUCCESSFUL"):
                 failure_reason = response.get('Errors')
-                logger.info(f'Data source creation failed with reason {failure_reason}')
+                logger.error(f'Data source creation failed with reason {failure_reason}')
                 return False
             return True
         except self.client.exceptions.ResourceExistsException:
@@ -288,10 +288,12 @@ class QuickSight():
         try:
             for v in self.list_data_sources():
                 _datasource = Datasource(v)
-                logger.info(f'Found datasource "{_datasource.name}" ({_datasource.id})')
-                if not _datasource.id in self._datasources:
-                    logger.info(f'Saving datasource "{_datasource.name}" ({_datasource.id})')
-                    self._datasources.update({_datasource.id: _datasource})
+                logger.info(f'Found datasource "{_datasource.name}" ({_datasource.id}) status={_datasource.status}')
+                if _datasource.status in ['CREATION_IN_PROGRESS', 'CREATION_FAILED']:
+                    logger.info(f'Ignoring "{_datasource.name}"')
+                    continue
+                logger.info(f'Saving datasource "{_datasource.name}" ({_datasource.id})')
+                self._datasources.update({_datasource.id: _datasource})
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied discovering data sources')
             for v in self.datasets.values():
