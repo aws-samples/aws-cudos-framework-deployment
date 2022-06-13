@@ -25,3 +25,12 @@ class Datasource(CidQsResource):
     @property
     def type(self) -> str:
         return self.get_property('Type')
+
+    @property
+    def is_healthy(self) -> bool:
+        return self.status not in ['CREATION_IN_PROGRESS', 'CREATION_FAILED']
+
+    @property
+    def error_info(self) -> bool:
+        """ returns a dict  {'Type': '...', 'Message': '...'} or empty dict """
+        return self.get_property('ErrorInfo') or {}

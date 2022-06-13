@@ -215,11 +215,12 @@ class QuickSight():
             logger.info(f'Data source creation status {current_status}')
             # Poll for the current status of query as long as its not finished
             while current_status in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
-                response = self.describe_data_source(create_status['DataSourceId'])
-                current_status = response.status
+                time.sleep(1)
+                datasource = self.describe_data_source(create_status['DataSourceId'])
+                current_status = datasource.status
 
             if (current_status != "CREATION_SUCCESSFUL"):
-                failure_reason = response.get('Errors')
+                failure_reason = response.error_info.get('Message')
                 logger.error(f'Data source creation failed with reason {failure_reason}')
                 return False
             return True
@@ -572,10 +573,12 @@ class QuickSight():
         return result
 
 
-    def get_datasources(self, id: str=None, name: str=None, type: str=None, athena_workgroup_name: str=None) -> List[Datasource]:
+    def get_datasources(self, id: str=None, name: str=None, type: str=None, athena_workgroup_name: str=None, healthy: bool=True) -> List[Datasource]:
         """ get datasource that matches parameters """
         result = []
         for datasource in self.datasources.values():
+            if datasource.is_healthy != healthy:
+                continue
             if id is not None and datasource.id != id:
                 continue
             if name is not None and datasource.name != name:
@@ -640,14 +643,11 @@ class QuickSight():
             return self.datasources.get(id)
         try:
             logger.info(f'Discovering DataSource {id}')
-            result = self.client.describe_data_source(AwsAccountId=self.account_id,DataSourceId=id)
+            result = self.client.describe_data_source(AwsAccountId=self.account_id, DataSourceId=id)
             logger.debug(result)
             _datasource = Datasource(result.get('DataSource'))
-            if _datasource.status not in ['CREATION_IN_PROGRESS', 'CREATION_FAILED']:
-                logger.info(f'DataSource "{_datasource.name}" status is {_datasource.status}, saving details')
-                self._datasources.update({_datasource.id: _datasource})
-            else:
-                logger.info(f'DataSource "{_datasource.name}" status is {_datasource.status}, skipping')
+            logger.info(f'DataSource "{_datasource.name}" status is {_datasource.status}, saving details')
+            self._datasources.update({_datasource.id: _datasource})
         except self.client.exceptions.ResourceNotFoundException:
             logger.info(f'DataSource {id} do not exist')
             raise
