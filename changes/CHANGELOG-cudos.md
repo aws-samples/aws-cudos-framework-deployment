@@ -1,5 +1,13 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.69
+
+* Compute Summary: Added ability to choose service (ECS or EKS) for AWS Fargate visuals
+* Compute Summary: 'TOP 20 Fargate Clusters' visual renamed to 'TOP 20 "ECS Fargate", "EKS Fargate" and "EKS Control Plane" cost' and shows corresponding Fargate and EKS Cluster Control plane charges
+* End User Computing: Added 'Workspaces Count per Running Mode', 'Average Cost per WorkSpace','Average Usage for AutoStop WorkSpaces (hours)','Workspaces Count per Region','Workspaces spend per Bundle' and 'Average WorkSpaces cost per Region' visuals
+* End User Computing: Added Bundle description to 'WorkSpaces Cost and Usage Top 20' and 'Workspaces AutoStop with monthly usage over 80 hours' visuals
+
+
 ## CUDOS - 4.68.1
 
 * RI/SP Summary: Fix filters for "Amortised Spend by Purchase Option and Savings (Potential Savings Eligible Workloads Only)" vizual to exclude services which can't be covered by RIs or SPs 
