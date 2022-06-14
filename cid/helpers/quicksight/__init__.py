@@ -218,10 +218,8 @@ class QuickSight():
                 time.sleep(1)
                 datasource = self.describe_data_source(create_status['DataSourceId'])
                 current_status = datasource.status
-
-            if (current_status != "CREATION_SUCCESSFUL"):
-                failure_reason = response.error_info.get('Message')
-                logger.error(f'Data source creation failed with reason {failure_reason}')
+            if not datasource.is_healthy:
+                logger.error(f'Data source creation failed: {datasource.error_info}')
                 return False
             return True
         except self.client.exceptions.ResourceExistsException:
@@ -290,10 +288,6 @@ class QuickSight():
             for v in self.list_data_sources():
                 _datasource = Datasource(v)
                 logger.info(f'Found datasource "{_datasource.name}" ({_datasource.id}) status={_datasource.status}')
-                if _datasource.status in ['CREATION_IN_PROGRESS', 'CREATION_FAILED']:
-                    logger.info(f'Ignoring "{_datasource.name}"')
-                    continue
-                logger.info(f'Saving datasource "{_datasource.name}" ({_datasource.id})')
                 self._datasources.update({_datasource.id: _datasource})
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied discovering data sources')
@@ -577,7 +571,7 @@ class QuickSight():
         """ get datasource that matches parameters """
         result = []
         for datasource in self.datasources.values():
-            if datasource.is_healthy != healthy:
+            if healthy is not None and datasource.is_healthy != healthy:
                 continue
             if id is not None and datasource.id != id:
                 continue
