@@ -1,0 +1,11 @@
+{
+  "Principal": "${user_arn}",
+  "Actions": [
+    "quicksight:UpdateDataSourcePermissions",
+    "quicksight:DescribeDataSource",
+    "quicksight:DescribeDataSourcePermissions",
+    "quicksight:PassDataSource",
+    "quicksight:UpdateDataSource",
+    "quicksight:DeleteDataSource"
+  ]
+}
