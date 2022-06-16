@@ -36,4 +36,4 @@ jobs:
       - name:  Test
         run: |
           sudo apt-get install -y bats
-          bats cid/test/cudos.bats
+          bats cid/test/bats/cudos.bats
