@@ -29,6 +29,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install ./
+          cid-cmd --help
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
