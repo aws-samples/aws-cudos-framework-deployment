@@ -1,16 +1,19 @@
+import json
+import logging
 import re
 import time
+import uuid
+from pkg_resources import resource_string
+from string import Template
 from typing import Dict, List, Union
+
 import click
 from deepmerge import always_merger
-import uuid
 
 from cid.utils import get_parameter
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -183,6 +186,15 @@ class QuickSight():
     def create_data_source(self) -> bool:
         """Create a new data source"""
         logger.info('Creating Athena data source')
+
+        columns_tpl = {
+            'user_arn': self.user.get('Arn')
+        }
+        data_source_permissions_tpl = Template(resource_string(
+            package_or_requirement=__name__,
+            resource_name=f'builtin/core/data/permissions/data_source_permissions.json',
+        ).decode('utf-8'))
+        data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
         params = {
             "AwsAccountId": self.account_id,
             "DataSourceId": str(uuid.uuid4()),
@@ -194,17 +206,7 @@ class QuickSight():
                 }
             },
             "Permissions": [
-                {
-                    "Principal": self.user.get('Arn'),
-                    "Actions": [
-                        "quicksight:UpdateDataSourcePermissions",
-                        "quicksight:DescribeDataSource",
-                        "quicksight:DescribeDataSourcePermissions",
-                        "quicksight:PassDataSource",
-                        "quicksight:UpdateDataSource",
-                        "quicksight:DeleteDataSource"
-                    ]
-                }
+                data_source_permissions
             ]
         }
         try:
@@ -230,18 +232,18 @@ class QuickSight():
         return False
 
 
-    def create_folder(self, folder_name: str) -> dict:
+    def create_folder(self, folder_name: str, **create_parameters) -> dict:
         """Create a new folder"""
         logger.info('Creating QuickSight folder')
-        params = {
+        create_parameters.update({
             "AwsAccountId": self.account_id,
             "FolderId": str(uuid.uuid4()),
             "Name": folder_name,
             "FolderType": "SHARED",
-        }
+        })
         try:
-            logger.info(f'Creating folder {params}')
-            result = self.client.create_folder(**params)
+            logger.info(f'Creating folder {create_parameters}')
+            result = self.client.create_folder(**create_parameters)
             logger.debug(f'Folder creation result {result}')
             if (result.get('Status') != 200):
                 logger.info(f'Folder creation failed with status {result.get("Status")}')
@@ -750,24 +752,20 @@ class QuickSight():
                 'DataSetArn': v
             })
         
+        dashboard_permissions_tpl = Template(resource_string(
+            package_or_requirement=__name__,
+            resource_name=f'builtin/core/data/permissions/dashboard_permissions.json',
+        ).decode('utf-8'))
+        columns_tpl = {
+            'user_arn': self.user.get('Arn')
+        }
+        dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
         create_parameters = {
             'AwsAccountId': self.account_id,
             'DashboardId': definition.get('dashboardId'),
             'Name': definition.get('name'),
             'Permissions': [
-                {
-                    "Principal": self.user.get('Arn'),
-                    "Actions": [
-                        "quicksight:DescribeDashboard",
-                        "quicksight:ListDashboardVersions",
-                        "quicksight:UpdateDashboardPermissions",
-                        "quicksight:QueryDashboard",
-                        "quicksight:UpdateDashboard",
-                        "quicksight:DeleteDashboard",
-                        "quicksight:DescribeDashboardPermissions",
-                        "quicksight:UpdateDashboardPublishedVersion"
-                    ]
-                }
+                dashboard_permissions
             ],
             'SourceEntity': {
                 'SourceTemplate': {

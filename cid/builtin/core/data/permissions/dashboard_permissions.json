@@ -1,0 +1,13 @@
+{
+  "Principal": "${user_arn}",
+  "Actions": [
+    "quicksight:DescribeDashboard",
+    "quicksight:ListDashboardVersions",
+    "quicksight:UpdateDashboardPermissions",
+    "quicksight:QueryDashboard",
+    "quicksight:UpdateDashboard",
+    "quicksight:DeleteDashboard",
+    "quicksight:UpdateDashboardPublishedVersion",
+    "quicksight:DescribeDashboardPermissions"
+  ]
+}

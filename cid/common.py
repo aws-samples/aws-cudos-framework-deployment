@@ -561,7 +561,15 @@ class Cid:
                             param_name='folder-name',
                             message='Please enter the folder name to create'
                         )
-                        folder = self.qs.create_folder(folder_name)
+                        folder_permissions_tpl = Template(resource_string(
+                            package_or_requirement=__name__,
+                            resource_name=f'builtin/core/data/permissions/folder_permissions.json',
+                        ).decode('utf-8'))
+                        columns_tpl = {
+                            'user_arn': self.qs.user.get('Arn')
+                        }
+                        folder_permissions = json.loads(folder_permissions_tpl.safe_substitute(columns_tpl))
+                        folder = self.qs.create_folder(folder_name, **folder_permissions)
                     except self.qs.client.exceptions.AccessDeniedException:
                         print('\nYou are not allowed to create folder, unable to proceed')
                         exit(1)
@@ -581,56 +589,31 @@ class Cid:
                 if not user:
                     print(f'QuickSight user {user_name} was not found')
                     unset_parameter('quicksight-user')
-            dashboard_permissions ={
-                'GrantPermissions': [{
-                    'Principal': user.get('Arn'),
-                    'Actions': [
-                        'quicksight:DescribeDashboard',
-                        'quicksight:ListDashboardVersions',
-                        'quicksight:UpdateDashboardPermissions',
-                        'quicksight:QueryDashboard',
-                        'quicksight:UpdateDashboard',
-                        'quicksight:DeleteDashboard',
-                        'quicksight:UpdateDashboardPublishedVersion',
-                        'quicksight:DescribeDashboardPermissions'
-                    ]
-                }]
+
+            columns_tpl = {
+                'user_arn': user.get('Arn')
+            }
+            dashboard_permissions_tpl = Template(resource_string(
+                package_or_requirement=__name__,
+                resource_name=f'builtin/core/data/permissions/dashboard_permissions.json',
+            ).decode('utf-8'))
+            dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
+            dashboard_params = {
+                "GrantPermissions": [
+                    dashboard_permissions
+                ]
             }
             logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
-            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_permissions)
+            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
             logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
-            data_set_permissions = {
-                'GrantPermissions': [{
-                    'Principal': user.get('Arn'),
-                    'Actions': [
-                        'quicksight:UpdateDataSetPermissions',
-                        'quicksight:DescribeDataSet',
-                        'quicksight:DescribeDataSetPermissions',
-                        'quicksight:PassDataSet',
-                        'quicksight:DescribeIngestion',
-                        'quicksight:ListIngestions',
-                        'quicksight:UpdateDataSet',
-                        'quicksight:DeleteDataSet',
-                        'quicksight:CreateIngestion',
-                        'quicksight:CancelIngestion'
-                    ]
-                }]
-            }
-            data_source_permissions = {
-                'GrantPermissions': [{
-                    'Principal': user.get('Arn'),
-                    'Actions': [
-                        'quicksight:UpdateDataSourcePermissions',
-                        'quicksight:DescribeDataSource',
-                        'quicksight:DescribeDataSourcePermissions',
-                        'quicksight:PassDataSource',
-                        'quicksight:UpdateDataSource',
-                        'quicksight:DeleteDataSource'
-                    ]
-                }]
-            }
-            _datasources = Dict[str, Datasource]
+            data_set_permissions_tpl = Template(resource_string(
+                package_or_requirement=__name__,
+                resource_name=f'builtin/core/data/permissions/data_set_permissions.json',
+            ).decode('utf-8'))
+            data_set_permissions = json.loads(data_set_permissions_tpl.safe_substitute(columns_tpl))
+
+            _datasources: Dict[str, Datasource] = {}
             for _id in dashboard.datasets.values():
                 logger.info(f'Sharing dataset {_id}')
                 self.qs.update_data_set_permissions(DataSetId=_id, **data_set_permissions)
@@ -642,9 +625,19 @@ class Cid:
                     if not _datasources.get(_datasource.id):
                         _datasources.update({_datasource.id: _datasource})
 
+            data_source_permissions_tpl = Template(resource_string(
+                package_or_requirement=__name__,
+                resource_name=f'builtin/core/data/permissions/data_source_permissions.json',
+            ).decode('utf-8'))
+            data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
+            data_source_params = {
+                "GrantPermissions": [
+                    data_source_permissions
+                ]
+            }
             for k, v in _datasources.items():
                 logger.info(f'Sharing data source "{v.name}" ({k})')
-                self.qs.update_data_source_permissions(DataSourceId=k, **data_source_permissions)
+                self.qs.update_data_source_permissions(DataSourceId=k, **data_source_params)
                 logger.info(f'Sharing data source "{v.name}" ({k}) complete')
 
             print(f'Sharing complete')
