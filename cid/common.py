@@ -562,8 +562,8 @@ class Cid:
                             message='Please enter the folder name to create'
                         )
                         folder_permissions_tpl = Template(resource_string(
-                            package_or_requirement=__name__,
-                            resource_name=f'builtin/core/data/permissions/folder_permissions.json',
+                            package_or_requirement='cid.builtin.core',
+                            resource_name=f'data/permissions/folder_permissions.json',
                         ).decode('utf-8'))
                         columns_tpl = {
                             'user_arn': self.qs.user.get('Arn')
@@ -594,8 +594,8 @@ class Cid:
                 'user_arn': user.get('Arn')
             }
             dashboard_permissions_tpl = Template(resource_string(
-                package_or_requirement=__name__,
-                resource_name=f'builtin/core/data/permissions/dashboard_permissions.json',
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/dashboard_permissions.json',
             ).decode('utf-8'))
             dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
             dashboard_params = {
@@ -608,8 +608,8 @@ class Cid:
             logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
             data_set_permissions_tpl = Template(resource_string(
-                package_or_requirement=__name__,
-                resource_name=f'builtin/core/data/permissions/data_set_permissions.json',
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/data_set_permissions.json',
             ).decode('utf-8'))
             data_set_permissions = json.loads(data_set_permissions_tpl.safe_substitute(columns_tpl))
 
@@ -626,8 +626,8 @@ class Cid:
                         _datasources.update({_datasource.id: _datasource})
 
             data_source_permissions_tpl = Template(resource_string(
-                package_or_requirement=__name__,
-                resource_name=f'builtin/core/data/permissions/data_source_permissions.json',
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/data_source_permissions.json',
             ).decode('utf-8'))
             data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
             data_source_params = {
