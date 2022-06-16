@@ -35,5 +35,5 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       - name:  Test
         run: |
-          apt-get install -y bats
+          sudo apt-get install -y bats
           bats cid/test/cudos.bats
