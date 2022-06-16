@@ -630,7 +630,7 @@ class Cid:
                     ]
                 }]
             }
-            _datasources = {}
+            _datasources = Dict[str, Datasource]
             for _id in dashboard.datasets.values():
                 logger.info(f'Sharing dataset {_id}')
                 self.qs.update_data_set_permissions(DataSetId=_id, **data_set_permissions)
@@ -643,9 +643,9 @@ class Cid:
                         _datasources.update({_datasource.id: _datasource})
 
             for k, v in _datasources.items():
-                logger.info(f'Sharing data source "{v.get("Name")}" ({k})')
+                logger.info(f'Sharing data source "{v.name}" ({k})')
                 self.qs.update_data_source_permissions(DataSourceId=k, **data_source_permissions)
-                logger.info(f'Sharing data source "{v.get("Name")}" ({k}) complete')
+                logger.info(f'Sharing data source "{v.name}" ({k}) complete')
 
             print(f'Sharing complete')
 
