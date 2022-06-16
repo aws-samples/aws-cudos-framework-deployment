@@ -191,8 +191,8 @@ class QuickSight():
             'user_arn': self.user.get('Arn')
         }
         data_source_permissions_tpl = Template(resource_string(
-            package_or_requirement=__name__,
-            resource_name=f'builtin/core/data/permissions/data_source_permissions.json',
+            package_or_requirement='cid.builtin.core',
+            resource_name=f'data/permissions/data_source_permissions.json',
         ).decode('utf-8'))
         data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
         params = {
@@ -218,7 +218,7 @@ class QuickSight():
             # Poll for the current status of query as long as its not finished
             while current_status in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
                 time.sleep(1)
-                datasource = self.describe_data_source(create_status['DataSourceId'])
+                datasource = self.describe_data_source(create_status['DataSourceId'], update=True)
                 current_status = datasource.status
             if not datasource.is_healthy:
                 logger.error(f'Data source creation failed: {datasource.error_info}')
@@ -633,9 +633,9 @@ class QuickSight():
             logger.info('No datasets found')
 
 
-    def describe_data_source(self, id: str) -> Datasource:
+    def describe_data_source(self, id: str, update: bool=False) -> Datasource:
         """ Describes an AWS QuickSight DataSource """
-        if self.datasources and id in self.datasources:
+        if not update and self.datasources and id in self.datasources:
             return self.datasources.get(id)
         try:
             logger.info(f'Discovering DataSource {id}')
@@ -753,8 +753,8 @@ class QuickSight():
             })
         
         dashboard_permissions_tpl = Template(resource_string(
-            package_or_requirement=__name__,
-            resource_name=f'builtin/core/data/permissions/dashboard_permissions.json',
+            package_or_requirement='cid.builtin.core',
+            resource_name=f'data/permissions/dashboard_permissions.json',
         ).decode('utf-8'))
         columns_tpl = {
             'user_arn': self.user.get('Arn')
