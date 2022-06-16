@@ -575,9 +575,10 @@ class Cid:
             while not user:
                 user_name = get_parameter(
                     param_name='quicksight-user',
-                    message='Please enter the folder name to create'
+                    message='Please enter the user name to share with'
                 )
                 user = self.qs.describe_user(user_name)
+                if not user: unset_parameter('quicksight-user')
             dashboard_permissions ={
                 'GrantPermissions': [{
                     'Principal': user.get('Arn'),
