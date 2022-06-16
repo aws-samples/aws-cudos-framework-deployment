@@ -637,8 +637,8 @@ class Cid:
                 # Extract DataSources from DataSet
                 for v in _dataset.datasources:
                     _datasource = self.qs.describe_data_source(v)
-                    if not _datasources.get(_datasource.get('DataSourceId')):
-                        _datasources.update({_datasource.get('DataSourceId'): _datasource})
+                    if not _datasources.get(_datasource.id):
+                        _datasources.update({_datasource.id: _datasource})
 
             for k, v in _datasources.items():
                 logger.info(f'Sharing data source "{v.get("Name")}" ({k})')
