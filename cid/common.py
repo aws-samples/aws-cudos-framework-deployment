@@ -578,7 +578,9 @@ class Cid:
                     message='Please enter the user name to share with'
                 )
                 user = self.qs.describe_user(user_name)
-                if not user: unset_parameter('quicksight-user')
+                if not user:
+                    print(f'QuickSight user {user_name} was not found')
+                    unset_parameter('quicksight-user')
             dashboard_permissions ={
                 'GrantPermissions': [{
                     'Principal': user.get('Arn'),

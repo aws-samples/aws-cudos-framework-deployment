@@ -676,21 +676,27 @@ class QuickSight():
         return result.get('Template')
 
     def describe_user(self, username: str) -> dict:
-        """ Describes an AWS QuickSight template """
+        """ Describes an AWS QuickSight user """
         parameters = {
             'AwsAccountId': self.account_id,
             'UserName': username,
             'Namespace': 'default'
         }
         try:
-            return self.identityClient.describe_user(**parameters).get('User')
+            result = self.identityClient.describe_user(**parameters)
+            logger.debug(result)
+            return result.get('User')
         except self.client.exceptions.ResourceNotFoundException:
+            logger.info(f'QuickSight user {username} not found.')
             return None
         except self.client.exceptions.AccessDeniedException:
             userList = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
+            logger.debug(userList)
             for user in userList:
                 if username.endswith(user.get('UserName')):
+                    logger.info(f'Found user: {user}')
                     return user
+            logger.info(f'QuickSight user {username} not found.')
             return None
 
     def create_dataset(self, definition: dict) -> str:
