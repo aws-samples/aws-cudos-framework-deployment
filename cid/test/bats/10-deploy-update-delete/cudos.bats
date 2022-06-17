@@ -3,12 +3,14 @@
 
 account_id=$(aws sts get-caller-identity --query "Account" --output text )
 database_name="${database_name:-athenacurcfn_cur1}" # If variable not set or null, use default
+quicksight_user="${quicksight_user:-cicd-staging}" # If variable not set or null, use default
 
 @test "Install" {
   run cid-cmd -vv deploy  \
     --dashboard-id cudos \
     --athena-database $database_name\
     --account-map-source dummy \
+    --quicksight-user $quicksight_user \
 
   [ "$status" -eq 0 ]
 }
@@ -48,9 +50,9 @@ database_name="${database_name:-athenacurcfn_cur1}" # If variable not set or nul
 @test "Update works" {
   run cid-cmd -vv --yes update --force --recursive  \
     --dashboard-id cudos \
+    --quicksight-user $quicksight_user \
 
   [ "$status" -eq 0 ]
-  echo "$output" | grep 'Update completed'
 }
 
 
