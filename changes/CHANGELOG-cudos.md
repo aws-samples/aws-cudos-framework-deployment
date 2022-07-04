@@ -1,5 +1,9 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.69.1
+
+* End User Computing: Added detailed description for Storage and Application Bundles in 'Workspaces spend per Bundle' and 'WorkSpaces Cost and Usage Top 20' vizuals
+
 ## CUDOS - 4.69
 
 * Compute Summary: Added ability to choose service (ECS or EKS) for AWS Fargate visuals
