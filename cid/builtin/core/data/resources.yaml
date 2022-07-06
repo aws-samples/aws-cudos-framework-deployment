@@ -147,9 +147,6 @@ datasets:
       views:
         - monthly_anomaly_detection
   monthly-bill-by-account:
-    spriFile: trends/monthly_bill_by_account_sp_ri.json
-    spFile: trends/monthly_bill_by_account_sp.json
-    riFile: trends/monthly_bill_by_account_ri.json
     File: trends/monthly_bill_by_account.json
     dependsOn:
       views:
@@ -168,17 +165,11 @@ datasets:
 views:
   # CID Shared Views
   summary_view:
-    spriFile: cid/summary_view_sp_ri.sql
-    spFile: cid/summary_view_sp.sql
-    riFile: cid/summary_view_ri.sql
     File: cid/summary_view.sql
     dependsOn:
       cur: true
 
   ec2_running_cost:
-    spriFile: cid/ec2_running_cost_sp_ri.sql
-    spFile: cid/ec2_running_cost_sp.sql
-    riFile: cid/ec2_running_cost_ri.sql
     File: cid/ec2_running_cost.sql
     dependsOn:
       cur: true
@@ -194,9 +185,6 @@ views:
       cur: true
 
   ri_sp_mapping:
-    spriFile: cid/ri_sp_mapping_sp_ri.sql
-    spFile: cid/ri_sp_mapping_sp.sql
-    riFile: cid/ri_sp_mapping_ri.sql
     File: cid/ri_sp_mapping.sql
     dependsOn:
       cur: true
@@ -215,9 +203,6 @@ views:
       views:
         - aws_accounts
   monthly_bill_by_account:
-    riFile: trends/monthly_bill_by_account_ri.sql
-    spriFile: trends/monthly_bill_by_account_sp_ri.sql
-    spFile: trends/monthly_bill_by_account_sp.sql
     File: trends/monthly_bill_by_account.sql
     dependsOn:
       cur: true
@@ -246,9 +231,6 @@ views:
         - account_map
 
   kpi_instance_all:
-    spriFile: kpi/kpi_instance_all_view.sql
-    spFile: kpi/kpi_instance_all_view_noRI.sql
-    riFile: kpi/kpi_instance_all_view_noSP.sql
     File: kpi/kpi_instance_all_view_noRISP.sql
     dependsOn:
       cur: true
