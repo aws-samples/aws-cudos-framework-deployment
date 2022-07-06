@@ -4,11 +4,11 @@ import re
 import time
 import uuid
 from pkg_resources import resource_string
-from string import Template
 from typing import Dict, List, Union
 
 import click
 from deepmerge import always_merger
+from mako.template import Template
 
 from cid.utils import get_parameter
 from cid.helpers.quicksight.dashboard import Dashboard
@@ -194,7 +194,7 @@ class QuickSight():
             package_or_requirement='cid.builtin.core',
             resource_name=f'data/permissions/data_source_permissions.json',
         ).decode('utf-8'))
-        data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
+        data_source_permissions = json.loads(data_source_permissions_tpl.render(**columns_tpl))
         params = {
             "AwsAccountId": self.account_id,
             "DataSourceId": str(uuid.uuid4()),
@@ -759,7 +759,7 @@ class QuickSight():
         columns_tpl = {
             'user_arn': self.user.get('Arn')
         }
-        dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
+        dashboard_permissions = json.loads(dashboard_permissions_tpl.render(**columns_tpl))
         create_parameters = {
             'AwsAccountId': self.account_id,
             'DashboardId': definition.get('dashboardId'),

@@ -3,12 +3,12 @@ import sys
 import json
 import logging
 from pathlib import Path
-from string import Template
 from typing import Dict
 from pkg_resources import resource_string
 
 import click
 import requests
+from mako.template import Template
 from deepmerge import always_merger
 from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
@@ -568,7 +568,7 @@ class Cid:
                         columns_tpl = {
                             'user_arn': self.qs.user.get('Arn')
                         }
-                        folder_permissions = json.loads(folder_permissions_tpl.safe_substitute(columns_tpl))
+                        folder_permissions = json.loads(folder_permissions_tpl.render(**columns_tpl))
                         folder = self.qs.create_folder(folder_name, **folder_permissions)
                     except self.qs.client.exceptions.AccessDeniedException:
                         print('\nYou are not allowed to create folder, unable to proceed')
@@ -597,7 +597,7 @@ class Cid:
                 package_or_requirement='cid.builtin.core',
                 resource_name=f'data/permissions/dashboard_permissions.json',
             ).decode('utf-8'))
-            dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
+            dashboard_permissions = json.loads(dashboard_permissions_tpl.render(**columns_tpl))
             dashboard_params = {
                 "GrantPermissions": [
                     dashboard_permissions
@@ -611,7 +611,7 @@ class Cid:
                 package_or_requirement='cid.builtin.core',
                 resource_name=f'data/permissions/data_set_permissions.json',
             ).decode('utf-8'))
-            data_set_permissions = json.loads(data_set_permissions_tpl.safe_substitute(columns_tpl))
+            data_set_permissions = json.loads(data_set_permissions_tpl.render(**columns_tpl))
 
             _datasources: Dict[str, Datasource] = {}
             for _id in dashboard.datasets.values():
@@ -629,7 +629,7 @@ class Cid:
                 package_or_requirement='cid.builtin.core',
                 resource_name=f'data/permissions/data_source_permissions.json',
             ).decode('utf-8'))
-            data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
+            data_source_permissions = json.loads(data_source_permissions_tpl.render(**columns_tpl))
             data_source_params = {
                 "GrantPermissions": [
                     data_source_permissions
@@ -879,7 +879,12 @@ class Cid:
         ).decode('utf-8'))
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
-
+        columns_tpl = {
+            'athena_datasource_arn': None,
+            'athena_database_name': None,
+            'cur_table_name': None,
+            'user_arn': None,
+        }
 
         if not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
@@ -891,7 +896,7 @@ class Cid:
             print('No Athena datasources detected and unable to create one. Please create at least one dataset manually if it fails.')
             # Not failing here to let views creation below
         else:
-            pre_compiled_dataset = json.loads(template.safe_substitute())
+            pre_compiled_dataset = json.loads(template.render(**columns_tpl))
             dataset_name = pre_compiled_dataset.get('Name')
 
             # let's find the schema/database and workgroup name
@@ -949,7 +954,7 @@ class Cid:
             'user_arn': self.qs.user.get('Arn')
         }
 
-        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
+        compiled_dataset = json.loads(template.render(**columns_tpl))
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
 
@@ -1077,20 +1082,10 @@ class Cid:
         """ Returns a fully compiled AHQ """
         # View path
         view_definition = self.get_definition("view", name=view_name)
+        view_file = view_definition.get('File')
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
-        if cur_required and self.cur.hasSavingsPlans and self.cur.hasReservations and view_definition.get('spriFile'):
-            view_file = view_definition.get('spriFile')
-        elif cur_required and self.cur.hasSavingsPlans and view_definition.get('spFile'):
-            view_file = view_definition.get('spFile')
-        elif cur_required and self.cur.hasReservations and view_definition.get('riFile'):
-            view_file = view_definition.get('riFile')
-        elif view_definition.get('File'):
-            view_file = view_definition.get('File')
-        else:
-            logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
-            raise Exception(f'\nCannot find view {view_name}')
 
-        # Load TPL file
+        # Load Template file
         template = Template(resource_string(
             view_definition.get('providedBy'),
             f'data/queries/{view_file}'
@@ -1102,6 +1097,9 @@ class Cid:
             'athenaTableName': view_name,
             'athena_database_name': self.athena.DatabaseName,
         }
+        if cur_required:
+            columns_tpl['cur_has_savings_plans'] = self.cur.hasSavingsPlans
+            columns_tpl['cur_has_reservations'] = self.cur.hasReservations
 
         for k, v in view_definition.get('parameters', dict()).items():
             if isinstance(v, str):
@@ -1122,7 +1120,7 @@ class Cid:
             # Add parameter
             columns_tpl.update(param)
         # Compile template
-        compiled_query = template.safe_substitute(columns_tpl)
+        compiled_query = template.render(**columns_tpl)
 
         return compiled_query
 

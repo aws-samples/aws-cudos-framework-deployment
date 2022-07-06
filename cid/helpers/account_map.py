@@ -1,9 +1,11 @@
 import csv
 import logging
 from pathlib import Path
-import click
 from pkg_resources import resource_string
-from string import Template
+
+import click
+from mako.template import Template
+
 from cid.helpers import Athena, CUR
 from cid.utils import get_parameter
 
@@ -133,7 +135,7 @@ class AccountMap():
                 for k,v in self.mappings.get(name).get(self._AthenaTableName).items():
                     logger.info(f'Mapping field {k} to {v}')
                     columns_tpl.update({k: v})
-                compiled_query = template.safe_substitute(columns_tpl)
+                compiled_query = template.render(**columns_tpl)
                 print('compiled view.')
             else:
                 logger.info('Metadata table not found')
@@ -167,7 +169,7 @@ class AccountMap():
             'cur_table_name': self.cur.tableName
         }
         columns_tpl.update(**parameters)
-        compiled_query = template.safe_substitute(columns_tpl)
+        compiled_query = template.render(**columns_tpl)
         
         return compiled_query
         
@@ -287,6 +289,6 @@ class AccountMap():
                 'rows': ','.join(accounts_sql)
             }
             columns_tpl.update(**parameters)
-            compiled_query = template.safe_substitute(columns_tpl)
+            compiled_query = template.render(**columns_tpl)
 
         return compiled_query

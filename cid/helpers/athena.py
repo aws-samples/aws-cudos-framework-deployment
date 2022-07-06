@@ -1,13 +1,14 @@
-import time, csv
+import csv
+import time
+import json
+import logging
+from io import StringIO
+from pkg_resources import resource_string
+
+from mako.template import Template
 
 from cid.utils import get_parameter
-from io import StringIO
 
-from pkg_resources import resource_string
-from string import Template
-import json
-
-import logging
 logger = logging.getLogger(__name__)
 
 class Athena():
@@ -327,7 +328,7 @@ class Athena():
         # Fill in TPLs
         columns_tpl = dict()
         columns_tpl.update(**kwargs)
-        compiled_query = template.safe_substitute(columns_tpl)
+        compiled_query = template.render(**columns_tpl)
 
         return compiled_query
 
