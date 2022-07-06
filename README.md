@@ -7,7 +7,7 @@ This repository contains CloudFormation templates and Command Line tool (cid-cmd
 
 There are several ways we can manage dashboards:
 1. Manual (2 hours) 
-2. CloudFormation Tempalte (30 mins)
+2. CloudFormation Template (30 mins)
 3. (`recommended`) Using cid-cmd tool. (5 mins) 
 
 We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home).
@@ -75,6 +75,6 @@ cid-cmd -vv [command]
     
 This will produce a log file in the same directory that were at the tile of launch of cid-cmd. 
 
-:heavy_exclamation_mark:Inspect the produced debug log for any sensitive information and anonimise it.
+:heavy_exclamation_mark:Inspect the produced debug log for any sensitive information and anonymise it.
 
 We encourage you to open [new issue](https://github.com/aws-samples/aws-cudos-framework-deployment/issues/new) with description of the problem and attached debug log file.
