@@ -11,7 +11,7 @@ quicksight_user="${quicksight_user:-cicd-staging}" # If variable not set or null
     --athena-database $database_name\
     --account-map-source dummy \
     --quicksight-user $quicksight_user \
-
+  echo $output
   [ "$status" -eq 0 ]
 }
 
