@@ -25,8 +25,10 @@ class Athena():
     _resources = dict()
     _client = None
     region: str = None
+    _session = None
 
-    def __init__(self, session, resources: dict=None):        
+    def __init__(self, session, resources: dict=None):
+        self._session = session
         self.region = session.region_name
         self._resources = resources
         
@@ -122,6 +124,8 @@ class Athena():
                     choices=[d['Name'] for d in workgroups],
                     default=default_workgroup
                 )
+            self.ensure_workgroup_has_location(self._WorkGroup)
+
             logger.info(f'Selected workgroup: "{self._WorkGroup}"')
         return self._WorkGroup
 
@@ -165,6 +169,47 @@ class Athena():
             logger.error(e)
             
         return table_metadata
+
+
+    def ensure_workgroup_has_location(self, workgroup):
+        try:
+            config = self.client.get_work_group(WorkGroup=workgroup)['WorkGroup']['Configuration']
+        except self.client.exceptions.InternalServerException:
+            logger.info('Insufficient permissions for getting workgroup configuration '
+                'Please make sure that the workgroup has a s3 Result Configuration'
+            )
+
+        if config['ResultConfiguration']:
+            logger.debug(f'WorkGroup {workgroup} is ok. It has ResultConfiguration')
+            return True
+
+        try:
+            account_id = self._session.client('sts').get_caller_identity()['Account']
+            bucket_name = f'aws-athena-location-{account_id}-{self.region}'
+            s3 = self._session.client('s3', region_name=self.region)
+            try:
+                s3.create_bucket(Bucket=bucket_name)
+            except s3.exceptions.AccessDeniedException:
+                logger.debug(f'Insufficient permissions when trying to create an s3 bucket for ResultConfiguration of Workgroup {workgroup}')
+                logger.critical(f'Please make sure that the Athena workgroup {workgroup} has a s3 Result Configuration')
+                return False
+            self._client.update_work_group(
+                WorkGroup=workgroup,
+                ConfigurationUpdates = {
+                    'ResultConfigurationUpdates': {
+                        'OutputLocation': f's3://{bucket_name}/'
+                    }
+                }
+            )
+            return True
+        except Exception as exc:
+            logger.debug(exc, stack_info=True)
+            logger.critical(
+                f'Athena WorkGroup {workgroup} does not have a ResultConfiguration.'
+                ' Please create an s3 bucket in the region and configure Athena WorkGroup {workgroup} to use this bucket')
+            exit(1)
+
+
 
     def list_work_groups(self) -> list:
         """ List AWS Athena workgroups """
