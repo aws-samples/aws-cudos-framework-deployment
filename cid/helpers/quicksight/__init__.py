@@ -27,6 +27,7 @@ class QuickSight():
     _user: dict = None
 
     def __init__(self, session, awsIdentity, resources=None):        
+        self._session = session
         self.region = session.region_name
         self.awsIdentity = awsIdentity
         self._resources = resources
@@ -129,6 +130,73 @@ class QuickSight():
             self.discover_data_sources()
 
         return self._datasources
+
+    def ensure_enterprise_subscription(self, email: str=None) -> bool:
+        try:
+            edition = self.client.describe_account_subscription(
+                AwsAccountId=self.account_id
+            ).get('AccountInfo', {}).get('Edition')
+        except self.client.exceptions.ResourceNotFoundException as exc:
+            edition = None
+        except self.client.exceptions.AccessDeniedException as exc:
+            logger.info(
+                'Insufficient rights to verify Quicksight subscription. '
+                'Please make sure you have Quicksight has ENTERPRISE eddition'
+            )
+            return False
+
+        if edition and 'ENTERPRISE' in edition:
+            logger.debug(f'All Good. Quicksight has {edition} edition')
+            return True
+
+        logger.info('QuickSight ENTERPRISE Subscription is not found. Subscibing. Please check pricing here: https://aws.amazon.com/quicksight/pricing/ ')
+        if not email:
+            organizations = self._session.client('organizations')
+            try:
+                email = organizations.describe_account(AccountId=self.account_id).get("Account", {}).get("Email")
+            except organizations.exceptions.AccessDeniedException as exc:
+                logger.debug('Insufficient rights to describe_account')
+            except organizations.exceptions.AWSOrganizationsNotInUseException as exc:
+                logger.debug('Account is not a part of organization.')
+            except Exception as exc:
+                logger.debug(f'Failed to describe_account: {exc}')
+            if not email:
+                email = get_parameter(
+                    param_name='quicksight-email',
+                    message="Please enter an email to receive service and usage notifications from QuickSight. (mandatory)",
+                )
+        try:
+            res = self.client.create_account_subscription(
+                Edition='ENTERPRISE',
+                AuthenticationMethod='IAM_AND_QUICKSIGHT',
+                AwsAccountId=self.account_id,
+                AccountName=self.account_id,
+                NotificationEmail=email,
+            )
+        except self.client.exceptions.AccessDeniedException as exc:
+            logger.info('Insufficient rights to set a QS subscription. Please set it manually')
+            return False
+        if res['Status'] != 200:
+            logger.warning("Failed to create QS account_subscription {res}. Please set it manually")
+            return False
+
+        logger.info('Waiting for subscription to take effect')
+        for i in range(60 * 5):
+            time.sleep(1)
+            try:
+                edition = self.client.describe_account_subscription(
+                    AwsAccountId=self.account_id
+                ).get('AccountInfo', {}).get('Edition')
+            except self.client.exceptions.ResourceNotFoundException as exc:
+                edition = None
+            if edition:
+                break
+        else:
+            logger.critical('Timeout when waiting for QS account_subscription. Try to rerun in 10 mins.')
+            exit(1)
+
+        logger.info('Activated {edition} subscription.')
+        return True
 
     def discover_dashboard(self, dashboardId: str):
         """Discover single dashboard"""

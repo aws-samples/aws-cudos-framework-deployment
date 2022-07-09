@@ -227,6 +227,8 @@ class Cid:
 
     def deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
+        self.qs.ensure_enterprise_subscription()
+
         if dashboard_id is None:
             dashboard_id = get_parameter(
                 param_name='dashboard-id',
