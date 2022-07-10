@@ -37,7 +37,12 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-session-name: ${{ secrets.AWS_SESSION_NAME }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name:  Test
+      - name: Setup BATS testing framework
+        uses: mig4/setup-bats@v1.2.0
+        with:
+          bats-version: 1.7.0
+      - name: Verify Bats
+        run: which bats && bats --version
+      - name: Test
         run: |
-          sudo apt-get install -y bats
           bats cid/test/bats/10-deploy-update-delete/cudos.bats
