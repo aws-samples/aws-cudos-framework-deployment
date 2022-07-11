@@ -195,7 +195,7 @@ class QuickSight():
             logger.critical('Timeout when waiting for QS account_subscription. Try to rerun in 10 mins.')
             exit(1)
 
-        logger.info('Activated {edition} subscription.')
+        logger.info(f'Activated {edition} subscription.')
         return True
 
     def discover_dashboard(self, dashboardId: str):

@@ -185,7 +185,7 @@ class Athena():
 
         try:
             account_id = self._session.client('sts').get_caller_identity()['Account']
-            bucket_name = f'aws-athena-location-{account_id}-{self.region}'
+            bucket_name = f'aws-athena-query-results-{account_id}-{self.region}-cid'
             s3 = self._session.client('s3', region_name=self.region)
             try:
                 s3.create_bucket(Bucket=bucket_name)
