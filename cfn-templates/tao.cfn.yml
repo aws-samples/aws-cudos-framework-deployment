@@ -601,11 +601,11 @@ Resources:
             DataSourceArn: !GetAtt taoQuickSightDataSource.Arn
             Catalog: AwsDataCatalog
             Schema: !Ref DatabaseName
-            Name: ta_organizational_view_reports
+            Name: !Join [ '' , [ !FindInMap [ "Definitions", "taoAthenaTable", "Value" ] ,  !Ref taoSuffix ] ]
             InputColumns: !FindInMap [ "References", "taoDataSetInputColumns", "Value" ]  
       LogicalTableMap:
         b5de237f-b599-407f-87ec-32024624ba65:
-          Alias: ta_organizational_view_reports
+          Alias: !Join [ '' , [ !FindInMap [ "Definitions", "taoAthenaTable", "Value" ] ,  !Ref taoSuffix ] ] 
           DataTransforms:
           - TagColumnOperation:
               ColumnName: region
