@@ -258,6 +258,18 @@ class AccountMap():
 
     def create_account_mapping_sql(self, name) -> str:
         """ Returns account mapping Athena query """
+        for attempt in range(3):
+            if self.accounts or self._metadata_source == 'dummy':
+                break
+            self.select_metadata_collection_method()
+            logger.info(f'Attempt {attempt + 2}' )
+        else:
+            logger.critical('Failed to create map')
+            exit(1)
+
+        if self._metadata_source == 'dummy':
+            return self.get_dummy_account_mapping_sql(name)
+
         template_str = '''CREATE OR REPLACE VIEW  ${athena_view_name} AS
             SELECT
                 *
@@ -265,28 +277,18 @@ class AccountMap():
                 ( VALUES ${rows} )
             ignored_table_name (account_id, account_name, parent_account_id, account_status, account_email)
         '''
-        
-        while not self.accounts and self._metadata_source != 'dummy':
-            self.select_metadata_collection_method()
-            
-        if self._metadata_source == 'dummy':
-            compiled_query = self.get_dummy_account_mapping_sql(name)        
-        else:
-            template = Template(template_str)
-            accounts_sql = list()
-            for account in self.accounts:
-                acc = account.copy()
-                account_name = acc.pop('account_name').replace("'", "''")
-                accounts_sql.append(
-                    """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')""".format(account_name=account_name, **acc))
-            
-            # Fill in TPLs
-            columns_tpl = dict()
-            parameters = {
-                'athena_view_name': name,
-                'rows': ','.join(accounts_sql)
-            }
-            columns_tpl.update(**parameters)
-            compiled_query = template.safe_substitute(columns_tpl)
+        template = Template(template_str)
+        accounts_sql = list()
+        for account in self.accounts:
+            acc = account.copy()
+            account_name = acc.pop('account_name').replace("'", "''")
+            accounts_sql.append(
+                """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')""".format(account_name=account_name, **acc))
+        # Fill in TPLs
+        columns_tpl = {
+            'athena_view_name': name,
+            'rows': ','.join(accounts_sql)
+        }
+        compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query

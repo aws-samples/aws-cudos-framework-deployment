@@ -206,11 +206,12 @@ class Athena():
             # Get Query Status
             query_status = self.client.get_query_execution(QueryExecutionId=query_id)
         except self.client.exceptions.InvalidRequestException as e:
-            logger.error(f'InvalidRequestException: {e}')
+            logger.debug('Full query: {}'.format(sql_query))
+            logger.critical(f'InvalidRequestException: {e}')
             exit(1)
         except Exception as e:
-            logger.error('Athena query failed: {}'.format(e))
-            logger.error('Full query: {}'.format(sql_query))
+            logger.debug('Full query: {}'.format(sql_query))
+            logger.critical('Athena query failed: {}'.format(e))
             exit(1)
 
         current_status = query_status['QueryExecution']['Status']['State']
