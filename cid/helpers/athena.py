@@ -44,20 +44,17 @@ class Athena():
             # Get AWS Glue DataCatalogs
             glue_data_catalogs = [d for d in self.list_data_catalogs() if d['Type'] == 'GLUE']
             if not len(glue_data_catalogs):
+                logger.error('AWS DataCatog of type GLUE not found!')
                 self._status = 'AWS DataCatog of type GLUE not found'
             if len(glue_data_catalogs) == 1:
                 self._CatalogName = glue_data_catalogs.pop().get('CatalogName')
             elif len(glue_data_catalogs) > 1:
-                # Select default catalog if present
-                default_catalog = [d for d in glue_data_catalogs if d['CatalogName'] == self.defaults.get('CatalogName')]
-                if not len(default_catalog):
-                    # Ask user
-
-                    self._CatalogName = get_parameter(
-                        param_name='glue-data-catalog',
-                        message="Select AWS DataCatalog to use",
-                        choices=glue_data_catalogs
-                    )
+                # Ask user
+                self._CatalogName = get_parameter(
+                    param_name='glue-data-catalog',
+                    message="Select AWS DataCatalog to use",
+                    choices=[catalog.get('CatalogName') for catalog in glue_data_catalogs],
+                )
             logger.info(f'Using datacatalog: {self._CatalogName}')
         return self._CatalogName
 
