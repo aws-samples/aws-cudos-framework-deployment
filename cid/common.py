@@ -412,7 +412,7 @@ class Cid:
             logger.info(f'Dataset {name} is not managed by CID. Skipping.')
             print(f'Dataset {name} is not managed by CID. Skipping.')
             return False
-        for dataset in list(self.qs._datasets.values()):
+        for dataset in list(self.qs._datasets.values()) if self.qs._datasets else []:
             if dataset.id == id or dataset.name == name:
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
