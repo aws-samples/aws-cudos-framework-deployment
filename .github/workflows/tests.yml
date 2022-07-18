@@ -40,4 +40,4 @@ jobs:
       - name:  Test
         run: |
           sudo apt-get install -y bats
-          bats cid/test/bats/10-deploy-update-delete/cudos.bats
+          bats cid/test/bats/10-deploy-update-delete/cudos.bats --print-output-on-failure
