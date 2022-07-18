@@ -37,7 +37,16 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-session-name: ${{ secrets.AWS_SESSION_NAME }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name:  Test
+      - name:  Install Bats
         run: |
           sudo apt-get install -y bats
-          bats cid/test/bats/10-deploy-update-delete/cudos.bats --print-output-on-failure
+      - name:  Run basic Tests
+        run: |
+          cid-cmd -vv deploy  \
+            --dashboard-id cudos \
+            --athena-database athenacurcfn_cur1\
+            --account-map-source dummy \
+            --quicksight-user cicd-staging | grep -v accountId   | grep -v userId
+      - name:  Run Bats Tests
+        run: |
+          bats cid/test/bats/10-deploy-update-delete/cudos.bats
