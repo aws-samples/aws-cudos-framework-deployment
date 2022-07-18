@@ -422,7 +422,7 @@ class QuickSight():
         _username = get_parameter(
             param_name='quicksight-user',
             message="Please select QuickSight user to use",
-            choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user.get('UserName') for user in userList}
+            choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user.get('UserName') for user in user_list}
         )
         for u in user_list:
             if u.get('UserName') == _username:

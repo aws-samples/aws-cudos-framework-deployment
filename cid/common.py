@@ -932,6 +932,9 @@ class Cid:
                 if cur_required and view_name == self.cur.tableName:
                     logger.debug(f'Dependancy view {view_name} is a CUR. Skip.')
                     continue
+                if view_name == 'account_map':
+                    logger.debug(f'Dependancy view is {view_name}. Skip.')
+                    continue
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
 
         # create missing views
