@@ -1,7 +1,7 @@
 # What's new in the KPI Dashboard
 
 ## KPI - 1.2.1
-* Graviton: Fixed potential savings filter to show a correct monthly value.
+* Other Graviton: Fixed potential savings filter to show a correct monthly value.
 
 ## KPI - 1.2
 * Metrics Summary: Added EC2 Unit Cost to EC2 section
