@@ -412,7 +412,7 @@ class Cid:
             logger.info(f'Dataset {name} is not managed by CID. Skipping.')
             print(f'Dataset {name} is not managed by CID. Skipping.')
             return False
-        for dataset in list(self.qs._datasets.values()):
+        for dataset in list(self.qs._datasets.values()) if self.qs._datasets else []:
             if dataset.id == id or dataset.name == name:
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
@@ -912,9 +912,19 @@ class Cid:
             if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
                 athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
             else:
-                # FIXME: add user choice
-                athena_datasource = next(iter(v for v in self.qs.athena_datasources.values()))
-                logger.info(f'Found {len(datasources)} Athena datasources, using the first one {athena_datasource.id}')
+                #try to find a datasource with defined workgroup
+                workgroup = self.athena.WorkGroup
+                datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=workgroup)
+                if len(datasources_with_workgroup) == 1:
+                    athena_datasource = datasources_with_workgroup[0]
+                else:
+                    #cannot find the right athena_datasource
+                    athena_datasource = get_parameter(
+                        param_name='quicksight-datasource-arn',
+                        message=f"Please choose DataSource ARN",
+                        choices={f'{arn} (workgroup={datasource.AthenaParameters.get('WorkGroup')})':datasource for arn, datasource in self.qs.athena_datasources.items()},
+                    )
+                    logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
             if isinstance(athena_datasource, Datasource):
                 self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
 
