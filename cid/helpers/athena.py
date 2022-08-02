@@ -78,7 +78,7 @@ class Athena():
             elif len(athena_databases) > 1:
                 # Remove empty databases from the list
                 for d in athena_databases:
-                    tables = self.list_table_metadata(DatabaseName=d.get('Name'))
+                    tables = self.list_table_metadata(DatabaseName=d.get('Name'), limit=True)
                     if not len(tables):
                         athena_databases.remove(d)
                 # Select default database if present
@@ -144,7 +144,7 @@ class Athena():
             logger.debug(e, stack_info=True)
             return False
 
-    def list_table_metadata(self, DatabaseName: str=None) -> dict:
+    def list_table_metadata(self, DatabaseName: str=None, limit: bool=False) -> dict:
         params = {
             'CatalogName': self.CatalogName,
             'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName
@@ -155,6 +155,7 @@ class Athena():
             response_iterator = paginator.paginate(**params)
             for page in response_iterator:
                 table_metadata.extend(page.get('TableMetadataList'))
+                if limit: break # some times we need just to know if there are tables or not
             logger.debug(f'Table metadata: {table_metadata}')
             logger.info(f'Found {len(table_metadata)} tables in {DatabaseName if DatabaseName else self.DatabaseName}')
         except Exception as e:
