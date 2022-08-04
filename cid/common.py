@@ -922,7 +922,7 @@ class Cid:
                     athena_datasource = get_parameter(
                         param_name='quicksight-datasource-arn',
                         message=f"Please choose DataSource ARN",
-                        choices={f'{arn} (workgroup={datasource.AthenaParameters.get('WorkGroup')})':datasource for arn, datasource in self.qs.athena_datasources.items()},
+                        choices={f"{arn} (workgroup={datasource.AthenaParameters.get('WorkGroup')})":datasource for arn, datasource in self.qs.athena_datasources.items()},
                     )
                     logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
             if isinstance(athena_datasource, Datasource):
