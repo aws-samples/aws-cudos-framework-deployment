@@ -4,7 +4,7 @@
 
 * Compute Summary: Changed  'On-Demand Capacity Reservations Usage Hours' visual to show data for Last 30 days instead of previous month so it displays current inventory and utilization of On-Demand Capacity Reservations
 * Monitoring and Observability: Added CloudWatch Synthetics and CloudWatch Metrics Steams to 'CloudWatch Usage Cost per Usage Type Group' visual
-* Monitoring and Observability: Added pricing unit and usage ammount to 'TOP 10 CloudWatch Resources Previous Month' and 'TOP 10 CloudWatch Log Resources Previous Month' vizuals
+* Monitoring and Observability: Added pricing unit and usage ammount to 'TOP 10 CloudWatch Resources Previous Month' and 'TOP 10 CloudWatch Log Resources Previous Month' visuals
 
 
 ## CUDOS - 4.70
