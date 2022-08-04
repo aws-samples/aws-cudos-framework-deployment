@@ -29,7 +29,7 @@ jobs:
     - name: CodeGuru Reviewer
       uses: aws-actions/codeguru-reviewer@v1.1
       with:
-        s3_bucket: cid-stage-code-review
+        s3_bucket: codeguru-reviewer-cid-stage
     
     - name: Upload review result
       if: ${{ github.event_name != 'push' }}
