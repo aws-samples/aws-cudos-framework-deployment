@@ -102,6 +102,22 @@ def deploy(ctx, **kwargs):
     ctx.obj.deploy(**kwargs)
 
 
+@cid_command
+def export(ctx, **kwargs):
+    """Deploy Dashboard
+    
+    \b
+    Command options:
+        --analysis-name       Analysis you want to share (not needed if analysis-id is provided).
+        --analysis-id         ID of analysis you want to share (open analysis in browser and copy id from url)
+        --template-id         Template Id
+        --template-version    Version description vX.Y.Z
+        --reader-account      Account id with howm you want to share or *
+        --output              A filename (.yaml)
+    """
+    ctx.obj.export(**kwargs)
+
+
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @cid_command
 def status(ctx, dashboard_id):
