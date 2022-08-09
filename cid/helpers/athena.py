@@ -78,7 +78,9 @@ class Athena():
             elif len(athena_databases) > 1:
                 # Remove empty databases from the list
                 for d in athena_databases:
-                    tables = self.list_table_metadata(DatabaseName=d.get('Name'), limit=True)
+                    max_items=1000 # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
+                    #FIXME: we need dynamyically check tables
+                    tables = self.list_table_metadata(DatabaseName=d.get('Name'), max_items=max_items)
                     if not len(tables):
                         athena_databases.remove(d)
                 # Select default database if present
@@ -144,11 +146,14 @@ class Athena():
             logger.debug(e, stack_info=True)
             return False
 
-    def list_table_metadata(self, DatabaseName: str=None, limit: bool=False) -> dict:
+    def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
         params = {
             'CatalogName': self.CatalogName,
             'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName
         }
+        if max_items is not None:
+            params['MaxItems'] = max_items
+
         table_metadata = list()
         try:
             paginator = self.client.get_paginator('list_table_metadata')
