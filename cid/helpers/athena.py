@@ -67,6 +67,11 @@ class Athena():
         """ Check if Athena database exist """
 
         if not self._DatabaseName:
+            if get_parameters().get('athena-database'):
+                self._DatabaseName = get_parameters().get('athena-database')
+                if not self.get_database(self._DatabaseName):
+                    logger.critical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
+                    exit(1)
             # Get AWS Athena databases
             athena_databases = self.list_databases()
             if not len(athena_databases):
@@ -78,9 +83,10 @@ class Athena():
             elif len(athena_databases) > 1:
                 # Remove empty databases from the list
                 for d in athena_databases:
-                    max_items=1000 # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
-                    #FIXME: we need dynamyically check tables
-                    tables = self.list_table_metadata(DatabaseName=d.get('Name'), max_items=max_items)
+                    tables = self.list_table_metadata(
+                        DatabaseName=d.get('Name'),
+                        max_items=1000, # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
+                    )
                     if not len(tables):
                         athena_databases.remove(d)
                 # Select default database if present
@@ -148,9 +154,11 @@ class Athena():
 
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
         params = {
-            'MaxItems': max_items,
             'CatalogName': self.CatalogName,
-            'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName
+            'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName,
+            'PaginationConfig':{
+                'MaxItems': max_items,
+            },
         }
         table_metadata = list()
         try:
