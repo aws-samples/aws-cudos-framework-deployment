@@ -1,5 +1,3 @@
-
-
 '''
 Source Account                    Destination Account
 ┌─────────────────────────┐       ┌──────────────────┐
@@ -31,7 +29,7 @@ def export_analysis(qs):
     if not analysis_id:
         try:
             analyzes = []
-            logger.debug("Discovering analyses")
+            logger.info("Discovering analyses")
             paginator = qs.client.get_paginator('list_analyses')
             response_iterator = paginator.paginate(
                 AwsAccountId=qs.account_id,
@@ -42,7 +40,7 @@ def export_analysis(qs):
             if len(analyzes) == 100:
                 logger.info('Too many analyzes. Will show first 100')
         except qs.client.exceptions.AccessDeniedException:
-            logger.debug("AccessDeniedException while discovering analyses")
+            logger.info("AccessDeniedException while discovering analyses")
         else:
             analyzes = list(filter(lambda a: a['Status']=='CREATION_SUCCESSFUL', analyzes ))
             choices = {a['Name']:a for a in sorted(analyzes, key=lambda a: a['LastUpdatedTime'])[::-1]}
@@ -67,12 +65,17 @@ def export_analysis(qs):
         AnalysisId=analysis_id
     )['Analysis']
 
-    logger.debug("analysing datasets")
+    logger.info("analysing datasets")
     dataset_references = []
     datasets = {}
     for dataset_arn in analysis['DataSetArns']:
         dataset_id = dataset_arn.split('/')[-1]
         dataset = qs.describe_dataset(dataset_id)
+
+        if not isinstance(dataset, quicksight.Dataset):
+            logger.critical(f'dataset {dataset_id} not found. '
+                'We need all datasets to be preset for template generation')
+            exit(1)
 
         dataset_references.append({
             "DataSetPlaceholder": dataset.raw['Name'],
@@ -106,7 +109,7 @@ def export_analysis(qs):
         default='vX.X.X' # FIXME: can we get the version from Analysis?
     )
 
-    print('updating template in a working account')
+    logger.info('Updating template')
     params = {
         "AwsAccountId": qs.account_id,
         "TemplateId": template_id,
@@ -119,6 +122,7 @@ def export_analysis(qs):
         },
         "VersionDescription": template_version_description, # well actually version is not used, but i leave it as a reminder to update
     }
+    logger.debug(f'Template params = {params}')
     try:
         res = qs.client.update_template(**params)
         logger.info(f'Template {template_id} updated from Analysis {analysis.get("Arn")}')
@@ -126,7 +130,10 @@ def export_analysis(qs):
         res = qs.client.create_template(**params)
         logger.info(f'Template {template_id} created from Analysis {analysis.get("Arn")}')
 
-    assert res['CreationStatus'] in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS'], repr(res)
+    if res['CreationStatus'] not in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
+        logger.critical(f'failed template operation {res}')
+        exit(1)
+
     template_arn = res['Arn']
     logger.info(f'Template arn = {template_arn}')
 
@@ -134,14 +141,14 @@ def export_analysis(qs):
 
     reader_account = get_parameter(
         'reader-account',
-        message='Enter account id with howm you want to share or *',
+        message='Enter account id to share the template with or *',
         default='*'
     )
     res = qs.update_template_permissions(
         TemplateId=template_id,
         GrantPermissions=[
             {
-                "Principal": {"AWS": reader_account} if reader_account != '*' else '*', 
+                "Principal": {"AWS": reader_account} if reader_account != '*' else '*',
                 'Actions': [
                     "quicksight:DescribeTemplate",
                 ]
