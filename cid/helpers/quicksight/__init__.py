@@ -885,3 +885,12 @@ class QuickSight():
         update_status = self.client.update_data_source_permissions(**update_parameters)
         logger.debug(update_status)
         return update_status
+
+
+    def update_template_permissions(self, **update_parameters):
+        """ Updates an AWS QuickSight template permissions """
+        logger.debug(f"Updating Template permissions: {update_parameters}")
+        update_parameters.update({'AwsAccountId': self.account_id})
+        update_status = self.client.update_template_permissions(**update_parameters)
+        logger.debug(update_status)
+        return update_status

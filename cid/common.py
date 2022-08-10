@@ -19,7 +19,7 @@ from cid.utils import get_parameter, get_parameters, unset_parameter
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
-
+from cid.export import export_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +200,9 @@ class Cid:
                 return definition
         return None
 
+
+    def export(self, **kwargs):
+        export_analysis(self.qs)
 
     def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """
