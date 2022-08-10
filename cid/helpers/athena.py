@@ -148,19 +148,16 @@ class Athena():
 
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
         params = {
+            'MaxItems': max_items,
             'CatalogName': self.CatalogName,
             'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName
         }
-        if max_items is not None:
-            params['MaxItems'] = max_items
-
         table_metadata = list()
         try:
             paginator = self.client.get_paginator('list_table_metadata')
             response_iterator = paginator.paginate(**params)
             for page in response_iterator:
                 table_metadata.extend(page.get('TableMetadataList'))
-                if limit: break # some times we need just to know if there are tables or not
             logger.debug(f'Table metadata: {table_metadata}')
             logger.info(f'Found {len(table_metadata)} tables in {DatabaseName if DatabaseName else self.DatabaseName}')
         except Exception as e:
