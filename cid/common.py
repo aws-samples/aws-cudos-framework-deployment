@@ -331,6 +331,30 @@ class Cid:
             print(f'failed with an error message: {e}')
             self.delete(dashboard_id)
             exit(1)
+        if get_parameter(
+                param_name=f'share-with-account',
+                message=f'Share this dashboard with everyone in the account?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+            permissions_tpl = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/dashboard_link_permissions.json',
+            ).decode('utf-8'))
+            columns_tpl = {
+                'AwsAccountId': self.awsIdentity.get('Account'),
+            }
+            dashboard_permissions = json.loads(permissions_tpl.safe_substitute(columns_tpl))
+            dashboard_params = {
+                "GrantPermissions": [
+                    dashboard_permissions
+                ],
+                "GrantLinkPermissions": [
+                    dashboard_permissions
+                ]
+            }
+            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
+            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
+            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
         return dashboard_id
 
@@ -430,7 +454,7 @@ class Cid:
             logger.info(f'Dataset {name} is not managed by CID. Skipping.')
             print(f'Dataset {name} is not managed by CID. Skipping.')
             return False
-        for dataset in list(self.qs._datasets.values()):
+        for dataset in list(self.qs._datasets.values()) if self.qs._datasets else []:
             if dataset.id == id or dataset.name == name:
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
@@ -542,7 +566,8 @@ class Cid:
 
         share_methods = {
             'Shared Folder (except datasource)': 'folder',
-            'Specific User only': 'user'
+            'Specific User only': 'user',
+            'Everyone in this account': 'account',
         }
         share_method = get_parameter(
             param_name='share-method',
@@ -663,6 +688,26 @@ class Cid:
                 logger.info(f'Sharing data source "{v.name}" ({k}) complete')
 
             print(f'Sharing complete')
+        elif share_method == 'account':
+            dashboard_permissions_tpl = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/dashboard_link_permissions.json',
+            ).decode('utf-8'))
+            columns_tpl = {
+                'AwsAccountId': self.awsIdentity.get('Account'),
+            }
+            dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
+            dashboard_link_params = {
+                "GrantPermissions": [
+                    dashboard_permissions
+                ],
+                "GrantLinkPermissions": [
+                    dashboard_permissions
+                ]
+            }
+            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
+            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_link_params)
+            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
 
     def update(self, dashboard_id, recursive=False, force=False, **kwargs):
@@ -939,9 +984,19 @@ class Cid:
             if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
                 athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
             else:
-                # FIXME: add user choice
-                athena_datasource = next(iter(v for v in self.qs.athena_datasources.values()))
-                logger.info(f'Found {len(datasources)} Athena datasources, using the first one {athena_datasource.id}')
+                #try to find a datasource with defined workgroup
+                workgroup = self.athena.WorkGroup
+                datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=workgroup)
+                if len(datasources_with_workgroup) == 1:
+                    athena_datasource = datasources_with_workgroup[0]
+                else:
+                    #cannot find the right athena_datasource
+                    athena_datasource = get_parameter(
+                        param_name='quicksight-datasource-arn',
+                        message=f"Please choose DataSource ARN",
+                        choices={f"{arn} (workgroup={datasource.AthenaParameters.get('WorkGroup')})":datasource for arn, datasource in self.qs.athena_datasources.items()},
+                    )
+                    logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
             if isinstance(athena_datasource, Datasource):
                 self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
 

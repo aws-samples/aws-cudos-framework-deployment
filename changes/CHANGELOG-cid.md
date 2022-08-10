@@ -1,5 +1,12 @@
 # What's new in the Cost Intelligence Dashboard (CID) 
 
+## CID - 3.1
+* All
+	* Added Account Name control to all tabs
+
+* Compute Summary
+	* Removed % sign from Spot savings.
+
 ## CID - 3
 * All 
 	* Added an Account ID control to CID 
