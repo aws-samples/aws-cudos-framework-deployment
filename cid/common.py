@@ -7,6 +7,7 @@ from string import Template
 from typing import Dict
 from pkg_resources import resource_string
 
+import yaml
 import click
 import requests
 from deepmerge import always_merger
@@ -14,7 +15,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 
 from cid import utils
 from cid.plugin import Plugin
-from cid.utils import get_parameter, unset_parameter
+from cid.utils import get_parameter, get_parameters, unset_parameter
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
@@ -225,8 +226,22 @@ class Cid:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
 
+    def load_resources(self):
+        ''' load additional resources from command line parameters
+        '''
+        if get_parameters().get('resources'):
+            fileneme = get_parameters().get('resources')
+            with open(get_parameters().get('resources'), 'r', encoding='utf-8') as file:
+                resources = yaml.safe_load(file)
+            logging.info(f'Loaded resources from {fileneme}')
+            self.resources = always_merger.merge(self.resources, resources)
+
+
     def deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
+
+        self.load_resources()
+
         if dashboard_id is None:
             dashboard_id = get_parameter(
                 param_name='dashboard-id',
@@ -373,6 +388,7 @@ class Cid:
 
     def status(self, dashboard_id, **kwargs):
         """Check QuickSight dashboard status"""
+        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -396,6 +412,8 @@ class Cid:
 
     def delete(self, dashboard_id, **kwargs):
         """Delete QuickSight dashboard"""
+
+        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -509,6 +527,8 @@ class Cid:
     def cleanup(self):
         """Delete unused resources (QuickSight datasets, Athena views)"""
 
+        self.load_resources()
+
         self.qs.discover_dashboards()
         self.qs.discover_datasets()
         used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
@@ -524,6 +544,8 @@ class Cid:
 
     def share(self, dashboard_id, **kwargs):
         """Share resources (QuickSight datasets, dashboards)"""
+
+        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -695,7 +717,7 @@ class Cid:
         :param recursive: Update Datasets and Views as well
         :param force: allow selection of already updated dashboards in the manual selection mode
         """
-
+        self.load_resources()
         if not dashboard_id:
             if not self.qs.dashboards:
                 print('\nNo deployed dashboards found')
@@ -828,16 +850,13 @@ class Cid:
             for dataset_name in missing_datasets[:]:
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
-                    dataset_file = dataset_definition.get('File')
-                    # Load TPL file
-                    if dataset_file:
-                        raw_template = json.loads(resource_string(
-                            dataset_definition.get('providedBy'), f'data/datasets/{dataset_file}'
-                        ).decode('utf-8'))
+                    raw_template = self.get_dataset_data_from_defintion(dataset_definition)
+                    if raw_template:
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
                             missing_datasets.remove(dataset_name)
                             print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
+
                 except FileNotFoundError:
                     logger.info(f'File "{dataset_file}" not found')
                     pass
@@ -910,18 +929,26 @@ class Cid:
                     continue
             print('\n')
 
+    def get_dataset_data_from_defintion(self, dataset_definition):
+        raw_template = None
+        dataset_file = dataset_definition.get('File')
+        if dataset_file:
+            raw_template = json.loads(resource_string(
+                dataset_definition.get('providedBy'), f'data/datasets/{dataset_file}'
+            ).decode('utf-8'))
+        elif dataset_definition.get('Data'):
+            raw_template = dataset_definition.get('Data')
+        if raw_template is None:
+            logger.critical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
+            exit(1)
+        return raw_template
+
+
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
-        dataset_file = dataset_definition.get('File')
-        if not dataset_file:
-            logger.critical("Error: definition is broken. Check resources file.")
-            exit(1)
-
-        template = Template(resource_string(
-            package_or_requirement=dataset_definition.get('providedBy'),
-            resource_name=f'data/datasets/{dataset_file}',
-        ).decode('utf-8'))
+        data = self.get_dataset_data_from_defintion(dataset_definition)
+        template = Template(json.dumps(data))
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
 
