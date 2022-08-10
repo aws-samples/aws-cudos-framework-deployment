@@ -231,7 +231,8 @@ class Cid:
         '''
         if get_parameters().get('resources'):
             fileneme = get_parameters().get('resources')
-            resources = yaml.safe_load(open(fileneme))
+            with open(get_parameters().get('resources'), 'r', encoding='utf-8') as file:
+                resources = yaml.safe_load(file)
             logging.info(f'Loaded resources from {fileneme}')
             self.resources = always_merger.merge(self.resources, resources)
 
