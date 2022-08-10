@@ -30,12 +30,17 @@ def export_analysis(qs):
 
     if not analysis_id:
         try:
+            analyzes = []
             logger.debug("Discovering analyses")
-            res = qs.client.list_analyses(AwsAccountId=qs.account_id)
-            analyzes = res['AnalysisSummaryList']
-            if 'NextToken' in res and res['NextToken']:
-                logger.warning('Too many analyzes. Will show first 100')
-                # FIXME: manage more analyzes via pagination 
+            paginator = qs.client.get_paginator('list_analyses')
+            response_iterator = paginator.paginate(
+                AwsAccountId=qs.account_id,
+                PaginationConfig={'MaxItems': 100}
+            )
+            for page in response_iterator:
+                analyzes.extend(page.get('AnalysisSummaryList'))
+            if len(analyzes) == 100:
+                logger.info('Too many analyzes. Will show first 100')
         except qs.client.exceptions.AccessDeniedException:
             logger.debug("AccessDeniedException while discovering analyses")
         else:
@@ -87,7 +92,6 @@ def export_analysis(qs):
             value['RelationalTable']['Schema'] = '${athena_database_name}'
 
         datasets[dataset_arn] = dataset_data
-        # FIXME: generate template file
 
 
     template_id = get_parameter(
@@ -117,24 +121,23 @@ def export_analysis(qs):
     }
     try:
         res = qs.client.update_template(**params)
-        print(f'Template {template_id} updated from Analysis {analysis.get("Arn")}')
+        logger.info(f'Template {template_id} updated from Analysis {analysis.get("Arn")}')
     except qs.client.exceptions.ResourceNotFoundException:
         res = qs.client.create_template(**params)
-        print(f'Template {template_id} created from Analysis {analysis.get("Arn")}')
+        logger.info(f'Template {template_id} created from Analysis {analysis.get("Arn")}')
 
     assert res['CreationStatus'] in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS'], repr(res)
     template_arn = res['Arn']
-    print(f'Template arn = {template_arn}')
+    logger.info(f'Template arn = {template_arn}')
 
     time.sleep(5)
 
     reader_account = get_parameter(
-            'reader-account',
-            message='Enter account id with howm you want to share or *',
-            default='*'
+        'reader-account',
+        message='Enter account id with howm you want to share or *',
+        default='*'
     )
-    res = qs.client.update_template_permissions(
-        AwsAccountId=qs.account_id,
+    res = qs.update_template_permissions(
         TemplateId=template_id,
         GrantPermissions=[
             {
@@ -145,12 +148,6 @@ def export_analysis(qs):
             },
         ],
     )
-    template = qs.client.describe_template(
-        AwsAccountId=qs.account_id,
-        TemplateId=template_id
-    )['Template']
-
-    print(f"Template: {template.get('Arn')}")
 
     resources = {}
     resources['dashboards'] = {}
@@ -160,7 +157,6 @@ def export_analysis(qs):
     resources['dashboards'][analysis['Name'].upper()] = {
         'name': analysis['Name'],
         'templateId': template_id,
-        'templateArn': template_arn,
         'sourceAccountId': qs.account_id,
         'dashboardId': analysis['Name'].replace(' ', '-'),
         'dependsOn':{
