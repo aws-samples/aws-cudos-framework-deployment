@@ -316,6 +316,27 @@ class Cid:
             print(f'failed with an error message: {e}')
             self.delete(dashboard_id)
             exit(1)
+        if get_parameter(
+                param_name=f'share-with-account',
+                message=f'Share this dashboard with everyone in the account?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+            dashboard_link_permissions_tpl = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/dashboard_link_permissions.json',
+            ).decode('utf-8'))
+            columns_tpl = {
+                'AwsAccountId': self.awsIdentity.get('Account'),
+            }
+            dashboard_link_permissions = json.loads(dashboard_link_permissions_tpl.safe_substitute(columns_tpl))
+            dashboard_link_params = {
+                "GrantLinkPermissions": [
+                    dashboard_link_permissions
+                ]
+            }
+            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
+            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_link_params)
+            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
         return dashboard_id
 
@@ -520,7 +541,8 @@ class Cid:
 
         share_methods = {
             'Shared Folder (except datasource)': 'folder',
-            'Specific User only': 'user'
+            'Specific User only': 'user',
+            'Everyone in this account': 'account',
         }
         share_method = get_parameter(
             param_name='share-method',
@@ -641,6 +663,23 @@ class Cid:
                 logger.info(f'Sharing data source "{v.name}" ({k}) complete')
 
             print(f'Sharing complete')
+        elif share_method == 'account':
+            dashboard_link_permissions_tpl = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/dashboard_link_permissions.json',
+            ).decode('utf-8'))
+            columns_tpl = {
+                'AwsAccountId': self.awsIdentity.get('Account'),
+            }
+            dashboard_link_permissions = json.loads(dashboard_link_permissions_tpl.safe_substitute(columns_tpl))
+            dashboard_link_params = {
+                "GrantLinkPermissions": [
+                    dashboard_link_permissions
+                ]
+            }
+            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
+            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_link_params)
+            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
 
     def update(self, dashboard_id, recursive=False, force=False, **kwargs):

@@ -1,0 +1,8 @@
+{
+  "Principal": "arn:aws:quicksight:us-east-1:${AwsAccountId}:namespace/default",
+  "Actions": [
+    "quicksight:DescribeDashboard",
+    "quicksight:ListDashboardVersions",
+    "quicksight:QueryDashboard"
+  ]
+}
