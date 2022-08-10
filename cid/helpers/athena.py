@@ -155,7 +155,7 @@ class Athena():
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
         params = {
             'CatalogName': self.CatalogName,
-            'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName,
+            'DatabaseName': DatabaseName or self.DatabaseName,
             'PaginationConfig':{
                 'MaxItems': max_items,
             },
