@@ -99,6 +99,7 @@ def deploy(ctx, **kwargs):
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
+     --share-with-account ['yes/no']       Share dashboard with all users in the current account
     """
     ctx.obj.deploy(**kwargs)
 
@@ -148,7 +149,7 @@ def cleanup(ctx):
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.option('--share-method', help='Sharing method', default=None, type=click.Choice(['folder', 'user']))
+@click.option('--share-method', help='Sharing method', default=None, type=click.Choice(['folder', 'user', 'account']))
 @click.option('--folder-method', help='Folder to use', default=None, type=click.Choice(['new', 'existing']))
 @click.option('--folder-id', help='QuickSight folder id (existing)', default=None)
 @click.option('--folder-name', help='QuickSight folder name (new)', default=None)

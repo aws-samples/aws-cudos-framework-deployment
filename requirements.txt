@@ -1,4 +1,4 @@
-boto3>=1.19
+boto3>=1.24
 Click>=8.0
 yaspin==0.14.1
 deepmerge
