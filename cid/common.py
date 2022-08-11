@@ -861,7 +861,7 @@ class Cid:
                             print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
 
                 except FileNotFoundError:
-                    logger.info(f'File "{dataset_file}" not found')
+                    logger.info(f'Definitions File for Dataset "{dataset_name}" not found')
                     pass
                 except self.qs.client.exceptions.ResourceNotFoundException:
                     logger.info(f'Dataset "{dataset_name}" not found')
