@@ -1,6 +1,6 @@
 import time, csv
 
-from cid.utils import get_parameter
+from cid.utils import get_parameter, get_parameters
 from io import StringIO
 
 from pkg_resources import resource_string
