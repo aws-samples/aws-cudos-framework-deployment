@@ -995,17 +995,19 @@ class Cid:
                     athena_datasource = datasources_with_workgroup[0]
                 else:
                     #cannot find the right athena_datasource
-                    athena_datasource = get_parameter(
-                        param_name='quicksight-datasource-arn',
-                        message=f"Please choose DataSource ARN",
-                        choices={f"{arn} (workgroup={datasource.AthenaParameters.get('WorkGroup')})":datasource for arn, datasource in self.qs.athena_datasources.items()},
+                    logger.info('Multiple DataSources found.')
+                    datasource_id = get_parameter(
+                        param_name='quicksight-datasource-id',
+                        message=f"Please choose DataSource",
+                        choices={f"{datasource.name} {id_} (workgroup={datasource.AthenaParameters.get('WorkGroup')})":id_ for id_, datasource in self.qs.athena_datasources.items()},
                     )
+                    athena_datasource = self.qs.athena_datasources[datasource_id]
                     logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
             if isinstance(athena_datasource, Datasource):
                 self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
 
         # Check for required views
-        _views = dataset_definition.get('dependsOn').get('views')
+        _views = dataset_definition.get('dependsOn', {}).get('views', [])
         required_views = [(self.cur.tableName if cur_required and name =='${cur_table_name}' else name) for name in _views]
 
         self.athena.discover_views(required_views)
