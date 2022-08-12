@@ -338,7 +338,7 @@ class Cid:
                 param_name=f'share-with-account',
                 message=f'Share this dashboard with everyone in the account?',
                 choices=['yes', 'no'],
-                default='yes') != 'yes':
+                default='yes') == 'yes':
             permissions_tpl = Template(resource_string(
                 package_or_requirement='cid.builtin.core',
                 resource_name=f'data/permissions/dashboard_link_permissions.json',
@@ -355,9 +355,9 @@ class Cid:
                     dashboard_permissions
                 ]
             }
-            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
-            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
-            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
+            logger.info(f'Sharing dashboard {dashboard_id}')
+            self.qs.update_dashboard_permissions(DashboardId=dashboard_id, **dashboard_params)
+            logger.info(f'Shared dashboard {dashboard_id}')
 
         return dashboard_id
 
