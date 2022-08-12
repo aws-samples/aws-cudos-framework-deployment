@@ -313,7 +313,8 @@ class Cid:
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
-        if self.qs.dashboards.get(dashboard_id):
+        dashboard = self.qs.dashboards.get(dashboard_id)
+        if isinstance(dashboard, Dashboard):
             if update:
                 return self.update_dashboard(dashboard_id)
             else:
@@ -322,7 +323,7 @@ class Cid:
 
         print(f'Deploying dashboard {dashboard_id}')
         try:
-            self.qs.create_dashboard(dashboard_definition, **kwargs)
+            dashboard = self.qs.create_dashboard(dashboard_definition, **kwargs)
             print(f"\n#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
             self.track('created', dashboard_id)
         except self.qs.client.exceptions.ResourceExistsException:
@@ -338,7 +339,7 @@ class Cid:
                 param_name=f'share-with-account',
                 message=f'Share this dashboard with everyone in the account?',
                 choices=['yes', 'no'],
-                default='yes') != 'yes':
+                default='yes') == 'yes':
             permissions_tpl = Template(resource_string(
                 package_or_requirement='cid.builtin.core',
                 resource_name=f'data/permissions/dashboard_link_permissions.json',
