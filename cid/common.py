@@ -339,7 +339,7 @@ class Cid:
                 param_name=f'share-with-account',
                 message=f'Share this dashboard with everyone in the account?',
                 choices=['yes', 'no'],
-                default='yes') != 'yes':
+                default='yes') == 'yes':
             permissions_tpl = Template(resource_string(
                 package_or_requirement='cid.builtin.core',
                 resource_name=f'data/permissions/dashboard_link_permissions.json',
