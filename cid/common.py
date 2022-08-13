@@ -955,15 +955,15 @@ class Cid:
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
 
-
         if not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
             self.qs.AthenaWorkGroup = self.athena.WorkGroup
-            self.qs.create_data_source()
+            self.qs.create_data_source() # FIXME: we need to use name/id provided by user if any
+            # FIXME: we need to cleanup if datasource creation fails
 
         if not self.qs.athena_datasources:
-            logger.info('No Athena datasources available, failing')
-            print('No Athena datasources detected and unable to create one. Please create at least one dataset manually if it fails.')
+            logger.info('No valid DataSources available, failing')
+            print('No valid DataSources detected and unable to create one. Please create at least one DataSet manually in QuickSight and see why it fails.')
             # Not failing here to let views creation below
         else:
             datasource_choices = {
@@ -974,7 +974,10 @@ class Cid:
                 # We have explicit choice of datasource
                 datasource_id = get_parameters().get('quicksight-datasource-id')
                 if datasource_id not in datasource_choices.values():
-                    logger.critical(f'quicksight-datasource-id={datasource_id} not found. Here is a list of DataSources (Name ID WorkGroup)')
+                    logger.critical(
+                        f'quicksight-datasource-id={datasource_id} not found or not in a valid state. '
+                        f'Here is a list of available DataSources (Name ID WorkGroup): {datasource_choices.keys()}'
+                    )
                     exit(1)
                 athena_datasource = self.qs.athena_datasources[datasource_id]
 
