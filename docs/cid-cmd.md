@@ -1,10 +1,39 @@
 # CID-CMD - Cloud Intellegence Dashboards - CoMmanD line tool
 CID-CMD is tool for managing QuickSight Dasboards. Also it manage Dashboard's dependancies, like Datasets, DataSources and Athena Views.
 
+Syntax:
+```bash
+cid-cmd [tool parameters] [command] [command parameters]
+```
+
+
+
+## Commands
+
+### deploy
+
+### update
+
+### delete
+
+### map
+
+### share
+
+### export
+
+
 ## Tool Parameters
 #### verbose
+Generate a verbose log.
+ex:
+```bash
+cid-cmd -vv deploy
+```
+See `cid.log` in the current folder
 
 #### yes
+Allways answer yes to yes/no questions
 
 ## Command Parameters
 
@@ -63,18 +92,3 @@ CID resources file (yaml)
 Share dashboard with all users in the current account.
 values:  ['yes/no']
 
-
-
-## Commands
-
-### deploy
-
-### update
-
-### delete
-
-### map
-
-### share
-
-### export
