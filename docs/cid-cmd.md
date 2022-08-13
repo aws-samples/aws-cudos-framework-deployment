@@ -1,8 +1,12 @@
-# CID-CMD - Cloud Intellegence Dashboards - CoMmanD Line Tool
+# CID-CMD - Cloud Intellegence Dashboards - CoMmanD line tool
+CID-CMD is tool for managing QuickSight Dasboards. Also it manage Dashboard's dependancies, like Datasets, DataSources and Athena Views.
 
+## Tool Parameters
+#### verbose
 
+#### yes
 
-## Parameters
+## Command Parameters
 
 #### dashboard-id
 QuickSight Dashboard ID (cudos, cost_intelligence_dashboard, kpi_dashboard, ta-organizational-view, trends-dashboard etc)
@@ -42,10 +46,10 @@ QuickSight dataset id for a specific dataset. Can be useful if the tool is not a
 a custom parameter for a view creation, can use variable: {account_id}
 
 #### account-map-source
-Vales: `csv`, `dummy`, `organization` (if autodiscovery impossible)
- `csv` - from csv. Format is the same as in 
- `dummy`  - fill table with account ids instead of names
- `organization` - one time read organizations api
+Vales: `csv`, `dummy`, `organization` (if autodiscovery impossible)  
+ `csv` - from csv. Format is the same as in  
+ `dummy`  - fill table with account ids instead of names  
+ `organization` - one time read organizations api  
 
 If you do not know what to choose, choose `dummy`, and modify `account_map` later.
 
