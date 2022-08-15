@@ -211,7 +211,7 @@ class QuickSight():
         params = {
             "AwsAccountId": self.account_id,
             "DataSourceId": str(uuid.uuid4()),
-            "Name": "Athena",
+            "Name": "Athena-CID",
             "Type": "ATHENA",
             "DataSourceParameters": {
                 "AthenaParameters": {
@@ -235,6 +235,15 @@ class QuickSight():
                 current_status = datasource.status
             if not datasource.is_healthy:
                 logger.error(f'Data source creation failed: {datasource.error_info}')
+                if get_parameter(
+                    param_name='quicksight-delete-failed-datasource',
+                    message=f'Data source creation failed: {datasource.error_info}. Delete?',
+                    choices=['yes', 'no'],
+                ) == 'yes':
+                    try:
+                        self.delete_data_source(datasource.id)
+                    except self.client.exceptions.AccessDeniedException as e:
+                        logger.info('Access denied deleting Athena datasource')
                 return False
             return True
         except self.client.exceptions.ResourceExistsException:
@@ -548,6 +557,16 @@ class QuickSight():
         logger.info(f'Deleting dashboard {dashboard_id}')
         result = self.client.delete_dashboard(**paramaters)
         del self._dashboards[dashboard_id]
+        return result
+
+    def delete_data_source(self, datasource_id):
+        """ Deletes an AWS QuickSight dashboard """
+        paramaters = {
+            'AwsAccountId': self.account_id,
+            'DataSourceId': datasource_id
+        }
+        logger.info(f'Deleting DataSource {datasource_id}')
+        result = self.client.delete_data_source(**paramaters)
         return result
 
     def delete_dataset(self, id: str) -> bool:

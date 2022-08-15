@@ -94,6 +94,7 @@ def deploy(ctx, **kwargs):
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
      --quicksight-datasource-arn TEXT      QuickSight Datasource ARN (if not found one with provided Athena workgroup)
+     --quicksight-delete-failed-datasource (yes|no) Delete datasoruce if creation failed
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
