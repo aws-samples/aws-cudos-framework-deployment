@@ -80,7 +80,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     Check if parameters are provided in the command line and if not, ask user 
 
     :param message: text message for user
-    :param choices: a list or dict for choice. None for text entry
+    :param choices: a list or dict for choice. None for text entry. Keys and Values must be strings.
     :param default: a default text template
     :param none_as_disabled: if True and choices is a dict, all choices with None as a value will be disabled
     :param template_variables: a dict with varibles for template
@@ -92,7 +92,9 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     if params.get(param_name):
         value = params[param_name]
         logger.info(f'Using {param_name}={value}, from parameters')
-        return value.format(**template_variables)
+        if isinstance(value, str):
+            value = value.format(**template_variables)
+        return value
 
     if choices is not None:
         if 'yes' in choices and _all_yes:
@@ -116,14 +118,14 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             default=default,
         ).ask()
     else: # it is a text entry
-        if default:
+        if isinstance(default, str):
             default=default.format(**template_variables)
         print()
         result = questionary.text(
             message=f'[{param_name}] {message}:' ,
             default=default or '',
         ).ask()
-        if result:
+        if isinstance(result, str):
             result = result.format(**template_variables)
     if (break_on_ctrl_c and result is None):
         exit(1)
