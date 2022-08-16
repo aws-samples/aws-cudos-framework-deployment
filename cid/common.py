@@ -161,27 +161,9 @@ class Cid:
 
 
     def __setupLogging(self, verbosity: int=0, log_filename: str='cid.log') -> None:
-        _logger = logging.getLogger('cid')
-        # create formatter
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s:%(funcName)s:%(lineno)d - %(message)s')
-        # File handler logs everything down to DEBUG level
-        fh = logging.FileHandler(log_filename)
-        fh.setLevel(logging.DEBUG)
-        fh.setFormatter(formatter)
-        # Console handler logs everything down to ERROR level
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.ERROR)
-        # create formatter and add it to the handlers
-        ch.setFormatter(formatter)
-        # add the handlers to logger
-        _logger.addHandler(ch)
-        _logger.addHandler(fh)
-        if verbosity:
-            # Limit Logging level to DEBUG, base level is WARNING
-            verbosity = 2 if verbosity > 2 else verbosity
-            _logger.setLevel(logger.getEffectiveLevel()-10*verbosity)
-            # Logging application start here due to logging configuration
-            print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
+        set_logging(verbosity, log_filename)
+
+
 
 
     def get_definition(self, type: str, name: str=None, id: str=None) -> dict:
