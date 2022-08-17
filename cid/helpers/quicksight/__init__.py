@@ -567,6 +567,8 @@ class QuickSight():
         }
         logger.info(f'Deleting DataSource {datasource_id}')
         result = self.client.delete_data_source(**paramaters)
+        if datasource_id in self._datasources:
+            del self._datasources[datasource_id]
         return result
 
     def delete_dataset(self, id: str) -> bool:
