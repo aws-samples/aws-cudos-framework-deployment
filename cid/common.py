@@ -20,13 +20,17 @@ from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
 from cid.export import export_analysis
+from cid.logger import set_logging
 
 logger = logging.getLogger(__name__)
 
 class Cid:
 
     def __init__(self, **kwargs) -> None:
-        self.__setupLogging(verbosity=kwargs.pop('verbose'))
+        set_logging(
+            verbosity=kwargs.pop('verbose'),
+            log_filename=kwargs.pop('log_filename', 'cid.log')
+        )
         logger.info(f'Initializing CID {__version__}')
         # Defined resources
         self.resources = dict()
@@ -158,12 +162,6 @@ class Cid:
         print('\tRegion: {}'.format(self.session.region_name))
         logger.info(f'AWS region: {self.session.region_name}')
         print('\n')
-
-
-    def __setupLogging(self, verbosity: int=0, log_filename: str='cid.log') -> None:
-        set_logging(verbosity, log_filename)
-
-
 
 
     def get_definition(self, type: str, name: str=None, id: str=None) -> dict:
