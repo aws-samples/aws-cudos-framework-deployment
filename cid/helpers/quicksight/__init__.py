@@ -211,7 +211,7 @@ class QuickSight():
         params = {
             "AwsAccountId": self.account_id,
             "DataSourceId": str(uuid.uuid4()),
-            "Name": "Athena-CID",
+            "Name": "Athena",
             "Type": "ATHENA",
             "DataSourceParameters": {
                 "AthenaParameters": {
