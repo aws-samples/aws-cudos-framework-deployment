@@ -69,6 +69,8 @@
         {
             "Effect": "Allow",
             "Action": [
+                "quicksight:DescribeAccount",
+                "quicksight:CreateAccountSubscription",
                 "quicksight:CreateDashboard",
                 "quicksight:CreateDataSet",
                 "quicksight:CreateDataSource",
@@ -89,7 +91,6 @@
                 "quicksight:PassDataSet",
                 "quicksight:UpdateDashboard",
                 "quicksight:UpdateDashboardPublishedVersion"
-                
             ],
             "Resource": [
                 "*"
@@ -109,6 +110,15 @@
               "arn:aws:s3:::<S3-BUCKET>/*",
               "arn:aws:s3:::<ATHENA-QUERY-RESULTS-BUCKET>",
               "arn:aws:s3:::<ATHENA-QUERY-RESULTS-BUCKET>/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket"
+            ],
+            "Resource": [
+              "arn:aws:s3:::<ATHENA-QUERY-RESULTS-BUCKET>"
             ]
         }
     ]

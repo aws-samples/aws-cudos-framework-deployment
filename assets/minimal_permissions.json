@@ -66,6 +66,7 @@
         {
             "Effect": "Allow",
             "Action": [
+                "quicksight:DescribeAccount",
                 "quicksight:CreateDashboard",
                 "quicksight:CreateDataSet",
                 "quicksight:CreateDataSource",
@@ -79,7 +80,6 @@
                 "quicksight:ListUsers",
                 "quicksight:PassDataSource",
                 "quicksight:PassDataSet"
-                
             ],
             "Resource": [
                 "*"
