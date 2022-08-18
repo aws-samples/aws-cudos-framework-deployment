@@ -7,6 +7,7 @@ from string import Template
 from typing import Dict
 from pkg_resources import resource_string
 
+import yaml
 import click
 import requests
 from deepmerge import always_merger
@@ -14,11 +15,11 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 
 from cid import utils
 from cid.plugin import Plugin
-from cid.utils import get_parameter, unset_parameter
+from cid.utils import get_parameter, get_parameters, unset_parameter
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
-
+from cid.export import export_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +201,9 @@ class Cid:
         return None
 
 
+    def export(self, **kwargs):
+        export_analysis(self.qs)
+
     def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """
         method = {'created':'PUT', 'updated':'PATCH', 'deleted': 'DELETE'}.get(action, None)
@@ -225,8 +229,20 @@ class Cid:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
 
+    def load_resources(self):
+        ''' load additional resources from command line parameters
+        '''
+        if get_parameters().get('resources'):
+            fileneme = get_parameters().get('resources')
+            with open(get_parameters().get('resources'), 'r', encoding='utf-8') as file:
+                resources = yaml.safe_load(file)
+            logging.info(f'Loaded resources from {fileneme}')
+            self.resources = always_merger.merge(self.resources, resources)
+
+
     def deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
+        self.load_resources()
         self.qs.ensure_enterprise_subscription()
 
         if dashboard_id is None:
@@ -297,7 +313,8 @@ class Cid:
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
-        if self.qs.dashboards.get(dashboard_id):
+        dashboard = self.qs.dashboards.get(dashboard_id)
+        if isinstance(dashboard, Dashboard):
             if update:
                 return self.update_dashboard(dashboard_id)
             else:
@@ -306,7 +323,7 @@ class Cid:
 
         print(f'Deploying dashboard {dashboard_id}')
         try:
-            self.qs.create_dashboard(dashboard_definition, **kwargs)
+            dashboard = self.qs.create_dashboard(dashboard_definition, **kwargs)
             print(f"\n#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
             self.track('created', dashboard_id)
         except self.qs.client.exceptions.ResourceExistsException:
@@ -318,6 +335,30 @@ class Cid:
             print(f'failed with an error message: {e}')
             self.delete(dashboard_id)
             exit(1)
+        if get_parameter(
+                param_name=f'share-with-account',
+                message=f'Share this dashboard with everyone in the account?',
+                choices=['yes', 'no'],
+                default='yes') == 'yes':
+            permissions_tpl = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/dashboard_link_permissions.json',
+            ).decode('utf-8'))
+            columns_tpl = {
+                'AwsAccountId': self.awsIdentity.get('Account'),
+            }
+            dashboard_permissions = json.loads(permissions_tpl.safe_substitute(columns_tpl))
+            dashboard_params = {
+                "GrantPermissions": [
+                    dashboard_permissions
+                ],
+                "GrantLinkPermissions": [
+                    dashboard_permissions
+                ]
+            }
+            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
+            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
+            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
         return dashboard_id
 
@@ -351,6 +392,7 @@ class Cid:
 
     def status(self, dashboard_id, **kwargs):
         """Check QuickSight dashboard status"""
+        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -374,6 +416,8 @@ class Cid:
 
     def delete(self, dashboard_id, **kwargs):
         """Delete QuickSight dashboard"""
+
+        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -414,7 +458,7 @@ class Cid:
             logger.info(f'Dataset {name} is not managed by CID. Skipping.')
             print(f'Dataset {name} is not managed by CID. Skipping.')
             return False
-        for dataset in list(self.qs._datasets.values()):
+        for dataset in list(self.qs._datasets.values()) if self.qs._datasets else []:
             if dataset.id == id or dataset.name == name:
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
@@ -487,6 +531,8 @@ class Cid:
     def cleanup(self):
         """Delete unused resources (QuickSight datasets, Athena views)"""
 
+        self.load_resources()
+
         self.qs.discover_dashboards()
         self.qs.discover_datasets()
         used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
@@ -502,6 +548,8 @@ class Cid:
 
     def share(self, dashboard_id, **kwargs):
         """Share resources (QuickSight datasets, dashboards)"""
+
+        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -522,7 +570,8 @@ class Cid:
 
         share_methods = {
             'Shared Folder (except datasource)': 'folder',
-            'Specific User only': 'user'
+            'Specific User only': 'user',
+            'Everyone in this account': 'account',
         }
         share_method = get_parameter(
             param_name='share-method',
@@ -643,6 +692,26 @@ class Cid:
                 logger.info(f'Sharing data source "{v.name}" ({k}) complete')
 
             print(f'Sharing complete')
+        elif share_method == 'account':
+            dashboard_permissions_tpl = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/permissions/dashboard_link_permissions.json',
+            ).decode('utf-8'))
+            columns_tpl = {
+                'AwsAccountId': self.awsIdentity.get('Account'),
+            }
+            dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
+            dashboard_link_params = {
+                "GrantPermissions": [
+                    dashboard_permissions
+                ],
+                "GrantLinkPermissions": [
+                    dashboard_permissions
+                ]
+            }
+            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
+            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_link_params)
+            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
 
     def update(self, dashboard_id, recursive=False, force=False, **kwargs):
@@ -652,7 +721,7 @@ class Cid:
         :param recursive: Update Datasets and Views as well
         :param force: allow selection of already updated dashboards in the manual selection mode
         """
-
+        self.load_resources()
         if not dashboard_id:
             if not self.qs.dashboards:
                 print('\nNo deployed dashboards found')
@@ -785,18 +854,15 @@ class Cid:
             for dataset_name in missing_datasets[:]:
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
-                    dataset_file = dataset_definition.get('File')
-                    # Load TPL file
-                    if dataset_file:
-                        raw_template = json.loads(resource_string(
-                            dataset_definition.get('providedBy'), f'data/datasets/{dataset_file}'
-                        ).decode('utf-8'))
+                    raw_template = self.get_dataset_data_from_defintion(dataset_definition)
+                    if raw_template:
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
                             missing_datasets.remove(dataset_name)
                             print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
+
                 except FileNotFoundError:
-                    logger.info(f'File "{dataset_file}" not found')
+                    logger.info(f'Definitions File for Dataset "{dataset_name}" not found')
                     pass
                 except self.qs.client.exceptions.ResourceNotFoundException:
                     logger.info(f'Dataset "{dataset_name}" not found')
@@ -867,61 +933,104 @@ class Cid:
                     continue
             print('\n')
 
+    def get_dataset_data_from_defintion(self, dataset_definition):
+        raw_template = None
+        dataset_file = dataset_definition.get('File')
+        if dataset_file:
+            raw_template = json.loads(resource_string(
+                dataset_definition.get('providedBy'), f'data/datasets/{dataset_file}'
+            ).decode('utf-8'))
+        elif dataset_definition.get('Data'):
+            raw_template = dataset_definition.get('Data')
+        if raw_template is None:
+            logger.critical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
+            exit(1)
+        return raw_template
+
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
-        dataset_file = dataset_definition.get('File')
-        if not dataset_file:
-            logger.critical("Error: definition is broken. Check resources file.")
-            exit(1)
-
-        template = Template(resource_string(
-            package_or_requirement=dataset_definition.get('providedBy'),
-            resource_name=f'data/datasets/{dataset_file}',
-        ).decode('utf-8'))
+        data = self.get_dataset_data_from_defintion(dataset_definition)
+        template = Template(json.dumps(data))
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
-
 
         if not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
             self.qs.AthenaWorkGroup = self.athena.WorkGroup
-            self.qs.create_data_source()
+            self.qs.create_data_source() # FIXME: we need to use name/id provided by user if any
+            # FIXME: we need to cleanup if datasource creation fails
 
-        if not len(self.qs.athena_datasources):
-            logger.info('No Athena datasources available, failing')
-            print('No Athena datasources detected and unable to create one. Please create at least one dataset manually if it fails.')
+        if not self.qs.athena_datasources:
+            logger.info('No valid DataSources available, failing')
+            print('No valid DataSources detected and unable to create one. Please create at least one DataSet manually in QuickSight and see why it fails.')
             # Not failing here to let views creation below
         else:
-            pre_compiled_dataset = json.loads(template.safe_substitute())
-            dataset_name = pre_compiled_dataset.get('Name')
+            datasource_choices = {
+                f"{datasource.name} {id_} (workgroup={datasource.AthenaParameters.get('WorkGroup')})":id_
+                for id_, datasource in self.qs.athena_datasources.items()
+            }
+            if get_parameters().get('quicksight-datasource-id'):
+                # We have explicit choice of datasource
+                datasource_id = get_parameters().get('quicksight-datasource-id')
+                if datasource_id not in datasource_choices.values():
+                    logger.critical(
+                        f'quicksight-datasource-id={datasource_id} not found or not in a valid state. '
+                        f'Here is a list of available DataSources (Name ID WorkGroup): {datasource_choices.keys()}'
+                    )
+                    exit(1)
+                athena_datasource = self.qs.athena_datasources[datasource_id]
 
-            # let's find the schema/database and workgroup name
-            schemas = []
-            datasources = []
-            if dataset_id:
-                schemas = self.qs.get_datasets(id=dataset_id)[0].schemas
-                datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
-            else: # try to find dataset and get athena database
-                found_datasets = self.qs.get_datasets(name=dataset_name)
-                if found_datasets:
-                    schemas = list(set(sum([d.schemas for d in found_datasets], [])))
-                    datasources = list(set(sum([d.datasources for d in found_datasets], [])))
-
-            if len(schemas) == 1:
-                self.athena.DatabaseName = schemas[0]
-            # else user will be suggested to choose database
-            if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
-                athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
             else:
-                # FIXME: add user choice
-                athena_datasource = next(iter(v for v in self.qs.athena_datasources.values()))
-                logger.info(f'Found {len(datasources)} Athena datasources, using the first one {athena_datasource.id}')
-            if isinstance(athena_datasource, Datasource):
-                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+                # Datasources are not obvious for customer so we will try to do our best guess
+                # - if there is just one? -> take that one
+                # - if datasource is references in existing dataset? -> take that one
+                # - if athena workgroup defined -> Try to find a dataset with this workgroup
+                # - and if still nothing -> ask an expicit choice from the user
+                pre_compiled_dataset = json.loads(template.safe_substitute())
+                dataset_name = pre_compiled_dataset.get('Name')
+
+                # let's find the schema/database and workgroup name
+                schemas = []
+                datasources = []
+                if dataset_id:
+                    schemas = self.qs.get_datasets(id=dataset_id)[0].schemas
+                    datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
+                else: # try to find dataset and get athena database
+                    found_datasets = self.qs.get_datasets(name=dataset_name)
+                    if found_datasets:
+                        schemas = list(set(sum([d.schemas for d in found_datasets], [])))
+                        datasources = list(set(sum([d.datasources for d in found_datasets], [])))
+
+                if len(schemas) == 1:
+                    self.athena.DatabaseName = schemas[0]
+                # else user will be suggested to choose database anyway
+
+                if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
+                    athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
+                else:
+                    #try to find a datasource with defined workgroup
+                    workgroup = self.athena.WorkGroup
+                    datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=workgroup)
+                    if len(datasources_with_workgroup) == 1:
+                        athena_datasource = datasources_with_workgroup[0]
+                    else:
+                        #cannot find the right athena_datasource
+                        logger.info('Multiple DataSources found.')
+                        datasource_id = get_parameter(
+                            param_name='quicksight-datasource-id',
+                            message=f"Please choose DataSource (Choose the first one if not sure).",
+                            choices=datasource_choices,
+                        )
+                        athena_datasource = self.qs.athena_datasources[datasource_id]
+                        logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
+                if isinstance(athena_datasource, Datasource):
+                    self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+                else:
+                    logger.debug('Athena_datasource is not defined. Will only create views')
 
         # Check for required views
-        _views = dataset_definition.get('dependsOn').get('views')
+        _views = dataset_definition.get('dependsOn', {}).get('views', [])
         required_views = [(self.cur.tableName if cur_required and name =='${cur_table_name}' else name) for name in _views]
 
         self.athena.discover_views(required_views)
@@ -933,6 +1042,9 @@ class Cid:
             for view_name in found_views:
                 if cur_required and view_name == self.cur.tableName:
                     logger.debug(f'Dependancy view {view_name} is a CUR. Skip.')
+                    continue
+                if view_name == 'account_map':
+                    logger.debug(f'Dependancy view is {view_name}. Skip.')
                     continue
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
 

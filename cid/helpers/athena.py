@@ -1,6 +1,6 @@
 import time, csv
 
-from cid.utils import get_parameter
+from cid.utils import get_parameter, get_parameters
 from io import StringIO
 
 from pkg_resources import resource_string
@@ -46,20 +46,17 @@ class Athena():
             # Get AWS Glue DataCatalogs
             glue_data_catalogs = [d for d in self.list_data_catalogs() if d['Type'] == 'GLUE']
             if not len(glue_data_catalogs):
+                logger.error('AWS DataCatog of type GLUE not found!')
                 self._status = 'AWS DataCatog of type GLUE not found'
             if len(glue_data_catalogs) == 1:
                 self._CatalogName = glue_data_catalogs.pop().get('CatalogName')
             elif len(glue_data_catalogs) > 1:
-                # Select default catalog if present
-                default_catalog = [d for d in glue_data_catalogs if d['CatalogName'] == self.defaults.get('CatalogName')]
-                if not len(default_catalog):
-                    # Ask user
-
-                    self._CatalogName = get_parameter(
-                        param_name='glue-data-catalog',
-                        message="Select AWS DataCatalog to use",
-                        choices=glue_data_catalogs
-                    )
+                # Ask user
+                self._CatalogName = get_parameter(
+                    param_name='glue-data-catalog',
+                    message="Select AWS DataCatalog to use",
+                    choices=[catalog.get('CatalogName') for catalog in glue_data_catalogs],
+                )
             logger.info(f'Using datacatalog: {self._CatalogName}')
         return self._CatalogName
 
@@ -72,6 +69,11 @@ class Athena():
         """ Check if Athena database exist """
 
         if not self._DatabaseName:
+            if get_parameters().get('athena-database'):
+                self._DatabaseName = get_parameters().get('athena-database')
+                if not self.get_database(self._DatabaseName):
+                    logger.critical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
+                    exit(1)
             # Get AWS Athena databases
             athena_databases = self.list_databases()
             if not len(athena_databases):
@@ -83,7 +85,10 @@ class Athena():
             elif len(athena_databases) > 1:
                 # Remove empty databases from the list
                 for d in athena_databases:
-                    tables = self.list_table_metadata(DatabaseName=d.get('Name'))
+                    tables = self.list_table_metadata(
+                        DatabaseName=d.get('Name'),
+                        max_items=1000, # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
+                    )
                     if not len(tables):
                         athena_databases.remove(d)
                 # Select default database if present
@@ -151,10 +156,13 @@ class Athena():
             logger.debug(e, stack_info=True)
             return False
 
-    def list_table_metadata(self, DatabaseName: str=None) -> dict:
+    def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
         params = {
             'CatalogName': self.CatalogName,
-            'DatabaseName': DatabaseName if DatabaseName else self.DatabaseName
+            'DatabaseName': DatabaseName or self.DatabaseName,
+            'PaginationConfig':{
+                'MaxItems': max_items,
+            },
         }
         table_metadata = list()
         try:
@@ -260,11 +268,12 @@ class Athena():
             # Get Query Status
             query_status = self.client.get_query_execution(QueryExecutionId=query_id)
         except self.client.exceptions.InvalidRequestException as e:
-            logger.error(f'InvalidRequestException: {e}')
+            logger.debug('Full query: {}'.format(sql_query))
+            logger.critical(f'InvalidRequestException: {e}')
             exit(1)
         except Exception as e:
-            logger.error('Athena query failed: {}'.format(e))
-            logger.error('Full query: {}'.format(sql_query))
+            logger.debug('Full query: {}'.format(sql_query))
+            logger.critical('Athena query failed: {}'.format(e))
             exit(1)
 
         current_status = query_status['QueryExecution']['Status']['State']

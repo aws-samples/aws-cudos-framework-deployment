@@ -81,12 +81,15 @@ class QuickSight():
     @property
     def user(self) -> dict:
         if not self._user:
-            self._user =  self.describe_user('/'.join(self.awsIdentity.get('Arn').split('/')[1:]))
+            try:
+                self._user =  self.describe_user(self.username())
+            except Exception as exc:
+                logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
             if not self._user:
                 # If no user match, ask
                 self._user = self.select_user()
             if not self._user:
-                logger.critical('Cannot get QuickSight. Please provide correct QuickSight user as --quicksight-user parameter.')
+                logger.critical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
                 exit(1)
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
         return self._user
@@ -201,6 +204,16 @@ class QuickSight():
 
         logger.info(f'Activated {edition} subscription.')
         return True
+
+    def username(self) -> str:
+        if self._user:
+            return self._user.get('UserName')
+        # Guess the username from identity ARN
+        arn = self.awsIdentity.get('Arn')
+        if arn.split(':')[5] == 'root':
+            return self.account_id
+        else:
+            return '/'.join(arn.split('/')[1:])
 
     def discover_dashboard(self, dashboardId: str):
         """Discover single dashboard"""
@@ -471,19 +484,20 @@ class QuickSight():
 
     def select_user(self):
         """ Select a user from the list of users """
+        user_list = None
         try:
-            userList = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
+            user_list = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing users')
-            return None
+            return None #FIXME: should we rather allow manual entry when no access?
 
-        _user = get_parameter(
+        _username = get_parameter(
             param_name='quicksight-user',
             message="Please select QuickSight user to use",
-            choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user.get('UserName') for user in userList}
+            choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user.get('UserName') for user in user_list}
         )
-        for u in userList:
-            if u.get('UserName') == _user:
+        for u in user_list:
+            if u.get('UserName') == _username:
                 return u
         else:
             return None
@@ -941,5 +955,14 @@ class QuickSight():
         logger.debug(f"Updating DataSource permissions: {update_parameters}")
         update_parameters.update({'AwsAccountId': self.account_id})
         update_status = self.client.update_data_source_permissions(**update_parameters)
+        logger.debug(update_status)
+        return update_status
+
+
+    def update_template_permissions(self, **update_parameters):
+        """ Updates an AWS QuickSight template permissions """
+        logger.debug(f"Updating Template permissions: {update_parameters}")
+        update_parameters.update({'AwsAccountId': self.account_id})
+        update_status = self.client.update_template_permissions(**update_parameters)
         logger.debug(update_status)
         return update_status

@@ -1,5 +1,8 @@
 # What's new in the KPI Dashboard
 
+## KPI - 1.2.1
+* Other Graviton: Fixed potential savings filter to show a correct monthly value.
+
 ## KPI - 1.2
 * Metrics Summary: Added EC2 Unit Cost to EC2 section
 * KPI S3 Storage All Athena view: Updated product_volume_type case when statement to like '%Intelligent%' for Intelligent Tiering to meet AIA formatting

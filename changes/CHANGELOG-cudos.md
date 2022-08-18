@@ -1,5 +1,18 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.71
+
+* Compute Summary: Changed  'On-Demand Capacity Reservations Usage Hours' visual to show data for Last 30 days instead of previous month so it displays current inventory and utilization of On-Demand Capacity Reservations
+* Monitoring and Observability: Added CloudWatch Synthetics and CloudWatch Metrics Steams to 'CloudWatch Usage Cost per Usage Type Group' visual
+* Monitoring and Observability: Added pricing unit and usage amount to 'TOP 10 CloudWatch Resources Previous Month' and 'TOP 10 CloudWatch Log Resources Previous Month' visuals
+
+
+## CUDOS - 4.70
+
+* Compute Summary: Added visuals 'Unused On-Demand Capacity Reservations Cost per Account' and 'On-Demand Capacity Reservations Usage Hours (Previous Month)'
+* Compute Summary: Combined visuals 'EC2 Instance Type Running Hours Cost' and 'EC2 Family Running Hours Cost' into 'EC2 Running Hours Cost by Purchase Option' and added ability to switch between Instance Family and Instance Type with 'Group By' control 
+* Compute Summary: Top 3 previous generation instances types Focus Area extended to top 5 added ability to switch between Instance Family and Instance Type with 'Group By' control 
+
 ## CUDOS - 4.69.1
 
 * End User Computing: Added detailed description for Storage and Application Bundles in 'Workspaces spend per Bundle' and 'WorkSpaces Cost and Usage Top 20' vizuals
