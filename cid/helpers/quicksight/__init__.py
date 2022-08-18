@@ -131,7 +131,7 @@ class QuickSight():
 
         return self._datasources
 
-    def ensure_enterprise_subscription(self, email: str=None) -> bool:
+    def ensure_enterprise_subscription(self, email: str=None, subscribe_allowed=False) -> bool:
         try:
             edition = self.client.describe_account_subscription(
                 AwsAccountId=self.account_id
@@ -148,6 +148,10 @@ class QuickSight():
         if edition and 'ENTERPRISE' in edition:
             logger.debug(f'All Good. Quicksight has {edition} edition')
             return True
+
+        if not subscribe_allowed:
+            logger.critical("Quicksight has no Enterprise Edition")
+            exit()
 
         logger.info('QuickSight ENTERPRISE Subscription is not found. Subscibing. Please check pricing here: https://aws.amazon.com/quicksight/pricing/ ')
         if not email:

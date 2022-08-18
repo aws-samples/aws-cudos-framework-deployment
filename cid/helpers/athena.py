@@ -171,7 +171,7 @@ class Athena():
         return table_metadata
 
 
-    def ensure_workgroup_has_location(self, workgroup):
+    def ensure_workgroup_has_location(self, workgroup, create_allowed=False):
         try:
             config = self.client.get_work_group(WorkGroup=workgroup)['WorkGroup']['Configuration']
         except self.client.exceptions.InternalServerException:
@@ -183,9 +183,15 @@ class Athena():
             logger.debug(f'WorkGroup {workgroup} is ok. It has ResultConfiguration')
             return True
 
+        if not create_allowed:
+            logger.critical(
+                f'Athena WorkGroup {workgroup} does not have a ResultConfiguration.'
+                ' Please create an s3 bucket in the region and configure Athena WorkGroup {workgroup} to use this bucket.')
+            exit(1)
+
         try:
             account_id = self._session.client('sts').get_caller_identity()['Account']
-            bucket_name = f'aws-athena-query-results-{account_id}-{self.region}-cid'
+            bucket_name = f'aws-athena-query-results-{account_id}-{self.region}-cid' # FIXME: add choosing name
             s3 = self._session.client('s3', region_name=self.region)
             try:
                 s3.create_bucket(Bucket=bucket_name)
