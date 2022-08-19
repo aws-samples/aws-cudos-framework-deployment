@@ -2,9 +2,9 @@
 
 ## CUDOS - 4.72
 
-* Databases: Addeed ability to vizualise spend and usage for Amazon Netpune
-* Compute Summary: Added insights and reccomendations to AWS Lambda Summary section with the links to respective documentation
-* RI/SP Summary: Added Cost line to 'Avg. Hourly EC2 Cost by Pricing Model' which allows to get total EC2 compute cost per hour
+* Databases: Added ability to vizualise spend and usage for Amazon Neptune
+* Compute Summary: Added insights and recommendations to AWS Lambda Summary section with the links to respective documentation
+* RI/SP Summary: Added Cost line to ‘Avg. Hourly EC2 Cost by Pricing Model’ which allows to get total EC2 compute cost per hour
 
 
 ## CUDOS - 4.71
