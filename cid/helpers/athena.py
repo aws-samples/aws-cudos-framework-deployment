@@ -115,13 +115,13 @@ class Athena():
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
             if len(workgroups) == 1:
-                self._WorkGroup = workgroups.pop().get('Name')
+                self.WorkGroup = workgroups.pop().get('Name')
             elif len(workgroups) > 1:
                 # Select default workgroup if present
                 default_workgroup = next(iter([wg.get('Name') for wg in workgroups if wg['Name'] == self.defaults.get('WorkGroup')]), None)
                 if default_workgroup: logger.info(f'Found "{default_workgroup}" as a default workgroup')
                 # Ask user
-                self._WorkGroup = get_parameter(
+                self.WorkGroup = get_parameter(
                     param_name='athena-workgroup',
                     message="Select AWS Athena workgroup to use",
                     choices=[d['Name'] for d in workgroups],
@@ -132,6 +132,17 @@ class Athena():
 
     @WorkGroup.setter
     def WorkGroup(self, name: str):
+        try:
+            _workgroup = self.client.get_work_group(WorkGroup=name).get('WorkGroup')
+        except self.client.exceptions.InvalidRequestException as e:
+            logger.error(e)
+            exit(1)
+        if _workgroup.get('State') == 'DISABLED':
+            logger.critical(f'Workgroup "{name}" is disabled.')
+            exit(1)
+        if not _workgroup.get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation'):
+            logger.critical(f'Workgroup "{name}" must have an output location set.')
+            exit(1)
         self._WorkGroup = name
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
