@@ -244,6 +244,7 @@ class Cid:
         """ Deploy Dashboard """
 
         self.load_resources()
+        self.qs.ensure_subscription()
 
         if dashboard_id is None:
             dashboard_id = get_parameter(
