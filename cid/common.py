@@ -699,7 +699,8 @@ class Cid:
                 resource_name=f'data/permissions/dashboard_link_permissions.json',
             ).decode('utf-8'))
             columns_tpl = {
-                'AwsAccountId': self.awsIdentity.get('Account'),
+                'AwsAccountId': self.account_id,
+                'AwsRegion': self.qs.identityRegion
             }
             dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
             dashboard_link_params = {
