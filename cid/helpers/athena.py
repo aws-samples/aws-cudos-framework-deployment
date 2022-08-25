@@ -1,16 +1,18 @@
+from io import StringIO
+import json
+import logging
+from string import Template
 import time, csv
 
-from cid.utils import get_parameter, get_parameters
-from io import StringIO
-
 from pkg_resources import resource_string
-from string import Template
-import json
 
-import logging
+from cid.base import CidBase
+from cid.utils import get_parameter, get_parameters
+
+
 logger = logging.getLogger(__name__)
 
-class Athena():
+class Athena(CidBase):
     # Define defaults
     defaults = {
         'CatalogName': 'AwsDataCatalog',
@@ -26,15 +28,14 @@ class Athena():
     _client = None
     region: str = None
 
-    def __init__(self, session, resources: dict=None):        
-        self.region = session.region_name
+    def __init__(self, session, resources: dict=None) -> None:
+        super().__init__(session)
         self._resources = resources
-        
-        # Athena client
-        self._client = session.client('athena', region_name=self.region)
 
     @property
     def client(self):
+        if not self._client:
+            self._client = self.session.client('athena', region_name=self.region)
         return self._client
 
     @property

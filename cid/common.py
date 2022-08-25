@@ -14,6 +14,7 @@ from deepmerge import always_merger
 from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
 from cid import utils
+from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, unset_parameter
 from cid.helpers.account_map import AccountMap
@@ -23,7 +24,7 @@ from cid.export import export_analysis
 
 logger = logging.getLogger(__name__)
 
-class Cid:
+class Cid(CidBase):
 
     def __init__(self, **kwargs) -> None:
         self.__setupLogging(verbosity=kwargs.pop('verbose'))
@@ -33,8 +34,6 @@ class Cid:
         self.dashboards = dict()
         self.plugins = self.__loadPlugins()
         self._clients = dict()
-        self.awsIdentity = None
-        self.session = None
         self._visited_views = [] # Views updated in the current session
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
 
@@ -42,7 +41,7 @@ class Cid:
     def qs(self) -> QuickSight:
         if not self._clients.get('quicksight'):
             self._clients.update({
-                'quicksight': QuickSight(self.session, self.awsIdentity, resources=self.resources)
+                'quicksight': QuickSight(self.session, resources=self.resources)
             })
         return self._clients.get('quicksight')
 
@@ -135,10 +134,8 @@ class Cid:
             if self.session.profile_name:
                 print(f'\tprofile name: {self.session.profile_name}')
                 logger.info(f'AWS profile name: {self.session.profile_name}')
-            sts = self.session.client('sts')
-            self.awsIdentity = sts.get_caller_identity()
             self.qs_url_params = {
-                'account_id': self.awsIdentity.get('Account'),
+                'account_id': self.account_id,
                 'region': self.session.region_name
             }
         except (NoCredentialsError, CredentialRetrievalError):
@@ -149,12 +146,9 @@ class Cid:
             print(f'Error: {e}')
             logger.info(f'Error: {e}')
             exit()
-        print('\taccountId: {}\n\tAWS userId: {}'.format(
-            self.awsIdentity.get('Account'),
-            self.awsIdentity.get('Arn').split(':')[5]
-        ))
-        logger.info(f'AWS accountId: {self.awsIdentity.get("Account")}')
-        logger.info(f'AWS userId: {self.awsIdentity.get("Arn").split(":")[5]}')
+        print(f'\taccountId: {self.account_id}\n\tAWS userId: {self.username}')
+        logger.info(f'AWS accountId: {self.account_id}')
+        logger.info(f'AWS userId: {self.username}')
         print('\tRegion: {}'.format(self.session.region_name))
         logger.info(f'AWS region: {self.session.region_name}')
         print('\n')
@@ -213,7 +207,7 @@ class Cid:
         endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/'
         payload = {
             'dashboard_id': dashboard_id,
-            'account_id': self.awsIdentity.get('Account'),
+            'account_id': self.account_id,
             action + '_via': 'CID',
         }
         try:
@@ -224,7 +218,7 @@ class Cid:
                 headers={'Content-Type': 'application/json'}
             )
             if res.status_code != 200:
-                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {self.awsIdentity.get('Account')}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
+                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {self.account_id}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
         except Exception as e:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
@@ -288,7 +282,7 @@ class Cid:
                 dashboard_definition.get('datasets').update({dataset_name: arn})
 
         kwargs = dict()
-        local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard_definition.get("dashboardId")}.json'
+        local_overrides = f'work/{self.account_id}/{dashboard_definition.get("dashboardId")}.json'
         logger.info(f'Looking for local overrides file "{local_overrides}"...')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
@@ -346,7 +340,7 @@ class Cid:
                 resource_name=f'data/permissions/dashboard_link_permissions.json',
             ).decode('utf-8'))
             columns_tpl = {
-                'AwsAccountId': self.awsIdentity.get('Account'),
+                'AwsAccountId': self.account_id,
             }
             dashboard_permissions = json.loads(permissions_tpl.safe_substitute(columns_tpl))
             dashboard_params = {
@@ -763,7 +757,7 @@ class Cid:
                 exit()
 
         kwargs = dict()
-        local_overrides = f'work/{self.awsIdentity.get("Account")}/{dashboard.id}.json'
+        local_overrides = f'work/{self.account_id}/{dashboard.id}.json'
         logger.info(f'Looking for local overrides file "{local_overrides}"')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
@@ -1116,7 +1110,7 @@ class Cid:
 
         # Find all saved deployments for current AWS account
         file_path = os.path.join(
-            abs_path, f'work/{self.awsIdentity.get("Account")}')
+            abs_path, f'work/{self.account_id}')
         found_deployments = list()
         if os.path.isdir(file_path):
             files = [f for f in os.listdir(file_path) if f.endswith('.json')]
@@ -1229,7 +1223,7 @@ class Cid:
                         param_name=f'view-{view_name}-{k}',
                         message=f"Required parameter: {k} ({v.get('description')})",
                         default=v.get('default'),
-                        template_variables=dict(account_id=self.awsIdentity.get('Account')),
+                        template_variables=dict(account_id=self.account_id),
                     )
                 param = {k:value}
             else:

@@ -10,64 +10,35 @@ from typing import Dict, List, Union
 import click
 from deepmerge import always_merger
 
-from cid.utils import get_parameter
+from cid.base import CidBase
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
+from cid.utils import get_parameter
 
 logger = logging.getLogger(__name__)
 
-class QuickSight():
+class QuickSight(CidBase):
     # Define defaults
     cidAccountId = '223485597511'
     _AthenaWorkGroup: str = None
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
     _datasources: Dict[str, Datasource] = None
+    _identityRegion: str = None
     _user: dict = None
+    client = None
 
-    def __init__(self, session, awsIdentity, resources=None):        
-        self.region = session.region_name
-        self.awsIdentity = awsIdentity
+    def __init__(self, session, resources=None) -> None:
         self._resources = resources
+        super().__init__(session)
 
         # QuickSight clients
         logger.info(f'Creating QuickSight client')
-        self.client = session.client('quicksight')
-        self.use1Client = session.client('quicksight', region_name='us-east-1')
-        try:
-            logger.info(f'Detecting QuickSight identity region, trying {self.region}')
-            parameters = {
-                'AwsAccountId': self.account_id,
-                'UserName': '/'.join(self.awsIdentity.get('Arn').split('/')[1:]),
-                'Namespace': 'default'
-            }
-            self.client.describe_user(**parameters)
-        except self.client.exceptions.AccessDeniedException as e:
-            logger.debug(e)
-            pattern = f'Operation is being called from endpoint {self.region}, but your identity region is (.*). Please use the (.*) endpoint.'
-            match = re.search(pattern, e.response['Error']['Message'])
-            if match:
-                logger.info(f'Switching QuickSight identity region to {match.group(1)}')
-                self.identityRegion = match.group(1)
-                self.identityClient = session.client('quicksight', region_name=self.identityRegion)
-            else:
-                raise
-        except Exception as e:
-            logger.info('QuickSight identity region detection failed')
-            logger.debug(e, stack_info=True)
-            self.identityRegion = self.region
-            self.identityClient = self.client
-        else:
-            self.identityRegion = self.region
-            self.identityClient = self.client
-        finally:
-            logger.info(f'Using QuickSight identity region: {self.identityRegion}')
+        self.client = self.session.client('quicksight')
+        self.use1Client = self.session.client('quicksight', region_name='us-east-1')
+        self.identityClient = self.session.client('quicksight', region_name=self.identityRegion)
 
-
-    @property
-    def account_id(self) -> str:
-        return self.awsIdentity.get('Account')
 
     @property
     def AthenaWorkGroup(self) -> str:
@@ -93,6 +64,33 @@ class QuickSight():
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
         return self._user
 
+    @property
+    def identityRegion(self) -> str:
+        if not self._identityRegion:
+            try:
+                logger.info(f'Detecting QuickSight identity region, trying {self.region}')
+                parameters = {
+                    'AwsAccountId': self.account_id,
+                    'UserName': '/'.join(self.username),
+                    'Namespace': 'default'
+                }
+                self.client.describe_user(**parameters)
+                self._identityRegion = self.region
+            except self.client.exceptions.AccessDeniedException as e:
+                logger.debug(e)
+                pattern = f'Operation is being called from endpoint {self.region}, but your identity region is (.*). Please use the (.*) endpoint.'
+                match = re.search(pattern, e.response['Error']['Message'])
+                if match:
+                    logger.info(f'Switching QuickSight identity region to {match.group(1)}')
+                    self._identityRegion = match.group(1)
+                else:
+                    raise
+            except Exception as e:
+                logger.info(f'QuickSight identity region detection failed, using {self.region}')
+                logger.debug(e, stack_info=True)
+                self._identityRegion = self.region
+            logger.info(f'Using QuickSight identity region: {self._identityRegion}')
+        return self._identityRegion
 
     @property
     def edition(self) -> Union[str, None]:
@@ -140,15 +138,6 @@ class QuickSight():
 
         return self._datasources
 
-    def username(self) -> str:
-        if self._user:
-            return self._user.get('UserName')
-        # Guess the username from identity ARN
-        arn = self.awsIdentity.get('Arn')
-        if arn.split(':')[5] == 'root':
-            return self.account_id
-        else:
-            return '/'.join(arn.split('/')[1:])
 
     def ensure_subscription(self) -> None:
         """Ensure that the QuickSight subscription is active"""
