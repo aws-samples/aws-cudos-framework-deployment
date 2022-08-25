@@ -85,6 +85,7 @@
                 "quicksight:DescribeUser",
                 "quicksight:ListDashboards",
                 "quicksight:ListDataSets",
+                "quicksight:ListFolders",
                 "quicksight:ListUsers",
                 "quicksight:PassDataSource",
                 "quicksight:PassDataSet",
