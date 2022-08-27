@@ -96,6 +96,17 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             value = value.format(**template_variables)
         return value
 
+    # Check environment variables
+    env_var_name = 'CID_' + param_name.upper().replace('-', '_')
+    env_var_value = os.environ.get(env_var_name, None)
+    if env_var_value != None:
+        value = env_var_value
+        logger.info(f'Using {param_name}={value}, from env var {env_var_name}')
+        params[param_name] = value
+        if isinstance(value, str):
+            value = value.format(**template_variables)
+        return value
+
     if choices is not None:
         if 'yes' in choices and _all_yes:
             return 'yes'

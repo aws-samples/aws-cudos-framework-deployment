@@ -15,7 +15,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 
 from cid import utils
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, unset_parameter
+from cid.utils import get_parameter, get_parameters, unset_parameter, set_parameters
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
@@ -242,7 +242,7 @@ class Cid:
 
     def deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
-
+        set_parameters(kwargs)
         self.load_resources()
         self.qs.ensure_subscription()
 
@@ -393,6 +393,8 @@ class Cid:
 
     def status(self, dashboard_id, **kwargs):
         """Check QuickSight dashboard status"""
+
+        set_parameters(kwargs)
         self.load_resources()
 
         if not dashboard_id:
@@ -418,6 +420,7 @@ class Cid:
     def delete(self, dashboard_id, **kwargs):
         """Delete QuickSight dashboard"""
 
+        set_parameters(kwargs)
         self.load_resources()
 
         if not dashboard_id:
@@ -550,6 +553,7 @@ class Cid:
     def share(self, dashboard_id, **kwargs):
         """Share resources (QuickSight datasets, dashboards)"""
 
+        set_parameters(kwargs)
         self.load_resources()
 
         if not dashboard_id:
@@ -722,6 +726,7 @@ class Cid:
         :param recursive: Update Datasets and Views as well
         :param force: allow selection of already updated dashboards in the manual selection mode
         """
+        set_parameters(kwargs)
         self.load_resources()
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -1243,6 +1248,8 @@ class Cid:
 
     def map(self, **kwargs):
         """Create account mapping Athena views"""
+        set_parameters(kwargs)
+
         for v in ['account_map', 'aws_accounts']:
             self.accountMap.create(v)
 

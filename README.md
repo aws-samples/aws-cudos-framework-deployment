@@ -61,9 +61,18 @@ We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cl
     cid-cmd --help
     ```
 
+You can also use environment variables to pass parameters to cid-cmd.
+
+    ```bash
+    export CID_DASHBOARD_ID=cudos
+    export CID_ATHENA_WORKGROUP=cid
+    #etc
+    ```
+
 ### Usage Demo
 
    [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
+
 
 ## Troubleshooting 
 
