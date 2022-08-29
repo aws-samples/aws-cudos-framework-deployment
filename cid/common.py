@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import logging
+import functools
 from pathlib import Path
 from string import Template
 from typing import Dict
@@ -16,7 +17,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, unset_parameter
+from cid.utils import get_parameter, get_parameters, unset_parameter, set_parameters
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
@@ -38,17 +39,24 @@ class Cid():
         self._visited_views = [] # Views updated in the current session
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
+        set_parameters(kwargs, self.all_yes)
 
+    def aws_login(self):
         params = {
-            'profile_name': kwargs.get('profile_name', None),
-            'region_name': kwargs.get('region_name', None),
-            'aws_access_key_id': kwargs.get('aws_access_key_id', None),
-            'aws_secret_access_key': kwargs.get('aws_secret_access_key', None),
-            'aws_session_token': kwargs.get('aws_session_token', None)
+            'profile_name': None,
+            'region_name': None,
+            'aws_access_key_id': None,
+            'aws_secret_access_key': None,
+            'aws_session_token': None
         }
+        for key in params.keys():
+            value = get_parameters().get(key.replace('_', '-'))
+            if  value != None:
+                params[key] = value
+
         print('Checking AWS environment...')
         try:
-            self.base = CidBase(session = utils.get_boto_session(**params))
+            self.base = CidBase(session=utils.get_boto_session(**params))
             if self.base.session.profile_name:
                 print(f'\tprofile name: {self.base.session.profile_name}')
                 logger.info(f'AWS profile name: {self.base.session.profile_name}')
@@ -131,6 +139,17 @@ class Cid():
             })
         return self._clients.get('accountMap')
 
+    def command(func):
+        ''' a decorator that ensure that we logged in to AWS acc, and loaded additional resource files
+        '''
+        @functools.wraps(func)
+        def wrap(self, *args, **kwargs):
+            set_parameters(kwargs)
+            self.aws_login()
+            self.load_resources()
+            return func(self, *args, **kwargs)
+        return wrap
+
     def __loadPlugins(self) -> dict:
         if sys.version_info < (3, 8):
             from importlib_metadata import entry_points
@@ -203,6 +222,7 @@ class Cid():
         return None
 
 
+    @command
     def export(self, **kwargs):
         export_analysis(self.qs)
 
@@ -242,10 +262,10 @@ class Cid():
             self.resources = always_merger.merge(self.resources, resources)
 
 
+    @command
     def deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
 
-        self.load_resources()
         self.qs.ensure_subscription()
 
         if dashboard_id is None:
@@ -366,7 +386,8 @@ class Cid():
         return dashboard_id
 
 
-    def open(self, dashboard_id):
+    @command
+    def open(self, dashboard_id, **kwargs):
         """Open QuickSight dashboard in browser"""
 
         if os.environ.get('AWS_EXECUTION_ENV') in ['CloudShell', 'AWS_Lambda']:
@@ -393,6 +414,7 @@ class Cid():
         
         return dashboard_id
 
+    @command
     def status(self, dashboard_id, **kwargs):
         """Check QuickSight dashboard status"""
         self.load_resources()
@@ -531,10 +553,9 @@ class Cid():
 
         return True
 
-    def cleanup(self):
+    @command
+    def cleanup(self, **kwargs):
         """Delete unused resources (QuickSight datasets, Athena views)"""
-
-        self.load_resources()
 
         self.qs.discover_dashboards()
         self.qs.discover_datasets()
@@ -549,10 +570,9 @@ class Cid():
                 print(f'Dataset {v.name} ({v.arn}) is in use')
 
 
+    @command
     def share(self, dashboard_id, **kwargs):
         """Share resources (QuickSight datasets, dashboards)"""
-
-        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -718,6 +738,7 @@ class Cid():
             logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
 
+    @command
     def update(self, dashboard_id, recursive=False, force=False, **kwargs):
         """Update Dashboard
 
@@ -725,7 +746,6 @@ class Cid():
         :param recursive: Update Datasets and Views as well
         :param force: allow selection of already updated dashboards in the manual selection mode
         """
-        self.load_resources()
         if not dashboard_id:
             if not self.qs.dashboards:
                 print('\nNo deployed dashboards found')

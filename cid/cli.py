@@ -111,9 +111,9 @@ def export(ctx, **kwargs):
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @cid_command
-def status(ctx, dashboard_id):
+def status(ctx, dashboard_id, **kwargs):
     """Show Dashboard status"""
-    ctx.obj.status(dashboard_id)
+    ctx.obj.status(dashboard_id, **kwargs)
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
@@ -137,20 +137,20 @@ def delete(ctx, dashboard_id, **kwargs):
 @cid_command
 def update(ctx, dashboard_id, force, recursive, **kwargs):
     """Update Dashboard"""
-    ctx.obj.update(dashboard_id, force=force, recursive=recursive)
+    ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @cid_command
-def open(ctx, dashboard_id):
+def open(ctx, dashboard_id, **kwargs):
     """Open Dashboard in browser"""
-    ctx.obj.open(dashboard_id)
+    ctx.obj.open(dashboard_id, **kwargs)
 
 
 @cid_command
-def cleanup(ctx):
+def cleanup(ctx, **kwargs):
     """Delete unused resources (QuickSight datasets, Athena views)"""
-    ctx.obj.cleanup()
+    ctx.obj.cleanup(**kwargs)
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
