@@ -1,11 +1,14 @@
 import json
+import logging
+
+from cid.base import CidBase
 from cid.helpers import Athena
 from cid.utils import get_parameter
-import logging
+
 logger = logging.getLogger(__name__)
 
 
-class CUR:
+class CUR(CidBase):
     curRequiredColumns = [
         'identity_line_item_id',
         'identity_time_interval',
@@ -51,8 +54,8 @@ class CUR:
     _status = str()
     
 
-    def __init__(self, session=None) -> None:
-        self.session = session
+    def __init__(self, session) -> None:
+        super().__init__(session)
 
     @property
     def athena(self) -> Athena:

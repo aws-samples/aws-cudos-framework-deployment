@@ -1,16 +1,17 @@
 import json
 import logging
 
+from cid.base import CidBase
+
 logger = logging.getLogger(__name__)
 
 
-class Glue():
+class Glue(CidBase):
 
     def __init__(self, session):
-        self.region = session.region_name
-
+        super().__init__(session)
         # QuickSight client
-        self.client = session.client('glue', region_name=self.region)
+        self.client = self.session.client('glue', region_name=self.region)
 
 
     def create_or_update_table(self, view_name: str, view_query: str) -> None:

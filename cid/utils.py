@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Iterable
 
-import boto3
+from boto3.session import Session
 import questionary
 from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError
 
@@ -17,10 +17,10 @@ def intersection(a: Iterable, b: Iterable) -> Iterable:
 def difference(a: Iterable, b: Iterable) -> Iterable:
     return sorted(list(set(a).difference(b)))
 
-def get_aws_region():
+def get_aws_region() -> str:
     return get_boto_session().region_name
 
-def get_boto_session(**kwargs):
+def get_boto_session(**kwargs) -> Session:
     """
     Initiates boto's session object
     :param region: region name
@@ -28,7 +28,7 @@ def get_boto_session(**kwargs):
     :return: Boto3 Client
     """
     try:
-        session = boto3.session.Session(**kwargs)
+        session = Session(**kwargs)
         logger.info('Boto3 session created')
         logger.debug(session)
         if not session.region_name:

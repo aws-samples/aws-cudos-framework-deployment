@@ -1,15 +1,18 @@
 import csv
 import logging
 from pathlib import Path
+
 import click
 from pkg_resources import resource_string
 from string import Template
+
+from cid.base import CidBase
 from cid.helpers import Athena, CUR
 from cid.utils import get_parameter
 
 logger = logging.getLogger(__name__)
 
-class AccountMap():
+class AccountMap(CidBase):
     defaults = {
         'MetadataTableNames': ['acc_metadata_details', 'organisation_data']
     } 
@@ -28,10 +31,9 @@ class AccountMap():
             'cur_fields': ['bill_payer_account_id']
         }
     }
-    session = None
 
-    def __init__(self, session=None) -> None:
-        self.session = session
+    def __init__(self, session) -> None:
+        super().__init__(session)
 
     @property
     def athena(self) -> Athena:
