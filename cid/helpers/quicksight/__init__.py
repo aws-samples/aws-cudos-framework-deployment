@@ -63,7 +63,7 @@ class QuickSight():
             self.identityClient = self.client
         finally:
             logger.info(f'Using QuickSight identity region: {self.identityRegion}')
-            
+
 
     @property
     def account_id(self) -> str:
@@ -92,6 +92,13 @@ class QuickSight():
                 exit(1)
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
         return self._user
+
+
+    @property
+    def edition(self) -> Union[str, None]:
+        if not hasattr(self, '_subscription_info'):
+            self._subscription_info = self.describe_account_subscription()
+        return self._subscription_info.get('Edition')
 
     @property
     def supported_dashboards(self) -> dict:
@@ -142,6 +149,45 @@ class QuickSight():
             return self.account_id
         else:
             return '/'.join(arn.split('/')[1:])
+
+    def ensure_subscription(self) -> None:
+        """Ensure that the QuickSight subscription is active"""
+
+        if not self.edition:
+            logger.critical('QuickSight not activated')
+            exit(1)
+        elif self.edition != 'STANDARD':
+            logger.info(f'QuickSight subscription: {self._subscription_info}')
+        else:
+            logger.critical(f'QuickSight Enterprise edition is required, you have {self.edition}')
+            exit(1)
+
+    def describe_account_subscription(self) -> dict:
+        """Returns the account subscription details"""
+        result = dict()
+
+        try:
+            result = self.client.describe_account_subscription(AwsAccountId=self.account_id).get('AccountInfo')
+        except self.client.exceptions.AccessDeniedException as e:
+            """
+            In case we lack privileges to DescribeAccountSubscription API
+            we use ListDashboards API call that throws UnsupportedUserEditionException
+            in case the account doesn't have Enterprise edition
+            """
+            logger.info('Insufficient privileges to describe account subscription, working around')
+            try:
+                self.client.list_dashboards(AwsAccountId=self.account_id).get('AccountInfo')
+                result = {'Edition': 'ENTERPRISE'}
+            except self.client.exceptions.UnsupportedUserEditionException as e:
+                logger.debug(f'UnsupportedUserEditionException means edition is STANDARD: {e}')
+                result = {'Edition': 'STANDARD'}
+        except self.client.exceptions.ResourceNotFoundException as e:
+            logger.debug(e, stack_info=True)
+            logger.info('QuickSight not activated')
+        except Exception as e:
+            logger.debug(e, stack_info=True)
+        return result
+
 
     def discover_dashboard(self, dashboardId: str):
         """Discover single dashboard"""
@@ -235,6 +281,15 @@ class QuickSight():
                 current_status = datasource.status
             if not datasource.is_healthy:
                 logger.error(f'Data source creation failed: {datasource.error_info}')
+                if get_parameter(
+                    param_name='quicksight-delete-failed-datasource',
+                    message=f'Data source creation failed: {datasource.error_info}. Delete?',
+                    choices=['yes', 'no'],
+                ) == 'yes':
+                    try:
+                        self.delete_data_source(datasource.id)
+                    except self.client.exceptions.AccessDeniedException as e:
+                        logger.info('Access denied deleting Athena datasource')
                 return False
             return True
         except self.client.exceptions.ResourceExistsException:
@@ -548,6 +603,18 @@ class QuickSight():
         logger.info(f'Deleting dashboard {dashboard_id}')
         result = self.client.delete_dashboard(**paramaters)
         del self._dashboards[dashboard_id]
+        return result
+
+    def delete_data_source(self, datasource_id):
+        """ Deletes an AWS QuickSight dashboard """
+        paramaters = {
+            'AwsAccountId': self.account_id,
+            'DataSourceId': datasource_id
+        }
+        logger.info(f'Deleting DataSource {datasource_id}')
+        result = self.client.delete_data_source(**paramaters)
+        if datasource_id in self._datasources:
+            del self._datasources[datasource_id]
         return result
 
     def delete_dataset(self, id: str) -> bool:

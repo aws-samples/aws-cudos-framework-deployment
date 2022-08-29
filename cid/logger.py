@@ -1,3 +1,6 @@
+import os
+import logging
+
 def add_logging_level(name, num):
     """
     # This method was inspired by the answers to Stack Overflow post
@@ -25,14 +28,20 @@ def add_logging_level(name, num):
 
 
 def set_cid_logger(verbosity, log_filename):
-    _logger = logging.getLogger('cid')
+
+    add_logging_level('TRACE', logging.DEBUG - 5)
+
+    cid_logger = logging.getLogger('cid')
+
     # create formatter
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s:%(funcName)s:%(lineno)d - %(message)s')
 
     # File handler logs everything down to DEBUG level
-    fh = logging.FileHandler(log_filename)
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter)
+    if log_filename and os.environ.get("AWS_EXECUTION_ENV") is None:
+        fh = logging.FileHandler(log_filename)
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+        cid_logger.addHandler(fh)
 
     # Console handler logs everything down to ERROR level
     ch = logging.StreamHandler()
@@ -40,13 +49,13 @@ def set_cid_logger(verbosity, log_filename):
     # create formatter and add it to the handlers
     ch.setFormatter(formatter)
     # add the handlers to logger
-    _logger.addHandler(ch)
-    _logger.addHandler(fh)
+    cid_logger.addHandler(ch)
+
 
     if verbosity:
         # Limit Logging level to DEBUG, base level is WARNING
         verbosity = min(verbosity, 2)
-        _logger.setLevel(logger.getEffectiveLevel()-10*verbosity)
+        cid_logger.setLevel(logger.getEffectiveLevel()-10 * verbosity)
         # Logging application start here due to logging configuration
         print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
 

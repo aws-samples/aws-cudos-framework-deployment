@@ -1,5 +1,12 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.72
+
+* Databases: Added ability to vizualise spend and usage for Amazon Neptune
+* Compute Summary: Added insights and recommendations to AWS Lambda Summary section with the links to respective documentation
+* RI/SP Summary: Added Cost line to ‘Avg. Hourly EC2 Cost by Pricing Model’ which allows to get total EC2 compute cost per hour
+
+
 ## CUDOS - 4.71
 
 * Compute Summary: Changed  'On-Demand Capacity Reservations Usage Hours' visual to show data for Last 30 days instead of previous month so it displays current inventory and utilization of On-Demand Capacity Reservations

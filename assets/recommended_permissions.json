@@ -77,6 +77,7 @@
                 "quicksight:DeleteDashboard",
                 "quicksight:DeleteDataSet",
                 "quicksight:DeleteDataSource",
+                "quicksight:DescribeAccountSubscription",
                 "quicksight:DescribeDashboard",
                 "quicksight:DescribeDataSet",
                 "quicksight:DescribeDataSource",
@@ -84,11 +85,17 @@
                 "quicksight:DescribeUser",
                 "quicksight:ListDashboards",
                 "quicksight:ListDataSets",
+                "quicksight:ListFolders",
                 "quicksight:ListUsers",
                 "quicksight:PassDataSource",
                 "quicksight:PassDataSet",
                 "quicksight:UpdateDashboard",
-                "quicksight:UpdateDashboardPublishedVersion"
+                "quicksight:UpdateDashboardPermissions",
+                "quicksight:UpdateDashboardPublishedVersion",
+                "quicksight:UpdateDataSet",
+                "quicksight:UpdateDataSetPermissions",
+                "quicksight:UpdateDataSourcePermissions"
+
                 
             ],
             "Resource": [
