@@ -1,13 +1,12 @@
-from typing import Dict, Union
 import click
 import json
-from pathlib import Path
+import logging
 import os
+from typing import Dict
 
 from cid.helpers.quicksight.resource import CidQsResource
 from cid.utils import is_unattendent_mode
 
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -89,41 +88,6 @@ class Dashboard(CidQsResource):
         if ":template/" not in arn:
             return ''
         return str(arn.split('/')[1])
-    
-    def find_local_config(self) -> Union[dict, None]:
-
-        if self.localConfig:
-            return self.localConfig
-        # Set base paths
-        abs_path = Path().absolute()
-
-        # Load TPL file
-        file_path = None
-        files_to_find = [
-            f'work/{self.account_id}/{self.id.lower()}-update-dashboard.json',
-            f'work/{self.account_id}/{self.id.lower()}-create-dashboard.json',
-            f'work/{self.account_id}/{self.id.lower()}-update-dashboard-{self.account_id}.json',
-            f'work/{self.account_id}/{self.id.lower()}-create-dashboard-{self.account_id}.json',
-        ]
-        files_to_find += [f'work/{self.account_id}/{f.lower()}' for f in self.definition.get('localConfigs', list())]
-        for file in files_to_find:
-            logger.info(f'Checking local config file {file}')
-            if os.path.isfile(os.path.join(abs_path, file)):
-                file_path = os.path.join(abs_path, file)
-                logger.info(f'Found local config file {file}, using it')
-                break
-            
-        if file_path:
-            try:
-                with open(file_path) as f:
-                    self.localConfig = json.loads(f.read())
-                    if self.localConfig:
-                        for dataset in self.localConfig.get('SourceEntity').get('SourceTemplate').get('DataSetReferences'):
-                            if not self.datasets.get(dataset.get('DataSetPlaceholder')):    
-                                logger.info(f'Saving dataset {dataset.get("DataSetPlaceholder")} ({dataset.get("DataSetId")} for "{self.name}")')
-                                self.datasets.update({dataset.get('DataSetPlaceholder'): dataset.get('DataSetId')})
-            except:
-                logger.info(f'Failed to load local config file {file_path}')
 
     def display_status(self) -> None:
         print('\nDashboard status:')
