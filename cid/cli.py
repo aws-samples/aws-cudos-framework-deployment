@@ -51,20 +51,7 @@ def cid_command(func):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.pass_context
 def main(ctx, **kwargs):
-
-    app = Cid(
-        verbose = kwargs.get('verbose')
-    )
-
-    app.run(
-        profile_name=kwargs.get('profile_name', None),
-        region_name=kwargs.get('region_name', None),
-        aws_access_key_id=kwargs.get('aws_access_key_id', None),
-        aws_secret_access_key=kwargs.get('aws_secret_access_key', None),
-        aws_session_token=kwargs.get('aws_session_token', None)
-    )
-    ctx.obj = app
-    ctx.obj.all_yes = kwargs.get('yes')
+    ctx.obj = Cid(**kwargs)
 
 
 @cid_command

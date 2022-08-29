@@ -24,11 +24,12 @@ from cid.export import export_analysis
 
 logger = logging.getLogger(__name__)
 
-class Cid(CidBase):
+class Cid():
 
     def __init__(self, **kwargs) -> None:
         self.__setupLogging(verbosity=kwargs.pop('verbose'))
         logger.info(f'Initializing CID {__version__}')
+        self.base: CidBase = None
         # Defined resources
         self.resources = dict()
         self.dashboards = dict()
@@ -36,12 +37,45 @@ class Cid(CidBase):
         self._clients = dict()
         self._visited_views = [] # Views updated in the current session
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
+        self.all_yes = kwargs.get('yes')
+
+        params = {
+            'profile_name': kwargs.get('profile_name', None),
+            'region_name': kwargs.get('region_name', None),
+            'aws_access_key_id': kwargs.get('aws_access_key_id', None),
+            'aws_secret_access_key': kwargs.get('aws_secret_access_key', None),
+            'aws_session_token': kwargs.get('aws_session_token', None)
+        }
+        print('Checking AWS environment...')
+        try:
+            self.base = CidBase(session = utils.get_boto_session(**params))
+            if self.base.session.profile_name:
+                print(f'\tprofile name: {self.base.session.profile_name}')
+                logger.info(f'AWS profile name: {self.base.session.profile_name}')
+            self.qs_url_params = {
+                'account_id': self.base.account_id,
+                'region': self.base.session.region_name
+            }
+        except (NoCredentialsError, CredentialRetrievalError):
+            print('Error: Not authenticated, please check AWS credentials')
+            logger.info('Not authenticated, exiting')
+            exit()
+        except ClientError as e:
+            print(f'Error: {e}')
+            logger.info(f'Error: {e}')
+            exit()
+        print(f'\taccountId: {self.base.account_id}\n\tAWS userId: {self.base.username}')
+        logger.info(f'AWS accountId: {self.base.account_id}')
+        logger.info(f'AWS userId: {self.base.username}')
+        print('\tRegion: {}'.format(self.base.session.region_name))
+        logger.info(f'AWS region: {self.base.session.region_name}')
+        print('\n')
 
     @property
     def qs(self) -> QuickSight:
         if not self._clients.get('quicksight'):
             self._clients.update({
-                'quicksight': QuickSight(self.session, resources=self.resources)
+                'quicksight': QuickSight(self.base.session, resources=self.resources)
             })
         return self._clients.get('quicksight')
 
@@ -49,7 +83,7 @@ class Cid(CidBase):
     def athena(self) -> Athena:
         if not self._clients.get('athena'):
             self._clients.update({
-                'athena': Athena(self.session, resources=self.resources)
+                'athena': Athena(self.base.session, resources=self.resources)
             })
         return self._clients.get('athena')
 
@@ -57,14 +91,14 @@ class Cid(CidBase):
     def glue(self) -> Glue:
         if not self._clients.get('glue'):
             self._clients.update({
-                'glue': Glue(self.session)
+                'glue': Glue(self.base.session)
             })
         return self._clients.get('glue')
 
     @property
     def cur(self) -> CUR:
         if not self._clients.get('cur'):
-            _cur = CUR(self.session)
+            _cur = CUR(self.base.session)
             _cur.athena = self.athena
             print('Checking if CUR is enabled and available...')
 
@@ -88,7 +122,7 @@ class Cid(CidBase):
     @property
     def accountMap(self) -> AccountMap:
         if not self._clients.get('accountMap'):
-            _account_map = AccountMap(self.session)
+            _account_map = AccountMap(self.base.session)
             _account_map.athena = self.athena
             _account_map.cur = self.cur
 
@@ -126,32 +160,6 @@ class Cid(CidBase):
 
     def getPlugin(self, plugin) -> dict:
         return self.plugins.get(plugin)
-
-    def run(self, **kwargs):
-        print('Checking AWS environment...')
-        try:
-            self.session = utils.get_boto_session(**kwargs)
-            if self.session.profile_name:
-                print(f'\tprofile name: {self.session.profile_name}')
-                logger.info(f'AWS profile name: {self.session.profile_name}')
-            self.qs_url_params = {
-                'account_id': self.account_id,
-                'region': self.session.region_name
-            }
-        except (NoCredentialsError, CredentialRetrievalError):
-            print('Error: Not authenticated, please check AWS credentials')
-            logger.info('Not authenticated, exiting')
-            exit()
-        except ClientError as e:
-            print(f'Error: {e}')
-            logger.info(f'Error: {e}')
-            exit()
-        print(f'\taccountId: {self.account_id}\n\tAWS userId: {self.username}')
-        logger.info(f'AWS accountId: {self.account_id}')
-        logger.info(f'AWS userId: {self.username}')
-        print('\tRegion: {}'.format(self.session.region_name))
-        logger.info(f'AWS region: {self.session.region_name}')
-        print('\n')
 
 
     def __setupLogging(self, verbosity: int=0, log_filename: str='cid.log') -> None:
@@ -207,7 +215,7 @@ class Cid(CidBase):
         endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/'
         payload = {
             'dashboard_id': dashboard_id,
-            'account_id': self.account_id,
+            'account_id': self.base.account_id,
             action + '_via': 'CID',
         }
         try:
@@ -218,7 +226,7 @@ class Cid(CidBase):
                 headers={'Content-Type': 'application/json'}
             )
             if res.status_code != 200:
-                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {self.account_id}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
+                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {self.base.account_id}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
         except Exception as e:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
@@ -282,7 +290,7 @@ class Cid(CidBase):
                 dashboard_definition.get('datasets').update({dataset_name: arn})
 
         kwargs = dict()
-        local_overrides = f'work/{self.account_id}/{dashboard_definition.get("dashboardId")}.json'
+        local_overrides = f'work/{self.base.account_id}/{dashboard_definition.get("dashboardId")}.json'
         logger.info(f'Looking for local overrides file "{local_overrides}"...')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
@@ -340,7 +348,7 @@ class Cid(CidBase):
                 resource_name=f'data/permissions/dashboard_link_permissions.json',
             ).decode('utf-8'))
             columns_tpl = {
-                'AwsAccountId': self.account_id,
+                'AwsAccountId': self.base.account_id,
             }
             dashboard_permissions = json.loads(permissions_tpl.safe_substitute(columns_tpl))
             dashboard_params = {
@@ -693,7 +701,7 @@ class Cid(CidBase):
                 resource_name=f'data/permissions/dashboard_link_permissions.json',
             ).decode('utf-8'))
             columns_tpl = {
-                'AwsAccountId': self.account_id,
+                'AwsAccountId': self.base.account_id,
                 'AwsRegion': self.qs.identityRegion
             }
             dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
@@ -757,7 +765,7 @@ class Cid(CidBase):
                 exit()
 
         kwargs = dict()
-        local_overrides = f'work/{self.account_id}/{dashboard.id}.json'
+        local_overrides = f'work/{self.base.account_id}/{dashboard.id}.json'
         logger.info(f'Looking for local overrides file "{local_overrides}"')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
@@ -1110,7 +1118,7 @@ class Cid(CidBase):
 
         # Find all saved deployments for current AWS account
         file_path = os.path.join(
-            abs_path, f'work/{self.account_id}')
+            abs_path, f'work/{self.base.account_id}')
         found_deployments = list()
         if os.path.isdir(file_path):
             files = [f for f in os.listdir(file_path) if f.endswith('.json')]
@@ -1223,7 +1231,7 @@ class Cid(CidBase):
                         param_name=f'view-{view_name}-{k}',
                         message=f"Required parameter: {k} ({v.get('description')})",
                         default=v.get('default'),
-                        template_variables=dict(account_id=self.account_id),
+                        template_variables=dict(account_id=self.base.account_id),
                     )
                 param = {k:value}
             else:
