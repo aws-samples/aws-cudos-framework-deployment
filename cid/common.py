@@ -801,9 +801,6 @@ class Cid():
         required_datasets = sorted(_datasets)
         print('\nRequired datasets: \n - {}\n'.format('\n - '.join(list(set(required_datasets)))))
         
-        # Look for previously saved deployment info
-        saved_datasets = self.find_saved_datasets()
-
         found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
@@ -812,8 +809,6 @@ class Cid():
             for dataset_name in found_datasets[:]:
                 if dataset_name in known_datasets.keys():
                     dataset_id = self.qs.get_datasets(id=known_datasets.get(dataset_name))[0].id
-                elif dataset_name in saved_datasets.keys():
-                    dataset_id = saved_datasets.get(dataset_name).get('id')
                 else:
                     datasets = self.qs.get_datasets(name=dataset_name)
                     if not datasets:
@@ -1084,49 +1079,6 @@ class Cid():
             self.qs.create_dataset(compiled_dataset)
 
         return True
-
-
-    def find_saved_datasets(self) -> dict:
-        """Look for datasets in saved deployments"""
-        # Get all saved deployment found
-        saved_deployments = self.find_saved_deployments()
-        found_datasets = dict()
-        for deployment in saved_deployments:
-            try:
-                # extract dataset references from saved deployment
-                _datasets = deployment.get('SourceEntity').get(
-                    'SourceTemplate').get('DataSetReferences', list())
-                for dataset in _datasets:
-                    # check if the dataset exists by describing it
-                    try:
-                        _dataset = self.qs.describe_dataset(dataset.get('DataSetArn').split('/')[1])
-                        if not found_datasets.get(_dataset.name):
-                            found_datasets.update({_dataset.name: _dataset.id})
-                    except Exception as e:
-                        logger.debug(e, stack_info=True)
-                        continue
-            except AttributeError:
-                # move to next saved deployment if the key is not present
-                continue
-        return found_datasets
-
-
-    def find_saved_deployments(self) -> list:
-        """Look for saved deployment information"""
-        # Set base paths
-        abs_path = Path().absolute()
-
-        # Find all saved deployments for current AWS account
-        file_path = os.path.join(
-            abs_path, f'work/{self.base.account_id}')
-        found_deployments = list()
-        if os.path.isdir(file_path):
-            files = [f for f in os.listdir(file_path) if f.endswith('.json')]
-            for file in files:
-                with open(os.path.join(file_path, file)) as f:
-                    found_deployments.append(json.loads(f.read()))
-
-        return found_deployments
 
 
     def create_or_update_view(self, view_name: str, recursive: bool=True, update: bool=False) -> None:

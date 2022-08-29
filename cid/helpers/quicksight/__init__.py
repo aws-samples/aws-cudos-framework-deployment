@@ -202,8 +202,7 @@ class QuickSight(CidBase):
                         logger.info(f"Detected dataset: \"{_dataset.name}\" ({_dataset.id} in {dashboard.name})")
                         dashboard.datasets.update({_dataset.name: _dataset.id})
                 except self.client.exceptions.AccessDeniedException:
-                    logger.info(f'Looking local config for {dashboardId}')
-                    dashboard.find_local_config()
+                    logger.info(f'Access denied describing DataSetId {dataset_id} for Dashboard {dashboardId}')
                 except self.client.exceptions.InvalidParameterValueException:
                     logger.info(f'Invalid dataset {dataset_id}')
             templateAccountId = _definition.get('sourceAccountId')
