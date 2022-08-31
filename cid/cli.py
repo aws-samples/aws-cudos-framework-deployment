@@ -47,6 +47,7 @@ def cid_command(func):
 @click.option('--aws_access_key_id', help='', default=None)
 @click.option('--aws_secret_access_key', help='', default=None)
 @click.option('--aws_session_token', help='', default=None)
+@click.option('--log_filename', help='log file name', default='cid.log')
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.pass_context
