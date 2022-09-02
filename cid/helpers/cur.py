@@ -47,6 +47,7 @@ class CUR:
     _hasResourceIDs = None
     _hasSavingsPlans = None
     _hasReservations = None
+    _tags = None
     _configured = None
     _status = str()
     
@@ -108,6 +109,12 @@ class CUR:
             self._hasSavingsPlans=all([c in self.fields for c in self.spRequiredColumns])
             logger.info(f'Savings Plans: {self._hasSavingsPlans}')
         return self._hasSavingsPlans
+
+    @property
+    def tags(self) -> list:
+        if self._configured and self._tags is None:
+            self._tags = [f[19:] for f in self.riRequiredColumns if f.startswith('resource_tags_user_')]
+        return self._tags
 
     @property
     def metadata(self) -> dict:

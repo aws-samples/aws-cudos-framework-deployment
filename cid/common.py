@@ -1113,6 +1113,7 @@ class Cid:
         if cur_required:
             columns_tpl['cur_has_savings_plans'] = self.cur.hasSavingsPlans
             columns_tpl['cur_has_reservations'] = self.cur.hasReservations
+            columns_tpl['tags'] = self.cur.tags
 
         for k, v in view_definition.get('parameters', dict()).items():
             if isinstance(v, str):
