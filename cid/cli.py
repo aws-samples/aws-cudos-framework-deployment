@@ -42,7 +42,7 @@ def cid_command(func):
 
 
 @click.group()
-@click.option('--profile_name', help='AWS Profile name to use', default=None)
+@click.option('--profile_name', '--profile', help='AWS Profile name to use', default=None)
 @click.option('--region_name', help="AWS Region (default:'us-east-1')", default=None)
 @click.option('--aws_access_key_id', help='', default=None)
 @click.option('--aws_secret_access_key', help='', default=None)
