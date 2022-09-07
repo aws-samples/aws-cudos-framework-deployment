@@ -81,15 +81,16 @@ def deploy(ctx, **kwargs):
      --athena-workgroup TEXT               Athena workgroup
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
-     --quicksight-datasource-id TEXT      QuickSight Datasource ARN (if not found one with provided Athena workgroup)
+     --quicksight-datasource-id TEXT       QuickSight Datasource ARN (if not found one with provided Athena workgroup)
      --quicksight-delete-failed-datasource (yes|no) Delete datasoruce if creation failed
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
+     --update yes                          Update all existing dependancies to the latest version (Datasets and Views). Default=no
      --resources TEXT                      CID resources file (yaml)
-     --share-with-account ['yes/no']       Share dashboard with all users in the current account
+     --share-with-account (yes|no)         Share dashboard with all users in the current account
     """
     ctx.obj.deploy(**kwargs)
 
