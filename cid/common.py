@@ -332,6 +332,7 @@ class Cid():
             ).decode('utf-8'))
             columns_tpl = {
                 'AwsAccountId': self.base.account_id,
+                'AwsRegion': self.base.region,
             }
             dashboard_permissions = json.loads(permissions_tpl.safe_substitute(columns_tpl))
             dashboard_params = {
