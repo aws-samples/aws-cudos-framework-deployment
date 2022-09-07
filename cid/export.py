@@ -165,6 +165,7 @@ def export_analysis(qs):
         'name': analysis['Name'],
         'templateId': template_id,
         'sourceAccountId': qs.account_id,
+        'region': qs.session.region_name,
         'dashboardId': analysis['Name'].replace(' ', '-'),
         'dependsOn':{
             'datasets': [dataset['Name'].replace(' ', '-') for dataset in datasets.values()]
