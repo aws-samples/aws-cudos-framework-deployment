@@ -1,7 +1,7 @@
 {
     "Permissions": [
     {
-      "Principal": "${user_arn}",
+      "Principal": "${PrincipalArn}",
       "Actions": [
         "quicksight:CreateFolder",
         "quicksight:DescribeFolder",

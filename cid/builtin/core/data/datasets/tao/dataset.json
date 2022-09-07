@@ -1,23 +1,7 @@
 {
     "DataSetId": "ta-organizational-view",
     "Name": "ta-organizational-view",
-    "Permissions": [
-        {
-            "Principal": "${user_arn}",
-            "Actions": [
-                "quicksight:UpdateDataSetPermissions",
-                "quicksight:DescribeDataSet",
-                "quicksight:DescribeDataSetPermissions",
-                "quicksight:PassDataSet",
-                "quicksight:DescribeIngestion",
-                "quicksight:ListIngestions",
-                "quicksight:UpdateDataSet",
-                "quicksight:DeleteDataSet",
-                "quicksight:CreateIngestion",
-                "quicksight:CancelIngestion"
-            ]
-        }
-    ],
+    "Permissions": [],
     "PhysicalTableMap": {
         "b5de237f-b599-407f-87ec-32024624ba65": {
             "RelationalTable": {

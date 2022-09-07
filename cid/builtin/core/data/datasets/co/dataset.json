@@ -2,23 +2,7 @@
     "DataSetId": "compute_optimizer_all_options",
     "Name": "compute_optimizer_all_options",
     "ImportMode": "SPICE",
-    "Permissions": [
-        {
-            "Principal": "${user_arn}",
-            "Actions": [
-                "quicksight:UpdateDataSetPermissions",
-                "quicksight:DescribeDataSet",
-                "quicksight:DescribeDataSetPermissions",
-                "quicksight:PassDataSet",
-                "quicksight:DescribeIngestion",
-                "quicksight:ListIngestions",
-                "quicksight:UpdateDataSet",
-                "quicksight:DeleteDataSet",
-                "quicksight:CreateIngestion",
-                "quicksight:CancelIngestion"
-            ]
-        }
-    ],
+    "Permissions": [],
     "LogicalTableMap": {
         "3ac94581-80b1-4ae5-a18f-af42ff4b61ad": {
             "Alias": "business_units_map",
