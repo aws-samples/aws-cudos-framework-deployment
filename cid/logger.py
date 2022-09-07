@@ -55,7 +55,7 @@ def set_cid_logger(verbosity, log_filename):
     if verbosity:
         # Limit Logging level to DEBUG, base level is WARNING
         verbosity = min(verbosity, 2)
-        cid_logger.setLevel(logger.getEffectiveLevel()-10 * verbosity)
+        cid_logger.setLevel(cid_logger.getEffectiveLevel()-10 * verbosity)
         # Logging application start here due to logging configuration
-        print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
+        print(f'Logging level set to: {logging.getLevelName(cid_logger.getEffectiveLevel())}')
 
