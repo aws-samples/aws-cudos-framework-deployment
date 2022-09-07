@@ -287,8 +287,11 @@ class Cid():
             logger.info('local overrides file not found')
 
         # Get QuickSight template details
-        latest_template = self.qs.describe_template(template_id=dashboard_definition.get(
-            'templateId'), account_id=dashboard_definition.get('sourceAccountId'))
+        latest_template = self.qs.describe_template(
+            template_id=dashboard_definition.get('templateId'),
+            account_id=dashboard_definition.get('sourceAccountId'),
+            region=dashboard_definition.get('region', 'us-east-1'),
+        )
         dashboard_definition.update({'sourceTemplate': latest_template})
 
         # Create dashboard

@@ -36,7 +36,6 @@ class QuickSight(CidBase):
         # QuickSight clients
         logger.info(f'Creating QuickSight client')
         self.client = self.session.client('quicksight')
-        self.use1Client = self.session.client('quicksight', region_name='us-east-1')
         self.identityClient = self.session.client('quicksight', region_name=self.identityRegion)
 
 
@@ -207,8 +206,9 @@ class QuickSight(CidBase):
                     logger.info(f'Invalid dataset {dataset_id}')
             templateAccountId = _definition.get('sourceAccountId')
             templateId = _definition.get('templateId')
+            region = _definition.get('region', 'us-east-1')
             try:
-                template = self.describe_template(templateId, account_id=templateAccountId)
+                template = self.describe_template(templateId, account_id=templateAccountId, region=region)
                 dashboard.sourceTemplate = template
             except Exception as e:
                 logger.debug(e, stack_info=True)
@@ -727,18 +727,19 @@ class QuickSight(CidBase):
             return _datasource
 
 
-    def describe_template(self, template_id: str, account_id: str=None ):
+    def describe_template(self, template_id: str, account_id: str=None, region: str='us-east-1'):
         """ Describes an AWS QuickSight template """
         if not account_id:
             account_id=self.cidAccountId
         try:
-            result = self.use1Client.describe_template(AwsAccountId=account_id,TemplateId=template_id)
+            client = self.session.client('quicksight', region_name=region)
+            result = client.describe_template(AwsAccountId=account_id, TemplateId=template_id)
             logger.debug(result)
         except self.client.exceptions.UnsupportedUserEditionException:
             logger.critical('AWS QuickSight Enterprise Edition is required')
             exit(1)
         except self.client.exceptions.ResourceNotFoundException:
-            logger.critical(f'Error: Template {template_id} is not available in account {account_id}.')
+            logger.critical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
             exit(1)
         except Exception as e:
             logger.debug(e, stack_info=True)
