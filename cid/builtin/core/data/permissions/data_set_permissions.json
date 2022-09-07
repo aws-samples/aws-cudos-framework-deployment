@@ -1,7 +1,7 @@
 {
   "GrantPermissions": [
     {
-      "Principal": "${user_arn}",
+      "Principal": "${PrincipalArn}",
       "Actions": [
         "quicksight:UpdateDataSetPermissions",
         "quicksight:DescribeDataSet",

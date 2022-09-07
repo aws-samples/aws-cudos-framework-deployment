@@ -16,7 +16,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, unset_parameter
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
@@ -326,26 +326,8 @@ class Cid():
                 message=f'Share this dashboard with everyone in the account?',
                 choices=['yes', 'no'],
                 default='yes') == 'yes':
-            permissions_tpl = Template(resource_string(
-                package_or_requirement='cid.builtin.core',
-                resource_name=f'data/permissions/dashboard_link_permissions.json',
-            ).decode('utf-8'))
-            columns_tpl = {
-                'AwsAccountId': self.base.account_id,
-                'AwsRegion': self.base.region,
-            }
-            dashboard_permissions = json.loads(permissions_tpl.safe_substitute(columns_tpl))
-            dashboard_params = {
-                "GrantPermissions": [
-                    dashboard_permissions
-                ],
-                "GrantLinkPermissions": [
-                    dashboard_permissions
-                ]
-            }
-            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
-            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
-            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
+            set_parameters({'share-method': 'account'})
+            self.share(dashboard_id)
 
         return dashboard_id
 
@@ -604,7 +586,7 @@ class Cid():
                             resource_name=f'data/permissions/folder_permissions.json',
                         ).decode('utf-8'))
                         columns_tpl = {
-                            'user_arn': self.qs.user.get('Arn')
+                            'PrincipalArn': self.qs.user.get('Arn')
                         }
                         folder_permissions = json.loads(folder_permissions_tpl.safe_substitute(columns_tpl))
                         folder = self.qs.create_folder(folder_name, **folder_permissions)
@@ -616,24 +598,31 @@ class Cid():
             for _id in dashboard.datasets.values():
                 self.qs.create_folder_membership(folder.get('FolderId'), _id, 'DATASET')
             print(f'Sharing complete')
-        elif share_method == 'user':
-            user = self.qs.select_user()
-            while not user:
-                user_name = get_parameter(
-                    param_name='quicksight-user',
-                    message='Please enter the user name to share with'
-                )
-                user = self.qs.describe_user(user_name)
-                if not user:
-                    print(f'QuickSight user {user_name} was not found')
-                    unset_parameter('quicksight-user')
+        elif share_method in ['account', 'user']:
+            if share_method == 'account':
+                principal_arn = f"arn:aws:quicksight:{self.qs.identityRegion}:{self.qs.account_id}:namespace/default"
+                template_filename = 'data/permissions/dashboard_permissions_namespace.json'
+            elif share_method == 'user':
+                template_filename = 'data/permissions/dashboard_permissions.json'
+                user = self.qs.select_user()
+                while not user:
+                    user_name = get_parameter(
+                        param_name='quicksight-user',
+                        message='Please enter the user name to share with'
+                    )
+                    user = self.qs.describe_user(user_name)
+                    if not user:
+                        print(f'QuickSight user {user_name} was not found')
+                        unset_parameter('quicksight-user')
+                principal_arn = user.get('Arn')
 
+            # Update Dashboard permissions
             columns_tpl = {
-                'user_arn': user.get('Arn')
+                'PrincipalArn': principal_arn
             }
             dashboard_permissions_tpl = Template(resource_string(
                 package_or_requirement='cid.builtin.core',
-                resource_name=f'data/permissions/dashboard_permissions.json',
+                resource_name=template_filename,
             ).decode('utf-8'))
             dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
             dashboard_params = {
@@ -641,65 +630,55 @@ class Cid():
                     dashboard_permissions
                 ]
             }
+            if share_method == 'account':
+                dashboard_params.update({
+                    "GrantLinkPermissions": [
+                        dashboard_permissions
+                    ]
+                })
+
             logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
             self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
             logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
-            data_set_permissions_tpl = Template(resource_string(
-                package_or_requirement='cid.builtin.core',
-                resource_name=f'data/permissions/data_set_permissions.json',
-            ).decode('utf-8'))
-            data_set_permissions = json.loads(data_set_permissions_tpl.safe_substitute(columns_tpl))
+            # Update DataSet permissions
+            if share_method == 'account':
+                logger.info(f'Sharing datasets/datasources with an account is not supported, skipping')
+            else:
+                data_set_permissions_tpl = Template(resource_string(
+                    package_or_requirement='cid.builtin.core',
+                    resource_name=f'data/permissions/data_set_permissions.json',
+                ).decode('utf-8'))
+                data_set_permissions = json.loads(data_set_permissions_tpl.safe_substitute(columns_tpl))
 
-            _datasources: Dict[str, Datasource] = {}
-            for _id in dashboard.datasets.values():
-                logger.info(f'Sharing dataset {_id}')
-                self.qs.update_data_set_permissions(DataSetId=_id, **data_set_permissions)
-                logger.info(f'Sharing dataset {_id} complete')
-                _dataset = self.qs._datasets.get(_id)
-                # Extract DataSources from DataSet
-                for v in _dataset.datasources:
-                    _datasource = self.qs.describe_data_source(v)
-                    if not _datasources.get(_datasource.id):
-                        _datasources.update({_datasource.id: _datasource})
+                _datasources: Dict[str, Datasource] = {}
+                for _id in dashboard.datasets.values():
+                    logger.info(f'Sharing dataset {_id}')
+                    self.qs.update_data_set_permissions(DataSetId=_id, **data_set_permissions)
+                    logger.info(f'Sharing dataset {_id} complete')
+                    _dataset = self.qs._datasets.get(_id)
+                    # Extract DataSources from DataSet
+                    for v in _dataset.datasources:
+                        _datasource = self.qs.describe_data_source(v)
+                        if not _datasources.get(_datasource.id):
+                            _datasources.update({_datasource.id: _datasource})
 
-            data_source_permissions_tpl = Template(resource_string(
-                package_or_requirement='cid.builtin.core',
-                resource_name=f'data/permissions/data_source_permissions.json',
-            ).decode('utf-8'))
-            data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
-            data_source_params = {
-                "GrantPermissions": [
-                    data_source_permissions
-                ]
-            }
-            for k, v in _datasources.items():
-                logger.info(f'Sharing data source "{v.name}" ({k})')
-                self.qs.update_data_source_permissions(DataSourceId=k, **data_source_params)
-                logger.info(f'Sharing data source "{v.name}" ({k}) complete')
+                data_source_permissions_tpl = Template(resource_string(
+                    package_or_requirement='cid.builtin.core',
+                    resource_name=f'data/permissions/data_source_permissions.json',
+                ).decode('utf-8'))
+                data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
+                data_source_params = {
+                    "GrantPermissions": [
+                        data_source_permissions
+                    ]
+                }
+                for k, v in _datasources.items():
+                    logger.info(f'Sharing data source "{v.name}" ({k})')
+                    self.qs.update_data_source_permissions(DataSourceId=k, **data_source_params)
+                    logger.info(f'Sharing data source "{v.name}" ({k}) complete')
 
             print(f'Sharing complete')
-        elif share_method == 'account':
-            dashboard_permissions_tpl = Template(resource_string(
-                package_or_requirement='cid.builtin.core',
-                resource_name=f'data/permissions/dashboard_link_permissions.json',
-            ).decode('utf-8'))
-            columns_tpl = {
-                'AwsAccountId': self.base.account_id,
-                'AwsRegion': self.qs.identityRegion
-            }
-            dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
-            dashboard_link_params = {
-                "GrantPermissions": [
-                    dashboard_permissions
-                ],
-                "GrantLinkPermissions": [
-                    dashboard_permissions
-                ]
-            }
-            logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
-            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_link_params)
-            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
 
 
     def update(self, dashboard_id, recursive=False, force=False, **kwargs):
@@ -836,8 +815,8 @@ class Cid():
             print('\nLooking by DataSetId defined in template...', end='')
             for dataset_name in missing_datasets[:]:
                 try:
-                    dataset_definition = self.get_definition("dataset", name=dataset_name)
-                    raw_template = self.get_dataset_data_from_defintion(dataset_definition)
+                    dataset_definition = self.get_definition(type='dataset', name=dataset_name)
+                    raw_template = self.get_dataset_data_from_definition(dataset_definition)
                     if raw_template:
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
@@ -916,7 +895,7 @@ class Cid():
                     continue
             print('\n')
 
-    def get_dataset_data_from_defintion(self, dataset_definition):
+    def get_dataset_data_from_definition(self, dataset_definition):
         raw_template = None
         dataset_file = dataset_definition.get('File')
         if dataset_file:
@@ -933,7 +912,7 @@ class Cid():
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
-        data = self.get_dataset_data_from_defintion(dataset_definition)
+        data = self.get_dataset_data_from_definition(dataset_definition)
         template = Template(json.dumps(data))
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
@@ -1042,8 +1021,7 @@ class Cid():
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
-            'cur_table_name': self.cur.tableName if cur_required else None,
-            'user_arn': self.qs.user.get('Arn')
+            'cur_table_name': self.cur.tableName if cur_required else None
         }
 
         compiled_dataset = json.loads(template.safe_substitute(columns_tpl))

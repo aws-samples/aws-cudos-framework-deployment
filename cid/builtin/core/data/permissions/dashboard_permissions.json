@@ -1,5 +1,5 @@
 {
-  "Principal": "${user_arn}",
+  "Principal": "${PrincipalArn}",
   "Actions": [
     "quicksight:DescribeDashboard",
     "quicksight:ListDashboardVersions",
