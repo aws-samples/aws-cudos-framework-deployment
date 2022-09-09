@@ -2,6 +2,12 @@
 
 ## CUDOS - 4.72
 
+* Compute Summary: 'Unused On-Demand Capacity Reservations Cost per Account' changed from monthly to daily aggregation for more granular visibility 
+* Billing Summary: Drill down to description on 'Discounts: Credits, Refunds, Others' now grouped by discount type 
+* End User Computing: Adjusted 'Cost Optimizer for Amazon WorkSpaces' solution name in Recommendations section
+
+## CUDOS - 4.72
+
 * Databases: Added ability to vizualise spend and usage for Amazon Neptune
 * Compute Summary: Added insights and recommendations to AWS Lambda Summary section with the links to respective documentation
 * RI/SP Summary: Added Cost line to ‘Avg. Hourly EC2 Cost by Pricing Model’ which allows to get total EC2 compute cost per hour
