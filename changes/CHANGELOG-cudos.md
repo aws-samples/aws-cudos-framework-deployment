@@ -1,6 +1,6 @@
 # What's new in CUDOS Dashboard
 
-## CUDOS - 4.72
+## CUDOS - 4.73
 
 * Compute Summary: 'Unused On-Demand Capacity Reservations Cost per Account' changed from monthly to daily aggregation for more granular visibility 
 * Billing Summary: Drill down to description on 'Discounts: Credits, Refunds, Others' now grouped by discount type 
