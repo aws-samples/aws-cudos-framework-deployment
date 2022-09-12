@@ -196,7 +196,7 @@ class Cid():
         payload = {
             'dashboard_id': dashboard_id,
             'account_id': self.base.account_id,
-            action + '_via': 'CID',
+            action + '_via': 'Lambda' if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda') else 'CID',
         }
         try:
             res = requests.request(
@@ -353,8 +353,9 @@ class Cid():
     def open(self, dashboard_id):
         """Open QuickSight dashboard in browser"""
 
-        if os.environ.get('AWS_EXECUTION_ENV') in ['CloudShell', 'AWS_Lambda']:
-            print(f"Operation is not supported in {os.environ.get('AWS_EXECUTION_ENV')}")
+        aws_execution_env = os.environ.get('AWS_EXECUTION_ENV', '')
+        if  aws_execution_env == 'CloudShell' or aws_execution_env.startswith('AWS_Lambda'):
+            print(f"Operation is not supported in {aws_execution_env}")
             return dashboard_id
         if not dashboard_id:
             dashboard_id = self.qs.select_dashboard(force=True)

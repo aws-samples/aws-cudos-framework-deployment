@@ -1,0 +1,1116 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deployment of Cloud Intelligence Dashboards
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: 'Prerequisites'
+        Parameters:
+          - PrerequisitesQuickSight
+          - PrerequisitesCUR
+          - PrerequisitesQuickSightPermissions
+      - Label:
+          default: 'Mandatory parameters'
+        Parameters:
+          - QuickSightUser
+          - CURBucketPath
+      - Label:
+          default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that change to 'yes'
+        Parameters:
+          - DeployCUDOSDashboard
+          - DeployCostIntelligenceDashboard
+          - DeployKPIDashboard
+          - DeployTAODashboard
+          - DeployComputeOptimizerDashboard
+          - CostOptimizationDataCollectionBucketPath
+      - Label:
+          default: 'Optional Parameters (do not change unless you know why)'
+        Parameters:
+          - AthenaWorkgroup
+          - AthenaQueryResultsBucket
+          - CURDatabaseName
+          - CURTableName
+          - CidVersion
+          - Suffix
+          - QuicksightIdentityRegion
+          - QuickSightDataSetRefreshSchedule
+Parameters:
+  PrerequisitesQuickSight:
+    Type: String
+    Description: I have QuickSight Enterprise Edition AND i have a SPICE capacity in QuickSight in the current region https://quicksight.aws.amazon.com/sn/admin#capacity. See https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/#enable-quicksight
+    ConstraintDescription: 'Please go to QS page https://quicksight.aws.amazon.com/sn/admin#capacity, make sure you have at least 10GB'
+    AllowedPattern: 'yes'
+    AllowedValues: ["yes", "no"]
+  PrerequisitesCUR:
+    Type: String
+    Description: I have CUR set up at least 24 hours ago. See https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/#prepare-cost--usage-report
+    AllowedPattern: 'yes'
+    AllowedValues: ["yes", "no"]
+    ConstraintDescription: 'Please go to Billing page and setup your Cost and Usage report.'
+  PrerequisitesQuickSightPermissions:
+    Type: String
+    Description: I understand that i need to set up manually Permission of QuickSight to access CUR backet and Queiry results bucket ( https://us-east-1.quicksight.aws.amazon.com/sn/admin#aws ), and then relaunch dataset refresh manually the first time.
+    ConstraintDescription: 'Please read prerequisites'
+    AllowedPattern: 'yes'
+    AllowedValues: ["yes", "no"]
+  QuickSightUser:
+    Type: String
+    MinLength: 1
+    Default: REPLACE WITH QuickSight USER (see https://quicksight.aws.amazon.com/sn/admin#users)
+    Description: >
+        REQUIRED - User name of QuickSight user from default namespace (as displayed in QuickSight admin panel).
+        Dashboard created by this template with be owned by this user. See https://quicksight.aws.amazon.com/sn/admin#users
+  QuicksightIdentityRegion: #CID can detect QS Idenity region, but we need in permissions
+    Type: String
+    MinLength: 8
+    Description: Quicksight Identity region(can be different than the region you deploy the dashboard, typically us-east-1)
+    Default: us-east-1
+  QuickSightDataSetRefreshSchedule:
+    Type: String
+    MinLength: 3
+    Default: cron(0 4 * * ? *)
+    Description: REQUIRED - cron expression on when to refresh spice datasets daily outside of business hours. Default is 4 AM utc, this should work for most customers in US and EU time zones.'
+  CURBucketPath:
+    Type: String
+    MinLength: 3
+    Default: 's3://bucket/cur-prefix/cur-name/cur-name'
+    AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9]$' #FIXME: we can do better here
+    Description: 'REQUIRED - s3 bucket with CUR and path to year partition (year=xxxx) eq: s3://{cur-bucket}/{cur-prefix}/{cur-name}/{cur-name}'
+  AthenaWorkgroup:
+    Type: String
+    Default: ''
+    Description: Leave Empty to create one. Athena workgroup to use.
+  AthenaQueryResultsBucket:
+    Type: String
+    Default: ''
+    Description:  Leave Empty to create one. Name of the s3 bucket configured for athena query results for the workgroup defined above (do not add a trailing slash) . Make sure QuickSight has read and right access to this bucket. 
+  CURDatabaseName:
+    Type: String
+    Description: Leave Empty to create one. Athena CUR Database name
+    Default: ''
+  CURTableName:
+    Type: String
+    Default: ''
+    Description: Leave Empty to create one. Athena CUR Table name. Last part of CURPath will be used as name.
+  CidVersion:
+    Type: String
+    MinLength: 5
+    Default: 0.2.3
+    Description: REQUIRED - A version of CID package
+  Suffix:
+    Type: String
+    Description: Do not use this Suffix it is not fully supported. For testing purposes only.
+  DeployCUDOSDashboard:
+    Type: String
+    Description: Deploy CUDOS Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Default: "no"
+    AllowedValues: ["yes", "no"]
+  DeployCostIntelligenceDashboard:
+    Type: String
+    Description: Deploy Cost Intelligence Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Default: "no"
+    AllowedValues: ["yes", "no"]
+  DeployKPIDashboard:
+    Type: String
+    Description: Deploy KPI Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Default: "no"
+    AllowedValues: ["yes", "no"]
+  DeployTAODashboard:
+    Type: String
+    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Default: "no"
+    AllowedValues: ["yes", "no"]
+  DeployComputeOptimizerDashboard:
+    Type: String
+    Description: Deploy Compute Optimizer Dashboard (COD) - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Default: "no"
+    AllowedValues: ["yes", "no"]
+  CostOptimizationDataCollectionBucketPath:
+    Type: String
+    Description: An S3 path to a bucket from Cost Optimisation Data Collection Lab, where you have /optics-data-collector folder (Required for TAO and COD). You can leave {account_id}, it will be replaced by current account ID
+    Default: "s3://costoptimizationdata{account_id}"
+
+Conditions:
+  NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+  NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+  NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
+  NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
+  NeedComputeOptimizerDashboard: !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
+  NeedAthenaWorkgroup:  !Equals [ !Ref AthenaWorkgroup, "" ]
+  NeedAthenaQueryResultsBucket:  !Equals [ !Ref AthenaQueryResultsBucket, "" ]
+  NeedCURDatabase:  !Equals [ !Ref CURDatabaseName, "" ]
+  NeedCURTable:  !Equals [ !Ref CURTableName, "" ]
+  NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
+
+Resources:
+  SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
+    Type: AWS::IAM::Role
+    Condition: NeedRefreshDatasets
+    Properties:
+      Path: /
+      RoleName: !Sub 'CidSpiceRefreshExecutionRole${Suffix}'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
+      Policies:
+        - PolicyName: !Sub 'CidSpiceRefreshExecutionRole${Suffix}'
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: quicksight:CreateIngestion
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:*'
+              - Effect: Allow
+                Action: quicksight:ListDatasets
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*'
+
+  # Currently QS has no api for managing updates, so we need to set up a scheduled lambda.
+  # Once QS will provide the API for scheduling this will be removed.
+  SpiceRefreshLambda: #
+    Type: AWS::Lambda::Function
+    Condition: NeedRefreshDatasets
+    Properties:
+      FunctionName:  !Sub 'CidSpiceRefreshLambda${Suffix}'
+      Role: !GetAtt SpiceRefreshExecutionRole.Arn
+      Description: 'Function for CID datasets refresh'
+      Runtime: python3.9
+      Architectures: [ arm64 ]
+      MemorySize: 128
+      Timeout: 60
+      Handler: 'index.lambda_handler'
+      Environment:
+        Variables:
+          #suffix: !Ref Suffix
+          suffix: '' # CID CMD does not support suffixes yet
+      Handler: index.lambda_handler
+      Code:
+        ZipFile: |
+          import os
+          from datetime import datetime
+          import boto3
+          #TODO: import cid.common Cid; Cid().resources()  get this info CID
+          DATASETS = '''
+            summary_view
+            ec2_running_cost
+            compute_savings_plan_eligible_spend
+            s3_view
+            kpi_ebs_snap
+            kpi_ebs_storage_all
+            kpi_instance_all
+            kpi_s3_storage_all
+            kpi_tracker
+            ta-organizational-view
+            daily-anomaly-detection
+            monthly-anomaly-detection
+            monthly-bill-by-account
+            compute_optimizer_all_options
+          '''.strip().split()
+
+          DATASETS_TO_REFRESH = [ name + os.environ.get('suffix', '') for name in DATASETS]
+
+          def get_account_id():
+              return boto3.client('sts').get_caller_identity()['Account']
+
+          def refresh_datasets():
+              account_id = get_account_id()
+              quicksight = boto3.client('quicksight')
+              # FIXME: add paginator
+              datasets = quicksight.list_data_sets(AwsAccountId=account_id)
+              for dataset in datasets['DataSetSummaries']:
+                  name = dataset['Name']
+                  if dataset['ImportMode'] != 'SPICE' or name not in DATASETS_TO_REFRESH:
+                      continue
+                  #if dataset['LastUpdatedTime'] and (datetime.now() - dataset['LastUpdatedTime'].replace(tzinfo=None)).seconds / 60 < 24:
+                  #    continue #No refresh
+                  ingestion_id = datetime.now().strftime("%d%m%y-%H%M%S-%f")
+                  print(f"INFO: Refreshing dataset {name}")
+                  res = quicksight.create_ingestion(
+                      AwsAccountId=account_id,
+                      DataSetId=dataset['DataSetId'],
+                      IngestionId=ingestion_id
+                  )
+                  print('DEBUG: response=', res)
+
+          def lambda_handler(event, context):
+              refresh_datasets()
+
+  SpiceRefreshRule:
+    Type: AWS::Events::Rule
+    Condition: NeedRefreshDatasets
+    Properties:
+      ScheduleExpression: !Ref QuickSightDataSetRefreshSchedule
+      Targets:
+        - Id: SpiceRefreshScheduler
+          Arn: !GetAtt SpiceRefreshLambda.Arn
+
+  SpiceRefreshInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Condition: NeedRefreshDatasets
+    Properties:
+      FunctionName: !GetAtt SpiceRefreshLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SpiceRefreshRule.Arn
+
+  MyAthenaQueryResultsBucket:
+    Type: AWS::S3::Bucket
+    Condition: NeedAthenaQueryResultsBucket
+    Properties:
+      BucketName: !Sub "${AWS::Partition}-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      AccessControl: BucketOwnerFullControl
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteContent
+            Status: 'Enabled'
+            ExpirationInDays: 7
+
+  MyAthenaWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Condition: NeedAthenaWorkgroup
+    Properties:
+      Name: !Sub 'CID${Suffix}'
+      Description: !Sub 'Used for CloudIntelligenceDashboards${Suffix}'
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        ResultConfiguration:
+          EncryptionConfiguration:
+            EncryptionOption: SSE_S3
+          OutputLocation: !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/', !Sub 's3://${AthenaQueryResultsBucket}/' ]
+
+  CustomRessourceFunctionInit:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "CidInitialSetup-DoNotRun${Suffix}"
+      Role: !GetAtt 'InitLambdaExecutionRole.Arn'
+      Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
+      Runtime: python3.9
+      Architectures: [ arm64 ]
+      MemorySize: 128
+      Timeout: 300
+      Handler: 'index.lambda_handler'
+      Code:
+        ZipFile: |
+          import os
+          import uuid
+          import json
+          import boto3
+          import botocore
+          import urllib3
+
+          BUCKET = os.environ['BUCKET']
+          WORKGROUP = os.environ['WORKGROUP']
+          CRAWLER = os.environ['CRAWLER']
+
+          def lambda_handler(event, context):
+              print(event)
+              type_ = event.get('RequestType', 'Undef')
+              res = (True, f"Un error on {type_}. Check logs")
+              try:
+                  if type_ == 'Create': res = on_create()
+                  elif type_ == 'Delete': res = on_delete()
+                  else: res = (True, f"Not supported operation: {type_}")
+              finally:
+                  url = event.get('ResponseURL')
+                  body = {}
+                  body['Status'] = 'SUCCESS' if res[0] else 'FAILED'
+                  body['Reason'] = str(res[1]) + '\nSee the details in CloudWatch Log Stream: ' + context.log_stream_name
+                  body['PhysicalResourceId'] = 'keep_it_constant'
+                  body['StackId'] = event.get('StackId')
+                  body['RequestId'] = event.get('RequestId')
+                  body['LogicalResourceId'] = event.get('LogicalResourceId')
+                  body['NoEcho'] = False
+                  body['Data'] =  {'Reason': res[1], 'uuid': str(uuid.uuid1()) }
+                  print(body)
+                  if not url: return
+                  json_body=json.dumps(body)
+                  try:
+                      http = urllib3.PoolManager()
+                      response = http.request('PUT', url, body=json_body, headers={'content-type' : '', 'content-length' : str(len(json_body))}, retries=False)
+                      print(f"Status code: {response}")
+                  except Exception as exc:
+                      print("Failed sending PUT to CFN: " + str(exc))
+
+          def on_create():
+              if CRAWLER:
+                  # FIXME: this can be replaced with AWS::Glue::Trigger
+                  try:
+                      boto3.client('glue').start_crawler(Name=CRAWLER)
+                  except Exception as exc:
+                      return (True, f'ERROR: error invoking crawler {CRAWLER} {exc}')
+                  return (True, 'INFO: crawler started. Takes 1 min to update the table.')
+              return (True, 'INFO: No actions on create')
+
+          def on_delete():
+              # Delete bucket (CF cannot delete if they are non-empty)
+              # and delete WorkGroup (CF cannot do that)
+              s3 = boto3.resource('s3')
+              log = []
+
+              if BUCKET:
+                  try:
+                      bucket = s3.Bucket(BUCKET)
+                      res = bucket.object_versions.delete()
+                      print(f'DEBUG: empty response = {res} ')
+                      res = bucket.delete()
+                      print(f'DEBUG: delete response = {res} ')
+                      log.append(f'INFO:  {BUCKET} deleted')
+                  except botocore.exceptions.ClientError as exc:
+                      status = exc.response["ResponseMetadata"]["HTTPStatusCode"]
+                      errcode = exc.response["Error"]["Code"]
+                      if status == 404:
+                          log.append(f'INFO:  {BUCKET} - {errcode}')
+                      else:
+                          log.append(f'ERROR: {BUCKET} - {errcode}')
+                  except Exception as exc:
+                      log.append(f'ERROR: {BUCKET} Error: {exc}')
+
+              if WORKGROUP:
+                  try:
+                      response = boto3.client('athena').delete_work_group(
+                          WorkGroup=WORKGROUP,
+                          RecursiveDeleteOption=True
+                      )
+                      print(f'DEBUG: WorkGroup {WORKGROUP} deleted. {response}')
+                      log.append(f'INFO: WorkGroup {WORKGROUP} deleted.')
+                  except botocore.exceptions.ClientError as exc:
+                      status = exc.response["ResponseMetadata"]["HTTPStatusCode"]
+                      errcode = exc.response["Error"]["Code"]
+                      if status == 404:
+                          log.append(f'INFO:  WorkGroup {WORKGROUP} - {errcode}')
+                      else:
+                          log.append(f'ERROR: WorkGroup {WORKGROUP} - {errcode}')
+                  except Exception as exc:
+                      log.append(f'ERROR: WorkGroup {WORKGROUP} Error: {exc}')
+              print('\n'.join(log))
+              return (True, '\n'.join(log))
+      Environment:
+        Variables:
+          BUCKET: !If [NeedAthenaQueryResultsBucket, !Ref MyAthenaQueryResultsBucket, '']
+          WORKGROUP: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
+          CRAWLER: !If [NeedCURDatabase, !Ref MyGlueCURCrawler, '']
+  InitLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                  - s3:DeleteObjectVersion
+                Resource: '*' # FIXME: MyAthenaQueryResultsBucket /*
+              - Effect: Allow
+                Action:
+                  - s3:ListBucketVersions
+                  - s3:DeleteBucket
+                Resource: "*" # FIXME: MyAthenaQueryResultsBucket
+              - Effect: Allow
+                Action:
+                  - athena:DeleteWorkGroup
+                Resource: '*' # FIXME: use MyAthenaWorkGroup
+              - Effect: Allow
+                Action:
+                  - glue:StartCrawler
+                Resource: '*' # FIXME: use MyGlueCURCrawler
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
+  InitialSetup:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt CustomRessourceFunctionInit.Arn
+      Tags: # Hacky way to manage conditional dependancies
+        - Key: IgnoreConditionalDependsOnAthenaQueryResultsBucket
+          Value: !If [NeedAthenaQueryResultsBucket, !Ref MyAthenaQueryResultsBucket, '']
+        - Key: IgnoreConditionalDependsOnAthenaWorkgroup
+          Value: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
+        - Key: IgnoreConditionalDependsOnCURDatabase
+          Value: !If [NeedCURDatabase, !Ref MyGlueCURCrawler, '']
+
+  CustomRessourceProcessPath:
+    Type: AWS::Lambda::Function
+    Properties:
+      Role: !GetAtt 'InitLambdaExecutionRole.Arn' #FIXME: Needs its own role
+      FunctionName: !Sub "CidProcessPath-DoNotRun${Suffix}"
+      Description: "Do what CFN cannot: process string of path"
+      Runtime: python3.9
+      Architectures: [ arm64 ]
+      MemorySize: 128
+      Timeout: 60
+      Handler: 'index.lambda_handler'
+      Code:
+        ZipFile: |
+          import uuid
+          import json
+          import urllib3
+
+          def lambda_handler(event, context):
+              print(json.dumps(event))
+              type_ = event.get('RequestType', 'Undef')
+              properties = event.get('ResourceProperties', {})
+              status, reason = ('SUCCESS', "Undef")
+              data = {}
+              body = {}
+              try:
+                  s3path = properties.get('s3path', '')
+                  if s3path.startswith('s3://'):
+                      s3path = s3path[len('s3://'):]
+                  if s3path.endswith('/'):
+                      s3path = s3path[:-1]
+                  parts = s3path.split('/')
+                  data['Bucket'] = parts[0]
+                  data['Path'] = '/'.join(parts[1:])
+                  data['Folder'] = parts[-1] if len(parts) > 1 else ''
+                  status, reason = 'SUCCESS', ""
+              except Exception as exc:
+                  status, reason = 'FAILED', str(exc)
+              finally:
+                  url = event.get('ResponseURL')
+                  body['Status'] = status
+                  body['Reason'] = reason + '\nSee the details in CloudWatch Log Stream: ' + context.log_stream_name
+                  body['PhysicalResourceId'] = s3path
+                  body['StackId'] = event.get('StackId')
+                  body['RequestId'] = event.get('RequestId')
+                  body['LogicalResourceId'] = event.get('LogicalResourceId')
+                  body['Data'] = data
+                  json_body=json.dumps(body)
+                  print(json_body)
+                  if not url: return
+                  try:
+                      http = urllib3.PoolManager()
+                      response = http.request('PUT', url, body=json_body, headers={'content-type' : '', 'content-length' : str(len(json_body))}, retries=False)
+                      print(f"Status code: {response}")
+                  except Exception as exc:
+                      print("Failed sending PUT to CFN: " + str(exc))
+
+  ProcessedCURPath:
+    Type: Custom::CustomRessourceProcessPath
+    Properties:
+      ServiceToken: !GetAtt CustomRessourceProcessPath.Arn
+      s3path: !Ref CURBucketPath
+
+  CidCURDatabase:
+    Type: AWS::Glue::Database
+    Condition: NeedCURDatabase
+    Properties:
+      DatabaseInput:
+        Name: !Join [ '_', !Split [ '-', !Sub 'cid_cur${Suffix}' ] ] # replace '-' to '_'
+      CatalogId: !Sub '${AWS::AccountId}'
+
+  MyGlueCURCrawler:
+    Type: AWS::Glue::Crawler
+    Condition: NeedCURDatabase
+    Properties:
+      Name:  !Sub 'CidCrawler${Suffix}'
+      Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
+      Role:
+        Fn::GetAtt: CidCURCrawlerRole.Arn
+      DatabaseName: !Ref CidCURDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
+            Exclusions:
+              - '**.json'
+              - '**.yml'
+              - '**.sql'
+              - '**.csv'
+              - '**.csv.metadata'
+              - '**.gz'
+              - '**.zip'
+              - '**/cost_and_usage_data_status/*'
+              - 'aws-programmatic-access-test-object'
+      SchemaChangePolicy:
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      Schedule:
+        ScheduleExpression: cron(0 2 * * ? *)
+      Configuration: |
+        {
+          "Version":1.0,
+          "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+          },
+          "CrawlerOutput":{
+            "Tables":{
+              "AddOrUpdateBehavior":"MergeNewColumns"
+            }
+          }
+        }
+
+  MyCURTable:  # Initial creation of table. it will be updated by crawler later
+    Type: AWS::Glue::Table
+    Condition: NeedCURTable
+    Properties:
+      CatalogId: !Ref "AWS::AccountId"
+      DatabaseName: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+      TableInput:
+        Name: !GetAtt ProcessedCURPath.Folder
+        Owner: owner
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          compressionType: none
+          classification: parquet
+          UPDATED_BY_CRAWLER: !Ref MyGlueCURCrawler
+        StorageDescriptor:
+          BucketColumns: []
+          Columns:
+          Compressed: false
+          Location: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
+          NumberOfBuckets: -1
+          InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
+          SerdeInfo:
+            Parameters:
+              serialization.format: '1'
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
+          StoredAsSubDirectories: false
+          Compressed: false
+          Columns: # All fields required for CID
+            - {"Name": "bill_bill_type", "Type": "string" }
+            - {"Name": "bill_billing_entity", "Type": "string" }
+            - {"Name": "bill_billing_period_end_date", "Type": "timestamp" }
+            - {"Name": "bill_billing_period_start_date", "Type": "timestamp" }
+            - {"Name": "bill_invoice_id", "Type": "string" }
+            - {"Name": "bill_payer_account_id", "Type": "string" }
+            - {"Name": "identity_line_item_id", "Type": "string" }
+            - {"Name": "identity_time_interval", "Type": "string" }
+            - {"Name": "line_item_availability_zone", "Type": "string" }
+            - {"Name": "line_item_legal_entity", "Type": "string" }
+            - {"Name": "line_item_line_item_description", "Type": "string" }
+            - {"Name": "line_item_line_item_type", "Type": "string" }
+            - {"Name": "line_item_operation", "Type": "string" }
+            - {"Name": "line_item_product_code", "Type": "string" }
+            - {"Name": "line_item_resource_id", "Type": "string" }
+            - {"Name": "line_item_unblended_cost", "Type": "double" }
+            - {"Name": "line_item_usage_account_id", "Type": "string" }
+            - {"Name": "line_item_usage_amount", "Type": "double" }
+            - {"Name": "line_item_usage_end_date", "Type": "timestamp" }
+            - {"Name": "line_item_usage_start_date", "Type": "timestamp" }
+            - {"Name": "line_item_usage_type", "Type": "string" }
+            - {"Name": "pricing_lease_contract_length", "Type": "string" }
+            - {"Name": "pricing_offering_class", "Type": "string" }
+            - {"Name": "pricing_public_on_demand_cost", "Type": "double" }
+            - {"Name": "pricing_purchase_option", "Type": "string" }
+            - {"Name": "pricing_unit", "Type": "string" }
+            - {"Name": "product_cache_engine", "Type": "string" }
+            - {"Name": "product_current_generation", "Type": "string" }
+            - {"Name": "product_database_engine", "Type": "string" }
+            - {"Name": "product_deployment_option", "Type": "string" }
+            - {"Name": "product_from_location", "Type": "string" }
+            - {"Name": "product_group", "Type": "string" }
+            - {"Name": "product_instance_type", "Type": "string" }
+            - {"Name": "product_instance_type_family", "Type": "string" }
+            - {"Name": "product_license_model", "Type": "string" }
+            - {"Name": "product_operating_system", "Type": "string" }
+            - {"Name": "product_physical_processor", "Type": "string" }
+            - {"Name": "product_processor_features", "Type": "string" }
+            - {"Name": "product_product_family", "Type": "string" }
+            - {"Name": "product_product_name", "Type": "string" }
+            - {"Name": "product_region", "Type": "string" }
+            - {"Name": "product_servicecode", "Type": "string" }
+            - {"Name": "product_tenancy", "Type": "string" }
+            - {"Name": "product_to_location", "Type": "string" }
+            - {"Name": "product_volume_api_name", "Type": "string" }
+            - {"Name": "product_volume_type", "Type": "string" }
+            - {"Name": "reservation_amortized_upfront_fee_for_billing_period", "Type": "double" }
+            - {"Name": "reservation_effective_cost", "Type": "double" }
+            - {"Name": "reservation_end_time", "Type": "string" }
+            - {"Name": "reservation_reservation_a_r_n", "Type": "string" }
+            - {"Name": "reservation_start_time", "Type": "string" }
+            - {"Name": "reservation_unused_amortized_upfront_fee_for_billing_period", "Type": "double" }
+            - {"Name": "reservation_unused_recurring_fee", "Type": "double" }
+            - {"Name": "savings_plan_amortized_upfront_commitment_for_billing_period", "Type": "double" }
+            - {"Name": "savings_plan_end_time", "Type": "string" }
+            - {"Name": "savings_plan_offering_type", "Type": "string" }
+            - {"Name": "savings_plan_payment_option", "Type": "string" }
+            - {"Name": "savings_plan_purchase_term", "Type": "string" }
+            - {"Name": "savings_plan_savings_plan_a_r_n", "Type": "string" }
+            - {"Name": "savings_plan_savings_plan_effective_cost", "Type": "double" }
+            - {"Name": "savings_plan_start_time", "Type": "string" }
+            - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
+            - {"Name": "savings_plan_used_commitment", "Type": "double" }
+        PartitionKeys:
+        - Name: year
+          Type: string
+        - Name: month
+          Type: string
+
+  CidCURCrawlerRole:
+    Type: AWS::IAM::Role
+    Condition: NeedCURDatabase
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - Fn::Sub: 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
+      Policies:
+        - PolicyName: AWSCURCrawlerComponentFunction
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  Fn::Sub: "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers/*"
+              - Effect: Allow
+                Action:
+                  - 'glue:UpdateDatabase'
+                  - 'glue:UpdatePartition'
+                  - 'glue:CreateTable'
+                  - 'glue:UpdateTable'
+                  - 'glue:ImportCatalogToGlue' # TODO
+                Resource:
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidCURDatabase}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidCURDatabase}/*
+                  #FIXME: user must be able to give a database as a parameter
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                Resource:
+                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
+        - PolicyName: AWSCURKMSDecryption
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                Resource: '*'
+
+  CidAthenaDataSource:
+    Type: AWS::QuickSight::DataSource
+    Properties:
+      AwsAccountId: !Sub '${AWS::AccountId}'
+      Type: ATHENA
+      DataSourceId: !Sub 'CID-Athena${Suffix}'
+      Name:         !Sub 'CID-Athena${Suffix}'
+      DataSourceParameters:
+        AthenaParameters:
+          WorkGroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+      Permissions:
+        - Actions:
+            - 'quicksight:DescribeDataSource'
+            - 'quicksight:DescribeDataSourcePermissions'
+            - 'quicksight:PassDataSource'
+            - 'quicksight:UpdateDataSource'
+            - 'quicksight:DeleteDataSource'
+            - 'quicksight:UpdateDataSourcePermissions'
+          Principal: !Sub 'arn:${AWS::Partition}:quicksight:${QuicksightIdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+
+  CidExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Sub 'CidExecRole${Suffix}'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CidExecPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:GetWorkGroup
+                  - athena:GetQueryResults
+                  - athena:GetQueryExecution
+                Resource:
+                  Fn::Join:
+                   - '/'
+                   - - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup'
+                     - !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+              - Effect: Allow
+                Action:
+                  - glue:GetDatabase
+                  - glue:GetTable
+                  - glue:UpdateTable
+                  - glue:GetTables
+                  - glue:GetPartitions
+                  - glue:CreateTable
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/*' #FIXME
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/*' #FIXME
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+              - Effect: Allow
+                Action:
+                  - glue:GetTable
+                  - glue:GetDatabases
+                  - glue:GetTables
+                Resource: "*" # This is needed to allow Autodetection in CID-CMD
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:ListMultipartUploadParts
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
+                  # FIXME: same for the case if AthenaQueryResultsBucket is not Null
+                  #- !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/' , !Sub 's3://${AthenaQueryResultsBucket}/' ]
+                  #- !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/*', !Sub 's3://${AthenaQueryResultsBucket}/*' ]
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:DescribeKey
+                  - kms:Encrypt
+                Resource: !Sub 'arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}::key/*'
+              - Effect: Allow
+                Action:
+                  - quicksight:ListDataSources
+                  - quicksight:CreateDataSource
+                  - quicksight:DeleteDataSource
+                  - quicksight:DescribeDataSource
+                  - quicksight:PassDataSource
+
+                  - quicksight:ListDataSets
+                  - quicksight:CreateDataSet
+                  - quicksight:DescribeDataSet
+                  - quicksight:DeleteDataSet
+                  - quicksight:UpdateDataSet
+                  - quicksight:PassDataSet
+
+                  - quicksight:CreateDashboard
+                  - quicksight:DescribeDashboard
+                  - quicksight:DeleteDashboard
+                  - quicksight:UpdateDashboard
+
+                  - quicksight:ListDashboards
+
+                  - quicksight:DescribeTemplate
+                  - quicksight:DescribeAccountSubscription
+                  - quicksight:ListFolders
+
+                  - quicksight:ListUsers
+                  - quicksight:DescribeUser
+                  - quicksight:CreateUser # TBC
+                  - quicksight:CreateIngestion
+                  - quicksight:UpdateDashboardPermissions
+                  - quicksight:UpdateDashboardPublishedVersion
+                  - quicksight:UpdateDataSetPermissions
+                  - quicksight:UpdateDataSourcePermissions
+                Resource: '*'
+
+              - Effect: Allow
+                Action:
+                 # - athena:BatchGetQueryExecution
+                 # - athena:GetQueryExecution
+                 # - athena:GetQueryResults
+                  - athena:GetTableMetadata
+                 # - athena:GetWorkGroup # see above
+                  - athena:ListDatabases
+                  - athena:ListDataCatalogs
+                  - athena:ListEngineVersions
+                  - athena:ListTableMetadata
+                  - athena:ListWorkGroups
+                  - athena:GetDatabase
+                 # - athena:ListQueryExecutions
+                 # - athena:ListNamedQueries
+                 # - athena:StartQueryExecution
+                 # - athena:UpdateWorkGroup
+                Resource: '*'
+
+  CidExec: #custom lambda resource that deploy views, datasets and dashboards
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'CidCustomResourceDashboard${Suffix}'
+      Description: 'A lambda that manage create delete update of Athena views, QuickSight Datasets and dashboards using CID-CMD tool'
+      Role: !GetAtt CidExecRole.Arn
+      Runtime: python3.9
+      Architectures: [ arm64 ]
+      MemorySize: 2688
+      Timeout: 300 # Time of discovery depend on number of dashboards
+      Handler: index.lambda_handler
+      Code:
+        ZipFile: |
+          import os
+          import uuid
+          import json
+          import logging
+
+          import boto3
+          import requests
+          from cid.common import Cid # From lambda layer
+          from cid.utils import set_parameters # From lambda layer
+
+          Cid._Cid__setupLogging = lambda self, verbosity: None #FIXME: Monkey patch to avoid file creation
+
+          logger = logging.getLogger(__name__)
+          logger.setLevel(logging.INFO)
+          logging.getLogger('cid').setLevel(logging.DEBUG)
+
+          account_id = boto3.client('sts').get_caller_identity()['Account']
+          region = boto3.session.Session().region_name
+
+          def lambda_handler(event, context):
+              print(json.dumps(event))
+              request_type = event.get('RequestType', 'Undef')
+              properties = event.get('ResourceProperties', {})
+              status, reason = ('FAILED', "Undef error")
+              physical_id = properties.get('Dashboard', {}).get('dashboard-id', 'Unknown')
+              dash_url = "Unknown"
+              try:
+                  dashboard = properties['Dashboard']
+                  if request_type == 'Create':
+                      dash_url = deploy_dash(dashboard)
+                      status, reason = 'SUCCESS', f"{request_type} {physical_id} ok"
+                  elif request_type == 'Delete':
+                      dash_url = delete_dash(dashboard)
+                      status, reason = 'SUCCESS', f"{request_type} {physical_id} ok"
+                  elif request_type == 'Update':
+                      dash_url = update_dash(dashboard)
+                      status, reason = 'SUCCESS', f"{request_type} {physical_id} ok"
+                  else:
+                      status, reason = 'SUCCESS', f"Not supported operation: {request_type}"
+              except Exception as exc:
+                  logger.exception(exc)
+                  status, reason = ('FAILED', f"Failed {request_type} {physical_id} with exception: {exc}. See CloudWatch logs.")
+              except SystemExit as exc:
+                  status, reason = ('FAILED', f"Cid called exit({exc.code}) on {request_type} {physical_id}. See CloudWatch logs.")
+              finally:
+                  url = event.get('ResponseURL')
+                  body = {
+                      'Status': status,
+                      'Reason': reason + '\nSee the details in CloudWatch Log Stream: ' + context.log_stream_name,
+                      'PhysicalResourceId': physical_id,
+                      'StackId': event.get('StackId'),
+                      'RequestId': event.get('RequestId'),
+                      'LogicalResourceId': event.get('LogicalResourceId'),
+                      'NoEcho': False,
+                      'Data': {'Reason': reason, 'DashboardURL': dash_url },
+                  }
+                  json_body = json.dumps(body)
+                  print(json_body)
+                  if not url: return
+                  try:
+                      res = requests.put(url, data=json_body, headers={'content-type' : '','content-length' : str(len(json_body))})
+                      print(f"return {res.status_code}: {res.text}" )
+                  except Exception as exc:
+                      print("send(..) failed executing requests.put(..): " + str(exc))
+
+          def deploy_dash(params):
+              app = Cid(verbose=3)
+              app.run()
+              set_parameters(params, all_yes=True)
+              app.deploy()
+              return app.qs_url.format(dashboard_id=params['dashboard-id'], **app.qs_url_params)
+
+          def delete_dash(params):
+              app = Cid(verbose=3)
+              app.run()
+              set_parameters(params, all_yes=True)
+              app.delete(dashboard_id=params['dashboard-id'])
+              return ''
+
+          def update_dash(params):
+              app = Cid(verbose=3)
+              app.run()
+              set_parameters(params, all_yes=True)
+              app.update(dashboard_id=params['dashboard-id'])
+              return app.qs_url.format(dashboard_id=params['dashboard-id'], **app.qs_url_params)
+      Layers:
+        - !Ref CidResourceLambdaLayer
+
+  CidResourceLambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Sub 'CidLambdaLayer${Suffix}'
+      Description: An AWS managed layer with a cid-cmd package installed
+      Content:
+        S3Bucket: !Sub 'aws-managed-cost-intelligence-dashboards-${AWS::Region}'
+        S3Key: !Sub 'cid-resource-lambda-layer/cid-${CidVersion}.zip'
+      CompatibleRuntimes:
+        - python3.9
+
+  CostIntelligenceDashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedCostIntelligenceDashboard
+    DependsOn:
+      - InitialSetup
+    Properties:
+      Name: !Sub 'CloudIntelligenceDashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: cost_intelligence_dashboard
+        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
+        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        quicksight-user: !Ref QuickSightUser
+        account-map-source: 'dummy' #initial
+        share-with-account: 'yes'
+
+  CUDOSDashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedCUDOSDashboard
+    DependsOn:
+      - InitialSetup
+    Properties:
+      Name: !Sub 'CUDOSDashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: cudos
+        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
+        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        quicksight-user: !Ref QuickSightUser
+        account-map-source: 'dummy' #initial
+        share-with-account: 'yes'
+      Tags: # Hacky way to manage conditional dependancies
+        - Key: IgnoreNeedCostIntelligenceDashboard
+          Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
+
+  KPIDashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedKPIDashboard
+    DependsOn:
+      - InitialSetup
+    Properties:
+      Name: !Sub 'KPIDashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: kpi_dashboard
+        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
+        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        quicksight-user: !Ref QuickSightUser
+        account-map-source: 'dummy' #initial
+        share-with-account: 'yes'
+      Tags: # Hacky way to manage conditional dependancies
+        - Key: IgnoreNeedCostIntelligenceDashboard
+          Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
+        - Key: IgnoreNeedCUDOSDashboard
+          Value: !If [NeedCUDOSDashboard, !Ref CUDOSDashboard, '']
+
+  TAODashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedTAODashboard
+    DependsOn:
+      - InitialSetup
+    Properties:
+      Name: !Sub 'TAODashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: ta-organizational-view
+        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
+        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        quicksight-user: !Ref QuickSightUser
+        share-with-account: 'yes'
+        view-ta-organizational-view-reports-s3FolderPath: !Sub '${CostOptimizationDataCollectionBucketPath}/optics-data-collector/ta-data'
+
+  ComputeOptimizerDashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedComputeOptimizerDashboard
+    DependsOn:
+      - InitialSetup
+    Properties:
+      Name: !Sub 'ComputeOptimizerDashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: compute-optimizer-dashboard
+        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
+        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        quicksight-user: !Ref QuickSightUser
+        share-with-account: 'yes'
+        view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_lambda'
+        view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ebs_volume'
+        view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_auto_scale'
+        view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
+
+Outputs:
+  CostIntelligenceDashboardURL:
+    Description: "URL of CostIntelligenceDashboard"
+    Condition: NeedCostIntelligenceDashboard
+    Value: !GetAtt CostIntelligenceDashboard.DashboardURL
+  CUDOSDashboardURL:
+    Description: "URL of CUDOSDashboard"
+    Condition: NeedCUDOSDashboard
+    Value: !GetAtt CUDOSDashboard.DashboardURL
+  KPIDashboardURL:
+    Description: "URL of KPIDashboard"
+    Condition: NeedKPIDashboard
+    Value: !GetAtt KPIDashboard.DashboardURL
+  TAODashboardURL:
+    Description: "URL of TAODashboard"
+    Condition: NeedTAODashboard
+    Value: !GetAtt TAODashboard.DashboardURL
+  ComputeOptimizerDashboardURL:
+    Description: "URL of ComputeOptimizerDashboard"
+    Condition: NeedComputeOptimizerDashboard
+    Value: !GetAtt ComputeOptimizerDashboard.DashboardURL
