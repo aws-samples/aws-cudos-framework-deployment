@@ -159,7 +159,7 @@ class AccountMap(CidBase):
             line_item_usage_account_id account_id, bill_payer_account_id parent_account_id,
             line_item_usage_account_id account_name, line_item_usage_account_id account_email_id
             FROM
-                ${cur_table_name}
+                "${cur_table_name}"
         '''
         template = Template(template_str)        
         # Fill in TPLs
