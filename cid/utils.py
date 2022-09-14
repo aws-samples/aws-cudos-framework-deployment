@@ -3,7 +3,7 @@ from collections.abc import Iterable
 
 from boto3.session import Session
 import questionary
-from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError
+from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError, ProfileNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,9 @@ def get_boto_session(**kwargs) -> Session:
         logger.info('No AWS region set, defaulting to us-east-1')
         kwargs.update({'region_name': 'us-east-1'})
         return get_boto_session(**kwargs)
+    except ProfileNotFound as e:
+        logger.critical(e)
+        exit(1)
     except Exception as e:
         logger.debug(e, stack_info=True)
         raise

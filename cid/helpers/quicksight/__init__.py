@@ -36,7 +36,6 @@ class QuickSight(CidBase):
         # QuickSight clients
         logger.info(f'Creating QuickSight client')
         self.client = self.session.client('quicksight')
-        self.use1Client = self.session.client('quicksight', region_name='us-east-1')
         self.identityClient = self.session.client('quicksight', region_name=self.identityRegion)
 
 
@@ -52,8 +51,9 @@ class QuickSight(CidBase):
     def user(self) -> dict:
         if not self._user:
             try:
-                self._user =  self.describe_user(self.username())
+                self._user =  self.describe_user(self.username)
             except Exception as exc:
+                logger.debug(exc, stack_info=True)
                 logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
             if not self._user:
                 # If no user match, ask
@@ -202,14 +202,14 @@ class QuickSight(CidBase):
                         logger.info(f"Detected dataset: \"{_dataset.name}\" ({_dataset.id} in {dashboard.name})")
                         dashboard.datasets.update({_dataset.name: _dataset.id})
                 except self.client.exceptions.AccessDeniedException:
-                    logger.info(f'Looking local config for {dashboardId}')
-                    dashboard.find_local_config()
+                    logger.info(f'Access denied describing DataSetId {dataset_id} for Dashboard {dashboardId}')
                 except self.client.exceptions.InvalidParameterValueException:
                     logger.info(f'Invalid dataset {dataset_id}')
             templateAccountId = _definition.get('sourceAccountId')
             templateId = _definition.get('templateId')
+            region = _definition.get('region', 'us-east-1')
             try:
-                template = self.describe_template(templateId, account_id=templateAccountId)
+                template = self.describe_template(templateId, account_id=templateAccountId, region=region)
                 dashboard.sourceTemplate = template
             except Exception as e:
                 logger.debug(e, stack_info=True)
@@ -236,7 +236,7 @@ class QuickSight(CidBase):
         logger.info('Creating Athena data source')
 
         columns_tpl = {
-            'user_arn': self.user.get('Arn')
+            'PrincipalArn': self.user.get('Arn')
         }
         data_source_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
@@ -728,18 +728,19 @@ class QuickSight(CidBase):
             return _datasource
 
 
-    def describe_template(self, template_id: str, account_id: str=None ):
+    def describe_template(self, template_id: str, account_id: str=None, region: str='us-east-1'):
         """ Describes an AWS QuickSight template """
         if not account_id:
             account_id=self.cidAccountId
         try:
-            result = self.use1Client.describe_template(AwsAccountId=account_id,TemplateId=template_id)
+            client = self.session.client('quicksight', region_name=region)
+            result = client.describe_template(AwsAccountId=account_id, TemplateId=template_id)
             logger.debug(result)
         except self.client.exceptions.UnsupportedUserEditionException:
             logger.critical('AWS QuickSight Enterprise Edition is required')
             exit(1)
         except self.client.exceptions.ResourceNotFoundException:
-            logger.critical(f'Error: Template {template_id} is not available in account {account_id}.')
+            logger.critical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
             exit(1)
         except Exception as e:
             logger.debug(e, stack_info=True)
@@ -775,7 +776,20 @@ class QuickSight(CidBase):
         """ Creates an AWS QuickSight dataset """
         poll_interval = 1
         max_timeout = 60
-        definition.update({'AwsAccountId': self.account_id})
+        columns_tpl = {
+            'PrincipalArn': self.user.get('Arn')
+        }
+        data_set_permissions_tpl = Template(resource_string(
+            package_or_requirement='cid.builtin.core',
+            resource_name=f'data/permissions/data_set_permissions.json',
+        ).decode('utf-8'))
+        data_set_permissions = json.loads(data_set_permissions_tpl.safe_substitute(columns_tpl))
+        definition.update({
+            'AwsAccountId': self.account_id,
+            'Permissions': [
+                data_set_permissions
+            ]
+        })
         dataset_id = None
         try:
             logger.info(f'Creating dataset {definition.get("Name")} ({dataset_id})')
@@ -827,7 +841,7 @@ class QuickSight(CidBase):
             resource_name=f'data/permissions/dashboard_permissions.json',
         ).decode('utf-8'))
         columns_tpl = {
-            'user_arn': self.user.get('Arn')
+            'PrincipalArn': self.user.get('Arn')
         }
         dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
         create_parameters = {

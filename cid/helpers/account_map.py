@@ -144,13 +144,13 @@ class AccountMap(CidBase):
         except:
             # TODO: Handle exceptions
             compiled_query = self.create_account_mapping_sql(name)
-        finally:
-            # Execute query
-            click.echo('\tcreating view...', nl=False)
-            query_id = self.athena.execute_query(sql_query=compiled_query)
-            # Get results as list
-            response = self.athena.get_query_results(query_id)
-            click.echo('done')
+
+        # Execute query
+        click.echo('\tcreating view...', nl=False)
+        query_id = self.athena.execute_query(sql_query=compiled_query)
+        # Get results as list
+        response = self.athena.get_query_results(query_id)
+        click.echo('done')
 
     def get_dummy_account_mapping_sql(self, name) -> list:
         """Create dummy account mapping"""
@@ -159,7 +159,7 @@ class AccountMap(CidBase):
             line_item_usage_account_id account_id, bill_payer_account_id parent_account_id,
             line_item_usage_account_id account_name, line_item_usage_account_id account_email_id
             FROM
-                ${cur_table_name}
+                "${cur_table_name}"
         '''
         template = Template(template_str)        
         # Fill in TPLs
