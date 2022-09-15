@@ -798,6 +798,9 @@ class QuickSight(CidBase):
             dataset_id = response.get('DataSetId')
         except self.client.exceptions.ResourceExistsException:
             logger.info(f'Dataset {definition.get("Name")} already exists')
+        except self.client.exceptions.LimitExceededException:
+            logger.critical('AWS QuickSight SPICE limit exceeded')
+            exit(1)
 
         logger.info(f'Waiting for {definition.get("Name")} to be created')
         deadline = time.time() + max_timeout
