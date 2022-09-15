@@ -34,6 +34,10 @@ Metadata:
           - Suffix
           - QuicksightIdentityRegion
           - QuickSightDataSetRefreshSchedule
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W2001
 Parameters:
   PrerequisitesQuickSight:
     Type: String
@@ -184,10 +188,9 @@ Resources:
       Role: !GetAtt SpiceRefreshExecutionRole.Arn
       Description: 'Function for CID datasets refresh'
       Runtime: python3.9
-      Architectures: [ arm64 ]
+      Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
-      Handler: 'index.lambda_handler'
       Environment:
         Variables:
           #suffix: !Ref Suffix
@@ -306,7 +309,7 @@ Resources:
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
       Runtime: python3.9
-      Architectures: [ arm64 ]
+      Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 300
       Handler: 'index.lambda_handler'
@@ -409,7 +412,7 @@ Resources:
         Variables:
           BUCKET: !If [NeedAthenaQueryResultsBucket, !Ref MyAthenaQueryResultsBucket, '']
           WORKGROUP: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
-          CRAWLER: !If [NeedCURDatabase, !Ref MyGlueCURCrawler, '']
+          CRAWLER: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
   InitLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -458,7 +461,7 @@ Resources:
         - Key: IgnoreConditionalDependsOnAthenaWorkgroup
           Value: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
         - Key: IgnoreConditionalDependsOnCURDatabase
-          Value: !If [NeedCURDatabase, !Ref MyGlueCURCrawler, '']
+          Value: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
 
   CustomRessourceProcessPath:
     Type: AWS::Lambda::Function
@@ -467,7 +470,7 @@ Resources:
       FunctionName: !Sub "CidProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
       Runtime: python3.9
-      Architectures: [ arm64 ]
+      Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
       Handler: 'index.lambda_handler'
@@ -532,13 +535,13 @@ Resources:
 
   MyGlueCURCrawler:
     Type: AWS::Glue::Crawler
-    Condition: NeedCURDatabase
+    Condition: NeedCURTable
     Properties:
       Name:  !Sub 'CidCrawler${Suffix}'
       Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
       Role:
         Fn::GetAtt: CidCURCrawlerRole.Arn
-      DatabaseName: !Ref CidCURDatabase
+      DatabaseName: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName]
       Targets:
         S3Targets:
           - Path: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
@@ -588,7 +591,6 @@ Resources:
           UPDATED_BY_CRAWLER: !Ref MyGlueCURCrawler
         StorageDescriptor:
           BucketColumns: []
-          Columns:
           Compressed: false
           Location: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
           NumberOfBuckets: -1
@@ -599,7 +601,6 @@ Resources:
               serialization.format: '1'
             SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
           StoredAsSubDirectories: false
-          Compressed: false
           Columns: # All fields required for CID
             - {"Name": "bill_bill_type", "Type": "string" }
             - {"Name": "bill_billing_entity", "Type": "string" }
@@ -672,7 +673,7 @@ Resources:
 
   CidCURCrawlerRole:
     Type: AWS::IAM::Role
-    Condition: NeedCURDatabase
+    Condition: NeedCURTable
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -887,7 +888,7 @@ Resources:
       Description: 'A lambda that manage create delete update of Athena views, QuickSight Datasets and dashboards using CID-CMD tool'
       Role: !GetAtt CidExecRole.Arn
       Runtime: python3.9
-      Architectures: [ arm64 ]
+      Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 2688
       Timeout: 300 # Time of discovery depend on number of dashboards
       Handler: index.lambda_handler

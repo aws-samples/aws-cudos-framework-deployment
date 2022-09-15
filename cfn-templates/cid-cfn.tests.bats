@@ -1,12 +1,16 @@
+#!/usr/local/bin/bats
+
+# Install: https://bats-core.readthedocs.io/en/stable/installation.html 
+# Run: bats ./cfn-templates/cid-cfn.tests.bats --timing
 
 # Testing happy path of creating/deleting stack
 
 # prereqs:
 #   1. Quicksight Enterprise edition
 #   2. Quicksight has rights to read all s3 bukets in the account (not managable today)
-#   3. at least 1 CUR created
+#   3. At least 1 CUR created
 
-setup() {
+setup_file() {
   export stackname="stack$(date +%Y%m%d%H%M)"
   export account_id=$(aws sts get-caller-identity --query Account --output text)
   export cid_version=$(python3 -c 'from cid._version import __version__;print(__version__)')
@@ -14,13 +18,13 @@ setup() {
 
   aws quicksight describe-user --aws-account-id $account_id --user-name $quicksight_user --namespace default
   if [[ "$?" != "0" ]]; then
-      echo "Missing CUR"
+      echo "Missing QS User '$quicksight_user'"
       return 1
   fi
 
-  export cur_name=$(aws cur describe-report-definitions --query 'ReportDefinitions[0].ReportName' --output text)
-  export cur_bucket=$(aws cur describe-report-definitions --query 'ReportDefinitions[0].S3Bucket' --output text)
-  export cur_prefix=$(aws cur describe-report-definitions --query 'ReportDefinitions[0].S3Prefix' --output text)
+  export cur_name=$(aws cur describe-report-definitions --query 'ReportDefinitions[0].ReportName' --output text --region us-east-1)
+  export cur_bucket=$(aws cur describe-report-definitions --query 'ReportDefinitions[0].S3Bucket' --output text --region us-east-1)
+  export cur_prefix=$(aws cur describe-report-definitions --query 'ReportDefinitions[0].S3Prefix' --output text --region us-east-1)
   if [[ "$?" != "0" ]]; then
       echo "Missing CUR"
       return 1
@@ -40,7 +44,7 @@ setup() {
   [ "$output" = "ENTERPRISE" ]
 }
 
-@test "Prereqs: CUR created" {
+@test "Prereqs: at least one CUR exists" {
   [ "$cur_name" != "" ]
 }
 
@@ -64,7 +68,7 @@ setup() {
       DeployComputeOptimizerDashboard="no"\
       DeployCostIntelligenceDashboard="yes"\
       DeployKPIDashboard="yes"\
-      DeployTAODashboard="no"\
+      DeployTAODashboard="yes"\
       AthenaWorkgroup=""\
       AthenaQueryResultsBucket=""\
       CURDatabaseName=""\
@@ -101,10 +105,6 @@ setup() {
   export stackname=$(aws cloudformation describe-stacks --query 'Stacks[?Description==`Deployment of Cloud Intelligence Dashboards`].StackName' --output text)
   aws cloudformation delete-stack --stack-name "$stackname"
   aws cloudformation wait stack-delete-complete  --stack-name "$stackname"
-
-  # Additional teardown steps in case of failure
-  # aws s3 rm s3://aws-athena-query-results-cid-$account_id-$region --recursive
-  # aws s3api delete-bucket --bucket aws-athena-query-results-cid-$account_id-$region
 }
 
 @test "Dashboards are deleted" {
@@ -131,4 +131,9 @@ setup() {
   [ "$output" = "0" ]
 }
 
+teardown_file() {
+  # Additional teardown steps in case of failure
+  # aws s3 rm s3://aws-athena-query-results-cid-$account_id-$region --recursive
+  # aws s3api delete-bucket --bucket aws-athena-query-results-cid-$account_id-$region
+}
 
