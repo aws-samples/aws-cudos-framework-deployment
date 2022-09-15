@@ -49,7 +49,7 @@ class CidBase():
 
     @property
     def username(self) -> str:
-        if not hasattr(self,"_user"):
+        if not hasattr(self, "_user") or self._user is None:
             # Guess the username from identity ARN
             arn = self.awsIdentity.get('Arn')
             if arn.split(':')[5] == 'root':

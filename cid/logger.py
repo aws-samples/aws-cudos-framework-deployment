@@ -31,7 +31,7 @@ def set_cid_logger(verbosity, log_filename):
 
     add_logging_level('TRACE', logging.DEBUG - 5)
 
-    cid_logger = logging.getLogger('cid')
+    logger = logging.getLogger('cid')
 
     # create formatter
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s:%(funcName)s:%(lineno)d - %(message)s')
@@ -41,7 +41,7 @@ def set_cid_logger(verbosity, log_filename):
         fh = logging.FileHandler(log_filename)
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
-        cid_logger.addHandler(fh)
+        logger.addHandler(fh)
 
     # Console handler logs everything down to ERROR level
     ch = logging.StreamHandler()
@@ -49,13 +49,12 @@ def set_cid_logger(verbosity, log_filename):
     # create formatter and add it to the handlers
     ch.setFormatter(formatter)
     # add the handlers to logger
-    cid_logger.addHandler(ch)
+    logger.addHandler(ch)
 
 
     if verbosity:
         # Limit Logging level to DEBUG, base level is WARNING
         verbosity = min(verbosity, 2)
-        cid_logger.setLevel(logger.getEffectiveLevel()-10 * verbosity)
+        logger.setLevel(logger.getEffectiveLevel()-10 * verbosity)
         # Logging application start here due to logging configuration
         print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
-

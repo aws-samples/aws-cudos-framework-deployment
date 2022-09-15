@@ -1,5 +1,5 @@
 {
-  "Principal": "arn:aws:quicksight:${AwsRegion}:${AwsAccountId}:namespace/default",
+  "Principal": "${PrincipalArn}",
   "Actions": [
     "quicksight:DescribeDashboard",
     "quicksight:ListDashboardVersions",
