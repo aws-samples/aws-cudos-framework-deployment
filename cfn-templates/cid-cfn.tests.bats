@@ -119,13 +119,13 @@ setup_file() {
   [ "$output" = "0" ]
 }
 
-@test "DataSources are deleted" {
+@test "DataSource is deleted" {
   run aws quicksight list-data-sources --aws-account-id $account_id --query 'length(DataSources[?Name==`CID-Athena`].Name)' --output text
   [ "$status" -eq 0 ]
   [ "$output" = "0" ]
 }
 
-@test "Workrgroups are deleted" {
+@test "WorkGroups is deleted" {
   run aws athena list-work-groups --query 'length(WorkGroups[?Name==`CID`])' --output text
   [ "$status" -eq 0 ]
   [ "$output" = "0" ]
@@ -133,7 +133,7 @@ setup_file() {
 
 teardown_file() {
   # Additional teardown steps in case of failure
-  # aws s3 rm s3://aws-athena-query-results-cid-$account_id-$region --recursive
-  # aws s3api delete-bucket --bucket aws-athena-query-results-cid-$account_id-$region
+  aws s3 rm s3://aws-athena-query-results-cid-$account_id-$region --recursive || echo "no bucket"
+  aws s3api delete-bucket --bucket aws-athena-query-results-cid-$account_id-$region || echo "no bucket"
 }
 
