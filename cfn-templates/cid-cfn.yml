@@ -500,6 +500,7 @@ Resources:
                   data['Bucket'] = parts[0]
                   data['Path'] = '/'.join(parts[1:])
                   data['Folder'] = parts[-1] if len(parts) > 1 else ''
+                  data['Folder'] = data['Folder'].replace('-', '_') # this is used for a Glue table name that will be managed by crawler
                   status, reason = 'SUCCESS', ""
               except Exception as exc:
                   status, reason = 'FAILED', str(exc)
