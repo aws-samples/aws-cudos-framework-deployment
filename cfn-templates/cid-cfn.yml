@@ -34,6 +34,7 @@ Metadata:
           - Suffix
           - QuicksightIdentityRegion
           - QuickSightDataSetRefreshSchedule
+          - LambdaLayerBucketPrefix
   cfn-lint:
     config:
       ignore_checks:
@@ -133,6 +134,10 @@ Parameters:
     Type: String
     Description: An S3 path to a bucket from Cost Optimisation Data Collection Lab, where you have /optics-data-collector folder (Required for TAO and COD). You can leave {account_id}, it will be replaced by current account ID
     Default: "s3://costoptimizationdata{account_id}"
+  LambdaLayerBucketPrefix:
+    Type: String
+    Description: An S3 bucket with a Lambda layer
+    Default: "aws-managed-cost-intelligence-dashboards"
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -199,6 +204,7 @@ Resources:
       Code:
         ZipFile: |
           import os
+          import json
           from datetime import datetime
           import boto3
           #TODO: import cid.common Cid; Cid().resources()  get this info CID
@@ -221,11 +227,7 @@ Resources:
 
           DATASETS_TO_REFRESH = [ name + os.environ.get('suffix', '') for name in DATASETS]
 
-          def get_account_id():
-              return boto3.client('sts').get_caller_identity()['Account']
-
-          def refresh_datasets():
-              account_id = get_account_id()
+          def refresh_datasets(account_id):
               quicksight = boto3.client('quicksight')
               # FIXME: add paginator
               datasets = quicksight.list_data_sets(AwsAccountId=account_id)
@@ -245,7 +247,8 @@ Resources:
                   print('DEBUG: response=', res)
 
           def lambda_handler(event, context):
-              refresh_datasets()
+              account_id = context.invoked_function_arn.split(":")[4]
+              refresh_datasets(account_id)
 
   SpiceRefreshRule:
     Type: AWS::Events::Rule
@@ -988,7 +991,7 @@ Resources:
       LayerName: !Sub 'CidLambdaLayer${Suffix}'
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
-        S3Bucket: !Sub 'aws-managed-cost-intelligence-dashboards-${AWS::Region}'
+        S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
         S3Key: !Sub 'cid-resource-lambda-layer/cid-${CidVersion}.zip'
       CompatibleRuntimes:
         - python3.9

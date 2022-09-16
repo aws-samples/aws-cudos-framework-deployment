@@ -1,6 +1,6 @@
 #!/usr/local/bin/bats
 
-# Install: https://bats-core.readthedocs.io/en/stable/installation.html 
+# Install: https://bats-core.readthedocs.io/en/stable/installation.html
 # Run: bats ./cfn-templates/cid-cfn.tests.bats --timing
 
 # Testing happy path of creating/deleting stack
@@ -53,11 +53,11 @@ setup_file() {
   #FIXME: need to check policies. Can start from here, but this list is empty.
   aws iam list-role-policies --role-name aws-quicksight-service-role-v0
 }
-@test "install stack (5 mins)" {
+@test "Install stack (5 mins)" {
   aws cloudformation deploy \
-  --template-file  ./cfn-templates/cid-cfn.yml \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM  \
-  --parameter-overrides \
+    --template-file  ./cfn-templates/cid-cfn.yml \
+    --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM  \
+    --parameter-overrides \
       PrerequisitesCUR="yes"\
       PrerequisitesQuickSight="yes"\
       PrerequisitesQuickSightPermissions="yes"\
@@ -77,10 +77,13 @@ setup_file() {
       CidVersion="$cid_version"\
       QuickSightDataSetRefreshSchedule="cron(0 4 * * ? *)"\
       QuicksightIdentityRegion="us-east-1"\
+      LambdaLayerBucketPrefix="aws-managed-cost-intelligence-dashboards"\
       Suffix=""\
     --stack-name "$stackname"
 
   aws cloudformation wait stack-create-complete \
+    --stack-name "$stackname" || \
+  aws cloudformation describe-stack-events \
     --stack-name "$stackname"
 }
 
