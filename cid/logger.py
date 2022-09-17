@@ -37,7 +37,7 @@ def set_cid_logger(verbosity, log_filename):
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s:%(funcName)s:%(lineno)d - %(message)s')
 
     # File handler logs everything down to DEBUG level
-    if log_filename and os.environ.get("AWS_EXECUTION_ENV") not in ['AWS_Lambda']:
+    if log_filename and not os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
         fh = logging.FileHandler(log_filename)
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
