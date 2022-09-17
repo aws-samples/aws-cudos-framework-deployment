@@ -79,7 +79,7 @@ Parameters:
     Type: String
     MinLength: 3
     Default: 's3://bucket/cur-prefix/cur-name/cur-name'
-    AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9]$' #FIXME: we can do better here
+    AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
     Description: 'REQUIRED - s3 bucket with CUR and path to year partition (year=xxxx) eq: s3://{cur-bucket}/{cur-prefix}/{cur-name}/{cur-name}'
   AthenaWorkgroup:
     Type: String
@@ -100,7 +100,7 @@ Parameters:
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.3
+    Default: 0.2.4
     Description: REQUIRED - A version of CID package
   Suffix:
     Type: String
@@ -965,21 +965,18 @@ Resources:
 
           def deploy_dash(params):
               app = Cid(verbose=3)
-              app.run()
               set_parameters(params, all_yes=True)
               app.deploy()
               return app.qs_url.format(dashboard_id=params['dashboard-id'], **app.qs_url_params)
 
           def delete_dash(params):
               app = Cid(verbose=3)
-              app.run()
               set_parameters(params, all_yes=True)
               app.delete(dashboard_id=params['dashboard-id'])
               return ''
 
           def update_dash(params):
               app = Cid(verbose=3)
-              app.run()
               set_parameters(params, all_yes=True)
               app.update(dashboard_id=params['dashboard-id'])
               return app.qs_url.format(dashboard_id=params['dashboard-id'], **app.qs_url_params)

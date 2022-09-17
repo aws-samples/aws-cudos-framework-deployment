@@ -1,3 +1,4 @@
+import os
 import logging
 from collections.abc import Iterable
 
@@ -10,6 +11,12 @@ logger = logging.getLogger(__name__)
 params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
+
+def exec_env():
+    if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
+        return 'lambda'
+    else:
+        return 'unknown'
 
 def intersection(a: Iterable, b: Iterable) -> Iterable:
     return sorted(set(a).intersection(b))
@@ -66,11 +73,13 @@ def get_boto_client(service_name, **kwargs):
         logger.debug(e, stack_info=True)
         raise
 
-def set_parameters(parameters: dict, all_yes: bool=False) -> None:
+def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():
         params[k.replace('_', '-')] = v
-    global _all_yes
-    _all_yes = all_yes
+
+    if all_yes != None:
+        global _all_yes
+        _all_yes = all_yes
 
 def is_unattendent_mode() -> bool:
     return _all_yes

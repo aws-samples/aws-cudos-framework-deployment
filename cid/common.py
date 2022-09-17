@@ -405,7 +405,7 @@ class Cid():
         else:
             click.echo('not deployed.')
 
-
+    @command
     def delete(self, dashboard_id, **kwargs):
         """Delete QuickSight dashboard"""
 
@@ -677,7 +677,7 @@ class Cid():
                 _datasources: Dict[str, Datasource] = {}
                 for _id in dashboard.datasets.values():
                     logger.info(f'Sharing dataset {_id}')
-                    self.qs.update_data_set_permissions(DataSetId=_id, **data_set_permissions)
+                    self.qs.update_data_set_permissions(DataSetId=_id, GrantPermissions=[data_set_permissions])
                     logger.info(f'Sharing dataset {_id} complete')
                     _dataset = self.qs._datasets.get(_id)
                     # Extract DataSources from DataSet
@@ -691,14 +691,9 @@ class Cid():
                     resource_name=f'data/permissions/data_source_permissions.json',
                 ).decode('utf-8'))
                 data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
-                data_source_params = {
-                    "GrantPermissions": [
-                        data_source_permissions
-                    ]
-                }
                 for k, v in _datasources.items():
                     logger.info(f'Sharing data source "{v.name}" ({k})')
-                    self.qs.update_data_source_permissions(DataSourceId=k, **data_source_params)
+                    self.qs.update_data_source_permissions(DataSourceId=k, GrantPermissions=[data_source_permissions])
                     logger.info(f'Sharing data source "{v.name}" ({k}) complete')
 
             print(f'Sharing complete')
@@ -1180,6 +1175,7 @@ class Cid():
 
         return compiled_query
 
+    @command
     def map(self, **kwargs):
         """Create account mapping Athena views"""
         for v in ['account_map', 'aws_accounts']:
