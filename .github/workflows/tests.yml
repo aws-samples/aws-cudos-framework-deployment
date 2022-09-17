@@ -51,3 +51,9 @@ jobs:
       - name:  Run Bats Tests
         run: |
           bats cid/test/bats/10-deploy-update-delete/cudos.bats | grep -v accountId   | grep -v userId
+      - name: Push LambdaLayer to S3
+        run: |
+          ./assets/publish_lambda_layer.sh
+      - name:  Run Bats Tests for CloudFormation
+        run: |
+          #bats <replace with CFN bats>
