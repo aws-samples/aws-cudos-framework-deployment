@@ -1,11 +1,10 @@
 export CID_VERSION=$(python3 -c "from cid import _version;print(_version.__version__)")
 
-tmpdir=$(mktemp -u)
-mkdir $tmpdir
-pip3 install . -t $tmpdir
-zip -r cid-$CID_VERSION.zip $tmpdir
+mkdir -p ./python
+pip3 install . -t ./python
+zip -r cid-$CID_VERSION.zip ./python
 ls cid-$CID_VERSION.zip
-rm -rf $tmpdir
+rm -rf ./python
 
 export AWS_REGION=us-east-1
 export STACK_SET_NAME=LayerBuckets
