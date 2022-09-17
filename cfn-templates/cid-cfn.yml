@@ -54,7 +54,7 @@ Parameters:
     ConstraintDescription: 'Please go to Billing page and setup your Cost and Usage report.'
   PrerequisitesQuickSightPermissions:
     Type: String
-    Description: I understand that i need to set up manually Permission of QuickSight to access CUR backet and Queiry results bucket ( https://us-east-1.quicksight.aws.amazon.com/sn/admin#aws ), and then relaunch dataset refresh manually the first time.
+    Description: I understand that i need to set up manually Permission of QuickSight to access CUR backet and Query results bucket ( https://quicksight.aws.amazon.com/sn/admin#aws ), and then relaunch dataset refresh manually the first time.
     ConstraintDescription: 'Please read prerequisites'
     AllowedPattern: 'yes'
     AllowedValues: ["yes", "no"]
