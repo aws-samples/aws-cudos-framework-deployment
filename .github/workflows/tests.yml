@@ -81,7 +81,7 @@ jobs:
 
   test:
     needs: push
-      runs-on: 'ubuntu-latest'
+    runs-on: 'ubuntu-latest'
       - name:  Run Bats Tests for CloudFormation
         run: |
           #bats <replace with CFN bats>
