@@ -51,7 +51,7 @@ jobs:
       - name:  Run Bats Tests
         run: |
           bats cid/test/bats/10-deploy-update-delete/cudos.bats | grep -v accountId   | grep -v userId
-  
+
   push:
     needs: build
     runs-on: ubuntu-latest
@@ -74,7 +74,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-session-name: ${{ secrets.AWS_SESSION_NAME }}
           aws-region: ${{ secrets.AWS_REGION }}
-    steps:
       - name: Push LambdaLayer to S3
         run: |
           ./assets/publish_lambda_layer.sh
@@ -82,6 +81,7 @@ jobs:
   test:
     needs: push
     runs-on: 'ubuntu-latest'
+    steps:
       - name:  Run Bats Tests for CloudFormation
         run: |
           #bats <replace with CFN bats>
