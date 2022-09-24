@@ -76,7 +76,6 @@ setup_file() {
       CURTableName=""\
       CidVersion="$cid_version"\
       QuickSightDataSetRefreshSchedule="cron(0 4 * * ? *)"\
-      QuicksightIdentityRegion="us-east-1"\
       LambdaLayerBucketPrefix="aws-managed-cost-intelligence-dashboards"\
       Suffix=""\
     --stack-name "$stackname"
