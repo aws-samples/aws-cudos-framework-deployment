@@ -24,7 +24,7 @@ jobs:
       - name: Git clone the repository
         uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install
@@ -51,3 +51,37 @@ jobs:
       - name:  Run Bats Tests
         run: |
           bats cid/test/bats/10-deploy-update-delete/cudos.bats | grep -v accountId   | grep -v userId
+
+  push:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: ${{ secrets.AWS_SESSION_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Push LambdaLayer to S3
+        run: |
+          ./assets/publish_lambda_layer.sh
+
+  test:
+    needs: push
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name:  Run Bats Tests for CloudFormation
+        run: |
+          #bats <replace with CFN bats>
