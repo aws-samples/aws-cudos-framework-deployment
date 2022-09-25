@@ -21,6 +21,7 @@ def add_logging_level(name, num):
     def log_to_root(message, *args, **kwargs):
         logging.log(num, message, *args, **kwargs)
 
+    if hasattr(logging, name): return # Already set
     logging.addLevelName(num, name)
     setattr(logging, name, num)
     setattr(logging.getLoggerClass(), method, log_method)

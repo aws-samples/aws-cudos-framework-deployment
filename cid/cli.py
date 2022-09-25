@@ -55,6 +55,8 @@ def main(ctx, **kwargs):
     ctx.obj = Cid(**kwargs)
 
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def map(ctx, **kwargs):
     """Create account mapping
@@ -70,6 +72,10 @@ def map(ctx, **kwargs):
     ctx.obj.map(**kwargs)
 
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@click.option('--share-with-account', help='Share dashboard with all users in the current account', is_flag=True, default=False)
+@click.option('--quicksight-delete-failed-datasource', help='Delete datasoruce if creation failed', is_flag=True, default=False)
 @cid_command
 def deploy(ctx, **kwargs):
     """Deploy Dashboard
@@ -82,18 +88,18 @@ def deploy(ctx, **kwargs):
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
      --quicksight-datasource-id TEXT      QuickSight Datasource ARN (if not found one with provided Athena workgroup)
-     --quicksight-delete-failed-datasource (yes|no) Delete datasoruce if creation failed
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
      --resources TEXT                      CID resources file (yaml)
-     --share-with-account ['yes/no']       Share dashboard with all users in the current account
     """
     ctx.obj.deploy(**kwargs)
 
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def export(ctx, **kwargs):
     """Deploy Dashboard
@@ -111,6 +117,8 @@ def export(ctx, **kwargs):
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def status(ctx, dashboard_id, **kwargs):
     """Show Dashboard status"""
@@ -118,7 +126,8 @@ def status(ctx, dashboard_id, **kwargs):
 
 
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.option('-y', '--yes', help='Answer Yes to all confirmation questions', default=False, is_flag=True)
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def delete(ctx, dashboard_id, **kwargs):
     """Delete Dashboard and all dependencies unused by other CID-managed dasboards
@@ -132,6 +141,8 @@ def delete(ctx, dashboard_id, **kwargs):
     ctx.obj.delete(dashboard_id, **kwargs)
 
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @click.option('--force/--noforce', help='allow selecting  up to date dashboards (flags must be before options)', default=False)
 @click.option('--recursive/--norecursive', help='Recursive update all Datasets and Views (flags must be before options)', default=False)
@@ -141,6 +152,8 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
     ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)
 
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @cid_command
 def open(ctx, dashboard_id, **kwargs):
@@ -148,12 +161,16 @@ def open(ctx, dashboard_id, **kwargs):
     ctx.obj.open(dashboard_id, **kwargs)
 
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def cleanup(ctx, **kwargs):
     """Delete unused resources (QuickSight datasets, Athena views)"""
     ctx.obj.cleanup(**kwargs)
 
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @click.option('--share-method', help='Sharing method', default=None, type=click.Choice(['folder', 'user', 'account']))
 @click.option('--folder-method', help='Folder to use', default=None, type=click.Choice(['new', 'existing']))

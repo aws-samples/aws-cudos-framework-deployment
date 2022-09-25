@@ -9,6 +9,7 @@ database_name="${database_name:-athenacurcfn_cur1}" # If variable not set or nul
     --dashboard-id kpi_dashboard \
     --athena-database $database_name\
     --account-map-source dummy \
+    --share-with-account \
 
   [ "$status" -eq 0 ]
 }

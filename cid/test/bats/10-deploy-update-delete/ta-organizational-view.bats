@@ -6,6 +6,8 @@ account_id=$(aws sts get-caller-identity --query "Account" --output text )
   run cid-cmd -vv deploy  \
     --dashboard-id ta-organizational-view \
     --athena-database 'optimization_data' \
+    --share-with-account \
+
     --view-ta-organizational-view-reports-s3FolderPath "s3://costoptimizationdata$account_id/optics-data-collector/ta-data'"
 
   [ "$status" -eq 0 ]

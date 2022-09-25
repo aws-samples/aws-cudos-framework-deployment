@@ -14,7 +14,7 @@ from cid.base import CidBase
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
-from cid.utils import get_parameter
+from cid.utils import get_parameter, get_parameters
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +50,9 @@ class QuickSight(CidBase):
     @property
     def user(self) -> dict:
         if not self._user:
+            username = get_parameters().get('quicksight-user', self.username)
             try:
-                self._user =  self.describe_user(self.username)
+                self._user =  self.describe_user(username)
             except Exception as exc:
                 logger.debug(exc, stack_info=True)
                 logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
@@ -69,9 +70,10 @@ class QuickSight(CidBase):
         if not self._identityRegion:
             try:
                 logger.info(f'Detecting QuickSight identity region, trying {self.region}')
+                username = get_parameters().get('quicksight-user', self.username)
                 parameters = {
                     'AwsAccountId': self.account_id,
-                    'UserName': '/'.join(self.username),
+                    'UserName': username,
                     'Namespace': 'default'
                 }
                 self.client.describe_user(**parameters)
@@ -410,14 +412,11 @@ class QuickSight(CidBase):
         parameters = {
             'AwsAccountId': self.account_id
         }
+        data_sources = []
         try:
-            result = self.client.list_data_sources(**parameters)
-            logger.debug(result)
-            if result.get('Status') != 200:
-                print(f'Error, {result}')
-                exit()
-            else:
-                return result.get('DataSources')
+            for page in self.client.get_paginator('list_data_sources').paginate(**parameters):
+                data_sources += page.get('DataSources',[])
+            return data_sources
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing data sources')
             raise

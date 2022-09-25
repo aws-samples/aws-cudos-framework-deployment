@@ -5,6 +5,7 @@ account_id=$(aws sts get-caller-identity --query "Account" --output text )
 @test "Install" {
   run cid-cmd -vv deploy  \
     --dashboard-id compute-optimizer-dashboard \
+    --share-with-account \
     --athena-database 'optimization_data' \
     --view-compute-optimizer-lambda-lines-s3FolderPath       's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_lambda' \
     --view-compute-optimizer-ebs-volume-lines-s3FolderPath   's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ebs_volume' \
