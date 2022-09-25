@@ -87,6 +87,21 @@ def is_unattendent_mode() -> bool:
 def get_parameters():
     return dict(params)
 
+
+def get_yesno_parameter(param_name, message, default=None, break_on_ctrl_c=True):
+    param_name = param_name.replace('_', '-')
+    mapping = {True: True, False:False, 'yes': True, 'no': False}
+    if param_name in params and params.get(param_name) != None:
+        return mapping[params.get(param_name)]
+    if param_name in params and params.get(param_name) == None:
+        unset_parameter(param_name)
+    if default != None:
+        default = 'yes' if mapping[default] else 'no'
+    res = get_parameter(param_name, message=message, choices=['yes', 'no'], default=default, break_on_ctrl_c=break_on_ctrl_c)
+    params[param_name] = (res == 'yes')
+    return params[param_name]
+
+
 def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True):
     """
     Check if parameters are provided in the command line and if not, ask user 
