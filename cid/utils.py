@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 from collections.abc import Iterable
 
@@ -12,11 +13,15 @@ params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
 
+def isatty():
+    return sys.__stdin__.isatty()
+
 def exec_env():
     if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
         return 'lambda'
     else:
         return 'unknown'
+
 
 def intersection(a: Iterable, b: Iterable) -> Iterable:
     return sorted(set(a).intersection(b))
@@ -139,6 +144,8 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
                 choices = _choices
 
         print()
+        if not isatty():
+            raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
         result = questionary.select(
             message=f'[{param_name}] {message}:',
             choices=choices,
@@ -148,6 +155,8 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         if isinstance(default, str):
             default=default.format(**template_variables)
         print()
+        if not isatty():
+            raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
         result = questionary.text(
             message=f'[{param_name}] {message}:' ,
             default=default or '',
