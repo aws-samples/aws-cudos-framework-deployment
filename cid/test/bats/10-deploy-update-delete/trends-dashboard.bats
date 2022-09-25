@@ -9,7 +9,7 @@ database_name="${database_name:-athenacurcfn_cur1}" # If variable not set or nul
     --dashboard-id trends-dashboard \
     --athena-database $database_name\
     --account-map-source dummy \
-    --share-with-account yes \
+    --share-with-account \
 
   [ "$status" -eq 0 ]
 }

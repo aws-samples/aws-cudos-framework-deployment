@@ -29,11 +29,6 @@ logger = logging.getLogger(__name__)
 class Cid():
 
     def __init__(self, **kwargs) -> None:
-        set_cid_logger(
-            verbosity=kwargs.pop('verbose'),
-            log_filename=kwargs.pop('log_filename', 'cid.log')
-        )
-        logger.info(f'Initializing CID {__version__}')
         self.base: CidBase = None
         # Defined resources
         self.resources = dict()
@@ -148,7 +143,14 @@ class Cid():
         '''
         @functools.wraps(func)
         def wrap(self, *args, **kwargs):
-            set_parameters(kwargs)
+            set_cid_logger(
+                verbosity=kwargs.pop('verbose'),
+                log_filename=kwargs.pop('log_filename', 'cid.log')
+            )
+            logger.info(f'Initializing CID {__version__} for {func.__name__}')
+            all_yes = kwargs.get('yes', None)
+            set_parameters(kwargs, all_yes=all_yes)
+            logger.debug(json.dumps(get_parameters()))
             self.aws_login()
             self.load_resources()
             return func(self, *args, **kwargs)
