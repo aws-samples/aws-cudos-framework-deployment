@@ -1,5 +1,15 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.74
+
+* MoM Trends: Added AWS Marketplace section with visuals 'AWS Marketplace spend by Legal Entity' and 'AWS Marketplace spend detailed view'
+* MoM Trends: Added Control to filter by Legal Entity
+* Monitoring and Observability: Merged visuals 'TOP 10 CloudWatch Resources Previous Month' and 'TOP 10 CloudWatch Log Resources Previous Month' into 'TOP 10 CloudWatch Resources' and changed time interval to last 30 days
+* Monitoring and Observability: Added 'TOP 10 CloudWatch Resources Daily Cost' visual
+* OPTICS Explorer: Added ability to filter by 'Billing Entity' and 'Legal Entity'
+* Data Transfer Summary: S3 Transfer Acceleration added to Region to Internet data transfer type
+
+
 ## CUDOS - 4.73
 
 * Compute Summary: 'Unused On-Demand Capacity Reservations Cost per Account' changed from monthly to daily aggregation for more granular visibility 
