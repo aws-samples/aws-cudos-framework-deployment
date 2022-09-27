@@ -6,6 +6,10 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
+permissions:
+  id-token: write
+  contents: read
+
 name: Upload Python Package
 
 on:
@@ -14,23 +18,32 @@ on:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
+    environment: release
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-    - name: Build package
-      run: python -m build
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+      - name: Build package
+        run: python -m build
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: ${{ secrets.AWS_SESSION_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Push LambdaLayer to S3
+        run: |
+          ./assets/publish_lambda_layer.sh
