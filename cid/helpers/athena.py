@@ -8,7 +8,7 @@ from pkg_resources import resource_string
 
 from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters
-
+from cid.exceptions import CidError
 
 logger = logging.getLogger(__name__)
 
@@ -71,14 +71,12 @@ class Athena(CidBase):
             if get_parameters().get('athena-database'):
                 self._DatabaseName = get_parameters().get('athena-database')
                 if not self.get_database(self._DatabaseName):
-                    logger.critical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
-                    exit(1)
+                    raise CidError(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
             # Get AWS Athena databases
             athena_databases = self.list_databases()
             if not len(athena_databases):
                 self._status = 'AWS Athena databases not found'
-                print(self._status)
-                exit(1)
+                raise CidError(self._status)
             if len(athena_databases) == 1:
                 self._DatabaseName = athena_databases.pop().get('Name')
             elif len(athena_databases) > 1:
@@ -136,14 +134,11 @@ class Athena(CidBase):
         try:
             _workgroup = self.client.get_work_group(WorkGroup=name).get('WorkGroup')
         except self.client.exceptions.InvalidRequestException as e:
-            logger.error(e)
-            exit(1)
+            raise CidError(e)
         if _workgroup.get('State') == 'DISABLED':
-            logger.critical(f'Workgroup "{name}" is disabled.')
-            exit(1)
+            raise CidError(f'Workgroup "{name}" is disabled.')
         if not _workgroup.get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation'):
-            logger.critical(f'Workgroup "{name}" must have an output location set.')
-            exit(1)
+            raise CidError(f'Workgroup "{name}" must have an output location set.')
         self._WorkGroup = name
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
@@ -161,7 +156,7 @@ class Athena(CidBase):
             self.client.get_database(CatalogName=self.CatalogName, DatabaseName=DatabaseName).get('Database')
             return True
         except Exception as e:
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
             return False
 
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
@@ -229,13 +224,12 @@ class Athena(CidBase):
             # Get Query Status
             query_status = self.client.get_query_execution(QueryExecutionId=query_id)
         except self.client.exceptions.InvalidRequestException as e:
-            logger.debug('Full query: {}'.format(sql_query))
-            logger.critical(f'InvalidRequestException: {e}')
-            exit(1)
+            logger.debug(f'Full query: {sql_query}')
+            raise CidError(f'InvalidRequestException: {e}')
         except Exception as e:
-            logger.debug('Full query: {}'.format(sql_query))
-            logger.critical('Athena query failed: {}'.format(e))
-            exit(1)
+            logger.debug(f'Full query: {sql_query}')
+            raise CidError(f'Athena query failed: {e}')
+
 
         current_status = query_status['QueryExecution']['Status']['State']
 
@@ -253,11 +247,9 @@ class Athena(CidBase):
         elif not fail:
             return False
         else:
-            failure_reason = response['QueryExecution']['Status']['StateChangeReason']
-            logger.error('Athena query failed: {}'.format(failure_reason))
-            logger.error(f'Failure reason: {failure_reason}')
-            logger.info('Full query: {}'.format(sql_query))
-            exit(1)
+            logger.error(f'Athena query failed: {failure_reason}')
+            logger.info(f'Full query: {sql_query}')
+            raise CidError(f'Athena query failed: {failure_reason}')
 
     def get_query_results(self, query_id):
         return self.client.get_query_results(QueryExecutionId=query_id)
@@ -402,7 +394,7 @@ class Athena(CidBase):
                 fail=False
             )
         except Exception as exc:
-            logger.debug(exc, stack_info=True)
+            logger.debug(exc, exc_info=True)
             logger.info(f'Table {name} cannot be deleted: {exc}')
             return False
         else:
@@ -426,7 +418,7 @@ class Athena(CidBase):
                 fail=False
             )
         except Exception as exc:
-            logger.debug(exc, stack_info=True)
+            logger.debug(exc, exc_info=True)
             logger.info(f'View {name} cannot be deleted: {exc}')
             return False
         else:

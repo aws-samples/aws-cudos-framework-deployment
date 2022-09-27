@@ -4,6 +4,7 @@ import logging
 from cid.base import CidBase
 from cid.helpers import Athena
 from cid.utils import get_parameter
+from cid.exceptions import CidError
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +87,7 @@ class CUR(CidBase):
     @property
     def tableName(self) -> str:
         if self.metadata is None:
-            print('Error: CUR not detected')
-            exit(1)
+            raise CidError('Error: CUR not detected')
         return self.metadata.get('Name')
 
     @property
