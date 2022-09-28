@@ -32,6 +32,7 @@ Metadata:
           - CURTableName
           - CidVersion
           - Suffix
+          - QuicksightIdentityRegion
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
   cfn-lint:
@@ -64,6 +65,11 @@ Parameters:
     Description: >
         REQUIRED - User name of QuickSight user from default namespace (as displayed in QuickSight admin panel).
         Dashboard created by this template with be owned by this user. See https://quicksight.aws.amazon.com/sn/admin#users
+  QuicksightIdentityRegion: #CID can detect QS Idenity region, but we need in permissions
+    Type: String
+    MinLength: 8
+    Description: Quicksight Identity region(can be different than the region you deploy the dashboard, typically us-east-1)
+    Default: us-east-1
   QuickSightDataSetRefreshSchedule:
     Type: String
     MinLength: 3
@@ -319,8 +325,6 @@ Resources:
           import botocore
           import urllib3
 
-          from cid.helpers import QuickSight # from layer
-
           BUCKET = os.environ['BUCKET']
           WORKGROUP = os.environ['WORKGROUP']
           CRAWLER = os.environ['CRAWLER']
@@ -329,12 +333,10 @@ Resources:
               print(event)
               type_ = event.get('RequestType', 'Undef')
               res = (True, f"Un error on {type_}. Check logs")
-              identity_region = ''
               try:
                   if type_ == 'Create': res = on_create()
                   elif type_ == 'Delete': res = on_delete()
                   else: res = (True, f"Not supported operation: {type_}")
-                  identity_region = get_identity_region()
               finally:
                   url = event.get('ResponseURL')
                   body = {}
@@ -345,7 +347,7 @@ Resources:
                   body['RequestId'] = event.get('RequestId')
                   body['LogicalResourceId'] = event.get('LogicalResourceId')
                   body['NoEcho'] = False
-                  body['Data'] =  {'Reason': res[1], 'uuid': str(uuid.uuid1()), 'IdentityRegion': identity_region}
+                  body['Data'] =  {'Reason': res[1], 'uuid': str(uuid.uuid1()) }
                   print(body)
                   if not url: return
                   json_body=json.dumps(body)
@@ -355,10 +357,6 @@ Resources:
                       print(f"Status code: {response}")
                   except Exception as exc:
                       print("Failed sending PUT to CFN: " + str(exc))
-
-          def get_identity_region():
-              qs = QuickSight(boto3.session.Session())
-              return qs.identityRegion
 
           def on_create():
               if CRAWLER:
@@ -413,8 +411,6 @@ Resources:
                       log.append(f'ERROR: WorkGroup {WORKGROUP} Error: {exc}')
               print('\n'.join(log))
               return (True, '\n'.join(log))
-      Layers:
-        - !Ref CidResourceLambdaLayer
       Environment:
         Variables:
           BUCKET: !If [NeedAthenaQueryResultsBucket, !Ref MyAthenaQueryResultsBucket, '']
@@ -456,10 +452,6 @@ Resources:
                 Action:
                   - glue:StartCrawler
                 Resource: '*' # FIXME: use MyGlueCURCrawler
-              - Effect: Allow
-                Action:
-                  - quicksight:DescribeUser
-                Resource: '*' #FIXME: use !Sub 'arn:${AWS::Partition}:quicksight:*:${AWS::AccountId}:user/default/${QuickSightUser}'
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
   InitialSetup:
@@ -755,7 +747,7 @@ Resources:
             - 'quicksight:UpdateDataSource'
             - 'quicksight:DeleteDataSource'
             - 'quicksight:UpdateDataSourcePermissions'
-          Principal: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+          Principal: !Sub 'arn:${AWS::Partition}:quicksight:${QuicksightIdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
 
   CidExecRole:
     Type: AWS::IAM::Role
