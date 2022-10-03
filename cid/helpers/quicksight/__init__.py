@@ -50,20 +50,26 @@ class QuickSight(CidBase):
     @property
     def user(self) -> dict:
         if not self._user:
-            username = get_parameters().get('quicksight-user', self.username)
-            try:
-                self._user =  self.describe_user(username)
-            except Exception as exc:
-                logger.debug(exc, stack_info=True)
-                logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
-            if not self._user:
-                # If no user match, ask
-                self._user = self.select_user()
-            if not self._user:
-                logger.critical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
-                exit(1)
-            logger.info(f"Using QuickSight user {self._user.get('UserName')}")
+            username = get_parameters().get('quicksight-user', None)
+            if username:
+                try:
+                    self._user =  self.describe_user(username)
+                except Exception as exc:
+                    logger.debug(exc, stack_info=True)
+                    logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
         return self._user
+
+    @property
+    def group(self) -> dict:
+        if not self._group:
+            groupname = get_parameters().get('quicksight-group', None)
+            if groupname:
+                try:
+                    self._group =  self.describe_group(groupname)
+                except Exception as exc:
+                    logger.debug(exc, stack_info=True)
+                    logger.error(f'Failed to find your QuickSight groupname ({exc}). Is QuickSight activated?')
+        return self._group
 
     @property
     def identityRegion(self) -> str:
@@ -233,12 +239,79 @@ class QuickSight(CidBase):
             logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
             return dashboard
 
+    def ensure_group(self):
+
+
+        qs.identityClient.describe_group(
+            AwsAccountId=self.account_id, Namespace='default', GroupName='cid-owners').get('Group')
+        self.identityClient.create_group(
+            AwsAccountId=self.account_id,
+            Namespace='default',
+        )
+
+
+    def get_principal_arn(self):
+        if self._principal_arn:
+            return self._principal_arn
+
+        if self.group: self._principal_arn = self.group.get('Arn')
+        elif self.user: self._principal_arn = self.user.get('Arn')
+
+        if self._principal_arn:
+            return self._principal_arn
+
+        quicksight_owner = get_parameter('quicksight-owner-choice',
+            message='you have not provided quicksight-user or quicksight-group. do you what your objects to be owned by a user or a group?',
+            choices=[
+                'group cid-owners (recommended)',
+                f'current user {self.username}',
+                'other user'],
+            default='group cid-owners (recommended)'
+        )
+
+        if quicksight_owner.startswith("current user"):
+            username = self.username # try with default user, works for IAM users
+            if username:
+                try:
+                    self._user =  self.describe_user(username)
+                except Exception as exc:
+                    logger.debug(exc, stack_info=True)
+                    logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
+            if not self._user:
+                self._user = self.select_user()
+            if not self._user:
+                logger.critical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
+                exit(1)
+            logger.info(f"Using QuickSight user {self._user.get('UserName')}")
+            self._principal_arn = self._user.get('Arn')
+
+        elif quicksight_owner.startswith("other user"):
+            self._user = self.select_user()
+            if not self._user:
+                logger.critical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
+                exit(1)
+            self._principal_arn = self._user.get('Arn')
+
+        elif quicksight_owner.startswith("group cid-owners"):
+            group 
+
+            if not self._user:
+                logger.critical('Cannot get QuickSight groupname. Is Enteprise subscription activated in QuickSight?')
+                exit(1)
+            logger.info(f"Using QuickSight group {self._group.get('GroupName')}")
+
+
+        if self._principal_arn:
+            return self._principal_arn
+ 
+
+
     def create_data_source(self) -> bool:
         """Create a new data source"""
         logger.info('Creating Athena data source')
 
         columns_tpl = {
-            'PrincipalArn': self.user.get('Arn')
+            'PrincipalArn': self.get_principal_arn()
         }
         data_source_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
@@ -771,12 +844,37 @@ class QuickSight(CidBase):
             logger.info(f'QuickSight user {username} not found.')
             return None
 
+    def describe_group(self, groupname: str) -> dict:
+        """ Describes an AWS QuickSight Group """
+        try:
+            result = self.identityClient.describe_group(**{
+                'AwsAccountId': self.account_id,
+                'GroupName': groupname,
+                'Namespace': 'default'
+            })
+            logger.debug('group = ',json.dumps(result))
+            return result.get('Group')
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.info(f'QuickSight group {groupname} not found.')
+            return None
+        except self.client.exceptions.AccessDeniedException: # Try to overcome AccessDeniedException
+            #FIXME: paginator is not available for list_groups
+            groups = self.identityClient.list_groups(AwsAccountId=self.account_id, Namespace='default').get('GroupList')
+            logger.debug(groups)
+            for group in groups:
+                if groupname.endswith(group.get('GroupName')):
+                    logger.info(f'Found group: {group}')
+                    return group
+            logger.info(f'QuickSight group {groupname} not found.')
+            return None
+
+
     def create_dataset(self, definition: dict) -> str:
         """ Creates an AWS QuickSight dataset """
         poll_interval = 1
         max_timeout = 60
         columns_tpl = {
-            'PrincipalArn': self.user.get('Arn')
+            'PrincipalArn': self.get_principal_arn()
         }
         data_set_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
@@ -843,7 +941,7 @@ class QuickSight(CidBase):
             resource_name=f'data/permissions/dashboard_permissions.json',
         ).decode('utf-8'))
         columns_tpl = {
-            'PrincipalArn': self.user.get('Arn')
+            'PrincipalArn': self.get_principal_arn()
         }
         dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
         create_parameters = {

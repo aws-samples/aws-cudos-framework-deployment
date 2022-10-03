@@ -611,7 +611,7 @@ class Cid():
                             resource_name=f'data/permissions/folder_permissions.json',
                         ).decode('utf-8'))
                         columns_tpl = {
-                            'PrincipalArn': self.qs.user.get('Arn')
+                            'PrincipalArn': self.qs.get_principal_arn()
                         }
                         folder_permissions = json.loads(folder_permissions_tpl.safe_substitute(columns_tpl))
                         folder = self.qs.create_folder(folder_name, **folder_permissions)
