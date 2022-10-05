@@ -27,6 +27,8 @@ class QuickSight(CidBase):
     _datasources: Dict[str, Datasource] = None
     _identityRegion: str = None
     _user: dict = None
+    _principal_arn: dict = None
+    _group: dict = None
     client = None
 
     def __init__(self, session, resources=None) -> None:
@@ -239,15 +241,21 @@ class QuickSight(CidBase):
             logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
             return dashboard
 
-    def ensure_group(self):
-
-
-        qs.identityClient.describe_group(
-            AwsAccountId=self.account_id, Namespace='default', GroupName='cid-owners').get('Group')
-        self.identityClient.create_group(
-            AwsAccountId=self.account_id,
-            Namespace='default',
-        )
+    def ensure_exist_group(self, groupname='cid-owners', description='Created by Cloud Intelligence Dashboards'):
+        try:
+            group = self.identityClient.describe_group(
+                AwsAccountId=self.account_id,
+                Namespace='default',
+                GroupName=groupname
+            ).get('Group')
+        except self.client.exceptions.ResourceNotFoundException:
+            group = self.identityClient.create_group(
+                AwsAccountId=self.account_id,
+                GroupName=groupname,
+                Namespace='default',
+                description=description,
+            ).get('Group')
+        return group
 
 
     def get_principal_arn(self):
@@ -261,7 +269,7 @@ class QuickSight(CidBase):
             return self._principal_arn
 
         quicksight_owner = get_parameter('quicksight-owner-choice',
-            message='you have not provided quicksight-user or quicksight-group. do you what your objects to be owned by a user or a group?',
+            message='You have not provided quicksight-user or quicksight-group. Do you what your objects to be owned by a user or a group?',
             choices=[
                 'group cid-owners (recommended)',
                 f'current user {self.username}',
@@ -293,17 +301,15 @@ class QuickSight(CidBase):
             self._principal_arn = self._user.get('Arn')
 
         elif quicksight_owner.startswith("group cid-owners"):
-            group 
+            group = self.ensure_exist_group('cid-owners')
+            self._principal_arn = group.get('Arn')
 
-            if not self._user:
-                logger.critical('Cannot get QuickSight groupname. Is Enteprise subscription activated in QuickSight?')
-                exit(1)
-            logger.info(f"Using QuickSight group {self._group.get('GroupName')}")
+        if not self._principal_arn:
+            logger.critical('Cannot find principal_arn. Please provide --quicksight-username or --quicksight-groupname')
+            exit(1)
 
+        return self._principal_arn
 
-        if self._principal_arn:
-            return self._principal_arn
- 
 
 
     def create_data_source(self) -> bool:
