@@ -486,8 +486,11 @@ class Cid():
                     continue
                 datasources = dataset.datasources
                 athena_datasource = self.qs.datasources.get(datasources[0])
-                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
-                break
+                if athena_datasource:
+                    self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+                    break
+                logger.debug(f'Cannot find QuickSight DataSource {datasources[0]}. So cannot define Athena WorkGroup')
+                continue
         else:
             logger.info(f'Dataset not found for deletion: {name} ({id})')
         for view_name in list(set(self.resources['datasets'][name].get('dependsOn', {}).get('views', []))):
