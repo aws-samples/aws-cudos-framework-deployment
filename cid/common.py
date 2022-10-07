@@ -1051,8 +1051,8 @@ class Cid():
         if isinstance(found_dataset, Dataset):
             if update:
                 self.qs.update_dataset(compiled_dataset)
-            elif found_dataset.name != dataset_name:
-                print(f"Dataset found with name {found_dataset.name}, but {dataset_name} expected. Updating.")
+            elif found_dataset.name != compiled_dataset.get('Name'):
+                print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
                 self.qs.update_dataset(compiled_dataset)
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')
