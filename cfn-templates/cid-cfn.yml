@@ -14,7 +14,7 @@ Metadata:
         Parameters:
           - QuickSightUser
           - CURBucketPath
-          - CURIsAggregated
+          - CURIsManagedWithCloudFormation
       - Label:
           default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that change to 'yes'
         Parameters:
@@ -73,14 +73,14 @@ Parameters:
   CURBucketPath:
     Type: String
     MinLength: 3
-    Default: 's3://bucket/cur-prefix/cur-name/cur-name'
+    Default: 's3://cid-{account_id}-shared/cur/'
     AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
-    Description: 'REQUIRED - s3 bucket with CUR and path to year partition (year=xxxx) eq: s3://{cur-bucket}/{cur-prefix}/{cur-name}/{cur-name}'
-  CURIsAggregated:
+    Description: 'REQUIRED - s3 bucket with CUR and path. If CUR was created with CloudFormation, the path must be up to account partition. If it was a manually created CUR, the path must be up to the years partition. A variable {account_id} will be replaced by current account id automatically.'
+  CURIsManagedWithCloudFormation:
     Type: String
     Default: 'yes'
     AllowedValues: ["yes", "no"]
-    Description: 'CUR is created with CloudFormation for multi-account Setup'
+    Description: 'CUR was created with CloudFormation.'
   AthenaWorkgroup:
     Type: String
     Default: ''
@@ -150,7 +150,7 @@ Conditions:
   NeedCURDatabase:  !Equals [ !Ref CURDatabaseName, "" ]
   NeedCURTable:  !Equals [ !Ref CURTableName, "" ]
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  CurIsAggregated: !Equals [ !Ref CURIsAggregated, "yes" ]
+  CURIsManagedWithCloudFormation: !Equals [ !Ref CURIsManagedWithCloudFormation, "yes" ]
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -500,6 +500,7 @@ Resources:
 
           def lambda_handler(event, context):
               print(json.dumps(event))
+              account_id = context.invoked_function_arn.split(":")[4]
               type_ = event.get('RequestType', 'Undef')
               properties = event.get('ResourceProperties', {})
               status, reason = ('SUCCESS', "Undef")
@@ -511,6 +512,7 @@ Resources:
                       s3path = s3path[len('s3://'):]
                   if s3path.endswith('/'):
                       s3path = s3path[:-1]
+                  s3path = s3path.replace('{account_id}', account_id)
                   parts = s3path.split('/')
                   data['Bucket'] = parts[0]
                   data['Path'] = '/'.join(parts[1:])
@@ -686,7 +688,7 @@ Resources:
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
         PartitionKeys:
           Fn::If:
-            - CurIsAggregated
+            - CURIsManagedWithCloudFormation
 
             - - {"Type": "string", "Name": "source_account_id" }
               - {"Type": "string", "Name": "cur_name_1" }
