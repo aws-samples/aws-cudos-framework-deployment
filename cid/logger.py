@@ -59,3 +59,5 @@ def set_cid_logger(verbosity, log_filename):
         logger.setLevel(logger.getEffectiveLevel()-10 * verbosity)
         # Logging application start here due to logging configuration
         print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
+
+    return logger
