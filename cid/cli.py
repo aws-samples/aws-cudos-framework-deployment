@@ -52,6 +52,7 @@ def cid_command(func):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.pass_context
 def main(ctx, **kwargs):
+    print('main', kwargs)
     ctx.obj = Cid(**kwargs)
 
 

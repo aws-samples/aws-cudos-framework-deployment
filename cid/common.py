@@ -38,7 +38,9 @@ class Cid():
         self._visited_views = [] # Views updated in the current session
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
+        print('init', get_parameters())
         set_parameters(kwargs, self.all_yes)
+        print('init2', get_parameters())
         self._logger = None
 
     def aws_login(self):
@@ -144,15 +146,16 @@ class Cid():
         '''
         @functools.wraps(func)
         def wrap(self, *args, **kwargs):
-            if not self._logger:
-                self._logger = set_cid_logger(
-                    verbosity=kwargs.get('verbose', 1),
-                    log_filename=kwargs.get('log_filename', 'cid.log')
-                )
-                logger.info(f'Initializing CID {__version__} for {func.__name__}')
-            all_yes = kwargs.get('yes', None)
+            print(get_parameters())
+            all_yes = kwargs.get('yes', self.all_yes)
             set_parameters(kwargs, all_yes=all_yes)
             logger.debug(json.dumps(get_parameters()))
+            if not self._logger:
+                self._logger = set_cid_logger(
+                    verbosity=get_parameters().get('verbose', 1),
+                    log_filename=get_parameters().get('log_filename', 'cid.log')
+                )
+                logger.info(f'Initializing CID {__version__} for {func.__name__}')
             if not self.base:
                 self.aws_login()
             self.load_resources()

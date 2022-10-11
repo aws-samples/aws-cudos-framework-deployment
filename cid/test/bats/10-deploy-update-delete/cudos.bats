@@ -4,6 +4,7 @@
 account_id=$(aws sts get-caller-identity --query "Account" --output text )
 database_name="${database_name:-athenacurcfn_cur1}" # If variable not set or null, use default
 quicksight_user="${quicksight_user:-cicd-staging}" # If variable not set or null, use default
+quicksight_datasource_id="${quicksight_datasource_id:-31c87a3c-8494-4f42-a590-c6930602e8e7}" # If variable not set or null, use default
 
 @test "Install" {
   run cid-cmd -vv deploy  \
@@ -12,6 +13,7 @@ quicksight_user="${quicksight_user:-cicd-staging}" # If variable not set or null
     --account-map-source dummy \
     --quicksight-user $quicksight_user \
     --share-with-account \
+    --quicksight-datasource-id $quicksight_datasource_id
 
   [ "$status" -eq 0 ]
 }
@@ -51,7 +53,7 @@ quicksight_user="${quicksight_user:-cicd-staging}" # If variable not set or null
 @test "Update works" {
   run cid-cmd -vv --yes update --force --recursive  \
     --dashboard-id cudos \
-    --quicksight-user $quicksight_user \
+    --quicksight-user $quicksight_user   \
 
   [ "$status" -eq 0 ]
 }
