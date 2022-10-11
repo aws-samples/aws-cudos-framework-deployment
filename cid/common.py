@@ -23,9 +23,9 @@ from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datas
 from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
-from cid.exceptions import CidError
+from cid.exceptions import CidError, CidCritical
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__Excename__)
 
 class Cid():
 
@@ -66,9 +66,9 @@ class Cid():
                 'region': self.base.session.region_name
             }
         except (NoCredentialsError, CredentialRetrievalError):
-            raise CidError('Error: Not authenticated, please check AWS credentials')
+            raise CidCritical('Error: Not authenticated, please check AWS credentials')
         except ClientError as e:
-            raise CidError(f'ClientError: {e}')
+            raise CidCritical(f'ClientError: {e}')
         print(f'\taccountId: {self.base.account_id}\n\tAWS userId: {self.base.username}')
         logger.info(f'AWS accountId: {self.base.account_id}')
         logger.info(f'AWS userId: {self.base.username}')
@@ -345,7 +345,7 @@ class Cid():
             logger.debug(e, exc_info=True)
             print()
             self.delete(dashboard_id)
-            raise CidError(f'Deploy failed: {e}')
+            raise CidCritical(f'Deploy failed: {e}')
 
         if get_yesno_parameter(
                 param_name=f'share-with-account',
@@ -927,7 +927,7 @@ class Cid():
         elif dataset_definition.get('Data'):
             raw_template = dataset_definition.get('Data')
         if raw_template is None:
-            raise CidError(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
+            raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
         return raw_template
 
 
@@ -957,7 +957,7 @@ class Cid():
                 # We have explicit choice of datasource
                 datasource_id = get_parameters().get('quicksight-datasource-id')
                 if datasource_id not in datasource_choices.values():
-                    raise CidError(
+                    raise CidCritical(
                         f'quicksight-datasource-id={datasource_id} not found or not in a valid state. '
                         f'Here is a list of available DataSources (Name ID WorkGroup): {datasource_choices.keys()}'
                     )
@@ -1169,7 +1169,7 @@ class Cid():
                     )
                 param = {k:value}
             else:
-                raise CidError(f'Unknown parameter type for "{k}". Must be a string or a dict with value or with default key')
+                raise CidCritical(f'Unknown parameter type for "{k}". Must be a string or a dict with value or with default key')
             # Add parameter
             columns_tpl.update(param)
         # Compile template

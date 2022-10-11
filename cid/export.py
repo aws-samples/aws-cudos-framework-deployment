@@ -16,7 +16,7 @@ import boto3
 
 from cid.helpers import quicksight
 from cid.utils import get_parameter, get_parameters
-from cid.exceptions import CidError
+from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ def export_analysis(qs):
             message='Enter ID of analysis you want to share (open analysis in browser and copy id from url)',
         )
     if not analysis_id:
-        raise CidError("Need a parameter --analysis-id or --analysis-name")
+        raise CidCritical("Need a parameter --analysis-id or --analysis-name")
 
     analysis = qs.client.describe_analysis(
         AwsAccountId=qs.account_id,
@@ -73,7 +73,7 @@ def export_analysis(qs):
         dataset = qs.describe_dataset(dataset_id)
 
         if not isinstance(dataset, quicksight.Dataset):
-            raise CidError(f'dataset {dataset_id} not found. '
+            raise CidCritical(f'dataset {dataset_id} not found. '
                 'We need all datasets to be preset for template generation')
 
         dataset_references.append({
@@ -130,7 +130,7 @@ def export_analysis(qs):
         logger.info(f'Template {template_id} created from Analysis {analysis.get("Arn")}')
 
     if res['CreationStatus'] not in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
-        raise CidError(f'failed template operation {res}')
+        raise CidCritical(f'failed template operation {res}')
 
     template_arn = res['Arn']
     logger.info(f'Template arn = {template_arn}')

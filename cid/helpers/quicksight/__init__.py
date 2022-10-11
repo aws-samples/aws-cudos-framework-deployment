@@ -15,6 +15,7 @@ from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.utils import get_parameter, get_parameters
+from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ class QuickSight(CidBase):
                 # If no user match, ask
                 self._user = self.select_user()
             if not self._user:
-                raise CidError('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
+                raise CidCritical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
         return self._user
 
@@ -144,11 +145,11 @@ class QuickSight(CidBase):
         """Ensure that the QuickSight subscription is active"""
 
         if not self.edition:
-            raise CidError('QuickSight is not activated')
+            raise CidCritical('QuickSight is not activated')
         elif self.edition != 'STANDARD':
             logger.info(f'QuickSight subscription: {self._subscription_info}')
         else:
-            raise CidError(f'QuickSight Enterprise edition is required, you have {self.edition}')
+            raise CidCritical(f'QuickSight Enterprise edition is required, you have {self.edition}')
 
     def describe_account_subscription(self) -> dict:
         """Returns the account subscription details"""
@@ -396,7 +397,7 @@ class QuickSight(CidBase):
         try:
             result = self.client.list_dashboards(**parameters)
             if result.get('Status') != 200:
-                raise CidError(f'list_dashboards: {result}')
+                raise CidCritical(f'list_dashboards: {result}')
             else:
                 logger.debug(result)
                 return result.get('DashboardSummaryList')
@@ -476,7 +477,7 @@ class QuickSight(CidBase):
         try:
             result = self.client.list_data_sets(**parameters)
             if result.get('Status') != 200:
-                raise CidError(f'list_data_sets: {result}')
+                raise CidCritical(f'list_data_sets: {result}')
             else:
                 return result.get('DataSetSummaries')
         except self.client.exceptions.AccessDeniedException:
@@ -493,7 +494,7 @@ class QuickSight(CidBase):
         try:
             result = self.client.list_folders(**parameters)
             if result.get('Status') != 200:
-                 raise CidError(f'list_folders: {result}')
+                 raise CidCritical(f'list_folders: {result}')
            else:
                 logger.debug(f"FolderList: {result.get('FolderSummaryList')}")
                 return result.get('FolderSummaryList')
@@ -514,7 +515,7 @@ class QuickSight(CidBase):
             result = self.client.describe_folder(**parameters)
             logger.debug(f"DescribeFolder: {result}")
             if result.get('Status') != 200:
-                 raise CidError(f'describe_folder : {result}')
+                 raise CidCritical(f'describe_folder : {result}')
             else:
                 logger.debug(result.get('Folder'))
                 return result.get('Folder')
@@ -569,7 +570,7 @@ class QuickSight(CidBase):
         except self.client.exceptions.ResourceNotFoundException:
             return None
         except self.client.exceptions.UnsupportedUserEditionException:
-            raise CidError('Error: AWS QuickSight Enterprise Edition is required')
+            raise CidCritical('Error: AWS QuickSight Enterprise Edition is required')
         except Exception as e:
             print(f'Error: {e}')
             raise
@@ -728,12 +729,12 @@ class QuickSight(CidBase):
             result = client.describe_template(AwsAccountId=account_id, TemplateId=template_id)
             logger.debug(result)
         except self.client.exceptions.UnsupportedUserEditionException:
-            raise CidError('AWS QuickSight Enterprise Edition is required')
+            raise CidCritical('AWS QuickSight Enterprise Edition is required')
         except self.client.exceptions.ResourceNotFoundException:
-            raise CidError(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
+            raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
         except Exception as e:
             logger.debug(e, exc_info=True)
-            raise CidError(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
+            raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
         return result.get('Template')
 
     def describe_user(self, username: str) -> dict:
@@ -787,7 +788,7 @@ class QuickSight(CidBase):
         except self.client.exceptions.ResourceExistsException:
             logger.info(f'Dataset {definition.get("Name")} already exists')
         except self.client.exceptions.LimitExceededException:
-            raise CidError('AWS QuickSight SPICE limit exceeded')
+            raise CidCritical('AWS QuickSight SPICE limit exceeded')
 
         logger.info(f'Waiting for {definition.get("Name")} to be created')
         deadline = time.time() + max_timeout

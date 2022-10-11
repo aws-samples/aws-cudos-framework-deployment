@@ -8,7 +8,7 @@ from pkg_resources import resource_string
 
 from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters
-from cid.exceptions import CidError
+from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +71,12 @@ class Athena(CidBase):
             if get_parameters().get('athena-database'):
                 self._DatabaseName = get_parameters().get('athena-database')
                 if not self.get_database(self._DatabaseName):
-                    raise CidError(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
+                    raise CidCritical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
             # Get AWS Athena databases
             athena_databases = self.list_databases()
             if not len(athena_databases):
                 self._status = 'AWS Athena databases not found'
-                raise CidError(self._status)
+                raise CidCritical(self._status)
             if len(athena_databases) == 1:
                 self._DatabaseName = athena_databases.pop().get('Name')
             elif len(athena_databases) > 1:
@@ -134,11 +134,11 @@ class Athena(CidBase):
         try:
             _workgroup = self.client.get_work_group(WorkGroup=name).get('WorkGroup')
         except self.client.exceptions.InvalidRequestException as e:
-            raise CidError(e)
+            raise CidCritical(e)
         if _workgroup.get('State') == 'DISABLED':
-            raise CidError(f'Workgroup "{name}" is disabled.')
+            raise CidCritical(f'Workgroup "{name}" is disabled.')
         if not _workgroup.get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation'):
-            raise CidError(f'Workgroup "{name}" must have an output location set.')
+            raise CidCritical(f'Workgroup "{name}" must have an output location set.')
         self._WorkGroup = name
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
@@ -225,10 +225,10 @@ class Athena(CidBase):
             query_status = self.client.get_query_execution(QueryExecutionId=query_id)
         except self.client.exceptions.InvalidRequestException as e:
             logger.debug(f'Full query: {sql_query}')
-            raise CidError(f'InvalidRequestException: {e}')
+            raise CidCritical(f'InvalidRequestException: {e}')
         except Exception as e:
             logger.debug(f'Full query: {sql_query}')
-            raise CidError(f'Athena query failed: {e}')
+            raise CidCritical(f'Athena query failed: {e}')
 
 
         current_status = query_status['QueryExecution']['Status']['State']
@@ -249,7 +249,7 @@ class Athena(CidBase):
         else:
             logger.error(f'Athena query failed: {failure_reason}')
             logger.info(f'Full query: {sql_query}')
-            raise CidError(f'Athena query failed: {failure_reason}')
+            raise CidCritical(f'Athena query failed: {failure_reason}')
 
     def get_query_results(self, query_id):
         return self.client.get_query_results(QueryExecutionId=query_id)
