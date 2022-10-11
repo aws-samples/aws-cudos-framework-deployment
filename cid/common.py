@@ -17,7 +17,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
@@ -40,6 +40,7 @@ class Cid():
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
         set_parameters(kwargs, self.all_yes)
+        self._logger = None
 
     def aws_login(self):
         params = {
@@ -138,15 +139,17 @@ class Cid():
         '''
         @functools.wraps(func)
         def wrap(self, *args, **kwargs):
-            set_cid_logger(
-                verbosity=kwargs.pop('verbose'),
-                log_filename=kwargs.pop('log_filename', 'cid.log')
-            )
-            logger.info(f'Initializing CID {__version__} for {func.__name__}')
+            if not self._logger:
+                self._logger = set_cid_logger(
+                    verbosity=kwargs.get('verbose', 1),
+                    log_filename=kwargs.get('log_filename', 'cid.log')
+                )
+                logger.info(f'Initializing CID {__version__} for {func.__name__}')
             all_yes = kwargs.get('yes', None)
             set_parameters(kwargs, all_yes=all_yes)
             logger.debug(json.dumps(get_parameters()))
-            self.aws_login()
+            if not self.base:
+                self.aws_login()
             self.load_resources()
             return func(self, *args, **kwargs)
         return wrap
@@ -241,6 +244,11 @@ class Cid():
 
     @command
     def deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
+        """ Deploy Dashboard Command"""
+        self._deploy(dashboard_id, recursive, update, **kwargs)
+
+
+    def _deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
 
         self.qs.ensure_subscription()
@@ -337,12 +345,12 @@ class Cid():
             logger.debug(e, exc_info=True)
             print()
             self.delete(dashboard_id)
-            raise(f'failed with an error message: {e}')
-        if get_parameter(
+            raise CidError(f'Deploy failed: {e}')
+
+        if get_yesno_parameter(
                 param_name=f'share-with-account',
                 message=f'Share this dashboard with everyone in the account?',
-                choices=['yes', 'no'],
-                default='yes') == 'yes':
+                default='yes'):
             set_parameters({'share-method': 'account'})
             self.share(dashboard_id)
 
@@ -381,7 +389,6 @@ class Cid():
     @command
     def status(self, dashboard_id, **kwargs):
         """Check QuickSight dashboard status"""
-        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -406,8 +413,6 @@ class Cid():
     @command
     def delete(self, dashboard_id, **kwargs):
         """Delete QuickSight dashboard"""
-
-        self.load_resources()
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -538,8 +543,11 @@ class Cid():
     @command
     def share(self, dashboard_id, **kwargs):
         """Share resources (QuickSight datasets, dashboards)"""
+        self._share(dashboard_id, **kwargs)
 
-        self.load_resources()
+
+    def _share(self, dashboard_id, **kwargs):
+        """Share resources (QuickSight datasets, dashboards)"""
 
         if not dashboard_id:
             if not self.qs.dashboards:
@@ -551,7 +559,7 @@ class Cid():
         else:
             # Describe dashboard by the ID given, no discovery
             self.qs.discover_dashboard(dashboardId=dashboard_id)
-        
+
         dashboard = self.qs.dashboards.get(dashboard_id)
 
         if dashboard is None:
@@ -713,7 +721,7 @@ class Cid():
                     print('\nNo updates available or dashboard(s) is/are broken, use --force to allow selection\n')
                 return
 
-        return self.deploy(dashboard_id, recursive=recursive, update=True)
+        return self._deploy(dashboard_id, recursive=recursive, update=True)
 
 
     def update_dashboard(self, dashboard_id, recursive=False, **kwargs):
@@ -1044,8 +1052,8 @@ class Cid():
         if isinstance(found_dataset, Dataset):
             if update:
                 self.qs.update_dataset(compiled_dataset)
-            elif found_dataset.name != dataset_name:
-                print(f"Dataset found with name {found_dataset.name}, but {dataset_name} expected. Updating.")
+            elif found_dataset.name != compiled_dataset.get('Name'):
+                print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
                 self.qs.update_dataset(compiled_dataset)
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')

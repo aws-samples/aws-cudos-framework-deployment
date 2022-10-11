@@ -143,6 +143,7 @@
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (generation IN ('Previous')) AND (purchase_option <> 'Spot') AND (purchase_option <> 'Reserved') AND (savings_plan_offering_type NOT LIKE '%EC2%')) THEN amortized_cost ELSE 0 END "ec2_previous_generation_cost"
 		   , CASE 
 				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%')
+				AND (lower(platform) NOT LIKE '%window%')
 				AND ((adjusted_processor = 'Graviton')
 				OR (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_graviton <> ''))) 
 				 THEN amortized_cost ELSE 0 END "ec2_graviton_eligible_cost"
