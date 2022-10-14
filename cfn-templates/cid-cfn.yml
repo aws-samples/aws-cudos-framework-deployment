@@ -14,7 +14,7 @@ Metadata:
         Parameters:
           - QuickSightUser
           - CURBucketPath
-          - CURIsManagedWithCloudFormation
+          - CURIsManagedByCloudFormation
       - Label:
           default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that change to 'yes'
         Parameters:
@@ -76,11 +76,11 @@ Parameters:
     Default: 's3://cid-{account_id}-shared/cur/'
     AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
     Description: 'REQUIRED - s3 bucket with CUR and path. If CUR was created with CloudFormation, the path must be up to account partition. If it was a manually created CUR, the path must be up to the years partition. A variable {account_id} will be replaced by current account id automatically.'
-  CURIsManagedWithCloudFormation:
+  CURIsManagedByCloudFormation:
     Type: String
     Default: 'yes'
     AllowedValues: ["yes", "no"]
-    Description: 'CUR was created with CloudFormation.'
+    Description: 'CUR was created with CloudFormation. If CUR was created manually AND it is a single account or single payer account CUR, select no'
   AthenaWorkgroup:
     Type: String
     Default: ''
@@ -150,7 +150,7 @@ Conditions:
   NeedCURDatabase:  !Equals [ !Ref CURDatabaseName, "" ]
   NeedCURTable:  !Equals [ !Ref CURTableName, "" ]
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  CURIsManagedWithCloudFormation: !Equals [ !Ref CURIsManagedWithCloudFormation, "yes" ]
+  CURIsManagedByCloudFormation: !Equals [ !Ref CURIsManagedByCloudFormation, "yes" ]
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -517,7 +517,7 @@ Resources:
                   data['Bucket'] = parts[0]
                   data['Path'] = '/'.join(parts[1:])
                   data['Folder'] = parts[-1] if len(parts) > 1 else ''
-                  data['Folder'] = data['Folder'].replace('-', '_') # this is used for a Glue table name that will be managed by crawler
+                  data['Folder'] = data['Folder'].replace('-', '_').lower() # this is used for a Glue table name that will be managed by crawler
                   status, reason = 'SUCCESS', ""
               except Exception as exc:
                   status, reason = 'FAILED', str(exc)
@@ -688,7 +688,7 @@ Resources:
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
         PartitionKeys:
           Fn::If:
-            - CURIsManagedWithCloudFormation
+            - CURIsManagedByCloudFormation
 
             - - {"Type": "string", "Name": "source_account_id" }
               - {"Type": "string", "Name": "cur_name_1" }
