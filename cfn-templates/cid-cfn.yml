@@ -16,7 +16,7 @@ Metadata:
           - CURBucketPath
           - CURIsManagedByCloudFormation
       - Label:
-          default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that change to 'yes'
+          default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that update the stack putting to 'yes' 3 first dashboards.
         Parameters:
           - DeployCUDOSDashboard
           - DeployCostIntelligenceDashboard
@@ -107,27 +107,27 @@ Parameters:
     Description: Do not use this Suffix it is not fully supported. For testing purposes only.
   DeployCUDOSDashboard:
     Type: String
-    Description: Deploy CUDOS Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy CUDOS Dashboard
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployCostIntelligenceDashboard:
     Type: String
-    Description: Deploy Cost Intelligence Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy Cost Intelligence Dashboard
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployKPIDashboard:
     Type: String
-    Description: Deploy KPI Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy KPI Dashboard
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - You need Optimisation Data Collection Lab to be installed
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: Deploy Compute Optimizer Dashboard (COD) - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy Compute Optimizer Dashboard (COD) - You need Optimisation Data Collection Lab to be installed
     Default: "no"
     AllowedValues: ["yes", "no"]
   CostOptimizationDataCollectionBucketPath:
