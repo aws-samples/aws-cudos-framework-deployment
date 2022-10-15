@@ -675,8 +675,11 @@ class Cid():
                 })
 
             logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
-            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
-            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
+            try:
+                self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
+                logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
+            except self.qs.exceptions.AccessDeniedException:
+                logger.error('An error occurred (AccessDeniedException) when calling the UpdateDashboardPermissions operation')
 
             # Update DataSet permissions
             if share_method == 'account':

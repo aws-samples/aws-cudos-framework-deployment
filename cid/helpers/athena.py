@@ -76,8 +76,7 @@ class Athena(CidBase):
                         exit(1)
                 except Exception as exc:
                     if 'AccessDeniedException' in str(exc):
-                        logger.debug(exc, exc_info=True)
-                        logger.warning(f'InternalServerException - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}')
+                        logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
                         return self._DatabaseName
                     raise
             # Get AWS Athena databases
