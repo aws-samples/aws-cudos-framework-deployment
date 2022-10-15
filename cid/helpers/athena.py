@@ -75,13 +75,17 @@ class Athena(CidBase):
                         logger.critical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
                         exit(1)
                 except self.client.exceptions.InternalServerException as exc:
-                    logger.debug(exc, exc_info=True)
-                    logger.warning(f'Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}')
-                    return self._DatabaseName
-                except Exception as exc:
-                    logger.debug(exc, exc_info=True)
-                    logger.warning(f'Exception={exc}')
-                    return self._DatabaseName
+                    if 'AccessDeniedException' in str(exc):
+                        logger.debug(exc, exc_info=True)
+                        logger.warning(f'InternalServerException - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}')
+                        return self._DatabaseName
+                    raise
+                except self.client.exceptions.InvalidRequestException as exc:
+                    if 'AccessDeniedException' in str(exc):
+                        logger.debug(exc, exc_info=True)
+                        logger.warning(f'InvalidRequestException - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}')
+                        return self._DatabaseName
+                    raise
             # Get AWS Athena databases
             athena_databases = self.list_databases()
             if not len(athena_databases):
@@ -169,9 +173,12 @@ class Athena(CidBase):
         try:
             self.client.get_database(CatalogName=self.CatalogName, DatabaseName=DatabaseName).get('Database')
             return True
-        except Exception as e:
-            logger.debug(e, exc_info=True)
-            return False
+        except Exception as exc:
+            if 'AccessDeniedException' in str(exc):
+                raise
+            else:
+                logger.debug(e, exc_info=True)
+                return False
 
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
         params = {
