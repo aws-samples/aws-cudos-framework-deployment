@@ -49,6 +49,9 @@ jobs:
       - name:  Run Bats Tests
         run: |
           bats cid/test/bats/10-deploy-update-delete/cudos.bats
+      - name:  Save logs
+        if: always()
+        run: |
           aws s3 cp ./cid.log s3://aws-cid-stage-logs/$GITHUB_EVENT_NAME/$GITHUB_REF_NAME/$GITHUB_RUN_ID/$GITHUB_RUN_NUMBER/
 
   push:
