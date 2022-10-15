@@ -39,9 +39,7 @@ class Cid():
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
         self.verbose = kwargs.get('verbose')
-        print('init', get_parameters())
         set_parameters(kwargs, self.all_yes)
-        print('init2', get_parameters())
         self._logger = None
 
     def aws_login(self):

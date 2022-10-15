@@ -37,6 +37,9 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-session-name: ${{ secrets.AWS_SESSION_NAME }}
           aws-region: ${{ secrets.AWS_REGION }}
+      - name: Basic check
+        run: |
+          cid-cmd status
       - name:  Install Bats
         run: |
           sudo apt-get install -y bats
