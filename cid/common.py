@@ -678,7 +678,7 @@ class Cid():
             try:
                 self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
                 logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
-            except self.qs.exceptions.AccessDeniedException:
+            except self.qs.client.exceptions.AccessDeniedException:
                 logger.error('An error occurred (AccessDeniedException) when calling the UpdateDashboardPermissions operation')
 
             # Update DataSet permissions
