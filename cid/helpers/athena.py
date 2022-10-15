@@ -70,9 +70,13 @@ class Athena(CidBase):
         if not self._DatabaseName:
             if get_parameters().get('athena-database'):
                 self._DatabaseName = get_parameters().get('athena-database')
-                if not self.get_database(self._DatabaseName):
-                    logger.critical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
-                    exit(1)
+                try:
+                    if not self.get_database(self._DatabaseName):
+                        logger.critical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
+                        exit(1)
+                except self.client.exceptions.AccessDeniedException as exc:
+                    logger.warning(f'Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}')
+                    return self._DatabaseName
             # Get AWS Athena databases
             athena_databases = self.list_databases()
             if not len(athena_databases):
