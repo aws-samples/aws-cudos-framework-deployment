@@ -14,7 +14,7 @@ class Dataset(CidQsResource):
     def datasources(self) -> list:
         _datasources = []
         try:
-            for table_map in self.raw.get('PhysicalTableMap').values():
+            for table_map in self.raw.get('PhysicalTableMap', {}).values():
                 _datasources.append(table_map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
         except Exception as e:
             logger.debug(e, stack_info=True)
