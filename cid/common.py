@@ -165,11 +165,13 @@ class Cid():
     def __loadPlugins(self) -> dict:
         if sys.version_info < (3, 8):
             from importlib_metadata import entry_points
+            _entry_points = [ep for ep in entry_points() if ep.group == 'cid.plugins']
+
         else:
             from importlib.metadata import entry_points
+            _entry_points = entry_points().get('cid.plugins')
 
         plugins = dict()
-        _entry_points = entry_points().get('cid.plugins')
         print('Loading plugins...')
         logger.info(f'Located {len(_entry_points)} plugin(s)')
         for ep in _entry_points:
