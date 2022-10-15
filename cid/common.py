@@ -352,7 +352,7 @@ class Cid():
             print(f"#######\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
         except Exception as e:
             # Catch exception and dump a reason
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
             print(f'failed with an error message: {e}')
             self.delete(dashboard_id)
             exit(1)
@@ -446,7 +446,7 @@ class Cid():
             print('not found')
         except Exception as e:
             # Catch exception and dump a reason
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
             print(f'failed with an error message: {e}')
             return dashboard_id
 
@@ -784,7 +784,7 @@ class Cid():
             self.track('updated', dashboard_id)
         except Exception as e:
             # Catch exception and dump a reason
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
             print(f'failed with an error message: {e}')
 
         return dashboard_id
@@ -826,7 +826,7 @@ class Cid():
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
-                    logger.critical(e, stack_info=True)
+                    logger.critical(e, exc_info=True)
                     raise
                 try:
                     if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
@@ -836,7 +836,7 @@ class Cid():
                 except self.qs.client.exceptions.AccessDeniedException as exc:
                     print(f'Unable to update, missing permissions: {exc}')
                 except Exception as e:
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
                     raise
 
 
@@ -864,7 +864,7 @@ class Cid():
                     logger.info(f'Access denied trying to find dataset "{dataset_name}"')
                     pass
                 except Exception as e:
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
             print('complete')
 
         # If there still datasets missing try automatic creation
@@ -879,7 +879,7 @@ class Cid():
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
-                    logger.critical(e, stack_info=True)
+                    logger.critical(e, exc_info=True)
                     raise
                 try:
                     if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
@@ -890,9 +890,9 @@ class Cid():
                 except self.qs.client.exceptions.AccessDeniedException as e:
                     print(f'Unable to create dataset  "{dataset_name}", missing permissions')
                     logger.info(f'Unable to create dataset  "{dataset_name}", missing permissions')
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
                 except Exception as e:
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
                     raise
 
         # Last chance to enter DataSetIds manually by user
@@ -920,7 +920,7 @@ class Cid():
                     print(f'\tFound valid "{_dataset.name}" dataset, using')
                     logger.info(f'\tFound valid "{_dataset.name}" ({_dataset.id}) dataset, using')
                 except Exception as e:
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
                     print(f"\tProvided DataSetId '{id}' can't be found\n")
                     unset_parameter(f'{dataset_name}-dataset-id')
                     continue
