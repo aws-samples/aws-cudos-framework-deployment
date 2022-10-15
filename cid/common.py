@@ -38,6 +38,7 @@ class Cid():
         self._visited_views = [] # Views updated in the current session
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
+        self.verbose = kwargs.get('verbose')
         print('init', get_parameters())
         set_parameters(kwargs, self.all_yes)
         print('init2', get_parameters())
@@ -146,13 +147,14 @@ class Cid():
         '''
         @functools.wraps(func)
         def wrap(self, *args, **kwargs):
-            print(get_parameters())
-            all_yes = kwargs.get('yes', self.all_yes)
-            set_parameters(kwargs, all_yes=all_yes)
+            self.all_yes = self.all_yes or kwargs.get('yes') # Flag params need special treatment
+            if kwargs.get('verbose'): # Count params need special treatment
+                self.verbose = self.verbose + kwargs.get('verbose')
+            set_parameters(kwargs, all_yes=self.all_yes)
             logger.debug(json.dumps(get_parameters()))
             if not self._logger:
                 self._logger = set_cid_logger(
-                    verbosity=get_parameters().get('verbose', 1),
+                    verbosity=self.verbose,
                     log_filename=get_parameters().get('log_filename', 'cid.log')
                 )
                 logger.info(f'Initializing CID {__version__} for {func.__name__}')
