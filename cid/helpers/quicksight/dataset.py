@@ -15,9 +15,9 @@ class Dataset(CidQsResource):
         _datasources = []
         try:
             for table_map in self.raw.get('PhysicalTableMap', {}).values():
-                _datasources.append(table_map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
+                _datasources.append(table_map.get('RelationalTable', {}).get('DataSourceArn').split('/')[-1])
         except Exception as e:
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
         return sorted(list(set(_datasources)))
 
     @property
@@ -29,5 +29,5 @@ class Dataset(CidQsResource):
                 if schema:
                     schemas.append(schema)
         except Exception as e:
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
         return sorted(list(set(schemas)))
