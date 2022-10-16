@@ -10,6 +10,9 @@
 #   2. Quicksight has rights to read all s3 bukets in the account (not managable today)
 #   3. At least 1 CUR created
 
+export lambda_bucket="${lambda_bucket:-aws-managed-cost-intelligence-dashboards}" # If variable not set or null, use default
+
+
 setup_file() {
   export cfns3bucket="aws-cid-stage-cloudformation"
   export stackname="stack$(date +%Y%m%d%H%M)"
@@ -79,7 +82,7 @@ setup_file() {
       CURTableName=""\
       CidVersion="$cid_version"\
       QuickSightDataSetRefreshSchedule="cron(0 4 * * ? *)"\
-      LambdaLayerBucketPrefix="aws-managed-cost-intelligence-dashboards"\
+      LambdaLayerBucketPrefix="$lambda_bucket"\
       Suffix=""\
     --stack-name "$stackname"
 
