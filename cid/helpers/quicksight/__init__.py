@@ -89,7 +89,10 @@ class QuickSight(CidBase):
                     raise
             except Exception as e:
                 logger.info(f'QuickSight identity region detection failed, using {self.region}')
-                logger.debug(e, exc_info=True)
+                if 'ResourceNotFoundException' in str(e):
+                    logger.debug(f'ResourceNotFound {self.username}, but it can be ok')
+                else:
+                    logger.debug(e, stack_info=True)
                 self._identityRegion = self.region
             logger.info(f'Using QuickSight identity region: {self._identityRegion}')
         return self._identityRegion

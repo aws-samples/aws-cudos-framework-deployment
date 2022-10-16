@@ -14,9 +14,9 @@ Metadata:
         Parameters:
           - QuickSightUser
           - CURBucketPath
-          - CURIsAggregated
+          - CURIsManagedByCloudFormation
       - Label:
-          default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that change to 'yes'
+          default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that update the stack putting to 'yes' 3 first dashboards.
         Parameters:
           - DeployCUDOSDashboard
           - DeployCostIntelligenceDashboard
@@ -73,14 +73,14 @@ Parameters:
   CURBucketPath:
     Type: String
     MinLength: 3
-    Default: 's3://bucket/cur-prefix/cur-name/cur-name'
+    Default: 's3://cid-{account_id}-shared/cur/'
     AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
-    Description: 'REQUIRED - s3 bucket with CUR and path to year partition (year=xxxx) eq: s3://{cur-bucket}/{cur-prefix}/{cur-name}/{cur-name}'
-  CURIsAggregated:
+    Description: 'REQUIRED - s3 bucket with CUR and path. If CUR was created with CloudFormation, the path must be up to account partition. If it was a manually created CUR, the path must be up to the years partition. A variable {account_id} will be replaced by current account id automatically.'
+  CURIsManagedByCloudFormation:
     Type: String
     Default: 'yes'
     AllowedValues: ["yes", "no"]
-    Description: 'CUR is created with CloudFormation for multi-account Setup'
+    Description: 'CUR was created with CloudFormation. If CUR was created manually AND it is a single account or single payer account CUR, select no'
   AthenaWorkgroup:
     Type: String
     Default: ''
@@ -107,27 +107,27 @@ Parameters:
     Description: Do not use this Suffix it is not fully supported. For testing purposes only.
   DeployCUDOSDashboard:
     Type: String
-    Description: Deploy CUDOS Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy CUDOS Dashboard
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployCostIntelligenceDashboard:
     Type: String
-    Description: Deploy Cost Intelligence Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy Cost Intelligence Dashboard
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployKPIDashboard:
     Type: String
-    Description: Deploy KPI Dashboard - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy KPI Dashboard
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - You need Optimisation Data Collection Lab to be installed
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: Deploy Compute Optimizer Dashboard (COD) - Keep 'no' for the first step, then add Permissions in QuickSight and come back to update to 'yes'
+    Description: Deploy Compute Optimizer Dashboard (COD) - You need Optimisation Data Collection Lab to be installed
     Default: "no"
     AllowedValues: ["yes", "no"]
   CostOptimizationDataCollectionBucketPath:
@@ -150,7 +150,7 @@ Conditions:
   NeedCURDatabase:  !Equals [ !Ref CURDatabaseName, "" ]
   NeedCURTable:  !Equals [ !Ref CURTableName, "" ]
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  CurIsAggregated: !Equals [ !Ref CURIsAggregated, "yes" ]
+  CURIsManagedByCloudFormation: !Equals [ !Ref CURIsManagedByCloudFormation, "yes" ]
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -500,6 +500,7 @@ Resources:
 
           def lambda_handler(event, context):
               print(json.dumps(event))
+              account_id = context.invoked_function_arn.split(":")[4]
               type_ = event.get('RequestType', 'Undef')
               properties = event.get('ResourceProperties', {})
               status, reason = ('SUCCESS', "Undef")
@@ -511,11 +512,12 @@ Resources:
                       s3path = s3path[len('s3://'):]
                   if s3path.endswith('/'):
                       s3path = s3path[:-1]
+                  s3path = s3path.replace('{account_id}', account_id)
                   parts = s3path.split('/')
                   data['Bucket'] = parts[0]
                   data['Path'] = '/'.join(parts[1:])
                   data['Folder'] = parts[-1] if len(parts) > 1 else ''
-                  data['Folder'] = data['Folder'].replace('-', '_') # this is used for a Glue table name that will be managed by crawler
+                  data['Folder'] = data['Folder'].replace('-', '_').lower() # this is used for a Glue table name that will be managed by crawler
                   status, reason = 'SUCCESS', ""
               except Exception as exc:
                   status, reason = 'FAILED', str(exc)
@@ -686,7 +688,7 @@ Resources:
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
         PartitionKeys:
           Fn::If:
-            - CurIsAggregated
+            - CURIsManagedByCloudFormation
 
             - - {"Type": "string", "Name": "source_account_id" }
               - {"Type": "string", "Name": "cur_name_1" }
