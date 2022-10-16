@@ -72,7 +72,7 @@ class Athena(CidBase):
                 self._DatabaseName = get_parameters().get('athena-database')
                 try:
                     if not self.get_database(self._DatabaseName):
-                    raise CidCritical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
+                        raise CidCritical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
                 except Exception as exc:
                     if 'AccessDeniedException' in str(exc):
                         logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')

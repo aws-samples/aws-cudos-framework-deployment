@@ -498,7 +498,7 @@ class QuickSight(CidBase):
             result = self.client.list_folders(**parameters)
             if result.get('Status') != 200:
                  raise CidCritical(f'list_folders: {result}')
-           else:
+            else:
                 logger.debug(f"FolderList: {result.get('FolderSummaryList')}")
                 return result.get('FolderSummaryList')
         except self.client.exceptions.AccessDeniedException:
@@ -518,7 +518,7 @@ class QuickSight(CidBase):
             result = self.client.describe_folder(**parameters)
             logger.debug(f"DescribeFolder: {result}")
             if result.get('Status') != 200:
-                 raise CidCritical(f'describe_folder : {result}')
+                raise CidCritical(f'describe_folder : {result}')
             else:
                 logger.debug(result.get('Folder'))
                 return result.get('Folder')
