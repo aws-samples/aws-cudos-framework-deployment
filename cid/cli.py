@@ -27,6 +27,7 @@ def cid_command(func):
         try:
             res = func(ctx, **kwargs)
         except CidCritical as exc:
+            logger.debug(exc, exc_info=True)
             logger.critical(exc)
         params = get_parameters()
         logger.info('Next time you can use following command:')
