@@ -5,6 +5,7 @@ import click
 from cid.common import Cid
 from cid.utils import get_parameters, set_parameters
 from cid._version import __version__
+from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 version = f'{__version__} Beta'
@@ -22,7 +23,11 @@ def cid_command(func):
             kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
 
         set_parameters(kwargs, all_yes=ctx.obj.all_yes)
-        res = func(ctx, **kwargs)
+        res = None
+        try:
+            res = func(ctx, **kwargs)
+        except CidCritical as exc:
+            logger.critical(exc)
         params = get_parameters()
         logger.info('Next time you can use following command:')
         logger.info('   cid-cmd ' + ctx.info_name
@@ -39,6 +44,8 @@ def cid_command(func):
             allow_extra_args=True,
         )
     )(click.pass_context(wrapper))
+
+
 
 
 @click.group()

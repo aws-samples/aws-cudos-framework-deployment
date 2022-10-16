@@ -25,7 +25,7 @@ from cid.export import export_analysis
 from cid.logger import set_cid_logger
 from cid.exceptions import CidError, CidCritical
 
-logger = logging.getLogger(__Excename__)
+logger = logging.getLogger(__name__)
 
 class Cid():
 

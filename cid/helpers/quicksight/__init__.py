@@ -447,7 +447,7 @@ class QuickSight(CidBase):
             )
         except AttributeError as e:
             # No updatable dashboards (selection is disabled)
-            logger.debug(e, exc_info=True, exc_info=True)
+            logger.debug(e, exc_info=True)
         except Exception as e:
             logger.exception(e)
         finally:
