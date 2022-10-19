@@ -38,6 +38,7 @@ class Cid():
         self._visited_views = [] # Views updated in the current session
         self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
+        self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
         self._logger = None
 
@@ -144,15 +145,17 @@ class Cid():
         '''
         @functools.wraps(func)
         def wrap(self, *args, **kwargs):
+            self.all_yes = self.all_yes or kwargs.get('yes') # Flag params need special treatment
+            if kwargs.get('verbose'): # Count params need special treatment
+                self.verbose = self.verbose + kwargs.get('verbose')
+            set_parameters(kwargs, all_yes=self.all_yes)
+            logger.debug(json.dumps(get_parameters()))
             if not self._logger:
                 self._logger = set_cid_logger(
-                    verbosity=kwargs.get('verbose', 1),
-                    log_filename=kwargs.get('log_filename', 'cid.log')
+                    verbosity=self.verbose,
+                    log_filename=get_parameters().get('log_filename', 'cid.log')
                 )
                 logger.info(f'Initializing CID {__version__} for {func.__name__}')
-            all_yes = kwargs.get('yes', None)
-            set_parameters(kwargs, all_yes=all_yes)
-            logger.debug(json.dumps(get_parameters()))
             if not self.base:
                 self.aws_login()
             self.load_resources()
@@ -162,11 +165,13 @@ class Cid():
     def __loadPlugins(self) -> dict:
         if sys.version_info < (3, 8):
             from importlib_metadata import entry_points
+            _entry_points = [ep for ep in entry_points() if ep.group == 'cid.plugins']
+
         else:
             from importlib.metadata import entry_points
+            _entry_points = entry_points().get('cid.plugins')
 
         plugins = dict()
-        _entry_points = entry_points().get('cid.plugins')
         print('Loading plugins...')
         logger.info(f'Located {len(_entry_points)} plugin(s)')
         for ep in _entry_points:
@@ -347,7 +352,7 @@ class Cid():
             print(f"#######\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
         except Exception as e:
             # Catch exception and dump a reason
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
             print(f'failed with an error message: {e}')
             self.delete(dashboard_id)
             exit(1)
@@ -441,7 +446,7 @@ class Cid():
             print('not found')
         except Exception as e:
             # Catch exception and dump a reason
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
             print(f'failed with an error message: {e}')
             return dashboard_id
 
@@ -670,8 +675,11 @@ class Cid():
                 })
 
             logger.info(f'Sharing dashboard {dashboard.name} ({dashboard.id})')
-            self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
-            logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
+            try:
+                self.qs.update_dashboard_permissions(DashboardId=dashboard.id, **dashboard_params)
+                logger.info(f'Shared dashboard {dashboard.name} ({dashboard.id})')
+            except self.qs.client.exceptions.AccessDeniedException:
+                logger.error('An error occurred (AccessDeniedException) when calling the UpdateDashboardPermissions operation')
 
             # Update DataSet permissions
             if share_method == 'account':
@@ -779,7 +787,7 @@ class Cid():
             self.track('updated', dashboard_id)
         except Exception as e:
             # Catch exception and dump a reason
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
             print(f'failed with an error message: {e}')
 
         return dashboard_id
@@ -821,7 +829,7 @@ class Cid():
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
-                    logger.critical(e, stack_info=True)
+                    logger.critical(e, exc_info=True)
                     raise
                 try:
                     if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
@@ -831,7 +839,7 @@ class Cid():
                 except self.qs.client.exceptions.AccessDeniedException as exc:
                     print(f'Unable to update, missing permissions: {exc}')
                 except Exception as e:
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
                     raise
 
 
@@ -859,7 +867,7 @@ class Cid():
                     logger.info(f'Access denied trying to find dataset "{dataset_name}"')
                     pass
                 except Exception as e:
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
             print('complete')
 
         # If there still datasets missing try automatic creation
@@ -874,7 +882,7 @@ class Cid():
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
-                    logger.critical(e, stack_info=True)
+                    logger.critical(e, exc_info=True)
                     raise
                 try:
                     if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
@@ -885,9 +893,9 @@ class Cid():
                 except self.qs.client.exceptions.AccessDeniedException as e:
                     print(f'Unable to create dataset  "{dataset_name}", missing permissions')
                     logger.info(f'Unable to create dataset  "{dataset_name}", missing permissions')
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
                 except Exception as e:
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
                     raise
 
         # Last chance to enter DataSetIds manually by user
@@ -915,7 +923,7 @@ class Cid():
                     print(f'\tFound valid "{_dataset.name}" dataset, using')
                     logger.info(f'\tFound valid "{_dataset.name}" ({_dataset.id}) dataset, using')
                 except Exception as e:
-                    logger.debug(e, stack_info=True)
+                    logger.debug(e, exc_info=True)
                     print(f"\tProvided DataSetId '{id}' can't be found\n")
                     unset_parameter(f'{dataset_name}-dataset-id')
                     continue

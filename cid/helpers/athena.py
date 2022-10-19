@@ -70,9 +70,15 @@ class Athena(CidBase):
         if not self._DatabaseName:
             if get_parameters().get('athena-database'):
                 self._DatabaseName = get_parameters().get('athena-database')
-                if not self.get_database(self._DatabaseName):
-                    logger.critical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
-                    exit(1)
+                try:
+                    if not self.get_database(self._DatabaseName):
+                        logger.critical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
+                        exit(1)
+                except Exception as exc:
+                    if 'AccessDeniedException' in str(exc):
+                        logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
+                        return self._DatabaseName
+                    raise
             # Get AWS Athena databases
             athena_databases = self.list_databases()
             if not len(athena_databases):
@@ -160,9 +166,12 @@ class Athena(CidBase):
         try:
             self.client.get_database(CatalogName=self.CatalogName, DatabaseName=DatabaseName).get('Database')
             return True
-        except Exception as e:
-            logger.debug(e, stack_info=True)
-            return False
+        except Exception as exc:
+            if 'AccessDeniedException' in str(exc):
+                raise
+            else:
+                logger.debug(e, exc_info=True)
+                return False
 
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
         params = {
@@ -402,7 +411,7 @@ class Athena(CidBase):
                 fail=False
             )
         except Exception as exc:
-            logger.debug(exc, stack_info=True)
+            logger.debug(exc, exc_info=True)
             logger.info(f'Table {name} cannot be deleted: {exc}')
             return False
         else:
@@ -426,7 +435,7 @@ class Athena(CidBase):
                 fail=False
             )
         except Exception as exc:
-            logger.debug(exc, stack_info=True)
+            logger.debug(exc, exc_info=True)
             logger.info(f'View {name} cannot be deleted: {exc}')
             return False
         else:
