@@ -1,6 +1,7 @@
 import logging
 
 from cid.commands.command_base import Command
+from cid.utils import get_yesno_parameter
 
 
 class InitCommand(Command):
@@ -32,12 +33,15 @@ class InitCommand(Command):
         print(f'\tQuickSight Edition...\t{self.cid.qs.edition}, needs to be one of {", ".join(required_editions)}')
         print(f'\tIMPORTANT: QuickSight Enterprise is required for Cost Intelligence Dashboard. This will lead to costs in your AWS account (https://aws.amazon.com/quicksight/pricing/).')
         if not self.cid.all_yes:
-            decision = input('\tPlease, confirm that you are OK with this (yes/[no]): ')
-            decision = 'no' if decision not in ('yes', 'y') else 'yes'
+            enable_quicksight_enterprise = get_yesno_parameter(
+                param_name='enable_quicksight_enterprise', 
+                message='Please, confirm that you are OK with enabling QuickSight Enterprise', 
+                default='no'
+                )
         else:
-            decision = 'yes'
+            enable_quicksight_enterprise = True
         
-        if decision == 'no':
+        if not enable_quicksight_enterprise:
             print('\tInitalization cancelled')
             return
         
@@ -52,8 +56,9 @@ class InitCommand(Command):
             'Edition': 'ENTERPRISE',
             'AuthenticationMethod': 'IAM_AND_QUICKSIGHT',
             'AwsAccountId': self.cid.base.account_id,
-            'AccountName': f'qs-cid-{self.cid.base.account_id}',
-            'NotificationEmail': email,
+            'AccountName': f'qs-cid-{self.cid.base.account_id}',  # Should be a parameter with a reasonable default
+            'NotificationEmail': email,  # Read the value from account parameters as a default
         }
         
+        response = self.cid.qs.client.create_account_subscription(**PARAMS)
         pass
