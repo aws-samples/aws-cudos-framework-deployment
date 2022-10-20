@@ -1226,5 +1226,5 @@ class Cid():
     def init(self, **kwargs):
         """ Initialize account resources for deployment """
         from commands import InitCommand
-        cmd = InitCommand()
-        result = cmd.execute(**kwargs)
+        cmd = InitCommand(cid=self, **kwargs)
+        result = cmd.execute()
