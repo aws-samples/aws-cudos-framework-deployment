@@ -1,0 +1,1 @@
+from cid.commands.cmd_init import InitCommand

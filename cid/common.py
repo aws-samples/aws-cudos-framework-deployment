@@ -1,28 +1,38 @@
-import os
-import sys
+import functools
 import json
 import logging
-import functools
+import os
+import sys
 from pathlib import Path
 from string import Template
 from typing import Dict
-from pkg_resources import resource_string
 
-import yaml
 import click
 import requests
+import yaml
+from botocore.exceptions import (
+    ClientError,
+    CredentialRetrievalError,
+    NoCredentialsError,
+)
 from deepmerge import always_merger
-from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
+from pkg_resources import resource_string
 
 from cid import utils
-from cid.base import CidBase
-from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
-from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid._version import __version__
+from cid.base import CidBase
 from cid.export import export_analysis
+from cid.helpers import CUR, Athena, Dashboard, Dataset, Datasource, Glue, QuickSight
+from cid.helpers.account_map import AccountMap
 from cid.logger import set_cid_logger
+from cid.plugin import Plugin
+from cid.utils import (
+    get_parameter,
+    get_parameters,
+    get_yesno_parameter,
+    set_parameters,
+    unset_parameter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1212,3 +1222,9 @@ class Cid():
         for v in ['account_map', 'aws_accounts']:
             self.accountMap.create(v)
 
+    @command
+    def init(self, **kwargs):
+        """ Initialize account resources for deployment """
+        from commands import InitCommand
+        cmd = InitCommand()
+        result = cmd.execute(**kwargs)
