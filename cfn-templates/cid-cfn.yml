@@ -948,7 +948,6 @@ Resources:
               properties = event.get('ResourceProperties', {})
               status, reason = ('FAILED', "Undef error")
               physical_id = properties.get('Dashboard', {}).get('dashboard-id', 'Unknown')
-              region = context.invoked_function_arn.split(":")[3]
               dash_url = "Unknown"
               try:
                   dashboard = properties['Dashboard']

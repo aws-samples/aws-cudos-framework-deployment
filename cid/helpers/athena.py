@@ -256,6 +256,7 @@ class Athena(CidBase):
         elif not fail:
             return False
         else:
+            failure_reason = response['QueryExecution']['Status']['StateChangeReason']
             logger.error(f'Athena query failed: {failure_reason}')
             logger.info(f'Full query: {sql_query}')
             raise CidCritical(f'Athena query failed: {failure_reason}')

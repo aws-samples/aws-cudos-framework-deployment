@@ -32,18 +32,6 @@ def intersection(a: Iterable, b: Iterable) -> Iterable:
 def difference(a: Iterable, b: Iterable) -> Iterable:
     return sorted(list(set(a).difference(b)))
 
-def terminate(message: str, code: int=1):
-    app_name = logger.name.split('.')[0]
-    main_logger = logging.getLogger(app_name)
-
-    caller = inspect.stack()[1]
-
-    main_logger.critical(message)
-    if exec_env() == "lambda":
-        raise SystemExit(message)
-    else:
-        exit(code)
-
 def get_aws_region() -> str:
     return get_boto_session().region_name
 
