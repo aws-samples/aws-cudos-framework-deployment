@@ -47,8 +47,6 @@ def cid_command(func):
     )(click.pass_context(wrapper))
 
 
-
-
 @click.group()
 @click.option('--profile_name', '--profile', help='AWS Profile name to use', default=None)
 @click.option('--region_name', help="AWS Region (default:'us-east-1')", default=None)
