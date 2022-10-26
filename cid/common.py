@@ -22,7 +22,16 @@ from cid import utils
 from cid._version import __version__
 from cid.base import CidBase
 from cid.export import export_analysis
-from cid.helpers import CUR, Athena, Dashboard, Dataset, Datasource, Glue, QuickSight
+from cid.helpers import (
+    CUR,
+    Athena,
+    Dashboard,
+    Dataset,
+    Datasource,
+    Glue,
+    Organizations,
+    QuickSight,
+)
 from cid.helpers.account_map import AccountMap
 from cid.logger import set_cid_logger
 from cid.plugin import Plugin
@@ -97,6 +106,14 @@ class Cid():
                 'quicksight': QuickSight(self.base.session, resources=self.resources)
             })
         return self._clients.get('quicksight')
+    
+    @property
+    def organizations(self) -> Organizations:
+        if not self._clients.get('organizations'):
+            self._clients.update({
+                'organizations': Organizations(self.base.session)
+            })
+        return self._clients.get('organizations')
 
     @property
     def athena(self) -> Athena:

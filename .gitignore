@@ -49,3 +49,5 @@ venv.bak/
 
 #Local dev and testing files
 cfn-templates/parameters.local
+
+IDEAS.md

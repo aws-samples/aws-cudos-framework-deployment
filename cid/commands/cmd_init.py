@@ -45,7 +45,7 @@ class InitCommand(Command):
             print('\tInitalization cancelled')
             return
         
-        email = ''
+        email = self.cid.organizations.get_account_email()
         print(f'\n\tQuicksight needs an email address that you want it to send notifications to regarding your Amazon QuickSight account or Amazon QuickSight subscription.')
         while '@' not in email or '.' not in email:
             email = input('\tNotification email: ')
