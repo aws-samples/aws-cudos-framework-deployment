@@ -2,7 +2,7 @@ export CID_VERSION=$(python3 -c "from cid import _version;print(_version.__versi
 
 mkdir -p ./python
 pip3 install . -t ./python
-zip -r cid-$CID_VERSION.zip ./python
+zip -qr cid-$CID_VERSION.zip ./python
 ls cid-$CID_VERSION.zip
 rm -rf ./python
 
