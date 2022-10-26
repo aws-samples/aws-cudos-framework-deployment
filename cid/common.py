@@ -8,6 +8,11 @@ from string import Template
 from typing import Dict
 from pkg_resources import resource_string
 
+if sys.version_info < (3, 8):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
+
 import yaml
 import click
 import requests
@@ -163,13 +168,10 @@ class Cid():
         return wrap
 
     def __loadPlugins(self) -> dict:
-        if sys.version_info < (3, 8):
-            from importlib_metadata import entry_points
-            _entry_points = [ep for ep in entry_points() if ep.group == 'cid.plugins']
-
-        else:
-            from importlib.metadata import entry_points
+        try:
             _entry_points = entry_points().get('cid.plugins')
+        except: # fallback for python version more than 3.7.x AND still less then 3.8
+            _entry_points = [ep for ep in entry_points() if ep.group == 'cid.plugins']
 
         plugins = dict()
         print('Loading plugins...')
