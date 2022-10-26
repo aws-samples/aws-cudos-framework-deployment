@@ -16,7 +16,17 @@ class Organizations(CidBase):
     def get_account_email(self):
         try:
             response = self.client.describe_account(AccountId=self.account_id)
+            result = response.get('Email', '')
         except Exception as ex:
-            response = ''
+            result = ''
             
-        return response
+        return result
+    
+    def get_account_name(self):
+        try:
+            response = self.client.describe_account(AccountId=self.account_id)
+            result = response.get('Name', '')
+        except Exception as ex:
+            result = ''
+            
+        return result

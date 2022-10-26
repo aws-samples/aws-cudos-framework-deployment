@@ -1,7 +1,7 @@
 import logging
 
 from cid.commands.command_base import Command
-from cid.utils import get_yesno_parameter
+from cid.utils import get_parameter, get_yesno_parameter, unset_parameter
 
 
 class InitCommand(Command):
@@ -34,7 +34,7 @@ class InitCommand(Command):
         print(f'\tIMPORTANT: QuickSight Enterprise is required for Cost Intelligence Dashboard. This will lead to costs in your AWS account (https://aws.amazon.com/quicksight/pricing/).')
         if not self.cid.all_yes:
             enable_quicksight_enterprise = get_yesno_parameter(
-                param_name='enable_quicksight_enterprise', 
+                param_name='enable-quicksight-enterprise', 
                 message='Please, confirm that you are OK with enabling QuickSight Enterprise', 
                 default='no'
                 )
@@ -47,18 +47,37 @@ class InitCommand(Command):
         
         email = self.cid.organizations.get_account_email()
         print(f'\n\tQuicksight needs an email address that you want it to send notifications to regarding your Amazon QuickSight account or Amazon QuickSight subscription.')
+        counter = 0
         while '@' not in email or '.' not in email:
-            email = input('\tNotification email: ')
+            counter += 1
+            email = get_parameter('qs-notification-email', 'Notification email', default=email)
             if '@' not in email or '.' not in email:
                 print(f'\t{email} does not seem to be a valid email. Please, try again.')
+                unset_parameter('qs-notification-email')
+                if counter >= 5:
+                    exit(1)
+        
+        account_name = self.cid.organizations.get_account_name()
+        counter = 0
+        print(f'\n\tPlease, choose a descriptive name for your QuickSight account. This will be used later to share it with your users. This can NOT be changed later.')
+        while account_name == '':
+            counter += 1
+            account_name = get_parameter('qs-account-name', 'QuickSight Account Name', default=account_name)
+            if account_name == '':
+                print(f'\t The account name must not be empty. Please, try again.')
+                unset_parameter('qs-account-name')
+                if counter >= 5:
+                    exit(1)
         
         PARAMS = {
             'Edition': 'ENTERPRISE',
             'AuthenticationMethod': 'IAM_AND_QUICKSIGHT',
             'AwsAccountId': self.cid.base.account_id,
-            'AccountName': f'qs-cid-{self.cid.base.account_id}',  # Should be a parameter with a reasonable default
+            'AccountName': account_name,  # Should be a parameter with a reasonable default
             'NotificationEmail': email,  # Read the value from account parameters as a default
         }
         
         response = self.cid.qs.client.create_account_subscription(**PARAMS)
+        if response.get('Status', 0) == 200:
+            print('\tQuickSight Edition...\tSubscribed')
         pass

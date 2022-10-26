@@ -186,6 +186,8 @@ def share(ctx, dashboard_id, **kwargs):
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@click.option('--qs-notification-email', help='QuickSight Notification Email', default='')
+@click.option('--qs-account-name', help='QuickSight Account Name', default='')
 @cid_command
 def init(ctx, **kwargs):
     """Initialize account resources for deployment"""
