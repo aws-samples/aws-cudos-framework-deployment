@@ -24,6 +24,7 @@ from cid.base import CidBase
 from cid.export import export_analysis
 from cid.helpers import (
     CUR,
+    S3,
     Athena,
     Dashboard,
     Dataset,
@@ -114,6 +115,14 @@ class Cid():
                 'organizations': Organizations(self.base.session)
             })
         return self._clients.get('organizations')
+    
+    @property
+    def s3(self) -> S3:
+        if not self._clients.get('s3'):
+            self._clients.update({
+                's3': S3(self.base.session)
+            })
+        return self._clients.get('s3')
 
     @property
     def athena(self) -> Athena:

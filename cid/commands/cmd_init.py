@@ -12,14 +12,27 @@ class InitCommand(Command):
         else:
             self._logger = logging.getLogger(__name__)
         
+        self.bucket_name = None
+        
     def execute(self):
         """ Execute the initilization """
         print('Initializing AWS environment...')
         print('-------------------------------')
         # Create QuickSight Enterprise subscription
         self._create_quicksight_enterprise_subscription()
-        # Create Athena workgroup "cid" + s3 bucket
+        # Create query results bucket
+        self._create_query_results_bucket()
+        # Create Athena workgroup "cid"
         # Create table with predefined fields and a crawler that updates it
+    
+    def _create_query_results_bucket(self):
+        self.bucket_name = f'aws-athena-query-results-cid-{self.cid.base.account_id}-{self.cid.base.region}'
+        try:
+            self.cid.s3.create_bucket(self.bucket_name)
+            print(f'\tAthena S3 Bucket...\tCreated ({self.bucket_name})')
+        except Exception as ex:
+            print(f'\tAthena S3 Bucket...\tFailed')
+            self._logger.error(f'ERROR: {ex}')
     
     def _create_quicksight_enterprise_subscription(self):
         required_editions = {'ENTERPRISE', 'ENTERPRISE_AND_Q'}
