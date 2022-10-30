@@ -19,6 +19,7 @@ import requests
 from deepmerge import always_merger
 from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
+
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
@@ -28,6 +29,7 @@ from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datas
 from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
+from cid.exceptions import CidError, CidCritical
 
 logger = logging.getLogger(__name__)
 
@@ -71,13 +73,9 @@ class Cid():
                 'region': self.base.session.region_name
             }
         except (NoCredentialsError, CredentialRetrievalError):
-            print('Error: Not authenticated, please check AWS credentials')
-            logger.info('Not authenticated, exiting')
-            exit()
+            raise CidCritical('Error: Not authenticated, please check AWS credentials')
         except ClientError as e:
-            print(f'Error: {e}')
-            logger.info(f'Error: {e}')
-            exit()
+            raise CidCritical(f'ClientError: {e}')
         print(f'\taccountId: {self.base.account_id}\n\tAWS userId: {self.base.username}')
         logger.info(f'AWS accountId: {self.base.account_id}')
         logger.info(f'AWS userId: {self.base.username}')
@@ -117,14 +115,12 @@ class Cid():
             print('Checking if CUR is enabled and available...')
 
             if not _cur.configured:
-                print(
-                    "Error: please ensure CUR is enabled, if yes allow it some time to propagate")
-                exit(1)
+                raise ClientError("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
+
             print(f'\tAthena table: {_cur.tableName}')
             print(f"\tResource IDs: {'yes' if _cur.hasResourceIDs else 'no'}")
             if not _cur.hasResourceIDs:
-                print("Error: CUR has to be created with Resource IDs")
-                exit(1)
+                raise ClientError("Error: CUR has to be created with Resource IDs")
             print(f"\tSavingsPlans: {'yes' if _cur.hasSavingsPlans else 'no'}")
             print(f"\tReserved Instances: {'yes' if _cur.hasReservations else 'no'}")
             print('\n')
@@ -357,7 +353,8 @@ class Cid():
             logger.debug(e, exc_info=True)
             print(f'failed with an error message: {e}')
             self.delete(dashboard_id)
-            exit(1)
+            raise CidCritical(f'Deploy failed: {e}')
+
         if get_yesno_parameter(
                 param_name=f'share-with-account',
                 message=f'Share this dashboard with everyone in the account?',
@@ -403,11 +400,12 @@ class Cid():
 
         if not dashboard_id:
             if not self.qs.dashboards:
-                print('\nNo deployed dashboards found')
-                exit()
+                print('No deployed dashboards found')
+                return
             dashboard_id = self.qs.select_dashboard(force=True)
             if not dashboard_id:
-                exit()
+                print('No dashboard selected')
+                return
             dashboard = self.qs.dashboards.get(dashboard_id)
         else:
             # Describe dashboard by the ID given, no discovery
@@ -426,11 +424,11 @@ class Cid():
 
         if not dashboard_id:
             if not self.qs.dashboards:
-                print('\nNo deployed dashboards found')
-                exit()
+                print('No deployed dashboards')
+                return
             dashboard_id = self.qs.select_dashboard(force=True)
             if not dashboard_id:
-                exit()
+                return
 
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
             datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
@@ -561,11 +559,11 @@ class Cid():
 
         if not dashboard_id:
             if not self.qs.dashboards:
-                print('\nNo deployed dashboards found')
-                exit()
+                print('No deployed dashboards found')
+                return
             dashboard_id = self.qs.select_dashboard(force=True)
             if not dashboard_id:
-                exit()
+                return
         else:
             # Describe dashboard by the ID given, no discovery
             self.qs.discover_dashboard(dashboardId=dashboard_id)
@@ -574,7 +572,7 @@ class Cid():
 
         if dashboard is None:
             print('not deployed.')
-            exit(1)
+            return
 
         share_methods = {
             'Shared Folder (except datasource)': 'folder',
@@ -630,8 +628,7 @@ class Cid():
                         folder_permissions = json.loads(folder_permissions_tpl.safe_substitute(columns_tpl))
                         folder = self.qs.create_folder(folder_name, **folder_permissions)
                     except self.qs.client.exceptions.AccessDeniedException:
-                        print('\nYou are not allowed to create folder, unable to proceed')
-                        exit(1)
+                        raise CidError('You are not allowed to create folder, unable to proceed')
 
             self.qs.create_folder_membership(folder.get('FolderId'), dashboard.id, 'DASHBOARD')
             for _id in dashboard.datasets.values():
@@ -728,12 +725,12 @@ class Cid():
         if not dashboard_id:
             if not self.qs.dashboards:
                 print('\nNo deployed dashboards found')
-                exit()
+                return
             dashboard_id = self.qs.select_dashboard(force)
             if not dashboard_id:
                 if not force:
                     print('\nNo updates available or dashboard(s) is/are broken, use --force to allow selection\n')
-                exit()
+                return
 
         return self._deploy(dashboard_id, recursive=recursive, update=True)
 
@@ -754,14 +751,14 @@ class Cid():
                 message=f'Dashboard template changed, update it anyway?',
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
-                exit()
+                return
         elif dashboard.latest:
             if get_parameter(
                 param_name=f'confirm-update',
                 message=f'No updates available, should I update it anyway?',
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
-                exit()
+                return
 
         kwargs = dict()
         local_overrides = f'work/{self.base.account_id}/{dashboard.id}.json'
@@ -941,8 +938,7 @@ class Cid():
         elif dataset_definition.get('Data'):
             raw_template = dataset_definition.get('Data')
         if raw_template is None:
-            logger.critical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
-            exit(1)
+            raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
         return raw_template
 
 
@@ -1199,8 +1195,7 @@ class Cid():
                     )
                 param = {k:value}
             else:
-                logger.critical(f'Unknown parameter type for "{k}". Must be a string or a dict with value or with default key')
-                exit(1)
+                raise CidCritical(f'Unknown parameter type for "{k}". Must be a string or a dict with value or with default key')
             # Add parameter
             columns_tpl.update(param)
         # Compile template
