@@ -264,12 +264,17 @@ class QuickSight(CidBase):
         if self._principal_arn:
             return self._principal_arn
 
-        if self.group: self._principal_arn = self.group.get('Arn')
-        elif self.user: self._principal_arn = self.user.get('Arn')
+        if self.group and self.user:
+            raise CidCritical('provided both quicksight-group and quicksight-user. Please keep just one.')
+        if self.group:
+            self._principal_arn = self.group.get('Arn')
+        elif self.user:
+            self._principal_arn = self.user.get('Arn')
 
         if self._principal_arn:
             return self._principal_arn
 
+        # No parameters provided, let's ask user. Following parameter is not supposed to be used by CLI users.
         quicksight_owner = get_parameter('quicksight-owner-choice',
             message='You have not provided quicksight-user or quicksight-group. Do you what your objects to be owned by a user or a group?',
             choices=[
