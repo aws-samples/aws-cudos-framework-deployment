@@ -243,7 +243,7 @@ class QuickSight(CidBase):
             logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
             return dashboard
 
-    def ensure_exist_group(self, groupname='cid-owners', description='Created by Cloud Intelligence Dashboards'):
+    def ensure_group_exists(self, groupname='cid-owners', description='Created by Cloud Intelligence Dashboards'):
         try:
             group = self.identityClient.describe_group(
                 AwsAccountId=self.account_id,
@@ -257,6 +257,9 @@ class QuickSight(CidBase):
                 Namespace='default',
                 description=description,
             ).get('Group')
+        except self.client.exceptions.AccessDeniedException as e:
+            raise CidCritical('Cannot access groups. (AccessDenied). Please use quicksight-user parameter '
+                'or ensure you have permissions quicksight::DescribeGroup and quicksight::CreateGroup')
         return group
 
 
@@ -308,7 +311,7 @@ class QuickSight(CidBase):
             self._principal_arn = self._user.get('Arn')
 
         elif quicksight_owner.startswith("group cid-owners"):
-            group = self.ensure_exist_group('cid-owners')
+            group = self.ensure_group_exists('cid-owners')
             self._principal_arn = group.get('Arn')
 
         if not self._principal_arn:
@@ -860,17 +863,11 @@ class QuickSight(CidBase):
             logger.debug('group = ',json.dumps(result))
             return result.get('Group')
         except self.client.exceptions.ResourceNotFoundException:
-            logger.info(f'QuickSight group {groupname} not found.')
+            logger.error(f'QuickSight group {groupname} not found.')
             return None
         except self.client.exceptions.AccessDeniedException: # Try to overcome AccessDeniedException
             #FIXME: paginator is not available for list_groups
-            groups = self.identityClient.list_groups(AwsAccountId=self.account_id, Namespace='default').get('GroupList')
-            logger.debug(groups)
-            for group in groups:
-                if groupname.endswith(group.get('GroupName')):
-                    logger.info(f'Found group: {group}')
-                    return group
-            logger.info(f'QuickSight group {groupname} not found.')
+            logger.error(f'AccessDeniedException when trying to DescribeGroup in QuickSight.')
             return None
 
 
