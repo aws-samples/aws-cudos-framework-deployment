@@ -329,15 +329,17 @@ class Athena(CidBase):
         return d
 
     # AHQ functions
+    def query(self, sql, **kwargs) -> list:
+        """ Execute Athena Query and return a result"""
+        execution_id = self.execute_query(sql)
+        results = self.get_query_results(execution_id)
+        return self.parse_response_as_list(results)
+
+    # AHQ functions
     def execute_ahq(self, query_id, **kwargs) -> list:
         """ Execute Athena Query by name """
         # Load query
-        query = self.get_ahq(query_id, **kwargs)
-        # Execute query
-        execution_id = self.execute_query(query)
-        results = self.get_query_results(execution_id)
-        # Return results as list
-        return self.parse_response_as_list(results)
+        return self.query(self.get_ahq(query_id, **kwargs)) 
 
 
     def get_ahq(self, query_id, **kwargs) -> str:
