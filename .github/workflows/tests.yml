@@ -12,14 +12,17 @@ on:
 concurrency: staging_environment
 
 jobs:
-  build:
+  test-cli:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 1
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        include:
+          - {python-version: '3.7',  os: ubuntu-latest, dashboard: cudos }
+          - {python-version: '3.8',  os: macos-latest,  dashboard: cudos }
+          - {python-version: '3.9',  os: ubuntu-latest, dashboard: cudos }
+          - {python-version: '3.10', os: macos-latest,  dashboard: cudos }
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v3
@@ -37,23 +40,25 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-session-name: ${{ secrets.AWS_SESSION_NAME }}
           aws-region: ${{ secrets.AWS_REGION }}
+      - name: Basic check
+        run: |
+          cid-cmd status
       - name:  Install Bats
         run: |
           sudo apt-get install -y bats
+      - name:  Check Bats Verson
+        run: |
           bats -v
-#      - name:  Run basic Tests
-#        run: |
-#          cid-cmd -vv status  \
-#            --dashboard-id cudos \
-#            --athena-database athenacurcfn_cur1\
-#            --account-map-source dummy \
-#            --quicksight-user cicd-staging | grep -v accountId   | grep -v userId
       - name:  Run Bats Tests
         run: |
-          bats cid/test/bats/10-deploy-update-delete/cudos.bats | grep -v accountId   | grep -v userId
+          bats cid/test/bats/10-deploy-update-delete/${{ matrix.dashboard }}.bats
+      - name:  Save logs
+        if: always()
+        run: |
+          aws s3 cp ./cid.log s3://aws-cid-stage-logs/$GITHUB_EVENT_NAME/$GITHUB_REF_NAME/$GITHUB_RUN_NUMBER/python${{ matrix.python-version }}-${{ matrix.os }}/
 
-  push:
-    needs: build
+  publish-lambda-layer:
+    needs: test-cli
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -78,10 +83,23 @@ jobs:
         run: |
           ./assets/publish_lambda_layer.sh
 
-  test:
-    needs: push
+  test-cfn:
+    needs: publish-lambda-layer
     runs-on: 'ubuntu-latest'
     steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: ${{ secrets.AWS_SESSION_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name:  Install Bats
+        run: |
+          sudo apt-get install -y bats
+          bats -v
       - name:  Run Bats Tests for CloudFormation
         run: |
-          #bats <replace with CFN bats>
+          export lambda_bucket='aws-cid-stage'
+          # bats cfn-templates/cid-cfn.tests.bats

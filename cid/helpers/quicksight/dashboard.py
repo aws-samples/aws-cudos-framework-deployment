@@ -47,7 +47,7 @@ class Dashboard(CidQsResource):
         try:
             return int(self.deployed_arn.split('/')[-1])
         except Exception as e:
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
             return 0
  
     @property

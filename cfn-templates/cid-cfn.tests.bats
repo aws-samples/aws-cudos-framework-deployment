@@ -10,7 +10,11 @@
 #   2. Quicksight has rights to read all s3 bukets in the account (not managable today)
 #   3. At least 1 CUR created
 
+export lambda_bucket="${lambda_bucket:-aws-managed-cost-intelligence-dashboards}" # If variable not set or null, use default
+
+
 setup_file() {
+  export cfns3bucket="aws-cid-stage-cloudformation"
   export stackname="stack$(date +%Y%m%d%H%M)"
   export account_id=$(aws sts get-caller-identity --query Account --output text)
   export cid_version=$(python3 -c 'from cid._version import __version__;print(__version__)')
@@ -55,6 +59,7 @@ setup_file() {
 }
 @test "Install stack (5 mins)" {
   aws cloudformation deploy \
+    --s3-bucket "$cfns3bucket" \
     --template-file  ./cfn-templates/cid-cfn.yml \
     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM  \
     --parameter-overrides \
@@ -63,12 +68,13 @@ setup_file() {
       PrerequisitesQuickSightPermissions="yes"\
       QuickSightUser="$quicksight_user"\
       CURBucketPath="s3://$cur_bucket/$cur_prefix/$cur_name/$cur_name"\
+      CURIsManagedByCloudFormation="yes"\
       CostOptimizationDataCollectionBucketPath="s3://costoptimizationdata{account_id}"\
       DeployCUDOSDashboard="yes"\
       DeployComputeOptimizerDashboard="no"\
       DeployCostIntelligenceDashboard="yes"\
       DeployKPIDashboard="yes"\
-      DeployTAODashboard="yes"\
+      DeployTAODashboard="no"\
       AthenaWorkgroup=""\
       AthenaQueryResultsBucket=""\
       CURDatabaseName=""\
@@ -76,7 +82,7 @@ setup_file() {
       CURTableName=""\
       CidVersion="$cid_version"\
       QuickSightDataSetRefreshSchedule="cron(0 4 * * ? *)"\
-      LambdaLayerBucketPrefix="aws-managed-cost-intelligence-dashboards"\
+      LambdaLayerBucketPrefix="$lambda_bucket"\
       Suffix=""\
     --stack-name "$stackname"
 

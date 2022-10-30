@@ -14,10 +14,12 @@ class Dataset(CidQsResource):
     def datasources(self) -> list:
         _datasources = []
         try:
-            for table_map in self.raw.get('PhysicalTableMap').values():
-                _datasources.append(table_map.get('RelationalTable').get('DataSourceArn').split('/')[-1])
+            for table_map in self.raw.get('PhysicalTableMap', {}).values():
+                ds = table_map.get('RelationalTable', {}).get('DataSourceArn', '').split('/')[-1]
+                if ds:
+                    _datasources.append(ds)
         except Exception as e:
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
         return sorted(list(set(_datasources)))
 
     @property
@@ -29,5 +31,5 @@ class Dataset(CidQsResource):
                 if schema:
                     schemas.append(schema)
         except Exception as e:
-            logger.debug(e, stack_info=True)
+            logger.debug(e, exc_info=True)
         return sorted(list(set(schemas)))

@@ -9,6 +9,7 @@ from string import Template
 from cid.base import CidBase
 from cid.helpers import Athena, CUR
 from cid.utils import get_parameter
+from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
@@ -266,8 +267,7 @@ class AccountMap(CidBase):
             self.select_metadata_collection_method()
             logger.info(f'Attempt {attempt + 2}' )
         else:
-            logger.critical('Failed to create map')
-            exit(1)
+            raise CidCritical('Failed to create account map')
 
         if self._metadata_source == 'dummy':
             return self.get_dummy_account_mapping_sql(name)

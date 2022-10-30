@@ -2,10 +2,13 @@ import os
 import sys
 import logging
 from collections.abc import Iterable
+import inspect
 
 from boto3.session import Session
 import questionary
 from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError, ProfileNotFound
+
+from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +60,7 @@ def get_boto_session(**kwargs) -> Session:
         logger.critical(e)
         exit(1)
     except Exception as e:
-        logger.debug(e, stack_info=True)
+        logger.debug(e, exc_info=True)
         raise
 
 def get_boto_client(service_name, **kwargs):
@@ -72,10 +75,9 @@ def get_boto_client(service_name, **kwargs):
         session = get_boto_session(**kwargs)
         return session.client(service_name)
     except (NoCredentialsError, CredentialRetrievalError):
-        print('Error: unable to initialize boto client, please check your AWS credentials, exiting')
-        exit(1)
+        raise CidCritical('Error: unable to initialize boto client, please check your AWS credentials, exiting')
     except Exception as e:
-        logger.debug(e, stack_info=True)
+        logger.debug(e, exc_info=True)
         raise
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
@@ -94,6 +96,7 @@ def get_parameters():
 
 
 def get_yesno_parameter(param_name, message, default=None, break_on_ctrl_c=True):
+    logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
     mapping = {True: True, False:False, 'yes': True, 'no': False}
     if param_name in params and params.get(param_name) != None:
@@ -120,6 +123,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
 
     :returns: a value choosed by user or provided in command line    
     """
+    logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
     if params.get(param_name):
         value = params[param_name]

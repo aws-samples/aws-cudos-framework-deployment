@@ -78,8 +78,9 @@
                 "quicksight:DescribeTemplate",
                 "quicksight:ListUsers",
                 "quicksight:PassDataSource",
-                "quicksight:PassDataSet"
-                
+                "quicksight:PassDataSet",
+                "quicksight:UpdateDashboard",
+                "quicksight:UpdateDashboardPublishedVersion"               
             ],
             "Resource": [
                 "*"
