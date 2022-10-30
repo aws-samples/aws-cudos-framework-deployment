@@ -164,10 +164,10 @@ class Cid():
         return wrap
 
     def __loadPlugins(self) -> dict:
-        if sys.version_info < (3, 8):
-            _entry_points = [ep for ep in entry_points() if ep.group == 'cid.plugins']
-        else:
+        try:
             _entry_points = entry_points().get('cid.plugins')
+        except: # fallback for python version more than 3.7.x AND still less then 3.8
+            _entry_points = [ep for ep in entry_points() if ep.group == 'cid.plugins']
 
         plugins = dict()
         print('Loading plugins...')
