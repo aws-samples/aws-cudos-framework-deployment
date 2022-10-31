@@ -491,8 +491,11 @@ class Cid():
                     continue
                 datasources = dataset.datasources
                 athena_datasource = self.qs.datasources.get(datasources[0])
-                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
-                break
+                if athena_datasource:
+                    self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+                    break
+                logger.debug(f'Cannot find QuickSight DataSource {datasources[0]}. So cannot define Athena WorkGroup')
+                continue
         else:
             logger.info(f'Dataset not found for deletion: {name} ({id})')
         for view_name in list(set(self.resources['datasets'][name].get('dependsOn', {}).get('views', []))):
@@ -623,7 +626,7 @@ class Cid():
                             resource_name=f'data/permissions/folder_permissions.json',
                         ).decode('utf-8'))
                         columns_tpl = {
-                            'PrincipalArn': self.qs.user.get('Arn')
+                            'PrincipalArn': self.qs.get_principal_arn()
                         }
                         folder_permissions = json.loads(folder_permissions_tpl.safe_substitute(columns_tpl))
                         folder = self.qs.create_folder(folder_name, **folder_permissions)
