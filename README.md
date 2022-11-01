@@ -6,9 +6,8 @@
 This repository contains CloudFormation templates and Command Line tool (cid-cmd) for managing various dashboards provided in AWS Well Architected LAB [Cloud Intelligence Dashboards](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/).
 
 There are several ways we can manage dashboards:
-1. Manual (2 hours) 
-2. CloudFormation Template (30 mins)
-3. (`recommended`) Using cid-cmd tool. (5 mins) 
+1. CloudFormation Template (using cid-cmd tool in lambda) 
+2. Using cid-cmd tool from command line
 
 We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home).
 
