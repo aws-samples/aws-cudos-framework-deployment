@@ -24,5 +24,4 @@ class Template(CidQsResource):
 
     @ property
     def version(self) -> int:
-        # get('Version', dict()).get('VersionNumber', -1)
-        return self.raw.get('Version').get('VersionNumber', -1)
+        return self.raw.get('Version', dict()).get('VersionNumber', -1)

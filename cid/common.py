@@ -813,7 +813,7 @@ class Cid():
         print('\nRequired datasets: \n - {}\n'.format('\n - '.join(list(set(required_datasets)))))
 
         for dataset_name in required_datasets:
-            _ds_id = get_parameters().get(f'{dataset_name.replace("_", "-")}-dataset-id', None)
+            _ds_id = get_parameters().get(f'{dataset_name.replace("_", "-")}-dataset-id')
             if _ds_id:
                 self.qs.describe_dataset(_ds_id)
         
