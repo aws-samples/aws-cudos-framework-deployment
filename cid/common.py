@@ -799,6 +799,11 @@ class Cid():
         # Check dependencies
         required_datasets = sorted(_datasets)
         print('\nRequired datasets: \n - {}\n'.format('\n - '.join(list(set(required_datasets)))))
+
+        for dataset_name in required_datasets:
+            _ds_id = get_parameters().get(f'{dataset_name.replace("_", "-")}-dataset-id', None)
+            if _ds_id:
+                self.qs.describe_dataset(_ds_id)
         
         found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
