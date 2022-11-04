@@ -5,6 +5,7 @@ import os
 from typing import Dict
 
 from cid.helpers.quicksight.resource import CidQsResource
+from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import is_unattendent_mode
 
 
@@ -18,9 +19,7 @@ class Dashboard(CidQsResource):
         self._status = str()
         self.status_detail = str()
         # Source template in origin account
-        self.sourceTemplate = dict()
-        # Locally saved deployment
-        self.localConfig = dict()
+        self.sourceTemplate: CidQsTemplate = None
 
     @property
     def id(self) -> str:
@@ -36,8 +35,8 @@ class Dashboard(CidQsResource):
 
     @property
     def latest_version(self) -> int:
-        return int(self.sourceTemplate.get('Version', dict()).get('VersionNumber', -1))
-    
+        return self.sourceTemplate.version
+
     @property
     def deployed_arn(self) -> str:
         return self.version.get('SourceEntityArn')
@@ -71,7 +70,7 @@ class Dashboard(CidQsResource):
                 logger.info(f"Found datasets: {self.datasets}")
                 logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
             # Source Template has changed
-            elif self.deployed_arn and self.sourceTemplate.get('Arn') and not self.deployed_arn.startswith(self.sourceTemplate.get('Arn')):
+            elif self.deployed_arn and self.sourceTemplate.arn and not self.deployed_arn.startswith(self.sourceTemplate.arn):
                 self._status = 'legacy'
             else:
                 if self.latest_version > self.deployed_version:
@@ -100,8 +99,6 @@ class Dashboard(CidQsResource):
             print(f"  Version: {self.deployed_version}")
         else:
             print(f"  Version (deployed, latest): {self.deployed_version}, {self.latest_version}")
-        if self.localConfig:
-            print(f"  Local config: {self.localConfig.get('SourceEntity').get('SourceTemplate').get('Name')}")
         if self.datasets:
             print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
         print('\n')
@@ -113,4 +110,4 @@ class Dashboard(CidQsResource):
         print(f"#######\n####### {self.name} is available at: " + url + "\n#######")
         _supported_env = os.environ.get('AWS_EXECUTION_ENV') not in ['CloudShell', 'AWS_Lambda']
         if _supported_env and not is_unattendent_mode() and launch and click.confirm('Do you wish to open it in your browser?'):
-                click.launch(url)
+            click.launch(url)

@@ -25,7 +25,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
@@ -284,6 +284,7 @@ class Cid():
                 raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
         required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
+        source_template = self.qs.describe_template(dashboard_definition.get('templateId'))
 
         dashboard_datasets = self.qs.dashboards.get(dashboard_id).datasets if self.qs.dashboards.get(dashboard_id) else {}
         for name, id in dashboard_datasets.items():
@@ -298,9 +299,20 @@ class Cid():
         if not dashboard_definition.get('datasets'):
             dashboard_definition.update({'datasets': {}})
         for dataset_name in required_datasets:
-            arn = next((v.arn for v in self.qs._datasets.values() if v.name == dataset_name), None)
-            if arn:
-                dashboard_definition.get('datasets').update({dataset_name: arn})
+            ds = next((v for v in self.qs.datasets.values() if v.name == dataset_name), None)
+            if isinstance(ds, Dataset):
+                dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
+                required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
+                unmatched = {}
+                for k,v in required_fileds.items():
+                    if k not in dataset_fields or dataset_fields[k] != v:
+                        unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
+                if unmatched:
+                    raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
+                else:
+                    print(f'Using dataset {dataset_name}: {ds.id}')
+                    dashboard_definition.get('datasets').update({dataset_name: ds.arn})
+  
 
         kwargs = dict()
         local_overrides = f'work/{self.base.account_id}/{dashboard_definition.get("dashboardId")}.json'
@@ -328,7 +340,7 @@ class Cid():
         dashboard_definition.update({'sourceTemplate': latest_template})
 
         # Create dashboard
-        print(f"Latest template: {latest_template.get('Arn')}/version/{latest_template.get('Version').get('VersionNumber')}")
+        print(f"Latest template: {latest_template.arn}/version/{latest_template.version}")
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
@@ -747,7 +759,7 @@ class Cid():
 
         print(f'\nChecking for updates...')
         print(f'Deployed template: {dashboard.deployed_arn}')
-        print(f"Latest template: {dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}")
+        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         if dashboard.status == 'legacy':
             if get_parameter(
                 param_name=f'confirm-update',

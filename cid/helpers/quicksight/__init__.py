@@ -14,6 +14,7 @@ from cid.base import CidBase
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
+from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
@@ -26,6 +27,7 @@ class QuickSight(CidBase):
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
     _datasources: Dict[str, Datasource] = None
+    _templates: Dict[str, CidQsTemplate] = dict()
     _identityRegion: str = None
     _user: dict = None
     _principal_arn: dict = None
@@ -811,22 +813,24 @@ class QuickSight(CidBase):
             return _datasource
 
 
-    def describe_template(self, template_id: str, account_id: str=None, region: str='us-east-1'):
+    def describe_template(self, template_id: str, account_id: str=None, region: str='us-east-1') -> CidQsTemplate:
         """ Describes an AWS QuickSight template """
         if not account_id:
             account_id=self.cidAccountId
-        try:
-            client = self.session.client('quicksight', region_name=region)
-            result = client.describe_template(AwsAccountId=account_id, TemplateId=template_id)
-            logger.debug(result)
-        except self.client.exceptions.UnsupportedUserEditionException:
-            raise CidCritical('AWS QuickSight Enterprise Edition is required')
-        except self.client.exceptions.ResourceNotFoundException:
-            raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
-        except Exception as e:
-            logger.debug(e, exc_info=True)
-            raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
-        return result.get('Template')
+        if not self._templates.get(f'{account_id}:{region}:{template_id}'):
+            try:
+                client = self.session.client('quicksight', region_name=region)
+                result = client.describe_template(AwsAccountId=account_id, TemplateId=template_id)
+                self._templates.update({f'{account_id}:{region}:{template_id}': CidQsTemplate(result.get('Template'))})
+                logger.debug(result)
+            except self.client.exceptions.UnsupportedUserEditionException:
+                raise CidCritical('AWS QuickSight Enterprise Edition is required')
+            except self.client.exceptions.ResourceNotFoundException:
+                raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
+            except Exception as e:
+                logger.debug(e, exc_info=True)
+                raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
+        return self._templates.get(f'{account_id}:{region}:{template_id}')
 
     def describe_user(self, username: str) -> dict:
         """ Describes an AWS QuickSight user """
@@ -954,7 +958,7 @@ class QuickSight(CidBase):
             ],
             'SourceEntity': {
                 'SourceTemplate': {
-                    'Arn': f"{definition.get('sourceTemplate').get('Arn')}/version/{definition.get('sourceTemplate').get('Version').get('VersionNumber')}",
+                    'Arn': f"{definition.get('sourceTemplate').arn}/version/{definition.get('sourceTemplate').version}",
                     'DataSetReferences': DataSetReferences
                 }
             }
@@ -1000,7 +1004,7 @@ class QuickSight(CidBase):
             'Name': dashboard.name,
             'SourceEntity': {
                 'SourceTemplate': {
-                    'Arn': f"{dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}",
+                    'Arn': f"{dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}",
                     'DataSetReferences': DataSetReferences
                 }
             }
