@@ -199,13 +199,23 @@ class QuickSight(CidBase):
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
             # Look for dashboard definition by templateId
-            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.templateId), None)
+            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.deployedTemplate.id), None)
+        try:
+            _template_arn = dashboard.version.get('SourceEntityArn')
+            _template_id = str(_template_arn.split('/')[1])
+            _template_version = int(_template_arn.split('/')[-1])
+            _template = self.describe_template(template_id=_template_id, version_number=_template_version)
+            if isinstance(_template, CidQsTemplate):
+                dashboard.deployedTemplate = _template
+        except Exception as e:
+                logger.debug(e, exc_info=True)
+                logger.info(f'Unable to describe template {_template_id}, {e}')
         if not _definition:
-            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
         else:
-            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
             dashboard.definition = _definition
-            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
             for dataset in dashboard.version.get('DataSetArns'):
                 dataset_id = dataset.split('/')[-1]
                 try:
@@ -813,14 +823,19 @@ class QuickSight(CidBase):
             return _datasource
 
 
-    def describe_template(self, template_id: str, account_id: str=None, region: str='us-east-1') -> CidQsTemplate:
+    def describe_template(self, template_id: str, version_number: int=None, account_id: str=None, region: str='us-east-1') -> CidQsTemplate:
         """ Describes an AWS QuickSight template """
         if not account_id:
             account_id=self.cidAccountId
         if not self._templates.get(f'{account_id}:{region}:{template_id}'):
             try:
                 client = self.session.client('quicksight', region_name=region)
-                result = client.describe_template(AwsAccountId=account_id, TemplateId=template_id)
+                parameters = {
+                    'AwsAccountId': account_id,
+                    'TemplateId': template_id
+                }
+                if version_number: parameters.update({'VersionNumber': version_number})
+                result = client.describe_template(**parameters)
                 self._templates.update({f'{account_id}:{region}:{template_id}': CidQsTemplate(result.get('Template'))})
                 logger.debug(result)
             except self.client.exceptions.UnsupportedUserEditionException:

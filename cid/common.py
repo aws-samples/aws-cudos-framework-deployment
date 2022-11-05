@@ -758,7 +758,7 @@ class Cid():
             return
 
         print(f'\nChecking for updates...')
-        print(f'Deployed template: {dashboard.deployed_arn}')
+        print(f'Deployed template: {dashboard.deployedTemplate.arn}/version/{dashboard.deployed_version}')
         print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         if dashboard.status == 'legacy':
             if get_parameter(

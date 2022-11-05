@@ -11,11 +11,14 @@ from cid.utils import is_unattendent_mode
 
 logger = logging.getLogger(__name__)
 
+
 class Dashboard(CidQsResource):
     def __init__(self, raw: dict) -> None:
         super().__init__(raw)
         # Initialize properties
         self.datasets: Dict[str, str] = {}
+        # Deployed template
+        self._deployedTemplate: CidQsTemplate = None
         self._status = str()
         self.status_detail = str()
         # Source template in origin account
@@ -30,6 +33,21 @@ class Dashboard(CidQsResource):
         return self.get_property('Version')
 
     @property
+    def deployedTemplate(self) -> CidQsTemplate:
+        return self._deployedTemplate
+
+    @deployedTemplate.setter
+    def deployedTemplate(self, template: CidQsTemplate) -> None:
+        self._deployedTemplate = template
+
+    @property
+    def deployed_version(self) -> int:
+        if isinstance(self.deployedTemplate, CidQsTemplate):
+            return self.deployedTemplate.version
+        else:
+            return -1
+
+    @property
     def latest(self) -> bool:
         return self.latest_version == self.deployed_version
 
@@ -37,18 +55,6 @@ class Dashboard(CidQsResource):
     def latest_version(self) -> int:
         return self.sourceTemplate.version
 
-    @property
-    def deployed_arn(self) -> str:
-        return self.version.get('SourceEntityArn')
-    
-    @property
-    def deployed_version(self) -> int:
-        try:
-            return int(self.deployed_arn.split('/')[-1])
-        except Exception as e:
-            logger.debug(e, exc_info=True)
-            return 0
- 
     @property
     def health(self) -> bool:
         return self.status not in ['broken']
@@ -70,7 +76,7 @@ class Dashboard(CidQsResource):
                 logger.info(f"Found datasets: {self.datasets}")
                 logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
             # Source Template has changed
-            elif self.deployed_arn and self.sourceTemplate.arn and not self.deployed_arn.startswith(self.sourceTemplate.arn):
+            elif self.deployedTemplate.arn and self.sourceTemplate.arn and not self.deployedTemplate.arn.startswith(self.sourceTemplate.arn):
                 self._status = 'legacy'
             else:
                 if self.latest_version > self.deployed_version:
@@ -78,15 +84,6 @@ class Dashboard(CidQsResource):
                 elif self.latest:
                     self._status = 'up to date'
         return self._status
-
-    @property
-    def templateId(self) -> str:
-        if 'SourceEntityArn' not in self.version:
-            return ''
-        arn = self.version.get('SourceEntityArn')
-        if ":template/" not in arn:
-            return ''
-        return str(arn.split('/')[1])
 
     def display_status(self) -> None:
         print('\nDashboard status:')
