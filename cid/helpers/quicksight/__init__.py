@@ -14,6 +14,7 @@ from cid.base import CidBase
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
+from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
@@ -26,6 +27,7 @@ class QuickSight(CidBase):
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
     _datasources: Dict[str, Datasource] = None
+    _templates: Dict[str, CidQsTemplate] = dict()
     _identityRegion: str = None
     _user: dict = None
     _principal_arn: dict = None
@@ -190,20 +192,30 @@ class QuickSight(CidBase):
         return result
 
 
-    def discover_dashboard(self, dashboardId: str):
+    def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover single dashboard"""
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
             # Look for dashboard definition by templateId
-            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.templateId), None)
+            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.deployedTemplate.id), None)
+        try:
+            _template_arn = dashboard.version.get('SourceEntityArn')
+            _template_id = str(_template_arn.split('/')[1])
+            _template_version = int(_template_arn.split('/')[-1])
+            _template = self.describe_template(template_id=_template_id, version_number=_template_version)
+            if isinstance(_template, CidQsTemplate):
+                dashboard.deployedTemplate = _template
+        except Exception as e:
+                logger.debug(e, exc_info=True)
+                logger.info(f'Unable to describe template {_template_id}, {e}')
         if not _definition:
-            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
         else:
-            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
             dashboard.definition = _definition
-            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
             for dataset in dashboard.version.get('DataSetArns'):
                 dataset_id = dataset.split('/')[-1]
                 try:
@@ -811,22 +823,29 @@ class QuickSight(CidBase):
             return _datasource
 
 
-    def describe_template(self, template_id: str, account_id: str=None, region: str='us-east-1'):
+    def describe_template(self, template_id: str, version_number: int=None, account_id: str=None, region: str='us-east-1') -> CidQsTemplate:
         """ Describes an AWS QuickSight template """
         if not account_id:
             account_id=self.cidAccountId
-        try:
-            client = self.session.client('quicksight', region_name=region)
-            result = client.describe_template(AwsAccountId=account_id, TemplateId=template_id)
-            logger.debug(result)
-        except self.client.exceptions.UnsupportedUserEditionException:
-            raise CidCritical('AWS QuickSight Enterprise Edition is required')
-        except self.client.exceptions.ResourceNotFoundException:
-            raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
-        except Exception as e:
-            logger.debug(e, exc_info=True)
-            raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
-        return result.get('Template')
+        if not self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}'):
+            try:
+                client = self.session.client('quicksight', region_name=region)
+                parameters = {
+                    'AwsAccountId': account_id,
+                    'TemplateId': template_id
+                }
+                if version_number: parameters.update({'VersionNumber': version_number})
+                result = client.describe_template(**parameters)
+                self._templates.update({f'{account_id}:{region}:{template_id}:{version_number}': CidQsTemplate(result.get('Template'))})
+                logger.debug(result)
+            except self.client.exceptions.UnsupportedUserEditionException:
+                raise CidCritical('AWS QuickSight Enterprise Edition is required')
+            except self.client.exceptions.ResourceNotFoundException:
+                raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
+            except Exception as e:
+                logger.debug(e, exc_info=True)
+                raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
+        return self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}')
 
     def describe_user(self, username: str) -> dict:
         """ Describes an AWS QuickSight user """
@@ -954,7 +973,7 @@ class QuickSight(CidBase):
             ],
             'SourceEntity': {
                 'SourceTemplate': {
-                    'Arn': f"{definition.get('sourceTemplate').get('Arn')}/version/{definition.get('sourceTemplate').get('Version').get('VersionNumber')}",
+                    'Arn': f"{definition.get('sourceTemplate').arn}/version/{definition.get('sourceTemplate').version}",
                     'DataSetReferences': DataSetReferences
                 }
             }
@@ -1000,7 +1019,7 @@ class QuickSight(CidBase):
             'Name': dashboard.name,
             'SourceEntity': {
                 'SourceTemplate': {
-                    'Arn': f"{dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}",
+                    'Arn': f"{dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}",
                     'DataSetReferences': DataSetReferences
                 }
             }

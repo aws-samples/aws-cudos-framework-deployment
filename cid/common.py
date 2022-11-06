@@ -25,7 +25,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
@@ -294,16 +294,36 @@ class Cid():
         if recursive:
             self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
 
+        # Get QuickSight template details
+        source_template = self.qs.describe_template(
+            template_id=dashboard_definition.get('templateId'),
+            account_id=dashboard_definition.get('sourceAccountId'),
+            region=dashboard_definition.get('region', 'us-east-1')
+        )
+        dashboard_definition.update({'sourceTemplate': source_template})
+        print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
+
         # Prepare API parameters
         if not dashboard_definition.get('datasets'):
             dashboard_definition.update({'datasets': {}})
         for dataset_name in required_datasets:
-            arn = next((v.arn for v in self.qs._datasets.values() if v.name == dataset_name), None)
-            if arn:
-                dashboard_definition.get('datasets').update({dataset_name: arn})
+            ds = next((v for v in self.qs.datasets.values() if v.name == dataset_name), None)
+            if isinstance(ds, Dataset):
+                dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
+                required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
+                unmatched = {}
+                for k,v in required_fileds.items():
+                    if k not in dataset_fields or dataset_fields[k] != v:
+                        unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
+                if unmatched:
+                    raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
+                else:
+                    print(f'Using dataset {dataset_name}: {ds.id}')
+                    dashboard_definition.get('datasets').update({dataset_name: ds.arn})
+  
 
         kwargs = dict()
-        local_overrides = f'work/{self.base.account_id}/{dashboard_definition.get("dashboardId")}.json'
+        local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'
         logger.info(f'Looking for local overrides file "{local_overrides}"...')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
@@ -319,23 +339,12 @@ class Cid():
         except FileNotFoundError:
             logger.info('local overrides file not found')
 
-        # Get QuickSight template details
-        latest_template = self.qs.describe_template(
-            template_id=dashboard_definition.get('templateId'),
-            account_id=dashboard_definition.get('sourceAccountId'),
-            region=dashboard_definition.get('region', 'us-east-1'),
-        )
-        dashboard_definition.update({'sourceTemplate': latest_template})
-
-        # Create dashboard
-        print(f"Latest template: {latest_template.get('Arn')}/version/{latest_template.get('Version').get('VersionNumber')}")
-
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
         dashboard = self.qs.dashboards.get(dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id)
+                return self.update_dashboard(dashboard_id, **kwargs)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
@@ -746,8 +755,8 @@ class Cid():
             return
 
         print(f'\nChecking for updates...')
-        print(f'Deployed template: {dashboard.deployed_arn}')
-        print(f"Latest template: {dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}")
+        print(f'Deployed template: {dashboard.deployedTemplate.arn}')
+        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         if dashboard.status == 'legacy':
             if get_parameter(
                 param_name=f'confirm-update',
@@ -762,23 +771,6 @@ class Cid():
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
                 return
-
-        kwargs = dict()
-        local_overrides = f'work/{self.base.account_id}/{dashboard.id}.json'
-        logger.info(f'Looking for local overrides file "{local_overrides}"')
-        try:
-            with open(local_overrides, 'r', encoding='utf-8') as r:
-                try:
-                    print('found')
-                    if click.confirm(f'Use local overrides from {local_overrides}?'):
-                        kwargs = json.load(r)
-                        print('loaded')
-                except Exception as e:
-                    # Catch exception and dump a reason
-                    print('failed to load, dumping error message')
-                    print(json.dumps(e, indent=4, sort_keys=True, default=str))
-        except FileNotFoundError:
-            logger.info('local overrides file not found')
 
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')
@@ -799,6 +791,11 @@ class Cid():
         # Check dependencies
         required_datasets = sorted(_datasets)
         print('\nRequired datasets: \n - {}\n'.format('\n - '.join(list(set(required_datasets)))))
+
+        for dataset_name in required_datasets:
+            _ds_id = get_parameters().get(f'{dataset_name.replace("_", "-")}-dataset-id')
+            if _ds_id:
+                self.qs.describe_dataset(_ds_id)
         
         found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
