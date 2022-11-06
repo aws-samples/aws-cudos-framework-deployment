@@ -284,7 +284,6 @@ class Cid():
                 raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
         required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
-        source_template = self.qs.describe_template(dashboard_definition.get('templateId'))
 
         dashboard_datasets = self.qs.dashboards.get(dashboard_id).datasets if self.qs.dashboards.get(dashboard_id) else {}
         for name, id in dashboard_datasets.items():
@@ -294,6 +293,15 @@ class Cid():
 
         if recursive:
             self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
+
+        # Get QuickSight template details
+        source_template = self.qs.describe_template(
+            template_id=dashboard_definition.get('templateId'),
+            account_id=dashboard_definition.get('sourceAccountId'),
+            region=dashboard_definition.get('region', 'us-east-1')
+        )
+        dashboard_definition.update({'sourceTemplate': source_template})
+        print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
 
         # Prepare API parameters
         if not dashboard_definition.get('datasets'):
@@ -315,7 +323,7 @@ class Cid():
   
 
         kwargs = dict()
-        local_overrides = f'work/{self.base.account_id}/{dashboard_definition.get("dashboardId")}.json'
+        local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'
         logger.info(f'Looking for local overrides file "{local_overrides}"...')
         try:
             with open(local_overrides, 'r', encoding='utf-8') as r:
@@ -331,23 +339,12 @@ class Cid():
         except FileNotFoundError:
             logger.info('local overrides file not found')
 
-        # Get QuickSight template details
-        latest_template = self.qs.describe_template(
-            template_id=dashboard_definition.get('templateId'),
-            account_id=dashboard_definition.get('sourceAccountId'),
-            region=dashboard_definition.get('region', 'us-east-1'),
-        )
-        dashboard_definition.update({'sourceTemplate': latest_template})
-
-        # Create dashboard
-        print(f"Latest template: {latest_template.arn}/version/{latest_template.version}")
-
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
         dashboard = self.qs.dashboards.get(dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id)
+                return self.update_dashboard(dashboard_id, **kwargs)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
@@ -758,7 +755,7 @@ class Cid():
             return
 
         print(f'\nChecking for updates...')
-        print(f'Deployed template: {dashboard.deployedTemplate.arn}/version/{dashboard.deployed_version}')
+        print(f'Deployed template: {dashboard.deployedTemplate.arn}')
         print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         if dashboard.status == 'legacy':
             if get_parameter(
@@ -774,23 +771,6 @@ class Cid():
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
                 return
-
-        kwargs = dict()
-        local_overrides = f'work/{self.base.account_id}/{dashboard.id}.json'
-        logger.info(f'Looking for local overrides file "{local_overrides}"')
-        try:
-            with open(local_overrides, 'r', encoding='utf-8') as r:
-                try:
-                    print('found')
-                    if click.confirm(f'Use local overrides from {local_overrides}?'):
-                        kwargs = json.load(r)
-                        print('loaded')
-                except Exception as e:
-                    # Catch exception and dump a reason
-                    print('failed to load, dumping error message')
-                    print(json.dumps(e, indent=4, sort_keys=True, default=str))
-        except FileNotFoundError:
-            logger.info('local overrides file not found')
 
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')

@@ -22,6 +22,6 @@ class Template(CidQsResource):
             logger.debug(e, exc_info = True)
         return _datasets
 
-    @ property
+    @property
     def version(self) -> int:
         return self.raw.get('Version', dict()).get('VersionNumber', -1)

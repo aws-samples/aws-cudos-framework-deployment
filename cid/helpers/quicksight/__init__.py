@@ -192,7 +192,7 @@ class QuickSight(CidBase):
         return result
 
 
-    def discover_dashboard(self, dashboardId: str):
+    def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover single dashboard"""
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         # Look for dashboard definition by DashboardId
@@ -827,7 +827,7 @@ class QuickSight(CidBase):
         """ Describes an AWS QuickSight template """
         if not account_id:
             account_id=self.cidAccountId
-        if not self._templates.get(f'{account_id}:{region}:{template_id}'):
+        if not self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}'):
             try:
                 client = self.session.client('quicksight', region_name=region)
                 parameters = {
@@ -836,7 +836,7 @@ class QuickSight(CidBase):
                 }
                 if version_number: parameters.update({'VersionNumber': version_number})
                 result = client.describe_template(**parameters)
-                self._templates.update({f'{account_id}:{region}:{template_id}': CidQsTemplate(result.get('Template'))})
+                self._templates.update({f'{account_id}:{region}:{template_id}:{version_number}': CidQsTemplate(result.get('Template'))})
                 logger.debug(result)
             except self.client.exceptions.UnsupportedUserEditionException:
                 raise CidCritical('AWS QuickSight Enterprise Edition is required')
@@ -845,7 +845,7 @@ class QuickSight(CidBase):
             except Exception as e:
                 logger.debug(e, exc_info=True)
                 raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
-        return self._templates.get(f'{account_id}:{region}:{template_id}')
+        return self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}')
 
     def describe_user(self, username: str) -> dict:
         """ Describes an AWS QuickSight user """
