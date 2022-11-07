@@ -1134,16 +1134,18 @@ class Cid():
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
                         print(f'Updating view: "{view_name}"')
-                        from cid.sql_tools import pretty_sql, diff
+
+                        #WIP
+                        from cid.sql_tools import pretty_sql, diff 
                         existing_view_query = '\n'.join(self.athena.query(f'SHOW CREATE VIEW {view_name}'))
-                        with open(f'old_{view_name}.sql', 'w') as f:
-                            f.write(existing_view_query)
-                        with open(f'new_{view_name}.sql', 'w') as f:
-                            f.write(view_query)
-                        with open(f'pretty_old_{view_name}.sql', 'w') as f:
-                            f.write(pretty_sql(existing_view_query))
-                        with open(f'pretty_new_{view_name}.sql', 'w') as f:
-                            f.write(pretty_sql(view_query))
+                        # with open(f'old_{view_name}.sql', 'w') as f:
+                        #     f.write(existing_view_query)
+                        # with open(f'new_{view_name}.sql', 'w') as f:
+                        #     f.write(view_query)
+                        # with open(f'pretty_old_{view_name}.sql', 'w') as f:
+                        #     f.write(pretty_sql(existing_view_query))
+                        # with open(f'pretty_new_{view_name}.sql', 'w') as f:
+                        #     f.write(pretty_sql(view_query))
                         print (diff(pretty_sql(existing_view_query), pretty_sql(view_query)))
                         print(f'Updating view: "{view_name}"')
                         self.athena.execute_query(view_query)
