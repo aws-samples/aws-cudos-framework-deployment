@@ -16,7 +16,7 @@ Metadata:
           - CURBucketPath
           - CURIsManagedByCloudFormation
       - Label:
-          default: Available dashboards. CUDOS CostIntelligenceDashboard and KPI are CUR based, others requre installation of an additional Lab.
+          default: Available dashboards. Trusted Advisor and Compute Optimiser Dashboards require deployment of Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
         Parameters:
           - DeployCUDOSDashboard
           - DeployCostIntelligenceDashboard
@@ -25,7 +25,7 @@ Metadata:
           - DeployComputeOptimizerDashboard
           - CostOptimizationDataCollectionBucketPath
       - Label:
-          default: 'Optional Parameters. DO NOT CHANGE!'
+          default: 'Technical Parameters. Please do not change.'
         Parameters:
           - AthenaWorkgroup
           - AthenaQueryResultsBucket
@@ -122,12 +122,12 @@ Parameters:
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: ADDITIONAL - Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! You need Optimisation Data Collection Lab to be installed https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: ADDITIONAL - Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: ADDITIONAL - Deploy Compute Optimizer Dashboard (COD) - WARNING! You need Optimisation Data Collection Lab to be installed https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: ADDITIONAL - Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   CostOptimizationDataCollectionBucketPath:
