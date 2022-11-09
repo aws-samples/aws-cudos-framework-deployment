@@ -1,4 +1,5 @@
 import logging
+import json
 
 from cid.commands.command_base import Command
 from cid.utils import get_parameter, get_yesno_parameter, unset_parameter
@@ -12,7 +13,12 @@ class InitCommand(Command):
         else:
             self._logger = logging.getLogger(__name__)
         
-        self.bucket_name = None
+        self.bucket_name = f'aws-athena-query-results-cid-{self.cid.base.account_id}-{self.cid.base.region}'
+        self.athena_workgroup_name = 'cid'
+        self.database_name = 'cid_cur'
+        self.catalog_id = self.cid.base.account_id
+        self.cur_bucket_path = f's3://cid-{self.cid.base.account_id}-shared/cur/'
+        self.cid_crawler_role_name = 'CidCURCrawlerRole'
         
     def execute(self):
         """ Execute the initilization """
@@ -24,12 +30,49 @@ class InitCommand(Command):
         self._create_query_results_bucket()
         # Create Athena workgroup "cid"
         self._create_athena_workgroup()
+        # Create Glue database
+        self._create_glue_database()
         # Create table with predefined fields 
+        self._create_glue_crawler_role()
+        self._create_glue_crawler()
         # Create crawler that updates the table
         
+    def _create_glue_crawler_role(self):
+        """ Create IAM role for Glue crawler """
+        assume_role_policy_document = json.dumps({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "greengrass.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+                }
+            ]
+        })
+
+        create_role_response = self._iam.create_role(
+            RoleName = "my-role-name",
+            AssumeRolePolicyDocument = assume_role_policy_document
+        )
+        
+    def _create_glue_crawler(self):
+        """ Create a new Glue crawler """
+        ...
+        
+    def _create_glue_database(self):
+        """ Create Glue database """
+        try:
+            self.cid.glue.create_database(name=self.database_name, catalog_id=self.catalog_id)
+            print(f'\tGlue Database...\tCreated ({self.database_name} in {self.catalog_id})')
+        except self.cid.glue.client.exceptions.AlreadyExistsException:
+            print(f'\tGlue Database...\tExists ({self.database_name} in {self.catalog_id})')
+        except Exception:
+            print(f'\tGlue Database...\tFailed')
     
     def _create_athena_workgroup(self):
-        self.athena_workgroup_name = 'cid'
+        """ Create Athena workgroup """
         try:
             self.cid.athena.create_workgroup(workgroup_name=self.athena_workgroup_name, s3_bucket_name=self.bucket_name)
             print(f'\tAthena Workgroup...\tCreated ({self.athena_workgroup_name})')
@@ -39,7 +82,7 @@ class InitCommand(Command):
             print(f'\tAthena Workgroup...\tFailed')
     
     def _create_query_results_bucket(self):
-        self.bucket_name = f'aws-athena-query-results-cid-{self.cid.base.account_id}-{self.cid.base.region}'
+        """ Create bucket for storing query results """
         try:
             self.cid.s3.create_bucket(self.bucket_name)
             print(f'\tAthena S3 Bucket...\tCreated ({self.bucket_name})')
@@ -48,6 +91,7 @@ class InitCommand(Command):
             self._logger.error(f'ERROR: {ex}')
     
     def _create_quicksight_enterprise_subscription(self):
+        """ Enable QuickSight Enterprise if not enabled already """
         required_editions = {'ENTERPRISE', 'ENTERPRISE_AND_Q'}
         
         if self.cid.qs.edition in required_editions:
@@ -106,4 +150,3 @@ class InitCommand(Command):
         response = self.cid.qs.client.create_account_subscription(**PARAMS)
         if response.get('Status', 0) == 200:
             print('\tQuickSight Edition...\tSubscribed')
-        pass

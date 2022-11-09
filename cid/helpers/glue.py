@@ -32,3 +32,18 @@ class Glue(CidBase):
             )
         except self.client.exceptions.EntityNotFoundException:
             return True
+
+    def create_database(self, name: str, catalog_id: str) -> None:
+        """ Create a new AWS Glue database """
+        try:
+            response = self.client.create_database(
+                CatalogId=catalog_id,
+                DatabaseInput={
+                    'Name': name,
+                },
+            )
+        except Exception as ex:
+            logger.debug(ex, exc_info=True)
+            logger.info(f'Database {name} cannot be created in {catalog_id}: {ex}')
+            raise
+    

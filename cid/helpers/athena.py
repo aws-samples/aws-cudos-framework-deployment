@@ -447,6 +447,7 @@ class Athena(CidBase):
         return True
 
     def create_workgroup(self, workgroup_name: str, s3_bucket_name: str) -> None:
+        """Crete a new Athena Workgroup"""
         try:
             self.client.create_work_group(
                     Name=workgroup_name,
