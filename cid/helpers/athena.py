@@ -13,6 +13,9 @@ from cid.utils import get_parameter, get_parameters
 logger = logging.getLogger(__name__)
 
 class Athena(CidBase):
+    class WorkGroupAlreadyExistsException(Exception):
+        ...
+    
     # Define defaults
     defaults = {
         'CatalogName': 'AwsDataCatalog',
@@ -442,3 +445,28 @@ class Athena(CidBase):
             if name in self._metadata: del self._metadata[name]
             logger.info(f'View {name} deleted')
         return True
+
+    def create_workgroup(self, workgroup_name: str, s3_bucket_name: str) -> None:
+        try:
+            self.client.create_work_group(
+                    Name=workgroup_name,
+                    Configuration={
+                        'ResultConfiguration': {
+                            'OutputLocation': f's3://{s3_bucket_name}',
+                            'EncryptionConfiguration': {
+                                'EncryptionOption': 'SSE_S3',
+                            },
+                        },
+                        'EnforceWorkGroupConfiguration': True,
+                    }
+            )
+        except self.client.exceptions.InvalidRequestException as exc:
+            if exc.response.get('Message') == 'WorkGroup is already created':
+                logger.info(f'Work group {workgroup_name} already exists')
+                raise Athena.WorkGroupAlreadyExistsException()
+            else:
+                raise
+        except Exception as exc:
+            logger.debug(exc, exc_info=True)
+            logger.info(f'Work group {workgroup_name} cannot be created: {exc}')
+            raise

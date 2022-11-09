@@ -23,7 +23,20 @@ class InitCommand(Command):
         # Create query results bucket
         self._create_query_results_bucket()
         # Create Athena workgroup "cid"
-        # Create table with predefined fields and a crawler that updates it
+        self._create_athena_workgroup()
+        # Create table with predefined fields 
+        # Create crawler that updates the table
+        
+    
+    def _create_athena_workgroup(self):
+        self.athena_workgroup_name = 'cid'
+        try:
+            self.cid.athena.create_workgroup(workgroup_name=self.athena_workgroup_name, s3_bucket_name=self.bucket_name)
+            print(f'\tAthena Workgroup...\tCreated ({self.athena_workgroup_name})')
+        except self.cid.athena.WorkGroupAlreadyExistsException:
+            print(f'\tAthena Workgroup...\tExists ({self.athena_workgroup_name})')
+        except Exception as ex:
+            print(f'\tAthena Workgroup...\tFailed')
     
     def _create_query_results_bucket(self):
         self.bucket_name = f'aws-athena-query-results-cid-{self.cid.base.account_id}-{self.cid.base.region}'
