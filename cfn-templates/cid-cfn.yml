@@ -16,7 +16,7 @@ Metadata:
           - CURBucketPath
           - CURIsManagedByCloudFormation
       - Label:
-          default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that update the stack putting to 'yes' 3 first dashboards.
+          default: Available dashboards. CUDOS CostIntelligenceDashboard and KPI are CUR based, others requre installation of an additional Lab.
         Parameters:
           - DeployCUDOSDashboard
           - DeployCostIntelligenceDashboard
@@ -25,7 +25,7 @@ Metadata:
           - DeployComputeOptimizerDashboard
           - CostOptimizationDataCollectionBucketPath
       - Label:
-          default: 'Optional Parameters (do not change unless you know why)'
+          default: 'Optional Parameters. DO NOT CHANGE!'
         Parameters:
           - AthenaWorkgroup
           - AthenaQueryResultsBucket
@@ -75,7 +75,7 @@ Parameters:
     MinLength: 3
     Default: 's3://cid-{account_id}-shared/cur/'
     AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
-    Description: 'REQUIRED - s3 bucket with CUR and path. If CUR was created with CloudFormation, the path must be up to account partition. If it was a manually created CUR, the path must be up to the years partition. A variable {account_id} will be replaced by current account id automatically.'
+    Description: 'REQUIRED - s3 bucket with CUR and path. If CUR was created with CloudFormation (cur-aggregation.yaml), the path must be to account partition (default). If it was a manually created CUR, the path must be to the years partition (excluding years). A variable {account_id} will be replaced by current account id automatically, you do not need to replace that.'
   CURIsManagedByCloudFormation:
     Type: String
     Default: 'yes'
@@ -108,26 +108,26 @@ Parameters:
   DeployCUDOSDashboard:
     Type: String
     Description: Deploy CUDOS Dashboard
-    Default: "no"
+    Default: "yes"
     AllowedValues: ["yes", "no"]
   DeployCostIntelligenceDashboard:
     Type: String
     Description: Deploy Cost Intelligence Dashboard
-    Default: "no"
+    Default: "yes"
     AllowedValues: ["yes", "no"]
   DeployKPIDashboard:
     Type: String
     Description: Deploy KPI Dashboard
-    Default: "no"
+    Default: "yes"
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - You need Optimisation Data Collection Lab to be installed
+    Description: ADDITIONAL - Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! You need Optimisation Data Collection Lab to be installed https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: Deploy Compute Optimizer Dashboard (COD) - You need Optimisation Data Collection Lab to be installed
+    Description: ADDITIONAL - Deploy Compute Optimizer Dashboard (COD) - WARNING! You need Optimisation Data Collection Lab to be installed https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   CostOptimizationDataCollectionBucketPath:
