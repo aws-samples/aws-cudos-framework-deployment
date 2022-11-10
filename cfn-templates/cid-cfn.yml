@@ -4,7 +4,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: 'Common'
+          default: 'Common Parameters'
         Parameters:
           - PrerequisitesQuickSight
           - PrerequisitesQuickSightPermissions
@@ -350,10 +350,11 @@ Resources:
                   else: res = (True, f"Not supported operation: {type_}")
                   identity_region = get_identity_region()
               finally:
+                  log_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logEvent:group={context.log_group_name};stream={context.log_stream_name}"
                   url = event.get('ResponseURL')
                   body = {}
                   body['Status'] = 'SUCCESS' if res[0] else 'FAILED'
-                  body['Reason'] = str(res[1]) + '\nSee the details in CloudWatch Log Stream: ' + context.log_stream_name
+                  body['Reason'] = reason + '\nLogs: ' + log_url
                   body['PhysicalResourceId'] = 'keep_it_constant'
                   body['StackId'] = event.get('StackId')
                   body['RequestId'] = event.get('RequestId')
@@ -576,7 +577,6 @@ Resources:
                   status, reason = 'FAILED', str(exc)
               finally:
                   log_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logEvent:group={context.log_group_name};stream={context.log_stream_name}"
-
                   url = event.get('ResponseURL')
                   body['Status'] = status
                   body['Reason'] = reason + '\nLogs: ' + log_url
