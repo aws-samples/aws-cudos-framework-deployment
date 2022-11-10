@@ -13,7 +13,6 @@ Metadata:
           default: CUDOS Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually 24h before.
         Parameters:
           - CURBucketPath
-          - CURIsManagedByCloudFormation
           - DeployCUDOSDashboard
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
@@ -69,11 +68,6 @@ Parameters:
     Default: 's3://cid-{account_id}-shared/cur/'
     AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
     Description: 'REQUIRED - s3 bucket with CUR and path. If CUR was created with CloudFormation (cur-aggregation.yaml), the path must be to account partition (default). If it was a manually created CUR, the path must be to the years partition (excluding years). A variable {account_id} will be replaced by current account id automatically, you do not need to replace that.'
-  CURIsManagedByCloudFormation:
-    Type: String
-    Default: 'yes'
-    AllowedValues: ["yes", "no"]
-    Description: 'CUR was created with CloudFormation. If CUR was created manually AND it is a single account or single payer account CUR, select no'
   AthenaWorkgroup:
     Type: String
     Default: ''
@@ -163,9 +157,7 @@ Conditions:
         - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
         - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
         - !Equals [ !Ref DeployKPIDashboard, "yes" ]
-
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  CURIsManagedByCloudFormation: !Equals [ !Ref CURIsManagedByCloudFormation, "yes" ]
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -512,6 +504,7 @@ Resources:
           import uuid
           import json
           import urllib3
+          import boto3
 
           partitions = {
             "managed_by_cfn": ["source_account_id", "cur_name_1", "cur_name_2", "year", "month"],
@@ -535,6 +528,7 @@ Resources:
                   s3path = s3path.replace('{account_id}', account_id)
                   parts = s3path.split('/')
                   data['Bucket'] = parts[0]
+                  if not bucket_exists(data['Bucket']): raise Exception('Bucket in CURBucketPath does not exist. Please deploy CUR, just creating a bucket is not enough')
                   # detect Type of CUR and choose the right partitions structure
                   if len(parts[1:]) == 1: # most likely it is created by CFN or similar
                       data['Partitions'] = partitions['managed_by_cfn']
@@ -567,6 +561,16 @@ Resources:
                       print(f"Status code: {response}")
                   except Exception as exc:
                       print("Failed sending PUT to CFN: " + str(exc))
+
+          def bucket_exists(name):
+              try:
+                  s3.meta.client.head_bucket(Bucket=name)
+              except botocore.exceptions.ClientError as e:
+                  if e.response['Error']['Code'] == '404':
+                      return False
+              return True
+
+
 
   ProcessedCURPath:
     Type: Custom::CustomRessourceProcessPath
