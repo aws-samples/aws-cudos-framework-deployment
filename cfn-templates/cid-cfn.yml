@@ -17,7 +17,7 @@ Metadata:
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
       - Label:
-          default: Trusted Advisor and Compute Optimiser Dashboards. Require deployment of Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
+          default: Trusted Advisor and Compute Optimizer Dashboards. To deploy theese two dashboard, you must first deploy the Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
         Parameters:
           - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
@@ -35,25 +35,25 @@ Metadata:
           - LambdaLayerBucketPrefix
     ParameterLabels: 
       PrerequisitesQuickSight:
-        default: "I have QuickSight Enterprise Edition AND i have a SPICE capacity in the current region."
+        default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
       PrerequisitesQuickSightPermissions:
-        default: "I understand that i need to set up manually Permission of QuickSight to access CUR backet and Query results bucket, and then relaunch dataset refresh manually the first time."
+        default: "I understand that I need to manually give Permission to QuickSight to access CUR bucket and Query results bucket. Then manually refresh datasets after deploying this CFN."
       QuickSightUser:
-        default: "User name of QuickSight user (as displayed in QuickSight admin panel). Dashboard created by this template with be owned by this user."
+        default: "User name of QuickSight user (as displayed in QuickSight admin panel). Dashboards created by this template will be owned by this user."
       CURBucketPath:
-        default: "S3 path to Cost and Usage report."
+        default: "Path to Cost and Usage report"
       DeployCUDOSDashboard:
-        default: "Deploy CUDOSDashboard"
+        default: "Deploy CUDOS Dashboard"
       DeployCostIntelligenceDashboard:
         default: "Deploy CostIntelligenceDashboard"
       DeployKPIDashboard:
-        default: "Deploy KPIDashboard"
+        default: "Deploy KPI Dashboard"
       OptimizationDataCollectionBucketPath:
-        default: "S3 path to OptimizationDataCollection Bucket"
+        default: "Path to Optimization Data Collection S3 bucket"
       DeployTAODashboard:
-        default: "Deploy TAODashboard"
+        default: "Deploy TAO Dashboard"
       DeployComputeOptimizerDashboard:
-        default: "Deploy ComputeOptimizerDashboard"
+        default: "Deploy Compute Optimizer Dashboard"
       AthenaWorkgroup:
         default: "AthenaWorkgroup"
       AthenaQueryResultsBucket:
@@ -107,7 +107,7 @@ Parameters:
     MinLength: 3
     Default: 's3://cid-{account_id}-shared/cur/'
     AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
-    Description: 'Leave as is if CUR was created with CloudFormation (cur-aggregation.yaml). If it was a manually created CUR, the path must be before years partition (excluding years). A variable {account_id} will be replaced by current account id automatically, you do not need to replace that.'
+    Description: 'Leave as is if CUR was created with CloudFormation (cur-aggregation.yaml). If it was a manually created CUR, the path entered below must be for the directory that contains the years partition (s3://curbucketname/prefix/curname/curname/). If you're using the defaults, the variable {account_id} will be replaced by current account id automatically, you can leave it as {account_id}.'
   AthenaWorkgroup:
     Type: String
     Default: ''
@@ -149,17 +149,17 @@ Parameters:
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   OptimizationDataCollectionBucketPath:
     Type: String
-    Description: An S3 path to a bucket from Cost Optimisation Data Collection Lab, where you have /optics-data-collector folder (Required for TAO and COD). You can leave {account_id}, it will be replaced by current account ID
+    Description: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /optics-data-collector folder. You can leave the variable {account_id} in place, it will be replaced by current account ID automatically.
     Default: "s3://costoptimizationdata{account_id}"
   LambdaLayerBucketPrefix:
     Type: String
