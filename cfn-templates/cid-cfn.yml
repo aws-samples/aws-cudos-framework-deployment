@@ -55,26 +55,21 @@ Metadata:
       DeployComputeOptimizerDashboard:
         default: "Deploy Compute Optimizer Dashboard"
       AthenaWorkgroup:
-        default: "AthenaWorkgroup"
+        default: "Athena Workgroup"
       AthenaQueryResultsBucket:
-        default: "AthenaQueryResultsBucket"
+        default: "Athena Query Results Bucket"
       DatabaseName:
-        default: "DatabaseName"
+        default: "Database Name"
       CURTableName:
-        default: "CURTableName"
+        default: "CUR Table Name"
       CidVersion:
-        default: "CidVersion"
+        default: "Cid Version"
       Suffix:
         default: "Suffix"
       QuickSightDataSetRefreshSchedule:
-        default: "QuickSightDataSetRefreshSchedule"
+        default: "QuickSight DataSet Refresh Schedule"
       LambdaLayerBucketPrefix:
         default: "LambdaLayerBucketPrefix"
-
-      VPCID: 
-        default: "Which VPC should this be deployed to?"
-
-
   cfn-lint:
     config:
       ignore_checks:
