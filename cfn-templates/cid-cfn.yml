@@ -95,26 +95,26 @@ Parameters:
   DeployCUDOSDashboard:
     Type: String
     Description: Deploy CUDOS Dashboard
-    Default: "yes"
+    Default: "no"
     AllowedValues: ["yes", "no"]
   DeployCostIntelligenceDashboard:
     Type: String
     Description: Deploy Cost Intelligence Dashboard
-    Default: "yes"
+    Default: "no"
     AllowedValues: ["yes", "no"]
   DeployKPIDashboard:
     Type: String
     Description: Deploy KPI Dashboard
-    Default: "yes"
+    Default: "no"
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: ADDITIONAL - Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: ADDITIONAL - Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   OptimizationDataCollectionBucketPath:
@@ -488,10 +488,39 @@ Resources:
         - Key: IgnoreConditionalDependsOnCURDatabase
           Value: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
 
+  ProcessPathLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBuckets
+                Resource:
+                  Fn::Join:
+                    - ''
+                    - - "arn:aws:s3:::"
+                      - !Select ["3", !Split ['/', !Ref CURBucketPath ] ]  #s3://<bucket>
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
   CustomRessourceProcessPath:
     Type: AWS::Lambda::Function
+    Condition: NeedCUR
     Properties:
-      Role: !GetAtt 'InitLambdaExecutionRole.Arn' #FIXME: Needs its own role
+      Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
       FunctionName: !Sub "CidProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
       Runtime: python3.9
@@ -504,6 +533,7 @@ Resources:
           import uuid
           import json
           import urllib3
+          import botocore
           import boto3
 
           partitions = {
@@ -564,7 +594,7 @@ Resources:
 
           def bucket_exists(name):
               try:
-                  s3.meta.client.head_bucket(Bucket=name)
+                  boto3.resource('s3').meta.client.head_bucket(Bucket=name)
               except botocore.exceptions.ClientError as e:
                   if e.response['Error']['Code'] == '404':
                       return False
@@ -574,6 +604,7 @@ Resources:
 
   ProcessedCURPath:
     Type: Custom::CustomRessourceProcessPath
+    Condition: NeedCUR
     Properties:
       ServiceToken: !GetAtt CustomRessourceProcessPath.Arn
       s3path: !Ref CURBucketPath
