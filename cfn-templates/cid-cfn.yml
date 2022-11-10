@@ -545,6 +545,7 @@ Resources:
               print(json.dumps(event))
               account_id = context.invoked_function_arn.split(":")[4]
               type_ = event.get('RequestType', 'Undef')
+              region = boto3.session.Session().region_name
               properties = event.get('ResourceProperties', {})
               status, reason = ('SUCCESS', "Undef")
               data = {}
@@ -574,9 +575,11 @@ Resources:
               except Exception as exc:
                   status, reason = 'FAILED', str(exc)
               finally:
+                  log_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logEvent:group={context.log_group_name};stream={context.log_stream_name}"
+
                   url = event.get('ResponseURL')
                   body['Status'] = status
-                  body['Reason'] = reason + '\nSee the details in CloudWatch Log Stream: ' + context.log_stream_name
+                  body['Reason'] = reason + '\nLogs: ' + log_url
                   body['PhysicalResourceId'] = s3path
                   body['StackId'] = event.get('StackId')
                   body['RequestId'] = event.get('RequestId')
