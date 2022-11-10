@@ -83,7 +83,7 @@ Parameters:
   PrerequisitesQuickSight:
     Type: String
     Description: See https://quicksight.aws.amazon.com/sn/admin#capacity
-    ConstraintDescription: 'Please go to QS page , make sure you have at least 10GB'
+    ConstraintDescription: 'Please check in QuickSight that you have at least 10GB of SPICE capacity'
     AllowedPattern: 'yes'
     AllowedValues: ["yes", "no"]
   PrerequisitesQuickSightPermissions:
