@@ -4,26 +4,25 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: 'Prerequisites'
+          default: 'Common'
         Parameters:
           - PrerequisitesQuickSight
-          - PrerequisitesCUR
           - PrerequisitesQuickSightPermissions
-      - Label:
-          default: 'Mandatory parameters'
-        Parameters:
           - QuickSightUser
+      - Label:
+          default: CUDOS Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually 24h before.
+        Parameters:
           - CURBucketPath
           - CURIsManagedByCloudFormation
-      - Label:
-          default: Available dashboards. Trusted Advisor and Compute Optimiser Dashboards require deployment of Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
-        Parameters:
           - DeployCUDOSDashboard
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
+      - Label:
+          default: Trusted Advisor and Compute Optimiser Dashboards. Require deployment of Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
+        Parameters:
+          - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
           - DeployComputeOptimizerDashboard
-          - CostOptimizationDataCollectionBucketPath
       - Label:
           default: 'Technical Parameters. Please do not change.'
         Parameters:
@@ -46,12 +45,6 @@ Parameters:
     ConstraintDescription: 'Please go to QS page https://quicksight.aws.amazon.com/sn/admin#capacity, make sure you have at least 10GB'
     AllowedPattern: 'yes'
     AllowedValues: ["yes", "no"]
-  PrerequisitesCUR:
-    Type: String
-    Description: I have CUR set up at least 24 hours ago. See https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/#prepare-cost--usage-report
-    AllowedPattern: 'yes'
-    AllowedValues: ["yes", "no"]
-    ConstraintDescription: 'Please go to Billing page and setup your Cost and Usage report.'
   PrerequisitesQuickSightPermissions:
     Type: String
     Description: I understand that i need to set up manually Permission of QuickSight to access CUR backet and Query results bucket ( https://quicksight.aws.amazon.com/sn/admin#aws ), and then relaunch dataset refresh manually the first time.
@@ -130,7 +123,7 @@ Parameters:
     Description: ADDITIONAL - Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimisation Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
-  CostOptimizationDataCollectionBucketPath:
+  OptimizationDataCollectionBucketPath:
     Type: String
     Description: An S3 path to a bucket from Cost Optimisation Data Collection Lab, where you have /optics-data-collector folder (Required for TAO and COD). You can leave {account_id}, it will be replaced by current account ID
     Default: "s3://costoptimizationdata{account_id}"
@@ -145,10 +138,32 @@ Conditions:
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
   NeedComputeOptimizerDashboard: !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
+  NeedCUR:
+    Fn::Or:
+      - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+      - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+      - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+  NeedDataCollectionLab:
+    Fn::Or:
+      - !Equals [ !Ref DeployTAODashboard, "yes" ]
+      - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   NeedAthenaWorkgroup:  !Equals [ !Ref AthenaWorkgroup, "" ]
   NeedAthenaQueryResultsBucket:  !Equals [ !Ref AthenaQueryResultsBucket, "" ]
-  NeedCURDatabase:  !Equals [ !Ref CURDatabaseName, "" ]
-  NeedCURTable:  !Equals [ !Ref CURTableName, "" ]
+  NeedCURDatabase:
+    Fn::And:
+      - !Equals [ !Ref CURDatabaseName, "" ]
+      - Fn::Or:
+        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+  NeedCURTable:
+    Fn::And:
+      - !Equals [ !Ref CURTableName, "" ]
+      - Fn::Or:
+        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
   CURIsManagedByCloudFormation: !Equals [ !Ref CURIsManagedByCloudFormation, "yes" ]
 
@@ -498,6 +513,11 @@ Resources:
           import json
           import urllib3
 
+          partitions = {
+            "managed_by_cfn": ["source_account_id", "cur_name_1", "cur_name_2", "year", "month"],
+            "manual":         ["year", "month"],
+          }
+
           def lambda_handler(event, context):
               print(json.dumps(event))
               account_id = context.invoked_function_arn.split(":")[4]
@@ -515,6 +535,14 @@ Resources:
                   s3path = s3path.replace('{account_id}', account_id)
                   parts = s3path.split('/')
                   data['Bucket'] = parts[0]
+                  # detect Type of CUR and choose the right partitions structure
+                  if len(parts[1:]) == 1: # most likely it is created by CFN or similar
+                      data['Partitions'] = partitions['managed_by_cfn']
+                  elif len(parts) > 3 and parts[-1] == parts[-2]: # most likely it is manual CUR
+                      data['Partitions'] = partitions['manual']
+                  else:
+                      raise Exception('CURBucketPath format is not recognized. It must be s3://{bucket}/cur or s3://{bucket}/{curprefix}/{curname}/{curname} ')
+                  data['Partitions'] = [{"Name": p, "Type": "string"} for p in data['Partitions']]
                   data['Path'] = '/'.join(parts[1:])
                   data['Folder'] = parts[-1] if len(parts) > 1 else ''
                   data['Folder'] = data['Folder'].replace('-', '_').lower() # this is used for a Glue table name that will be managed by crawler
@@ -686,18 +714,7 @@ Resources:
             - {"Name": "savings_plan_start_time", "Type": "string" }
             - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
-        PartitionKeys:
-          Fn::If:
-            - CURIsManagedByCloudFormation
-
-            - - {"Type": "string", "Name": "source_account_id" }
-              - {"Type": "string", "Name": "cur_name_1" }
-              - {"Type": "string", "Name": "cur_name_2" }
-              - {"Type": "string", "Name": "year" }
-              - {"Type": "string", "Name": "month" }
-
-            - - {"Type": "string", "Name": "year" }
-              - {"Type": "string", "Name": "month" }
+        PartitionKeys: !GetAtt ProcessedCURPath.Partitions
 
   CidCURCrawlerRole:
     Type: AWS::IAM::Role
@@ -1101,7 +1118,7 @@ Resources:
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
-        view-ta-organizational-view-reports-s3FolderPath: !Sub '${CostOptimizationDataCollectionBucketPath}/optics-data-collector/ta-data'
+        view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/optics-data-collector/ta-data'
 
   ComputeOptimizerDashboard:
     Type: Custom::CidDashboard
@@ -1119,10 +1136,10 @@ Resources:
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
-        view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_lambda'
-        view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ebs_volume'
-        view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_auto_scale'
-        view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
+        view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_lambda'
+        view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ebs_volume'
+        view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_auto_scale'
+        view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
 
 Outputs:
   CostIntelligenceDashboardURL:
