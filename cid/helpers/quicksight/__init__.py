@@ -395,9 +395,10 @@ class QuickSight(CidBase):
     def create_folder(self, folder_name: str, **create_parameters) -> dict:
         """Create a new folder"""
         logger.info('Creating QuickSight folder')
+        folder_id = str(uuid.uuid4())
         create_parameters.update({
             "AwsAccountId": self.account_id,
-            "FolderId": str(uuid.uuid4()),
+            "FolderId": folder_id,
             "Name": folder_name,
             "FolderType": "SHARED",
         })
@@ -411,6 +412,7 @@ class QuickSight(CidBase):
             folder = self.describe_folder(result['FolderId'])
             return folder
         except self.client.exceptions.ResourceExistsException:
+            return self.describe_folder(folder_id)
             logger.error('Folder already exists')
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied creating folder')
@@ -915,9 +917,10 @@ class QuickSight(CidBase):
             response = self.client.create_data_set(**definition)
             dataset_id = response.get('DataSetId')
         except self.client.exceptions.ResourceExistsException:
-            logger.info(f'Dataset {definition.get("Name")} already exists')
+            dataset_id = definition.get("DataSetId")
+            logger.info(f'Dataset {definition.get("Name")} already exists with DataSetId={dataset_id}')
         except self.client.exceptions.LimitExceededException:
-            raise CidCritical('AWS QuickSight SPICE limit exceeded')
+            raise CidCritical('AWS QuickSight SPICE limit exceeded. Add SPICE here https://quicksight.aws.amazon.com/sn/admin#capacity .')
 
         logger.info(f'Waiting for {definition.get("Name")} to be created')
         deadline = time.time() + max_timeout
