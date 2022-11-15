@@ -10,7 +10,7 @@ Metadata:
           - PrerequisitesQuickSightPermissions
           - QuickSightUser
       - Label:
-          default: CUDOS Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually 24h before.
+          default: CUDOS, Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually (Dashboard data will appear within 24h after CUR creation).
         Parameters:
           - CURBucketPath
           - DeployCUDOSDashboard
@@ -55,21 +55,21 @@ Metadata:
       DeployComputeOptimizerDashboard:
         default: "Deploy Compute Optimizer Dashboard"
       AthenaWorkgroup:
-        default: "Athena Workgroup"
+        default: "Athena Workgroup - Please do not change"
       AthenaQueryResultsBucket:
-        default: "Athena Query Results Bucket"
+        default: "Athena Query Results Bucket - Please do not change"
       DatabaseName:
-        default: "Database Name"
+        default: "Database Name - Please do not change"
       CURTableName:
-        default: "CUR Table Name"
+        default: "CUR Table Name - Please do not change"
       CidVersion:
-        default: "Cid Version"
+        default: "Cid Version - Please do not change"
       Suffix:
-        default: "Suffix"
+        default: "Suffix - Please do not change"
       QuickSightDataSetRefreshSchedule:
         default: "QuickSight DataSet Refresh Schedule"
       LambdaLayerBucketPrefix:
-        default: "LambdaLayerBucketPrefix"
+        default: "LambdaLayerBucketPrefix - Please do not change"
   cfn-lint:
     config:
       ignore_checks:
@@ -102,7 +102,7 @@ Parameters:
     MinLength: 3
     Default: 's3://cid-{account_id}-shared/cur/'
     AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
-    Description: 'Leave as is if CUR was created with CloudFormation (cur-aggregation.yaml). If it was a manually created CUR, the path entered below must be for the directory that contains the years partition (s3://curbucketname/prefix/curname/curname/). If you're using the defaults, the variable {account_id} will be replaced by current account id automatically, you can leave it as {account_id}.'
+    Description: "Leave as is if CUR was created with CloudFormation (cur-aggregation.yaml). If it was a manually created CUR, the path entered below must be for the directory that contains the years partition (s3://curbucketname/prefix/curname/curname/). If you're using the defaults, the variable {account_id} will be replaced by current account id automatically, you can leave it as {account_id}."
   AthenaWorkgroup:
     Type: String
     Default: ''
