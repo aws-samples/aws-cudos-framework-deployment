@@ -112,7 +112,6 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
 
     def _create_glue_crawler(self):
         """ Create a new Glue crawler """
-        ...
 
     def _create_glue_database(self):
         """ Create Glue database """
@@ -186,7 +185,8 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
 
         account_name = self.cid.organizations.get_account_name()
         counter = 0
-        print('\n\tPlease, choose a descriptive name for your QuickSight account. This will be used later to share it with your users. This can NOT be changed later.')
+        print('\n\tPlease, choose a descriptive name for your QuickSight account. '
+              'This will be used later to share it with your users. This can NOT be changed later.')
         while account_name == '':
             counter += 1
             account_name = get_parameter('qs-account-name', 'QuickSight Account Name', default=account_name)
