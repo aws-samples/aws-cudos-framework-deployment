@@ -32,6 +32,7 @@ from cid.helpers import (
     Glue,
     Organizations,
     QuickSight,
+    IAM,
 )
 from cid.helpers.account_map import AccountMap
 from cid.logger import set_cid_logger
@@ -139,6 +140,14 @@ class Cid():
                 'glue': Glue(self.base.session)
             })
         return self._clients.get('glue')
+    
+    @property
+    def iam(self) -> Glue:
+        if not self._clients.get('iam'):
+            self._clients.update({
+                'iam': IAM(self.base.session)
+            })
+        return self._clients.get('iam')
 
     @property
     def cur(self) -> CUR:

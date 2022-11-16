@@ -4,3 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [tool.bandit]
 exclude_dirs = ["tests", "migrations"]
+
+[tool.pylint.'MESSAGES CONTROL']
+max-line-length = 120
+disable = """
+    too-many-arguments,
+    not-callable,
+    too-many-instance-attributes,
+    missing-module-docstring
+"""
+
