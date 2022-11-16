@@ -26,5 +26,5 @@ with open('cfn-templates/cid-cfn.yml', "w") as f:
 	f.write(tx.replace(f" Default: {old_ver}", f" Default: {new_ver}"))
 
 
-os.system('git diff HEAD --unified=0')
+os.system('git diff HEAD --unified=0')  # nosec
 print('to undo:\n git checkout HEAD -- cfn-templates/cid-cfn.yml cid/_version.py')

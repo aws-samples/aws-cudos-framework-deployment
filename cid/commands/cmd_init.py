@@ -45,15 +45,15 @@ class InitCommand(Command):
                 {
                 "Effect": "Allow",
                 "Principal": {
-                    "Service": "greengrass.amazonaws.com"
+                    "Service": "glue.amazonaws.com"
                 },
                 "Action": "sts:AssumeRole"
                 }
             ]
         })
 
-        create_role_response = self._iam.create_role(
-            RoleName = "my-role-name",
+        create_role_response = self.cid.iam.create_role(
+            RoleName = self.cid_crawler_role_name,
             AssumeRolePolicyDocument = assume_role_policy_document
         )
         

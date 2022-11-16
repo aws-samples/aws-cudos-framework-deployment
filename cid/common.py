@@ -1120,7 +1120,7 @@ class Cid():
                 print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
                 self.qs.update_dataset(compiled_dataset)
             else:
-                print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')
+                print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')  # nosec
         else:
             self.qs.create_dataset(compiled_dataset)
 
@@ -1175,7 +1175,7 @@ class Cid():
                         self.athena.execute_query(view_query)
                     else:
                         print(f'View "{view_name}" is not compatible with update. Skipping.')
-                assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
+                assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"  # nosec
                 logger.info(f'View "{view_name}" updated')
             else:
                 return
@@ -1185,7 +1185,7 @@ class Cid():
                 self.glue.create_or_update_table(view_name, view_query)
             else:
                 self.athena.execute_query(view_query)
-            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"  # nosec
             logger.info(f'View "{view_name}" created')
 
 
