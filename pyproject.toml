@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 exclude_dirs = ["tests", "migrations"]
 
 [tool.pylint.'MESSAGES CONTROL']
-max-line-length = 120
+max-line-length = 160
 disable = """
     too-many-arguments,
     not-callable,
