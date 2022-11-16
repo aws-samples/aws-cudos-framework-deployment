@@ -181,11 +181,12 @@ def unset_parameter(param_name):
 
 
 def extract_cur_bucket_parameters(s3_path: str) -> Dict[str, str]:
+    """ Extract CUR bucket parameters from s3_path string """
     partitions = {
         "managed_by_cfn": ["source_account_id", "cur_name_1", "cur_name_2", "year", "month"],
         "manual":         ["year", "month"],
     }
-    
+
     data = {}
     if s3_path.startswith('s3://'):
         s3_path = s3_path[len('s3://'):]
@@ -198,10 +199,10 @@ def extract_cur_bucket_parameters(s3_path: str) -> Dict[str, str]:
     elif len(parts) > 3 and parts[-1] == parts[-2]:  # most likely it is manual CUR
         data['Partitions'] = partitions['manual']
     else:
-        raise Exception(f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://{bucket}/{curprefix}/{curname}/{curname} ')
+        raise Exception(f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://{bucket}/{curprefix}/{curname}/{curname} ')  # pylint: disable=line-too-long
     data['Partitions'] = [{"Name": p, "Type": "string"} for p in data['Partitions']]
     data['Path'] = '/'.join(parts[1:])
     data['Folder'] = parts[-1] if len(parts) > 1 else ''
     data['Folder'] = data['Folder'].replace('-', '_').lower()  # this is used for a Glue table name that will be managed by crawler
-    
+
     return data

@@ -1,18 +1,13 @@
-# flake8: noqa: E501
-from cid.utils import extract_cur_bucket_parameters
+import importlib.resources as pkg_resources
 import logging
-
-try:
-    import importlib.resources as pkg_resources
-except ImportError:
-    # Try backported to PY<37 `importlib_resources`.
-    import importlib_resources as pkg_resources
+import sys
 
 from cid.commands.command_base import Command
-from cid.utils import get_parameter, get_yesno_parameter, unset_parameter
+from cid.utils import (extract_cur_bucket_parameters, get_parameter,
+                       get_yesno_parameter, unset_parameter)
 
 
-class InitCommand(Command):
+class InitCommand(Command):  # pylint: disable=too-few-public-methods
     """ Init Command for CLI """
     def __init__(self, cid, logger=None, **kwargs):
         self.cid = cid
@@ -48,7 +43,7 @@ class InitCommand(Command):
         # Create table with predefined fields
         self._create_glue_crawler_role()
         self._attach_policies_to_crawler_role()
-        
+
         self._create_glue_crawler()
         # self._create_glue_table()
         # Create crawler that updates the table
@@ -60,9 +55,8 @@ class InitCommand(Command):
 
     def _create_glue_crawler_role(self):
         """ Create IAM role for Glue crawler """
-        # TODO: Check if role arn is already provided
         self.cid_crawler_role_arn = get_parameter('glue-role-arn', 'Glue role ARN. Hit ENTER to create new role', default='')
-        
+
         if self.cid_crawler_role_arn != '':
             print(f'\tGlue role ARN...\tProvided ({self.cid_crawler_role_arn})')
         try:
@@ -73,8 +67,8 @@ class InitCommand(Command):
 
         try:
             self.cid_crawler_role_arn = self.cid.iam.create_role(
-                role_name = self.cid_crawler_role_name,
-                assume_role_policy_document = assume_role_policy_document
+                role_name=self.cid_crawler_role_name,
+                assume_role_policy_document=assume_role_policy_document
             )
             print(f'\tGlue role ARN...\tCreated ({self.cid_crawler_role_arn})')
         except Exception:  # pylint: disable=broad-except
@@ -83,7 +77,9 @@ class InitCommand(Command):
             print(f'\tGlue role ARN...\tExists ({self.cid_crawler_role_arn})')
 
     def _attach_policies_to_crawler_role(self):
-        MANAGED_POLICIES = [f'arn:{self.aws_partition}:iam::aws:policy/service-role/AWSGlueServiceRole']
+        MANAGED_POLICIES = [
+            f'arn:{self.aws_partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
+        ]
         CUSTOM_POLICIES = {
             'AWSCURCrawlerComponentFunction': 'aws_cur_crawler_component_function.json',
             'AWSCURKMSDecryption': 'aws_cur_kms_decryption.json'
@@ -93,7 +89,7 @@ class InitCommand(Command):
         for policy in MANAGED_POLICIES:
             print(f'\t\t{policy}')
             self.cid.iam.attach_policy(role_name=self.cid_crawler_role_name, policy_arn=policy)
-        
+
         variables = {
             '${AWS::Region}': self.cid.base.region,
             '${AWS::Partition}': self.aws_partition,
@@ -106,10 +102,10 @@ class InitCommand(Command):
             policy_document = pkg_resources.read_text('cid.builtin.core.data.iam', policy_file)
             for key, value in variables.items():
                 policy_document = policy_document.replace(key, value)
-            
+
             try:
                 policy = self.cid.iam.create_policy_from_json(policy_name=name, policy_document=policy_document)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 policy = f'arn:{self.aws_partition}:iam::{self.cid.base.account_id}:policy/{name}'
             print(f'\t\t{policy}')
             self.cid.iam.attach_policy(role_name=self.cid_crawler_role_name, policy_arn=policy)
@@ -136,46 +132,48 @@ class InitCommand(Command):
             print(f'\tAthena Workgroup...\tCreated ({self.athena_workgroup_name})')
         except self.cid.athena.WorkGroupAlreadyExistsException:
             print(f'\tAthena Workgroup...\tExists ({self.athena_workgroup_name})')
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             self._logger.exception(str(ex))
-            print(f'\tAthena Workgroup...\tFailed')
+            print('\tAthena Workgroup...\tFailed')
 
     def _create_query_results_bucket(self):
         """ Create bucket for storing query results """
         try:
             self.cid.s3.create_bucket(self.bucket_name)
             print(f'\tAthena S3 Bucket...\tCreated ({self.bucket_name})')
-        except Exception as ex:
-            print(f'\tAthena S3 Bucket...\tFailed')
-            self._logger.error(f'ERROR: {ex}')
+        except Exception as ex:  # pylint: disable=broad-except
+            print('\tAthena S3 Bucket...\tFailed')
+            self._logger.error('ERROR: %s', ex)
 
     def _create_quicksight_enterprise_subscription(self):
         """ Enable QuickSight Enterprise if not enabled already """
         required_editions = {'ENTERPRISE', 'ENTERPRISE_AND_Q'}
 
         if self.cid.qs.edition in required_editions:
-            self._logger.info(f'QuickSight Edition: "{self.cid.qs.edition}", nothing to do')
+            self._logger.info('QuickSight Edition: "%s", nothing to do', self.cid.qs.edition)
             print('\tQuickSight Edition...\tOK')
             return
 
-        self._logger.info(f'QuickSight Edition: "{self.cid.qs.edition}", needs to be in [{", ".join(required_editions)}]')
+        self._logger.info('QuickSight Edition: "%s", needs to be in [%s]', self.cid.qs.edition, ", ".join(required_editions))
         print(f'\tQuickSight Edition...\t{self.cid.qs.edition}, needs to be one of {", ".join(required_editions)}')
-        print('\tIMPORTANT: QuickSight Enterprise is required for Cost Intelligence Dashboard. This will lead to costs in your AWS account (https://aws.amazon.com/quicksight/pricing/).')
+        print('\tIMPORTANT: QuickSight Enterprise is required for Cost Intelligence Dashboard. '
+              'This will lead to costs in your AWS account (https://aws.amazon.com/quicksight/pricing/).')
         if not self.cid.all_yes:
             enable_quicksight_enterprise = get_yesno_parameter(
-                param_name='enable-quicksight-enterprise', 
-                message='Please, confirm that you are OK with enabling QuickSight Enterprise', 
+                param_name='enable-quicksight-enterprise',
+                message='Please, confirm that you are OK with enabling QuickSight Enterprise',
                 default='no'
-                )
+            )
         else:
             enable_quicksight_enterprise = True
-        
+
         if not enable_quicksight_enterprise:
             print('\tInitalization cancelled')
             return
-        
+
         email = self.cid.organizations.get_account_email()
-        print(f'\n\tQuicksight needs an email address that you want it to send notifications to regarding your Amazon QuickSight account or Amazon QuickSight subscription.')
+        print('\n\tQuicksight needs an email address that you want it to send notifications to '
+              'regarding your Amazon QuickSight account or Amazon QuickSight subscription.')
         counter = 0
         while '@' not in email or '.' not in email:
             counter += 1
@@ -185,19 +183,19 @@ class InitCommand(Command):
                 unset_parameter('qs-notification-email')
                 if counter >= 5:
                     exit(1)
-        
+
         account_name = self.cid.organizations.get_account_name()
         counter = 0
-        print(f'\n\tPlease, choose a descriptive name for your QuickSight account. This will be used later to share it with your users. This can NOT be changed later.')
+        print('\n\tPlease, choose a descriptive name for your QuickSight account. This will be used later to share it with your users. This can NOT be changed later.')
         while account_name == '':
             counter += 1
             account_name = get_parameter('qs-account-name', 'QuickSight Account Name', default=account_name)
             if account_name == '':
-                print(f'\t The account name must not be empty. Please, try again.')
+                print('\t The account name must not be empty. Please, try again.')
                 unset_parameter('qs-account-name')
                 if counter >= 5:
-                    exit(1)
-        
+                    sys.exit(1)
+
         params = {
             'Edition': 'ENTERPRISE',
             'AuthenticationMethod': 'IAM_AND_QUICKSIGHT',
