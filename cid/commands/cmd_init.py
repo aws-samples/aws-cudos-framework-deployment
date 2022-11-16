@@ -77,16 +77,16 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
             print(f'\tGlue role ARN...\tExists ({self.cid_crawler_role_arn})')
 
     def _attach_policies_to_crawler_role(self):
-        MANAGED_POLICIES = [
+        managed_policies = [
             f'arn:{self.aws_partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
         ]
-        CUSTOM_POLICIES = {
+        custom_policies = {
             'AWSCURCrawlerComponentFunction': 'aws_cur_crawler_component_function.json',
             'AWSCURKMSDecryption': 'aws_cur_kms_decryption.json'
         }
 
         print('\tAttaching policies...')
-        for policy in MANAGED_POLICIES:
+        for policy in managed_policies:
             print(f'\t\t{policy}')
             self.cid.iam.attach_policy(role_name=self.cid_crawler_role_name, policy_arn=policy)
 
@@ -98,7 +98,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
             '${ProcessedCURPath.Bucket}': self.processed_cur_path['Bucket'],
             '${ProcessedCURPath.Path}': self.processed_cur_path['Path']
         }
-        for name, policy_file in CUSTOM_POLICIES.items():
+        for name, policy_file in custom_policies.items():
             policy_document = pkg_resources.read_text('cid.builtin.core.data.iam', policy_file)
             for key, value in variables.items():
                 policy_document = policy_document.replace(key, value)
