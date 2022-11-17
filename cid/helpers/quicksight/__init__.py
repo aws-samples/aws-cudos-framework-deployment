@@ -334,7 +334,7 @@ class QuickSight(CidBase):
 
 
 
-    def create_data_source(self) -> bool:
+    def create_data_source(self, datasource_id: str=None, role_arn: str=None) -> bool:
         """Create a new data source"""
         logger.info('Creating Athena data source')
 
@@ -346,14 +346,16 @@ class QuickSight(CidBase):
             resource_name=f'data/permissions/data_source_permissions.json',
         ).decode('utf-8'))
         data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
+        datasource_id = datasource_id or str(uuid.uuid4())
         params = {
             "AwsAccountId": self.account_id,
-            "DataSourceId": str(uuid.uuid4()),
-            "Name": "Athena",
+            "DataSourceId": datasource_id,
+            "Name": "CID-Athena",
             "Type": "ATHENA",
             "DataSourceParameters": {
                 "AthenaParameters": {
-                    "WorkGroup": self.AthenaWorkGroup
+                    "WorkGroup": self.AthenaWorkGroup,
+                    "RoleArn": role_arn,
                 }
             },
             "Permissions": [
@@ -389,6 +391,8 @@ class QuickSight(CidBase):
         except self.client.exceptions.AccessDeniedException as e:
             logger.info('Access denied creating Athena datasource')
             logger.debug(e, exc_info=True)
+            return False
+
         return False
 
 

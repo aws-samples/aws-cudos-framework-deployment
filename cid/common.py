@@ -25,7 +25,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, Template as CidQsTemplate
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, IAM, Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
@@ -82,6 +82,14 @@ class Cid():
         print('\tRegion: {}'.format(self.base.session.region_name))
         logger.info(f'AWS region: {self.base.session.region_name}')
         print('\n')
+
+    @property
+    def iam(self) -> IAM:
+        if not self._clients.get('iam'):
+            self._clients.update({
+                'iam': IAM(self.base.session)
+            })
+        return self._clients.get('iam')
 
     @property
     def qs(self) -> QuickSight:
