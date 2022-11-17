@@ -412,8 +412,8 @@ class QuickSight(CidBase):
             folder = self.describe_folder(result['FolderId'])
             return folder
         except self.client.exceptions.ResourceExistsException:
+            logger.info('Folder already exists')
             return self.describe_folder(folder_id)
-            logger.error('Folder already exists')
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied creating folder')
             raise
