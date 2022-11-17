@@ -59,11 +59,11 @@ Update only Dashboard
 ```bash
 cid-cmd update
 ```
-Update dashboard and all dependenies (Datasets and Athena View). WARNING: this will override any customization of SQL files and Datasets.
+Update dashboard and all dependenies (Datasets and Athena View). WARNING: this will overide any customization of SQL files and Datasets.
 ```bash
-cid-cmd update --force --recursive 
+cid-cmd update --force --recursive
 ```
-#### Show Sashboard status 
+#### Show Dashboard status
 ```bash
 cid-cmd status
 ```
@@ -76,17 +76,17 @@ cid-cmd share
 #### Delete Dashboard and all dependencies unused by other
 ```bash
 cid-cmd delete
-```  
+```
 
-#### Export 
-A command `export` takes as an input a QuickSight Analysis and generates all assets for a deployment of this Analysis as a Dashboard in another AWS Account. Commands generates a yaml file with a description of Dashboard and all required Datasets. Also this command generates a QuickSight Template in the current AWS Account that can be used for Dashboard deployment in other accoutns. The resource file can be used with all other `cid` commands in other accounts. Both accounts must have relevant Athena Views and Tables.  
+#### Export
+The command `export` lets you download or share a customized dashboard with another AWS Account. It takes the QuickSight Analysis as an input and generates all the assets needed to deploy your Analysis into another AWS Account. This command will generate a yaml file with a description of the Dashboard and all required Datasets. Also this command generates a QuickSight Template in the current AWS Account that can be used for Dashboard deployment in other accounts. The resource file can be used with all other cid commands. Both accounts must have relevant Athena Views and Tables.
 
-Export in account A:  
+Export from account A:
 ```
 cid-cmd export
 ```
 
-Deployment in account B:  
+Deployment to account B:
 ```
 cid-cmd deploy --resources ./mydashboard.yaml
 ```
