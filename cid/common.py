@@ -949,6 +949,20 @@ class Cid():
             raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
         return raw_template
 
+    def get_dataset_buckets(self, dataset_definition):
+        buckets = []
+        data = self.get_dataset_data_from_definition(dataset_definition)
+        cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
+        if cur_required:
+            location = self.athena.get_table_metadata().get('Parameters',{}).get('location')
+            if location and location.startswith('s3://'):
+                buckets.append(location.split('/')[2])
+        for par in get_parameters().values():
+            if par and par.startswith('s3://'):
+                buckets.append(par.split('/')[2])
+        return buckets
+
+
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
@@ -970,11 +984,20 @@ class Cid():
                     "Arn": f"arn:aws:quicksight:{self.base.session.region_name}:{self.base.account_id}:datasource/{datasource_id}",
                 })
 
+        buckets = self.get_dataset_buckets(dataset_definition)
+        print(f'Buckets = {buckets}')
+        role_arn = None
+
+        role_name = get_parameters().get('quicksight-dataset-role-name', 'CidDatasetRole')
+        try:
+            role_arn = self.iam.ensure_data_source_role_exists(role_name, buckets=buckets)
+        except self.iam.client.AccessDeniedException as exc:
+            logger.info(exc)
+
         if not athena_datasource and not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
             self.qs.AthenaWorkGroup = self.athena.WorkGroup
-            self.qs.create_data_source() # FIXME: we need to use name/id provided by user if any
-            # FIXME: we need to cleanup if datasource creation fails
+            self.qs.create_data_source(role_arn=role_arn) # FIXME: we need to use name/id provided by user if any
 
         if not athena_datasource:
             if not self.qs.athena_datasources:
