@@ -954,7 +954,7 @@ class Cid():
         data = self.get_dataset_data_from_definition(dataset_definition)
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         if cur_required:
-            location = self.athena.get_table_metadata().get('Parameters',{}).get('location')
+            location = self.athena.get_table_metadata(self.cur.tableName).get('Parameters',{}).get('location')
             if location and location.startswith('s3://'):
                 buckets.append(location.split('/')[2])
         for par in get_parameters().values():
@@ -971,10 +971,20 @@ class Cid():
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
 
-        if get_parameters().get('quicksight-datasource-id'):
-            # We have explicit choice of datasource
-            datasource_id = get_parameters().get('quicksight-datasource-id')
+        buckets = self.get_dataset_buckets(dataset_definition)
+        print(f'Buckets = {buckets}')
+        role_arn = None
 
+        role_name = get_parameters().get('quicksight-dataset-role-name', 'CidDatasetRole')
+        try:
+            role_arn = self.iam.ensure_data_source_role_exists(role_name, buckets=buckets)['Arn']
+            logger.critical(role_arn)
+        except self.iam.client.AccessDeniedException as exc:
+            logger.critical(exc)
+
+
+        datasource_id = get_parameters().get('quicksight-datasource-id', None)
+        if datasource_id: # We have explicit choice of datasource
             try:
                 athena_datasource = self.qs.describe_data_source(datasource_id)
             except self.qs.client.exceptions.AccessDeniedException:
@@ -983,21 +993,15 @@ class Cid():
                     "Id": datasource_id,
                     "Arn": f"arn:aws:quicksight:{self.base.session.region_name}:{self.base.account_id}:datasource/{datasource_id}",
                 })
-
-        buckets = self.get_dataset_buckets(dataset_definition)
-        print(f'Buckets = {buckets}')
-        role_arn = None
-
-        role_name = get_parameters().get('quicksight-dataset-role-name', 'CidDatasetRole')
-        try:
-            role_arn = self.iam.ensure_data_source_role_exists(role_name, buckets=buckets)
-        except self.iam.client.AccessDeniedException as exc:
-            logger.info(exc)
+            except self.qs.client.exceptions.ResourceNotFoundException:
+                logger.critical(f"Datasources {datasource_id} found, let's create one")
+                self.qs.AthenaWorkGroup = self.athena.WorkGroup
+                self.qs.create_data_source(datasource_id=datasource_id, role_arn=role_arn)
 
         if not athena_datasource and not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
             self.qs.AthenaWorkGroup = self.athena.WorkGroup
-            self.qs.create_data_source(role_arn=role_arn) # FIXME: we need to use name/id provided by user if any
+            self.qs.create_data_source(datasource_id=datasource_id, role_arn=role_arn)
 
         if not athena_datasource:
             if not self.qs.athena_datasources:
