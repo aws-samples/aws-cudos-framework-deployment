@@ -5,4 +5,4 @@ PyYAML
 requests
 six>=1.15
 questionary>=1.10
-mako
+Mako
