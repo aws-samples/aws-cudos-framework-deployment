@@ -197,7 +197,7 @@ class QuickSight(CidBase):
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
-        if not _definition:
+        if not _definition and dashboard.deployedTemplate:
             # Look for dashboard definition by templateId
             _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.deployedTemplate.id), None)
         try:
