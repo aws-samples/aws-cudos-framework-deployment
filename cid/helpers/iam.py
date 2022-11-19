@@ -91,9 +91,9 @@ class IAM(CidBase):
                     AssumeRolePolicyDocument=assume_doc.render(),
                 )['Role']
                 logger.debug(f'Created role: {role}')
-            except iam.exceptions.EntityAlreadyExistsException as exc:
+            except self.client.exceptions.EntityAlreadyExistsException as exc:
                 pass
-            except iam.exceptions.ClientError as exc:
+            except self.client.exceptions.ClientError as exc:
                 if '(AccessDenied)' in str(exc):
                     logger.error('Insufficient permissions. Please addd iam:CreateRole ')
                 else:
