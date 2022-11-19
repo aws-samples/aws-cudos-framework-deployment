@@ -93,8 +93,9 @@ def deploy(ctx, **kwargs):
      --athena-workgroup TEXT               Athena workgroup
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
-     --quicksight-datasource-id TEXT      QuickSight Datasource ARN (if not found one with provided Athena workgroup)
-     --quicksight-user TEXT                QuickSight user
+     --quicksight-datasource-id TEXT       QuickSight Datasource ARN (if not found one with provided Athena workgroup)
+     --quicksight-group TEXT               A QuickSight Group that will own all objects created in Quicksight
+     --quicksight-user TEXT                A QuickSight user that will own all objects created in Quicksight. you can provide value 'current user' (with space) to set the current IAM user as owner.
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
