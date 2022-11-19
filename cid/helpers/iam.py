@@ -93,8 +93,11 @@ class IAM(CidBase):
                 logger.debug(f'Created role: {role}')
             except iam.exceptions.EntityAlreadyExistsException as exc:
                 pass
-            except iam.exceptions.AccessDeniedException:
-                logger.error('Insufficient permissions. Please addd iam:CreateRole ')
+            except iam.exceptions.ClientError as exc:
+                if '(AccessDenied)' in str(exc):
+                    logger.error('Insufficient permissions. Please addd iam:CreateRole ')
+                else:
+                    raise
 
         attach_policies = {p['PolicyName']:p['PolicyArn'] for p in self.client.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']}
         for policy_name, policy_arn in policies.items():
