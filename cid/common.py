@@ -952,13 +952,13 @@ class Cid():
     def get_dataset_buckets(self, dataset_definition):
         buckets = []
         data = self.get_dataset_data_from_definition(dataset_definition)
-        cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
+        cur_required = dataset_definition.get('dependsOn', dict()).get('cur', False)
         if cur_required:
-            location = self.athena.get_table_metadata(self.cur.tableName).get('Parameters',{}).get('location')
+            location = self.athena.get_table_metadata(self.cur.tableName).get('Parameters',{}).get('location', '')
             if location and location.startswith('s3://'):
                 buckets.append(location.split('/')[2])
         for par in get_parameters().values():
-            if par and par.startswith('s3://'):
+            if isinstance(par, str) and par.startswith('s3://'):
                 buckets.append(par.split('/')[2])
         return buckets
 
