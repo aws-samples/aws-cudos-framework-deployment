@@ -978,7 +978,7 @@ class Cid():
         try:
             role_arn = self.iam.ensure_data_source_role_exists(role_name, buckets=buckets)['Arn']
             logger.info(role_arn)
-        except self.iam.exceptions.ClientError as exc:
+        except self.iam.client.exceptions.ClientError as exc:
             if '(AccessDenied)' in str(exc):
                 logger.info('Insufficient permissions to create/update role and policies. Please add iam:ListAttachedRolePolicies, iam:AttachRolePolicy, iam:CreatePolicy, iam:CreatePolicyVersion, iam:ListPolicyVersions, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:GetPolicy, iam:GetRole, iam:CreateRole ')
                 logger.info('Will try without IAM permissions')
