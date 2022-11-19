@@ -977,10 +977,13 @@ class Cid():
         role_arn = None
         try:
             role_arn = self.iam.ensure_data_source_role_exists(role_name, buckets=buckets)['Arn']
-            logger.critical(role_arn)
-        except self.iam.client.exceptions.AccessDeniedException as exc:
-            logger.critical(exc)
-
+            logger.info(role_arn)
+        except iam.exceptions.ClientError as exc:
+            if '(AccessDenied)' in str(exc):
+                logger.info('Insufficient permissions to create/update role and policies. Please add iam:ListAttachedRolePolicies, iam:AttachRolePolicy, iam:CreatePolicy, iam:CreatePolicyVersion, iam:ListPolicyVersions, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:GetPolicy, iam:GetRole, iam:CreateRole ')
+                logger.info('Will try without IAM permissions')
+            else:
+                raise
 
         datasource_id = get_parameters().get('quicksight-datasource-id', None)
         if datasource_id: # We have explicit choice of datasource
