@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 class IAM(CidBase):
     ''' IAM helper
-
-    Permissions:
+    '''
+    permissions = '''
         iam:ListAttachedRolePolicies
         iam:AttachRolePolicy
         iam:CreatePolicy
@@ -23,7 +23,8 @@ class IAM(CidBase):
         iam:GetPolicy
         iam:GetRole
         iam:CreateRole
-    '''
+    '''.split()
+
     def __init__(self, session, resources=None) -> None:
         super().__init__(session)
         self._resources = resources
@@ -92,12 +93,12 @@ class IAM(CidBase):
                 )['Role']
                 logger.debug(f'Created role: {role}')
             except self.client.exceptions.EntityAlreadyExistsException as exc:
-                pass
-            except self.client.exceptions.ClientError as exc:
-                if '(AccessDenied)' in str(exc):
-                    logger.error('Insufficient permissions. Please addd iam:CreateRole ')
-                else:
-                    raise
+                pass #TODO: update AssumeDoc if needed
+        except self.client.exceptions.ClientError as exc:
+            if '(AccessDenied)' in str(exc):
+                logger.error(f'Insufficient permissions. Please addd: {", ".join(self.permissions)}')
+            else:
+                raise
 
         attach_policies = {p['PolicyName']:p['PolicyArn'] for p in self.client.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']}
         for policy_name, policy_arn in policies.items():
