@@ -211,11 +211,11 @@ class QuickSight(CidBase):
                 logger.debug(e, exc_info=True)
                 logger.info(f'Unable to describe template {_template_id}, {e}')
         if not _definition:
-            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
+            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn if dashboard.deployedTemplate else None})')
         else:
-            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
+            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn if dashboard.deployedTemplate else None})')
             dashboard.definition = _definition
-            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.deployedTemplate.arn})')
+            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.deployedTemplate.arn if dashboard.deployedTemplate else None})')
             for dataset in dashboard.version.get('DataSetArns'):
                 dataset_id = dataset.split('/')[-1]
                 try:
