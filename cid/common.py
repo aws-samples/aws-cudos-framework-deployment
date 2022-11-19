@@ -973,13 +973,12 @@ class Cid():
 
         buckets = self.get_dataset_buckets(dataset_definition)
         print(f'Buckets = {buckets}')
-        role_arn = None
-
         role_name = get_parameters().get('quicksight-dataset-role-name', 'CidDatasetRole')
+        role_arn = None
         try:
             role_arn = self.iam.ensure_data_source_role_exists(role_name, buckets=buckets)['Arn']
             logger.critical(role_arn)
-        except self.iam.client.AccessDeniedException as exc:
+        except self.iam.client.exceptions.AccessDeniedException as exc:
             logger.critical(exc)
 
 
