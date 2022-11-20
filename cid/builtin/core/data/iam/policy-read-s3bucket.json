@@ -3,16 +3,19 @@
     "Statement":
     [
         {
+            "Sid": "CidAllowListAllMyBuckets",
             "Effect": "Allow",
             "Action": "s3:ListAllMyBuckets",
             "Resource": "arn:aws:s3:::*"
         },
         {
+            "Sid": "CidAllowListBucket",
             "Effect": "Allow",
             "Action": "s3:ListBucket",
             "Resource": "arn:aws:s3:::${bucket_name}"
         },
         {
+            "Sid": "CidAllowReadBucket",
             "Effect": "Allow",
             "Action": [
                 "s3:GetObject",
