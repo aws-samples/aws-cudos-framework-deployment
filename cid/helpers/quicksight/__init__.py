@@ -346,13 +346,14 @@ class QuickSight(CidBase):
             "DataSourceParameters": {
                 "AthenaParameters": {
                     "WorkGroup": athena_workgroup,
-                    "RoleArn": role_arn,
                 }
             },
             "Permissions": [
                 data_source_permissions
             ]
         }
+        if role_arn:
+            params['DataSourceParameters']['AthenaParameters']['RoleArn'] = role_arn
         try:
             logger.info(f'Creating data source {params}')
             create_status = self.client.create_data_source(**params)

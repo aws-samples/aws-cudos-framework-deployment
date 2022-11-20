@@ -973,19 +973,19 @@ class Cid():
 
         buckets = self.get_dataset_buckets(dataset_definition)
         logger.debug(f'Buckets = {buckets}')
-        role_name = get_parameters().get('quicksight-datasource-role-name', 'CidDataSourceRole')
-        role_arn = None
-        try:
-            role_arn = self.iam.ensure_data_source_role_exists(role_name, buckets=buckets)['Arn']
-            logger.info(role_arn)
-        except self.iam.client.exceptions.ClientError as exc:
-            if '(AccessDenied)' in str(exc):
-                logger.info('Insufficient permissions to create/update role and policies. Please add iam:ListAttachedRolePolicies, iam:AttachRolePolicy, iam:CreatePolicy, iam:CreatePolicyVersion, iam:ListPolicyVersions, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:GetPolicy, iam:GetRole, iam:CreateRole ')
-                logger.info('Will try without IAM permissions')
-            else:
-                raise
+        role_arn = get_parameters().get('quicksight-datasource-arn')
+        if not role_arn:
+            try:
+                role_arn = self.iam.ensure_data_source_role_exists(role_name='CidDataSourceRole', buckets=buckets)['Arn']
+                logger.info(role_arn)
+            except self.iam.client.exceptions.ClientError as exc:
+                if '(AccessDenied)' in str(exc):
+                    logger.info('Insufficient permissions to create/update role and policies. Please add iam:ListAttachedRolePolicies, iam:AttachRolePolicy, iam:CreatePolicy, iam:CreatePolicyVersion, iam:ListPolicyVersions, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:GetPolicy, iam:GetRole, iam:CreateRole ')
+                    logger.info('Will try without IAM permissions')
+                else:
+                    raise
 
-        datasource_id = get_parameters().get('quicksight-datasource-id', None)
+        datasource_id = get_parameters().get('quicksight-datasource-id')
         if datasource_id: # We have explicit choice of datasource
             try:
                 athena_datasource = self.qs.describe_data_source(datasource_id)
@@ -1067,7 +1067,9 @@ class Cid():
 
                         if datasource_id == new:
                             datasource_id = self.qs.create_data_source(athena_workgroup=self.athena.WorkGroup, role_arn=role_arn)
-
+                            set_parameters({'quicksight-datasource-id':datasource_id})
+                            if not datasource_id:
+                                raise CidCritical('Cannot create DataSources. Please create a datasource in QuickSight manually, configure permissions in QS to allow Athena and S3, and come back.')
                         if datasource_id:
                             athena_datasource = self.qs.athena_datasources[datasource_id]
                             logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
