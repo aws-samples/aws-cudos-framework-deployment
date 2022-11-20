@@ -93,6 +93,7 @@ def deploy(ctx, **kwargs):
      --athena-workgroup TEXT               Athena workgroup
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
+     --quicksight-datasource-role-arn      An arn of IAM role for QuickSight Datasource. If not provided a new IAM role will be created.
      --quicksight-datasource-id TEXT      QuickSight Datasource ARN (if not found one with provided Athena workgroup)
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset

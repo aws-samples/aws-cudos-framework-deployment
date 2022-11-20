@@ -972,8 +972,8 @@ class Cid():
         athena_datasource = None
 
         buckets = self.get_dataset_buckets(dataset_definition)
-        print(f'Buckets = {buckets}')
-        role_name = get_parameters().get('quicksight-dataset-role-name', 'CidDatasetRole')
+        logger.debug(f'Buckets = {buckets}')
+        role_name = get_parameters().get('quicksight-datasource-role-name', 'CidDataSourceRole')
         role_arn = None
         try:
             role_arn = self.iam.ensure_data_source_role_exists(role_name, buckets=buckets)['Arn']
@@ -997,13 +997,11 @@ class Cid():
                 })
             except self.qs.client.exceptions.ResourceNotFoundException:
                 logger.critical(f"Datasources {datasource_id} found, let's create one")
-                self.qs.AthenaWorkGroup = self.athena.WorkGroup
-                self.qs.create_data_source(datasource_id=datasource_id, role_arn=role_arn)
+                datasource_id = self.qs.create_data_source(datasource_id=datasource_id, athena_workgroup=self.athena.WorkGroup, role_arn=role_arn)
 
         if not athena_datasource and not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
-            self.qs.AthenaWorkGroup = self.athena.WorkGroup
-            self.qs.create_data_source(datasource_id=datasource_id, role_arn=role_arn)
+            datasource_id = self.qs.create_data_source(datasource_id=datasource_id, athena_workgroup=self.athena.WorkGroup, role_arn=role_arn)
 
         if not athena_datasource:
             if not self.qs.athena_datasources:
@@ -1051,22 +1049,26 @@ class Cid():
                         self.athena.DatabaseName = schemas[0]
                     # else user will be suggested to choose database anyway
 
-                    if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
-                        athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
+                    #try to find a datasource with defined workgroup
+                    datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=self.athena.WorkGroup)
+                    if len(datasources_with_workgroup) == 1:
+                        athena_datasource = datasources_with_workgroup[0]
                     else:
-                        #try to find a datasource with defined workgroup
-                        workgroup = self.athena.WorkGroup
-                        datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=workgroup)
-                        if len(datasources_with_workgroup) == 1:
-                            athena_datasource = datasources_with_workgroup[0]
-                        else:
-                            #cannot find the right athena_datasource
-                            logger.info('Multiple DataSources found.')
-                            datasource_id = get_parameter(
-                                param_name='quicksight-datasource-id',
-                                message=f"Please choose DataSource (Choose the first one if not sure).",
-                                choices=datasource_choices,
-                            )
+                        #cannot find the right athena_datasource
+                        logger.info('Multiple DataSources found.')
+                        new = 'Create a New CID-Athena DataSource'
+                        datasource_choices[new] = new
+                        datasource_id = get_parameter(
+                            param_name='quicksight-datasource-id',
+                            message=f"Please choose DataSource (Choose the first one if not sure).",
+                            choices=datasource_choices,
+                           # default=new
+                        )
+
+                        if datasource_id == new:
+                            datasource_id = self.qs.create_data_source(athena_workgroup=self.athena.WorkGroup, role_arn=role_arn)
+
+                        if datasource_id:
                             athena_datasource = self.qs.athena_datasources[datasource_id]
                             logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
         if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):

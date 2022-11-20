@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 class QuickSight(CidBase):
     # Define defaults
     cidAccountId = '223485597511'
-    _AthenaWorkGroup: str = None
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
     _datasources: Dict[str, Datasource] = None
@@ -43,14 +42,6 @@ class QuickSight(CidBase):
         self.client = self.session.client('quicksight')
         self.identityClient = self.session.client('quicksight', region_name=self.identityRegion)
 
-
-    @property
-    def AthenaWorkGroup(self) -> str:
-        return self._AthenaWorkGroup
-    
-    @AthenaWorkGroup.setter
-    def AthenaWorkGroup(self, value):
-        self._AthenaWorkGroup = value
 
     @property
     def user(self) -> dict:
@@ -334,7 +325,7 @@ class QuickSight(CidBase):
 
 
 
-    def create_data_source(self, datasource_id: str=None, role_arn: str=None) -> bool:
+    def create_data_source(self, athena_workgroup, datasource_id: str=None, role_arn: str=None) -> bool:
         """Create a new data source"""
         logger.info('Creating Athena data source')
 
@@ -350,11 +341,11 @@ class QuickSight(CidBase):
         params = {
             "AwsAccountId": self.account_id,
             "DataSourceId": datasource_id,
-            "Name": "CID-Athena",
+            "Name": "CID Athena",
             "Type": "ATHENA",
             "DataSourceParameters": {
                 "AthenaParameters": {
-                    "WorkGroup": self.AthenaWorkGroup,
+                    "WorkGroup": athena_workgroup,
                     "RoleArn": role_arn,
                 }
             },
@@ -366,13 +357,13 @@ class QuickSight(CidBase):
             logger.info(f'Creating data source {params}')
             create_status = self.client.create_data_source(**params)
             logger.debug(f'Data source creation result {create_status}')
-            current_status = create_status['CreationStatus']
-            logger.info(f'Data source creation status {current_status}')
-            # Poll for the current status of query as long as its not finished
-            while current_status in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
+            # Wait for the datasource completion
+            while True:
                 time.sleep(1)
-                datasource = self.describe_data_source(create_status['DataSourceId'], update=True)
-                current_status = datasource.status
+                datasource = self.describe_data_source(datasource_id, update=True)
+                logger.debug(f'Waiting for datasource {datasource_id}. current status={datasource.status}')
+                if not datasource.status.endswith('IN_PROGRESS'):
+                    break
             if not datasource.is_healthy:
                 logger.error(f'Data source creation failed: {datasource.error_info}')
                 if get_parameter(
@@ -384,16 +375,16 @@ class QuickSight(CidBase):
                         self.delete_data_source(datasource.id)
                     except self.client.exceptions.AccessDeniedException as e:
                         logger.info('Access denied deleting Athena datasource')
-                return False
-            return True
+                return None
+            return datasource_id
         except self.client.exceptions.ResourceExistsException:
             logger.error('Data source already exists')
+            return datasource_id
         except self.client.exceptions.AccessDeniedException as e:
             logger.info('Access denied creating Athena datasource')
             logger.debug(e, exc_info=True)
-            return False
-
-        return False
+            return None
+        return None
 
 
     def create_folder(self, folder_name: str, **create_parameters) -> dict:
