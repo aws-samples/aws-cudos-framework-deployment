@@ -190,7 +190,7 @@ class QuickSight(CidBase):
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition and dashboard.deployedTemplate:
             # Look for dashboard definition by templateId
-            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.deployedTemplate.id), None)
+            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.template_id), None)
         try:
             _template_arn = dashboard.version.get('SourceEntityArn')
             _template_id = str(_template_arn.split('/')[1])
@@ -202,11 +202,11 @@ class QuickSight(CidBase):
                 logger.debug(e, exc_info=True)
                 logger.info(f'Unable to describe template {_template_id}, {e}')
         if not _definition:
-            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn if dashboard.deployedTemplate else None})')
+            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
         else:
-            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.deployedTemplate.arn if dashboard.deployedTemplate else None})')
+            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.template_arn})')
             dashboard.definition = _definition
-            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.deployedTemplate.arn if dashboard.deployedTemplate else None})')
+            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.template_arn})')
             for dataset in dashboard.version.get('DataSetArns'):
                 dataset_id = dataset.split('/')[-1]
                 try:
@@ -228,7 +228,7 @@ class QuickSight(CidBase):
                 dashboard.sourceTemplate = template
             except Exception as e:
                 logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {templateId} in {templateAccountId}')
+                logger.info(f'Unable to describe template {templateId} in {templateAccountId} ({region})')
 
             # recoursively add views
             all_views = []
