@@ -43,7 +43,7 @@ class Dashboard(CidQsResource):
     @property
     def template_id(self) -> str:
         if isinstance(self.deployedTemplate, CidQsTemplate):
-            return self.deployedTemplate.arn
+            return self.deployedTemplate.id
         return None
 
     @property
@@ -67,6 +67,8 @@ class Dashboard(CidQsResource):
     def latest_version(self) -> int:
         if isinstance(self.sourceTemplate, CidQsTemplate):
             return self.sourceTemplate.version
+        else:
+            return -1
 
     @property
     def health(self) -> bool:
