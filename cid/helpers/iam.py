@@ -107,7 +107,7 @@ class IAM(CidBase):
                 pass #TODO: update AssumeDoc if needed
         except self.client.exceptions.ClientError as exc:
             if '(AccessDenied)' in str(exc):
-                logger.error(f'Insufficient permissions. Please addd: {", ".join(self.permissions)}')
+                logger.info(f'Insufficient permissions for IAM. Please addd: {", ".join(self.permissions)}')
             else:
                 raise
 
