@@ -41,6 +41,18 @@ class Dashboard(CidQsResource):
         self._deployedTemplate = template
 
     @property
+    def template_id(self) -> str:
+        if isinstance(self.deployedTemplate, CidQsTemplate):
+            return self.deployedTemplate.id
+        return None
+
+    @property
+    def template_arn(self) -> str:
+        if isinstance(self.deployedTemplate, CidQsTemplate):
+            return self.deployedTemplate.arn
+        return None
+
+    @property
     def deployed_version(self) -> int:
         if isinstance(self.deployedTemplate, CidQsTemplate):
             return self.deployedTemplate.version
@@ -53,7 +65,10 @@ class Dashboard(CidQsResource):
 
     @property
     def latest_version(self) -> int:
-        return self.sourceTemplate.version
+        if isinstance(self.sourceTemplate, CidQsTemplate):
+            return self.sourceTemplate.version
+        else:
+            return -1
 
     @property
     def health(self) -> bool:
@@ -76,7 +91,7 @@ class Dashboard(CidQsResource):
                 logger.info(f"Found datasets: {self.datasets}")
                 logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
             # Source Template has changed
-            elif self.deployedTemplate.arn and self.sourceTemplate.arn and not self.deployedTemplate.arn.startswith(self.sourceTemplate.arn):
+            elif self.deployedTemplate and self.sourceTemplate and self.deployedTemplate.arn and self.sourceTemplate.arn and not self.deployedTemplate.arn.startswith(self.sourceTemplate.arn):
                 self._status = 'legacy'
             else:
                 if self.latest_version > self.deployed_version:
