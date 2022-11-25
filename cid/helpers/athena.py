@@ -1,9 +1,10 @@
-from io import StringIO
+import re
+import csv
 import json
+import time
 import logging
 from string import Template
-import time, csv
-
+from io import StringIO
 from pkg_resources import resource_string
 
 from cid.base import CidBase
@@ -22,7 +23,6 @@ class Athena(CidBase):
     _CatalogName = None
     _DatabaseName = None
     _WorkGroup = None
-    ahq_queries = None
     _metadata = dict()
     _resources = dict()
     _client = None
@@ -222,8 +222,8 @@ class Athena(CidBase):
         try:
             # Start Athena query
             response = self.client.start_query_execution(
-                QueryString=sql_query, 
-                QueryExecutionContext=execution_context, 
+                QueryString=sql_query,
+                QueryExecutionContext=execution_context,
                 WorkGroup=self.WorkGroup
             )
 
@@ -239,7 +239,6 @@ class Athena(CidBase):
             logger.debug(f'Full query: {sql_query}')
             raise CidCritical(f'Athena query failed: {e}')
 
-
         current_status = query_status['QueryExecution']['Status']['State']
 
         # Poll for the current status of query as long as its not finished
@@ -250,22 +249,19 @@ class Athena(CidBase):
             # Sleep before polling again
             time.sleep(sleep_duration)
 
-        # Return result, either positive or negative
         if (current_status == "SUCCEEDED"):
             return query_id
-        elif not fail:
-            return False
         else:
             failure_reason = response['QueryExecution']['Status']['StateChangeReason']
-            logger.error(f'Athena query failed: {failure_reason}')
-            logger.info(f'Full query: {sql_query}')
-            raise CidCritical(f'Athena query failed: {failure_reason}')
+            logger.info(f'Athena query failed: {failure_reason}')
+            logger.debug(f'Full query: {sql_query}')
+            if fail:
+                raise CidCritical(f'Athena query failed: {failure_reason}')
+            else:
+                return False
 
     def get_query_results(self, query_id):
         return self.client.get_query_results(QueryExecutionId=query_id)
-    
-    def get_query_execution(self, query_id):
-        return self.client.get_query_execution(QueryExecutionId=query_id)
 
     def parse_response_as_list(self, response, include_header=False):
         data = list()
@@ -328,42 +324,23 @@ class Athena(CidBase):
         
         return d
 
-    # AHQ functions
-    def execute_ahq(self, query_id, **kwargs) -> list:
-        """ Execute Athena Query by name """
-        # Load query
-        query = self.get_ahq(query_id, **kwargs)
-        # Execute query
-        execution_id = self.execute_query(query)
+    def get_s3_obj_as_text(self, s3path, encoding: str='utf-8'):
+        """ Get an s3 object as a paht
+        s3path - an s3 path string. s3://bucket/path/file.ext
+        """
+        s3 = self.session.client('s3', region_name=self.region)
+        bucket = s3path.split('/')[2]
+        key = '/'.join(s3path.split('/')[3:])
+        with BytesIO() as fileobject:
+            s3.download_fileobj(bucket, key, fileobject)
+            return fileobject.getvalue().decode(encoding)
+
+
+    def query(self, sql, **kwargs) -> list:
+        """ Execute Athena Query and return a result"""
+        execution_id = self.execute_query(sql)
         results = self.get_query_results(execution_id)
-        # Return results as list
         return self.parse_response_as_list(results)
-
-
-    def get_ahq(self, query_id, **kwargs) -> str:
-        """ Returns a fully compiled AHQ """
-        # Query path
-        query_file = self.get_ahqs().get(query_id).get('File')
-
-        template = Template(resource_string(__name__, f'../queries/{query_file}').decode('utf-8'))
-
-        # Fill in TPLs
-        columns_tpl = dict()
-        columns_tpl.update(**kwargs)
-        compiled_query = template.safe_substitute(columns_tpl)
-
-        return compiled_query
-
-
-    def get_ahqs(self) -> dict:
-        """ Return a list of all availiable AHQs """
-        
-        if not self.ahq_queries:            
-            # Load queries
-            queries_files = resource_string(__name__, '../queries/ahq-queries.json')
-            self.ahq_queries = json.loads(queries_files).get('query_templates')
-
-        return self.ahq_queries
 
 
     def discover_views(self, views: dict={}) -> None:
@@ -435,3 +412,46 @@ class Athena(CidBase):
             if name in self._metadata: del self._metadata[name]
             logger.info(f'View {name} deleted')
         return True
+
+    def process_views(self, views):
+        """ returns a dict of discovered views. Going to each view and try to discover all FROM
+        """
+        all_views = {}
+        def _recursively_process_view(view):
+            """ process recursively views and add all dependency views to the global dict
+            """
+            logger.debug(f"Processing '{view}'")
+            athena_type = None
+            if self.query(f"SHOW VIEWS LIKE '{view}'"):
+                athena_type = 'view'
+            elif self.query(f"SHOW TABLES LIKE '{view}'"):
+                athena_type = 'table'
+            else:
+                logger.debug(f'{view} not a view and not a table. Skipping.')
+                return
+
+            all_views[view] = {}
+            if athena_type == 'view':
+                sql = self.query(f'SHOW CREATE VIEW {view}')
+                all_views[view]["dependsOn"] = {}
+                all_views[view]["dependsOn"]['views'] = []
+                deps = re.findall(r'FROM\W+([\S."]+)', sql)
+                for dep_view in deps:
+                    #FIXME: need to add cross Database Dependancies
+                    if dep_view in sqlparse.keywords.KEYWORDS: continue
+                    if dep_view not in all_views[view]["dependsOn"]['views']:
+                        all_views[view]["dependsOn"]['views'].append(dep_view)
+                    if dep_view not in all_views:
+                        _recursively_process_view(dep_view)
+                if not all_views[view]["dependsOn"]['views']:
+                    del all_views[view]["dependsOn"]
+
+            elif athena_type == 'table':
+                sql = self.query(f'SHOW CREATE TABLE {view}')
+
+            all_views[view]['data'] = sql
+
+        for view in views:
+            _recursively_process_view(view)
+
+        return all_views
