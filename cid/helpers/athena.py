@@ -263,66 +263,12 @@ class Athena(CidBase):
     def get_query_results(self, query_id):
         return self.client.get_query_results(QueryExecutionId=query_id)
 
-    def parse_response_as_list(self, response, include_header=False):
-        data = list()
-
-        # Get results rows, either with or without the header row
-        rows = response['ResultSet']['Rows'] if include_header else response['ResultSet']['Rows'][1:]
-
-        for row in rows:
-            for r in row['Data']:
-                data.append(r['VarCharValue'] if 'VarCharValue' in r else '')
-
-        return data
-
-    def query_results_to_csv(self, query_id, return_header=False):
-        # Get query results
-        response = self.client.get_query_results(QueryExecutionId=query_id)
-
-        # Get results rows, either with or without the header row
-        rows = response['ResultSet']['Rows'] if return_header else response['ResultSet']['Rows'][1:]
-
-        if rows:
-            # Write rows to StringIO in CSV format
-            buf = StringIO()
-            csv_writer = csv.writer(buf, delimiter=',')
-
-            for row in rows:
-                csv_writer.writerow([x['VarCharValue'] if 'VarCharValue' in x else None for x in row['Data']])
-
-            # Strip whitespaces from CSVified string and return it
-            return buf.getvalue().rstrip('\n')
-        else:
-            return None
-
-    def show_columns(self, table_name):
-        sql_query = f'SHOW COLUMNS in {table_name}'
-        query_id = self.execute_query(sql_query=sql_query)
-
-        describe = self.query_results_to_csv(query_id).split('\n')
-
-        # Athena is weird.. Remove whitespaces.
-        result = [elem.rstrip() for elem in describe]
-
+    def parse_response_as_table(self, response, include_header=False):
+        result = []
+        starting_row = 0 if include_header else 1
+        for row in response['ResultSet']['Rows'][starting_row:]:
+            result.append([data.get('VarCharValue', '') for data in row['Data']])
         return result
-
-    def parse_selected_tables(self, month_list):
-        d = {}
-
-        for month in month_list:
-            split = month.split('_')
-
-        payer = split[1]
-        year = split[2][:4]
-        month = split[2][4:]
-
-        if payer in d:
-            d[payer].append((year, month))
-        else:
-            d[payer] = list()
-            d[payer].append((year, month))
-        
-        return d
 
     def get_s3_obj_as_text(self, s3path, encoding: str='utf-8'):
         """ Get an s3 object as a paht
@@ -335,12 +281,11 @@ class Athena(CidBase):
             s3.download_fileobj(bucket, key, fileobject)
             return fileobject.getvalue().decode(encoding)
 
-
     def query(self, sql, **kwargs) -> list:
         """ Execute Athena Query and return a result"""
-        execution_id = self.execute_query(sql)
+        execution_id = self.execute_query(sql, **kwargs)
         results = self.get_query_results(execution_id)
-        return self.parse_response_as_list(results)
+        return self.parse_response_as_table(results)
 
 
     def discover_views(self, views: dict={}) -> None:
@@ -432,7 +377,9 @@ class Athena(CidBase):
 
             all_views[view] = {}
             if athena_type == 'view':
-                sql = self.query(f'SHOW CREATE VIEW {view}')
+                res = self.query(f'SHOW CREATE VIEW {view}')
+                if not res:
+                    continue
                 all_views[view]["dependsOn"] = {}
                 all_views[view]["dependsOn"]['views'] = []
                 deps = re.findall(r'FROM\W+([\S."]+)', sql)
