@@ -66,46 +66,48 @@ class Athena(CidBase):
     @property
     def DatabaseName(self) -> str:
         """ Check if Athena database exist """
+        if self._DatabaseName: return self._DatabaseName
 
-        if not self._DatabaseName:
-            if get_parameters().get('athena-database'):
-                self._DatabaseName = get_parameters().get('athena-database')
-                try:
-                    if not self.get_database(self._DatabaseName):
-                        raise CidCritical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
-                except Exception as exc:
-                    if 'AccessDeniedException' in str(exc):
-                        logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
-                        return self._DatabaseName
-                    raise
-            # Get AWS Athena databases
-            athena_databases = self.list_databases()
-            if not len(athena_databases):
-                self._status = 'AWS Athena databases not found'
-                raise CidCritical(self._status)
-            if len(athena_databases) == 1:
-                self._DatabaseName = athena_databases.pop().get('Name')
-            elif len(athena_databases) > 1:
-                # Remove empty databases from the list
-                for d in athena_databases:
-                    tables = self.list_table_metadata(
-                        DatabaseName=d.get('Name'),
-                        max_items=1000, # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
-                    )
-                    if not len(tables):
-                        athena_databases.remove(d)
-                # Select default database if present
-                default_database = [d for d in athena_databases if d['Name'] == self.defaults.get('DatabaseName')]
-                if len(default_database):
-                    self._DatabaseName = default_database.pop().get('Name')
-                else:
-                    # Ask user
-                    self._DatabaseName = get_parameter(
-                        param_name='athena-database',
-                        message="Select AWS Athena database to use",
-                        choices=[d['Name'] for d in athena_databases],
-                    )
-            logger.info(f'Using Athena database: {self._DatabaseName}')
+        if get_parameters().get('athena-database'):
+            self._DatabaseName = get_parameters().get('athena-database')
+            try:
+                if not self.get_database(self._DatabaseName):
+                    raise CidCritical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
+            except Exception as exc:
+                if 'AccessDeniedException' in str(exc):
+                    logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
+                    return self._DatabaseName
+                raise
+        # Get AWS Athena databases
+        athena_databases = self.list_databases()
+        if not len(athena_databases):
+            self._status = 'AWS Athena databases not found'
+            raise CidCritical(self._status)
+        if len(athena_databases) == 1:
+            # Silently choose an existing database
+            self._DatabaseName = athena_databases.pop().get('Name')
+        elif len(athena_databases) > 1:
+            # Remove empty databases from the list
+            for d in athena_databases:
+                tables = self.list_table_metadata(
+                    DatabaseName=d.get('Name'),
+                    max_items=1000, # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
+                )
+                if not len(tables):
+                    athena_databases.remove(d)
+            # Select default database if present
+            default_databases = [d for d in athena_databases if d['Name'] == self.defaults.get('DatabaseName')]
+            if len(default_databases):
+                # Silently choose an existing default database
+                self._DatabaseName = default_databases.pop().get('Name')
+            else:
+                # Ask user
+                self._DatabaseName = get_parameter(
+                    param_name='athena-database',
+                    message="Select AWS Athena database to use",
+                    choices=[d['Name'] for d in athena_databases],
+                )
+        logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
 
     @DatabaseName.setter
@@ -115,21 +117,26 @@ class Athena(CidBase):
     @property
     def WorkGroup(self) -> str:
         """ Select AWS Athena workgroup """
-        if not self._WorkGroup:
+        if self._WorkGroup: return self._WorkGroup
+
+        if get_parameters().get('athena-workgroup'):
+            self._WorkGroup = get_parameters().get('athena-workgroup')
+        else:
             logger.info('Selecting Athena workgroup...')
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
             if len(workgroups) == 1:
+                # Silently choose the only workgroup that is available
                 self.WorkGroup = workgroups.pop().get('Name')
             elif len(workgroups) > 1:
                 # Select default workgroup if present
-                default_workgroup = next(iter([wg.get('Name') for wg in workgroups if wg['Name'] == self.defaults.get('WorkGroup')]), None)
+                default_workgroup = next(iter([wgr.get('Name') for wgr in workgroups if wgr['Name'] == self.defaults.get('WorkGroup')]), None)
                 if default_workgroup: logger.info(f'Found "{default_workgroup}" as a default workgroup')
                 # Ask user
                 self.WorkGroup = get_parameter(
                     param_name='athena-workgroup',
                     message="Select AWS Athena workgroup to use",
-                    choices=[d['Name'] for d in workgroups],
+                    choices=[wgr['Name'] for wgr in workgroups],
                     default=default_workgroup
                 )
             logger.info(f'Selected workgroup: "{self._WorkGroup}"')
@@ -144,7 +151,7 @@ class Athena(CidBase):
         if _workgroup.get('State') == 'DISABLED':
             raise CidCritical(f'Workgroup "{name}" is disabled.')
         if not _workgroup.get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation'):
-            raise CidCritical(f'Workgroup "{name}" must have an output location set.')
+            raise CidCritical(f'Workgroup "{name}" must have an output location set. Please go to Athena in {region}, and cofigure Output Location s3 bucket.')
         self._WorkGroup = name
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
@@ -157,7 +164,7 @@ class Athena(CidBase):
     def get_database(self, DatabaseName: str=None) -> bool:
         """ Check if AWS Datacalog and Athena database exist """
         if not DatabaseName:
-            DatabaseName=self.DatabaseName
+            DatabaseName = self.DatabaseName
         try:
             self.client.get_database(CatalogName=self.CatalogName, DatabaseName=DatabaseName).get('Database')
             return True
