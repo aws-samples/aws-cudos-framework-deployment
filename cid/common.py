@@ -849,7 +849,7 @@ class Cid():
             for dataset_name in missing_datasets[:]:
                 try:
                     dataset_definition = self.get_definition(type='dataset', name=dataset_name)
-                    raw_template = self.get_dataset_data_from_definition(dataset_definition)
+                    raw_template = self.get_data_from_definition('dataset', dataset_definition)
                     if raw_template:
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
@@ -928,23 +928,34 @@ class Cid():
                     continue
             print('\n')
 
-    def get_dataset_data_from_definition(self, dataset_definition):
+    def get_data_from_definition(self, asset_type, definition):
+        """ Returns an json object for json resource file and a text for all other definitions
+        """
+        subfolder = {
+            'dataset': 'datasets',
+            'view': 'queries',
+            'table': 'queries',
+        }.get(asset_type)
         raw_template = None
-        dataset_file = dataset_definition.get('File')
-        if dataset_file:
-            raw_template = json.loads(resource_string(
-                dataset_definition.get('providedBy'), f'data/datasets/{dataset_file}'
-            ).decode('utf-8'))
-        elif dataset_definition.get('Data'):
-            raw_template = dataset_definition.get('Data')
-        if raw_template is None:
-            raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
-        return raw_template
+        file_name = definition.get('File')
+        if file_name:
+            text = resource_string(
+                definition.get('providedBy'), f'data/{subfolder}/{file_name}'
+            ).decode('utf-8')
+            if file_name.endswith('.json') or file_name.endswith('.jsn'):
+                data = json.loads(data)
+            else:
+                data = text
+        elif definition.get('Data'):
+            data = definition.get('Data')
+        if data is None:
+            raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(definition)}. Check resources file.")
+        return data
 
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
-        data = self.get_dataset_data_from_definition(dataset_definition)
+        data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
@@ -1157,22 +1168,19 @@ class Cid():
         view_definition = self.get_definition("view", name=view_name)
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
         if cur_required and self.cur.hasSavingsPlans and self.cur.hasReservations and view_definition.get('spriFile'):
-            view_file = view_definition.get('spriFile')
+            view_definition['File'] = view_definition.get('spriFile')
         elif cur_required and self.cur.hasSavingsPlans and view_definition.get('spFile'):
-            view_file = view_definition.get('spFile')
+            view_definition['File'] = view_definition.get('spFile')
         elif cur_required and self.cur.hasReservations and view_definition.get('riFile'):
-            view_file = view_definition.get('riFile')
+            view_definition['File'] = view_definition.get('riFile')
         elif view_definition.get('File'):
-            view_file = view_definition.get('File')
+            view_definition['File'] = view_definition.get('File')
         else:
             logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
             raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        template = Template(resource_string(
-            view_definition.get('providedBy'),
-            f'data/queries/{view_file}'
-        ).decode('utf-8'))
+        template = self.get_data_from_definition('view', view_definition) 
 
         # Prepare template parameters
         columns_tpl = {

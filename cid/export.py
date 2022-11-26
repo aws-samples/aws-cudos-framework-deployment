@@ -16,11 +16,22 @@ import boto3
 
 from cid.helpers import quicksight
 from cid.utils import get_parameter, get_parameters
+from cid.helpers.sql import pretty_sql
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
-def export_analysis(qs):
+def enable_multiline_in_yaml():
+    #https://stackoverflow.com/a/33300001
+    def str_presenter(dumper, data):
+      if len(data.splitlines()) > 1:  # check for multiline string
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+      return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+    yaml.add_representer(str, str_presenter)
+    yaml.representer.SafeRepresenter.add_representer(str, str_presenter) # to use with safe_dump
+
+
+def export_analysis(qs, athena):
 
     # Choose Analysis to share
     analysis_id = None
@@ -66,9 +77,16 @@ def export_analysis(qs):
     )['Analysis']
 
     logger.info("analysing datasets")
+    resources = {}
+    resources['dashboards'] = {}
+    resources['datasets'] = {}
+    resources['views'] = all_views_data
+
     dataset_references = []
     datasets = {}
+    all_views = []
     for dataset_arn in analysis['DataSetArns']:
+        dependancy_views = []
         dataset_id = dataset_arn.split('/')[-1]
         dataset = qs.describe_dataset(dataset_id)
 
@@ -92,9 +110,19 @@ def export_analysis(qs):
         for key, value in dataset_data['PhysicalTableMap'].items():
             value['RelationalTable']['DataSourceArn'] = '${athena_datasource_arn}'
             value['RelationalTable']['Schema'] = '${athena_database_name}'
+            athena_source = value['RelationalTable']['Name']
+            dependancy_views.append(athena_source)
+            all_views.append(athena_source)
 
-        datasets[dataset_arn] = dataset_data
 
+        datasets[dataset_arn] = {
+            'Data': dataset_data,
+            'dependsOn': {'views': dependancy_views},
+        }
+
+    all_views_data = athena.process_views(all_views)
+    for name, data in all_views_data.items:
+        data['Data'] = pretty_sql(data['Data'])
 
     template_id = get_parameter(
         'template-id',
@@ -146,18 +174,13 @@ def export_analysis(qs):
         TemplateId=template_id,
         GrantPermissions=[
             {
-                "Principal": {"AWS": reader_account} if reader_account != '*' else '*',
+                "Principal": {"AWS": reader_account.split(',')} if reader_account != '*' else '*',
                 'Actions': [
                     "quicksight:DescribeTemplate",
                 ]
             },
         ],
     )
-
-    resources = {}
-    resources['dashboards'] = {}
-    resources['datasets'] = {}
-    resources['views'] = {}
 
     resources['dashboards'][analysis['Name'].upper()] = {
         'name': analysis['Name'],
