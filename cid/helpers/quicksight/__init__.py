@@ -195,11 +195,6 @@ class QuickSight(CidBase):
     def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover single dashboard"""
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
-        # Look for dashboard definition by DashboardId
-        _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
-        if not _definition:
-            # Look for dashboard definition by templateId
-            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.template_id), None)
         try:
             _template_arn = dashboard.version.get('SourceEntityArn')
             _template_id = str(_template_arn.split('/')[1])
@@ -210,6 +205,12 @@ class QuickSight(CidBase):
         except Exception as e:
                 logger.debug(e, exc_info=True)
                 logger.info(f'Unable to describe template {_template_id}, {e}')
+        # Look for dashboard definition by DashboardId
+        _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
+        if not _definition:
+            # Look for dashboard definition by templateId
+            logger.info(dashboard.template_id)
+            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.template_id), None)
         if not _definition:
             logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
         else:
