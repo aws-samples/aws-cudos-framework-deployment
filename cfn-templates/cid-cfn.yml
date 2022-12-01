@@ -30,6 +30,7 @@ Metadata:
           - DatabaseName
           - CURTableName
           - CidVersion
+          - GlueDataCatalog
           - Suffix
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
@@ -70,6 +71,8 @@ Metadata:
         default: "QuickSight DataSet Refresh Schedule"
       LambdaLayerBucketPrefix:
         default: "LambdaLayerBucketPrefix - Please do not change"
+      GlueDataCatalog:
+        default: "Existing Glue Data Catalog"
   cfn-lint:
     config:
       ignore_checks:
@@ -160,6 +163,10 @@ Parameters:
     Type: String
     Description: An S3 bucket with a Lambda layer
     Default: "aws-managed-cost-intelligence-dashboards"
+  GlueDataCatalog:
+    Type: String
+    Description: Existing Glue Data Catalog
+    Default: "AwsDataCatalog"
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -1146,6 +1153,7 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1164,6 +1172,7 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1185,6 +1194,7 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1208,6 +1218,7 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
@@ -1226,6 +1237,7 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
