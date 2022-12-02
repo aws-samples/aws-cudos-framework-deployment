@@ -158,7 +158,7 @@ class AccountMap(CidBase):
         logger.info(f'Creating dummy account mapping for {name}')
         template = Template(resource_string(
             package_or_requirement='cid.builtin.core',
-            resource_name='data/queries/shared/account_map_dummy.py',
+            resource_name='data/queries/shared/account_map_dummy.sql',
         ).decode('utf-8'))
         columns_tpl = {
             'athena_view_name': name,
