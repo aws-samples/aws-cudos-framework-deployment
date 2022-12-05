@@ -1,7 +1,8 @@
-boto3>=1.24
+boto3>=1.26
 Click>=8.0
 deepmerge
 PyYAML
 requests
 six>=1.15
 questionary>=1.10
+Mako

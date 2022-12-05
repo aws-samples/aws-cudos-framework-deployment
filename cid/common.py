@@ -25,7 +25,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, Template as CidQsTemplate
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, IAM, Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
@@ -82,6 +82,14 @@ class Cid():
         print('\tRegion: {}'.format(self.base.session.region_name))
         logger.info(f'AWS region: {self.base.session.region_name}')
         print('\n')
+
+    @property
+    def iam(self) -> IAM:
+        if not self._clients.get('iam'):
+            self._clients.update({
+                'iam': IAM(self.base.session)
+            })
+        return self._clients.get('iam')
 
     @property
     def qs(self) -> QuickSight:
@@ -941,6 +949,20 @@ class Cid():
             raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
         return raw_template
 
+    def get_dataset_buckets(self, dataset_definition):
+        buckets = []
+        data = self.get_dataset_data_from_definition(dataset_definition)
+        cur_required = dataset_definition.get('dependsOn', dict()).get('cur', False)
+        if cur_required:
+            location = self.athena.get_table_metadata(self.cur.tableName).get('Parameters',{}).get('location', '')
+            if location and location.startswith('s3://'):
+                buckets.append(location.split('/')[2])
+        for par in get_parameters().values():
+            if isinstance(par, str) and par.startswith('s3://'):
+                buckets.append(par.split('/')[2])
+        return buckets
+
+
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
@@ -949,10 +971,22 @@ class Cid():
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
 
-        if get_parameters().get('quicksight-datasource-id'):
-            # We have explicit choice of datasource
-            datasource_id = get_parameters().get('quicksight-datasource-id')
+        buckets = self.get_dataset_buckets(dataset_definition)
+        logger.debug(f'Buckets = {buckets}')
+        role_arn = get_parameters().get('quicksight-datasource-arn')
+        if not role_arn:
+            try:
+                role_arn = self.iam.ensure_data_source_role_exists(role_name='CidDataSourceRole', buckets=buckets)['Arn']
+                logger.info(role_arn)
+            except self.iam.client.exceptions.ClientError as exc:
+                if '(AccessDenied)' in str(exc):
+                    logger.info('Insufficient permissions to create/update role and policies. Please add iam:ListAttachedRolePolicies, iam:AttachRolePolicy, iam:CreatePolicy, iam:CreatePolicyVersion, iam:ListPolicyVersions, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:GetPolicy, iam:GetRole, iam:CreateRole ')
+                    logger.info('Will try without IAM permissions')
+                else:
+                    raise
 
+        datasource_id = get_parameters().get('quicksight-datasource-id')
+        if datasource_id: # We have explicit choice of datasource
             try:
                 athena_datasource = self.qs.describe_data_source(datasource_id)
             except self.qs.client.exceptions.AccessDeniedException:
@@ -961,12 +995,13 @@ class Cid():
                     "Id": datasource_id,
                     "Arn": f"arn:aws:quicksight:{self.base.session.region_name}:{self.base.account_id}:datasource/{datasource_id}",
                 })
+            except self.qs.client.exceptions.ResourceNotFoundException:
+                logger.critical(f"Datasources {datasource_id} found, let's create one")
+                datasource_id = self.qs.create_data_source(datasource_id=datasource_id, athena_workgroup=self.athena.WorkGroup, role_arn=role_arn)
 
         if not athena_datasource and not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
-            self.qs.AthenaWorkGroup = self.athena.WorkGroup
-            self.qs.create_data_source() # FIXME: we need to use name/id provided by user if any
-            # FIXME: we need to cleanup if datasource creation fails
+            datasource_id = self.qs.create_data_source(datasource_id=datasource_id, athena_workgroup=self.athena.WorkGroup, role_arn=role_arn)
 
         if not athena_datasource:
             if not self.qs.athena_datasources:
@@ -1014,22 +1049,28 @@ class Cid():
                         self.athena.DatabaseName = schemas[0]
                     # else user will be suggested to choose database anyway
 
-                    if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
-                        athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
+                    #try to find a datasource with defined workgroup
+                    datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=self.athena.WorkGroup)
+                    if len(datasources_with_workgroup) == 1:
+                        athena_datasource = datasources_with_workgroup[0]
                     else:
-                        #try to find a datasource with defined workgroup
-                        workgroup = self.athena.WorkGroup
-                        datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=workgroup)
-                        if len(datasources_with_workgroup) == 1:
-                            athena_datasource = datasources_with_workgroup[0]
-                        else:
-                            #cannot find the right athena_datasource
-                            logger.info('Multiple DataSources found.')
-                            datasource_id = get_parameter(
-                                param_name='quicksight-datasource-id',
-                                message=f"Please choose DataSource (Choose the first one if not sure).",
-                                choices=datasource_choices,
-                            )
+                        #cannot find the right athena_datasource
+                        logger.info('Multiple DataSources found.')
+                        new = 'Create a New CID-Athena DataSource'
+                        datasource_choices[new] = new
+                        datasource_id = get_parameter(
+                            param_name='quicksight-datasource-id',
+                            message=f"Please choose DataSource (Choose the first one if not sure).",
+                            choices=datasource_choices,
+                           # default=new
+                        )
+
+                        if datasource_id == new:
+                            datasource_id = self.qs.create_data_source(athena_workgroup=self.athena.WorkGroup, role_arn=role_arn)
+                            set_parameters({'quicksight-datasource-id':datasource_id})
+                            if not datasource_id:
+                                raise CidCritical('Cannot create DataSources. Please create a datasource in QuickSight manually, configure permissions in QS to allow Athena and S3, and come back.')
+                        if datasource_id:
                             athena_datasource = self.qs.athena_datasources[datasource_id]
                             logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
         if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):

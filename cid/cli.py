@@ -93,6 +93,7 @@ def deploy(ctx, **kwargs):
      --athena-workgroup TEXT               Athena workgroup
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
+     --quicksight-datasource-role-arn      An arn of IAM role for QuickSight Datasource. If not provided a new IAM role will be created.
      --quicksight-datasource-id TEXT       QuickSight Datasource ARN (if not found one with provided Athena workgroup)
      --quicksight-group TEXT               A QuickSight Group that will own all objects created in Quicksight
      --quicksight-user TEXT                A QuickSight user that will own all objects created in Quicksight. You can provide value 'current user' (with space) to use the current IAM user as owner.
