@@ -1,8 +1,8 @@
 boto3>=1.24
 Click>=8.0
-yaspin==0.14.1
 deepmerge
 PyYAML
 requests
+sqlparse
 six>=1.15
 questionary>=1.10
