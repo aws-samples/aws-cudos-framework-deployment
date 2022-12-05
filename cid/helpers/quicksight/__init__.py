@@ -14,6 +14,7 @@ from cid.base import CidBase
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
+from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
@@ -26,8 +27,11 @@ class QuickSight(CidBase):
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
     _datasources: Dict[str, Datasource] = None
+    _templates: Dict[str, CidQsTemplate] = dict()
     _identityRegion: str = None
     _user: dict = None
+    _principal_arn: dict = None
+    _group: dict = None
     client = None
 
     def __init__(self, session, resources=None) -> None:
@@ -52,18 +56,25 @@ class QuickSight(CidBase):
     def user(self) -> dict:
         if not self._user:
             username = get_parameters().get('quicksight-user', self.username)
-            try:
-                self._user =  self.describe_user(username)
-            except Exception as exc:
-                logger.debug(exc, exc_info=True)
-                logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
-            if not self._user:
-                # If no user match, ask
-                self._user = self.select_user()
-            if not self._user:
-                raise CidCritical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
-            logger.info(f"Using QuickSight user {self._user.get('UserName')}")
+            if username:
+                try:
+                    self._user =  self.describe_user(username)
+                except Exception as exc:
+                    logger.debug(exc, exc_info=True)
+                    logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
         return self._user
+
+    @property
+    def group(self) -> dict:
+        if not self._group:
+            groupname = get_parameters().get('quicksight-group', None)
+            if groupname:
+                try:
+                    self._group =  self.describe_group(groupname)
+                except Exception as exc:
+                    logger.debug(exc, stack_info=True)
+                    logger.error(f'Failed to find your QuickSight groupname ({exc}). Is QuickSight activated?')
+        return self._group
 
     @property
     def identityRegion(self) -> str:
@@ -181,20 +192,31 @@ class QuickSight(CidBase):
         return result
 
 
-    def discover_dashboard(self, dashboardId: str):
+    def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover single dashboard"""
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
+        try:
+            _template_arn = dashboard.version.get('SourceEntityArn')
+            _template_id = str(_template_arn.split('/')[1])
+            _template_version = int(_template_arn.split('/')[-1])
+            _template = self.describe_template(template_id=_template_id, version_number=_template_version)
+            if isinstance(_template, CidQsTemplate):
+                dashboard.deployedTemplate = _template
+        except Exception as e:
+                logger.debug(e, exc_info=True)
+                logger.info(f'Unable to describe template {_template_id}, {e}')
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
             # Look for dashboard definition by templateId
-            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.templateId), None)
+            logger.info(dashboard.template_id)
+            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.template_id), None)
         if not _definition:
-            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
         else:
-            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.template_arn})')
             dashboard.definition = _definition
-            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.deployed_arn})')
+            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.template_arn})')
             for dataset in dashboard.version.get('DataSetArns'):
                 dataset_id = dataset.split('/')[-1]
                 try:
@@ -216,7 +238,7 @@ class QuickSight(CidBase):
                 dashboard.sourceTemplate = template
             except Exception as e:
                 logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {templateId} in {templateAccountId}')
+                logger.info(f'Unable to describe template {templateId} in {templateAccountId} ({region})')
 
             # recoursively add views
             all_views = []
@@ -234,12 +256,91 @@ class QuickSight(CidBase):
             logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
             return dashboard
 
+    def ensure_group_exists(self, groupname='cid-owners', description='Created by Cloud Intelligence Dashboards'):
+        try:
+            group = self.identityClient.describe_group(
+                AwsAccountId=self.account_id,
+                Namespace='default',
+                GroupName=groupname
+            ).get('Group')
+        except self.client.exceptions.ResourceNotFoundException:
+            group = self.identityClient.create_group(
+                AwsAccountId=self.account_id,
+                GroupName=groupname,
+                Namespace='default',
+                description=description,
+            ).get('Group')
+        except self.client.exceptions.AccessDeniedException as e:
+            raise CidCritical('Cannot access groups. (AccessDenied). Please use quicksight-user parameter '
+                'or ensure you have permissions quicksight::DescribeGroup and quicksight::CreateGroup')
+        return group
+
+
+    def get_principal_arn(self):
+        if self._principal_arn:
+            return self._principal_arn
+
+        if self.group and self.user:
+            raise CidCritical('provided both quicksight-group and quicksight-user. Please keep just one.')
+        if self.group:
+            self._principal_arn = self.group.get('Arn')
+        elif self.user:
+            self._principal_arn = self.user.get('Arn')
+
+        if self._principal_arn:
+            return self._principal_arn
+
+        # No parameters provided, let's ask user. Following parameter is not supposed to be used by CLI users.
+        quicksight_owner = get_parameter('quicksight-owner-choice',
+            message='You have not provided quicksight-user or quicksight-group. Do you what your objects to be owned by a user or a group?',
+            choices=[
+                'group cid-owners (recommended)',
+                f'current user {self.username}',
+                'other user'],
+            default='group cid-owners (recommended)'
+        )
+
+        if quicksight_owner.startswith("current user"):
+            username = self.username # try with default user, works for IAM users
+            if username:
+                try:
+                    self._user =  self.describe_user(username)
+                except Exception as exc:
+                    logger.debug(exc, stack_info=True)
+                    logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
+            if not self._user:
+                self._user = self.select_user()
+            if not self._user:
+                logger.critical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
+                exit(1)
+            logger.info(f"Using QuickSight user {self._user.get('UserName')}")
+            self._principal_arn = self._user.get('Arn')
+
+        elif quicksight_owner.startswith("other user"):
+            self._user = self.select_user()
+            if not self._user:
+                logger.critical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
+                exit(1)
+            self._principal_arn = self._user.get('Arn')
+
+        elif quicksight_owner.startswith("group cid-owners"):
+            group = self.ensure_group_exists('cid-owners')
+            self._principal_arn = group.get('Arn')
+
+        if not self._principal_arn:
+            logger.critical('Cannot find principal_arn. Please provide --quicksight-username or --quicksight-groupname')
+            exit(1)
+
+        return self._principal_arn
+
+
+
     def create_data_source(self) -> bool:
         """Create a new data source"""
         logger.info('Creating Athena data source')
 
         columns_tpl = {
-            'PrincipalArn': self.user.get('Arn')
+            'PrincipalArn': self.get_principal_arn()
         }
         data_source_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
@@ -295,9 +396,10 @@ class QuickSight(CidBase):
     def create_folder(self, folder_name: str, **create_parameters) -> dict:
         """Create a new folder"""
         logger.info('Creating QuickSight folder')
+        folder_id = str(uuid.uuid4())
         create_parameters.update({
             "AwsAccountId": self.account_id,
-            "FolderId": str(uuid.uuid4()),
+            "FolderId": folder_id,
             "Name": folder_name,
             "FolderType": "SHARED",
         })
@@ -311,7 +413,8 @@ class QuickSight(CidBase):
             folder = self.describe_folder(result['FolderId'])
             return folder
         except self.client.exceptions.ResourceExistsException:
-            logger.error('Folder already exists')
+            logger.info('Folder already exists')
+            return self.describe_folder(folder_id)
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied creating folder')
             raise
@@ -723,22 +826,29 @@ class QuickSight(CidBase):
             return _datasource
 
 
-    def describe_template(self, template_id: str, account_id: str=None, region: str='us-east-1'):
+    def describe_template(self, template_id: str, version_number: int=None, account_id: str=None, region: str='us-east-1') -> CidQsTemplate:
         """ Describes an AWS QuickSight template """
         if not account_id:
             account_id=self.cidAccountId
-        try:
-            client = self.session.client('quicksight', region_name=region)
-            result = client.describe_template(AwsAccountId=account_id, TemplateId=template_id)
-            logger.debug(result)
-        except self.client.exceptions.UnsupportedUserEditionException:
-            raise CidCritical('AWS QuickSight Enterprise Edition is required')
-        except self.client.exceptions.ResourceNotFoundException:
-            raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
-        except Exception as e:
-            logger.debug(e, exc_info=True)
-            raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
-        return result.get('Template')
+        if not self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}'):
+            try:
+                client = self.session.client('quicksight', region_name=region)
+                parameters = {
+                    'AwsAccountId': account_id,
+                    'TemplateId': template_id
+                }
+                if version_number: parameters.update({'VersionNumber': version_number})
+                result = client.describe_template(**parameters)
+                self._templates.update({f'{account_id}:{region}:{template_id}:{version_number}': CidQsTemplate(result.get('Template'))})
+                logger.debug(result)
+            except self.client.exceptions.UnsupportedUserEditionException:
+                raise CidCritical('AWS QuickSight Enterprise Edition is required')
+            except self.client.exceptions.ResourceNotFoundException:
+                raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
+            except Exception as e:
+                logger.debug(e, exc_info=True)
+                raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
+        return self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}')
 
     def describe_user(self, username: str) -> dict:
         """ Describes an AWS QuickSight user """
@@ -764,12 +874,31 @@ class QuickSight(CidBase):
             logger.info(f'QuickSight user {username} not found.')
             return None
 
+    def describe_group(self, groupname: str) -> dict:
+        """ Describes an AWS QuickSight Group """
+        try:
+            result = self.identityClient.describe_group(**{
+                'AwsAccountId': self.account_id,
+                'GroupName': groupname,
+                'Namespace': 'default'
+            })
+            logger.debug('group = ',json.dumps(result))
+            return result.get('Group')
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.error(f'QuickSight group {groupname} not found.')
+            return None
+        except self.client.exceptions.AccessDeniedException: # Try to overcome AccessDeniedException
+            #FIXME: paginator is not available for list_groups
+            logger.error(f'AccessDeniedException when trying to DescribeGroup in QuickSight.')
+            return None
+
+
     def create_dataset(self, definition: dict) -> str:
         """ Creates an AWS QuickSight dataset """
         poll_interval = 1
         max_timeout = 60
         columns_tpl = {
-            'PrincipalArn': self.user.get('Arn')
+            'PrincipalArn': self.get_principal_arn()
         }
         data_set_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
@@ -789,9 +918,10 @@ class QuickSight(CidBase):
             response = self.client.create_data_set(**definition)
             dataset_id = response.get('DataSetId')
         except self.client.exceptions.ResourceExistsException:
-            logger.info(f'Dataset {definition.get("Name")} already exists')
+            dataset_id = definition.get("DataSetId")
+            logger.info(f'Dataset {definition.get("Name")} already exists with DataSetId={dataset_id}')
         except self.client.exceptions.LimitExceededException:
-            raise CidCritical('AWS QuickSight SPICE limit exceeded')
+            raise CidCritical('AWS QuickSight SPICE limit exceeded. Add SPICE here https://quicksight.aws.amazon.com/sn/admin#capacity .')
 
         logger.info(f'Waiting for {definition.get("Name")} to be created')
         deadline = time.time() + max_timeout
@@ -835,7 +965,7 @@ class QuickSight(CidBase):
             resource_name=f'data/permissions/dashboard_permissions.json',
         ).decode('utf-8'))
         columns_tpl = {
-            'PrincipalArn': self.user.get('Arn')
+            'PrincipalArn': self.get_principal_arn()
         }
         dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
         create_parameters = {
@@ -847,7 +977,7 @@ class QuickSight(CidBase):
             ],
             'SourceEntity': {
                 'SourceTemplate': {
-                    'Arn': f"{definition.get('sourceTemplate').get('Arn')}/version/{definition.get('sourceTemplate').get('Version').get('VersionNumber')}",
+                    'Arn': f"{definition.get('sourceTemplate').arn}/version/{definition.get('sourceTemplate').version}",
                     'DataSetReferences': DataSetReferences
                 }
             }
@@ -893,7 +1023,7 @@ class QuickSight(CidBase):
             'Name': dashboard.name,
             'SourceEntity': {
                 'SourceTemplate': {
-                    'Arn': f"{dashboard.sourceTemplate.get('Arn')}/version/{dashboard.latest_version}",
+                    'Arn': f"{dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}",
                     'DataSetReferences': DataSetReferences
                 }
             }

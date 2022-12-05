@@ -1,5 +1,13 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.75
+
+* Databases: Added 'Daily Storage Cost' visual which shows detailed storage cost breakdown and can be used to track GP3 volumes adoption for Amazon RDS and OpenSearch 
+* MoM Trends: Added Payer Account to 'AWS Marketplace spend detailed view'
+* Data Transfer Summary: New visual 'Single-AZ VPC endpoints' which helps to asses reliability risks and consider to deploy production VPC endpoints in a several Availability Zones
+* Data Transfer Summary: Data Transfer types categorization logic so you have more precise breakdown of different data transfer types
+
+
 ## CUDOS - 4.74
 
 * MoM Trends: Added AWS Marketplace section with visuals 'AWS Marketplace spend by Legal Entity' and 'AWS Marketplace spend detailed view'

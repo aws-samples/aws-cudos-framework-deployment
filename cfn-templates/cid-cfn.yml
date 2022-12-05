@@ -4,37 +4,75 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: 'Prerequisites'
+          default: 'Common Parameters'
         Parameters:
           - PrerequisitesQuickSight
-          - PrerequisitesCUR
           - PrerequisitesQuickSightPermissions
-      - Label:
-          default: 'Mandatory parameters'
-        Parameters:
           - QuickSightUser
-          - CURBucketPath
-          - CURIsManagedByCloudFormation
       - Label:
-          default: Available dashboards. Keep all 'no' for the first deployment. Go to QuickSight, change Permission and after that update the stack putting to 'yes' 3 first dashboards.
+          default: CUDOS, Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually (Dashboard data will appear within 24h after CUR creation).
         Parameters:
+          - CURBucketPath
           - DeployCUDOSDashboard
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
+      - Label:
+          default: Trusted Advisor and Compute Optimizer Dashboards. To deploy theese two dashboard, you must first deploy the Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
+        Parameters:
+          - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
           - DeployComputeOptimizerDashboard
-          - CostOptimizationDataCollectionBucketPath
       - Label:
-          default: 'Optional Parameters (do not change unless you know why)'
+          default: 'Technical Parameters. Please do not change.'
         Parameters:
           - AthenaWorkgroup
           - AthenaQueryResultsBucket
-          - CURDatabaseName
+          - DatabaseName
           - CURTableName
           - CidVersion
+          - GlueDataCatalog
           - Suffix
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
+    ParameterLabels: 
+      PrerequisitesQuickSight:
+        default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
+      PrerequisitesQuickSightPermissions:
+        default: "I understand that I need to manually give Permission to QuickSight to access CUR bucket and Query results bucket. Then manually refresh datasets after deploying this CFN."
+      QuickSightUser:
+        default: "User name of QuickSight user (as displayed in QuickSight admin panel). Dashboards created by this template will be owned by this user."
+      CURBucketPath:
+        default: "Path to Cost and Usage report"
+      DeployCUDOSDashboard:
+        default: "Deploy CUDOS Dashboard"
+      DeployCostIntelligenceDashboard:
+        default: "Deploy CostIntelligenceDashboard"
+      DeployKPIDashboard:
+        default: "Deploy KPI Dashboard"
+      OptimizationDataCollectionBucketPath:
+        default: "Path to Optimization Data Collection S3 bucket"
+      DeployTAODashboard:
+        default: "Deploy TAO Dashboard"
+      DeployComputeOptimizerDashboard:
+        default: "Deploy Compute Optimizer Dashboard"
+      AthenaWorkgroup:
+        default: "Athena Workgroup - Please do not change"
+      AthenaQueryResultsBucket:
+        default: "Athena Query Results Bucket - Please do not change"
+      DatabaseName:
+        default: "Database Name - Please do not change"
+      CURTableName:
+        default: "CUR Table Name - Please do not change"
+      CidVersion:
+        default: "Cid Version - Please do not change"
+      Suffix:
+        default: "Suffix - Please do not change"
+      QuickSightDataSetRefreshSchedule:
+        default: "QuickSight DataSet Refresh Schedule"
+      LambdaLayerBucketPrefix:
+        default: "LambdaLayerBucketPrefix - Please do not change"
+      GlueDataCatalog:
+        default: "Existing Glue Data Catalog"
   cfn-lint:
     config:
       ignore_checks:
@@ -42,29 +80,21 @@ Metadata:
 Parameters:
   PrerequisitesQuickSight:
     Type: String
-    Description: I have QuickSight Enterprise Edition AND i have a SPICE capacity in QuickSight in the current region https://quicksight.aws.amazon.com/sn/admin#capacity. See https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/#enable-quicksight
-    ConstraintDescription: 'Please go to QS page https://quicksight.aws.amazon.com/sn/admin#capacity, make sure you have at least 10GB'
+    Description: See https://quicksight.aws.amazon.com/sn/admin#capacity
+    ConstraintDescription: 'Please check in QuickSight that you have at least 10GB of SPICE capacity'
     AllowedPattern: 'yes'
     AllowedValues: ["yes", "no"]
-  PrerequisitesCUR:
-    Type: String
-    Description: I have CUR set up at least 24 hours ago. See https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/1_prerequistes/#prepare-cost--usage-report
-    AllowedPattern: 'yes'
-    AllowedValues: ["yes", "no"]
-    ConstraintDescription: 'Please go to Billing page and setup your Cost and Usage report.'
   PrerequisitesQuickSightPermissions:
     Type: String
-    Description: I understand that i need to set up manually Permission of QuickSight to access CUR backet and Query results bucket ( https://quicksight.aws.amazon.com/sn/admin#aws ), and then relaunch dataset refresh manually the first time.
+    Description: See https://quicksight.aws.amazon.com/sn/admin#aws
     ConstraintDescription: 'Please read prerequisites'
     AllowedPattern: 'yes'
     AllowedValues: ["yes", "no"]
   QuickSightUser:
     Type: String
     MinLength: 1
-    Default: REPLACE WITH QuickSight USER (see https://quicksight.aws.amazon.com/sn/admin#users)
-    Description: >
-        REQUIRED - User name of QuickSight user from default namespace (as displayed in QuickSight admin panel).
-        Dashboard created by this template with be owned by this user. See https://quicksight.aws.amazon.com/sn/admin#users
+    Default: REPLACE WITH QuickSight USER
+    Description: See https://quicksight.aws.amazon.com/sn/admin#users
   QuickSightDataSetRefreshSchedule:
     Type: String
     MinLength: 3
@@ -75,36 +105,31 @@ Parameters:
     MinLength: 3
     Default: 's3://cid-{account_id}-shared/cur/'
     AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
-    Description: 'REQUIRED - s3 bucket with CUR and path. If CUR was created with CloudFormation, the path must be up to account partition. If it was a manually created CUR, the path must be up to the years partition. A variable {account_id} will be replaced by current account id automatically.'
-  CURIsManagedByCloudFormation:
-    Type: String
-    Default: 'yes'
-    AllowedValues: ["yes", "no"]
-    Description: 'CUR was created with CloudFormation. If CUR was created manually AND it is a single account or single payer account CUR, select no'
+    Description: "Leave as is if CUR was created with CloudFormation (cur-aggregation.yaml). If it was a manually created CUR, the path entered below must be for the directory that contains the years partition (s3://curbucketname/prefix/curname/curname/). If you're using the defaults, the variable {account_id} will be replaced by current account id automatically, you can leave it as {account_id}."
   AthenaWorkgroup:
     Type: String
     Default: ''
-    Description: Leave Empty to create one. Athena workgroup to use.
+    Description: Leave Empty
   AthenaQueryResultsBucket:
     Type: String
     Default: ''
-    Description:  Leave Empty to create one. Name of the s3 bucket configured for athena query results for the workgroup defined above (do not add a trailing slash) . Make sure QuickSight has read and right access to this bucket. 
-  CURDatabaseName:
+    Description:  Leave Empty
+  DatabaseName:
     Type: String
-    Description: Leave Empty to create one. Athena CUR Database name
+    Description: Leave Empty
     Default: ''
   CURTableName:
     Type: String
     Default: ''
-    Description: Leave Empty to create one. Athena CUR Table name. Last part of CURPath will be used as name.
+    Description: Leave Empty
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.5
-    Description: REQUIRED - A version of CID package
+    Default: 0.2.6
+    Description: A version of CID package
   Suffix:
     Type: String
-    Description: Do not use this Suffix it is not fully supported. For testing purposes only.
+    Description: Leave Empty. Do not use this Suffix it is not fully supported. For testing purposes only.
   DeployCUDOSDashboard:
     Type: String
     Description: Deploy CUDOS Dashboard
@@ -122,22 +147,26 @@ Parameters:
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - You need Optimisation Data Collection Lab to be installed
+    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: Deploy Compute Optimizer Dashboard (COD) - You need Optimisation Data Collection Lab to be installed
+    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
-  CostOptimizationDataCollectionBucketPath:
+  OptimizationDataCollectionBucketPath:
     Type: String
-    Description: An S3 path to a bucket from Cost Optimisation Data Collection Lab, where you have /optics-data-collector folder (Required for TAO and COD). You can leave {account_id}, it will be replaced by current account ID
+    Description: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /optics-data-collector folder. You can leave the variable {account_id} in place, it will be replaced by current account ID automatically.
     Default: "s3://costoptimizationdata{account_id}"
   LambdaLayerBucketPrefix:
     Type: String
     Description: An S3 bucket with a Lambda layer
     Default: "aws-managed-cost-intelligence-dashboards"
+  GlueDataCatalog:
+    Type: String
+    Description: Existing Glue Data Catalog
+    Default: "AwsDataCatalog"
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -145,12 +174,34 @@ Conditions:
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
   NeedComputeOptimizerDashboard: !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
+  NeedCUR:
+    Fn::Or:
+      - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+      - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+      - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+  NeedDataCollectionLab:
+    Fn::Or:
+      - !Equals [ !Ref DeployTAODashboard, "yes" ]
+      - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   NeedAthenaWorkgroup:  !Equals [ !Ref AthenaWorkgroup, "" ]
   NeedAthenaQueryResultsBucket:  !Equals [ !Ref AthenaQueryResultsBucket, "" ]
-  NeedCURDatabase:  !Equals [ !Ref CURDatabaseName, "" ]
-  NeedCURTable:  !Equals [ !Ref CURTableName, "" ]
+  NeedDatabase:
+    Fn::And:
+      - !Equals [ !Ref DatabaseName, "" ]
+      - Fn::Or:
+        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+        - !Equals [ !Ref DeployTAODashboard, "yes" ]
+        - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
+  NeedCURTable:
+    Fn::And:
+      - !Equals [ !Ref CURTableName, "" ]
+      - Fn::Or:
+        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  CURIsManagedByCloudFormation: !Equals [ !Ref CURIsManagedByCloudFormation, "yes" ]
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -169,7 +220,7 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
-        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: !Sub 'CidSpiceRefreshExecutionRole${Suffix}'
           PolicyDocument:
@@ -335,6 +386,7 @@ Resources:
           def lambda_handler(event, context):
               print(event)
               type_ = event.get('RequestType', 'Undef')
+              region = boto3.session.Session().region_name
               res = (True, f"Un error on {type_}. Check logs")
               identity_region = ''
               try:
@@ -343,10 +395,11 @@ Resources:
                   else: res = (True, f"Not supported operation: {type_}")
                   identity_region = get_identity_region()
               finally:
+                  log_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logEvent:group={context.log_group_name};stream={context.log_stream_name}"
                   url = event.get('ResponseURL')
                   body = {}
                   body['Status'] = 'SUCCESS' if res[0] else 'FAILED'
-                  body['Reason'] = str(res[1]) + '\nSee the details in CloudWatch Log Stream: ' + context.log_stream_name
+                  body['Reason'] = res[1] + '\nLogs: ' + log_url
                   body['PhysicalResourceId'] = 'keep_it_constant'
                   body['StackId'] = event.get('StackId')
                   body['RequestId'] = event.get('RequestId')
@@ -478,13 +531,43 @@ Resources:
           Value: !If [NeedAthenaQueryResultsBucket, !Ref MyAthenaQueryResultsBucket, '']
         - Key: IgnoreConditionalDependsOnAthenaWorkgroup
           Value: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
-        - Key: IgnoreConditionalDependsOnCURDatabase
+        - Key: IgnoreConditionalDependsOnDatabase
           Value: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
 
+  ProcessPathLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBuckets
+                Resource:
+                  - Fn::Sub:
+                    - "arn:aws:s3:::{bucket}"
+                    - bucket: !Select ["2", !Split ['/', !Ref CURBucketPath ] ]  #s3://<bucket>
+                  - Fn::Sub:
+                    - "arn:aws:s3:::{bucket}"
+                    - bucket: !Select ["2", !Split ['/', !Ref OptimizationDataCollectionBucketPath ] ]
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
   CustomRessourceProcessPath:
     Type: AWS::Lambda::Function
     Properties:
-      Role: !GetAtt 'InitLambdaExecutionRole.Arn' #FIXME: Needs its own role
+      Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
       FunctionName: !Sub "CidProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
       Runtime: python3.9
@@ -497,11 +580,19 @@ Resources:
           import uuid
           import json
           import urllib3
+          import botocore
+          import boto3
+
+          partitions = {
+            "managed_by_cfn": ["source_account_id", "cur_name_1", "cur_name_2", "year", "month"],
+            "manual":         ["year", "month"],
+          }
 
           def lambda_handler(event, context):
               print(json.dumps(event))
               account_id = context.invoked_function_arn.split(":")[4]
               type_ = event.get('RequestType', 'Undef')
+              region = boto3.session.Session().region_name
               properties = event.get('ResourceProperties', {})
               status, reason = ('SUCCESS', "Undef")
               data = {}
@@ -515,6 +606,19 @@ Resources:
                   s3path = s3path.replace('{account_id}', account_id)
                   parts = s3path.split('/')
                   data['Bucket'] = parts[0]
+                  if not bucket_exists(data['Bucket']) and type_.lower() != 'delete':
+                      raise Exception(f'Bucket {parts[0]} does not exist. Please check prerequisites. Just creating a bucket is not enough.')
+                  if properties.get('type', '') == 'CUR':
+                      # detect Type of CUR and choose the right partitions structure
+                      if len(parts[1:]) == 1: # most likely it is created by CFN or similar
+                          data['Partitions'] = partitions['managed_by_cfn']
+                      elif len(parts) > 3 and parts[-1] == parts[-2]: # most likely it is manual CUR
+                          data['Partitions'] = partitions['manual']
+                      elif type_.lower() == 'delete':
+                          pass # Do not fail delete
+                      else:
+                          raise Exception(f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://(bucket)/(curprefix)/(curname)/(curname) ')
+                      data['Partitions'] = [{"Name": p, "Type": "string"} for p in data['Partitions']]
                   data['Path'] = '/'.join(parts[1:])
                   data['Folder'] = parts[-1] if len(parts) > 1 else ''
                   data['Folder'] = data['Folder'].replace('-', '_').lower() # this is used for a Glue table name that will be managed by crawler
@@ -522,9 +626,10 @@ Resources:
               except Exception as exc:
                   status, reason = 'FAILED', str(exc)
               finally:
+                  log_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logEvent:group={context.log_group_name};stream={context.log_stream_name}"
                   url = event.get('ResponseURL')
                   body['Status'] = status
-                  body['Reason'] = reason + '\nSee the details in CloudWatch Log Stream: ' + context.log_stream_name
+                  body['Reason'] = reason + '\nLogs: ' + log_url
                   body['PhysicalResourceId'] = s3path
                   body['StackId'] = event.get('StackId')
                   body['RequestId'] = event.get('RequestId')
@@ -540,15 +645,32 @@ Resources:
                   except Exception as exc:
                       print("Failed sending PUT to CFN: " + str(exc))
 
+          def bucket_exists(name):
+              try:
+                  boto3.resource('s3').meta.client.head_bucket(Bucket=name)
+              except botocore.exceptions.ClientError as e:
+                  if e.response['Error']['Code'] == '404':
+                      return False
+              return True
+
   ProcessedCURPath:
     Type: Custom::CustomRessourceProcessPath
+    Condition: NeedCUR
     Properties:
       ServiceToken: !GetAtt CustomRessourceProcessPath.Arn
       s3path: !Ref CURBucketPath
+      type: 'CUR'
 
-  CidCURDatabase:
+  ProcessedODCPath:
+    Type: Custom::CustomRessourceProcessPath
+    Condition: NeedDataCollectionLab
+    Properties:
+      ServiceToken: !GetAtt CustomRessourceProcessPath.Arn
+      s3path: !Ref OptimizationDataCollectionBucketPath
+
+  CidDatabase:
     Type: AWS::Glue::Database
-    Condition: NeedCURDatabase
+    Condition: NeedDatabase
     Properties:
       DatabaseInput:
         Name: !Join [ '_', !Split [ '-', !Sub 'cid_cur${Suffix}' ] ] # replace '-' to '_'
@@ -562,7 +684,7 @@ Resources:
       Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
       Role:
         Fn::GetAtt: CidCURCrawlerRole.Arn
-      DatabaseName: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName]
+      DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName]
       Targets:
         S3Targets:
           - Path: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
@@ -600,7 +722,7 @@ Resources:
     Condition: NeedCURTable
     Properties:
       CatalogId: !Ref "AWS::AccountId"
-      DatabaseName: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+      DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
       TableInput:
         Name: !GetAtt ProcessedCURPath.Folder
         Owner: owner
@@ -686,18 +808,7 @@ Resources:
             - {"Name": "savings_plan_start_time", "Type": "string" }
             - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
-        PartitionKeys:
-          Fn::If:
-            - CURIsManagedByCloudFormation
-
-            - - {"Type": "string", "Name": "source_account_id" }
-              - {"Type": "string", "Name": "cur_name_1" }
-              - {"Type": "string", "Name": "cur_name_2" }
-              - {"Type": "string", "Name": "year" }
-              - {"Type": "string", "Name": "month" }
-
-            - - {"Type": "string", "Name": "year" }
-              - {"Type": "string", "Name": "month" }
+        PartitionKeys: !GetAtt ProcessedCURPath.Partitions
 
   CidCURCrawlerRole:
     Type: AWS::IAM::Role
@@ -736,8 +847,8 @@ Resources:
                   - 'glue:ImportCatalogToGlue' # TODO
                 Resource:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidCURDatabase}
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidCURDatabase}/*
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
                   #FIXME: user must be able to give a database as a parameter
               - Effect: Allow
                 Action:
@@ -827,12 +938,18 @@ Resources:
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
+                  Fn::If:
+                    - NeedCUR
+                    - !Sub 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
+                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
               - Effect: Allow
                 Action:
                   - s3:ListBucket
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}'
+                  Fn::If:
+                    - NeedCUR
+                    - !Sub 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}'
+                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
               - Effect: Allow
                 Action:
                   - s3:ListBucket
@@ -1035,7 +1152,8 @@ Resources:
         dashboard-id: cost_intelligence_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1053,7 +1171,8 @@ Resources:
         dashboard-id: cudos
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1074,7 +1193,8 @@ Resources:
         dashboard-id: kpi_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1097,11 +1217,12 @@ Resources:
         dashboard-id: ta-organizational-view
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
-        view-ta-organizational-view-reports-s3FolderPath: !Sub '${CostOptimizationDataCollectionBucketPath}/optics-data-collector/ta-data'
+        view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/trusted-advisor/trusted-advisor-data'
 
   ComputeOptimizerDashboard:
     Type: Custom::CidDashboard
@@ -1115,14 +1236,15 @@ Resources:
         dashboard-id: compute-optimizer-dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !If [NeedCURDatabase, !Ref CidCURDatabase, !Ref CURDatabaseName ]
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
-        view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_lambda'
-        view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ebs_volume'
-        view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_auto_scale'
-        view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${CostOptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
+        view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_lambda'
+        view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
+        view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
+        view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ec2_instance'
 
 Outputs:
   CostIntelligenceDashboardURL:
