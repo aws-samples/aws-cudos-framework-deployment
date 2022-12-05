@@ -30,6 +30,7 @@ Metadata:
           - DatabaseName
           - CURTableName
           - CidVersion
+          - GlueDataCatalog
           - Suffix
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
@@ -70,6 +71,8 @@ Metadata:
         default: "QuickSight DataSet Refresh Schedule"
       LambdaLayerBucketPrefix:
         default: "LambdaLayerBucketPrefix - Please do not change"
+      GlueDataCatalog:
+        default: "Existing Glue Data Catalog"
   cfn-lint:
     config:
       ignore_checks:
@@ -122,7 +125,7 @@ Parameters:
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.5
+    Default: 0.2.6
     Description: A version of CID package
   Suffix:
     Type: String
@@ -160,6 +163,10 @@ Parameters:
     Type: String
     Description: An S3 bucket with a Lambda layer
     Default: "aws-managed-cost-intelligence-dashboards"
+  GlueDataCatalog:
+    Type: String
+    Description: Existing Glue Data Catalog
+    Default: "AwsDataCatalog"
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -1146,6 +1153,7 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1164,6 +1172,7 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1185,6 +1194,7 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
@@ -1208,10 +1218,11 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
-        view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/optics-data-collector/ta-data'
+        view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/trusted-advisor/trusted-advisor-data'
 
   ComputeOptimizerDashboard:
     Type: Custom::CidDashboard
@@ -1226,13 +1237,14 @@ Resources:
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
-        view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_lambda'
-        view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ebs_volume'
-        view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_auto_scale'
-        view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
+        view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_lambda'
+        view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
+        view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
+        view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ec2_instance'
 
 Outputs:
   CostIntelligenceDashboardURL:
