@@ -16,7 +16,7 @@ from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import get_parameter, get_parameters
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 
@@ -844,10 +844,10 @@ class QuickSight(CidBase):
             except self.client.exceptions.UnsupportedUserEditionException:
                 raise CidCritical('AWS QuickSight Enterprise Edition is required')
             except self.client.exceptions.ResourceNotFoundException:
-                raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
+                raise CidError(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
             except Exception as e:
                 logger.debug(e, exc_info=True)
-                raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
+                raise CidError(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
         return self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}')
 
     def describe_user(self, username: str) -> dict:
