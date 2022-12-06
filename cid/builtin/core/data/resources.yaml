@@ -282,7 +282,7 @@ views:
     File: tao/glue_table.json
     parameters:
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}/optics-data-collector/ta-data'
+        default: 's3://costoptimizationdata{account_id}/trusted-advisor/trusted-advisor-data'
         description: Trusted Advisor Organization View report S3 path
 
   # Compute Optimiser (CO)
@@ -291,7 +291,7 @@ views:
     File: co/ec2_instance.json
     parameters:
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
+        default: 's3://costoptimizationdata{account_id}/compute_optimizer/compute_optimizer_ec2_instance'
         description: Compute Optimiser EC2 report S3 path
 
   compute_optimizer_auto_scale_lines:
@@ -299,7 +299,7 @@ views:
     File: co/auto_scale.json
     parameters:
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_auto_scale'
+        default: 's3://costoptimizationdata{account_id}/compute_optimizer/compute_optimizer_auto_scale'
         description: Compute Optimiser auto_scale report S3 path
 
   compute_optimizer_ebs_volume_lines:
@@ -307,7 +307,7 @@ views:
     File: co/ebs_volume.json
     parameters:
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ebs_volume'
+        default: 's3://costoptimizationdata{account_id}/compute_optimizer/compute_optimizer_ebs_volume'
         description: Compute Optimiser EBS report S3 path
 
   compute_optimizer_lambda_lines:
@@ -315,7 +315,7 @@ views:
     File: co/lambda.json
     parameters:
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_lambda'
+        default: 's3://costoptimizationdata{account_id}/compute_optimizer/compute_optimizer_lambda'
         description: Compute Optimiser Lambda report S3 path
 
   compute_optimizer_ec2_instance_options:

@@ -9,6 +9,7 @@ from string import Template
 from cid.base import CidBase
 from cid.helpers import Athena, CUR
 from cid.utils import get_parameter
+from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
@@ -155,24 +156,16 @@ class AccountMap(CidBase):
     def get_dummy_account_mapping_sql(self, name) -> list:
         """Create dummy account mapping"""
         logger.info(f'Creating dummy account mapping for {name}')
-        template_str = '''CREATE OR REPLACE VIEW  ${athena_view_name} AS SELECT DISTINCT
-            line_item_usage_account_id account_id, bill_payer_account_id parent_account_id,
-            line_item_usage_account_id account_name, line_item_usage_account_id account_email_id
-            FROM
-                "${cur_table_name}"
-        '''
-        template = Template(template_str)        
-        # Fill in TPLs
-        columns_tpl = dict()
-        parameters = {
+        template = Template(resource_string(
+            package_or_requirement='cid.builtin.core',
+            resource_name='data/queries/shared/account_map_dummy.sql',
+        ).decode('utf-8'))
+        columns_tpl = {
             'athena_view_name': name,
             'cur_table_name': self.cur.tableName
         }
-        columns_tpl.update(**parameters)
         compiled_query = template.safe_substitute(columns_tpl)
-        
         return compiled_query
-        
 
     def get_organization_accounts(self) -> list:
         """ Retreive AWS Organization account """
@@ -266,8 +259,7 @@ class AccountMap(CidBase):
             self.select_metadata_collection_method()
             logger.info(f'Attempt {attempt + 2}' )
         else:
-            logger.critical('Failed to create map')
-            exit(1)
+            raise CidCritical('Failed to create account map')
 
         if self._metadata_source == 'dummy':
             return self.get_dummy_account_mapping_sql(name)

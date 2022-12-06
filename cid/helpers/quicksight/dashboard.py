@@ -5,22 +5,24 @@ import os
 from typing import Dict
 
 from cid.helpers.quicksight.resource import CidQsResource
+from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import is_unattendent_mode
 
 
 logger = logging.getLogger(__name__)
+
 
 class Dashboard(CidQsResource):
     def __init__(self, raw: dict) -> None:
         super().__init__(raw)
         # Initialize properties
         self.datasets: Dict[str, str] = {}
+        # Deployed template
+        self._deployedTemplate: CidQsTemplate = None
         self._status = str()
         self.status_detail = str()
         # Source template in origin account
-        self.sourceTemplate = dict()
-        # Locally saved deployment
-        self.localConfig = dict()
+        self.sourceTemplate: CidQsTemplate = None
 
     @property
     def id(self) -> str:
@@ -31,25 +33,43 @@ class Dashboard(CidQsResource):
         return self.get_property('Version')
 
     @property
+    def deployedTemplate(self) -> CidQsTemplate:
+        return self._deployedTemplate
+
+    @deployedTemplate.setter
+    def deployedTemplate(self, template: CidQsTemplate) -> None:
+        self._deployedTemplate = template
+
+    @property
+    def template_id(self) -> str:
+        if isinstance(self.deployedTemplate, CidQsTemplate):
+            return self.deployedTemplate.id
+        return None
+
+    @property
+    def template_arn(self) -> str:
+        if isinstance(self.deployedTemplate, CidQsTemplate):
+            return self.deployedTemplate.arn
+        return None
+
+    @property
+    def deployed_version(self) -> int:
+        if isinstance(self.deployedTemplate, CidQsTemplate):
+            return self.deployedTemplate.version
+        else:
+            return -1
+
+    @property
     def latest(self) -> bool:
         return self.latest_version == self.deployed_version
 
     @property
     def latest_version(self) -> int:
-        return int(self.sourceTemplate.get('Version', dict()).get('VersionNumber', -1))
-    
-    @property
-    def deployed_arn(self) -> str:
-        return self.version.get('SourceEntityArn')
-    
-    @property
-    def deployed_version(self) -> int:
-        try:
-            return int(self.deployed_arn.split('/')[-1])
-        except Exception as e:
-            logger.debug(e, stack_info=True)
-            return 0
- 
+        if isinstance(self.sourceTemplate, CidQsTemplate):
+            return self.sourceTemplate.version
+        else:
+            return -1
+
     @property
     def health(self) -> bool:
         return self.status not in ['broken']
@@ -71,7 +91,7 @@ class Dashboard(CidQsResource):
                 logger.info(f"Found datasets: {self.datasets}")
                 logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
             # Source Template has changed
-            elif self.deployed_arn and self.sourceTemplate.get('Arn') and not self.deployed_arn.startswith(self.sourceTemplate.get('Arn')):
+            elif self.deployedTemplate and self.sourceTemplate and self.deployedTemplate.arn and self.sourceTemplate.arn and not self.deployedTemplate.arn.startswith(self.sourceTemplate.arn):
                 self._status = 'legacy'
             else:
                 if self.latest_version > self.deployed_version:
@@ -79,15 +99,6 @@ class Dashboard(CidQsResource):
                 elif self.latest:
                     self._status = 'up to date'
         return self._status
-
-    @property
-    def templateId(self) -> str:
-        if 'SourceEntityArn' not in self.version:
-            return ''
-        arn = self.version.get('SourceEntityArn')
-        if ":template/" not in arn:
-            return ''
-        return str(arn.split('/')[1])
 
     def display_status(self) -> None:
         print('\nDashboard status:')
@@ -100,8 +111,6 @@ class Dashboard(CidQsResource):
             print(f"  Version: {self.deployed_version}")
         else:
             print(f"  Version (deployed, latest): {self.deployed_version}, {self.latest_version}")
-        if self.localConfig:
-            print(f"  Local config: {self.localConfig.get('SourceEntity').get('SourceTemplate').get('Name')}")
         if self.datasets:
             print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
         print('\n')
@@ -113,4 +122,4 @@ class Dashboard(CidQsResource):
         print(f"#######\n####### {self.name} is available at: " + url + "\n#######")
         _supported_env = os.environ.get('AWS_EXECUTION_ENV') not in ['CloudShell', 'AWS_Lambda']
         if _supported_env and not is_unattendent_mode() and launch and click.confirm('Do you wish to open it in your browser?'):
-                click.launch(url)
+            click.launch(url)

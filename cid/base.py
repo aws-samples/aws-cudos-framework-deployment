@@ -1,6 +1,7 @@
 import logging
 
 from boto3.session import Session
+from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +24,13 @@ class CidBase():
     @property
     def awsIdentity(self) -> dict:
         if not self._awsIdentity:
-            sts = self.session.client('sts')
-            self.awsIdentity = sts.get_caller_identity()
+            try:
+                sts = self.session.client('sts')
+                self.awsIdentity = sts.get_caller_identity()
+            except Exception as e:
+                raise CidCritical(f'Authentication error: {e}')
         return self._awsIdentity
-    
+
     @awsIdentity.setter
     def awsIdentity(self, value):
         self._awsIdentity = value

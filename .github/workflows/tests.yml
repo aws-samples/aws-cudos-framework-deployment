@@ -101,4 +101,5 @@ jobs:
           bats -v
       - name:  Run Bats Tests for CloudFormation
         run: |
+          export lambda_bucket='aws-cid-stage'
           # bats cfn-templates/cid-cfn.tests.bats
