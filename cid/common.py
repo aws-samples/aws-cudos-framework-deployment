@@ -24,7 +24,6 @@ from cid.base import CidBase
 from cid.export import export_analysis
 from cid.helpers import (
     CUR,
-    IAM,
     S3,
     Athena,
     Dashboard,
@@ -33,6 +32,7 @@ from cid.helpers import (
     Glue,
     Organizations,
     QuickSight,
+    IAM,
 )
 from cid.helpers.account_map import AccountMap
 from cid.logger import set_cid_logger
@@ -47,8 +47,8 @@ from cid.utils import (
 
 logger = logging.getLogger(__name__)
 
-
 class Cid():
+
     def __init__(self, **kwargs) -> None:
         self.base: CidBase = None
         # Defined resources
