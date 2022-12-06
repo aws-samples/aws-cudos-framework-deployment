@@ -8,6 +8,9 @@ from string import Template
 from typing import Dict
 from pkg_resources import resource_string
 
+from cid.helpers.organizations import Organizations
+from cid.helpers.s3 import S3
+
 if sys.version_info < (3, 8):
     from importlib_metadata import entry_points
 else:
@@ -99,6 +102,31 @@ class Cid():
             })
         return self._clients.get('quicksight')
 
+    @property
+    def organizations(self) -> Organizations:
+        if not self._clients.get('organizations'):
+            self._clients.update({
+                'organizations': Organizations(self.base.session)
+            })
+        return self._clients.get('organizations')
+    
+    @property
+    def s3(self) -> S3:
+        if not self._clients.get('s3'):
+            self._clients.update({
+                's3': S3(self.base.session)
+            })
+        return self._clients.get('s3')
+
+    @property
+    def athena(self) -> Athena:
+        if not self._clients.get('athena'):
+            self._clients.update({
+                'athena': Athena(self.base.session, resources=self.resources)
+            })
+        return self._clients.get('athena')
+
+    
     @property
     def athena(self) -> Athena:
         if not self._clients.get('athena'):
@@ -1250,3 +1278,9 @@ class Cid():
         for v in ['account_map', 'aws_accounts']:
             self.accountMap.create(v)
 
+    @command
+    def init(self, **kwargs):
+        """ Initialize account resources for deployment """
+        from commands import InitCommand
+        cmd = InitCommand(cid=self, **kwargs)
+        result = cmd.execute()

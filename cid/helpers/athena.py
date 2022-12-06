@@ -8,7 +8,7 @@ from pkg_resources import resource_string
 
 from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 
@@ -435,3 +435,29 @@ class Athena(CidBase):
             if name in self._metadata: del self._metadata[name]
             logger.info(f'View {name} deleted')
         return True
+    
+    def create_workgroup(self, workgroup_name: str, s3_bucket_name: str) -> None:
+        """Crete a new Athena Workgroup"""
+        try:
+            self.client.create_work_group(
+                    Name=workgroup_name,
+                    Configuration={
+                        'ResultConfiguration': {
+                            'OutputLocation': f's3://{s3_bucket_name}',
+                            'EncryptionConfiguration': {
+                                'EncryptionOption': 'SSE_S3',
+                            },
+                        },
+                        'EnforceWorkGroupConfiguration': True,
+                    }
+            )
+        except self.client.exceptions.InvalidRequestException as ex:
+            if ex.response.get('Message') == 'WorkGroup is already created':
+                logger.info(f'Work group {workgroup_name} already exists')
+                raise CidError() from ex
+            else:
+                raise
+        except Exception as ex:
+            logger.debug(ex, exc_info=True)
+            logger.info(f'Work group {workgroup_name} cannot be created: {ex}')
+            raise CidError() from ex

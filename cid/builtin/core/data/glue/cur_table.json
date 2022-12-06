@@ -1,0 +1,34 @@
+{
+    "CatalogId": "${AWS::AccountId}",
+    "DatabaseName": "${CidCURDatabase}",
+    "TableInput": {
+        "Name": "${ProcessedCURPath.Folder}",
+        "Owner": "owner",
+        "Retention": 0,
+        "StorageDescriptor": {
+            "Columns": [],
+            "Location": "s3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/",
+            "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+            "Compressed": false,
+            "NumberOfBuckets": -1,
+            "SerdeInfo": {
+                "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+                "Parameters": {
+                    "serialization.format": "1"
+                }
+            },
+            "BucketColumns": [],
+            "StoredAsSubDirectories": false
+        },
+        "PartitionKeys": [],
+        "ViewOriginalText": "string",
+        "ViewExpandedText": "string",
+        "TableType": "EXTERNAL_TABLE",
+        "Parameters": {
+            "compressionType": "none",
+            "classification": "parquet",
+            "UPDATED_BY_CRAWLER": "${GlueCrawlerName}"
+        }
+    }
+}

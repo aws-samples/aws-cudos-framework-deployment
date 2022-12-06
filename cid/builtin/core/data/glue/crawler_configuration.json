@@ -1,0 +1,11 @@
+{
+    "Version": 1.0,
+    "Grouping": {
+        "TableGroupingPolicy": "CombineCompatibleSchemas"
+    },
+    "CrawlerOutput": {
+        "Tables": {
+            "AddOrUpdateBehavior": "MergeNewColumns"
+        }
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": [
+            "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers/*"
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "glue:UpdateDatabase",
+          "glue:UpdatePartition",
+          "glue:CreateTable",
+          "glue:UpdateTable",
+          "glue:ImportCatalogToGlue"
+        ],
+        "Resource": [
+            "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog",
+            "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidCURDatabase}",
+            "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidCURDatabase}/*"
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "s3:GetObject"
+        ],
+        "Resource": [
+          "arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*"
+        ]
+      }
+    ]
+  }
