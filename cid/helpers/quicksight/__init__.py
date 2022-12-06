@@ -198,8 +198,9 @@ class QuickSight(CidBase):
         try:
             _template_arn = dashboard.version.get('SourceEntityArn')
             _template_id = str(_template_arn.split('/')[1])
+            _template_account_id = int(_template_arn.split(':')[4])
             _template_version = int(_template_arn.split('/')[-1])
-            _template = self.describe_template(template_id=_template_id, version_number=_template_version)
+            _template = self.describe_template(template_id=_template_id, account_id=_template_account_id, version_number=_template_version)
             if isinstance(_template, CidQsTemplate):
                 dashboard.deployedTemplate = _template
         except Exception as e:
