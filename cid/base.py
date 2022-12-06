@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from boto3.session import Session
 from cid.exceptions import CidCritical
@@ -50,6 +51,15 @@ class CidBase():
     @session.setter
     def session(self, value):
         self._session = value
+        
+    @property
+    def aws_partition(self) -> Optional[str]:
+        for partition in self._session.get_available_partitions():
+            for region in self._session.get_available_regions('quicksight', partition):
+                if region == self.region:
+                    return partition
+        
+        return None
 
     @property
     def username(self) -> str:
