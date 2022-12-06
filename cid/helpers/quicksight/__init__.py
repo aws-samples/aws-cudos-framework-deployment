@@ -207,7 +207,7 @@ class QuickSight(CidBase):
                 dashboard.deployedTemplate = _template
         except Exception as e:
                 logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {_template_id}, {e}')
+                logger.info(f'Unable to describe template {_template_arn}, {e}')
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
