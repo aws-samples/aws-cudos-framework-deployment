@@ -1,16 +1,16 @@
-
 import logging
 
 import click
 
 from cid._version import __version__
 from cid.common import Cid
+from cid.exceptions import CidCritical
 from cid.utils import get_parameters, set_parameters
 
 logger = logging.getLogger(__name__)
-version = f'{__version__} Beta'
-prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
-print(f'{prog_name} {version}\n')
+version = f"{__version__} Beta"
+prog_name = "CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
+print(f"{prog_name} {version}\n")
 
 
 def cid_command(func):
@@ -20,18 +20,26 @@ def cid_command(func):
             print(f"Unknown extra argument, or an option without value {ctx.args}")
             exit(-1)
         for i in range(0, len(ctx.args), 2):
-            kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
+            kwargs[ctx.args[i][2:].replace("-", "_")] = ctx.args[i + 1]
 
         set_parameters(kwargs, all_yes=ctx.obj.all_yes)
-        res = func(ctx, **kwargs)
+        res = None
+        try:
+            res = func(ctx, **kwargs)
+        except CidCritical as exc:
+            logger.debug(exc, exc_info=True)
+            logger.critical(exc)
         params = get_parameters()
-        logger.info('Next time you can use following command:')
-        logger.info('   cid-cmd ' + ctx.info_name
-            + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
-            + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
-            + ''.join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
+        logger.info("Next time you can use following command:")
+        logger.info(
+            "   cid-cmd "
+            + ctx.info_name
+            + "".join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
+            + "".join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
+            + "".join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
         )
         return res
+
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
     return main.command(
@@ -43,21 +51,21 @@ def cid_command(func):
 
 
 @click.group()
-@click.option('--profile_name', '--profile', help='AWS Profile name to use', default=None)
-@click.option('--region_name', help="AWS Region (default:'us-east-1')", default=None)
-@click.option('--aws_access_key_id', help='', default=None)
-@click.option('--aws_secret_access_key', help='', default=None)
-@click.option('--aws_session_token', help='', default=None)
-@click.option('--log_filename', help='log file name', default='cid.log')
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@click.option("--profile_name", "--profile", help="AWS Profile name to use", default=None)
+@click.option("--region_name", help="AWS Region (default:'us-east-1')", default=None)
+@click.option("--aws_access_key_id", help="", default=None)
+@click.option("--aws_secret_access_key", help="", default=None)
+@click.option("--aws_session_token", help="", default=None)
+@click.option("--log_filename", help="log file name", default="cid.log")
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
 @click.pass_context
 def main(ctx, **kwargs):
     ctx.obj = Cid(**kwargs)
 
 
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
 @cid_command
 def map(ctx, **kwargs):
     """Create account mapping
@@ -73,14 +81,14 @@ def map(ctx, **kwargs):
     ctx.obj.map(**kwargs)
 
 
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
-@click.option('--share-with-account', help='Share dashboard with all users in the current account', is_flag=True, default=None)
-@click.option('--quicksight-delete-failed-datasource', help='Delete datasoruce if creation failed', is_flag=True, default=None)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
+@click.option("--share-with-account", help="Share dashboard with all users in the current account", is_flag=True, default=None)
+@click.option("--quicksight-delete-failed-datasource", help="Delete datasoruce if creation failed", is_flag=True, default=None)
 @cid_command
 def deploy(ctx, **kwargs):
     """Deploy Dashboard
-    
+
     \b
     Command options:
      --dashboard-id TEXT                   QuickSight dashboard id (cudos, cost_intelligence_dashboard, kpi_dashboard, ta-organizational-view, trends-dashboard etc)
@@ -99,12 +107,12 @@ def deploy(ctx, **kwargs):
     ctx.obj.deploy(**kwargs)
 
 
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
 @cid_command
 def export(ctx, **kwargs):
     """Export Dashboard
-    
+
     \b
     Command options:
         --analysis-name       Analysis you want to share (not needed if analysis-id is provided).
@@ -117,18 +125,18 @@ def export(ctx, **kwargs):
     ctx.obj.export(**kwargs)
 
 
-@click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@click.option("--dashboard-id", help="QuickSight dashboard id", default=None)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
 @cid_command
 def status(ctx, dashboard_id, **kwargs):
     """Show Dashboard status"""
     ctx.obj.status(dashboard_id, **kwargs)
 
 
-@click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@click.option("--dashboard-id", help="QuickSight dashboard id", default=None)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
 @cid_command
 def delete(ctx, dashboard_id, **kwargs):
     """Delete Dashboard and all dependencies unused by other CID-managed dasboards
@@ -138,65 +146,66 @@ def delete(ctx, dashboard_id, **kwargs):
     Command options:
      --dashboard-id TEXT                   QuickSight dashboard id (cudos, cost_intelligence_dashboard, kpi_dashboard, ta-organizational-view, trends-dashboard etc)
      --athena-database TEXT                Athena database
-     """
+    """
     ctx.obj.delete(dashboard_id, **kwargs)
 
 
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
-@click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.option('--force/--noforce', help='allow selecting  up to date dashboards (flags must be before options)', default=False)
-@click.option('--recursive/--norecursive', help='Recursive update all Datasets and Views (flags must be before options)', default=False)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
+@click.option("--dashboard-id", help="QuickSight dashboard id", default=None)
+@click.option("--force/--noforce", help="allow selecting  up to date dashboards (flags must be before options)", default=False)
+@click.option("--recursive/--norecursive", help="Recursive update all Datasets and Views (flags must be before options)", default=False)
 @cid_command
 def update(ctx, dashboard_id, force, recursive, **kwargs):
     """Update Dashboard"""
     ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)
 
 
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
-@click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
+@click.option("--dashboard-id", help="QuickSight dashboard id", default=None)
 @cid_command
 def open(ctx, dashboard_id, **kwargs):
     """Open Dashboard in browser"""
     ctx.obj.open(dashboard_id, **kwargs)
 
 
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
 @cid_command
 def cleanup(ctx, **kwargs):
     """Delete unused resources (QuickSight datasets, Athena views)"""
     ctx.obj.cleanup(**kwargs)
 
 
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
-@click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
-@click.option('--share-method', help='Sharing method', default=None, type=click.Choice(['folder', 'user', 'account']))
-@click.option('--folder-method', help='Folder to use', default=None, type=click.Choice(['new', 'existing']))
-@click.option('--folder-id', help='QuickSight folder id (existing)', default=None)
-@click.option('--folder-name', help='QuickSight folder name (new)', default=None)
-@click.option('--quicksight-user', help='QuickSight user', default=None)
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
+@click.option("--dashboard-id", help="QuickSight dashboard id", default=None)
+@click.option("--share-method", help="Sharing method", default=None, type=click.Choice(["folder", "user", "account"]))
+@click.option("--folder-method", help="Folder to use", default=None, type=click.Choice(["new", "existing"]))
+@click.option("--folder-id", help="QuickSight folder id (existing)", default=None)
+@click.option("--folder-name", help="QuickSight folder name (new)", default=None)
+@click.option("--quicksight-user", help="QuickSight user", default=None)
 @cid_command
 def share(ctx, dashboard_id, **kwargs):
     """Share QuickSight resources (Dashboard, Datasets, DataSource)"""
-    
+
     ctx.obj.share(dashboard_id)
 
 
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
-@click.option('--qs-notification-email', help='QuickSight Notification Email', default='')
-@click.option('--qs-account-name', help='QuickSight Account Name', default='')
-@click.option('--glue-role-arn', help='Glue Crawler Role ARN', default='')
-@click.option('--aws-partition', help='AWS Partition (aws/aws-cn)', default='')
-@click.option('--cur-path', help='Path to your CUR files', default='')
+@click.option("-v", "--verbose", count=True)
+@click.option("-y", "--yes", help="confirm all", is_flag=True, default=False)
+@click.option("--qs-notification-email", help="QuickSight Notification Email", default="")
+@click.option("--qs-account-name", help="QuickSight Account Name", default="")
+@click.option("--glue-role-arn", help="Glue Crawler Role ARN", default="")
+@click.option("--aws-partition", help="AWS Partition (aws/aws-cn)", default="")
+@click.option("--cur-path", help="Path to your CUR files", default="")
 @cid_command
 def init(ctx, **kwargs):
     """Initialize account resources for deployment"""
 
     ctx.obj.init(**kwargs)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
