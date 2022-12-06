@@ -29,7 +29,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
         self.cur_path = f"s3://cid-{self.cid.base.account_id}-shared/cur/"
         self.cid_crawler_role_name = "CidCURCrawlerRole"
         self.cid_crawler_role_arn = ""
-        self.aws_partition = "aws"
+        self.aws_partition = self.cid.base.aws_partition
         self.processed_cur_path = None
         self.cid_crawler_name = "CidCrawler"
         self.cur_is_managed_by_cf = True
@@ -59,7 +59,6 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
         self._create_glue_table()
 
     def _get_base_data(self):
-        self.aws_partition = get_parameter("aws-partition", "Please, choose an AWS partition", choices=["aws", "aws-cn"], default="aws")
         self.cur_path = get_parameter("cur-path", "Please, provide your CUR path", default=self.cur_path)
         self.processed_cur_path = extract_cur_bucket_parameters(self.cur_path)
         
@@ -198,6 +197,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
         except Exception as ex:  # pylint: disable=broad-except
             print("\tAthena S3 Bucket...\tFailed")
             logger.error("ERROR: %s", ex)
+            sys.exit(1)
 
     def _create_quicksight_enterprise_subscription(self):
         """Enable QuickSight Enterprise if not enabled already"""
@@ -238,7 +238,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
                 print(f"\t{email} does not seem to be a valid email. Please, try again.")
                 unset_parameter("qs-notification-email")
                 if counter >= 5:
-                    exit(1)
+                    raise CidCritical()
 
         account_name = self.cid.organizations.get_account_name()
         counter = 0
@@ -253,7 +253,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
                 print("\t The account name must not be empty. Please, try again.")
                 unset_parameter("qs-account-name")
                 if counter >= 5:
-                    sys.exit(1)
+                    raise CidCritical()
 
         params = {
             "Edition": "ENTERPRISE",
