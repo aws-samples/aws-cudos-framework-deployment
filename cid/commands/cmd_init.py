@@ -239,7 +239,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
                 print('\tQuickSight Edition...\tSubscribed')
                 break
             except Exception as ex:
-                print(f'\tQuickSight Edition...\tError ({ex})')
+                print(f'\tQuickSight Edition...\tError ({ex}). Please, try again or press CTRL + C to interrupt.')
                 unset_parameter('qs-account-name')
                 unset_parameter('qs-notification-email')
                 if counter >= MAX_ITERATIONS:
@@ -321,7 +321,7 @@ def extract_cur_bucket_parameters(s3_path: str) -> Dict[str, str]:
         data['Partitions'] = partitions['manual']
     else:
         raise CidError(
-            f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://<bucket>/<curprefix>/<curname>/<curname>'
+            f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://<bucket>/cur or s3://<bucket>/<curprefix>/<curname>/<curname>'
         )  # pylint: disable=line-too-long
     data['Partitions'] = [{'Name': p, 'Type': 'string'} for p in data['Partitions']]
     data['Path'] = '/'.join(parts[1:])
