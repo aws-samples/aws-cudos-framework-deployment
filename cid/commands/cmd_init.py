@@ -2,7 +2,7 @@ import importlib.resources as pkg_resources
 import json
 import logging
 import sys
-from typing import Dict
+from typing import Any, Dict
 
 from cid.commands.command_base import Command
 from cid.exceptions import CidCritical, CidError
@@ -24,19 +24,19 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
     def __init__(self, cid, **kwargs):
         self.cid = cid
 
-        self.bucket_name = f'aws-athena-query-results-cid-{self.cid.base.account_id}-{self.cid.base.region}'
-        self.athena_workgroup_name = 'cid'
-        self.database_name = 'cid_cur'
-        self.catalog_id = self.cid.base.account_id
-        self.cur_path = f's3://cid-{self.cid.base.account_id}-shared/cur/'
-        self.cid_crawler_role_name = 'CidCURCrawlerRole'
-        self.cid_crawler_role_arn = ''
-        self.aws_partition = self.cid.base.aws_partition
-        self.processed_cur_path = 208
-        self.cid_crawler_name = 'CidCrawler'
-        self.cur_is_managed_by_cf = True
-        self.athena_bucket_lifecycle_expiration = 7
-        self.variables = {}
+        self.bucket_name: str = f'aws-athena-query-results-cid-{self.cid.base.account_id}-{self.cid.base.region}'
+        self.athena_workgroup_name: str = 'cid'
+        self.database_name: str = 'cid_cur'
+        self.catalog_id: str = self.cid.base.account_id
+        self.cur_path: str = f's3://cid-{self.cid.base.account_id}-shared/cur/'
+        self.cid_crawler_role_name: str = 'CidCURCrawlerRole'
+        self.cid_crawler_role_arn: str = ''
+        self.aws_partition: str = self.cid.base.aws_partition
+        self.processed_cur_path: Dict[str, str] = {}
+        self.cid_crawler_name: str = 'CidCrawler'
+        self.cur_is_managed_by_cf: str = True
+        self.athena_bucket_lifecycle_expiration: int = 7
+        self.variables: Dict[str, Any] = {}
 
     def execute(self, *args, **kwargs):
         """Execute the initilization"""
@@ -321,7 +321,7 @@ def extract_cur_bucket_parameters(s3_path: str) -> Dict[str, str]:
         data['Partitions'] = partitions['manual']
     else:
         raise CidError(
-            f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://{bucket}/{curprefix}/{curname}/{curname} '
+            f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://<bucket>/<curprefix>/<curname>/<curname>'
         )  # pylint: disable=line-too-long
     data['Partitions'] = [{'Name': p, 'Type': 'string'} for p in data['Partitions']]
     data['Path'] = '/'.join(parts[1:])
