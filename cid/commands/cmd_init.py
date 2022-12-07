@@ -45,9 +45,9 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
         # Collect partition and CUR bucket path
         self._get_base_data()
         # Create QuickSight Enterprise subscription
-        self._create_quicksight_enterprise_subscription()
+        self._create_quicksight_enterprise_subscription()  # No tagging available
         # Create query results bucket
-        self._create_query_results_bucket()
+        self._create_query_results_bucket()  # Not tagged as bucket should be deleted manually
         # Create Athena workgroup "cid"
         self._create_athena_workgroup()
         # Create Glue database
@@ -58,7 +58,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
 
         # Create crawler and table
         self._create_glue_crawler()
-        self._create_glue_table()
+        self._create_glue_table()  # Crawler resource cannot be tagged
 
     def _get_base_data(self):
         """Get base data required for initialization"""
@@ -245,7 +245,6 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
                 if counter >= MAX_ITERATIONS:
                     raise CidCritical('Quicksight setup failed') from ex
             
-
     def _get_quicksight_params(self, email, account_name):
         """Create dictionary of quicksight subscription initialization parameters"""
         params = {

@@ -449,7 +449,8 @@ class Athena(CidBase):
                             },
                         },
                         'EnforceWorkGroupConfiguration': True,
-                    }
+                    },
+                    Tags=self.default_tag_list
             )
         except self.client.exceptions.InvalidRequestException as ex:
             if ex.response.get('Message') == 'WorkGroup is already created':

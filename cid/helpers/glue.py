@@ -45,6 +45,7 @@ class Glue(CidBase):
                 DatabaseInput={
                     "Name": name,
                 },
+                Tags=self.default_tag_dict
             )
         except self.client.exceptions.AlreadyExistsException as ex:
             logger.debug(ex, exc_info=True)
@@ -82,6 +83,7 @@ class Glue(CidBase):
                 SchemaChangePolicy={"DeleteBehavior": "LOG"},
                 RecrawlPolicy={"RecrawlBehavior": "CRAWL_EVERYTHING"},
                 Configuration=configuration,
+                Tags=self.default_tag_dict
             )
         except self.client.exceptions.AlreadyExistsException as ex:
             raise CidError(f'Crawler {name} already exists') from ex
