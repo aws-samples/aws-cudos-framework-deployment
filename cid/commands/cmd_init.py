@@ -61,6 +61,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
         self._create_glue_table()
 
     def _get_base_data(self):
+        """Get base data required for initialization"""
         self.cur_path = get_parameter('cur-path', 'Please, provide your CUR path', default=self.cur_path)
         self.processed_cur_path = extract_cur_bucket_parameters(self.cur_path)
         
@@ -111,6 +112,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
             print(f'\tGlue role ARN...\tExists ({self.cid_crawler_role_arn})')
 
     def _attach_policies_to_crawler_role(self):
+        """Attach policies to crawler role"""
         managed_policies = [f'arn:{self.aws_partition}:iam::aws:policy/service-role/AWSGlueServiceRole']
         custom_policies = {'AWSCURCrawlerComponentFunction': 'aws_cur_crawler_component_function.json', 'AWSCURKMSDecryption': 'aws_cur_kms_decryption.json'}
 
@@ -245,6 +247,7 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
             
 
     def _get_quicksight_params(self, email, account_name):
+        """Create dictionary of quicksight subscription initialization parameters"""
         params = {
             'Edition': 'ENTERPRISE',
             'AuthenticationMethod': 'IAM_AND_QUICKSIGHT',
@@ -255,7 +258,8 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
         
         return params
 
-    def _get_account_name_for_quicksight(self):           
+    def _get_account_name_for_quicksight(self):
+        """Get the account name for quicksight"""        
         account_name = get_parameter('qs-account-name', 'QuickSight Account Name', default=self.cid.organizations.get_account_name())
         
         if account_name == '':
@@ -275,7 +279,8 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
                     raise CidCritical()
         return account_name
 
-    def _get_email_for_quicksight(self):            
+    def _get_email_for_quicksight(self):
+        """Get email for quicksight"""        
         email = get_parameter('qs-notification-email', 'Notification email', default=self.cid.organizations.get_account_email())
             
         if email == '':
