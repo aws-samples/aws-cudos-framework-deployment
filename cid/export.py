@@ -139,7 +139,7 @@ def export_analysis(qs):
 
     time.sleep(5)
 
-    reader_account = get_parameter(
+    reader_account_id = get_parameter(
         'reader-account',
         message='Enter account id to share the template with or *',
         default='*'
@@ -148,7 +148,7 @@ def export_analysis(qs):
         TemplateId=template_id,
         GrantPermissions=[
             {
-                "Principal": {"AWS": reader_account} if reader_account != '*' else '*',
+                "Principal": f'arn:aws:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
                 'Actions': [
                     "quicksight:DescribeTemplate",
                 ]
