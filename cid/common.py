@@ -25,7 +25,8 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, Template as CidQsTemplate
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
+from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
@@ -276,8 +277,10 @@ class Cid():
 
         # Get selected dashboard definition
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
+        
+        dashboard = self.qs.dashboards.get(dashboard_id)
+        
         if not dashboard_definition:
-            dashboard = self.qs.dashboards.get(dashboard_id)
             if isinstance(dashboard, Dashboard):
                 dashboard_definition = dashboard.definition
             else:
@@ -285,14 +288,12 @@ class Cid():
 
         required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
-        dashboard_datasets = self.qs.dashboards.get(dashboard_id).datasets if self.qs.dashboards.get(dashboard_id) else {}
+        dashboard_datasets = dashboard.datasets if dashboard else {}
+        
         for name, id in dashboard_datasets.items():
             if id not in self.qs.datasets:
                 logger.info(f'Removing unknown dataset "{name}" ({id}) from dashboard {dashboard_id}')
                 del dashboard_datasets[name]
-
-        if recursive:
-            self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
 
         # Get QuickSight template details
         try:
@@ -305,6 +306,20 @@ class Cid():
             raise CidCritical(exc) # Cannot proceed without a valid template
         dashboard_definition.update({'sourceTemplate': source_template})
         print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
+
+        # Check if Source and Destination Templates version are compatible
+        # Ask for recursive if major upgrade 
+        try:
+            if dashboard and update and not dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version):
+                if click.confirm(f'This update may require a recursive update action, proceed with --recursive ?',default=True):
+                    recursive = True
+        except ValueError as e:
+            logger.info(e)
+        
+        # Find dashboard version
+        
+        if recursive:
+            self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
 
         # Prepare API parameters
         if not dashboard_definition.get('datasets'):
@@ -383,7 +398,7 @@ class Cid():
 
         aws_execution_env = os.environ.get('AWS_EXECUTION_ENV', '')
         if  aws_execution_env == 'CloudShell' or aws_execution_env.startswith('AWS_Lambda'):
-            print(f"Operation is not supported in {aws_execution_env}")
+            click.echo(f"Operation is not supported in {aws_execution_env}")
             return dashboard_id
         if not dashboard_id:
             dashboard_id = self.qs.select_dashboard(force=True)
@@ -420,9 +435,7 @@ class Cid():
                 return
             dashboard = self.qs.dashboards.get(dashboard_id)
         else:
-            # Describe dashboard by the ID given, no discovery
-            self.qs.discover_dashboard(dashboardId=dashboard_id)
-            dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
         if dashboard is not None:
             dashboard.display_status()
@@ -757,9 +770,23 @@ class Cid():
             click.echo(f'Dashboard "{dashboard_id}" is not deployed')
             return
 
-        print(f'\nChecking for updates...')
-        print(f'Deployed template: {dashboard.deployedTemplate.arn}')
-        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+        click.echo(f'\nChecking for updates...')
+        click.echo(f'Deployed template: {dashboard.deployedTemplate.arn}')
+        click.echo(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+        try:
+            click.echo(f"CID Version: {dashboard.deployedTemplate.cid_version}")
+        except ValueError:
+            click.echo(f"CID Version: Not available")
+            pass
+        
+        try:
+            version_latest = dashboard.sourceTemplate.cid_version if isinstance(dashboard.sourceTemplate, CidQsTemplate) else "UNKNOWN"
+            click.echo(f"CID Latest Version: {version_latest}")
+        except ValueError:
+            click.echo(f"CID Latest Version: Not available")
+            pass
+        
+        
         if dashboard.status == 'legacy':
             if get_parameter(
                 param_name=f'confirm-update',
