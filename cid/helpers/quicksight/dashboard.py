@@ -101,25 +101,44 @@ class Dashboard(CidQsResource):
         return self._status
 
     def display_status(self) -> None:
-        print('\nDashboard status:')
-        print(f"  Name (id): {self.name} ({self.id})")
-        print(f"  Status: {self.status}")
-        print(f"  Health: {'healthy' if self.health else 'unhealthy'}")
+        
+        click.echo('\nDashboard status:')
+        click.echo(f"  Name (id): {self.name} ({self.id})")
+        click.echo(f"  Status: {self.status}")
+        click.echo(f"  Health: {'healthy' if self.health else 'unhealthy'}")
         if self.status_detail:
-            print(f"  Status detail: {self.status_detail}")
+            click.echo(f"  Status detail: {self.status_detail}")
+        
+        cid_version = None
+        cid_version_latest = None
+        try:
+            cid_version = self.deployedTemplate.cid_version
+        except ValueError:
+            cid_version = "UNKNOWN"
+        
+        try:
+            cid_version_latest = self.sourceTemplate.cid_version if isinstance(self.sourceTemplate, CidQsTemplate) else "UNKNOWN"
+        except ValueError:
+            cid_version_latest = "UNKNOWN"
+        
         if self.latest:
-            print(f"  Version: {self.deployed_version}")
+            click.echo(f"  Version: {self.deployed_version}")
         else:
-            print(f"  Version (deployed, latest): {self.deployed_version}, {self.latest_version}")
+            click.echo(f"  Version (deployed, latest): {self.deployed_version}, {self.latest_version}")
+        
+        click.echo(f"  CID Version (deployed, latest): {cid_version}, {cid_version_latest}")
+        
         if self.datasets:
-            print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
-        print('\n')
+            click.echo(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
+        click.echo('\n')
+        
         if click.confirm('Display dashboard raw data?'):
-            print(json.dumps(self.raw, indent=4, sort_keys=True, default=str))
+            click.echo(json.dumps(self.raw, indent=4, sort_keys=True, default=str))
+            
     
     def display_url(self, url_template: str, launch: bool = False, **kwargs) -> None:
         url = url_template.format(dashboard_id=self.id, **kwargs)
-        print(f"#######\n####### {self.name} is available at: " + url + "\n#######")
+        click.echo(f"#######\n####### {self.name} is available at: " + url + "\n#######")
         _supported_env = os.environ.get('AWS_EXECUTION_ENV') not in ['CloudShell', 'AWS_Lambda']
         if _supported_env and not is_unattendent_mode() and launch and click.confirm('Do you wish to open it in your browser?'):
             click.launch(url)
