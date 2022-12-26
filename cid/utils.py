@@ -82,7 +82,12 @@ def get_boto_client(service_name, **kwargs):
 
 
 def cid_print(value) -> None:
-    ''' print to stdout AND to log
+    ''' Print to stdout AND to log
+
+    ex:
+        violets, roses = 'violets', 'roses'
+        cid_print(f'{roses} are <BOLD><RED>red<END>, {violets} are <BLUE><UNDERLINE>blue<END>')
+
     '''
     colors = {
         'PURPLE': '\033[95m',
@@ -97,7 +102,7 @@ def cid_print(value) -> None:
         'END': '\033[0m',
     }
 
-    msg = value
+    msg = str(value)
     for col, val in colors.items():
         msg = msg.replace(f'<{col}>', val)
     try:
