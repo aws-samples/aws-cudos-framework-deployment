@@ -1,8 +1,8 @@
 import os
 import sys
+import inspect
 import logging
 from collections.abc import Iterable
-import inspect
 
 from boto3.session import Session
 import questionary
@@ -79,6 +79,34 @@ def get_boto_client(service_name, **kwargs):
     except Exception as e:
         logger.debug(e, exc_info=True)
         raise
+
+
+def cid_print(value) -> None:
+    ''' print to stdout AND to log
+    '''
+    colors = {
+        'PURPLE': '\033[95m',
+        'CYAN': '\033[96m',
+        'DARKCYAN': '\033[36m',
+        'BLUE': '\033[94m',
+        'GREEN': '\033[92m',
+        'YELLOW': '\033[93m',
+        'RED': '\033[91m',
+        'BOLD': '\033[1m',
+        'UNDERLINE': '\033[4m',
+        'END': '\033[0m',
+    }
+
+    msg = value
+    for col, val in colors.items():
+        msg = msg.replace(f'<{col}>', val)
+    try:
+        mod = inspect.getmodule(inspect.stack()[1][0])
+        logging.getLogger(mod.__dict__ if mod else '__main__').debug(value)
+    except:
+        raise
+        print('error')
+    print(msg)
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():
