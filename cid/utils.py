@@ -17,14 +17,14 @@ params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
 
-@cache
+@cache(maxsize=None)
 def isatty():
     """ return True if executed in a Terminal that allows user input """
     if exec_env()['terminal'] == 'gitbash': # We cannot trust isatty on Git Bash on Windows
         return True
     return sys.__stdin__.isatty()
 
-@cache
+@cache(maxsize=None)
 def exec_env():
     """ return os, shell and terminal
     supported environments: lambda, cloudsell, macos terminals, windows/cmd, windows/powershell, windows/gitbash
