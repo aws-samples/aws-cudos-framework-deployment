@@ -5,7 +5,7 @@ import click
 from cid.common import Cid
 from cid.utils import get_parameters, set_parameters
 from cid._version import __version__
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 version = f'{__version__} Beta'
@@ -29,6 +29,9 @@ def cid_command(func):
         except CidCritical as exc:
             logger.debug(exc, exc_info=True)
             logger.critical(exc)
+        except CidError as exc:
+            logger.debug(exc, exc_info=True)
+            logger.error(exc)
         params = get_parameters()
         logger.info('Next time you can use following command:')
         logger.info('   cid-cmd ' + ctx.info_name

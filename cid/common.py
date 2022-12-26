@@ -303,11 +303,14 @@ class Cid():
             self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
 
         # Get QuickSight template details
-        source_template = self.qs.describe_template(
-            template_id=dashboard_definition.get('templateId'),
-            account_id=dashboard_definition.get('sourceAccountId'),
-            region=dashboard_definition.get('region', 'us-east-1')
-        )
+        try:
+            source_template = self.qs.describe_template(
+                template_id=dashboard_definition.get('templateId'),
+                account_id=dashboard_definition.get('sourceAccountId'),
+                region=dashboard_definition.get('region', 'us-east-1')
+            )
+        except CidError as exc:
+            raise CidCritical(exc) # Cannot proceed without a valid template
         dashboard_definition.update({'sourceTemplate': source_template})
         print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
 
