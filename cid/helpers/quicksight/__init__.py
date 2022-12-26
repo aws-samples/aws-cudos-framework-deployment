@@ -271,7 +271,7 @@ class QuickSight(CidBase):
                 AwsAccountId=self.account_id,
                 GroupName=groupname,
                 Namespace='default',
-                description=description,
+                Description=description,
             ).get('Group')
         except self.client.exceptions.AccessDeniedException as e:
             raise CidCritical('Cannot access groups. (AccessDenied). Please use quicksight-user parameter '
