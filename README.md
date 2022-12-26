@@ -28,7 +28,7 @@ We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cl
 2. :heavy_exclamation_mark: [Specifying a Query Result Location Using a Workgroup](https://docs.aws.amazon.com/athena/latest/ug/querying.html#query-results-specify-location-workgroup)
 3. :heavy_exclamation_mark: Make sure QuickSight [Enterprise edition](https://aws.amazon.com/premiumsupport/knowledge-center/quicksight-enterprise-account/) is activated.
 
-## How to use
+## How to use for Dasbhoard Deployment
 
 1. Launch [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home) or your local shell
 
@@ -48,21 +48,54 @@ We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cl
     ```bash
     cid-cmd deploy
     ```
-#### Optional Commands
-
-6. Update existing Dashboards
-    ```bash
-    cid-cmd update
-    ```
-
-7. See available commands and command line options
-    ```
-    cid-cmd --help
-    ```
-
-### Usage Demo
+### Demo
 
    [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
+
+## Other Commands
+
+#### Update existing Dashboards
+Update only Dashboard
+```bash
+cid-cmd update
+```
+Update dashboard and all dependenies (Datasets and Athena View). WARNING: this will overide any customization of SQL files and Datasets.
+```bash
+cid-cmd update --force --recursive
+```
+#### Show Dashboard status
+```bash
+cid-cmd status
+```
+
+####  Share QuickSight resources
+```bash
+cid-cmd share
+```
+
+#### Delete Dashboard and all dependencies unused by other
+```bash
+cid-cmd delete
+```
+
+#### Export
+The command `export` lets you download or share a customized dashboard with another AWS Account. It takes the QuickSight Analysis as an input and generates all the assets needed to deploy your Analysis into another AWS Account. This command will generate a yaml file with a description of the Dashboard and all required Datasets. Also this command generates a QuickSight Template in the current AWS Account that can be used for Dashboard deployment in other accounts. The resource file can be used with all other cid commands. Both accounts must have relevant Athena Views and Tables.
+
+Export from account A:
+```
+cid-cmd export
+```
+
+Deployment to account B:
+```
+cid-cmd deploy --resources ./mydashboard.yaml
+```
+
+#### See available commands and command line options
+```
+cid-cmd --help
+```
+
 
 ## Troubleshooting 
 
