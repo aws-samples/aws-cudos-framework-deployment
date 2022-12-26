@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 import platform
-from functools import cache
+from functools import lru_cache as cache
 from collections.abc import Iterable
 
 from boto3.session import Session
