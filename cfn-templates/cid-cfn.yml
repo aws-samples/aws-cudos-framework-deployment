@@ -960,11 +960,8 @@ Resources:
                   - s3:GetObject
                   - s3:PutObject
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
-                  - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
-                  # FIXME: same for the case if AthenaQueryResultsBucket is not Null
-                  #- !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/' , !Sub 's3://${AthenaQueryResultsBucket}/' ]
-                  #- !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/*', !Sub 's3://${AthenaQueryResultsBucket}/*' ]
+                  - !If [ NeedAthenaQueryResultsBucket, !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/' , !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/' ]
+                  - !If [ NeedAthenaQueryResultsBucket, !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*', !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*' ]
               - Effect: Allow
                 Action:
                   - kms:Decrypt
