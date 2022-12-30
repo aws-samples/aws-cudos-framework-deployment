@@ -133,7 +133,7 @@ datasets:
     File: tao/dataset.json
     dependsOn:
       views:
-        - ta_organizational_view_reports
+        - ta_org_view
 
   # Trends
   daily-anomaly-detection:
@@ -284,6 +284,11 @@ views:
       s3FolderPath:
         default: 's3://costoptimizationdata{account_id}/trusted-advisor/trusted-advisor-data'
         description: Trusted Advisor Organization View report S3 path
+  ta_org_view:
+    File: tao/ta_org_view.sql
+    dependsOn:
+      views:
+        - ta_organizational_view_reports
 
   # Compute Optimiser (CO)
   compute_optimizer_ec2_instance_lines:
