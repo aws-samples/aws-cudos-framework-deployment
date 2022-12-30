@@ -101,7 +101,7 @@ Parameters:
     Type: String
     MinLength: 3
     Default: 's3://cid-{account_id}-shared/cur/'
-    AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$' #FIXME: we can do better here
+    AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$'
     Description: "Leave as is if CUR was created with CloudFormation (cur-aggregation.yaml). If it was a manually created CUR, the path entered below must be for the directory that contains the years partition (s3://curbucketname/prefix/curname/curname/). If you're using the defaults, the variable {account_id} will be replaced by current account id automatically, you can leave it as {account_id}."
   AthenaWorkgroup:
     Type: String
@@ -178,13 +178,6 @@ Conditions:
       - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   NeedAthenaWorkgroup:  !Equals [ !Ref AthenaWorkgroup, "" ]
   NeedAthenaQueryResultsBucket:  !Equals [ !Ref AthenaQueryResultsBucket, "" ]
-  NeedDatabase:
-    - Fn::Or:
-      - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
-      - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
-      - !Equals [ !Ref DeployKPIDashboard, "yes" ]
-      - !Equals [ !Ref DeployTAODashboard, "yes" ]
-      - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   NeedCURTable:
     Fn::And:
       - !Equals [ !Ref CURTableName, "" ]
@@ -369,10 +362,12 @@ Resources:
           import urllib3
 
           from cid.helpers import QuickSight # from layer
+          from cid.utils import set_parameters
 
           BUCKET = os.environ['BUCKET']
           WORKGROUP = os.environ['WORKGROUP']
           CRAWLER = os.environ['CRAWLER']
+          QUICKSIGHT_USER = os.environ['QUICKSIGHT_USER']
 
           def lambda_handler(event, context):
               print(event)
@@ -384,6 +379,7 @@ Resources:
                   if type_ == 'Create': res = on_create()
                   elif type_ == 'Delete': res = on_delete()
                   else: res = (True, f"Not supported operation: {type_}")
+                  set_parameters({'quicksight-user': QUICKSIGHT_USER})
                   identity_region = get_identity_region()
               finally:
                   log_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logEvent:group={context.log_group_name};stream={context.log_stream_name}"
@@ -471,6 +467,7 @@ Resources:
           BUCKET: !If [NeedAthenaQueryResultsBucket, !Ref MyAthenaQueryResultsBucket, '']
           WORKGROUP: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
           CRAWLER: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
+          QUICKSIGHT_USER: !Ref QuickSightUser
   InitLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -497,7 +494,7 @@ Resources:
                   - Fn::If:
                     - NeedAthenaQueryResultsBucket
                     - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
-                    - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
+                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
               - Effect: Allow
                 Action:
                   - s3:ListBucketVersions
@@ -506,24 +503,20 @@ Resources:
                   - Fn::If:
                     - NeedAthenaQueryResultsBucket
                     - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
-                    - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}'
+                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
               - Effect: Allow
                 Action:
                   - athena:DeleteWorkGroup
                 Resource:
-                  Fn::Join:
-                   - '/'
-                   - - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup'
-                     - !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
               - Effect: Allow
                 Action:
                   - glue:StartCrawler
                 Resource:
-                  arn:aws:glue:us-east-1:123456789012:crawler/mycrawler
-                  Fn::Join:
-                   - '/'
-                   - - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:crawler/'
-                     - !If [ NeedCURTable, !Ref MyGlueCURCrawler, 'none' ]
+                  Fn::If:
+                    - NeedCURTable
+                    - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:crawler/${MyGlueCURCrawler}'
+                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
               - Effect: Allow
                 Action:
                   - quicksight:DescribeUser
@@ -566,10 +559,10 @@ Resources:
                   - s3:ListBuckets
                 Resource:
                   - Fn::Sub:
-                    - "arn:aws:s3:::{bucket}"
+                    - "arn:aws:s3:::${bucket}"
                     - bucket: !Select ["2", !Split ['/', !Ref CURBucketPath ] ]  #s3://<bucket>
                   - Fn::Sub:
-                    - "arn:aws:s3:::{bucket}"
+                    - "arn:aws:s3:::${bucket}"
                     - bucket: !Select ["2", !Split ['/', !Ref OptimizationDataCollectionBucketPath ] ]
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
@@ -679,7 +672,6 @@ Resources:
 
   CidDatabase:
     Type: AWS::Glue::Database
-    Condition: NeedDatabase
     Properties:
       DatabaseInput:
         Name: !Join [ '_', !Split [ '-', !Sub 'cid_cur${Suffix}' ] ] # replace '-' to '_'
@@ -846,24 +838,25 @@ Resources:
                   - 'glue:UpdatePartition'
                   - 'glue:CreateTable'
                   - 'glue:UpdateTable'
-                  - 'glue:ImportCatalogToGlue' # TODO
+                  - 'glue:ImportCatalogToGlue'
                 Resource:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${ProcessedCURPath.Folder}
               - Effect: Allow
                 Action:
                   - 's3:GetObject'
                 Resource:
                   Fn::Sub: 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
-        - PolicyName: AWSCURKMSDecryption
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'kms:Decrypt'
-                Resource: '*'
+        # Uncomment if your CUR bucket is encrypted with KMS
+        # - PolicyName: AWSCURKMSDecryption
+        #   PolicyDocument:
+        #     Version: 2012-10-17
+        #     Statement:
+        #       - Effect: Allow
+        #         Action:
+        #           - 'kms:Decrypt'
+        #         Resource: '*'
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
@@ -908,10 +901,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - athena:StartQueryExecution
                   - athena:GetWorkGroup
-                  - athena:GetQueryResults
-                  - athena:GetQueryExecution
                 Resource:
                   Fn::Join:
                    - '/'
@@ -926,8 +916,8 @@ Resources:
                   - glue:GetPartitions
                   - glue:CreateTable
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/*' #FIXME
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/*' #FIXME
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/*'
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/*'
                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
               - Effect: Allow
                 Action:
@@ -935,70 +925,30 @@ Resources:
                   - glue:GetDatabases
                   - glue:GetTables
                 Resource: "*" # This is needed to allow Autodetection in CID-CMD
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                Resource:
-                  Fn::If:
-                    - NeedCUR
-                    - !Sub 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
-                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
-              - Effect: Allow
-                Action:
-                  - s3:ListBucket
-                Resource:
-                  Fn::If:
-                    - NeedCUR
-                    - !Sub 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}'
-                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
-              - Effect: Allow
-                Action:
-                  - s3:ListBucket
-                  - s3:ListBucketMultipartUploads
-                  - s3:ListMultipartUploadParts
-                  - s3:AbortMultipartUpload
-                  - s3:GetBucketLocation
-                  - s3:GetObject
-                  - s3:PutObject
-                Resource:
-                  - !If [ NeedAthenaQueryResultsBucket, !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/' , !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/' ]
-                  - !If [ NeedAthenaQueryResultsBucket, !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*', !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*' ]
-              - Effect: Allow
-                Action:
-                  - kms:Decrypt
-                  - kms:DescribeKey
-                  - kms:Encrypt
-                Resource: !Sub 'arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}::key/*'
+              ## Uncomment if your CUR bucket is encrypted with KMS
+              # - Effect: Allow
+              #   Action:
+              #     - kms:Decrypt
+              #     - kms:DescribeKey
+              #     - kms:Encrypt
+              #   Resource: !Sub 'arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}::key/*'
               - Effect: Allow
                 Action:
                   - quicksight:ListDataSources
-                  - quicksight:CreateDataSource
-                  - quicksight:DeleteDataSource
-                  - quicksight:DescribeDataSource
-                  - quicksight:PassDataSource
-
                   - quicksight:ListDataSets
                   - quicksight:CreateDataSet
                   - quicksight:DescribeDataSet
                   - quicksight:DeleteDataSet
                   - quicksight:UpdateDataSet
                   - quicksight:PassDataSet
-
                   - quicksight:CreateDashboard
                   - quicksight:DescribeDashboard
                   - quicksight:DeleteDashboard
                   - quicksight:UpdateDashboard
-
                   - quicksight:ListDashboards
-
                   - quicksight:DescribeTemplate
                   - quicksight:DescribeAccountSubscription
-                  - quicksight:ListFolders
-
-                  - quicksight:ListUsers
                   - quicksight:DescribeUser
-                  - quicksight:CreateUser # TBC
-                  - quicksight:CreateIngestion
                   - quicksight:UpdateDashboardPermissions
                   - quicksight:UpdateDashboardPublishedVersion
                   - quicksight:UpdateDataSetPermissions
@@ -1007,21 +957,16 @@ Resources:
 
               - Effect: Allow
                 Action:
-                 # - athena:BatchGetQueryExecution
-                 # - athena:GetQueryExecution
-                 # - athena:GetQueryResults
+                  - athena:StartQueryExecution
+                  - athena:GetQueryResults
+                  - athena:GetQueryExecution
                   - athena:GetTableMetadata
-                 # - athena:GetWorkGroup # see above
                   - athena:ListDatabases
                   - athena:ListDataCatalogs
                   - athena:ListEngineVersions
                   - athena:ListTableMetadata
                   - athena:ListWorkGroups
                   - athena:GetDatabase
-                 # - athena:ListQueryExecutions
-                 # - athena:ListNamedQueries
-                 # - athena:StartQueryExecution
-                 # - athena:UpdateWorkGroup
                 Resource: '*'
 
   CidExec: #custom lambda resource that deploy views, datasets and dashboards
@@ -1048,7 +993,7 @@ Resources:
           from cid.utils import set_parameters # From lambda layer
           from cid.exceptions import CidCritical
 
-          Cid._Cid__setupLogging = lambda self, verbosity: None #FIXME: Monkey patch to avoid file creation
+          Cid._Cid__setupLogging = lambda self, verbosity: None #Monkey patch to avoid file creation
 
           logger = logging.getLogger(__name__)
           logger.setLevel(logging.INFO)
