@@ -409,7 +409,6 @@ Resources:
 
           def on_create():
               if CRAWLER:
-                  # FIXME: this can be replaced with AWS::Glue::Trigger
                   try:
                       boto3.client('glue').start_crawler(Name=CRAWLER)
                   except Exception as exc:
