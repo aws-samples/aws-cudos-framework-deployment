@@ -33,6 +33,7 @@ Metadata:
           - Suffix
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
+          - DataBuketsKmsKeyArns
     ParameterLabels: 
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -65,11 +66,13 @@ Metadata:
       Suffix:
         default: "Suffix - Please do not change"
       QuickSightDataSetRefreshSchedule:
-        default: "QuickSight DataSet Refresh Schedule"
+        default: "QuickSight DataSet Refresh Schedule. Must be a valid cron or empty. If empty refresh will be disabled."
       LambdaLayerBucketPrefix:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
+      DataBuketsKmsKeyArns:
+        default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encypted with KMS. Also you can set it to '*'."
   cfn-lint:
     config:
       ignore_checks:
@@ -186,6 +189,7 @@ Conditions:
         - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
         - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
+  NeedDataBuketsKms: !Equals [ !Ref DataBuketsKmsKeyArns, "" ]
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -847,15 +851,14 @@ Resources:
                   - 's3:GetObject'
                 Resource:
                   Fn::Sub: 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
-        # Uncomment if your CUR bucket is encrypted with KMS
-        # - PolicyName: AWSCURKMSDecryption
-        #   PolicyDocument:
-        #     Version: 2012-10-17
-        #     Statement:
-        #       - Effect: Allow
-        #         Action:
-        #           - 'kms:Decrypt'
-        #         Resource: '*'
+        - PolicyName: AwsCurCrawlerKmsDecryption
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                Resource: !If [ NeedDataBuketsKms, !Split [',', !Ref DataBuketsKmsKeyArns], !Sub 'arn:${AWS::Partition}:nothing:::nothing']
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
@@ -914,23 +917,17 @@ Resources:
                   - glue:GetTables
                   - glue:GetPartitions
                   - glue:CreateTable
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/*'
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/*'
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                Resource: "*" # This is needed to allow Autodetection in CID-CMD
               - Effect: Allow
                 Action:
                   - glue:GetTable
                   - glue:GetDatabases
                   - glue:GetTables
                 Resource: "*" # This is needed to allow Autodetection in CID-CMD
-              ## Uncomment if your CUR bucket is encrypted with KMS
-              # - Effect: Allow
-              #   Action:
-              #     - kms:Decrypt
-              #     - kms:DescribeKey
-              #     - kms:Encrypt
-              #   Resource: !Sub 'arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}::key/*'
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !If [ NeedDataBuketsKms, !Split [',', !Ref DataBuketsKmsKeyArns], !Sub 'arn:${AWS::Partition}:nothing:::nothing']
               - Effect: Allow
                 Action:
                   - quicksight:ListDataSources
@@ -940,20 +937,18 @@ Resources:
                   - quicksight:DeleteDataSet
                   - quicksight:UpdateDataSet
                   - quicksight:PassDataSet
+                  - quicksight:UpdateDataSetPermissions
                   - quicksight:CreateDashboard
                   - quicksight:DescribeDashboard
                   - quicksight:DeleteDashboard
                   - quicksight:UpdateDashboard
-                  - quicksight:ListDashboards
-                  - quicksight:DescribeTemplate
-                  - quicksight:DescribeAccountSubscription
-                  - quicksight:DescribeUser
                   - quicksight:UpdateDashboardPermissions
                   - quicksight:UpdateDashboardPublishedVersion
-                  - quicksight:UpdateDataSetPermissions
-                  - quicksight:UpdateDataSourcePermissions
-                Resource: '*'
-
+                  - quicksight:ListDashboards
+                  - quicksight:DescribeUser
+                  - quicksight:DescribeTemplate
+                  - quicksight:DescribeAccountSubscription
+                Resource: '*' # This is needed to allow Autodetection in CID-CMD
               - Effect: Allow
                 Action:
                   - athena:StartQueryExecution
@@ -966,7 +961,7 @@ Resources:
                   - athena:ListTableMetadata
                   - athena:ListWorkGroups
                   - athena:GetDatabase
-                Resource: '*'
+                Resource: '*'  # This is needed to allow Autodetection in CID-CMD
 
   CidExec: #custom lambda resource that deploy views, datasets and dashboards
     Type: AWS::Lambda::Function
