@@ -6,9 +6,16 @@ from cid.helpers.quicksight.resource import CidQsResource
 logger = logging.getLogger(__name__)
 
 class CidVersion:
-    def __init__(self, str_version):
-        self.major, self.minor, self.build = self._parse(str_version)
+    
+    def __init__(self, version):
         
+        if isinstance(version, __class__):
+            self.major, self.minor, self.build = version.major, version.minor, version.build 
+        elif isinstance(version, str):
+            self.major, self.minor, self.build = self._parse(version)
+        else:
+            raise TypeError(f'{version} must be {__class__} or str ')
+
     def __str__(self):
         return f'v{self.major}.{self.minor}.{self.build}'
     
@@ -31,42 +38,28 @@ class CidVersion:
         """
             Return True when both version are on the same major branch
         """
-        if not isinstance(_version, __class__):
-            _version = self._parse(_version)
-            
-        return bool(_version.major == self.major)
+                    
+        return CidVersion(_version).major == self.major
     
     def __lt__(self, _version):
-        if not isinstance(_version, __class__):
-            _version = self._parse(_version)
-        return self.get_version_as_tuple() < _version.get_version_as_tuple()
+        return self._get_version_as_tuple() < CidVersion(_version)._get_version_as_tuple()
 
     def __le__(self, _version):
-        if not isinstance(_version, __class__):
-            _version = self._parse(_version)
-        return self.get_version_as_tuple() <= _version.get_version_as_tuple()
+        return self._get_version_as_tuple() <= CidVersion(_version)._get_version_as_tuple()
 
     def __eq__(self, _version):
-        if not isinstance(_version, __class__):
-            _version = self._parse(_version)
-        return self.get_version_as_tuple() == _version.get_version_as_tuple()
+        return self._get_version_as_tuple() == CidVersion(_version)._get_version_as_tuple()
 
     def __ge__(self, _version):
-        if not isinstance(_version, __class__):
-            _version = self._parse(_version)
-        return self.get_version_as_tuple() >= _version.get_version_as_tuple()
+        return self._get_version_as_tuple() >= CidVersion(_version)._get_version_as_tuple()
 
     def __gt__(self, _version):
-        if not isinstance(_version, __class__):
-            _version = self._parse(_version)
-        return self.get_version_as_tuple() > _version.get_version_as_tuple()
+        return self._get_version_as_tuple() > CidVersion(_version)._get_version_as_tuple()
 
     def __ne__(self, _version):
-        if not isinstance(_version, __class__):
-            _version = self._parse(_version)
-        return self.get_version_as_tuple() != _version.get_version_as_tuple()
+        return self._get_version_as_tuple() != CidVersion(_version)._get_version_as_tuple()
 
-    def get_version_as_tuple(self) -> tuple:
+    def _get_version_as_tuple(self) -> tuple:
         return (self.major,self.minor,self.build)
 class Template(CidQsResource):
 
@@ -74,10 +67,6 @@ class Template(CidQsResource):
     def id(self) -> str:
         return self.get_property('TemplateId')
     
-    @property
-    def arn(self) -> str:
-        return self.get_property('Arn')
-
     @property
     def datasets(self) -> Dict[str, list]:
         _datasets = {}
