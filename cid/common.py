@@ -398,7 +398,7 @@ class Cid():
 
         aws_execution_env = os.environ.get('AWS_EXECUTION_ENV', '')
         if  aws_execution_env == 'CloudShell' or aws_execution_env.startswith('AWS_Lambda'):
-            click.echo(f"Operation is not supported in {aws_execution_env}")
+            print(f"Operation is not supported in {aws_execution_env}")
             return dashboard_id
         if not dashboard_id:
             dashboard_id = self.qs.select_dashboard(force=True)
@@ -767,23 +767,23 @@ class Cid():
 
         dashboard = self.qs.dashboards.get(dashboard_id)
         if not dashboard:
-            click.echo(f'Dashboard "{dashboard_id}" is not deployed')
+            print(f'Dashboard "{dashboard_id}" is not deployed')
             return
 
-        click.echo(f'\nChecking for updates...')
-        click.echo(f'Deployed template: {dashboard.deployedTemplate.arn}')
-        click.echo(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+        print(f'\nChecking for updates...')
+        print(f'Deployed template: {dashboard.deployedTemplate.arn}')
+        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         try:
-            click.echo(f"CID Version: {dashboard.deployedTemplate.cid_version}")
+            print(f"CID Version: {dashboard.deployedTemplate.cid_version}")
         except ValueError:
-            click.echo(f"CID Version: Not available")
+            print(f"CID Version: Not available")
             pass
         
         try:
             version_latest = dashboard.sourceTemplate.cid_version if isinstance(dashboard.sourceTemplate, CidQsTemplate) else "UNKNOWN"
-            click.echo(f"CID Latest Version: {version_latest}")
+            print(f"CID Latest Version: {version_latest}")
         except ValueError:
-            click.echo(f"CID Latest Version: Not available")
+            print(f"CID Latest Version: Not available")
             pass
         
         
