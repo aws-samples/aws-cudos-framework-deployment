@@ -61,6 +61,8 @@ class CidVersion:
 
     def _get_version_as_tuple(self) -> tuple:
         return (self.major,self.minor,self.build)
+    
+
 class Template(CidQsResource):
 
     @property
