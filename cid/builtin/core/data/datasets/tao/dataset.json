@@ -876,7 +876,96 @@
                     {
                         "Name": "resource",
                         "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload type",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload last modified date",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload started date",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of questions answered for performance",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of hris resolved for performance",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "total number of questions in performance pillar",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of identified hris for performance",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "reviewer name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload arn",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of hris resolved for reliability",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "total number of questions in reliability pillar",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of questions answered for reliability",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of identified hris for reliability",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of hris resolved for security",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "total number of questions in security pillar",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of questions answered for security",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of identified hris for security",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of hris resolved for cost optimization",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "total number of questions in cost optimization pillar",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of questions answered for cost optimization",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of identified hris for cost optimization",
+                        "Type": "STRING"
                     }
+                    
                 ]
             }
         }
@@ -1257,6 +1346,17 @@
                     }
                 },
                 {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "One Check Selected",
+                                "ColumnId": "0ff3cf35-ffeb-4cf4-b379-684c430ccb3c",
+                                "Expression": "distinctCountOver(checkid, [], PRE_AGG) = 1"
+                            }
+                        ]
+                    }
+                },
+                {
                     "ProjectOperation": {
                         "ProjectedColumns": [
                             "ip address",
@@ -1476,6 +1576,28 @@
                             "days to deprecation",
                             "deprecation date",
                             "resource",
+                            "workload type",
+                            "workload last modified date",
+                            "workload started date",
+                            "number of questions answered for performance",
+                            "number of hris resolved for performance",
+                            "total number of questions in performance pillar",
+                            "number of identified hris for performance",
+                            "reviewer name",
+                            "workload arn",
+                            "workload name",
+                            "number of hris resolved for reliability",
+                            "total number of questions in reliability pillar",
+                            "number of questions answered for reliability",
+                            "number of identified hris for reliability",
+                            "number of hris resolved for security",
+                            "total number of questions in security pillar",
+                            "number of questions answered for security",
+                            "number of identified hris for security",
+                            "number of hris resolved for cost optimization",
+                            "total number of questions in cost optimization pillar",
+                            "number of questions answered for cost optimization",
+                            "number of identified hris for cost optimization",
                             "Check Name",
                             "Resource Name",
                             "Datetime",
@@ -1506,7 +1628,8 @@
                             "Ratio of Transfer to Storage",
                             "Max Daily Median",
                             "Number of Days Over",
-                            "DateTime is Last Check for Resource"
+                            "DateTime is Last Check for Resource",
+                            "One Check Selected"
                         ]
                     }
                 }

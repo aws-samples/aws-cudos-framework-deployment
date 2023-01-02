@@ -216,7 +216,29 @@ SELECT DISTINCT
 "runtime",
 "days to deprecation",
 "deprecation date",
-"resource"
+"resource",
+"workload type",
+"workload last modified date",
+"workload started date",
+"number of questions answered for performance",
+"Number of hris resolved for performance",
+"total number of questions in performance pillar",
+"number of identified hris for performance",
+"reviewer name",
+"workload arn",
+"workload name",
+"number of hris resolved for reliability",
+"total number of questions in reliability pillar",
+"number of questions answered for reliability",
+"number of identified hris for reliability",
+"number of hris resolved for security",
+"total number of questions in security pillar",
+"number of questions answered for security",
+"number of identified hris for security",
+"number of hris resolved for cost optimization",
+"total number of questions in cost optimization pillar",
+"number of questions answered for cost optimization",
+"number of identified hris for cost optimization"
 FROM
   "ta_organizational_view_reports"
 WHERE  
