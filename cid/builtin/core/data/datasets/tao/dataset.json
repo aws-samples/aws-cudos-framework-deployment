@@ -976,7 +976,7 @@
                             {
                                 "ColumnName": "Last Check for Resource",
                                 "ColumnId": "da58a4e8-1246-46a2-b1f2-416d33eb1d51",
-                                "Expression": "ifelse(category = 'Cost Optimizing',maxOver(Datetime, [{Resource Name},{instance type}],PRE_AGG),{Check Name} = 'Amazon EBS Snapshots',maxOver(Datetime, [{volume id},{Account},{snapshot age},{volume attachment}],PRE_AGG),{Check Name} = 'Amazon EC2 Availability Zone Balance',maxOver(Datetime, [{Account},{region}, {instances in zone a},{instances in zone b},{instances in zone c},{instances in zone d},{instances in zone e},{instances in zone f}],PRE_AGG),maxOver(Datetime, [{Resource Name}],PRE_AGG))"
+                                "Expression": "ifelse(\ncategory = 'Cost Optimizing',\nmaxOver(Datetime, [{Resource Name},{instance type}],PRE_AGG),\n{Check Name} = 'Amazon EBS Snapshots',\nmaxOver(Datetime, [{volume id},{Account},{snapshot age},{volume attachment}],PRE_AGG),\n{Check Name} = 'Amazon EC2 Availability Zone Balance',\nmaxOver(Datetime, [{Account},{region}, {instances in zone a},{instances in zone b},{instances in zone c},{instances in zone d},{instances in zone e},{instances in zone f}],PRE_AGG),\n\nmaxOver(Datetime, [{Resource Name}],PRE_AGG)\n)\n"
                             }
                         ]
                     }
@@ -1043,6 +1043,215 @@
                                 "ColumnName": "Category",
                                 "ColumnId": "1d145d5d-46d9-4c58-8ee2-694e7b53f5b1",
                                 "Expression": "ifelse(\n    category = 'cost_optimizing',\n    'Cost Optimizing',\n    category = 'fault_tolerance',\n    'Fault Tolerance',\n    category = 'security',\n    'Security',\n    category = 'performance',\n    'Performance',\n    category = 'service_limits',\n    'Service Limits',\n    category\n)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Deprecation Date",
+                                "ColumnId": "e351a4a5-1a61-4ee5-9927-69040296e120",
+                                "Expression": "maxOver(parseDate({deprecation date},'MM/dd/yyyy'),[{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Average Daily Invokes",
+                                "ColumnId": "0108dd54-9ae3-447d-97d8-788894e6a8ae",
+                                "Expression": "maxOver(parseDecimal({average daily invokes}),[{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Number of Days Low Utilization",
+                                "ColumnId": "b9a05d2d-5997-4677-9ad4-73f1f0534210",
+                                "Expression": "maxOver(parseInt(replace({number of days low utilization}, ' days','')), [{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "14-Day Average CPU Utilization",
+                                "ColumnId": "d04502b9-c9df-4ef0-a78d-a11771b5967f",
+                                "Expression": "maxOver(parseDecimal(replace({14-day average cpu utilization}, '%','')), [{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "14-Day Average Network I/O",
+                                "ColumnId": "c059301f-0228-44be-b827-4337615995ac",
+                                "Expression": "maxOver(parseDecimal(replace({14-day average network i/o}, 'MB','')), [{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Max Daily Error Rate",
+                                "ColumnId": "b6ea96d4-6a88-49ac-b24d-b12942c72fd4",
+                                "Expression": "maxOver(parseDecimal({max daily error rate}),[{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Date for Max Error Rate",
+                                "ColumnId": "ae799e1f-17d8-44dd-9374-f538a041200b",
+                                "Expression": "maxOver(parseDate({date for max error rate},'MM/dd/yyyy'),[{Resource Name}],PRE_AGG)\n"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Average Daily Error Rate",
+                                "ColumnId": "e22c306a-1ef8-472e-9c98-0b487cf917c2",
+                                "Expression": "maxOver(parseDecimal({average daily error rate}),[{Resource Name}],PRE_AGG)\n"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Snapshot Age",
+                                "ColumnId": "d6f76967-c54b-4ac9-9b9f-6af03f79e4df",
+                                "Expression": "maxOver(parseDecimal({snapshot age}),[{volume id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Number of Days Over 90% Cpu Utilization",
+                                "ColumnId": "c352f86e-24de-442a-b314-9165d2da90de",
+                                "Expression": "maxOver(parseInt({number of days over 90% cpu utilization}), [{instance name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Total Inbound Rules",
+                                "ColumnId": "c7cc84c9-26f0-4aab-8f77-533deb13a0ea",
+                                "Expression": "maxOver(parseInt({total inbound rules}),[{instance id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Total Outbound Rules",
+                                "ColumnId": "2dfec784-1361-4d8f-b1a9-4d7200ac6bd9",
+                                "Expression": "maxOver(parseInt({total outbound rules}),[{instance id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Instance Count",
+                                "ColumnId": "754c711b-469a-4800-9772-5d4d6f1c7678",
+                                "Expression": "maxOver(parseInt({instance count}),[{group id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "S3 Storage (gb)",
+                                "ColumnId": "bfb2040b-6fba-4461-ba23-4d71ab1af02e",
+                                "Expression": "maxOver(parseDecimal({s3 storage (gb)}),[{bucket name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Data Transfer Out (GB)",
+                                "ColumnId": "1d903eee-9562-4ce1-84fa-2ce084902974",
+                                "Expression": "maxOver(parseDecimal({data transfer out (gb)}),[{bucket name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Ratio of Transfer to Storage",
+                                "ColumnId": "cf75e0af-3e1e-46e4-bef8-23b53d5876a6",
+                                "Expression": "maxOver(parseDecimal({ratio of transfer to storage}),[{bucket name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Max Daily Median",
+                                "ColumnId": "4969569f-00c3-4dd2-bea4-30e45b8a9597",
+                                "Expression": "maxOver(parseDecimal({max daily median}),[{volume id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Number of Days Over",
+                                "ColumnId": "43150fa6-4a63-4a74-85b1-4adf93795a4c",
+                                "Expression": "maxOver(parseInt({number of days over}),[{volume id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "DateTime is Last Check for Resource",
+                                "ColumnId": "4dd256b5-fe3a-4304-b98e-ac9059604f68",
+                                "Expression": "{Datetime} = {Last Check for Resource}"
                             }
                         ]
                     }
@@ -1278,7 +1487,26 @@
                             "Estimated Monthly Savings Numeric",
                             "Estimated Monthly Savings",
                             "Status",
-                            "Category"
+                            "Category",
+                            "Deprecation Date",
+                            "Average Daily Invokes",
+                            "Number of Days Low Utilization",
+                            "14-Day Average CPU Utilization",
+                            "14-Day Average Network I/O",
+                            "Max Daily Error Rate",
+                            "Date for Max Error Rate",
+                            "Average Daily Error Rate",
+                            "Snapshot Age",
+                            "Number of Days Over 90% Cpu Utilization",
+                            "Total Inbound Rules",
+                            "Total Outbound Rules",
+                            "Instance Count",
+                            "S3 Storage (gb)",
+                            "Data Transfer Out (GB)",
+                            "Ratio of Transfer to Storage",
+                            "Max Daily Median",
+                            "Number of Days Over",
+                            "DateTime is Last Check for Resource"
                         ]
                     }
                 }
