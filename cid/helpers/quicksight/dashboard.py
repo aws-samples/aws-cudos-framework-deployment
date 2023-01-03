@@ -7,7 +7,6 @@ from typing import Dict
 from cid.helpers.quicksight.resource import CidQsResource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import is_unattendent_mode
-from tabulate import tabulate
 
 logger = logging.getLogger(__name__)
 
