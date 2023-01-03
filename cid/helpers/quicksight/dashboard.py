@@ -7,7 +7,7 @@ from typing import Dict
 from cid.helpers.quicksight.resource import CidQsResource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import is_unattendent_mode
-
+from tabulate import tabulate
 
 logger = logging.getLogger(__name__)
 
@@ -101,22 +101,48 @@ class Dashboard(CidQsResource):
         return self._status
 
     def display_status(self) -> None:
+          
         print('\nDashboard status:')
         print(f"  Name (id): {self.name} ({self.id})")
         print(f"  Status: {self.status}")
         print(f"  Health: {'healthy' if self.health else 'unhealthy'}")
+        
         if self.status_detail:
             print(f"  Status detail: {self.status_detail}")
-        if self.latest:
-            print(f"  Version: {self.deployed_version}")
+            
+        cid_version = None
+        cid_version_latest = None
+        
+        try:
+            cid_version = self.deployedTemplate.cid_version
+        except ValueError:
+            cid_version = "UNKNOWN"
+            
+        try:
+            cid_version_latest = self.sourceTemplate.cid_version if isinstance(self.sourceTemplate, CidQsTemplate) else "UNKNOWN"
+        except ValueError:
+            cid_version_latest = "UNKNOWN"
+        
+       
+        if self.latest:            
+            print(f"  CID Version      {cid_version}")
+            print(f"  TemplateVersion  {self.deployed_version} ")
         else:
-            print(f"  Version (deployed, latest): {self.deployed_version}, {self.latest_version}")
+            cid_version = str(cid_version).ljust(9, ' ')
+            cid_version_latest = str(cid_version_latest).ljust(6, ' ')
+            template_version = str(self.deployed_version).ljust(9, ' ')
+            template_version_latest = str(self.latest_version).ljust(6, ' ')
+            print("                   Deployed -> Latest")
+            print(f"  CID Version      {cid_version}   {cid_version_latest}")
+            print(f"  TemplateVersion  {template_version}   {template_version_latest}")
+    
+    
         if self.datasets:
             print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
         print('\n')
         if click.confirm('Display dashboard raw data?'):
             print(json.dumps(self.raw, indent=4, sort_keys=True, default=str))
-    
+   
     def display_url(self, url_template: str, launch: bool = False, **kwargs) -> None:
         url = url_template.format(dashboard_id=self.id, **kwargs)
         print(f"#######\n####### {self.name} is available at: " + url + "\n#######")

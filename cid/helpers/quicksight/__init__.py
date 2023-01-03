@@ -195,6 +195,8 @@ class QuickSight(CidBase):
     def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover single dashboard"""
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
+        if not dashboard:
+            raise CidCritical(f'Dashboard {dashboardId} was not found')
         try:
             _template_arn = dashboard.version.get('SourceEntityArn')
             _template = self.describe_template(
@@ -206,8 +208,8 @@ class QuickSight(CidBase):
             if isinstance(_template, CidQsTemplate):
                 dashboard.deployedTemplate = _template
         except Exception as e:
-                logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {_template_arn}, {e}')
+            logger.debug(e, exc_info=True)
+            logger.info(f'Unable to describe template for {dashboardId}, {e}')
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
