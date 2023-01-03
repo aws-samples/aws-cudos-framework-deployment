@@ -195,6 +195,8 @@ class QuickSight(CidBase):
     def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover single dashboard"""
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
+        if not dashboard:
+            raise CidCritical(f'Dashboard {dashboardId} was not found')
         try:
             _template_arn = dashboard.version.get('SourceEntityArn')
             _template = self.describe_template(
