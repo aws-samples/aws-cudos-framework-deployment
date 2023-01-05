@@ -27,6 +27,7 @@ Metadata:
         Parameters:
           - AthenaWorkgroup
           - AthenaQueryResultsBucket
+          - DatabaseName
           - CURTableName
           - CidVersion
           - GlueDataCatalog
@@ -59,6 +60,8 @@ Metadata:
         default: "Athena Workgroup - Please do not change"
       AthenaQueryResultsBucket:
         default: "Athena Query Results Bucket - Please do not change"
+      DatabaseName:
+        default: "Database Name - Please do not change"
       CURTableName:
         default: "CUR Table Name - Please do not change"
       CidVersion:
@@ -114,6 +117,10 @@ Parameters:
     Type: String
     Default: ''
     Description:  Leave Empty
+  DatabaseName:
+    Type: String
+    Description: Leave Empty
+    Default: ''
   CURTableName:
     Type: String
     Default: ''
@@ -185,6 +192,15 @@ Conditions:
       - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   NeedAthenaWorkgroup:  !Equals [ !Ref AthenaWorkgroup, "" ]
   NeedAthenaQueryResultsBucket:  !Equals [ !Ref AthenaQueryResultsBucket, "" ]
+  NeedDatabase:
+    Fn::And:
+      - !Equals [ !Ref DatabaseName, "" ]
+      - Fn::Or:
+        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+        - !Equals [ !Ref DeployTAODashboard, "yes" ]
+        - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   NeedCURTable:
     Fn::And:
       - !Equals [ !Ref CURTableName, "" ]
@@ -594,21 +610,6 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: /
-      Policies:
-        - PolicyName: root
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:ListBuckets
-                Resource:
-                  - Fn::Sub:
-                    - "arn:aws:s3:::${bucket}"
-                    - bucket: !Select ["2", !Split ['/', !Ref CURBucketPath ] ]  #s3://<bucket>
-                  - Fn::Sub:
-                    - "arn:aws:s3:::${bucket}"
-                    - bucket: !Select ["2", !Split ['/', !Ref OptimizationDataCollectionBucketPath ] ]
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
   CustomRessourceProcessPath:
@@ -717,6 +718,7 @@ Resources:
 
   CidDatabase:
     Type: AWS::Glue::Database
+    Condition: NeedDatabase
     Properties:
       DatabaseInput:
         Name: !Join [ '_', !Split [ '-', !Sub 'cid_cur${Suffix}' ] ] # replace '-' to '_'
@@ -730,7 +732,7 @@ Resources:
       Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
       Role:
         Fn::GetAtt: CidCURCrawlerRole.Arn
-      DatabaseName: !Ref CidDatabase
+      DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
       Targets:
         S3Targets:
           - Path: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
@@ -768,7 +770,7 @@ Resources:
     Condition: NeedCURTable
     Properties:
       CatalogId: !Ref "AWS::AccountId"
-      DatabaseName: !Ref CidDatabase
+      DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
       TableInput:
         Name: !GetAtt ProcessedCURPath.Folder
         Owner: owner
@@ -1171,7 +1173,7 @@ Resources:
         dashboard-id: cost_intelligence_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !Ref CidDatabase
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
@@ -1190,7 +1192,7 @@ Resources:
         dashboard-id: cudos
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !Ref CidDatabase
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
@@ -1212,7 +1214,7 @@ Resources:
         dashboard-id: kpi_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !Ref CidDatabase
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
@@ -1236,7 +1238,7 @@ Resources:
         dashboard-id: ta-organizational-view
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !Ref CidDatabase
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
@@ -1255,7 +1257,7 @@ Resources:
         dashboard-id: compute-optimizer-dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        athena-database: !Ref CidDatabase
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
