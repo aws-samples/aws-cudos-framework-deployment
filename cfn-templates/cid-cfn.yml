@@ -34,7 +34,7 @@ Metadata:
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
           - DataBuketsKmsKeyArns
-    ParameterLabels: 
+    ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
       PrerequisitesQuickSightPermissions:
@@ -163,6 +163,10 @@ Parameters:
     Type: String
     Description: Existing Glue Data Catalog
     Default: "AwsDataCatalog"
+  DataBuketsKmsKeyArns:
+    Type: String
+    Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encypted with KMS. Also you can set it to '*'."
+    Default: "*"
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -189,7 +193,17 @@ Conditions:
         - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
         - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  NeedDataBuketsKms: !Equals [ !Ref DataBuketsKmsKeyArns, "" ]
+  NeedDataBucketsKms: !Equals [ !Ref DataBuketsKmsKeyArns, "" ]
+  NeedDataBucketsKmsAndNeedCURTable:
+    Fn::And:
+      - !Equals [ !Ref DataBuketsKmsKeyArns, "" ]
+      - Fn::And:
+        - !Equals [ !Ref CURTableName, "" ]
+        - Fn::Or:
+          - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+          - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+          - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -471,6 +485,7 @@ Resources:
           WORKGROUP: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
           CRAWLER: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
           QUICKSIGHT_USER: !Ref QuickSightUser
+
   InitLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -490,43 +505,64 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action:
-                  - s3:DeleteObject
-                  - s3:DeleteObjectVersion
-                Resource:
-                  - Fn::If:
-                    - NeedAthenaQueryResultsBucket
-                    - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
-                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
-              - Effect: Allow
-                Action:
-                  - s3:ListBucketVersions
-                  - s3:DeleteBucket
-                Resource:
-                  - Fn::If:
-                    - NeedAthenaQueryResultsBucket
-                    - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
-                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
-              - Effect: Allow
-                Action:
-                  - athena:DeleteWorkGroup
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
-              - Effect: Allow
-                Action:
-                  - glue:StartCrawler
-                Resource:
-                  Fn::If:
-                    - NeedCURTable
-                    - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:crawler/${MyGlueCURCrawler}'
-                    - !Sub 'arn:${AWS::Partition}:nothing:::nothing'
-              - Effect: Allow
-                Action:
-                  - quicksight:DescribeUser
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:quicksight:*:${AWS::AccountId}:user/default/${QuickSightUser}'
+                Action: quicksight:DescribeUser
+                Resource: !Sub 'arn:${AWS::Partition}:quicksight:*:${AWS::AccountId}:user/default/${QuickSightUser}' # region=* as at this moment we do not know the Identity region where QS stores users
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
+
+  InitLambdaExecutionRoleWorkGroupPoliciy:
+    Type: AWS::IAM::Policy
+    Condition: NeedAthenaWorkgroup
+    Properties:
+      PolicyName: AthenaWorkGroupDeletion
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: athena:DeleteWorkGroup
+            Resource: !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/{$MyAthenaWorkGroup}'
+      Roles:
+        - !Ref InitLambdaExecutionRole
+
+  InitLambdaExecutionRoleBucketPoliciy:
+    Type: AWS::IAM::Policy
+    Condition: NeedAthenaQueryResultsBucket
+    Properties:
+      PolicyName: AthenaQueryResultsBucketDeletion
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:DeleteObject
+              - s3:DeleteObjectVersion
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
+          - Effect: Allow
+            Action:
+              - s3:ListBucketVersions
+              - s3:DeleteBucket
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
+      Roles:
+        - !Ref InitLambdaExecutionRole
+
+  InitLambdaExecutionRoleStartCrawlerPoliciy:
+    Type: AWS::IAM::Policy
+    Condition: NeedCURTable
+    Properties:
+      PolicyName: StartCrawler
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - glue:StartCrawler
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:crawler/${MyGlueCURCrawler}'
+      Roles:
+        - !Ref InitLambdaExecutionRole
+
   InitialSetup:
     Type: Custom::CustomResource
     Properties:
@@ -851,14 +887,21 @@ Resources:
                   - 's3:GetObject'
                 Resource:
                   Fn::Sub: 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
-        - PolicyName: AwsCurCrawlerKmsDecryption
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'kms:Decrypt'
-                Resource: !If [ NeedDataBuketsKms, !Split [',', !Ref DataBuketsKmsKeyArns], !Sub 'arn:${AWS::Partition}:nothing:::nothing']
+
+  KmsPoliciyForCidCURCrawlerRole:
+    Type: AWS::IAM::Policy
+    Condition: NeedDataBucketsKmsAndNeedCURTable
+    Properties:
+      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+      Roles:
+        - !Ref CidCURCrawlerRole
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
@@ -905,29 +948,20 @@ Resources:
                 Action:
                   - athena:GetWorkGroup
                 Resource:
-                  Fn::Join:
-                   - '/'
-                   - - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup'
-                     - !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+                  Fn::If:
+                   - NeedAthenaWorkgroup
+                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/{$MyAthenaWorkGroup}'
+                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/{$AthenaWorkgroup}'
               - Effect: Allow
                 Action:
                   - glue:GetDatabase
+                  - glue:GetDatabases
                   - glue:GetTable
                   - glue:UpdateTable
                   - glue:GetTables
                   - glue:GetPartitions
                   - glue:CreateTable
                 Resource: "*" # This is needed to allow Autodetection in CID-CMD
-              - Effect: Allow
-                Action:
-                  - glue:GetTable
-                  - glue:GetDatabases
-                  - glue:GetTables
-                Resource: "*" # This is needed to allow Autodetection in CID-CMD
-              - Effect: Allow
-                Action:
-                  - kms:Decrypt
-                Resource: !If [ NeedDataBuketsKms, !Split [',', !Ref DataBuketsKmsKeyArns], !Sub 'arn:${AWS::Partition}:nothing:::nothing']
               - Effect: Allow
                 Action:
                   - quicksight:ListDataSources
@@ -962,6 +996,21 @@ Resources:
                   - athena:ListWorkGroups
                   - athena:GetDatabase
                 Resource: '*'  # This is needed to allow Autodetection in CID-CMD
+
+  KmsPoliciyForCidExecRole:
+    Type: AWS::IAM::Policy
+    Condition: NeedDataBucketsKms
+    Properties:
+      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+      Roles:
+        - !Ref CidExecRole
 
   CidExec: #custom lambda resource that deploy views, datasets and dashboards
     Type: AWS::Lambda::Function
