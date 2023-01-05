@@ -238,7 +238,8 @@ SELECT DISTINCT
 "number of hris resolved for cost optimization",
 "total number of questions in cost optimization pillar",
 "number of questions answered for cost optimization",
-"number of identified hris for cost optimization"
+"number of identified hris for cost optimization",
+"cluster name"
 FROM
   "ta_organizational_view_reports"
 WHERE  

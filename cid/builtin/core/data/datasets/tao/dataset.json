@@ -964,6 +964,10 @@
                     {
                         "Name": "number of identified hris for cost optimization",
                         "Type": "STRING"
+                    },
+                    {
+                        "Name": "cluster name",
+                        "Type": "STRING"
                     }
                     
                 ]
@@ -1021,7 +1025,7 @@
                             {
                                 "ColumnName": "Resource Name",
                                 "ColumnId": "c32a279b-d728-4947-b6db-f122b7f5250f",
-                                "Expression": "ifelse(\n{Check Name} = 'Idle Load Balancers', {load balancer name},\n{Check Name} = 'Amazon RDS Idle DB Instances', {db instance name},\n{Check Name} = 'Low Utilization Amazon EC2 Instances', {instance id},\n{Check Name} = 'Unassociated Elastic IP Addresses', {ip address},\n{Check Name} = 'Underutilized Amazon EBS Volumes', {volume id},\n{Check Name} = 'Underutilized Amazon Redshift Clusters', cluster,\n{Check Name} = 'Amazon EBS Public Snapshots', {volume id},\n{Check Name} = 'Amazon RDS Public Snapshots', {db instance or cluster id},\n{Check Name} = 'AWS Lambda Functions with High Error Rates', {function arn},\n{Check Name} = 'AWS Lambda Functions Using Deprecated Runtimes', {function arn},\nresourceid\n)"
+                                "Expression": "ifelse(\n{Check Name} = 'Idle Load Balancers', {load balancer name},\n{Check Name} = 'Amazon RDS Idle DB Instances', {db instance name},\n{Check Name} = 'Low Utilization Amazon EC2 Instances', {instance id},\n{Check Name} = 'Unassociated Elastic IP Addresses', {ip address},\n{Check Name} = 'Underutilized Amazon EBS Volumes', {volume id},\n{Check Name} = 'Underutilized Amazon Redshift Clusters', cluster,\n{Check Name} = 'Amazon EBS Public Snapshots', {volume id},\n{Check Name} = 'Amazon RDS Public Snapshots', {db instance or cluster id},\n{Check Name} = 'AWS Lambda Functions with High Error Rates', {function arn},\n{Check Name} = 'AWS Lambda Functions Using Deprecated Runtimes', {function arn},\ncheckid = 'Wxdfp4B1L1' OR checkid = 'Wxdfp4B1L2' OR checkid = 'Wxdfp4B1L3' OR checkid = 'Wxdfp4B1L4',{workload arn},\nresourceid\n)"
                             }
                         ]
                     }
@@ -1099,17 +1103,6 @@
                                 "ColumnName": "Estimated Monthly Savings Numeric",
                                 "ColumnId": "963fa412-d889-4c35-8d90-31839c3fdd27",
                                 "Expression": "ifelse(\n{checkname} = 'Idle Load Balancers', parseDecimal(replace(replace({estimated monthly savings},'$',''),',','')),\n{checkname} = 'Amazon RDS Idle DB Instances', parseDecimal(replace(replace({estimated monthly savings (on demand)},'$',''),',','')),\n{checkname} = 'Low Utilization Amazon EC2 Instances', parseDecimal(replace(replace({estimated monthly savings},'$',''),',','')),\n{checkname} = 'Underutilized Amazon EBS Volumes', parseDecimal(replace(replace({monthly storage cost},'$',''),',','')),\n{checkname} = 'Underutilized Amazon Redshift Clusters', parseDecimal(replace(replace({estimated monthly savings},'$',''),',','')),\n{checkname} = 'AWS Lambda Functions with High Error Rates',parseDecimal(replace(replace({lost daily compute cost},'$',''),',',''))*30,\nnull\n)\n\n"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "CreateColumnsOperation": {
-                        "Columns": [
-                            {
-                                "ColumnName": "Estimated Monthly Savings",
-                                "ColumnId": "28324317-e353-414e-8d03-b3c27f845441",
-                                "Expression": "ifelse(\ndistinct_count({Resource Name}) <> count({Resource Name}),\nsum({Estimated Monthly Savings Numeric})/(count({Estimated Monthly Savings Numeric})/distinct_count({Resource Name})),\nsum({Estimated Monthly Savings Numeric})\n)\n"
                             }
                         ]
                     }
@@ -1598,6 +1591,7 @@
                             "total number of questions in cost optimization pillar",
                             "number of questions answered for cost optimization",
                             "number of identified hris for cost optimization",
+                            "cluster name",
                             "Check Name",
                             "Resource Name",
                             "Datetime",
@@ -1607,7 +1601,6 @@
                             "Last Check for Account and CheckId",
                             "Resource in Last Check",
                             "Estimated Monthly Savings Numeric",
-                            "Estimated Monthly Savings",
                             "Status",
                             "Category",
                             "Deprecation Date",
