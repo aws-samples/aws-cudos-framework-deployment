@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class QuickSight(CidBase):
     # Define defaults
-    cidAccountId = '223485597511'
+    cidAccountId = '802204788523'
     _AthenaWorkGroup: str = None
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
@@ -195,6 +195,7 @@ class QuickSight(CidBase):
     def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover single dashboard"""
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
+        print(dashboard)
         try:
             _template_arn = dashboard.version.get('SourceEntityArn')
             _template = self.describe_template(
@@ -246,6 +247,7 @@ class QuickSight(CidBase):
             # recoursively add views
             all_views = []
             def _recoursive_add_view(view):
+                print(view)
                 all_views.append(view)
                 for dep_view in (self.supported_views.get(view) or {}).get('dependsOn', {}).get('views', []):
                     _recoursive_add_view(dep_view)
@@ -1003,6 +1005,7 @@ class QuickSight(CidBase):
             'VersionNumber': created_version
         }
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
+        print(dashboard)
         self.discover_dashboard(dashboard.id)
         if not dashboard.health:
             failure_reason = dashboard.version.get('Errors')
