@@ -520,7 +520,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action: athena:DeleteWorkGroup
-            Resource: !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/{$MyAthenaWorkGroup}'
+            Resource: !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
       Roles:
         - !Ref InitLambdaExecutionRole
 
@@ -574,6 +574,12 @@ Resources:
           Value: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
         - Key: IgnoreConditionalDependsOnDatabase
           Value: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
+        - Key: IgnoreConditionalDependsOnPolicy1
+          Value: !If [NeedAthenaWorkgroup, !Ref InitLambdaExecutionRoleWorkGroupPoliciy, '']
+        - Key: IgnoreConditionalDependsOnPolicy2
+          Value: !If [NeedAthenaQueryResultsBucket, !Ref InitLambdaExecutionRoleBucketPoliciy, '']
+        - Key: IgnoreConditionalDependsOnPolicy3
+          Value: !If [NeedCURTable, !Ref InitLambdaExecutionRoleStartCrawlerPoliciy, '']
 
   ProcessPathLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -950,8 +956,16 @@ Resources:
                 Resource:
                   Fn::If:
                    - NeedAthenaWorkgroup
-                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/{$MyAthenaWorkGroup}'
-                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/{$AthenaWorkgroup}'
+                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
+                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
+              - Effect: Allow
+                Action:
+                  - athena:GetWorkGroup
+                Resource:
+                  Fn::If:
+                   - NeedAthenaWorkgroup
+                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
+                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
               - Effect: Allow
                 Action:
                   - glue:GetDatabase
@@ -964,12 +978,31 @@ Resources:
                 Resource: "*" # This is needed to allow Autodetection in CID-CMD
               - Effect: Allow
                 Action:
-                  - quicksight:ListDataSources
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:ListMultipartUploadParts
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - Fn::If:
+                    - NeedAthenaQueryResultsBucket
+                    - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
+                    - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}'
+                  - Fn::If:
+                    - NeedAthenaQueryResultsBucket
+                    - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
+                    - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
+              - Effect: Allow
+                Action:
+                  - quicksight:ListDataSources #
                   - quicksight:ListDataSets
                   - quicksight:CreateDataSet
                   - quicksight:DescribeDataSet
                   - quicksight:DeleteDataSet
                   - quicksight:UpdateDataSet
+                  - quicksight:PassDataSource #
                   - quicksight:PassDataSet
                   - quicksight:UpdateDataSetPermissions
                   - quicksight:CreateDashboard
