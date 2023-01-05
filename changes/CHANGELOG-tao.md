@@ -1,5 +1,20 @@
 # What's new in TAO Dashboard
 
+
+## TAO Dashboard v2.0:
+**Performance Improvements:** Added Athena view to limit amount of data loaded to QuickSight SPICE and extracted heavy calculation fields from dashboard to dataset level   
+**New tab Security Hub Checks:** Added visuals with detailed view for Security Hub checks delivered to AWS Trusted Advisor:
+* Security Hub Flagged resources by month
+* Security Hub Flagged resources by Top Accounts
+* Security Hub Flagged Resources
+**New tab AWS Well Architected reviews:** Added visuals with detailed view for AWS Well Architected reviews details delivered to AWS Trusted Advisor:
+* Identified High Risk Items by Workload
+* Identified High Risk Items by Category
+* Well-Architected Reviews Detailed View
+
+* Cost Optimization: fixed total calculation for Cost Optimization checks
+
+
 ## TAO Dashboard v1.5:
 Added Account and IsSuppressed controls to the Performance and Fault Tolerance tabs
 
