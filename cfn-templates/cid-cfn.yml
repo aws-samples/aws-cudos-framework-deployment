@@ -962,14 +962,6 @@ Resources:
                    - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
               - Effect: Allow
                 Action:
-                  - athena:GetWorkGroup
-                Resource:
-                  Fn::If:
-                   - NeedAthenaWorkgroup
-                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
-                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
-              - Effect: Allow
-                Action:
                   - glue:GetDatabase
                   - glue:GetDatabases
                   - glue:GetTable
