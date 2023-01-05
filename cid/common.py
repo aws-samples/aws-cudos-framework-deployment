@@ -306,19 +306,15 @@ class Cid():
             raise CidCritical(exc) # Cannot proceed without a valid template
         dashboard_definition.update({'sourceTemplate': source_template})
         print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
-
-        # Check if Source and Destination Templates version are compatible
-        # Ask for recursive if major upgrade 
-        try:
-            if dashboard and update and not dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version):
-                if click.confirm(f'This update may require a recursive update action, proceed with --recursive ?',default=True):
-                    recursive = True
-        except ValueError as e:
-            logger.info(e)
-        
-        # Find dashboard version
-        
+                    
         if recursive:
+            ## The recursive flag is set, and will update all subcomponent. This could lead to the loss of dataset customization. 
+            if get_parameter(
+                param_name=f'confirm-recursive',
+                message=f'The recursive flag is set. This could lead to the loss of dataset customization. Continue anyway?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+                return
             self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
 
         # Prepare API parameters
@@ -362,7 +358,7 @@ class Cid():
         dashboard = self.qs.dashboards.get(dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id, **kwargs)
+                return self.update_dashboard(dashboard_id, recursive, required_datasets, dashboard_datasets,**kwargs)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
@@ -763,7 +759,7 @@ class Cid():
         return self._deploy(dashboard_id, recursive=recursive, update=True)
 
 
-    def update_dashboard(self, dashboard_id, recursive=False, **kwargs):
+    def update_dashboard(self, dashboard_id, recursive=False, required_datasets=None, dashboard_datasets=None, **kwargs):
 
         dashboard = self.qs.dashboards.get(dashboard_id)
         if not dashboard:
@@ -771,22 +767,48 @@ class Cid():
             return
 
         print(f'\nChecking for updates...')
-        print(f'Deployed template: {dashboard.deployedTemplate.arn}')
-        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+         
         try:
-            print(f"CID Version: {dashboard.deployedTemplate.cid_version}")
+            cid_version = dashboard.deployedTemplate.cid_version
         except ValueError:
-            print(f"CID Version: Not available")
-            pass
-        
+            cid_version = "N/A"
+            
         try:
-            version_latest = dashboard.sourceTemplate.cid_version if isinstance(dashboard.sourceTemplate, CidQsTemplate) else "UNKNOWN"
-            print(f"CID Latest Version: {version_latest}")
+            cid_version_latest = dashboard.sourceTemplate.cid_version if isinstance(dashboard.sourceTemplate, CidQsTemplate) else "UNKNOWN"
         except ValueError:
-            print(f"CID Latest Version: Not available")
-            pass
+            cid_version_latest = "N/A"
         
+        if dashboard.latest:     
+            print(f"  You are up to date!")       
+            print(f"  CID Version      {cid_version}")
+            print(f"  TemplateVersion  {dashboard.deployed_version} ")
+        else:
+            cid_version = str(cid_version).ljust(9, ' ')
+            cid_version_latest = str(cid_version_latest).ljust(6, ' ')
+            template_version = str(dashboard.deployed_version).ljust(9, ' ')
+            template_version_latest = str(dashboard.latest_version).ljust(6, ' ')
+            print(f"An update is available:")
+            print("                   Deployed -> Latest")
+            print(f"  CID Version      {cid_version}   {cid_version_latest}")
+            print(f"  TemplateVersion  {template_version}   {template_version_latest}")
+
         
+        compatible_version = None        
+        try:
+            compatible_version = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
+        except ValueError as e:
+            logger.info(e)
+        
+        if not compatible_version and compatible_version is not None:
+            if get_parameter(
+                    param_name=f'confirm-recursive',
+                    message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
+                    choices=['yes', 'no'],
+                    default='yes') != 'yes':
+                    return
+            logger.info("Swich to recursive mode")
+            recursive = True
+                            
         if dashboard.status == 'legacy':
             if get_parameter(
                 param_name=f'confirm-update',
@@ -801,9 +823,16 @@ class Cid():
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
                 return
-
+        
+        
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')
+        
+        if recursive:
+            logger.info("Recursive mode is activated")
+            logger.info("Updating dashboards dataset")
+            self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=True)
+            
         try:
             self.qs.update_dashboard(dashboard, **kwargs)
             print('Update completed\n')

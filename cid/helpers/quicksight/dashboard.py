@@ -115,12 +115,12 @@ class Dashboard(CidQsResource):
         try:
             cid_version = self.deployedTemplate.cid_version
         except ValueError:
-            cid_version = "UNKNOWN"
+            cid_version = "N/A"
             
         try:
-            cid_version_latest = self.sourceTemplate.cid_version if isinstance(self.sourceTemplate, CidQsTemplate) else "UNKNOWN"
+            cid_version_latest = self.sourceTemplate.cid_version if isinstance(self.sourceTemplate, CidQsTemplate) else "N/A"
         except ValueError:
-            cid_version_latest = "UNKNOWN"
+            cid_version_latest = "N/A"
         
        
         if self.latest:            
