@@ -42,6 +42,7 @@ dashboards:
     name: Trusted Advisor Organizational View
     templateId: ta-organizational-view
     dashboardId: ta-organizational-view
+    sourceAccountId: '802204788523'
     dependsOn:
       datasets:
         - ta-organizational-view

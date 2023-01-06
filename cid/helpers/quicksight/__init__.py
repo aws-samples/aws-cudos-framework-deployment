@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class QuickSight(CidBase):
     # Define defaults
-    cidAccountId = '802204788523'
+    cidAccountId = '223485597511'
     _AthenaWorkGroup: str = None
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
