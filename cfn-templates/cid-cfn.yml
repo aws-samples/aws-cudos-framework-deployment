@@ -196,29 +196,18 @@ Conditions:
     Fn::And:
       - !Equals [ !Ref DatabaseName, "" ]
       - Fn::Or:
-        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
-        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
-        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
-        - !Equals [ !Ref DeployTAODashboard, "yes" ]
-        - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
+        - !Condition NeedDataCollectionLab
+        - !Condition NeedCUR
   NeedCURTable:
     Fn::And:
       - !Equals [ !Ref CURTableName, "" ]
-      - Fn::Or:
-        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
-        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
-        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+      - !Condition NeedCUR
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
   NeedDataBucketsKms: !Equals [ !Ref DataBuketsKmsKeyArns, "" ]
   NeedDataBucketsKmsAndNeedCURTable:
     Fn::And:
-      - !Equals [ !Ref DataBuketsKmsKeyArns, "" ]
-      - Fn::And:
-        - !Equals [ !Ref CURTableName, "" ]
-        - Fn::Or:
-          - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
-          - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
-          - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+      - !Condition NeedDataBucketsKms
+      - !Condition NeedCURTable
 
 
 Resources:
