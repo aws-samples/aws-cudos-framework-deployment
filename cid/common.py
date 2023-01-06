@@ -243,10 +243,18 @@ class Cid():
         ''' load additional resources from command line parameters
         '''
         if get_parameters().get('resources'):
-            fileneme = get_parameters().get('resources')
-            with open(get_parameters().get('resources'), 'r', encoding='utf-8') as file:
-                resources = yaml.safe_load(file)
-            logging.info(f'Loaded resources from {fileneme}')
+            source = get_parameters().get('resources')
+            logging.info(f'Loading resources from {source}')
+            resources = {}
+            try:
+                if source.startswith('https://'):
+                    resp = requests.get(source)
+                    assert resp.status_code in [200, 201], f'Error {resp.status_code} while loading url. {resp.text}'
+                    resources = yaml.safe_load(resp.text)
+                else:
+                    resources = yaml.safe_load(open(source, encoding='utf-8').read())
+            except Exception as exc:
+                raise CidCritical(f'Failed to load resources from {source}: {type(exc)} {exc}')
             self.resources = always_merger.merge(self.resources, resources)
 
 
