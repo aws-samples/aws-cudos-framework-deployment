@@ -311,7 +311,7 @@ class Cid():
         # Ask for recursive if major upgrade 
         try:
             if dashboard and update and not dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version):
-                if click.confirm(f'This update may require a recursive update action, proceed with --recursive ?',default=True):
+                if click.confirm(f'This update may require a recursive update action which will re-deploy Athena views and QuickSight DataSets used by the dashboard, would you like to proceed?',default=True):
                     recursive = True
         except ValueError as e:
             logger.info(e)
