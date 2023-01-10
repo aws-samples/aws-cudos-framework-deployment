@@ -1,5 +1,6 @@
 import os
 import sys
+import inspect
 import logging
 import platform
 from functools import lru_cache as cache
@@ -106,6 +107,39 @@ def get_boto_client(service_name, **kwargs):
     except Exception as e:
         logger.debug(e, exc_info=True)
         raise
+
+
+def cid_print(value) -> None:
+    ''' Print to stdout AND to log
+
+    ex:
+        violets, roses = 'violets', 'roses'
+        cid_print(f'{roses} are <BOLD><RED>red<END>, {violets} are <BLUE><UNDERLINE>blue<END>')
+
+    '''
+    colors = {
+        'PURPLE': '\033[95m',
+        'CYAN': '\033[96m',
+        'DARKCYAN': '\033[36m',
+        'BLUE': '\033[94m',
+        'GREEN': '\033[92m',
+        'YELLOW': '\033[93m',
+        'RED': '\033[91m',
+        'BOLD': '\033[1m',
+        'UNDERLINE': '\033[4m',
+        'END': '\033[0m',
+    }
+
+    msg = str(value)
+    for col, val in colors.items():
+        msg = msg.replace(f'<{col}>', val)
+    try:
+        mod = inspect.getmodule(inspect.stack()[1][0])
+        logging.getLogger(mod.__dict__ if mod else '__main__').debug(value)
+    except:
+        raise
+        print('error')
+    print(msg)
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():
