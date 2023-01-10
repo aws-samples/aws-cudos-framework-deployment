@@ -2,6 +2,8 @@ import os
 import sys
 import inspect
 import logging
+import platform
+from functools import lru_cache as cache
 from collections.abc import Iterable
 
 from boto3.session import Session
@@ -16,14 +18,40 @@ params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
 
+@cache(maxsize=None)
 def isatty():
+    """ return True if executed in a Terminal that allows user input """
+    if exec_env()['terminal'] == 'gitbash': # We cannot trust isatty on Git Bash on Windows
+        return True
     return sys.__stdin__.isatty()
 
+@cache(maxsize=None)
 def exec_env():
+    """ return os, shell and terminal
+    supported environments: lambda, cloudsell, macos terminals, windows/cmd, windows/powershell, windows/gitbash
+    """
+    terminal = 'unknown'
+    shell = 'unknown'
+    os_ = platform.system()
     if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
-        return 'lambda'
-    else:
-        return 'unknown'
+        terminal = 'lambda'
+        shell = 'lambda'
+    elif os.environ.get('AWS_EXECUTION_ENV', '') == 'CloudShell':
+        terminal = 'cloudshell'
+        shell = 'cloudshell'
+    elif os.environ.get('SHELL', '').endswith('bash.exe'): # gitbash
+        terminal = 'gitbash'
+        shell = 'bash'
+    elif os.environ.get('TERM_PROGRAM', ''):  # macos
+        terminal = os.environ.get('TERM_PROGRAM', '')
+        shell = os.environ.get('SHELL', '')
+    elif os.environ.get('COMSPEC', '').endswith('cmd.exe'): # cmd
+        terminal = 'cmd'
+        shell = 'cmd'
+    elif os.environ.get('PSMODULEPATH', ''): # powershell
+        terminal = 'powershell'
+        shell = 'powershell'
+    return {'os': os_, 'shell': shell, 'terminal': terminal}
 
 
 def intersection(a: Iterable, b: Iterable) -> Iterable:
@@ -83,7 +111,6 @@ def get_boto_client(service_name, **kwargs):
 
 def cid_print(value, **kwargs) -> None:
     ''' Print AND log
-
     ex:
         violets, roses = 'violets', 'roses'
         cid_print(f'{roses} are <BOLD><RED>red<END>, {violets} are <BLUE><UNDERLINE>blue<END>')
@@ -114,6 +141,7 @@ def cid_print(value, **kwargs) -> None:
     except Exception as exc:
         logger.debug('cid_print: {exc}')
     print(msg, **kwargs)
+
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():

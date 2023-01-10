@@ -7,7 +7,7 @@
             "RelationalTable": {
                 "DataSourceArn": "${athena_datasource_arn}",
                 "Schema": "${athena_database_name}",
-                "Name": "ta_organizational_view_reports",
+                "Name": "ta_org_view",
                 "InputColumns": [
                     {
                         "Name": "ip address",
@@ -808,78 +808,175 @@
                     {
                         "Name": "function arn",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "max daily error rate",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "date for max error rate",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "average daily error rate",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "lost daily compute cost",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "current day invokes",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "current day error rate",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "average daily invokes",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "last refresh time",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "max daily timeout rate",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "date of max daily timeout rate",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "average daily timeout rate",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "function timeout setting",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "current day timeout rate",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "runtime",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "days to deprecation",
                         "Type": "STRING"
-                      },
-                      {
+                    },
+                    {
                         "Name": "deprecation date",
                         "Type": "STRING"
-                      }
+                    },
+                    {
+                        "Name": "resource",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload type",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload last modified date",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload started date",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of questions answered for performance",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of hris resolved for performance",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "total number of questions in performance pillar",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of identified hris for performance",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "reviewer name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload arn",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "workload name",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of hris resolved for reliability",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "total number of questions in reliability pillar",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of questions answered for reliability",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of identified hris for reliability",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of hris resolved for security",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "total number of questions in security pillar",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of questions answered for security",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of identified hris for security",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of hris resolved for cost optimization",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "total number of questions in cost optimization pillar",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of questions answered for cost optimization",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "number of identified hris for cost optimization",
+                        "Type": "STRING"
+                    },
+                    {
+                        "Name": "cluster name",
+                        "Type": "STRING"
+                    }
+                    
                 ]
             }
         }
     },
     "LogicalTableMap": {
         "b5de237f-b599-407f-87ec-32024624ba65": {
-            "Alias": "ta_organizational_view_reports",
+            "Alias": "ta_org_view",
             "DataTransforms": [
                 {
                     "TagColumnOperation": {
@@ -907,6 +1004,347 @@
                         "Tags": [
                             {
                                 "ColumnGeographicRole": "STATE"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Check Name",
+                                "ColumnId": "0faa07a9-3583-4b17-ad9c-cdb746b8fc19",
+                                "Expression": "checkname"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Resource Name",
+                                "ColumnId": "c32a279b-d728-4947-b6db-f122b7f5250f",
+                                "Expression": "ifelse(\n{Check Name} = 'Idle Load Balancers', {load balancer name},\n{Check Name} = 'Amazon RDS Idle DB Instances', {db instance name},\n{Check Name} = 'Low Utilization Amazon EC2 Instances', {instance id},\n{Check Name} = 'Unassociated Elastic IP Addresses', {ip address},\n{Check Name} = 'Underutilized Amazon EBS Volumes', {volume id},\n{Check Name} = 'Underutilized Amazon Redshift Clusters', cluster,\n{Check Name} = 'Amazon EBS Public Snapshots', {volume id},\n{Check Name} = 'Amazon RDS Public Snapshots', {db instance or cluster id},\n{Check Name} = 'AWS Lambda Functions with High Error Rates', {function arn},\n{Check Name} = 'AWS Lambda Functions Using Deprecated Runtimes', {function arn},\ncheckid = 'Wxdfp4B1L1' OR checkid = 'Wxdfp4B1L2' OR checkid = 'Wxdfp4B1L3' OR checkid = 'Wxdfp4B1L4',{workload arn},\nresourceid\n)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Datetime",
+                                "ColumnId": "a22e1199-f893-48d1-9066-e37c4c7d0f94",
+                                "Expression": "epochDate(parseInt(timestamp))"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Account",
+                                "ColumnId": "bc17d09c-5a52-4e82-a166-925f8178166d",
+                                "Expression": "ifelse(\n    accountname = '' OR isNull(accountname),\n    accountid,\n    concat(accountname,': ',accountid)\n    )"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "First Check for Resource",
+                                "ColumnId": "b2d7393f-c258-45ce-aa35-e93bdd879652",
+                                "Expression": "minOver(Datetime, [{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Last Check for Resource",
+                                "ColumnId": "da58a4e8-1246-46a2-b1f2-416d33eb1d51",
+                                "Expression": "ifelse(\ncategory = 'Cost Optimizing',\nmaxOver(Datetime, [{Resource Name},{instance type}],PRE_AGG),\n{Check Name} = 'Amazon EBS Snapshots',\nmaxOver(Datetime, [{volume id},{Account},{snapshot age},{volume attachment}],PRE_AGG),\n{Check Name} = 'Amazon EC2 Availability Zone Balance',\nmaxOver(Datetime, [{Account},{region}, {instances in zone a},{instances in zone b},{instances in zone c},{instances in zone d},{instances in zone e},{instances in zone f}],PRE_AGG),\n\nmaxOver(Datetime, [{Resource Name}],PRE_AGG)\n)\n"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Last Check for Account and CheckId",
+                                "ColumnId": "e6e521cf-63eb-488a-9173-8e22fc341d3b",
+                                "Expression": "maxOver(Datetime,[accountid], PRE_FILTER)\n"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Resource in Last Check",
+                                "ColumnId": "f3f28fd1-5b05-48d4-8b73-54f7981213e4",
+                                "Expression": "ifelse(dateDiff({Last Check for Resource},{Last Check for Account and CheckId}) >= 7, 'no', 'yes')"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Estimated Monthly Savings Numeric",
+                                "ColumnId": "963fa412-d889-4c35-8d90-31839c3fdd27",
+                                "Expression": "ifelse(\n{checkname} = 'Idle Load Balancers', parseDecimal(replace(replace({estimated monthly savings},'$',''),',','')),\n{checkname} = 'Amazon RDS Idle DB Instances', parseDecimal(replace(replace({estimated monthly savings (on demand)},'$',''),',','')),\n{checkname} = 'Low Utilization Amazon EC2 Instances', parseDecimal(replace(replace({estimated monthly savings},'$',''),',','')),\n{checkname} = 'Underutilized Amazon EBS Volumes', parseDecimal(replace(replace({monthly storage cost},'$',''),',','')),\n{checkname} = 'Underutilized Amazon Redshift Clusters', parseDecimal(replace(replace({estimated monthly savings},'$',''),',','')),\n{checkname} = 'AWS Lambda Functions with High Error Rates',parseDecimal(replace(replace({lost daily compute cost},'$',''),',',''))*30,\nnull\n)\n\n"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Status",
+                                "ColumnId": "e178b4e6-14c0-4826-a40b-d42c7838fa9d",
+                                "Expression": "ifelse(\n    status = 'error',\n    'Red',\n    status = 'warning',\n    'Yellow',\n    status = 'ok',\n    'Green',\n    status\n)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Category",
+                                "ColumnId": "1d145d5d-46d9-4c58-8ee2-694e7b53f5b1",
+                                "Expression": "ifelse(\n    category = 'cost_optimizing',\n    'Cost Optimizing',\n    category = 'fault_tolerance',\n    'Fault Tolerance',\n    category = 'security',\n    'Security',\n    category = 'performance',\n    'Performance',\n    category = 'service_limits',\n    'Service Limits',\n    category\n)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Deprecation Date",
+                                "ColumnId": "e351a4a5-1a61-4ee5-9927-69040296e120",
+                                "Expression": "maxOver(parseDate({deprecation date},'MM/dd/yyyy'),[{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Average Daily Invokes",
+                                "ColumnId": "0108dd54-9ae3-447d-97d8-788894e6a8ae",
+                                "Expression": "maxOver(parseDecimal({average daily invokes}),[{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Number of Days Low Utilization",
+                                "ColumnId": "b9a05d2d-5997-4677-9ad4-73f1f0534210",
+                                "Expression": "maxOver(parseInt(replace({number of days low utilization}, ' days','')), [{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "14-Day Average CPU Utilization",
+                                "ColumnId": "d04502b9-c9df-4ef0-a78d-a11771b5967f",
+                                "Expression": "maxOver(parseDecimal(replace({14-day average cpu utilization}, '%','')), [{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "14-Day Average Network I/O",
+                                "ColumnId": "c059301f-0228-44be-b827-4337615995ac",
+                                "Expression": "maxOver(parseDecimal(replace({14-day average network i/o}, 'MB','')), [{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Max Daily Error Rate",
+                                "ColumnId": "b6ea96d4-6a88-49ac-b24d-b12942c72fd4",
+                                "Expression": "maxOver(parseDecimal({max daily error rate}),[{Resource Name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Date for Max Error Rate",
+                                "ColumnId": "ae799e1f-17d8-44dd-9374-f538a041200b",
+                                "Expression": "maxOver(parseDate({date for max error rate},'MM/dd/yyyy'),[{Resource Name}],PRE_AGG)\n"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Average Daily Error Rate",
+                                "ColumnId": "e22c306a-1ef8-472e-9c98-0b487cf917c2",
+                                "Expression": "maxOver(parseDecimal({average daily error rate}),[{Resource Name}],PRE_AGG)\n"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Snapshot Age",
+                                "ColumnId": "d6f76967-c54b-4ac9-9b9f-6af03f79e4df",
+                                "Expression": "maxOver(parseDecimal({snapshot age}),[{volume id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Number of Days Over 90% Cpu Utilization",
+                                "ColumnId": "c352f86e-24de-442a-b314-9165d2da90de",
+                                "Expression": "maxOver(parseInt({number of days over 90% cpu utilization}), [{instance name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Total Inbound Rules",
+                                "ColumnId": "c7cc84c9-26f0-4aab-8f77-533deb13a0ea",
+                                "Expression": "maxOver(parseInt({total inbound rules}),[{instance id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Total Outbound Rules",
+                                "ColumnId": "2dfec784-1361-4d8f-b1a9-4d7200ac6bd9",
+                                "Expression": "maxOver(parseInt({total outbound rules}),[{instance id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Instance Count",
+                                "ColumnId": "754c711b-469a-4800-9772-5d4d6f1c7678",
+                                "Expression": "maxOver(parseInt({instance count}),[{group id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "S3 Storage (gb)",
+                                "ColumnId": "bfb2040b-6fba-4461-ba23-4d71ab1af02e",
+                                "Expression": "maxOver(parseDecimal({s3 storage (gb)}),[{bucket name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Data Transfer Out (GB)",
+                                "ColumnId": "1d903eee-9562-4ce1-84fa-2ce084902974",
+                                "Expression": "maxOver(parseDecimal({data transfer out (gb)}),[{bucket name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Ratio of Transfer to Storage",
+                                "ColumnId": "cf75e0af-3e1e-46e4-bef8-23b53d5876a6",
+                                "Expression": "maxOver(parseDecimal({ratio of transfer to storage}),[{bucket name}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Max Daily Median",
+                                "ColumnId": "4969569f-00c3-4dd2-bea4-30e45b8a9597",
+                                "Expression": "maxOver(parseDecimal({max daily median}),[{volume id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "Number of Days Over",
+                                "ColumnId": "43150fa6-4a63-4a74-85b1-4adf93795a4c",
+                                "Expression": "maxOver(parseInt({number of days over}),[{volume id}],PRE_AGG)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "DateTime is Last Check for Resource",
+                                "ColumnId": "4dd256b5-fe3a-4304-b98e-ac9059604f68",
+                                "Expression": "{Datetime} = {Last Check for Resource}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "One Check Selected",
+                                "ColumnId": "0ff3cf35-ffeb-4cf4-b379-684c430ccb3c",
+                                "Expression": "distinctCountOver(checkid, [], PRE_AGG) = 1"
                             }
                         ]
                     }
@@ -1129,7 +1567,62 @@
                             "current day timeout rate",
                             "runtime",
                             "days to deprecation",
-                            "deprecation date"
+                            "deprecation date",
+                            "resource",
+                            "workload type",
+                            "workload last modified date",
+                            "workload started date",
+                            "number of questions answered for performance",
+                            "number of hris resolved for performance",
+                            "total number of questions in performance pillar",
+                            "number of identified hris for performance",
+                            "reviewer name",
+                            "workload arn",
+                            "workload name",
+                            "number of hris resolved for reliability",
+                            "total number of questions in reliability pillar",
+                            "number of questions answered for reliability",
+                            "number of identified hris for reliability",
+                            "number of hris resolved for security",
+                            "total number of questions in security pillar",
+                            "number of questions answered for security",
+                            "number of identified hris for security",
+                            "number of hris resolved for cost optimization",
+                            "total number of questions in cost optimization pillar",
+                            "number of questions answered for cost optimization",
+                            "number of identified hris for cost optimization",
+                            "cluster name",
+                            "Check Name",
+                            "Resource Name",
+                            "Datetime",
+                            "First Check for Resource",
+                            "Last Check for Resource",
+                            "Account",
+                            "Last Check for Account and CheckId",
+                            "Resource in Last Check",
+                            "Estimated Monthly Savings Numeric",
+                            "Status",
+                            "Category",
+                            "Deprecation Date",
+                            "Average Daily Invokes",
+                            "Number of Days Low Utilization",
+                            "14-Day Average CPU Utilization",
+                            "14-Day Average Network I/O",
+                            "Max Daily Error Rate",
+                            "Date for Max Error Rate",
+                            "Average Daily Error Rate",
+                            "Snapshot Age",
+                            "Number of Days Over 90% Cpu Utilization",
+                            "Total Inbound Rules",
+                            "Total Outbound Rules",
+                            "Instance Count",
+                            "S3 Storage (gb)",
+                            "Data Transfer Out (GB)",
+                            "Ratio of Transfer to Storage",
+                            "Max Daily Median",
+                            "Number of Days Over",
+                            "DateTime is Last Check for Resource",
+                            "One Check Selected"
                         ]
                     }
                 }
