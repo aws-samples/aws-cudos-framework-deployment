@@ -252,7 +252,8 @@ class Cid():
                     assert resp.status_code in [200, 201], f'Error {resp.status_code} while loading url. {resp.text}'
                     resources = yaml.safe_load(resp.text)
                 else:
-                    resources = yaml.safe_load(open(source, encoding='utf-8').read())
+                    with open(source, encoding='utf-8') as file_:
+                        resources = yaml.safe_load(file_)
             except Exception as exc:
                 raise CidCritical(f'Failed to load resources from {source}: {type(exc)} {exc}')
             self.resources = always_merger.merge(self.resources, resources)
