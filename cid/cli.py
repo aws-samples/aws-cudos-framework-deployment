@@ -102,7 +102,7 @@ def deploy(ctx, **kwargs):
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
-     --resources TEXT                      CID resources file (yaml)
+     --resources TEXT                      CID resources yaml file or url
     """
     ctx.obj.deploy(**kwargs)
 
