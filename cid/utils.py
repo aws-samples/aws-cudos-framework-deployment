@@ -81,8 +81,8 @@ def get_boto_client(service_name, **kwargs):
         raise
 
 
-def cid_print(value) -> None:
-    ''' Print to stdout AND to log
+def cid_print(value, **kwargs) -> None:
+    ''' Print AND log
 
     ex:
         violets, roses = 'violets', 'roses'
@@ -103,15 +103,17 @@ def cid_print(value) -> None:
     }
 
     msg = str(value)
+    log_msg = str(msg)
     for col, val in colors.items():
         msg = msg.replace(f'<{col}>', val)
+        log_msg = log_msg.replace(f'<{col}>', '')
     try:
         mod = inspect.getmodule(inspect.stack()[1][0])
-        logging.getLogger(mod.__dict__ if mod else '__main__').debug(value)
-    except:
-        raise
-        print('error')
-    print(msg)
+        name = mod.__name__ if mod else __name__
+        logging.getLogger(name).debug(log_msg)
+    except Exception as exc:
+        logger.debug('cid_print: {exc}')
+    print(msg, **kwargs)
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():
