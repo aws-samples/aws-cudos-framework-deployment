@@ -238,6 +238,28 @@ class QuickSight(CidBase):
             templateAccountId = _definition.get('sourceAccountId')
             templateId = _definition.get('templateId')
             region = _definition.get('region', 'us-east-1')
+
+            # Checking for version override in template definition 
+                 
+            version = dashboard.deployedTemplate.version
+            
+            version_obj = _definition.get('versions')
+            
+            if not version_obj: raise CidCritical("No `versions` key find in dashboard definition resources.yml")
+            
+            version_map = version_obj.get('versionMap', dict())
+            
+            description_override = version_map.get(version)
+            if description_override:
+                logger.info(f"Template description is overrided with: {description_override}")
+                dashboard.deployedTemplate.raw['Version']['Description'] = description_override
+            else:
+                min_template_version = version_obj.get('minTemplateVersion')
+                default_description_version = version_obj.get('minTemplateDescription')
+                if version <= min_template_version:
+                    logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
+                    dashboard.deployedTemplate.raw['Version']['Description'] = default_description_version
+              
             try:
                 template = self.describe_template(templateId, account_id=templateAccountId, region=region)
                 dashboard.sourceTemplate = template
