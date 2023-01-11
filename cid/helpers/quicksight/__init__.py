@@ -943,7 +943,7 @@ class QuickSight(CidBase):
         return dataset_id
 
 
-    def update_dataset(self, definition: dict) -> str:
+    def update_dataset(self, definition: dict) -> Dataset:
         """ Update an AWS QuickSight dataset """
         definition.update({'AwsAccountId': self.account_id})
         logger.info(f'Updating dataset {definition.get("Name")}')
