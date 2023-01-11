@@ -780,7 +780,10 @@ class Cid():
             return
 
         print(f'\nChecking for updates...')
-        print(f'Deployed template: {dashboard.deployedTemplate.arn}')
+        if isinstance(dashboard.deployedTemplate, CidQsTemplate):
+            print(f'Deployed template: {dashboard.deployedTemplate.arn}')
+        else:
+            print(f'Deployed template: Not available')
         print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         try:
             print(f"CID Version: {dashboard.deployedTemplate.cid_version}")
