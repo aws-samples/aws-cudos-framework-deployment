@@ -15,7 +15,7 @@ dashboards:
         - customer_all
     versions:
       minTemplateVersion: 189
-      minTemplateDescription: "v1.0.0"
+      minTemplateDescription: "v4.74.0"
 
   CID:
     name: Cost Intelligence Dashboard
@@ -29,7 +29,7 @@ dashboards:
         - s3_view
     versions:
       minTemplateVersion: 3
-      minTemplateDescription: "v1.0.0"
+      minTemplateDescription: "v3.1.0"
 
   KPI:
     name: KPI Dashboard
@@ -56,7 +56,7 @@ dashboards:
         - ta-organizational-view
     versions:
       minTemplateVersion: 13
-      minTemplateDescription: "v1.0.0"
+      minTemplateDescription: "v1.4.0"
 
   Trends:
     name: Trends Dashboard
@@ -69,7 +69,7 @@ dashboards:
         - daily-anomaly-detection
     versions:
       minTemplateVersion: 1
-      minTemplateDescription: "v1.0.0"
+      minTemplateDescription: "v5.0.0"
 
   Compute Optimizer:
     name: Compute Optimizer Dashboard
@@ -80,7 +80,7 @@ dashboards:
         - compute_optimizer_all_options
     versions:
       minTemplateVersion: 3
-      minTemplateDescription: "v1.0.0"
+      minTemplateDescription: "v1.1.1"
 
 
 # QuickSight DataSets definitions
