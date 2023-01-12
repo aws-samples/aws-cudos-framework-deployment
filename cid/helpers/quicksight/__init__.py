@@ -943,8 +943,8 @@ class QuickSight(CidBase):
         return dataset_id
 
 
-    def update_dataset(self, definition: dict) -> str:
-        """ Creates an AWS QuickSight dataset """
+    def update_dataset(self, definition: dict) -> Dataset:
+        """ Update an AWS QuickSight dataset """
         definition.update({'AwsAccountId': self.account_id})
         logger.info(f'Updating dataset {definition.get("Name")}')
 
@@ -953,7 +953,9 @@ class QuickSight(CidBase):
             del definition['Permissions']
         response = self.client.update_data_set(**definition)
         logger.info(f'Dataset {definition.get("Name")} is updated')
-        return True
+        dataset_id = definition.get('DataSetId')
+        self.datasets.pop(dataset_id, None) # invalidate cache
+        return self.describe_dataset(dataset_id)
 
 
     def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
