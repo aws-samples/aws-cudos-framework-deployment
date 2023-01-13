@@ -1,8 +1,10 @@
 import os
 import sys
-import logging
-from collections.abc import Iterable
 import inspect
+import logging
+import platform
+from functools import lru_cache as cache
+from collections.abc import Iterable
 
 from boto3.session import Session
 import questionary
@@ -16,14 +18,40 @@ params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
 
+@cache(maxsize=None)
 def isatty():
+    """ return True if executed in a Terminal that allows user input """
+    if exec_env()['terminal'] == 'gitbash': # We cannot trust isatty on Git Bash on Windows
+        return True
     return sys.__stdin__.isatty()
 
+@cache(maxsize=None)
 def exec_env():
+    """ return os, shell and terminal
+    supported environments: lambda, cloudsell, macos terminals, windows/cmd, windows/powershell, windows/gitbash
+    """
+    terminal = 'unknown'
+    shell = 'unknown'
+    os_ = platform.system()
     if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
-        return 'lambda'
-    else:
-        return 'unknown'
+        terminal = 'lambda'
+        shell = 'lambda'
+    elif os.environ.get('AWS_EXECUTION_ENV', '') == 'CloudShell':
+        terminal = 'cloudshell'
+        shell = 'cloudshell'
+    elif os.environ.get('SHELL', '').endswith('bash.exe'): # gitbash
+        terminal = 'gitbash'
+        shell = 'bash'
+    elif os.environ.get('TERM_PROGRAM', ''):  # macos
+        terminal = os.environ.get('TERM_PROGRAM', '')
+        shell = os.environ.get('SHELL', '')
+    elif os.environ.get('COMSPEC', '').endswith('cmd.exe'): # cmd
+        terminal = 'cmd'
+        shell = 'cmd'
+    elif os.environ.get('PSMODULEPATH', ''): # powershell
+        terminal = 'powershell'
+        shell = 'powershell'
+    return {'os': os_, 'shell': shell, 'terminal': terminal}
 
 
 def intersection(a: Iterable, b: Iterable) -> Iterable:
@@ -79,6 +107,39 @@ def get_boto_client(service_name, **kwargs):
     except Exception as e:
         logger.debug(e, exc_info=True)
         raise
+
+
+def cid_print(value) -> None:
+    ''' Print to stdout AND to log
+
+    ex:
+        violets, roses = 'violets', 'roses'
+        cid_print(f'{roses} are <BOLD><RED>red<END>, {violets} are <BLUE><UNDERLINE>blue<END>')
+
+    '''
+    colors = {
+        'PURPLE': '\033[95m',
+        'CYAN': '\033[96m',
+        'DARKCYAN': '\033[36m',
+        'BLUE': '\033[94m',
+        'GREEN': '\033[92m',
+        'YELLOW': '\033[93m',
+        'RED': '\033[91m',
+        'BOLD': '\033[1m',
+        'UNDERLINE': '\033[4m',
+        'END': '\033[0m',
+    }
+
+    msg = str(value)
+    for col, val in colors.items():
+        msg = msg.replace(f'<{col}>', val)
+    try:
+        mod = inspect.getmodule(inspect.stack()[1][0])
+        logging.getLogger(mod.__dict__ if mod else '__main__').debug(value)
+    except:
+        raise
+        print('error')
+    print(msg)
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():

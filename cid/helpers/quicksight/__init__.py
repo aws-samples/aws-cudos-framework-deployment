@@ -16,7 +16,7 @@ from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import get_parameter, get_parameters
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 
@@ -195,21 +195,27 @@ class QuickSight(CidBase):
     def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover single dashboard"""
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
+        if not dashboard:
+            raise CidCritical(f'Dashboard {dashboardId} was not found')
+        try:
+            _template_arn = dashboard.version.get('SourceEntityArn')
+            _template = self.describe_template(
+                template_id=_template_arn.split('/')[1],
+                account_id=_template_arn.split(':')[4],
+                region=_template_arn.split(':')[3],
+                version_number=int(_template_arn.split('/')[-1]),
+            )
+            if isinstance(_template, CidQsTemplate):
+                dashboard.deployedTemplate = _template
+        except Exception as e:
+            logger.debug(e, exc_info=True)
+            logger.info(f'Unable to describe template for {dashboardId}, {e}')
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
             # Look for dashboard definition by templateId
+            logger.info(dashboard.template_id)
             _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.template_id), None)
-        try:
-            _template_arn = dashboard.version.get('SourceEntityArn')
-            _template_id = str(_template_arn.split('/')[1])
-            _template_version = int(_template_arn.split('/')[-1])
-            _template = self.describe_template(template_id=_template_id, version_number=_template_version)
-            if isinstance(_template, CidQsTemplate):
-                dashboard.deployedTemplate = _template
-        except Exception as e:
-                logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {_template_id}, {e}')
         if not _definition:
             logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
         else:
@@ -267,7 +273,7 @@ class QuickSight(CidBase):
                 AwsAccountId=self.account_id,
                 GroupName=groupname,
                 Namespace='default',
-                description=description,
+                Description=description,
             ).get('Group')
         except self.client.exceptions.AccessDeniedException as e:
             raise CidCritical('Cannot access groups. (AccessDenied). Please use quicksight-user parameter '
@@ -395,9 +401,10 @@ class QuickSight(CidBase):
     def create_folder(self, folder_name: str, **create_parameters) -> dict:
         """Create a new folder"""
         logger.info('Creating QuickSight folder')
+        folder_id = str(uuid.uuid4())
         create_parameters.update({
             "AwsAccountId": self.account_id,
-            "FolderId": str(uuid.uuid4()),
+            "FolderId": folder_id,
             "Name": folder_name,
             "FolderType": "SHARED",
         })
@@ -411,7 +418,8 @@ class QuickSight(CidBase):
             folder = self.describe_folder(result['FolderId'])
             return folder
         except self.client.exceptions.ResourceExistsException:
-            logger.error('Folder already exists')
+            logger.info('Folder already exists')
+            return self.describe_folder(folder_id)
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied creating folder')
             raise
@@ -841,10 +849,10 @@ class QuickSight(CidBase):
             except self.client.exceptions.UnsupportedUserEditionException:
                 raise CidCritical('AWS QuickSight Enterprise Edition is required')
             except self.client.exceptions.ResourceNotFoundException:
-                raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
+                raise CidError(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
             except Exception as e:
                 logger.debug(e, exc_info=True)
-                raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
+                raise CidError(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
         return self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}')
 
     def describe_user(self, username: str) -> dict:
@@ -915,9 +923,10 @@ class QuickSight(CidBase):
             response = self.client.create_data_set(**definition)
             dataset_id = response.get('DataSetId')
         except self.client.exceptions.ResourceExistsException:
-            logger.info(f'Dataset {definition.get("Name")} already exists')
+            dataset_id = definition.get("DataSetId")
+            logger.info(f'Dataset {definition.get("Name")} already exists with DataSetId={dataset_id}')
         except self.client.exceptions.LimitExceededException:
-            raise CidCritical('AWS QuickSight SPICE limit exceeded')
+            raise CidCritical('AWS QuickSight SPICE limit exceeded. Add SPICE here https://quicksight.aws.amazon.com/sn/admin#capacity .')
 
         logger.info(f'Waiting for {definition.get("Name")} to be created')
         deadline = time.time() + max_timeout

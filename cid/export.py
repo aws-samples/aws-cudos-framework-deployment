@@ -50,11 +50,13 @@ def export_analysis(qs, athena):
             for page in response_iterator:
                 analyzes.extend(page.get('AnalysisSummaryList'))
             if len(analyzes) == 100:
-                logger.info('Too many analyzes. Will show first 100')
+                logger.info('Too many analyses. Will show first 100')
         except qs.client.exceptions.AccessDeniedException:
             logger.info("AccessDeniedException while discovering analyses")
         else:
             analyzes = list(filter(lambda a: a['Status']=='CREATION_SUCCESSFUL', analyzes ))
+            if not analyzes:
+                raise CidCritical("No analyses was found, please save your dashboard as an analyse first")
             choices = {a['Name']:a for a in sorted(analyzes, key=lambda a: a['LastUpdatedTime'])[::-1]}
             choice = get_parameter(
                 'analysis-name',
@@ -165,7 +167,7 @@ def export_analysis(qs, athena):
 
     time.sleep(5)
 
-    reader_account = get_parameter(
+    reader_account_id = get_parameter(
         'reader-account',
         message='Enter account id to share the template with or *',
         default='*'
@@ -174,7 +176,7 @@ def export_analysis(qs, athena):
         TemplateId=template_id,
         GrantPermissions=[
             {
-                "Principal": {"AWS": reader_account.split(',')} if reader_account != '*' else '*',
+                "Principal": f'arn:aws:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
                 'Actions': [
                     "quicksight:DescribeTemplate",
                 ]
