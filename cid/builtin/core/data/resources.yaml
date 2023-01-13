@@ -45,7 +45,7 @@ dashboards:
         - summary_view
     versions:
       minTemplateVersion: 9
-      minTemplateDescription: "v1.0.0"
+      minTemplateDescription: "v1.2.1"
 
   TAO:
     name: Trusted Advisor Organizational View
