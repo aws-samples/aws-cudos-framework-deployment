@@ -238,6 +238,7 @@ class QuickSight(CidBase):
             templateAccountId = _definition.get('sourceAccountId')
             templateId = _definition.get('templateId')
             region = _definition.get('region', 'us-east-1')
+
             try:
                 template = self.describe_template(templateId, account_id=templateAccountId, region=region)
                 dashboard.sourceTemplate = template
@@ -245,6 +246,39 @@ class QuickSight(CidBase):
                 logger.debug(e, exc_info=True)
                 logger.info(f'Unable to describe template {templateId} in {templateAccountId} ({region})')
 
+           # Checking for version override in template definition
+            for dashboard_template in [dashboard.deployedTemplate, dashboard.sourceTemplate]:
+                                
+                if not isinstance(dashboard_template, CidQsTemplate)\
+                    or int(dashboard_template.version) <= 0 \
+                    or not _definition.get('versions'):
+                        continue
+                
+                version_obj = _definition.get('versions')
+               
+                logger.debug("versions object found in template")
+                version_map = version_obj.get('versionMap', dict())
+                description_override = version_map.get(int(dashboard_template.version))
+                
+                try:
+                    if description_override:
+                        logger.info(f"Template description is overrided with: {description_override}")
+                        description_override = str(description_override)
+                        dashboard_template.raw['Version']['Description'] = description_override
+                    else:
+                        min_template_version = int(version_obj.get('minTemplateVersion'))
+                        default_description_version = str(version_obj.get('minTemplateDescription'))
+                        if min_template_version and default_description_version:
+                            if int(dashboard_template.version) <= min_template_version:
+                                logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
+                                dashboard_template.raw['Version']['Description'] = default_description_version
+                except ValueError as val_error:
+                    logger.debug(val_error,  exc_info=True)
+                    logger.info("The provided values of the versions object are not well formed, please use int for template version and str for template description")
+                except Exception as e:
+                    logger.debug(e, exc_info=True)
+                    logger.info("Unable to override template description")
+                                
             # recoursively add views
             all_views = []
             def _recoursive_add_view(view):
@@ -273,7 +307,7 @@ class QuickSight(CidBase):
                 AwsAccountId=self.account_id,
                 GroupName=groupname,
                 Namespace='default',
-                description=description,
+                Description=description,
             ).get('Group')
         except self.client.exceptions.AccessDeniedException as e:
             raise CidCritical('Cannot access groups. (AccessDenied). Please use quicksight-user parameter '
@@ -943,8 +977,8 @@ class QuickSight(CidBase):
         return dataset_id
 
 
-    def update_dataset(self, definition: dict) -> str:
-        """ Creates an AWS QuickSight dataset """
+    def update_dataset(self, definition: dict) -> Dataset:
+        """ Update an AWS QuickSight dataset """
         definition.update({'AwsAccountId': self.account_id})
         logger.info(f'Updating dataset {definition.get("Name")}')
 
@@ -953,7 +987,9 @@ class QuickSight(CidBase):
             del definition['Permissions']
         response = self.client.update_data_set(**definition)
         logger.info(f'Dataset {definition.get("Name")} is updated')
-        return True
+        dataset_id = definition.get('DataSetId')
+        self.datasets.pop(dataset_id, None) # invalidate cache
+        return self.describe_dataset(dataset_id)
 
 
     def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
