@@ -15,7 +15,7 @@ dashboards:
         - customer_all
     versions:
       minTemplateVersion: 189
-      minTemplateDescription: "v4.74.0"
+      minTemplateDescription: "v4.75.0"
 
   CID:
     name: Cost Intelligence Dashboard
