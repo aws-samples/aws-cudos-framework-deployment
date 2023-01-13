@@ -250,34 +250,34 @@ class QuickSight(CidBase):
             for dashboard_template in [dashboard.deployedTemplate, dashboard.sourceTemplate]:
                                 
                 if not isinstance(dashboard_template, CidQsTemplate)\
-                    or int(dashboard_template.version) < 0 \
+                    or int(dashboard_template.version) <= 0 \
                     or not _definition.get('versions'):
                         continue
                 
                 version_obj = _definition.get('versions')
-                if version_obj:
-                    logger.debug("versions object found in template")
-                    version_map = version_obj.get('versionMap', dict())
-                    description_override = version_map.get(int(dashboard_template.version))
-                    
-                    try:
-                        if description_override:
-                            logger.info(f"Template description is overrided with: {description_override}")
-                            description_override = str(description_override)
-                            dashboard_template.raw['Version']['Description'] = description_override
-                        else:
-                            min_template_version = int(version_obj.get('minTemplateVersion'))
-                            default_description_version = str(version_obj.get('minTemplateDescription'))
-                            if min_template_version and default_description_version:
-                                if int(dashboard_template.version) <= min_template_version:
-                                    logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
-                                    dashboard_template.raw['Version']['Description'] = default_description_version
-                    except ValueError as val_error:
-                        logger.debug(val_error,  exc_info=True)
-                        logger.info("The provided values of the versions object are not well formed, please use int for template version and str for template description")
-                    except Exception as e:
-                        logger.debug(e, exc_info=True)
-                        logger.info("Unable to override template description")
+               
+                logger.debug("versions object found in template")
+                version_map = version_obj.get('versionMap', dict())
+                description_override = version_map.get(int(dashboard_template.version))
+                
+                try:
+                    if description_override:
+                        logger.info(f"Template description is overrided with: {description_override}")
+                        description_override = str(description_override)
+                        dashboard_template.raw['Version']['Description'] = description_override
+                    else:
+                        min_template_version = int(version_obj.get('minTemplateVersion'))
+                        default_description_version = str(version_obj.get('minTemplateDescription'))
+                        if min_template_version and default_description_version:
+                            if int(dashboard_template.version) <= min_template_version:
+                                logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
+                                dashboard_template.raw['Version']['Description'] = default_description_version
+                except ValueError as val_error:
+                    logger.debug(val_error,  exc_info=True)
+                    logger.info("The provided values of the versions object are not well formed, please use int for template version and str for template description")
+                except Exception as e:
+                    logger.debug(e, exc_info=True)
+                    logger.info("Unable to override template description")
                                 
             # recoursively add views
             all_views = []
