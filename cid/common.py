@@ -315,7 +315,19 @@ class Cid():
             raise CidCritical(exc) # Cannot proceed without a valid template
         dashboard_definition.update({'sourceTemplate': source_template})
         print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
-                    
+        
+        compatible = self.check_dashboard_version_compatibility(dashboard_id)
+        
+        if not recursive and compatible == False:
+            if get_parameter(
+                    param_name=f'confirm-recursive',
+                    message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
+                    choices=['yes', 'no'],
+                    default='yes') != 'yes':
+                    return
+            logger.info("Swich to recursive mode")
+            recursive = True
+                     
         if recursive:
             self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
 
@@ -761,19 +773,17 @@ class Cid():
         return self._deploy(dashboard_id, recursive=recursive, update=True)
 
 
-    def update_dashboard(self, dashboard_id, recursive=False, required_datasets=None, dashboard_datasets=None, **kwargs):
-
+    def check_dashboard_version_compatibility(self, dashboard_id):
+        
+        """
+            Returns True | False | None if could not check 
+        """
+        
         dashboard = self.qs.dashboards.get(dashboard_id)
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
-            return
-
-        print(f'\nChecking for updates...')
-        if isinstance(dashboard.deployedTemplate, CidQsTemplate):
-            print(f'Deployed template: {dashboard.deployedTemplate.arn}')
-        else:
-            print(f'Deployed template: Not available')
-        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+            return None
+        
         try:
             cid_version = dashboard.deployedTemplate.cid_version
         except ValueError:
@@ -810,16 +820,23 @@ class Cid():
             compatible = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
         except ValueError as e:
             logger.info(e)
+            
+        return compatible
+    
+    def update_dashboard(self, dashboard_id, recursive=False, required_datasets=None, dashboard_datasets=None, **kwargs):
+
+        dashboard = self.qs.dashboards.get(dashboard_id)
+        if not dashboard:
+            print(f'Dashboard "{dashboard_id}" is not deployed')
+            return
+
+        print(f'\nChecking for updates...')
+        if isinstance(dashboard.deployedTemplate, CidQsTemplate):
+            print(f'Deployed template: {dashboard.deployedTemplate.arn}')
+        else:
+            print(f'Deployed template: Not available')
+        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         
-        if compatible == False:
-            if get_parameter(
-                    param_name=f'confirm-recursive',
-                    message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
-                    choices=['yes', 'no'],
-                    default='yes') != 'yes':
-                    return
-            logger.info("Swich to recursive mode")
-            recursive = True
                             
         if dashboard.status == 'legacy':
             if get_parameter(
@@ -840,11 +857,6 @@ class Cid():
         print(f'\nUpdating {dashboard_id}')
         logger.debug(f"Updating {dashboard_id}")
         
-        if recursive:
-            logger.debug("Recursive mode is activated")
-            logger.debug("Updating dashboards dataset")
-            self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=True)
-            
         try:
             self.qs.update_dashboard(dashboard, **kwargs)
             print('Update completed\n')
