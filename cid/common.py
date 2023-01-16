@@ -797,12 +797,12 @@ class Cid():
         else:
             print(f"An update is available:")
             print("                   Deployed -> Latest")
-            print(f"  CID Version      {cid_version: <9}   {cid_version_latest: <6}")
-            print(f"  TemplateVersion  {template_version: <9}   {template_version_latest: <6}")
+            print(f"  CID Version      {str(cid_version): <9}   {str(cid_version_latest): <6}")
+            print(f"  TemplateVersion  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <6}")
 
             logger.debug("An update is available")
-            logger.debug(f"CID Version      {cid_version: <9} --> {cid_version_latest: <6}")
-            logger.debug(f"TemplateVersion  {template_version: <9} -->  {template_version_latest: <6}")
+            logger.debug(f"CID Version      {str(cid_version): <9} --> {str(cid_version_latest): <6}")
+            logger.debug(f"TemplateVersion  {str(dashboard.deployedTemplate.version): <9} -->  {dashboard.latest_version: <6}")
 
         # Check if version are compatible
         compatible = None
