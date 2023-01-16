@@ -243,5 +243,5 @@ SELECT DISTINCT
 FROM
   "ta_organizational_view_reports"
 WHERE  
- "timestamp" not like '%Z%' AND (("from_unixtime"(CAST("timestamp" AS decimal)) > (current_date - INTERVAL  '3' MONTH)))
+ "timestamp" not like '%Z%' AND (("from_unixtime"(CAST(substr("timestamp",1,10) AS decimal)) > (current_date - INTERVAL  '3' MONTH)))
 AND (status IS NULL OR status not in ('ok', 'Green') OR checkid IN ('Wxdfp4B1L1', 'Wxdfp4B1L2', 'Wxdfp4B1L3', 'Wxdfp4B1L4'))
