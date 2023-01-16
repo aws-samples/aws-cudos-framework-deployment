@@ -96,7 +96,7 @@ def deploy(ctx, **kwargs):
      --athena-workgroup TEXT               Athena workgroup
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
-     --quicksight-datasource-id TEXT      QuickSight Datasource ARN (if not found one with provided Athena workgroup)
+     --quicksight-datasource-id TEXT       QuickSight Datasource ARN (if not found one with provided Athena workgroup)
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
@@ -111,13 +111,14 @@ def deploy(ctx, **kwargs):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def export(ctx, **kwargs):
-    """Deploy Dashboard
+    """Expot Dashboard
     
     \b
     Command options:
         --analysis-name       Analysis you want to share (not needed if analysis-id is provided).
         --analysis-id         ID of analysis you want to share (open analysis in browser and copy id from url)
         --template-id         Template Id
+        --dashboard-id        Target Dashboard Id
         --template-version    Version description vX.Y.Z
         --reader-account      Account id with howm you want to share or *
         --output              A filename (.yaml)

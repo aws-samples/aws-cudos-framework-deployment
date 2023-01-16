@@ -92,11 +92,14 @@ def export_analysis(qs):
         }
 
         for key, value in dataset_data['PhysicalTableMap'].items():
+            if 'RelationalTable' not in value \
+                or 'DataSourceArn' not in value['RelationalTable'] \
+                or 'Schema' not in value['RelationalTable']:
+                raise CidCritical(f'Dataset {key} does not seems to be Antena dataset. Only Athena datasets are supported.' )
             value['RelationalTable']['DataSourceArn'] = '${athena_datasource_arn}'
             value['RelationalTable']['Schema'] = '${athena_database_name}'
 
         datasets[dataset_arn] = dataset_data
-
 
     template_id = get_parameter(
         'template-id',
@@ -107,7 +110,7 @@ def export_analysis(qs):
     template_version_description = get_parameter(
         'template-version-description',
         message='Enter version description',
-        default='vX.X.X' # FIXME: can we get the version from Analysis?
+        default='vX.X.X' # FIXME: get version from analysis / template
     )
 
     logger.info('Updating template')
@@ -121,7 +124,7 @@ def export_analysis(qs):
                 "DataSetReferences": dataset_references
             }
         },
-        "VersionDescription": template_version_description, # well actually version is not used, but i leave it as a reminder to update
+        "VersionDescription": template_version_description,
     }
     logger.debug(f'Template params = {params}')
     try:
@@ -156,6 +159,12 @@ def export_analysis(qs):
         ],
     )
 
+    dashboard_id = get_parameter(
+        'dashboard-id',
+        message='dashboard id (will be used in url of dashboard)',
+        default=analysis['Name'].replace(' ', '-').lower()
+    )
+
     resources = {}
     resources['dashboards'] = {}
     resources['datasets'] = {}
@@ -166,7 +175,7 @@ def export_analysis(qs):
         'templateId': template_id,
         'sourceAccountId': qs.account_id,
         'region': qs.session.region_name,
-        'dashboardId': analysis['Name'].replace(' ', '-'),
+        'dashboardId': dashboard_id,
         'dependsOn':{
             'datasets': [dataset['Name'].replace(' ', '-') for dataset in datasets.values()]
         }
