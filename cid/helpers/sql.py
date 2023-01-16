@@ -1,30 +1,20 @@
-import sqlparse
+from pygments import highlight, lexers, formatters
+from pygments_pprint_sql import SqlFilter
+
+from pygments.formatters.other import NullFormatter
 
 
 def pretty_sql(sql):
-    sql = sqlparse.format(sql,
-        reindent=True,
-        keyword_case='upper',
-        strip_comments=True,
-        reindent_aligned=True
-    )
+    """ make a human readable SQL"""
 
-    if ' CREATE ' in sql and ' TABLE ' in sql:
-        #additional prettifying for tables
-        for word in (
-            'ROW FORMAT SERDE',
-            'WITH SERDEPROPERTIES',
-            'STORED AS INPUTFORMAT',
-            'OUTPUTFORMAT',
-            '(',
-            ')',
-            'LOCATION',
-            'TBLPROPERTIES '):
-            sql = sql.replace(word, '\n' + word)
-        sql = '\n'.join([l.strip() for l in sql.splitlines() if l.strip()])
+    lexer = lexers.MySqlLexer()
+    lexer.add_filter(SqlFilter())
 
-    elif ' CREATE ' in sql and ' VIEW ' in sql:
-        #additional prettifying for views
-        sql = '\n'.join([l for l in sql.splitlines() if l.strip()])
+    formatter = NullFormatter() # for color: = formatters.TerminalFormatter()
 
-    return sql
+    pretty = highlight(sql, lexer, formatter)
+
+    # postprocessing. (FIXME: check if this can be done in SQLFilter)
+    pretty = pretty.replace(' , ', '\n , ').replace('SELECT', 'SELECT\n  ')
+
+    return pretty

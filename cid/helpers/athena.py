@@ -11,6 +11,8 @@ from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
+import sqlparse 
+
 logger = logging.getLogger(__name__)
 
 class Athena(CidBase):
@@ -287,11 +289,15 @@ class Athena(CidBase):
             s3.download_fileobj(bucket, key, fileobject)
             return fileobject.getvalue().decode(encoding)
 
-    def query(self, sql, **kwargs) -> list:
+    def query(self, sql, include_header=False, **kwargs) -> list:
         """ Execute Athena Query and return a result"""
+        logger.debug(f'query={sql}')
         execution_id = self.execute_query(sql, **kwargs)
         results = self.get_query_results(execution_id)
-        return self.parse_response_as_table(results)
+        #logger.debug(f'results = {json.dumps(results, indent=2)}')
+        prarsed = self.parse_response_as_table(results, include_header)
+        logger.debug(f'prarsed res = {json.dumps(prarsed, indent=2)}')
+        return prarsed
 
 
     def discover_views(self, views: dict={}) -> None:
@@ -373,9 +379,9 @@ class Athena(CidBase):
             """
             logger.debug(f"Processing '{view}'")
             athena_type = None
-            if self.query(f"SHOW VIEWS LIKE '{view}'"):
+            if self.query(f"SHOW VIEWS LIKE '{view}'", include_header=True):
                 athena_type = 'view'
-            elif self.query(f"SHOW TABLES LIKE '{view}'"):
+            elif self.query(f"SHOW TABLES LIKE '{view}'", include_header=True):
                 athena_type = 'table'
             else:
                 logger.debug(f'{view} not a view and not a table. Skipping.')
@@ -383,15 +389,18 @@ class Athena(CidBase):
 
             all_views[view] = {}
             if athena_type == 'view':
-                res = self.query(f'SHOW CREATE VIEW {view}')
-                if not res:
-                    continue
+                sql = self.query(f'SHOW CREATE VIEW {view}', include_header=True)
+                if not sql:
+                    return
+                sql = '\n'.join([line[0] for line in sql])
+                #print("sql", sql)
                 all_views[view]["dependsOn"] = {}
                 all_views[view]["dependsOn"]['views'] = []
                 deps = re.findall(r'FROM\W+([\S."]+)', sql)
                 for dep_view in deps:
                     #FIXME: need to add cross Database Dependancies
-                    if dep_view in sqlparse.keywords.KEYWORDS: continue
+                    if dep_view.upper() in ('SELECT'):
+                        continue
                     if dep_view not in all_views[view]["dependsOn"]['views']:
                         all_views[view]["dependsOn"]['views'].append(dep_view)
                     if dep_view not in all_views:
@@ -400,9 +409,10 @@ class Athena(CidBase):
                     del all_views[view]["dependsOn"]
 
             elif athena_type == 'table':
-                sql = self.query(f'SHOW CREATE TABLE {view}')
+                sql = self.query(f'SHOW CREATE TABLE {view}', include_header=True)
+                sql = '\n'.join([line[0] for line in sql])
 
-            all_views[view]['data'] = sql
+            all_views[view]['data'] = sql.rstrip()
 
         for view in views:
             _recursively_process_view(view)
