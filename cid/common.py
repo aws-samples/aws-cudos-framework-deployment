@@ -121,7 +121,7 @@ class Cid():
             print(f'\tAthena table: {_cur.tableName}')
             print(f"\tResource IDs: {'yes' if _cur.hasResourceIDs else 'no'}")
             if not _cur.hasResourceIDs:
-                raise ClientError("Error: CUR has to be created with Resource IDs")
+                raise CidCritical("Error: CUR has to be created with Resource IDs")
             print(f"\tSavingsPlans: {'yes' if _cur.hasSavingsPlans else 'no'}")
             print(f"\tReserved Instances: {'yes' if _cur.hasReservations else 'no'}")
             print('\n')
