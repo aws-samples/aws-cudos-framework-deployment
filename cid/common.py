@@ -526,7 +526,7 @@ class Cid():
                     continue
                 datasources = dataset.datasources
                 athena_datasource = self.qs.datasources.get(datasources[0])
-                if athena_datasource:
+                if athena_datasource and not get_parameters().get('athena-workgroup'):
                     self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
                     break
                 logger.debug(f'Cannot find QuickSight DataSource {datasources[0]}. So cannot define Athena WorkGroup')
