@@ -785,7 +785,7 @@ class Cid():
             return None
         
         try:
-            cid_version = dashboard.deployedTemplate.cid_version
+            cid_version = dashboard.deployedTemplate.cid_version if isinstance(dashboard.deployedTemplate, CidQsTemplate) else "N/A"            
         except ValueError:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
             cid_version = "N/A"
