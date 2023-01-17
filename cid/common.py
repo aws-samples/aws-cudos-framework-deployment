@@ -526,7 +526,7 @@ class Cid():
                     continue
                 datasources = dataset.datasources
                 athena_datasource = self.qs.datasources.get(datasources[0])
-                if athena_datasource:
+                if athena_datasource and not get_parameters().get('athena-workgroup'):
                     self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
                     break
                 logger.debug(f'Cannot find QuickSight DataSource {datasources[0]}. So cannot define Athena WorkGroup')
@@ -1109,10 +1109,12 @@ class Cid():
                         )
                         athena_datasource = self.qs.athena_datasources[datasource_id]
                         logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
-        if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):
-            self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
-        else:
-            logger.debug('Athena_datasource is not defined. Will only create views')
+        if not get_parameters().get('athena-workgroup'):
+            # set default workgroup from datasource if not provided via parameters
+            if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):
+                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+            else:
+                logger.debug('Athena_datasource is not defined. Will only create views')
 
         # Check for required views
         _views = dataset_definition.get('dependsOn', {}).get('views', [])
