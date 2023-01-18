@@ -787,7 +787,8 @@ class Cid():
             print(f'Dashboard "{dashboard_id}" does not have a versioned template')
             return None
         if not isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            raise CidCritical(f"Cannot access QuickSight source template")
+            print(f"Cannot access QuickSight source template for {dashboard_id}")
+            return None
         try:
             cid_version = dashboard.deployedTemplate.cid_version            
         except ValueError:
