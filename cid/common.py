@@ -783,9 +783,12 @@ class Cid():
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
+        if not isinstance(dashboard.deployedTemplate, CidQsTemplate): 
+            print(f'Dashboard "{dashboard_id}" does not have a versioned template')
+            return None
         
         try:
-            cid_version = dashboard.deployedTemplate.cid_version if isinstance(dashboard.deployedTemplate, CidQsTemplate) else "N/A"            
+            cid_version = dashboard.deployedTemplate.cid_version            
         except ValueError:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
             cid_version = "N/A"
