@@ -786,7 +786,8 @@ class Cid():
         if not isinstance(dashboard.deployedTemplate, CidQsTemplate): 
             print(f'Dashboard "{dashboard_id}" does not have a versioned template')
             return None
-        
+        if not isinstance(dashboard.sourceTemplate, CidQsTemplate):
+            raise CidCritical(f"Cannot access QuickSight source template")
         try:
             cid_version = dashboard.deployedTemplate.cid_version            
         except ValueError:
@@ -794,7 +795,7 @@ class Cid():
             cid_version = "N/A"
 
         try:
-            cid_version_latest = dashboard.sourceTemplate.cid_version if isinstance(dashboard.sourceTemplate, CidQsTemplate) else "N/A"
+            cid_version_latest = dashboard.sourceTemplate.cid_version
         except ValueError:
             logger.debug("The latest version of the dashboard could not be retrieved")
             cid_version_latest = "N/A"
