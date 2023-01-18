@@ -2,12 +2,12 @@
 
 ## TAO Dashboard v2.0.0:
 
-**Important:** Update to this version requires cid-cmd v0.2.11. Please update cid-cmd first before updating the dashboard. During the update you'd need to provide a path to s3 folder where your Trusted Advisor data is stored. To update run these commands in your CloudShell (recoommended) or other terminal:
+**Important:** Update to this version requires cid-cmd v0.2.12. Please update cid-cmd first before updating the dashboard. During the update you'd need to provide a path to s3 folder where your Trusted Advisor data is stored. To update run these commands in your CloudShell (recoommended) or other terminal:
 
 ```
 python3 -m ensurepip --upgrade
 pip3 install --upgrade cid-cmd
-cid-cmd update --dashboard-id ta-organizational-view
+cid-cmd update --dashboard-id ta-organizational-view --recursive
 ```
 
 **Changes:**
