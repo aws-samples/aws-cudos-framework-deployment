@@ -116,7 +116,7 @@ class Cid():
             print('Checking if CUR is enabled and available...')
 
             if not _cur.configured:
-                raise ClientError("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
+                raise CidCritical("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
 
             print(f'\tAthena table: {_cur.tableName}')
             print(f"\tResource IDs: {'yes' if _cur.hasResourceIDs else 'no'}")
