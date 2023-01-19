@@ -199,14 +199,21 @@ class QuickSight(CidBase):
             raise CidCritical(f'Dashboard {dashboardId} was not found')
         try:
             _template_arn = dashboard.version.get('SourceEntityArn')
-            _template = self.describe_template(
-                template_id=_template_arn.split('/')[1],
-                account_id=_template_arn.split(':')[4],
-                region=_template_arn.split(':')[3],
-                version_number=int(_template_arn.split('/')[-1]),
-            )
-            if isinstance(_template, CidQsTemplate):
-                dashboard.deployedTemplate = _template
+            
+            ## Check for version_number
+            template_version_nb = int(_template_arn.split('/')[-1]) if _template_arn.split('/')[-1].isdecimal() else None
+            
+            if  template_version_nb:
+                _template = self.describe_template(
+                    template_id=_template_arn.split('/')[1],
+                    account_id=_template_arn.split(':')[4],
+                    region=_template_arn.split(':')[3],
+                    version_number=template_version_nb,
+                )
+                if isinstance(_template, CidQsTemplate):
+                    dashboard.deployedTemplate = _template
+            else:
+                logger.warning("We could not determine the version of the template")
         except Exception as e:
             logger.debug(e, exc_info=True)
             logger.info(f'Unable to describe template for {dashboardId}, {e}')

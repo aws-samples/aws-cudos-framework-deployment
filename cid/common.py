@@ -840,6 +840,9 @@ class Cid():
             print(f'Deployed template: {dashboard.deployedTemplate.arn}')
         else:
             print(f'Deployed template: Not available')
+            print("If the update failed please try to rre run with --recursive flag.")
+            print("/!\ Using recursive flag will override any existing customization on the datesets, please make sure you have a backup")
+        
         print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         
                             
