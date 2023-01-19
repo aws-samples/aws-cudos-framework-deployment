@@ -213,7 +213,7 @@ class QuickSight(CidBase):
                 if isinstance(_template, CidQsTemplate):
                     dashboard.deployedTemplate = _template
             else:
-                logger.warning("We could not determine the version of the template")
+                logger.info(f'Unable to determine the version of the template from arn {_template_arn}')
         except Exception as e:
             logger.debug(e, exc_info=True)
             logger.info(f'Unable to describe template for {dashboardId}, {e}')
