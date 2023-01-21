@@ -115,27 +115,29 @@ class Dashboard(CidQsResource):
         try:
             cid_version = self.deployedTemplate.cid_version
         except ValueError:
-            cid_version = "UNKNOWN"
-            
+            logger.debug("The cid version of the deployed dashboard could not be retrieved")
+            cid_version = "N/A"
+
         try:
-            cid_version_latest = self.sourceTemplate.cid_version if isinstance(self.sourceTemplate, CidQsTemplate) else "UNKNOWN"
+            cid_version_latest = self.sourceTemplate.cid_version if isinstance(self.sourceTemplate, CidQsTemplate) else "N/A"
         except ValueError:
-            cid_version_latest = "UNKNOWN"
-        
-       
-        if self.latest:            
-            print(f"  CID Version      {cid_version}")
-            print(f"  TemplateVersion  {self.deployed_version} ")
+            logger.debug("The latest version of the dashboard could not be retrieved")
+            cid_version_latest = "N/A"
+            print(f"  CID Version     {cid_version}")
+            print(f"  TemplateVersion {self.deployed_version} ")
+
+        if self.latest:
+            logger.debug("The dashboard is up-to-date")
+            logger.debug(f"CID Version {cid_version}")
+            logger.debug(f"TemplateVersion {self.deployed_version} ")
         else:
-            cid_version = str(cid_version).ljust(9, ' ')
-            cid_version_latest = str(cid_version_latest).ljust(6, ' ')
-            template_version = str(self.deployed_version).ljust(9, ' ')
-            template_version_latest = str(self.latest_version).ljust(6, ' ')
-            print("                   Deployed -> Latest")
-            print(f"  CID Version      {cid_version}   {cid_version_latest}")
-            print(f"  TemplateVersion  {template_version}   {template_version_latest}")
-    
-    
+            print(f"  CID Version     {str(cid_version): <6} --> {str(cid_version_latest): <6}")
+            print(f"  TemplateVersion {str(self.deployed_version): <6} --> {str(self.latest_version): <6}")
+
+            logger.debug("An update is available")
+            logger.debug(f"CID Version      {str(cid_version): <9} --> {str(cid_version_latest): <6}")
+            logger.debug(f"TemplateVersion  {str(self.deployed_version): <9} -->  {str(self.latest_version): <6}")
+            
         if self.datasets:
             print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
         print('\n')

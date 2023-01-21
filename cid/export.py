@@ -147,7 +147,7 @@ def export_analysis(qs, athena):
     template_version_description = get_parameter(
         'template-version-description',
         message='Enter version description',
-        default='v0.0.1'
+        default='vX.X.X' # FIXME: get version from analysis / template
     )
 
     logger.info('Updating template')

@@ -116,12 +116,12 @@ class Cid():
             print('Checking if CUR is enabled and available...')
 
             if not _cur.configured:
-                raise ClientError("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
+                raise CidCritical("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
 
             print(f'\tAthena table: {_cur.tableName}')
             print(f"\tResource IDs: {'yes' if _cur.hasResourceIDs else 'no'}")
             if not _cur.hasResourceIDs:
-                raise ClientError("Error: CUR has to be created with Resource IDs")
+                raise CidCritical("Error: CUR has to be created with Resource IDs")
             print(f"\tSavingsPlans: {'yes' if _cur.hasSavingsPlans else 'no'}")
             print(f"\tReserved Instances: {'yes' if _cur.hasReservations else 'no'}")
             print('\n')
@@ -315,18 +315,19 @@ class Cid():
             raise CidCritical(exc) # Cannot proceed without a valid template
         dashboard_definition.update({'sourceTemplate': source_template})
         print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
-
-        # Check if Source and Destination Templates version are compatible
-        # Ask for recursive if major upgrade 
-        try:
-            if dashboard and update and not dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version):
-                if click.confirm(f'This update may require a recursive update action which will re-deploy Athena views and QuickSight DataSets used by the dashboard, would you like to proceed?',default=True):
-                    recursive = True
-        except ValueError as e:
-            logger.info(e)
         
-        # Find dashboard version
+        compatible = self.check_dashboard_version_compatibility(dashboard_id)
         
+        if not recursive and compatible == False:
+            if get_parameter(
+                    param_name=f'confirm-recursive',
+                    message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
+                    choices=['yes', 'no'],
+                    default='yes') != 'yes':
+                    return
+            logger.info("Swich to recursive mode")
+            recursive = True
+                     
         if recursive:
             self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
 
@@ -371,7 +372,7 @@ class Cid():
         dashboard = self.qs.dashboards.get(dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id, **kwargs)
+                return self.update_dashboard(dashboard_id, recursive, required_datasets, dashboard_datasets,**kwargs)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
@@ -525,7 +526,7 @@ class Cid():
                     continue
                 datasources = dataset.datasources
                 athena_datasource = self.qs.datasources.get(datasources[0])
-                if athena_datasource:
+                if athena_datasource and not get_parameters().get('athena-workgroup'):
                     self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
                     break
                 logger.debug(f'Cannot find QuickSight DataSource {datasources[0]}. So cannot define Athena WorkGroup')
@@ -772,7 +773,62 @@ class Cid():
         return self._deploy(dashboard_id, recursive=recursive, update=True)
 
 
-    def update_dashboard(self, dashboard_id, recursive=False, **kwargs):
+    def check_dashboard_version_compatibility(self, dashboard_id):
+        
+        """
+            Returns True | False | None if could not check 
+        """
+        
+        dashboard = self.qs.dashboards.get(dashboard_id)
+        if not dashboard:
+            print(f'Dashboard "{dashboard_id}" is not deployed')
+            return None
+        if not isinstance(dashboard.deployedTemplate, CidQsTemplate): 
+            print(f'Dashboard "{dashboard_id}" does not have a versioned template')
+            return None
+        if not isinstance(dashboard.sourceTemplate, CidQsTemplate):
+            print(f"Cannot access QuickSight source template for {dashboard_id}")
+            return None
+        try:
+            cid_version = dashboard.deployedTemplate.cid_version            
+        except ValueError:
+            logger.debug("The cid version of the deployed dashboard could not be retrieved")
+            cid_version = "N/A"
+
+        try:
+            cid_version_latest = dashboard.sourceTemplate.cid_version
+        except ValueError:
+            logger.debug("The latest version of the dashboard could not be retrieved")
+            cid_version_latest = "N/A"
+
+        if dashboard.latest:
+            print("You are up to date!")       
+            print(f"  CID Version      {cid_version}")
+            print(f"  TemplateVersion  {dashboard.deployed_version} ")
+
+            logger.debug("The dashboard is up-to-date")
+            logger.debug(f"CID Version      {cid_version}")
+            logger.debug(f"TemplateVersion  {dashboard.deployed_version} ")
+        else:
+            print(f"An update is available:")
+            print("                   Deployed -> Latest")
+            print(f"  CID Version      {str(cid_version): <9}   {str(cid_version_latest): <6}")
+            print(f"  TemplateVersion  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <6}")
+
+            logger.debug("An update is available")
+            logger.debug(f"CID Version      {str(cid_version): <9} --> {str(cid_version_latest): <6}")
+            logger.debug(f"TemplateVersion  {str(dashboard.deployedTemplate.version): <9} -->  {dashboard.latest_version: <6}")
+
+        # Check if version are compatible
+        compatible = None
+        try:
+            compatible = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
+        except ValueError as e:
+            logger.info(e)
+            
+        return compatible
+    
+    def update_dashboard(self, dashboard_id, recursive=False, required_datasets=None, dashboard_datasets=None, **kwargs):
 
         dashboard = self.qs.dashboards.get(dashboard_id)
         if not dashboard:
@@ -785,20 +841,8 @@ class Cid():
         else:
             print(f'Deployed template: Not available')
         print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
-        try:
-            print(f"CID Version: {dashboard.deployedTemplate.cid_version}")
-        except ValueError:
-            print(f"CID Version: Not available")
-            pass
         
-        try:
-            version_latest = dashboard.sourceTemplate.cid_version if isinstance(dashboard.sourceTemplate, CidQsTemplate) else "UNKNOWN"
-            print(f"CID Latest Version: {version_latest}")
-        except ValueError:
-            print(f"CID Latest Version: Not available")
-            pass
-        
-        
+                            
         if dashboard.status == 'legacy':
             if get_parameter(
                 param_name=f'confirm-update',
@@ -816,6 +860,8 @@ class Cid():
 
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')
+        logger.debug(f"Updating {dashboard_id}")
+        
         try:
             self.qs.update_dashboard(dashboard, **kwargs)
             print('Update completed\n')
@@ -1079,10 +1125,12 @@ class Cid():
                         )
                         athena_datasource = self.qs.athena_datasources[datasource_id]
                         logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
-        if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):
-            self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
-        else:
-            logger.debug('Athena_datasource is not defined. Will only create views')
+        if not get_parameters().get('athena-workgroup'):
+            # set default workgroup from datasource if not provided via parameters
+            if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):
+                self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
+            else:
+                logger.debug('Athena_datasource is not defined. Will only create views')
 
         # Check for required views
         _views = dataset_definition.get('dependsOn', {}).get('views', [])
