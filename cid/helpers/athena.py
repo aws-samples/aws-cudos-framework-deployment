@@ -2,6 +2,7 @@ import re
 import csv
 import json
 import time
+import uuid
 import logging
 from string import Template
 from io import StringIO
@@ -9,9 +10,8 @@ from pkg_resources import resource_string
 
 from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters
-from cid.exceptions import CidCritical
-
-import sqlparse 
+from cid.helpers.sql import diff_sql
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 
@@ -368,6 +368,33 @@ class Athena(CidBase):
             if name in self._metadata: del self._metadata[name]
             logger.info(f'View {name} deleted')
         return True
+
+    def get_view_diff(self, name, sql):
+        """ returns a diff between existing and new viws. """
+        existing_sql = ''
+        try:
+            existing_sql = self.query(f'SHOW CREATE VIEW {name}', include_header=True)
+            existing_sql = '\n'.join([line[0] for line in existing_sql][1:])
+        except Exception as exc:
+            print(exc)
+            return None
+        try:
+            tmp_name = 'cid_deleteme_' + str(uuid.uuid4()).replace('-', '_')
+            tmp_sql = re.sub(r'(CREATE OR REPLACE VIEW) (.+?) (AS.*)', r'\1 ' + tmp_name +  r' \3', sql)
+
+            if tmp_sql == sql:
+                raise CidError(f"Cannot get diff: same sql {repr(sql)}")
+            self.query(tmp_sql)
+            tmp_sql = self.query(f'SHOW CREATE VIEW {tmp_name}', include_header=True)
+            tmp_sql = '\n'.join([line[0] for line in tmp_sql][1:])
+        except Exception as exc:
+            print(exc)
+            return None
+
+        return diff_sql(existing_sql, tmp_sql)
+
+
+
 
     def process_views(self, views):
         """ returns a dict of discovered views. Going to each view and try to discover all FROM

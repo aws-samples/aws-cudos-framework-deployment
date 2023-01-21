@@ -23,7 +23,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
@@ -1031,7 +1031,7 @@ class Cid():
                 definition.get('providedBy'), f'data/{subfolder}/{file_name}'
             ).decode('utf-8')
             if file_name.endswith('.json') or file_name.endswith('.jsn'):
-                data = json.loads(data)
+                data = json.loads(text)
             else:
                 data = text
         elif definition.get('Data'):
@@ -1228,6 +1228,24 @@ class Cid():
                     self.glue.create_or_update_table(view_name, view_query)
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
+                        diff = self.athena.get_view_diff(view_name, view_query)
+                        if diff and diff['diff']:
+                            cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
+                            cid_print(diff['printable'])
+                            if not get_yesno_parameter(
+                                param_name=view_name+'_forceupdate',
+                                message=f'The existing view is different. Override?',
+                                default='yes'
+                                ):
+                                raise CidCritical(f'User choice is not to update {view_name}.')
+                        elif not diff:
+                            if not get_yesno_parameter(
+                                param_name=view_name+'_forceupdate',
+                                message=f'Cannot get sql diff for {view_name}. Continue?',
+                                default='yes'
+                                ):
+                                raise CidCritical(f'User choice is not to update {view_name}.')
+
                         print(f'Updating view: "{view_name}"')
                         self.athena.execute_query(view_query)
                     else:
@@ -1264,7 +1282,7 @@ class Cid():
             raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        template = self.get_data_from_definition('view', view_definition) 
+        template = Template(self.get_data_from_definition('view', view_definition)) 
 
         # Prepare template parameters
         columns_tpl = {
