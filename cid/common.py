@@ -213,7 +213,7 @@ class Cid():
 
     @command
     def export(self, **kwargs):
-        export_analysis(self.qs)
+        export_analysis(self.qs, self.athena)
 
     def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """
@@ -335,8 +335,9 @@ class Cid():
         if not dashboard_definition.get('datasets'):
             dashboard_definition.update({'datasets': {}})
         for dataset_name in required_datasets:
-            ds = next((v for v in self.qs.datasets.values() if v.name == dataset_name), None)
-            if isinstance(ds, Dataset):
+            for ds in self.qs.datasets.values():
+                if isinstance(ds, Dataset) or ds.name != dataset_name:
+                    continue
                 dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                 required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
                 unmatched = {}
@@ -348,8 +349,11 @@ class Cid():
                 else:
                     print(f'Using dataset {dataset_name}: {ds.id}')
                     dashboard_definition.get('datasets').update({dataset_name: ds.arn})
+                    break
+            else: # not found
+                logger.warning(f'Dataset {dataset_name} is not found')
   
-
+        #FIXME: this code looks absolete
         kwargs = dict()
         local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'
         logger.info(f'Looking for local overrides file "{local_overrides}"...')
@@ -1024,7 +1028,7 @@ class Cid():
             'view': 'queries',
             'table': 'queries',
         }.get(asset_type)
-        raw_template = None
+        data = None
         file_name = definition.get('File')
         if file_name:
             text = resource_string(
@@ -1036,6 +1040,8 @@ class Cid():
                 data = text
         elif definition.get('Data'):
             data = definition.get('Data')
+        elif definition.get('data'):
+            data = definition.get('data')
         if data is None:
             raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(definition)}. Check resources file.")
         return data
@@ -1177,7 +1183,7 @@ class Cid():
                 print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
                 self.qs.update_dataset(compiled_dataset)
             else:
-                print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')
+                print(f'No update requested for dataset {compiled_dataset.get("DataSetId")} {compiled_dataset.get("Name")}={found_dataset.name} ')
         else:
             self.qs.create_dataset(compiled_dataset)
 
@@ -1233,14 +1239,14 @@ class Cid():
                             cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
                             cid_print(diff['printable'])
                             if not get_yesno_parameter(
-                                param_name=view_name+'_forceupdate',
+                                param_name=view_name+'-override',
                                 message=f'The existing view is different. Override?',
                                 default='yes'
                                 ):
                                 raise CidCritical(f'User choice is not to update {view_name}.')
                         elif not diff:
                             if not get_yesno_parameter(
-                                param_name=view_name+'_forceupdate',
+                                param_name=view_name+'-override',
                                 message=f'Cannot get sql diff for {view_name}. Continue?',
                                 default='yes'
                                 ):
