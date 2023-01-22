@@ -14,6 +14,6 @@ def test_basic_csv2view():
 		sql = file_.read()
 
 	assert "CREATE OR REPLACE VIEW res AS" in sql
-	assert "ROW('c'  , 'd e')" in sql
+	assert "ROW('c', 'd e')" in sql
 	assert "(a, b)" in sql
 
