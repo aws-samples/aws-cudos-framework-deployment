@@ -140,5 +140,5 @@ FROM
    , ROW ('AWSCloudShell', 'Developer Tools')
    , ROW ('auditmanager', 'Security, Identity & Compliance')
    , ROW ('AmazonLocationService', 'Front-end Web & Mobile')
-   , ROW ('AmazonTimestream', 'Amazon Timestream', 'Database')
+   , ROW ('AmazonTimestream', 'Database')
 )  ignored_table_name (line_item_product_code, aws_service_category)
