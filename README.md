@@ -104,6 +104,13 @@ cid-cmd deploy --resources ./mydashboard.yaml
 cid-cmd --help
 ```
 
+#### CSV to Athena View
+Generate and SQL file for Athena View for CSV file
+
+```
+cid-cmd csv2view --input my_mapping.csv --name my_mapping
+```
+This command generates a SQL file that you can execute. Please mind [Athena Service Limit for Query Size](https://docs.aws.amazon.com/athena/latest/ug/service-limits.html#service-limits-query-string-length).
 
 ## Troubleshooting 
 
