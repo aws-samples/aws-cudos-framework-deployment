@@ -1037,12 +1037,18 @@ class Cid():
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
 
+        # Manage datasource
+        # We must do it here. In case if dastasource is not defined by user, we can take it from dataset
+
         if get_parameters().get('quicksight-datasource-id'):
             # We have explicit choice of datasource
             datasource_id = get_parameters().get('quicksight-datasource-id')
-
+            role_arn = get_parameters().get('quicksight-datasource-role-arn')
             try:
                 athena_datasource = self.qs.describe_data_source(datasource_id)
+            except self.qs.client.exceptions.ResourceNotFoundException:
+                logger.info(f'DataSource {datasource_id} not found. Creating.')
+                athena_datasource = self.qs.create_data_source(athena_workgroup=self.athena.WorkGroup, datasource_id=datasource_id, role_arn=role_arn)
             except self.qs.client.exceptions.AccessDeniedException:
                 # We have access denied on DescribeDataSet but there can be PassDataSet 
                 athena_datasource = Datasource(raw={
@@ -1053,14 +1059,12 @@ class Cid():
             except Exception as exc:
                 raise CidCritical(
                     f'quicksight-datasource-id={datasource_id} not found or not in a valid state. {exc}'
-            )
-
+                )
 
         if not athena_datasource and not len(self.qs.athena_datasources):
             logger.info('No Athena datasources found, attempting to create one')
-            self.qs.AthenaWorkGroup = self.athena.WorkGroup
-            self.qs.create_data_source() # FIXME: we need to use name/id provided by user if any
-            # FIXME: we need to cleanup if datasource creation fails
+            role_arn = get_parameters().get('quicksight-datasource-role-arn')
+            athena_datasource = self.qs.create_data_source(athena_workgroup=self.athena.WorkGroup, datasource_id='CID-CMD-Athena', role_arn=role_arn)
 
         if not athena_datasource:
             if not self.qs.athena_datasources:
