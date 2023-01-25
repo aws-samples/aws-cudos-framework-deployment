@@ -977,6 +977,13 @@ Resources:
                     - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
               - Effect: Allow
                 Action:
+                  - quicksight:DescribeDataSource
+                  - quicksight:CreateDataSource
+                  - quicksight:DeleteDataSource
+                Resource: # only needed if CFN for Datasource is not available
+                    - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:datasource/CID-Athena-1'
+              - Effect: Allow
+                Action:
                   - quicksight:ListDataSources #
                   - quicksight:ListDataSets
                   - quicksight:CreateDataSet
