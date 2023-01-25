@@ -98,6 +98,11 @@ def export_analysis(qs):
                 raise CidCritical(f'Dataset {key} does not seems to be Antena dataset. Only Athena datasets are supported.' )
             value['RelationalTable']['DataSourceArn'] = '${athena_datasource_arn}'
             value['RelationalTable']['Schema'] = '${athena_database_name}'
+        for key, value in dataset_data.get('LogicalTableMap', {}).items():
+            if 'Source' in value and "DataSetArn" in value['Source']:
+                #FIXME add value['Source']['DataSetArn'] to the list of dataset_arn s 
+                raise CidCritical(f"DataSet {dataset.raw['Name']} contains unsupported join. Please replace join of {value.get('Alias')} from DataSet to DataSource")
+
 
         datasets[dataset_arn] = dataset_data
 
