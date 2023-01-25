@@ -25,7 +25,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
@@ -1286,6 +1286,14 @@ class Cid():
         compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query
+
+    @command
+    def csv2view(self, **kwargs):
+        """CSV 2 SQL"""
+        input_file = get_parameter('input', message='Enter csv filename')
+        file_name = os.path.splitext(os.path.split(input_file)[-1])[0]
+        name = get_parameter('name', message='Enter view name', default=file_name)
+        csv2view(input_file, name)
 
     @command
     def map(self, **kwargs):
