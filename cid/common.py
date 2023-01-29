@@ -335,8 +335,14 @@ class Cid():
         if not dashboard_definition.get('datasets'):
             dashboard_definition.update({'datasets': {}})
         for dataset_name in required_datasets:
-            ds = next((v for v in self.qs.datasets.values() if v.name == dataset_name), None)
-            if isinstance(ds, Dataset):
+            # Search dataset by name.
+            # This is not ideal as there can be several with the same name,
+            # but if dataset is created manually we cannot use id.
+            for ds in self.qs.datasets.values():
+                if ds.name != dataset_name: continue
+                if not isinstance(ds, Dataset): continue
+
+                # check fields to make sure they match
                 dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                 required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
                 unmatched = {}
@@ -344,11 +350,15 @@ class Cid():
                     if k not in dataset_fields or dataset_fields[k] != v:
                         unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
                 if unmatched:
-                    raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
-                else:
-                    print(f'Using dataset {dataset_name}: {ds.id}')
-                    dashboard_definition.get('datasets').update({dataset_name: ds.arn})
-  
+                    logger.warning(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
+                    continue
+
+                print(f'Using dataset {dataset_name}: {ds.id}')
+                dashboard_definition.get('datasets').update({dataset_name: ds.arn})
+                break
+            else:
+                raise CidCritical(f'Dataset "{dataset_name}" is not found OR ther is missmathc in fields. Check log.')
+
 
         kwargs = dict()
         local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'

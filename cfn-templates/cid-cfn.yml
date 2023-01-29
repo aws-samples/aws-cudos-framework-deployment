@@ -1090,7 +1090,7 @@ Resources:
                   url = event.get('ResponseURL')
                   body = {
                       'Status': status,
-                      'Reason': reason + '\nSee more: ' + log_url,
+                      'Reason': reason[:2000] + '\nSee more: ' + log_url,
                       'PhysicalResourceId': physical_id,
                       'StackId': event.get('StackId'),
                       'RequestId': event.get('RequestId'),
