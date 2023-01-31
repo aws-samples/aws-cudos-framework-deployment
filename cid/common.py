@@ -295,7 +295,7 @@ class Cid():
             else:
                 raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
-        required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
+        required_datasets_names = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
         dashboard_datasets = dashboard.datasets if dashboard else {}
         
@@ -329,7 +329,7 @@ class Cid():
             recursive = True
                      
         if recursive:
-            self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
+            self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
 
         # Prepare API parameters
         if not dashboard_definition.get('datasets'):
@@ -339,8 +339,8 @@ class Cid():
             # This is not ideal as there can be several with the same name,
             # but if dataset is created manually we cannot use id.
             for ds in self.qs.datasets.values():
-                if ds.name != dataset_name: continue
-                if not isinstance(ds, Dataset): continue
+                if not isinstance(ds, Dataset) or ds.name != dataset_name:
+                    continue
 
                 # check fields to make sure they match
                 dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
