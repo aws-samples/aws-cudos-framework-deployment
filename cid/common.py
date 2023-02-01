@@ -1234,33 +1234,49 @@ class Cid():
                     self.glue.create_or_update_table(view_name, view_query)
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
-                        diff = self.athena.get_view_diff(view_name, view_query)
-                        if diff and diff['diff']:
-                            cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
-                            cid_print(diff['printable'])
-                            if not get_yesno_parameter(
-                                param_name=view_name+'-override',
-                                message=f'The existing view is different. Override?',
-                                default='yes'
-                                ):
-                                raise CidCritical(f'User choice is not to update {view_name}.')
-                        elif not diff:
-                            if not get_yesno_parameter(
-                                param_name=view_name+'-override',
-                                message=f'Cannot get sql diff for {view_name}. Continue?',
-                                default='yes'
-                                ):
-                                raise CidCritical(f'User choice is not to update {view_name}.')
-
-                        print(f'Updating view: "{view_name}"')
-                        self.athena.execute_query(view_query)
+                        update_view = False
+                        while True:
+                            cid_print(f'Analysing view {view_name}')
+                            diff = self.athena.get_view_diff(view_name, view_query)
+                            if diff and diff['diff']:
+                                cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
+                                cid_print(diff['printable'])
+                                choice = get_parameter(
+                                    param_name=view_name + '-override',
+                                    message=f'The existing view is different. Override?',
+                                    choices=['retry diff', 'override', 'keep existing', 'stop'],
+                                    default='retry diff'
+                                )
+                                if choice == 'retry diff':
+                                    unset_parameter(view_name + '-override')
+                                    continue
+                                elif choice == 'override':
+                                    update_view = True
+                                    break
+                                elif choice == 'keep existing':
+                                    update_view = False
+                                    break
+                                else:
+                                    raise CidCritical(f'User choice is not to update {view_name}.')
+                            elif not diff:
+                                if not get_yesno_parameter(
+                                    param_name=view_name + '-override',
+                                    message=f'Cannot get sql diff for {view_name}. Continue?',
+                                    default='yes'
+                                    ):
+                                    raise CidCritical(f'User choice is not to update {view_name}.')
+                                update_view = True
+                            break
+                        if update_view:
+                            print(f'Updating view: "{view_name}"')
+                            self.athena.execute_query(view_query)
                     else:
                         print(f'View "{view_name}" is not compatible with update. Skipping.')
                 assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
                 logger.info(f'View "{view_name}" updated')
             else:
                 return
-        else:
+        else: # No found -> creation
             logger.info(f'Creating view: "{view_name}"')
             if view_definition.get('type') == 'Glue_Table':
                 self.glue.create_or_update_table(view_name, view_query)

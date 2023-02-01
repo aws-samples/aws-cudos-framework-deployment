@@ -371,6 +371,7 @@ class Athena(CidBase):
 
     def get_view_diff(self, name, sql):
         """ returns a diff between existing and new viws. """
+        tmp_name = 'cid_tmp_deleteme'
         existing_sql = ''
         try:
             existing_sql = self.query(f'SHOW CREATE VIEW {name}', include_header=True)
@@ -379,7 +380,6 @@ class Athena(CidBase):
             print(exc)
             return None
         try:
-            tmp_name = 'cid_deleteme_' + str(uuid.uuid4()).replace('-', '_')
             tmp_sql = re.sub(r'(CREATE OR REPLACE VIEW) (.+?) (AS.*)', r'\1 ' + tmp_name +  r' \3', sql)
 
             if tmp_sql == sql:
@@ -390,6 +390,8 @@ class Athena(CidBase):
         except Exception as exc:
             print(exc)
             return None
+        finally:
+            self.query(f'DROP VIEW IF EXISTS {tmp_name};', fail=False)
 
         return diff_sql(existing_sql, tmp_sql)
 
