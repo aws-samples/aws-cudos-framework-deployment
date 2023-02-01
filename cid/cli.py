@@ -83,6 +83,20 @@ def map(ctx, **kwargs):
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@cid_command
+def csv2view(ctx, **kwargs):
+    """Create account sql code from CSV file
+
+    \b
+    Command options:
+     --input                         csv file
+     --name                          Athena View name
+    """
+    ctx.obj.csv2view(**kwargs)
+
+
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.option('--share-with-account', help='Share dashboard with all users in the current account', is_flag=True, default=None)
 @click.option('--quicksight-delete-failed-datasource', help='Delete datasoruce if creation failed', is_flag=True, default=None)
 @cid_command

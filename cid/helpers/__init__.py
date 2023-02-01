@@ -3,6 +3,7 @@ from cid.helpers.cur import CUR
 from cid.helpers.glue import Glue
 from cid.helpers.sql import pretty_sql
 from cid.helpers.quicksight import QuickSight, Dashboard, Dataset, Datasource, Template
+from cid.helpers.csv2view import csv2view
 
 __all__ = [
     "Athena",
@@ -14,4 +15,5 @@ __all__ = [
     "Datasource",
     "Template",
     "pretty_sql",
+    "csv2view",
 ]

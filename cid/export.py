@@ -120,6 +120,12 @@ def export_analysis(qs, athena):
             dependancy_views.append(athena_source)
             all_views.append(athena_source)
 
+        for key, value in dataset_data.get('LogicalTableMap', {}).items():
+            if 'Source' in value and "DataSetArn" in value['Source']:
+                #FIXME add value['Source']['DataSetArn'] to the list of dataset_arn s 
+                raise CidCritical(f"DataSet {dataset.raw['Name']} contains unsupported join. Please replace join of {value.get('Alias')} from DataSet to DataSource")
+
+
         datasets[dataset_arn] = {
             'data': dataset_data,
             'dependsOn': {'views': dependancy_views},
@@ -199,7 +205,7 @@ def export_analysis(qs, athena):
     dashboard_id = get_parameter(
         'dashboard-id',
         message='dashboard id (will be used in url of dashboard)',
-        default=analysis['Name'].replace(' ', '-').lower()
+        default=analysis['Name'].replace(' ', '-').replace('.', '-').lower()
     )
 
     resources['dashboards'][analysis['Name'].upper()] = {
