@@ -8,6 +8,7 @@ Source Account                    Destination Account
 │                         │       │                  │
 └─────────────────────────┘       └──────────────────┘
 '''
+import re
 import time
 import logging
 
@@ -29,6 +30,9 @@ def enable_multiline_in_yaml():
       return dumper.represent_scalar('tag:yaml.org,2002:str', data)
     yaml.add_representer(str, str_presenter)
     yaml.representer.SafeRepresenter.add_representer(str, str_presenter) # to use with safe_dump
+
+def escape_id(id_):
+    return re.sub('[^0-9a-zA-Z]+', '-', id_)
 
 def choose_analysis(qs):
     try:
@@ -147,7 +151,7 @@ def export_analysis(qs, athena):
     template_id = get_parameter(
         'template-id',
         message='Enter template id',
-        default=analysis.get('Name').replace(' ', '-')
+        default=escape_id(analysis['Name'].lower())
     )
 
     template_version_description = get_parameter(
@@ -205,7 +209,7 @@ def export_analysis(qs, athena):
     dashboard_id = get_parameter(
         'dashboard-id',
         message='dashboard id (will be used in url of dashboard)',
-        default=analysis['Name'].replace(' ', '-').replace('.', '-').lower()
+        default=escape_id(analysis['Name'].lower())
     )
 
     resources['dashboards'][analysis['Name'].upper()] = {
