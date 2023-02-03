@@ -99,8 +99,10 @@ def export_analysis(qs, athena):
             raise CidCritical(f'dataset {dataset_id} not found. '
                 'We need all datasets to be preset for template generation')
 
+        dataset_name = dataset.raw['Name']
+
         dataset_references.append({
-            "DataSetPlaceholder": dataset.raw['Name'],
+            "DataSetPlaceholder": dataset_name,
             "DataSetArn": dataset_arn
         })
 
@@ -130,7 +132,7 @@ def export_analysis(qs, athena):
                 raise CidCritical(f"DataSet {dataset.raw['Name']} contains unsupported join. Please replace join of {value.get('Alias')} from DataSet to DataSource")
 
 
-        datasets[dataset_arn] = {
+        datasets[dataset_name] = {
             'data': dataset_data,
             'dependsOn': {'views': dependancy_views},
         }
@@ -212,6 +214,7 @@ def export_analysis(qs, athena):
         default=escape_id(analysis['Name'].lower())
     )
 
+
     resources['dashboards'][analysis['Name'].upper()] = {
         'name': analysis['Name'],
         'templateId': template_id,
@@ -219,13 +222,14 @@ def export_analysis(qs, athena):
         'region': qs.session.region_name,
         'dashboardId': dashboard_id,
         'dependsOn':{
-            'datasets': [arn.split('/')[-1] for arn, dataset in datasets.items()]
+            # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
+            # We can potentially reconsider this and use IDs at some point
+            'datasets': [dataset_name for dataset_name in datasets.keys()]
         }
     }
 
-    for arn, dataset in datasets.items():
-        dataset_id = arn.split('/')[-1]
-        resources['datasets'][dataset_id] = dataset
+    for name, dataset in datasets.items():
+        resources['datasets'][name] = dataset
 
     output = get_parameter(
         'output',

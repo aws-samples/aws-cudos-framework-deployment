@@ -427,7 +427,7 @@ class Athena(CidBase):
                 deps = re.findall(r'FROM\W+([\S."]+)', sql)
                 for dep_view in deps:
                     #FIXME: need to add cross Database Dependancies
-                    if dep_view.upper() in ('SELECT'):
+                    if dep_view.upper() in ('SELECT', 'VALUES'): # remove "FROM SELECT" and "FROM VALUES"
                         continue
                     if dep_view not in all_views[view]["dependsOn"]['views']:
                         all_views[view]["dependsOn"]['views'].append(dep_view)

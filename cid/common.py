@@ -336,7 +336,7 @@ class Cid():
             dashboard_definition.update({'datasets': {}})
         for dataset_name in required_datasets:
             for ds in self.qs.datasets.values():
-                if isinstance(ds, Dataset) or ds.name != dataset_name:
+                if not isinstance(ds, Dataset) or ds.name != dataset_name:
                     continue
                 dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                 required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
@@ -344,12 +344,12 @@ class Cid():
                 for k,v in required_fileds.items():
                     if k not in dataset_fields or dataset_fields[k] != v:
                         unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
+                print('DEBUG:', unmatched)
                 if unmatched:
                     raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
-                else:
-                    print(f'Using dataset {dataset_name}: {ds.id}')
-                    dashboard_definition.get('datasets').update({dataset_name: ds.arn})
-                    break
+                print(f'Using dataset {dataset_name}: {ds.id}')
+                dashboard_definition.get('datasets').update({dataset_name: ds.arn})
+                break
             else: # not found
                 logger.warning(f'Dataset {dataset_name} is not found')
   
@@ -1297,8 +1297,8 @@ class Cid():
             view_definition['File'] = view_definition.get('spFile')
         elif cur_required and self.cur.hasReservations and view_definition.get('riFile'):
             view_definition['File'] = view_definition.get('riFile')
-        elif view_definition.get('File'):
-            view_definition['File'] = view_definition.get('File')
+        elif view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
+            pass
         else:
             logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
             raise Exception(f'\nCannot find view {view_name}')
@@ -1331,6 +1331,7 @@ class Cid():
             # Add parameter
             columns_tpl.update(param)
         # Compile template
+        print('DEBUG', view_name,  columns_tpl, self.get_data_from_definition('view', view_definition))
         compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query
