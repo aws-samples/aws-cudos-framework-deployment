@@ -1,25 +1,36 @@
+import re
 import os
 import csv
 import logging
 
 logger = logging.getLogger(__name__)
 
+def escape(text, character='_'):
+    """ escape for sql statement """
+    return re.sub('[^0-9a-zA-Z]+', character, text)
+
+
 def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> None:
     """ Make an sql mapping from sql """
     logger.debug(f"input {input_file_name}")
+
+    sniffer = csv.Sniffer()
     with open(input_file_name) as file_:
-        data = [d for d in csv.DictReader(file_)]
+        dialect = sniffer.sniff(file_.read(2000))
+
+    with open(input_file_name) as file_:
+        data = [d for d in csv.DictReader(file_, dialect=dialect)]
 
     lines = []
     for line in data:
-        arr = ", ".join(["\'" + val.replace("'", ' ') + "\'" for val in line.values()])
+        arr = ", ".join(["'" + val.replace("'", "''") + "'" for val in line.values()])
         lines.append(f'ROW({arr})')
 
     row_lines = '\n, '.join(lines)
-    cols = ', '.join([c.lower().replace(' ','_') for c in data[0].keys()])
+    cols = ', '.join([escape(c.lower()) for c in data[0].keys()])
 
     sql = (f'''
-CREATE OR REPLACE VIEW {name} AS
+CREATE OR REPLACE VIEW {escape(name.lower())} AS
 SELECT *
 FROM
 (
