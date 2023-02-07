@@ -1,7 +1,7 @@
 # CID Terraform Module: cid-dashboards
 
 Terraform module to deploy CID dashboards. This module is a wrapper around CloudFormation
-to allow you to deploy CID dashboards using your existing Terraform workflows. Under th
+to allow you to deploy CID dashboards using your existing Terraform workflows. Under the
 hood, the module will deploy a CloudFormation stack which will provision the necessary
 resources and a custom Lambda function to create the dashboards using `cid-cmd`.
 
@@ -41,9 +41,9 @@ for the custom resource Lambda function "CidCustomDashboardResource"if dashboard
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.0)
+- terraform (>= 1.0)
 
-- <a name="requirement_aws"></a> [aws](#requirement\_aws) (>= 3.0)
+- aws (>= 3.0)
 
 ## Resources
 
@@ -57,13 +57,13 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_stack_name"></a> [stack\_name](#input\_stack\_name)
+### stack\_name
 
 Description: CloudFormation stack name for CID deployment
 
 Type: `string`
 
-### <a name="input_stack_parameters"></a> [stack\_parameters](#input\_stack\_parameters)
+### stack\_parameters
 
 Description: CloudFormation stack parameters. For the full list of available parameters, refer to  
 https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/cfn-templates/cid-cfn.yml.  
@@ -83,7 +83,7 @@ For most setups, you will want to set the following parameters:
 
 Type: `map(string)`
 
-### <a name="input_template_bucket"></a> [template\_bucket](#input\_template\_bucket)
+### template\_bucket
 
 Description: S3 bucket where the Cloudformation template will be uploaded. Must already exist and be in the same region as the stack.
 
@@ -93,7 +93,7 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_stack_iam_role"></a> [stack\_iam\_role](#input\_stack\_iam\_role)
+### stack\_iam\_role
 
 Description: The ARN of an IAM role that AWS CloudFormation assumes to create the stack (default behavior is to use the previous role if available, or current user permissions otherwise).
 
@@ -101,7 +101,7 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_stack_notification_arns"></a> [stack\_notification\_arns](#input\_stack\_notification\_arns)
+### stack\_notification\_arns
 
 Description: A list of SNS topic ARNs to publish stack related events.
 
@@ -109,7 +109,7 @@ Type: `list(string)`
 
 Default: `[]`
 
-### <a name="input_stack_policy_body"></a> [stack\_policy\_body](#input\_stack\_policy\_body)
+### stack\_policy\_body
 
 Description: String containing the stack policy body. Conflicts with stack\_policy\_url.
 
@@ -117,7 +117,7 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_stack_policy_url"></a> [stack\_policy\_url](#input\_stack\_policy\_url)
+### stack\_policy\_url
 
 Description: Location of a file containing the stack policy body. Conflicts with stack\_policy\_body.
 
@@ -125,7 +125,7 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_stack_tags"></a> [stack\_tags](#input\_stack\_tags)
+### stack\_tags
 
 Description: Tag key-value pairs to apply to the stack
 
@@ -133,7 +133,7 @@ Type: `map(string)`
 
 Default: `null`
 
-### <a name="input_template_key"></a> [template\_key](#input\_template\_key)
+### template\_key
 
 Description: Name of the S3 path/key where the Cloudformation template will be created. Defaults to cid-cfn.yml
 
@@ -145,7 +145,7 @@ Default: `"cid-cfn.yml"`
 
 The following outputs are exported:
 
-### <a name="output_stack_outputs"></a> [stack\_outputs](#output\_stack\_outputs)
+### stack\_outputs
 
 Description: CloudFormation stack outputs (map of strings)
 <!-- END_TF_DOCS -->

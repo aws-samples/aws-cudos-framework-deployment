@@ -8,3 +8,5 @@ sections:
     - modules
 sort:
   by: required
+settings:
+  anchor: false
