@@ -197,19 +197,6 @@ class QuickSight(CidBase):
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         if not dashboard:
             raise CidCritical(f'Dashboard {dashboardId} was not found')
-        try:
-            _template_arn = dashboard.version.get('SourceEntityArn')
-            _template = self.describe_template(
-                template_id=_template_arn.split('/')[1],
-                account_id=_template_arn.split(':')[4],
-                region=_template_arn.split(':')[3],
-                version_number=int(_template_arn.split('/')[-1]),
-            )
-            if isinstance(_template, CidQsTemplate):
-                dashboard.deployedTemplate = _template
-        except Exception as e:
-            logger.debug(e, exc_info=True)
-            logger.info(f'Unable to describe template for {dashboardId}, {e}')
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
@@ -218,82 +205,122 @@ class QuickSight(CidBase):
             _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.template_id), None)
         if not _definition:
             logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
-        else:
-            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.template_arn})')
-            dashboard.definition = _definition
-            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.template_arn})')
-            for dataset in dashboard.version.get('DataSetArns'):
-                dataset_id = dataset.split('/')[-1]
-                try:
-                    _dataset = self.describe_dataset(id=dataset_id)
-                    if not isinstance(_dataset, Dataset):
-                        logger.info(f'Dataset "{dataset_id}" is missing')
-                    else:
-                        logger.info(f"Detected dataset: \"{_dataset.name}\" ({_dataset.id} in {dashboard.name})")
-                        dashboard.datasets.update({_dataset.name: _dataset.id})
-                except self.client.exceptions.AccessDeniedException:
-                    logger.info(f'Access denied describing DataSetId {dataset_id} for Dashboard {dashboardId}')
-                except self.client.exceptions.InvalidParameterValueException:
-                    logger.info(f'Invalid dataset {dataset_id}')
-            templateAccountId = _definition.get('sourceAccountId')
-            templateId = _definition.get('templateId')
-            region = _definition.get('region', 'us-east-1')
-
+            return None
+        
+        logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.template_arn})')
+        dashboard.definition = _definition
+        logger.info(f'Found definition for "{dashboard.name}" ({dashboard.template_arn})')
+        
+        sourcetemplateAccountId = _definition.get('sourceAccountId')
+        templateId = _definition.get('templateId')
+        region = _definition.get('region', 'us-east-1')
+        
+        # Check for extra informations in resource definitionn
+        version_obj = _definition.get('versions', dict())
+        min_template_version = int(version_obj.get('minTemplateVersion')) if str(version_obj.get('minTemplateVersion')).isdecimal() else None
+        default_description_version = str(version_obj.get('minTemplateDescription')) if version_obj.get('minTemplateVersion') else None
+        
+        try:
+            _template_arn = dashboard.version.get('SourceEntityArn')
+            
+            params = {
+                "template_id": _template_arn.split('/')[1],
+                "account_id": _template_arn.split(':')[4],
+                "region": _template_arn.split(':')[3]
+            }
+            
+            ## Check for version_number
+            # Some Legagy template arn does not have a version number
+            
+            template_version_nb = int(_template_arn.split('/')[-1]) if _template_arn.split('/')[-1].isdecimal() else None
+                
+            if not template_version_nb:
+                logger.info(f"Unable to determine the version of the template from arn {_template_arn}")
+                if min_template_version:
+                    logger.info(f"Using default version number {min_template_version} in place")
+                    params['version_number'] = min_template_version
+                else:
+                    logger.error("Minimum template version could not be found, deployed template could not be described")
+                    return None
+            else:
+                params['version_number'] = template_version_nb
+            
+            _template = self.describe_template(**params)
+            
+            if isinstance(_template, CidQsTemplate):
+                dashboard.deployedTemplate = _template
+        except Exception as e:
+            logger.debug(e, exc_info=True)
+            logger.info(f'Unable to describe template for {dashboardId}, {e}')
+            
+            
+        for dataset in dashboard.version.get('DataSetArns'):
+            dataset_id = dataset.split('/')[-1]
             try:
-                template = self.describe_template(templateId, account_id=templateAccountId, region=region)
-                dashboard.sourceTemplate = template
+                _dataset = self.describe_dataset(id=dataset_id)
+                if not isinstance(_dataset, Dataset):
+                    logger.info(f'Dataset "{dataset_id}" is missing')
+                else:
+                    logger.info(f"Detected dataset: \"{_dataset.name}\" ({_dataset.id} in {dashboard.name})")
+                    dashboard.datasets.update({_dataset.name: _dataset.id})
+            except self.client.exceptions.AccessDeniedException:
+                logger.info(f'Access denied describing DataSetId {dataset_id} for Dashboard {dashboardId}')
+            except self.client.exceptions.InvalidParameterValueException:
+                logger.info(f'Invalid dataset {dataset_id}')
+
+        # Get latest version of sourceTemplate from source account
+        try:
+            logger.debug(f'Loading latest source template {templateId} from source account {sourcetemplateAccountId} in {region}')
+            template = self.describe_template(templateId, account_id=sourcetemplateAccountId, region=region)
+            dashboard.sourceTemplate = template
+        except Exception as e:
+            logger.debug(e, exc_info=True)
+            logger.info(f'Unable to describe template {templateId} in {sourcetemplateAccountId} ({region})')
+
+        # Checking for version override in template definition
+        for dashboard_template in [dashboard.deployedTemplate, dashboard.sourceTemplate]:
+                            
+            if not isinstance(dashboard_template, CidQsTemplate)\
+                or int(dashboard_template.version) <= 0 \
+                or not version_obj:
+                    continue
+            
+            logger.debug("versions object found in template")
+            version_map = version_obj.get('versionMap', dict())
+            description_override = version_map.get(int(dashboard_template.version))
+            
+            try:
+                if description_override:
+                    logger.info(f"Template description is overrided with: {description_override}")
+                    description_override = str(description_override)
+                    dashboard_template.raw['Version']['Description'] = description_override
+                else:
+                    if min_template_version and default_description_version:
+                        if int(dashboard_template.version) <= min_template_version:
+                            logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
+                            dashboard_template.raw['Version']['Description'] = default_description_version
+            except ValueError as val_error:
+                logger.debug(val_error,  exc_info=True)
+                logger.info("The provided values of the versions object are not well formed, please use int for template version and str for template description")
             except Exception as e:
                 logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {templateId} in {templateAccountId} ({region})')
-
-           # Checking for version override in template definition
-            for dashboard_template in [dashboard.deployedTemplate, dashboard.sourceTemplate]:
-                                
-                if not isinstance(dashboard_template, CidQsTemplate)\
-                    or int(dashboard_template.version) <= 0 \
-                    or not _definition.get('versions'):
-                        continue
-                
-                version_obj = _definition.get('versions')
-               
-                logger.debug("versions object found in template")
-                version_map = version_obj.get('versionMap', dict())
-                description_override = version_map.get(int(dashboard_template.version))
-                
-                try:
-                    if description_override:
-                        logger.info(f"Template description is overrided with: {description_override}")
-                        description_override = str(description_override)
-                        dashboard_template.raw['Version']['Description'] = description_override
-                    else:
-                        min_template_version = int(version_obj.get('minTemplateVersion'))
-                        default_description_version = str(version_obj.get('minTemplateDescription'))
-                        if min_template_version and default_description_version:
-                            if int(dashboard_template.version) <= min_template_version:
-                                logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
-                                dashboard_template.raw['Version']['Description'] = default_description_version
-                except ValueError as val_error:
-                    logger.debug(val_error,  exc_info=True)
-                    logger.info("The provided values of the versions object are not well formed, please use int for template version and str for template description")
-                except Exception as e:
-                    logger.debug(e, exc_info=True)
-                    logger.info("Unable to override template description")
-                                
-            # recoursively add views
-            all_views = []
-            def _recoursive_add_view(view):
-                all_views.append(view)
-                for dep_view in (self.supported_views.get(view) or {}).get('dependsOn', {}).get('views', []):
-                    _recoursive_add_view(dep_view)
-            for dataset_name in dashboard.datasets.keys():
-                for view in (self.supported_datasets.get(dataset_name) or {}).get('dependsOn', {}).get('views', []):
-                    _recoursive_add_view(view)
-            dashboard.views = all_views
-            self._dashboards = self._dashboards or {}
-            self._dashboards.update({dashboardId: dashboard})
-            logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
-            logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
-            return dashboard
+                logger.info("Unable to override template description")
+                            
+        # recoursively add views
+        all_views = []
+        def _recoursive_add_view(view):
+            all_views.append(view)
+            for dep_view in (self.supported_views.get(view) or {}).get('dependsOn', {}).get('views', []):
+                _recoursive_add_view(dep_view)
+        for dataset_name in dashboard.datasets.keys():
+            for view in (self.supported_datasets.get(dataset_name) or {}).get('dependsOn', {}).get('views', []):
+                _recoursive_add_view(view)
+        dashboard.views = all_views
+        self._dashboards = self._dashboards or {}
+        self._dashboards.update({dashboardId: dashboard})
+        logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
+        logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
+        return dashboard
 
     def ensure_group_exists(self, groupname='cid-owners', description='Created by Cloud Intelligence Dashboards'):
         try:
