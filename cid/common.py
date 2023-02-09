@@ -1177,10 +1177,45 @@ class Cid():
 
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
         if isinstance(found_dataset, Dataset):
+            update_dataset = False
             if update:
-                self.qs.update_dataset(compiled_dataset)
+                update_dataset = True
             elif found_dataset.name != compiled_dataset.get('Name'):
                 print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
+                update_dataset = True
+            if update_dataset:
+                while True:
+                    diff = self.quicksight.dataset_diff(found_dataset.raw, compiled_dataset)
+                    if diff and diff['diff']:
+                        cid_print(f'<BOLD>Found a difference between existing dataset <YELLOW>{dataset_id}<END> <BOLD>and the one we want to deploy. <END>')
+                        cid_print(diff['printable'])
+                        choice = get_parameter(
+                            param_name=dataset_id + '-override',
+                            message=f'The existing dataset is different. Override?',
+                            choices=['retry diff', 'override', 'keep existing', 'stop'],
+                            default='retry diff'
+                        )
+                        if choice == 'retry diff':
+                            unset_parameter(dataset_id + '-override')
+                            continue
+                        elif choice == 'override':
+                            update_dataset = True
+                            break
+                        elif choice == 'keep existing':
+                            update_dataset = False
+                            break
+                        else:
+                            raise CidCritical(f'User choice is not to update {dataset_id}.')
+                    elif not diff:
+                        if not get_yesno_parameter(
+                            param_name=dataset_id + '-override',
+                            message=f'Cannot get sql diff for {dataset_id}. Continue?',
+                            default='yes'
+                            ):
+                            raise CidCritical(f'User choice is not to update {dataset_id}.')
+                        update_dataset = True
+                    break
+            if update_dataset:
                 self.qs.update_dataset(compiled_dataset)
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")} {compiled_dataset.get("Name")}={found_dataset.name} ')

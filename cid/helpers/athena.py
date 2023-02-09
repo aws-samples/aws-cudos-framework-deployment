@@ -10,7 +10,7 @@ from pkg_resources import resource_string
 
 from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters
-from cid.helpers.sql import diff_sql
+from cid.helpers import diff
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
@@ -393,7 +393,7 @@ class Athena(CidBase):
         finally:
             self.query(f'DROP VIEW IF EXISTS {tmp_name};', fail=False)
 
-        return diff_sql(existing_sql, tmp_sql)
+        return diff(existing_sql, tmp_sql)
 
 
 

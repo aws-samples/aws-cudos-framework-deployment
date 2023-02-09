@@ -1,51 +1,25 @@
 import difflib
 
-from pygments import highlight, lexers, formatters
-from pygments_pprint_sql import SqlFilter
+from utils import cid_print
 
-from pygments.formatters.other import NullFormatter
-
-
-def pretty_sql(sql):
-    """ make a human readable SQL"""
-    return sql
-    lexer = lexers.MySqlLexer()
-    lexer.add_filter(SqlFilter())
-
-    formatter = NullFormatter() # for color: = formatters.TerminalFormatter()
-
-    pretty = highlight(sql, lexer, formatter)
-
-    # postprocessing. (FIXME: check if this can be done in SQLFilter)
-    pretty = pretty.replace(' , ', '\n , ').replace('SELECT', 'SELECT\n  ').replace('select', 'select\n  ')
-
-    return pretty
-
-
-
-def diff_sql(sql1, sql2):
+def diff(text1, text2):
     """ Return SQL diff """
-    pretty1 = pretty_sql(sql1)
-    pretty2 = pretty_sql(sql2)
     res = {}
     ndiff = difflib.ndiff(
-        pretty1.splitlines(keepends=True),
-        pretty2.splitlines(keepends=True),
+        text1.splitlines(keepends=True),
+        text2.splitlines(keepends=True),
     )
     lines = ''.join(ndiff)
     res['lines'] = lines
     res['+'] = 0
     res['-'] = 0
     res['='] = 0
-
     for line in lines.splitlines():
         if line.startswith('-'): res['-'] += 1
         elif line.startswith('+'): res['+'] += 1
         elif line.startswith(' '): res['='] += 1
-
     res['diff'] = res['+'] + res['-']
     res['printable'] = diff_2_cid_print(lines)
-
     return res
 
 def diff_2_cid_print(lines):

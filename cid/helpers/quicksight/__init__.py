@@ -7,10 +7,12 @@ from pkg_resources import resource_string
 from string import Template
 from typing import Dict, List, Union
 
+import yaml
 import click
 from deepmerge import always_merger
 
 from cid.base import CidBase
+from cid.helpers import diff
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
@@ -1129,3 +1131,7 @@ class QuickSight(CidBase):
         update_status = self.client.update_template_permissions(**update_parameters)
         logger.debug(update_status)
         return update_status
+
+    def dataset_diff(self, raw1, raw2):
+        """ get dataset diff """
+        return diff(yaml.dumps(raw1), yaml.dumps(raw2))
