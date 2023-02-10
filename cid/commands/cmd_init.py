@@ -149,9 +149,9 @@ class InitCommand(Command):  # pylint: disable=too-few-public-methods
         """Create a new table in Glue"""
         print('\tGlue table...', end='')
         # Load table columns
-        table_columns = json.loads(pkg_resources.read_text('cid.builtin.core.data.glue', 'table_columns.json'))
+        table_columns = json.loads(pkg_resources.read_text('cid.builtin.core.data.glue', 'cur_columns.json'))
         # Load table partition keys
-        partition_keys = json.loads(pkg_resources.read_text('cid.builtin.core.data.glue', 'table_partition_keys.json'))
+        partition_keys = json.loads(pkg_resources.read_text('cid.builtin.core.data.glue', 'cur_partition_keys.json'))
         partition_keys = partition_keys['yes' if self.cur_is_managed_by_cf else 'no']
         # Load table definition
         table_definition_str = pkg_resources.read_text('cid.builtin.core.data.glue', 'cur_table.json')
