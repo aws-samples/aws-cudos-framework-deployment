@@ -193,13 +193,10 @@ class InitCurCommand(Command):  # pylint: disable=too-few-public-methods
             print(f'\tAthena S3 Bucket...\tCreated ({self.bucket_name})')
         except CidError as ex:
             print(f'\tAthena S3 Bucket...\t{ex} ({self.bucket_name})')
-        except CidCritical as ex:
-            print(f'\tAthena S3 Bucket...\t{ex} ({self.bucket_name})')
-            sys.exit(1)
         except Exception as ex:  # pylint: disable=broad-except
             print('\tAthena S3 Bucket...\tFailed')
             logger.error('ERROR: %s', ex)
-            sys.exit(1)     
+            raise CidCritical(f'ERROR: {ex}') from ex
 
 
 def extract_cur_bucket_parameters(s3_path: str) -> Dict[str, str]:
