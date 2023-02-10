@@ -192,10 +192,10 @@ def share(ctx, dashboard_id, **kwargs):
     ctx.obj.share(dashboard_id)
 
 @cid_command
-def init(ctx, **kwargs):
-    """Initialize account resources for deployment"""
+def initqs(ctx, **kwargs):
+    """Initialize QuickSight resources for deployment"""
 
-    ctx.obj.init(**kwargs)
+    ctx.obj.initqs(**kwargs)
 
 
 if __name__ == '__main__':

@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 MAX_ITERATIONS = 5
 
 
-class InitCommand(Command):  # pylint: disable=too-few-public-methods
-    """Init Command for CLI"""
+class InitCurCommand(Command):  # pylint: disable=too-few-public-methods
+    """Init CUR Command for CLI"""
 
     def __init__(self, cid, **kwargs):
         self.cid = cid

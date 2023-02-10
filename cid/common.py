@@ -1279,8 +1279,8 @@ class Cid():
             self.accountMap.create(v)
 
     @command
-    def init(self, **kwargs):
+    def initqs(self, **kwargs):
         """ Initialize account resources for deployment """
-        from commands import InitCommand
-        cmd = InitCommand(cid=self, **kwargs)
+        from commands import InitQsCommand
+        cmd = InitQsCommand(cid=self, **kwargs)
         result = cmd.execute()
