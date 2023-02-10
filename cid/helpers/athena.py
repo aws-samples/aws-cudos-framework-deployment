@@ -10,7 +10,7 @@ from pkg_resources import resource_string
 
 from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters
-from cid.helpers import diff
+from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
@@ -391,7 +391,10 @@ class Athena(CidBase):
             print(exc)
             return None
         finally:
-            self.query(f'DROP VIEW IF EXISTS {tmp_name};', fail=False)
+            try:
+                self.query(f'DROP VIEW IF EXISTS {tmp_name};', fail=False)
+            except Exception as exc:
+                logger.debug(f'Cannot delete temporary view {tmp_name}: {exc}')
 
         return diff(existing_sql, tmp_sql)
 

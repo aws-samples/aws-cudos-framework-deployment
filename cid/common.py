@@ -1185,18 +1185,18 @@ class Cid():
                 update_dataset = True
             if update_dataset:
                 while True:
-                    diff = self.quicksight.dataset_diff(found_dataset.raw, compiled_dataset)
+                    diff = self.qs.dataset_diff(found_dataset.raw, compiled_dataset)
                     if diff and diff['diff']:
-                        cid_print(f'<BOLD>Found a difference between existing dataset <YELLOW>{dataset_id}<END> <BOLD>and the one we want to deploy. <END>')
-                        cid_print(diff['printable'])
+                        cid_print(f'<BOLD>Found a difference between existing dataset <YELLOW>{found_dataset.name}<END> <BOLD>and the one we want to deploy. <END>')
                         choice = get_parameter(
-                            param_name=dataset_id + '-override',
+                            param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
                             message=f'The existing dataset is different. Override?',
                             choices=['retry diff', 'override', 'keep existing', 'stop'],
                             default='retry diff'
                         )
-                        if choice == 'retry diff':
-                            unset_parameter(dataset_id + '-override')
+                        if choice == 'show diff':
+                            cid_print(diff['printable'])
+                            unset_parameter(found_dataset.name + '-override')
                             continue
                         elif choice == 'override':
                             update_dataset = True
@@ -1205,14 +1205,15 @@ class Cid():
                             update_dataset = False
                             break
                         else:
-                            raise CidCritical(f'User choice is not to update {dataset_id}.')
+                            raise CidCritical(f'User choice is not to update {found_dataset.name}.')
                     elif not diff:
-                        if not get_yesno_parameter(
-                            param_name=dataset_id + '-override',
-                            message=f'Cannot get sql diff for {dataset_id}. Continue?',
-                            default='yes'
-                            ):
-                            raise CidCritical(f'User choice is not to update {dataset_id}.')
+                        if not get_parameter(
+                            param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
+                            message=f'Cannot get sql diff for {found_dataset.name}. Continue?',
+                            choices=['override', 'stop'],
+                            default='override'
+                            ) != 'override':
+                            raise CidCritical(f'User choice is not to update {found_dataset.name}.')
                         update_dataset = True
                     break
             if update_dataset:
@@ -1366,7 +1367,6 @@ class Cid():
             # Add parameter
             columns_tpl.update(param)
         # Compile template
-        print('DEBUG', view_name,  columns_tpl, self.get_data_from_definition('view', view_definition))
         compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query

@@ -1,8 +1,8 @@
-import json
-import logging
 import re
-import time
+import json
 import uuid
+import time
+import logging
 from pkg_resources import resource_string
 from string import Template
 from typing import Dict, List, Union
@@ -1134,4 +1134,22 @@ class QuickSight(CidBase):
 
     def dataset_diff(self, raw1, raw2):
         """ get dataset diff """
-        return diff(yaml.dumps(raw1), yaml.dumps(raw2))
+        raw1_ = {}
+        raw2_ = {}
+        for key in ['Name', 'DataSetId', 'PhysicalTableMap']:
+            if key in raw1: raw1_[key] = raw1[key]
+            if key in raw2: raw2_[key] = raw2[key]
+        raw1_['LogicalTableMap'] = {}
+        raw2_['LogicalTableMap'] = {}
+        for key, value in raw1['LogicalTableMap'].items():
+            new_key = value.get('Alias','') + key
+            raw1_['LogicalTableMap'][new_key] = value
+        for key, value in raw2['LogicalTableMap'].items():
+            new_key = value.get('Alias','') + key
+            raw2_['LogicalTableMap'][new_key] = value
+        text1 = yaml.dump(raw1_)
+        text2 = yaml.dump(raw2_)
+        # Exclude uuid:
+        text1 = re.sub('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', 'xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', text1)
+        text2 = re.sub('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', 'xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', text2)
+        return diff(text1, text2)

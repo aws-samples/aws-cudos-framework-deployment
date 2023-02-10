@@ -17,7 +17,6 @@ import boto3
 
 from cid.helpers import Dataset, QuickSight, Athena
 from cid.utils import get_parameter, get_parameters
-from cid.helpers import pretty_sql
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
@@ -144,9 +143,6 @@ def export_analysis(qs, athena):
     athena.DatabaseName = all_databases[0]
 
     all_views_data = athena.process_views(all_views)
-    for name, data in all_views_data.items():
-        if 'CREATE EXTERNAL TABLE' not in data['data']:
-            data['data'] = pretty_sql(data['data'])
 
     resources['views'] = all_views_data
 

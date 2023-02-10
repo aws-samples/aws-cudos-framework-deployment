@@ -1,6 +1,6 @@
 import difflib
 
-from utils import cid_print
+from cid.utils import cid_print
 
 def diff(text1, text2):
     """ Return SQL diff """
