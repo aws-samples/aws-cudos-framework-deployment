@@ -1,5 +1,6 @@
 import logging
 from typing import Dict, List, Optional
+from functools import lru_cache as cache
 
 from boto3.session import Session
 from cid.exceptions import CidCritical
@@ -53,6 +54,7 @@ class CidBase():
         self._session = value
         
     @property
+    @cache(maxsize=None)
     def aws_partition(self) -> Optional[str]:
         for partition in self._session.get_available_partitions():
             for region in self._session.get_available_regions('quicksight', partition):
