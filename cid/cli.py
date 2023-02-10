@@ -197,6 +197,13 @@ def initqs(ctx, **kwargs):
 
     ctx.obj.initqs(**kwargs)
 
+@cid_command
+def initcur(ctx, **kwargs):
+    """Initialize CUR resources for deployment"""
+
+    ctx.obj.initcur(**kwargs)
+
+
 
 if __name__ == '__main__':
     main()

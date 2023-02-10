@@ -1280,7 +1280,14 @@ class Cid():
 
     @command
     def initqs(self, **kwargs):
-        """ Initialize account resources for deployment """
+        """ Initialize QuickSight resources for deployment """
         from commands import InitQsCommand
         cmd = InitQsCommand(cid=self, **kwargs)
+        result = cmd.execute()
+    
+    @command
+    def initcur(self, **kwargs):
+        """ Initialize CUR resources for deployment """
+        from commands import InitCurCommand
+        cmd = InitCurCommand(cid=self, **kwargs)
         result = cmd.execute()
