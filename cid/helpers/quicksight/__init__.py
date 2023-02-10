@@ -16,7 +16,7 @@ from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import get_parameter, get_parameters
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 
@@ -190,14 +190,17 @@ class QuickSight(CidBase):
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         try:
             _template_arn = dashboard.version.get('SourceEntityArn')
-            _template_id = str(_template_arn.split('/')[1])
-            _template_version = int(_template_arn.split('/')[-1])
-            _template = self.describe_template(template_id=_template_id, version_number=_template_version)
+            _template = self.describe_template(
+                template_id=_template_arn.split('/')[1],
+                account_id=_template_arn.split(':')[4],
+                region=_template_arn.split(':')[3],
+                version_number=int(_template_arn.split('/')[-1]),
+            )
             if isinstance(_template, CidQsTemplate):
                 dashboard.deployedTemplate = _template
         except Exception as e:
                 logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {_template_id}, {e}')
+                logger.info(f'Unable to describe template {_template_arn}, {e}')
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
@@ -261,7 +264,7 @@ class QuickSight(CidBase):
                 AwsAccountId=self.account_id,
                 GroupName=groupname,
                 Namespace='default',
-                description=description,
+                Description=description,
             ).get('Group')
         except self.client.exceptions.AccessDeniedException as e:
             raise CidCritical('Cannot access groups. (AccessDenied). Please use quicksight-user parameter '
@@ -842,10 +845,10 @@ class QuickSight(CidBase):
             except self.client.exceptions.UnsupportedUserEditionException:
                 raise CidCritical('AWS QuickSight Enterprise Edition is required')
             except self.client.exceptions.ResourceNotFoundException:
-                raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
+                raise CidError(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
             except Exception as e:
                 logger.debug(e, exc_info=True)
-                raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
+                raise CidError(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
         return self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}')
 
     def describe_user(self, username: str) -> dict:

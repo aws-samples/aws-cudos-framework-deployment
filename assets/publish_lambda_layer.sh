@@ -1,9 +1,13 @@
+#!/bin/bash
+# This script can be used for release or testing of lambda layers upload.
 export CID_VERSION=$(python3 -c "from cid import _version;print(_version.__version__)")
+rm -rf build
 
+echo 'Building a layer'
 mkdir -p ./python
 pip3 install . -t ./python
 zip -qr cid-$CID_VERSION.zip ./python
-ls cid-$CID_VERSION.zip
+ls -l cid-$CID_VERSION.zip
 rm -rf ./python
 
 export AWS_REGION=us-east-1
@@ -29,5 +33,20 @@ aws cloudformation list-stack-instances \
     fi
   done
 
-echo 'cleanup'
+echo 'Cleanup'
 rm -vf ./cid-$CID_VERSION.zip
+
+
+# Publish cfn (only works for the release)
+aws s3 ls aws-managed-cost-intelligence-dashboards
+if [ $? -eq 0 ]; then
+  echo "Updating cid-cfn.yml"
+  aws s3api put-object \
+        --bucket "aws-managed-cost-intelligence-dashboards" \
+        --key cfn/cid-cfn.yml \
+        --body ./cfn-templates/cid-cfn.yml
+else
+  echo "Not a main account. Skipping update of cid-cfn.yml"
+fi
+
+echo 'Done'

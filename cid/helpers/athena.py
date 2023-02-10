@@ -26,7 +26,6 @@ class Athena(CidBase):
     _metadata = dict()
     _resources = dict()
     _client = None
-    region: str = None
 
     def __init__(self, session, resources: dict=None) -> None:
         super().__init__(session)
@@ -142,9 +141,9 @@ class Athena(CidBase):
         except self.client.exceptions.InvalidRequestException as e:
             raise CidCritical(e)
         if _workgroup.get('State') == 'DISABLED':
-            raise CidCritical(f'Workgroup "{name}" is disabled.')
+            raise CidCritical(f'Athena Workgroup "{name}" is disabled.')
         if not _workgroup.get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation'):
-            raise CidCritical(f'Workgroup "{name}" must have an output location set.')
+            raise CidCritical(f'Athena Workgroup "{name}" must have an output location s3 bucket configured in the region {self.region}.')
         self._WorkGroup = name
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
