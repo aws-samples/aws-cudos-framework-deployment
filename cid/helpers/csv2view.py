@@ -3,6 +3,8 @@ import os
 import csv
 import logging
 
+from cid.exceptions import CidCritical
+
 logger = logging.getLogger(__name__)
 
 def escape(text, character='_'):
@@ -13,6 +15,9 @@ def escape(text, character='_'):
 def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> None:
     """ Make an sql mapping from sql """
     logger.debug(f"input {input_file_name}")
+
+    if not os.path.isfile(input_file_name):
+        raise CidCritical(f'File not found: {repr(input_file_name)}')
 
     sniffer = csv.Sniffer()
     with open(input_file_name) as file_:
