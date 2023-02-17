@@ -1,5 +1,10 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.76.1
+
+* Storage : Fix for 'EBS Storage Unit Cost' visual not showing data
+* Amazon S3: Added account tooltip to 'Total Cost per Bucket Previous Month by Operation' visual
+
 ## CUDOS - 4.76.0
 
 * Databases and Compute: Added ability to switch between Instance Hours, Normalized Hours and Cost with the top level control 'Usage Unit’. Normalized Hours allows you to get more precise tracking of your usage taking into account size of the instances. Learn more about normalized hours in recommendations sections of each tab
