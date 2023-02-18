@@ -376,7 +376,7 @@ class Cid():
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
-        dashboard = self.qs.describe_dashboard(dashboard_id)
+        dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
                 return self.update_dashboard(dashboard_id, recursive, required_datasets, dashboard_datasets,**kwargs)
