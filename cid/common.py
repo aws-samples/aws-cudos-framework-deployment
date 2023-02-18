@@ -23,7 +23,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view
 from cid.helpers.quicksight.template import Template as CidQsTemplate
@@ -287,7 +287,7 @@ class Cid():
         # Get selected dashboard definition
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
         
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         
         if not dashboard_definition:
             if isinstance(dashboard, Dashboard):
@@ -344,7 +344,7 @@ class Cid():
                 for k,v in required_fileds.items():
                     if k not in dataset_fields or dataset_fields[k] != v:
                         unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
-                print('DEBUG:', unmatched)
+                logger.debug(f'unmatched_fields={unmatched}')
                 if unmatched:
                     raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
                 print(f'Using dataset {dataset_name}: {ds.id}')
@@ -373,7 +373,7 @@ class Cid():
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
                 return self.update_dashboard(dashboard_id, recursive, required_datasets, dashboard_datasets,**kwargs)
@@ -416,10 +416,8 @@ class Cid():
             return dashboard_id
         if not dashboard_id:
             dashboard_id = self.qs.select_dashboard(force=True)
-            dashboard = self.qs.dashboards.get(dashboard_id)
-        else:
-            # Describe dashboard by the ID given, no discovery
-            dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
+
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
         click.echo('Getting dashboard status...', nl=False)
         if dashboard is not None:
@@ -432,7 +430,7 @@ class Cid():
             click.launch(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
         else:
             click.echo('not deployed.')
-        
+
         return dashboard_id
 
     @command
@@ -447,7 +445,7 @@ class Cid():
             if not dashboard_id:
                 print('No dashboard selected')
                 return
-            dashboard = self.qs.dashboards.get(dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         else:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
@@ -470,7 +468,7 @@ class Cid():
                 return
 
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
-            datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
+            datasets = self.qs.discover_dashboard(dashboardId=dashboard_id).datasets # save for later
         else:
             dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
             datasets = {d: None for d in (dashboard_definition or {}).get('dependsOn', {}).get('datasets', [])}
@@ -610,7 +608,7 @@ class Cid():
             # Describe dashboard by the ID given, no discovery
             self.qs.discover_dashboard(dashboardId=dashboard_id)
 
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
         if dashboard is None:
             print('not deployed.')
@@ -783,7 +781,7 @@ class Cid():
             Returns True | False | None if could not check 
         """
         
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
@@ -834,7 +832,7 @@ class Cid():
     
     def update_dashboard(self, dashboard_id, recursive=False, required_datasets=None, dashboard_datasets=None, **kwargs):
 
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return
@@ -1183,11 +1181,12 @@ class Cid():
             elif found_dataset.name != compiled_dataset.get('Name'):
                 print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
                 update_dataset = True
-            if update_dataset:
+            if update_dataset and get_parameters().get('on-drift', 'show').lower() != 'override' and isatty() and not cur_required:
                 while True:
                     diff = self.qs.dataset_diff(found_dataset.raw, compiled_dataset)
                     if diff and diff['diff']:
                         cid_print(f'<BOLD>Found a difference between existing dataset <YELLOW>{found_dataset.name}<END> <BOLD>and the one we want to deploy. <END>')
+                        cid_print(diff['printable'])
                         choice = get_parameter(
                             param_name='dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override',
                             message=f'The existing dataset is different. Override?',
@@ -1195,7 +1194,6 @@ class Cid():
                             default='retry diff'
                         )
                         if choice == 'retry diff':
-                            cid_print(diff['printable'])
                             unset_parameter('dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override')
                             continue
                         elif choice == 'proceed and override':
@@ -1271,7 +1269,7 @@ class Cid():
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
                         update_view = False
-                        while True:
+                        while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
                             cid_print(f'Analysing view {view_name}')
                             diff = self.athena.get_view_diff(view_name, view_query)
                             if diff and diff['diff']:

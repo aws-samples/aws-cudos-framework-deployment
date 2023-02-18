@@ -57,7 +57,7 @@ class Dataset(CidQsResource):
                 if 'RelationalTable' in phy:
                     rel = phy['RelationalTable']
                     name +='(' + '/'.join([rel.get('Catalog', 'AwsDataCatalog'),rel.get('Schema', ''), rel.get('Name', '') ]) + ')'
-                    cols = [col['Type']+ ' ' + col['Name'] for col in rel.get('InputColumns', [])]
+                    cols = sorted([col['Type']+ ' ' + col['Name'] for col in rel.get('InputColumns', [])])
                 else:
                     cols = [f"Unsupported PhysicalTableMap in {phtid}: {phy.keys()}"]
             elif 'JoinInstruction' in source:

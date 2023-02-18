@@ -511,6 +511,7 @@ class QuickSight(CidBase):
         deployed_dashboards=self.list_dashboards()
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
         logger.debug(deployed_dashboards)
+        raise Exception
         with click.progressbar(
             length=len(deployed_dashboards),
             label='Discovering deployed dashboards...',
@@ -571,7 +572,11 @@ class QuickSight(CidBase):
     def select_dashboard(self, force=False) -> str:
         """ Select from a list of discovered dashboards """
         selection = list()
-        dashboard_id = None
+
+        dashboard_id = get_parameters().get('dashboard-id')
+        if dashboard_id:
+            return dashboard_id
+
         if not self.dashboards:
             return None
         choices = {}
@@ -1135,6 +1140,6 @@ class QuickSight(CidBase):
     def dataset_diff(self, raw1, raw2):
         """ get dataset diff """
         return diff(
-                Dataset(raw1).to_diffable_structure(),
-                Dataset(raw2).to_diffable_structure(),
+            Dataset(raw1).to_diffable_structure(),
+            Dataset(raw2).to_diffable_structure(),
         )
