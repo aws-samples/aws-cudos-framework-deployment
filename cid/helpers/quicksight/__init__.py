@@ -511,7 +511,6 @@ class QuickSight(CidBase):
         deployed_dashboards=self.list_dashboards()
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
         logger.debug(deployed_dashboards)
-        raise Exception
         with click.progressbar(
             length=len(deployed_dashboards),
             label='Discovering deployed dashboards...',
