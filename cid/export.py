@@ -16,6 +16,7 @@ import yaml
 import boto3
 
 from cid.helpers import Dataset, QuickSight, Athena
+from cid.helpers import CUR
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
@@ -85,6 +86,10 @@ def export_analysis(qs, athena):
     resources['dashboards'] = {}
     resources['datasets'] = {}
 
+
+    cur_helper = CUR(session=athena.session)
+    resources_datasets = []
+
     dataset_references = []
     datasets = {}
     all_views = []
@@ -104,6 +109,11 @@ def export_analysis(qs, athena):
             "DataSetPlaceholder": dataset_name,
             "DataSetArn": dataset_arn
         })
+
+        if dataset_name in athena._resources.get('datasets'):
+            resources_datasets.append(dataset_name)
+            logger.info(f'DataSet {dataset_name} is in resources. Skiping.')
+            continue
 
         dataset_data = {
             "DataSetId": dataset.raw['DataSetId'],
@@ -130,21 +140,62 @@ def export_analysis(qs, athena):
                 #FIXME add value['Source']['DataSetArn'] to the list of dataset_arn s 
                 raise CidCritical(f"DataSet {dataset.raw['Name']} contains unsupported join. Please replace join of {value.get('Alias')} from DataSet to DataSource")
 
-
+        dep_cur = False
+        for dep_view in dependancy_views[:]:
+            if cur_helper.table_is_cur(name=key):
+                dependancy_views.remove(dep_view)
+                dep_cur = True
         datasets[dataset_name] = {
             'data': dataset_data,
             'dependsOn': {'views': dependancy_views},
         }
+        if dep_cur: datasets[dataset_name]['dependsOn']['cur'] = True
 
     all_databases = list(set(all_databases))
     if len(all_databases) > 1:
         raise CidCritical(f'CID only supports one database. Multiple used: {all_databases}')
 
-    athena.DatabaseName = all_databases[0]
+    if all_databases:
+        athena.DatabaseName = all_databases[0]
 
     all_views_data = athena.process_views(all_views)
 
-    resources['views'] = all_views_data
+    # Post processing of views:
+    # - Special treatment for CUR: replace cur table with a placeholder
+    # - Detect S3 paths as variables
+    resources['views'] = {}
+    cur_tables = []
+    for key, view_data in all_views_data.items():
+        if all_databases and isinstance(view_data.get('data'), str):
+            view_data['data'] = view_data['data'].replace(f'{all_databases[0]}.', '${athena_database_name}.')
+            view_data['data'] = view_data['data'].replace('CREATE VIEW ', 'CREATE OR REPLACE VIEW ')
+
+        deps = view_data.get('dependsOn', {})
+
+        non_cur_dep_views = []
+        for dep_view in deps.get('views', []):
+            print('analysing ', dep_view)
+            if cur_helper.table_is_cur(name=dep_view):
+                view_data['dependsOn']['cur'] = True
+                # replace cur table name with a variable
+                if isinstance(view_data.get('data'), str):
+                    view_data['data'] = view_data['data'].replace(f'"{dep_view}"', '"${cur_table_name}"')
+                cur_tables.append(dep_view)
+            else:
+                print('not cur')
+                non_cur_dep_views.append(dep_view)
+        if deps.get('views'):
+             deps['views'] = non_cur_dep_views
+             if not deps['views']:
+                del deps['views']
+    for key, view_data in all_views_data.items():
+        if key in cur_tables or cur_helper.table_is_cur(name=key): continue     # Filter out all CUR tables
+        if isinstance(view_data.get('data'), str):
+            buckets = re.findall("LOCATION\n  's3://(.+?)/", view_data.get('data'))
+            for bucket in buckets:
+                logger.warning('Please replace manually location bucket with a parameter: s3://{bucket}')
+                #FIXME: add parameter automatically
+        resources['views'][key] = view_data 
 
     template_id = get_parameter(
         'template-id',
@@ -185,13 +236,15 @@ def export_analysis(qs, athena):
     template_arn = res['Arn']
     logger.info(f'Template arn = {template_arn}')
 
-    time.sleep(5)
 
     reader_account_id = get_parameter(
         'reader-account',
         message='Enter account id to share the template with or *',
         default='*'
     )
+
+    time.sleep(5) # Some times update_template_permissions does not work immediatly.
+
     res = qs.update_template_permissions(
         TemplateId=template_id,
         GrantPermissions=[
@@ -220,7 +273,7 @@ def export_analysis(qs, athena):
         'dependsOn':{
             # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
             # We can potentially reconsider this and use IDs at some point
-            'datasets': [dataset_name for dataset_name in datasets.keys()]
+            'datasets': [dataset_name for dataset_name in datasets.keys()] + resources_datasets
         }
     }
 

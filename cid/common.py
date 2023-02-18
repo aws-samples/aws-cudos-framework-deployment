@@ -1189,16 +1189,16 @@ class Cid():
                     if diff and diff['diff']:
                         cid_print(f'<BOLD>Found a difference between existing dataset <YELLOW>{found_dataset.name}<END> <BOLD>and the one we want to deploy. <END>')
                         choice = get_parameter(
-                            param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
+                            param_name='dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override',
                             message=f'The existing dataset is different. Override?',
-                            choices=['retry diff', 'override', 'keep existing', 'stop'],
+                            choices=['retry diff', 'proceed and override', 'keep existing', 'stop'],
                             default='retry diff'
                         )
-                        if choice == 'show diff':
+                        if choice == 'retry diff':
                             cid_print(diff['printable'])
-                            unset_parameter(found_dataset.name + '-override')
+                            unset_parameter('dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override')
                             continue
-                        elif choice == 'override':
+                        elif choice == 'proceed and override':
                             update_dataset = True
                             break
                         elif choice == 'keep existing':
@@ -1278,15 +1278,15 @@ class Cid():
                                 cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
                                 cid_print(diff['printable'])
                                 choice = get_parameter(
-                                    param_name=view_name + '-override',
+                                    param_name='view-' + view_name + '-override',
                                     message=f'The existing view is different. Override?',
-                                    choices=['retry diff', 'override', 'keep existing', 'stop'],
+                                    choices=['retry diff', 'proceed and override', 'keep existing', 'stop'],
                                     default='retry diff'
                                 )
                                 if choice == 'retry diff':
-                                    unset_parameter(view_name + '-override')
+                                    unset_parameter('view-' + view_name + '-override')
                                     continue
-                                elif choice == 'override':
+                                elif choice == 'proceed and override':
                                     update_view = True
                                     break
                                 elif choice == 'keep existing':
@@ -1296,7 +1296,7 @@ class Cid():
                                     raise CidCritical(f'User choice is not to update {view_name}.')
                             elif not diff:
                                 if not get_yesno_parameter(
-                                    param_name=view_name + '-override',
+                                    param_name='view-' + view_name + '-override',
                                     message=f'Cannot get sql diff for {view_name}. Continue?',
                                     default='yes'
                                     ):
