@@ -290,7 +290,7 @@ class Cid():
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         except CidCritical:
-            pass
+            pass 
         
         if not dashboard_definition:
             if isinstance(dashboard, Dashboard):
@@ -783,8 +783,10 @@ class Cid():
         """
             Returns True | False | None if could not check 
         """
-        
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        try:
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        except CidCritical:
+            dashboard = None
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
