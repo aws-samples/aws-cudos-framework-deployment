@@ -286,8 +286,11 @@ class Cid():
 
         # Get selected dashboard definition
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
-        
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        dashboard = None
+        try:
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        except CidCritical:
+            pass
         
         if not dashboard_definition:
             if isinstance(dashboard, Dashboard):
