@@ -427,11 +427,13 @@ class Athena(CidBase):
                 #print("sql", sql)
                 all_views[view]["dependsOn"] = {}
                 all_views[view]["dependsOn"]['views'] = []
-                deps = re.findall(r'FROM\W+([\S."]+)', sql)
+                deps = re.findall(r'FROM\W+([\w.]+)', sql)
                 for dep_view in deps:
                     #FIXME: need to add cross Database Dependancies
                     if dep_view.upper() in ('SELECT', 'VALUES'): # remove "FROM SELECT" and "FROM VALUES"
                         continue
+                    if dep_view.lower() in self._resources.get('views', []):
+                        logger.info('{dep_view} is a predefined resource. Skipping.')
                     if dep_view not in all_views[view]["dependsOn"]['views']:
                         all_views[view]["dependsOn"]['views'].append(dep_view)
                     if dep_view not in all_views:
