@@ -133,6 +133,7 @@ Parameters:
   Suffix:
     Type: String
     Description: Leave Empty. Do not use this Suffix it is not fully supported. For testing purposes only.
+    Default: ""
   DeployCUDOSDashboard:
     Type: String
     Description: Deploy CUDOS Dashboard
