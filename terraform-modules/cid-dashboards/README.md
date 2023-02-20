@@ -29,6 +29,19 @@ module "cid_dashboards" {
 }
 ```
 
+## Version Locking
+
+For production deployments, you should lock the version of this module to a release tag to better
+control when and what updates are made. To specify the release tag to use, append `?ref=VERSION`
+to the module source. For example, the following source reference will use the Terraform module
+and Cloudformation template from version 0.2.13 of this module:
+
+```
+source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cid-dashboards?ref=0.2.13"
+```
+
+For a complete list of release tags, visit https://github.com/aws-samples/aws-cudos-framework-deployment/tags.
+
 ## Troubleshooting
 
 Because this module is primarily a wrapper for CloudFormation, Terraform output may not be sufficient
