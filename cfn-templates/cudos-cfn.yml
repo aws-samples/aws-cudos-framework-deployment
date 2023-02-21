@@ -295,22 +295,6 @@ Resources:
                           WorkGroup=athena_workgroup
                       )
                       logger.info('Completed step %s',step)
-                  # Create a dummy account map. Can be modified later        
-                  account_map_query = f"""
-                      CREATE OR REPLACE VIEW account_map 
-                      AS SELECT DISTINCT 
-                          line_item_usage_account_id account_id, 
-                          line_item_usage_account_id account_name
-                      FROM  \"{table_name}\"
-                  """  
-                  step = f"Executing account map query: {repr(account_map_query)}" 
-                  logger.info(step)
-                  response = athena.start_query_execution(
-                      QueryString=account_map_query,
-                      QueryExecutionContext={'Database': database_name},
-                      WorkGroup=athena_workgroup,
-                  )
-                  logger.info("Completed %s", step)
                   return(True, "Views created successfully")
               except Exception as exc:
                   logger.error(exc, exc_info=True)
@@ -1419,6 +1403,14 @@ Resources:
                 Type: STRING
               - Name: account_name
                 Type: STRING
+              - Name: parent_account_id
+                Type: STRING
+              - Name: account_status
+                Type: STRING
+              - Name: account_email_id
+                Type: STRING
+              - Name: account_email
+                Type: STRING
             Name: account_map
             Schema: !Ref CURDatabaseName
             Catalog: AwsDataCatalog
@@ -1505,6 +1497,14 @@ Resources:
                 - Name: account_id
                   Type: STRING
                 - Name: account_name
+                  Type: STRING
+                - Name: parent_account_id
+                  Type: STRING
+                - Name: account_status
+                  Type: STRING
+                - Name: account_email_id
+                  Type: STRING
+                - Name: account_email
                   Type: STRING
               Name: account_map
               Schema: !Ref CURDatabaseName
@@ -1621,6 +1621,14 @@ Resources:
                 Type: STRING
               - Name: account_name
                 Type: STRING
+              - Name: parent_account_id
+                Type: STRING
+              - Name: account_status
+                Type: STRING
+              - Name: account_email_id
+                Type: STRING
+              - Name: account_email
+                Type: STRING
             Name: account_map
             Schema: !Ref CURDatabaseName
             Catalog: AwsDataCatalog
@@ -1689,6 +1697,14 @@ Resources:
               - Name: account_id
                 Type: STRING
               - Name: account_name
+                Type: STRING
+              - Name: parent_account_id
+                Type: STRING
+              - Name: account_status
+                Type: STRING
+              - Name: account_email_id
+                Type: STRING
+              - Name: account_email
                 Type: STRING
             Name: account_map
             Schema: !Ref CURDatabaseName
@@ -1836,6 +1852,14 @@ Resources:
               - Name: account_id
                 Type: STRING
               - Name: account_name
+                Type: STRING
+              - Name: parent_account_id
+                Type: STRING
+              - Name: account_status
+                Type: STRING
+              - Name: account_email_id
+                Type: STRING
+              - Name: account_email
                 Type: STRING
             Name: account_map
             Schema: !Ref CURDatabaseName
