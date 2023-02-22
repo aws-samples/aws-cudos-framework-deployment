@@ -46,32 +46,37 @@ class Dataset(CidQsResource):
     def to_diffable_structure(self):
         """ return diffable text """
         data = {}
+        data['Name'] = self.raw.get('Name')
+        data['Data'] = {}
+        join_clauses = {}
         for key, ltm in self.raw['LogicalTableMap'].items():
             alias = ltm.get('Alias')
             source = ltm.get('Source')
             name = alias
-            cols = []
+            element = {}
             if 'PhysicalTableId' in source:
                 phtid = source['PhysicalTableId']
                 phy = self.raw['PhysicalTableMap'][phtid]
                 if 'RelationalTable' in phy:
                     rel = phy['RelationalTable']
                     name +='(' + '/'.join([rel.get('Catalog', 'AwsDataCatalog'),rel.get('Schema', ''), rel.get('Name', '') ]) + ')'
-                    cols = sorted([col['Type']+ ' ' + col['Name'] for col in rel.get('InputColumns', [])])
+                    element['columns'] = sorted([col['Type']+ ' ' + col['Name'] for col in rel.get('InputColumns', [])])
                 else:
-                    cols = [f"Unsupported PhysicalTableMap in {phtid}: {phy.keys()}"]
+                    element['columns'] = [f"Unsupported PhysicalTableMap in {phtid}: {phy.keys()}"]
+                data['Data'][name] = element
             elif 'JoinInstruction' in source:
                 join = source['JoinInstruction']
-                left_id = join.get('LeftOperand')
-                left_alias = self.raw['LogicalTableMap'].get(left_id).get('Alias')
                 right_id = join.get('RightOperand')
                 right_alias = self.raw['LogicalTableMap'].get(right_id).get('Alias')
-                cols = {
-                    'Operand1': right_alias,
-                    'Operand2': left_alias,
-                    'onClause': join.get('OnClause'),
-                }
+                alias = right_alias
+                if alias.startswith('Intermediate Table'):
+                    left_id = join.get('LeftOperand')
+                    left_alias = self.raw['LogicalTableMap'].get(left_id).get('Alias')
+                    alias = left_alias
+                join_clauses[alias] = join.get('OnClause')
             else:
-                cols = [f'Unsupported source {source}']
-            data[name] = cols
+                data['Data'][name]['columns'] = [f'Unsupported source {source}']
+        for alias, join in join_clauses.items():
+            if isinstance(data['Data'].get(alias), dict) :
+                data['Data'][alias]['clause'] = join
         return (yaml.safe_dump(data))
