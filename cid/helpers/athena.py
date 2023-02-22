@@ -396,6 +396,8 @@ class Athena(CidBase):
             except Exception as exc:
                 logger.debug(f'Cannot delete temporary view {tmp_name}: {exc}')
 
+        existing_sql = re.sub('"(.+?)"', r'\1', existing_sql) # remove quotes
+        tmp_sql = re.sub('"(.+?)"', r'\1', tmp_sql) # remove quotes
         return diff(existing_sql, tmp_sql)
 
 
