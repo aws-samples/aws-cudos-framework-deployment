@@ -1,5 +1,4 @@
 import re
-import os
 import csv
 import logging
 
@@ -16,23 +15,35 @@ def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> Non
     """ Make an sql mapping from sql """
     logger.debug(f"input {input_file_name}")
 
-    if not os.path.isfile(input_file_name):
-        raise CidCritical(f'File not found: {repr(input_file_name)}')
-
     sniffer = csv.Sniffer()
-    with open(input_file_name) as file_:
-        dialect = sniffer.sniff(file_.read(2000))
-
-    with open(input_file_name) as file_:
-        data = [d for d in csv.DictReader(file_, dialect=dialect)]
-
+    try:
+        with open(input_file_name, 'rb') as file_:
+            dialect = sniffer.sniff(file_.read(2000))
+            file_.seek(0)
+            data = [d for d in csv.DictReader(file_, dialect=dialect)]
+            
+    except FileNotFoundError:
+        raise CidCritical(f'File not found: {repr(input_file_name)}')
+    except PermissionError:
+        raise CidCritical(f'Insufficient permission to read {repr(input_file_name)}!')
+    except IsADirectoryError:
+        raise CidCritical(f'{repr(input_file_name)} is a directory!')
+    except Exception as _err:
+        raise CidCritical(_err)
+    
     lines = []
+    
     for line in data:
-        arr = ", ".join(["'" + val.replace("'", "''") + "'" for val in line.values()])
+        arr = ", ".join([f'\'{escape(val, " ")}\'' for val in line.values()])
         lines.append(f'ROW({arr})')
 
+    if not lines:
+        CidCritical(f'There is no data to write, exiting"')
+        
+    headers = data[0].keys()
+    
     row_lines = '\n, '.join(lines)
-    cols = ', '.join([escape(c.lower()) for c in data[0].keys()])
+    cols = ', '.join([escape(c.lower()) for c in headers ])
 
     sql = (f'''
 CREATE OR REPLACE VIEW {escape(name.lower())} AS
