@@ -1040,15 +1040,19 @@ class Cid():
         # Manage datasource
         # We must do it here. In case if dastasource is not defined by user, we can take it from dataset
 
-        if get_parameters().get('quicksight-datasource-id'):
+        datasource_id = get_parameters().get('quicksight-datasource-id')
+        role_arn = get_parameters().get('quicksight-datasource-role-arn')
+        if datasource_id:
             # We have explicit choice of datasource
-            datasource_id = get_parameters().get('quicksight-datasource-id')
-            role_arn = get_parameters().get('quicksight-datasource-role-arn')
             try:
                 athena_datasource = self.qs.describe_data_source(datasource_id)
             except self.qs.client.exceptions.ResourceNotFoundException:
                 logger.info(f'DataSource {datasource_id} not found. Creating.')
-                athena_datasource = self.qs.create_data_source(athena_workgroup=self.athena.WorkGroup, datasource_id=datasource_id, role_arn=role_arn)
+                athena_datasource = self.qs.create_data_source(
+                    athena_workgroup=self.athena.WorkGroup,
+                    datasource_id=datasource_id,
+                    role_arn=role_arn
+                )
             except self.qs.client.exceptions.AccessDeniedException:
                 # We have access denied on DescribeDataSet but there can be PassDataSet 
                 athena_datasource = Datasource(raw={
@@ -1102,6 +1106,7 @@ class Cid():
                     #try to find a datasource with defined workgroup
                     workgroup = self.athena.WorkGroup
                     datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=workgroup)
+                    logger.info(f'Found {len(datasources)} Athena datasources')
                     if len(datasources_with_workgroup) == 1:
                         athena_datasource = datasources_with_workgroup[0]
                     else:
@@ -1111,13 +1116,23 @@ class Cid():
                             f"{datasource.name} {datasource.id} (workgroup={datasource.AthenaParameters.get('WorkGroup')})": datasource.id
                             for datasource in datasources_with_workgroup
                         }
+                        datasource_id['Create New DataSource'] = None
                         datasource_id = get_parameter(
                             param_name='quicksight-datasource-id',
                             message=f"Please choose DataSource (Choose the first one if not sure).",
                             choices=datasource_choices,
                         )
-                        athena_datasource = self.qs.athena_datasources[datasource_id]
-                        logger.info(f'Found {len(datasources)} Athena datasources, not using {athena_datasource.id}')
+                        if not datasource_id:
+                            datasource_id = 'CID-CMD-Athena'
+                            logger.info(f'Creating DataSource {datasource_id}')
+                            athena_datasource = self.qs.create_data_source(
+                                athena_workgroup=self.athena.WorkGroup,
+                                datasource_id=datasource_id,
+                                role_arn=role_arn
+                            )
+                        else:
+                            athena_datasource = self.qs.get_datasources(id=datasource_id)[0]
+                        logger.info(f'Using  DataSource = {athena_datasource.id}')
         if not get_parameters().get('athena-workgroup'):
             # set default workgroup from datasource if not provided via parameters
             if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):
