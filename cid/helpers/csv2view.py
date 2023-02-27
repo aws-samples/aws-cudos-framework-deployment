@@ -17,7 +17,7 @@ def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> Non
 
     sniffer = csv.Sniffer()
     try:
-        with open(input_file_name, 'rb') as file_:
+        with open(input_file_name) as file_:
             dialect = sniffer.sniff(file_.read(2000))
             file_.seek(0)
             data = [d for d in csv.DictReader(file_, dialect=dialect)]
