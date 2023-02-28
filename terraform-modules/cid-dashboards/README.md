@@ -72,7 +72,7 @@ The following input variables are required:
 
 ### stack\_name
 
-Description: CloudFormation stack name for CID deployment
+Description: CloudFormation stack name for Cloud Intelligence Dashboards deployment
 
 Type: `string`
 
@@ -87,7 +87,7 @@ For most setups, you will want to set the following parameters:
   - QuickSightDataSetRefreshSchedule: Cron expression to refresh spice datasets daily outside of business hours. Default is 4 AM UTC, which should work for most customers in US and EU time zones
   - CURBucketPath: Leave as default is if CUR was created with CloudFormation (cur-aggregation.yaml). If it was a manually created CUR, the path entered below must be for the directory that contains the years partition (s3://curbucketname/prefix/curname/curname/).
   - OptimizationDataCollectionBucketPath: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /optics-data-collector folder. Required for TAO and Compute Optimizer dashboards.
-  - DataBuketsKmsKeyArns: Comma-delimited list of KMS key ARNs ("*" is also valid)
+  - DataBuketsKmsKeyArns: Comma-delimited list of KMS key ARNs ("*" is also valid). Include any KMS keys used to encrypt your CUR or Cost Optimization Data S3 data
   - DeployCUDOSDashboard: (yes/no, default no)
   - DeployCostIntelligenceDashboard: (yes/no, default no)
   - DeployKPIDashboard: (yes/no, default no)

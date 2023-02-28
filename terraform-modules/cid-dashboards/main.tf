@@ -1,3 +1,14 @@
+data "aws_s3_bucket" "template_bucket" {
+  bucket = var.template_bucket
+}
+
+resource "aws_s3_object" "template" {
+  bucket = data.aws_s3_bucket.template_bucket.bucket
+  key    = var.template_key
+  source = "${path.module}/../../cfn-templates/cid-cfn.yml"
+  etag   = filemd5("${path.module}/../../cfn-templates/cid-cfn.yml")
+}
+
 resource "aws_cloudformation_stack" "cid" {
   name              = var.stack_name
   template_url      = "https://${data.aws_s3_bucket.template_bucket.bucket_regional_domain_name}/${aws_s3_object.template.key}?etag=${aws_s3_object.template.etag}"
