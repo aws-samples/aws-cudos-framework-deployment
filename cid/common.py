@@ -1116,7 +1116,7 @@ class Cid():
                             f"{datasource.name} {datasource.id} (workgroup={datasource.AthenaParameters.get('WorkGroup')})": datasource.id
                             for datasource in datasources_with_workgroup
                         }
-                        datasource_id['Create New DataSource'] = None
+                        datasource_choices['Create New DataSource'] = None
                         datasource_id = get_parameter(
                             param_name='quicksight-datasource-id',
                             message=f"Please choose DataSource (Choose the first one if not sure).",
