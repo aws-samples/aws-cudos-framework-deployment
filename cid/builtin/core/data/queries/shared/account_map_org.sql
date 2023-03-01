@@ -3,4 +3,4 @@ SELECT
    *
 FROM
    ( VALUES ${rows} )
-ignored_table_name (account_id, account_name, parent_account_id, account_status, account_email, account_email_id)
+ignored_table_name (account_id, account_name, parent_account_id, account_status, account_email)

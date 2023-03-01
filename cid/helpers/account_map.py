@@ -273,7 +273,7 @@ class AccountMap(CidBase):
             acc = account.copy()
             account_name = acc.pop('account_name').replace("'", "''")
             accounts_sql.append(
-                """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}', '{account_email}')""".format(account_name=account_name, **acc))
+                """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')""".format(account_name=account_name, **acc))
         # Fill in TPLs
         columns_tpl = {
             'athena_view_name': name,

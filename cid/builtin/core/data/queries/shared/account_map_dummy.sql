@@ -4,8 +4,7 @@ SELECT DISTINCT
     MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_name,
     MAX_BY(bill_payer_account_id,      line_item_usage_start_date) parent_account_id,
     CAST('' AS varchar)                                            account_status,
-    CAST('' AS varchar)                                            account_email,
-    CAST('' AS varchar)                                            account_email_id
+    CAST('' AS varchar)                                            account_email
 FROM
     "${cur_table_name}"
 WHERE
