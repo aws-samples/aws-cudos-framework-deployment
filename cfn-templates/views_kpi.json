@@ -36,7 +36,7 @@
 		"account_map": {
 			"__description__": "",
 			"Path": "https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/cid/builtin/core/data/queries/shared",
-			"File": "account_map_cfn.sql"
+			"File": "account_map.sql"
 		},
 		"summary_view": {
 			"__description__": "",

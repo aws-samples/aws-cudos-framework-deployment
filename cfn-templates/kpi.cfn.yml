@@ -477,6 +477,10 @@ Resources:
     Properties:
       ServiceToken: !GetAtt KPICustomResourceViewsLambdaHandler.Arn
       ViewName: !FindInMap [ "Definitions", "sharedAccountMapView", "Value" ]
+      ViewCode: !Join 
+        - ""
+        - - "CREATE OR REPLACE VIEW account_map AS SELECT DISTINCT line_item_usage_account_id account_id, line_item_usage_account_id account_name FROM "
+          - !Ref CURTableName
       TableName: !Ref CURTableName
 # -----
   sharedSummaryViewCustom:
@@ -1635,14 +1639,6 @@ Resources:
               - Name: account_id
                 Type: STRING
               - Name: account_name
-                Type: STRING
-              - Name: parent_account_id
-                Type: STRING
-              - Name: account_status
-                Type: STRING
-              - Name: account_email_id
-                Type: STRING
-              - Name: account_email
                 Type: STRING
             Name: account_map
             Schema: !Ref CURDatabaseName
