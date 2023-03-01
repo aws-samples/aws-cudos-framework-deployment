@@ -35,13 +35,6 @@
 			"spFile": "cid/summary_view_sp.sql",
 			"riFile": "cid/summary_view_ri.sql",
 			"File": "cid/summary_view.sql"
-		},
-		"account_map": {
-			"__description__": "",
-			"spriFile": "shared/account_map_cfn.sql",
-			"spFile": "shared/account_map_cfn.sql",
-			"riFile": "shared/account_map_cfn.sql",
-			"File": "shared/account_map_cfn.sql"
 		}
 	}
 }
