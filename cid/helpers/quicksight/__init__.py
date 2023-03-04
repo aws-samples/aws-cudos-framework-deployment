@@ -1001,7 +1001,7 @@ class QuickSight(CidBase):
     def create_dashboard(self, definition: dict) -> Dashboard:
         """ Creates an AWS QuickSight dashboard """
 
-        create_parameters = _buid_params_for_create_update_dash(definition)
+        create_parameters = self._buid_params_for_create_update_dash(definition)
 
         dashboard_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
