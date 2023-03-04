@@ -217,7 +217,7 @@ class QuickSight(CidBase):
         if not _definition:
             # Look for dashboard definition by templateId
             logger.info(dashboard.template_id)
-            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.template_id), None)
+            _definition = next((v for v in self.supported_dashboards.values() if 'templateId' in v and v['templateId'] == dashboard.template_id), None)
         if not _definition:
             logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
         else:
@@ -1000,12 +1000,6 @@ class QuickSight(CidBase):
 
     def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
         """ Creates an AWS QuickSight dashboard """
-        DataSetReferences = list()
-        for k, v in definition.get('datasets', dict()).items():
-            DataSetReferences.append({
-                'DataSetPlaceholder': k,
-                'DataSetArn': v
-            })
         
         dashboard_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
@@ -1022,14 +1016,32 @@ class QuickSight(CidBase):
             'Permissions': [
                 dashboard_permissions
             ],
-            'SourceEntity': {
+        }
+
+        if definition.get('sourceTemplate'):
+            dataset_references = [
+                {'DataSetPlaceholder': key, 'DataSetArn': value}
+                for key, value in definition.get('datasets', {}).items()
+            ]
+            create_parameters['SourceEntity'] = {
                 'SourceTemplate': {
                     'Arn': f"{definition.get('sourceTemplate').arn}/version/{definition.get('sourceTemplate').version}",
-                    'DataSetReferences': DataSetReferences
+                    'DataSetReferences': dataset_references
                 }
             }
-        }
-        
+        elif definition.get('definition'):
+            create_parameters['Definition'] = definition.get('definition')
+            dataset_references = [
+                {'Identifier': key, 'DataSetArn': value}
+                for key, value in definition.get('datasets', {}).items()
+            ]
+            create_parameters['SourceEntity'] = {}
+            create_parameters['Definition']['DataSetIdentifierDeclarations'] = dataset_references
+        else:
+            logger.debug(f'Defintion = {definition}')
+            raise CidCritical('Dashboard definition must contain sourceTemplate or definition')
+
+        print(create_parameters)
         create_parameters = always_merger.merge(create_parameters, kwargs)
         try:
             logger.info(f'Creating dashboard "{definition.get("name")}"')

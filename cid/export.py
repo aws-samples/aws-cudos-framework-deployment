@@ -159,6 +159,7 @@ def export_analysis(qs, athena):
         athena.DatabaseName = all_databases[0]
 
     all_views_data = athena.process_views(all_views)
+    logger.debug(f'List of views: {all_views}')
 
     # Post processing of views:
     # - Special treatment for CUR: replace cur table with a placeholder
@@ -170,112 +171,147 @@ def export_analysis(qs, athena):
             view_data['data'] = view_data['data'].replace(f'{all_databases[0]}.', '${athena_database_name}.')
             view_data['data'] = view_data['data'].replace('CREATE VIEW ', 'CREATE OR REPLACE VIEW ')
 
+        # Analyse dependancies: if the dependancy is CUR there is a special flag
         deps = view_data.get('dependsOn', {})
-
         non_cur_dep_views = []
         for dep_view in deps.get('views', []):
-            print('analysing ', dep_view)
             if cur_helper.table_is_cur(name=dep_view):
+                logger.debug(f'{dep_view} is cur')
                 view_data['dependsOn']['cur'] = True
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
                     view_data['data'] = view_data['data'].replace(f'"{dep_view}"', '"${cur_table_name}"')
                 cur_tables.append(dep_view)
             else:
-                print('not cur')
+                logger.debug(f'{dep_view} is not cur')
                 non_cur_dep_views.append(dep_view)
         if deps.get('views'):
              deps['views'] = non_cur_dep_views
              if not deps['views']:
                 del deps['views']
+
+    logger.debug(f'cur_tables = {cur_tables}')
+    # Add Views to Resources
     for key, view_data in all_views_data.items():
-        if key in cur_tables or cur_helper.table_is_cur(name=key): continue     # Filter out all CUR tables
+        if key in cur_tables or cur_helper.table_is_cur(name=key):
+            logger.debug(f'Skipping {key} views - it is a CUR')
+            continue
         if isinstance(view_data.get('data'), str):
             buckets = re.findall("LOCATION\n  's3://(.+?)/", view_data.get('data'))
             for bucket in buckets:
                 logger.warning('Please replace manually location bucket with a parameter: s3://{bucket}')
-                #FIXME: add parameter automatically
-        resources['views'][key] = view_data 
+                #TODO: add parameter automatically
+        resources['views'][key] = view_data
 
-    template_id = get_parameter(
-        'template-id',
-        message='Enter template id',
-        default=escape_id(analysis['Name'].lower())
-    )
-
-    template_version_description = get_parameter(
-        'template-version-description',
-        message='Enter version description',
-        default='vX.X.X' # FIXME: get version from analysis / template
-    )
-
-    logger.info('Updating template')
-    params = {
-        "AwsAccountId": qs.account_id,
-        "TemplateId": template_id,
-        "Name": template_id,
-        "SourceEntity": {
-            "SourceAnalysis": {
-                "Arn": analysis.get("Arn"),
-                "DataSetReferences": dataset_references
-            }
-        },
-        "VersionDescription": template_version_description,
-    }
-    logger.debug(f'Template params = {params}')
-    try:
-        res = qs.client.update_template(**params)
-        logger.info(f'Template {template_id} updated from Analysis {analysis.get("Arn")}')
-    except qs.client.exceptions.ResourceNotFoundException:
-        res = qs.client.create_template(**params)
-        logger.info(f'Template {template_id} created from Analysis {analysis.get("Arn")}')
-
-    if res['CreationStatus'] not in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
-        raise CidCritical(f'failed template operation {res}')
-
-    template_arn = res['Arn']
-    logger.info(f'Template arn = {template_arn}')
-
-
-    reader_account_id = get_parameter(
-        'reader-account',
-        message='Enter account id to share the template with or *',
-        default='*'
-    )
-
-    time.sleep(5) # Some times update_template_permissions does not work immediatly.
-
-    res = qs.update_template_permissions(
-        TemplateId=template_id,
-        GrantPermissions=[
-            {
-                "Principal": f'arn:aws:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
-                'Actions': [
-                    "quicksight:DescribeTemplate",
-                ]
-            },
-        ],
-    )
-
+    logger.debug('Building dashboard resource')
     dashboard_id = get_parameter(
         'dashboard-id',
         message='dashboard id (will be used in url of dashboard)',
         default=escape_id(analysis['Name'].lower())
     )
 
-
-    resources['dashboards'][analysis['Name'].upper()] = {
-        'name': analysis['Name'],
-        'templateId': template_id,
-        'sourceAccountId': qs.account_id,
-        'region': qs.session.region_name,
-        'dashboardId': dashboard_id,
-        'dependsOn':{
-            # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
-            # We can potentially reconsider this and use IDs at some point
-            'datasets': [dataset_name for dataset_name in datasets.keys()] + resources_datasets
-        }
+    dashboard_resource = {}
+    dashboard_resource['dependsOn'] = {
+        # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
+        # We can potentially reconsider this and use IDs at some point
+        'datasets': [dataset_name for dataset_name in datasets.keys()] + resources_datasets
     }
+    dashboard_resource['name'] = analysis['Name']
+    dashboard_resource['dashboardId'] = dashboard_id
+
+    dashboard_export_method = None
+    if get_parameters().get('template-id'):
+        dashboard_export_method = 'template'
+    else:
+        dashboard_export_method = get_parameter(
+            'dashboard-export-method',
+            message='Please choose dashboards method',
+            choices=[
+                'template',
+                'definition',
+            ],
+            default='definition',
+        )
+    if dashboard_export_method == 'template':
+        template_id = get_parameter(
+            'template-id',
+            message='Enter template id',
+            default=escape_id(analysis['Name'].lower())
+        )
+        default_description_version = 'v0.0.1'
+        try:
+            old_template = qs.client.describe_template(
+                AwsAccountId=qs.account_id,
+                TemplateId=template_id,
+            )['Template']
+            default_description_version = old_template.get('Version', {}).get('Description')
+        except qs.client.exceptions.ResourceNotFoundException:
+            logger.debug('No previous template')
+        template_version_description = get_parameter(
+            'template-version-description',
+            message='Enter version description',
+            default=default_description_version, # FIXME: get version from analysis / template
+        )
+
+        logger.info('Updating template')
+        params = {
+            "AwsAccountId": qs.account_id,
+            "TemplateId": template_id,
+            "Name": template_id,
+            "SourceEntity": {
+                "SourceAnalysis": {
+                    "Arn": analysis.get("Arn"),
+                    "DataSetReferences": dataset_references
+                }
+            },
+            "VersionDescription": template_version_description,
+        }
+        logger.debug(f'Template params = {params}')
+        try:
+            res = qs.client.update_template(**params)
+            logger.info(f'Template {template_id} updated from Analysis {analysis.get("Arn")}')
+        except qs.client.exceptions.ResourceNotFoundException:
+            res = qs.client.create_template(**params)
+            logger.info(f'Template {template_id} created from Analysis {analysis.get("Arn")}')
+
+        if res['CreationStatus'] not in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
+            raise CidCritical(f'failed template operation {res}')
+
+        template_arn = res['Arn']
+        logger.info(f'Template arn = {template_arn}')
+
+
+        reader_account_id = get_parameter(
+            'reader-account',
+            message='Enter account id to share the template with or *',
+            default='*'
+        )
+
+        time.sleep(5) # Some times update_template_permissions does not work immediatly.
+
+        res = qs.update_template_permissions(
+            TemplateId=template_id,
+            GrantPermissions=[
+                {
+                    "Principal": f'arn:aws:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
+                    'Actions': [
+                        "quicksight:DescribeTemplate",
+                    ]
+                },
+            ],
+        )
+        dashboard_resource['templateId'] = template_id
+        dashboard_resource['sourceAccountId'] = qs.account_id
+        dashboard_resource['region'] = qs.session.region_name
+
+    elif dashboard_export_method == 'definition':
+        definition = qs.client.describe_analysis_definition(
+            AwsAccountId=qs.account_id,
+            AnalysisId=analysis_id,
+        )['Definition']
+        dashboard_resource['data'] = yaml.safe_dump(definition)
+
+    resources['dashboards'][analysis['Name'].upper()] = dashboard_resource
 
     for name, dataset in datasets.items():
         resources['datasets'][name] = dataset
@@ -283,7 +319,7 @@ def export_analysis(qs, athena):
     output = get_parameter(
         'output',
         message='Enter a filename (.yaml)',
-        default=f"{analysis['Name'].replace(' ', '-')}-{template_version_description}.yaml"
+        default=f"{analysis['Name'].replace(' ', '-')}.yaml"
     )
 
     enable_multiline_in_yaml()

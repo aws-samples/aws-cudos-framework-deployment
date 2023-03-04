@@ -301,61 +301,91 @@ class Cid():
         required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
         dashboard_datasets = dashboard.datasets if dashboard else {}
-        
+
         for name, id in dashboard_datasets.items():
             if id not in self.qs.datasets:
                 logger.info(f'Removing unknown dataset "{name}" ({id}) from dashboard {dashboard_id}')
                 del dashboard_datasets[name]
 
-        # Get QuickSight template details
-        try:
-            source_template = self.qs.describe_template(
-                template_id=dashboard_definition.get('templateId'),
-                account_id=dashboard_definition.get('sourceAccountId'),
-                region=dashboard_definition.get('region', 'us-east-1')
-            )
-        except CidError as exc:
-            raise CidCritical(exc) # Cannot proceed without a valid template
-        dashboard_definition.update({'sourceTemplate': source_template})
-        print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
-        
-        compatible = self.check_dashboard_version_compatibility(dashboard_id)
-        
+        compatible = True
+        if dashboard_definition.get('templateId'):
+            # Get QuickSight template details
+            try:
+                source_template = self.qs.describe_template(
+                    template_id=dashboard_definition.get('templateId'),
+                    account_id=dashboard_definition.get('sourceAccountId'),
+                    region=dashboard_definition.get('region', 'us-east-1')
+                )
+            except CidError as exc:
+                raise CidCritical(exc) # Cannot proceed without a valid template
+            dashboard_definition['sourceTemplate'] = source_template
+            print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
+            compatible = self.check_dashboard_version_compatibility(dashboard_id)
+        elif dashboard_definition.get('data'):
+            data = dashboard_definition.get('data')
+            if isinstance(data, dict):
+                data = yaml.safe_dump(data)
+            if isinstance(data, str):
+                data = Template(data).safe_substitute(get_parameters())
+            dashboard_definition['definition'] = yaml.safe_load(data)
+        elif dashboard_definition.get('file'):
+            raise NotImplementedError('File option is not implemented')
+        else:
+            raise CidCritical('Definition of dashboard resource must contain data or template_id')
+
+
         if not recursive and compatible == False:
             if get_parameter(
-                    param_name=f'confirm-recursive',
-                    message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
-                    choices=['yes', 'no'],
-                    default='yes') != 'yes':
-                    return
+                param_name=f'confirm-recursive',
+                message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+                return
             logger.info("Swich to recursive mode")
             recursive = True
-                     
+
         if recursive:
             self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
 
-        # Prepare API parameters
+
+        # Find datasets for template or defintion
         if not dashboard_definition.get('datasets'):
-            dashboard_definition.update({'datasets': {}})
+            dashboard_definition['datasets'] = {}
         for dataset_name in required_datasets:
+            # First try to find the dataset with the id
+            dataset = self.qs.describe_dataset(id=dataset_name)
+            if dataset:
+                logger.debug(f'Found dataset {dataset_name} with id match = {ds.arn}')
+                dashboard_definition['datasets'][dataset_name] = dataset.arn
+                continue
+
+            # Then find dataset by name by scanning all datasets with matching name AND if possible matching fields
             for ds in self.qs.datasets.values():
                 if not isinstance(ds, Dataset) or ds.name != dataset_name:
                     continue
-                dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
-                required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
-                unmatched = {}
-                for k,v in required_fileds.items():
-                    if k not in dataset_fields or dataset_fields[k] != v:
-                        unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
-                logger.debug(f'unmatched_fields={unmatched}')
-                if unmatched:
-                    raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
-                print(f'Using dataset {dataset_name}: {ds.id}')
-                dashboard_definition.get('datasets').update({dataset_name: ds.arn})
-                break
+                if dashboard_definition.get('templateId'):
+                    # For templates we can additionaly verify dataset fields 
+                    dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
+                    required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
+                    unmatched = {}
+                    for k,v in required_fileds.items():
+                        if k not in dataset_fields or dataset_fields[k] != v:
+                            unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
+                    logger.debug(f'unmatched_fields={unmatched}')
+                    if unmatched:
+                        logger.warning(f'Found Dataset "{dataset_name}" ({ds.id}) but it is missing required fields. {(unmatched)}')
+                    print(f'Using dataset {dataset_name}: {ds.id}')
+                    dashboard_definition['datasets'][dataset_name] = ds.arn
+                    break
+                else:
+                    # for definitions datasets we do not have any possibilty to check if dataset with a given name matches
+                    dashboard_definition['datasets'][dataset_name] = ds.arn
+                    break
             else: # not found
                 logger.warning(f'Dataset {dataset_name} is not found')
+                raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
   
+        logger.debug(f"datasets: {dashboard_definition['datasets']}")
         #FIXME: this code looks absolete
         kwargs = dict()
         local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'
