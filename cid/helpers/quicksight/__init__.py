@@ -998,9 +998,11 @@ class QuickSight(CidBase):
         return self.describe_dataset(dataset_id)
 
 
-    def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
+    def create_dashboard(self, definition: dict) -> Dashboard:
         """ Creates an AWS QuickSight dashboard """
-        
+
+        create_parameters = _buid_params_for_create_update_dash(definition)
+
         dashboard_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
             resource_name=f'data/permissions/dashboard_permissions.json',
@@ -1009,40 +1011,8 @@ class QuickSight(CidBase):
             'PrincipalArn': self.get_principal_arn()
         }
         dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
-        create_parameters = {
-            'AwsAccountId': self.account_id,
-            'DashboardId': definition.get('dashboardId'),
-            'Name': definition.get('name'),
-            'Permissions': [
-                dashboard_permissions
-            ],
-        }
+        create_parameters['Permissions'] = [ dashboard_permissions ]
 
-        if definition.get('sourceTemplate'):
-            dataset_references = [
-                {'DataSetPlaceholder': key, 'DataSetArn': value}
-                for key, value in definition.get('datasets', {}).items()
-            ]
-            create_parameters['SourceEntity'] = {
-                'SourceTemplate': {
-                    'Arn': f"{definition.get('sourceTemplate').arn}/version/{definition.get('sourceTemplate').version}",
-                    'DataSetReferences': dataset_references
-                }
-            }
-        elif definition.get('definition'):
-            create_parameters['Definition'] = definition.get('definition')
-            dataset_references = [
-                {'Identifier': key, 'DataSetArn': value}
-                for key, value in definition.get('datasets', {}).items()
-            ]
-            create_parameters['SourceEntity'] = {}
-            create_parameters['Definition']['DataSetIdentifierDeclarations'] = dataset_references
-        else:
-            logger.debug(f'Defintion = {definition}')
-            raise CidCritical('Dashboard definition must contain sourceTemplate or definition')
-
-        print(create_parameters)
-        create_parameters = always_merger.merge(create_parameters, kwargs)
         try:
             logger.info(f'Creating dashboard "{definition.get("name")}"')
             logger.debug(create_parameters)
@@ -1067,28 +1037,41 @@ class QuickSight(CidBase):
         return dashboard
 
 
-    def update_dashboard(self, dashboard: Dashboard, **kwargs):
-        """ Updates an AWS QuickSight dashboard """
-        DataSetReferences = list()
-        for k, v in dashboard.datasets.items():
-            DataSetReferences.append({
-                'DataSetPlaceholder': k,
-                'DataSetArn': self.datasets.get(v).arn
-            })
+    def _buid_params_for_create_update_dash(self, definition: dict, permissions: bool=True) -> Dict:
 
-        update_parameters = {
+        create_parameters = {
             'AwsAccountId': self.account_id,
-            'DashboardId': dashboard.id,
-            'Name': dashboard.name,
-            'SourceEntity': {
-                'SourceTemplate': {
-                    'Arn': f"{dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}",
-                    'DataSetReferences': DataSetReferences
-                }
-            }
+            'DashboardId': definition.get('dashboardId'),
+            'Name': definition.get('name'),
         }
 
-        update_parameters = always_merger.merge(update_parameters, kwargs)
+        if definition.get('sourceTemplate'):
+            dataset_references = [
+                {'DataSetPlaceholder': key, 'DataSetArn': value}
+                for key, value in definition.get('datasets', {}).items()
+            ]
+            create_parameters['SourceEntity'] = {
+                'SourceTemplate': {
+                    'Arn': f"{definition.get('sourceTemplate').arn}/version/{definition.get('sourceTemplate').version}",
+                    'DataSetReferences': dataset_references
+                }
+            }
+        elif definition.get('definition'):
+            create_parameters['Definition'] = definition.get('definition')
+            dataset_references = [
+                {'Identifier': key, 'DataSetArn': value}
+                for key, value in definition.get('datasets', {}).items()
+            ]
+            create_parameters['SourceEntity'] = {}
+            create_parameters['Definition']['DataSetIdentifierDeclarations'] = dataset_references
+        else:
+            logger.debug(f'Defintion = {definition}')
+            raise CidCritical('Dashboard definition must contain sourceTemplate or definition')
+        return create_parameters
+
+    def update_dashboard(self, dashboard: Dashboard, definition):
+        """ Updates an AWS QuickSight dashboard """
+        update_parameters = self._buid_params_for_create_update_dash(definition)
         logger.info(f'Updating dashboard "{dashboard.name}"')
         logger.debug(f"Update parameters: {update_parameters}")
         update_status = self.client.update_dashboard(**update_parameters)

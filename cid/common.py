@@ -409,7 +409,7 @@ class Cid():
         dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id, recursive, required_datasets, dashboard_datasets,**kwargs)
+                return self.update_dashboard(dashboard_id, dashboard_definition)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
@@ -865,7 +865,7 @@ class Cid():
             
         return compatible
     
-    def update_dashboard(self, dashboard_id, recursive=False, required_datasets=None, dashboard_datasets=None, **kwargs):
+    def update_dashboard(self, dashboard_id, dashboard_definition):
 
         dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         if not dashboard:
@@ -877,7 +877,10 @@ class Cid():
             print(f'Deployed template: {dashboard.deployedTemplate.arn}')
         else:
             print(f'Deployed template: Not available')
-        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+        if isinstance(dashboard.sourceTemplate, CidQsTemplate):
+            print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+        else:
+            print('Unable to determine dashboard source.')
         
                             
         if dashboard.status == 'legacy':
@@ -900,7 +903,7 @@ class Cid():
         logger.debug(f"Updating {dashboard_id}")
         
         try:
-            self.qs.update_dashboard(dashboard, **kwargs)
+            self.qs.update_dashboard(dashboard, dashboard_definition)
             print('Update completed\n')
             dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)
             self.track('updated', dashboard_id)
