@@ -23,7 +23,7 @@ def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> Non
             data = [d for d in csv.DictReader(file_, dialect=dialect)]
             
     except FileNotFoundError:
-         raise CidCritical(f'File not found: {repr(input_file_name)}')
+        raise CidCritical(f'File not found: {repr(input_file_name)}')
     except PermissionError:
         raise CidCritical(f'Insufficient permission to read {repr(input_file_name)}!')
     except IsADirectoryError:
