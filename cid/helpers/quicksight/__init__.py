@@ -306,15 +306,15 @@ class QuickSight(CidBase):
                 logger.debug(e, exc_info=True)
                 logger.info("Unable to override template description")
                             
-        # recoursively add views
+        # recursively add views
         all_views = []
-        def _recoursive_add_view(view):
+        def _recursive_add_view(view):
             all_views.append(view)
             for dep_view in (self.supported_views.get(view) or {}).get('dependsOn', {}).get('views', []):
-                _recoursive_add_view(dep_view)
+                _recursive_add_view(dep_view)
         for dataset_name in dashboard.datasets.keys():
             for view in (self.supported_datasets.get(dataset_name) or {}).get('dependsOn', {}).get('views', []):
-                _recoursive_add_view(view)
+                _recursive_add_view(view)
         dashboard.views = all_views
         self._dashboards = self._dashboards or {}
         self._dashboards.update({dashboardId: dashboard})
