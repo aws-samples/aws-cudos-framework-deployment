@@ -3,6 +3,7 @@ import sys
 import inspect
 import logging
 import platform
+import requests
 from functools import lru_cache as cache
 from collections.abc import Iterable
 
@@ -17,6 +18,18 @@ logger = logging.getLogger(__name__)
 params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
+PYPI_URL = "https://pypi.org/pypi/cid-cmd/json"
+
+def get_latest_tool_version():
+    res_json = {}
+    try:
+        r = requests.get(PYPI_URL,timeout=3)
+        r.raise_for_status()
+        res_json = r.json()
+    except requests.exceptions as exec:
+        logger.debug(exec, exc_info=True)
+    finally:
+        return res_json.get("info", {}).get("version", "UNDEFINED")
 
 @cache(maxsize=None)
 def isatty():
