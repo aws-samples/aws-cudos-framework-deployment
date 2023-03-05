@@ -3,15 +3,21 @@ import logging
 import click
 
 from cid.common import Cid
-from cid.utils import get_parameters, set_parameters
+from cid.utils import get_parameters, set_parameters, get_latest_tool_version
 from cid._version import __version__
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 version = f'{__version__} Beta'
+latest_version = get_latest_tool_version()
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
 
+if __version__ != latest_version and latest_version != 'UNDEFINED':
+    
+    print('\033[93mUPDATE AVAILABLE\033[0m')
+    print(f'\033[93mA new version {latest_version} is available, please consider update cid-cmd package via pip\033[0m\n\n')
+    logger.info(f'A new version {latest_version} is available, please consider update cid-cmd package via pip')
 
 def cid_command(func):
     def wrapper(ctx, **kwargs):

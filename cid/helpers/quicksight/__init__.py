@@ -376,7 +376,7 @@ class QuickSight(CidBase):
 
 
 
-    def create_data_source(self) -> bool:
+    def create_data_source(self, athena_workgroup, datasource_id: str=None, role_arn: str=None) -> Datasource:
         """Create a new data source"""
         logger.info('Creating Athena data source')
 
@@ -388,31 +388,35 @@ class QuickSight(CidBase):
             resource_name=f'data/permissions/data_source_permissions.json',
         ).decode('utf-8'))
         data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
+        datasource_name = datasource_id or "CID Athena"
+        datasource_id = datasource_id or str(uuid.uuid4())
         params = {
             "AwsAccountId": self.account_id,
-            "DataSourceId": str(uuid.uuid4()),
-            "Name": "Athena",
+            "DataSourceId": datasource_id,
+            "Name": datasource_name,
             "Type": "ATHENA",
             "DataSourceParameters": {
                 "AthenaParameters": {
-                    "WorkGroup": self.AthenaWorkGroup
+                    "WorkGroup": athena_workgroup,
                 }
             },
             "Permissions": [
                 data_source_permissions
             ]
         }
+        if role_arn:
+            params['DataSourceParameters']['AthenaParameters']['RoleArn'] = role_arn
         try:
             logger.info(f'Creating data source {params}')
             create_status = self.client.create_data_source(**params)
             logger.debug(f'Data source creation result {create_status}')
-            current_status = create_status['CreationStatus']
-            logger.info(f'Data source creation status {current_status}')
-            # Poll for the current status of query as long as its not finished
-            while current_status in ['CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
+            # Wait for the datasource completion
+            while True:
                 time.sleep(1)
-                datasource = self.describe_data_source(create_status['DataSourceId'], update=True)
-                current_status = datasource.status
+                datasource = self.describe_data_source(datasource_id, update=True)
+                logger.debug(f'Waiting for datasource {datasource_id}. current status={datasource.status}')
+                if not datasource.status.endswith('IN_PROGRESS'):
+                    break
             if not datasource.is_healthy:
                 logger.error(f'Data source creation failed: {datasource.error_info}')
                 if get_parameter(
@@ -424,15 +428,16 @@ class QuickSight(CidBase):
                         self.delete_data_source(datasource.id)
                     except self.client.exceptions.AccessDeniedException as e:
                         logger.info('Access denied deleting Athena datasource')
-                return False
-            return True
+                return None
+            return datasource
         except self.client.exceptions.ResourceExistsException:
             logger.error('Data source already exists')
+            return self.describe_data_source(datasource_id, update=True)
         except self.client.exceptions.AccessDeniedException as e:
             logger.info('Access denied creating Athena datasource')
             logger.debug(e, exc_info=True)
-        return False
-
+            return None
+        return None
 
     def create_folder(self, folder_name: str, **create_parameters) -> dict:
         """Create a new folder"""
