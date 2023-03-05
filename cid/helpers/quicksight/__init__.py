@@ -197,7 +197,7 @@ class QuickSight(CidBase):
 
         def _save_int(value, default=None):
             """Safe int from string"""
-            return int(str(value)) if str(value).isdecimal() default
+            return int(str(value)) if str(value).isdecimal() else default
 
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         if not dashboard:
