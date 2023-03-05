@@ -224,7 +224,7 @@ class QuickSight(CidBase):
 
         # Fetch template referenced as dashboard source (if any)
         _template_arn = dashboard.version.get('SourceEntityArn')
-        if _template_arn \
+        if _template_arn and isinstance(_template_arn, str) \
             and len(_template_arn.split(':')) > 5 \
             and _template_arn.split(':')[5].startswith('template/'):
 
@@ -234,7 +234,7 @@ class QuickSight(CidBase):
                 "region": _template_arn.split(':')[3]
             }
 
-            if _template_arn.contains('/version/'):
+            if '/version/' in _template_arn:
                 params['version_number'] = _save_int(_template_arn.split('/version/')[-1])
             elif min_template_version:
                 logger.info(f"Using default version number {min_template_version} in place")
