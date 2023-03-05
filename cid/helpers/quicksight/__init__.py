@@ -225,7 +225,7 @@ class QuickSight(CidBase):
         # Fetch template referenced as dashboard source (if any)
         _template_arn = dashboard.version.get('SourceEntityArn')
         if _template_arn \
-            and len(_template_arn.split(':')) >= 5 \
+            and len(_template_arn.split(':')) > 5 \
             and _template_arn.split(':')[5].startswith('template/'):
 
             params = {
