@@ -234,7 +234,7 @@ class QuickSight(CidBase):
                 "region": _template_arn.split(':')[3]
             }
 
-            if _template_arn.contains('/version/')
+            if _template_arn.contains('/version/'):
                 params['version_number'] = _save_int(_template_arn.split('/version/')[-1])
             elif min_template_version:
                 logger.info(f"Using default version number {min_template_version} in place")
