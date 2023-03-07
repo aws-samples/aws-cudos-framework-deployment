@@ -316,6 +316,16 @@ class Cid():
         dashboard_definition.update({'sourceTemplate': source_template})
         print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
         
+        try:
+            dashboard_version = source_template.cid_version
+            default_name = dashboard_definition.get("name")
+            logger.debug("Adding version to dashboard name")
+            dashboard_name = default_name + " | " + str(dashboard_version)
+            dashboard_definition.update({'name': dashboard_name})
+        except ValueError:
+            logger.debug("CID Version could not be determined, could not add version to dashboard name")
+            
+        
         compatible = self.check_dashboard_version_compatibility(dashboard_id)
         
         if not recursive and compatible == False:
@@ -334,7 +344,7 @@ class Cid():
         # Prepare API parameters
         if not dashboard_definition.get('datasets'):
             dashboard_definition.update({'datasets': {}})
-        for dataset_name in required_datasets:
+        for dataset_name in required_datasets_names:
             # Search dataset by name.
             # This is not ideal as there can be several with the same name,
             # but if dataset is created manually we cannot use id.
@@ -382,7 +392,7 @@ class Cid():
         dashboard = self.qs.dashboards.get(dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id, recursive, required_datasets, dashboard_datasets,**kwargs)
+                return self.update_dashboard(dashboard_id, recursive, required_datasets_names, dashboard_datasets,**kwargs)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
@@ -781,8 +791,7 @@ class Cid():
                 return
 
         return self._deploy(dashboard_id, recursive=recursive, update=True)
-
-
+    
     def check_dashboard_version_compatibility(self, dashboard_id):
         
         """

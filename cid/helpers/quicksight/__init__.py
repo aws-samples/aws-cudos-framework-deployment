@@ -1062,11 +1062,20 @@ class QuickSight(CidBase):
                 'DataSetPlaceholder': k,
                 'DataSetArn': self.datasets.get(v).arn
             })
-
+        
+        
+        dashboard_name = dashboard.name.split(" | ")[0]
+        try:
+            dashboard_version = dashboard.sourceTemplate.cid_version
+            dashboard_name = dashboard_name + " | " + str(dashboard_version)
+        except ValueError:
+            logger.debug("CID Version could not be determined, could not add version to dashboard name")
+            dashboard_name = dashboard.name
+            
         update_parameters = {
             'AwsAccountId': self.account_id,
             'DashboardId': dashboard.id,
-            'Name': dashboard.name,
+            'Name': dashboard_name,
             'SourceEntity': {
                 'SourceTemplate': {
                     'Arn': f"{dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}",
@@ -1076,7 +1085,7 @@ class QuickSight(CidBase):
         }
 
         update_parameters = always_merger.merge(update_parameters, kwargs)
-        logger.info(f'Updating dashboard "{dashboard.name}"')
+        logger.info(f'Updating dashboard "{dashboard_name}"')
         logger.debug(f"Update parameters: {update_parameters}")
         update_status = self.client.update_dashboard(**update_parameters)
         logger.debug(update_status)
