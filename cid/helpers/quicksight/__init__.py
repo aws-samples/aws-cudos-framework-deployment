@@ -195,7 +195,7 @@ class QuickSight(CidBase):
     def discover_dashboard(self, dashboardId: str) -> Dashboard:
         """Discover a single dashboard: describe and pull downstream info (datasets, related templates and views) """
 
-        def _save_int(value, default=None):
+        def _safe_int(value, default=None):
             """Safe int from string"""
             return int(str(value)) if str(value).isdecimal() else default
 
@@ -219,8 +219,8 @@ class QuickSight(CidBase):
 
         # Check for extra informations from resource definition
         version_obj = _definition.get('versions', dict())
-        min_template_version = _save_int(version_obj.get('minTemplateVersion'))
-        default_description_version = _save_int(version_obj.get('minTemplateDescription'))
+        min_template_version = _safe_int(version_obj.get('minTemplateVersion'))
+        default_description_version = _safe_int(version_obj.get('minTemplateDescription'))
 
         # Fetch template referenced as dashboard source (if any)
         _template_arn = dashboard.version.get('SourceEntityArn')
@@ -235,7 +235,7 @@ class QuickSight(CidBase):
             }
 
             if '/version/' in _template_arn:
-                params['version_number'] = _save_int(_template_arn.split('/version/')[-1])
+                params['version_number'] = _safe_int(_template_arn.split('/version/')[-1])
             elif min_template_version:
                 logger.info(f"Using default version number {min_template_version} in place")
                 params['version_number'] = min_template_version
