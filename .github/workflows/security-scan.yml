@@ -7,7 +7,7 @@ on:
       - '*'
 
 jobs:
-  test-cli:
+  bandit-scan:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -25,6 +25,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install bandit toml
-      - name: Basic check
+      - name: Bandit Scan
         run: |
           bandit -c pyproject.toml -r .
