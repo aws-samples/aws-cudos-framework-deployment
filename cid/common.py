@@ -334,7 +334,7 @@ class Cid():
         # Prepare API parameters
         if not dashboard_definition.get('datasets'):
             dashboard_definition.update({'datasets': {}})
-        for dataset_name in required_datasets:
+        for dataset_name in required_datasets_names:
             # Search dataset by name.
             # This is not ideal as there can be several with the same name,
             # but if dataset is created manually we cannot use id.
@@ -382,7 +382,7 @@ class Cid():
         dashboard = self.qs.dashboards.get(dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id, recursive, required_datasets, dashboard_datasets,**kwargs)
+                return self.update_dashboard(dashboard_id, recursive, required_datasets_names, dashboard_datasets,**kwargs)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
