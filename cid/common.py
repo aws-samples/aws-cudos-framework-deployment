@@ -295,7 +295,7 @@ class Cid():
             else:
                 raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
-        required_datasets = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
+        required_datasets_names = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
         dashboard_datasets = dashboard.datasets if dashboard else {}
         
@@ -329,14 +329,20 @@ class Cid():
             recursive = True
                      
         if recursive:
-            self.create_datasets(required_datasets, dashboard_datasets, recursive=recursive, update=update)
+            self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
 
         # Prepare API parameters
         if not dashboard_definition.get('datasets'):
             dashboard_definition.update({'datasets': {}})
-        for dataset_name in required_datasets:
-            ds = next((v for v in self.qs.datasets.values() if v.name == dataset_name), None)
-            if isinstance(ds, Dataset):
+        for dataset_name in required_datasets_names:
+            # Search dataset by name.
+            # This is not ideal as there can be several with the same name,
+            # but if dataset is created manually we cannot use id.
+            for ds in self.qs.datasets.values():
+                if not isinstance(ds, Dataset) or ds.name != dataset_name:
+                    continue
+
+                # check fields to make sure they match
                 dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                 required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
                 unmatched = {}
@@ -344,11 +350,15 @@ class Cid():
                     if k not in dataset_fields or dataset_fields[k] != v:
                         unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
                 if unmatched:
-                    raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
-                else:
-                    print(f'Using dataset {dataset_name}: {ds.id}')
-                    dashboard_definition.get('datasets').update({dataset_name: ds.arn})
-  
+                    logger.warning(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
+                    continue
+
+                print(f'Using dataset {dataset_name}: {ds.id}')
+                dashboard_definition.get('datasets').update({dataset_name: ds.arn})
+                break
+            else:
+                raise CidCritical(f'Dataset "{dataset_name}" is not found OR ther is missmathc in fields. Check log.')
+
 
         kwargs = dict()
         local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'
@@ -372,7 +382,7 @@ class Cid():
         dashboard = self.qs.dashboards.get(dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id, recursive, required_datasets, dashboard_datasets,**kwargs)
+                return self.update_dashboard(dashboard_id, recursive, required_datasets_names, dashboard_datasets,**kwargs)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
