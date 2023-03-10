@@ -243,6 +243,10 @@ Resources:
                 Action: quicksight:ListDatasets
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*'
+              - Effect: Allow
+                Action: quicksight:ListIngestions
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/ingestion/*'
 
   # Currently QS has no api for managing updates, so we need to set up a scheduled lambda.
   # Once QS will provide the API for scheduling this will be removed.
@@ -298,6 +302,12 @@ Resources:
                   for dataset in page['DataSetSummaries']:
                       name = dataset['Name']
                       if dataset['ImportMode'] != 'SPICE' or name not in DATASETS_TO_REFRESH:
+                          continue
+                      ingestions = quicksight.get_paginator('list_ingestions').paginate(AwsAccountId=account_id, DataSetId=dataset['DataSetId'])
+                      running_ingestions = list(ingestions.search("Ingestions[?contains([`INITIALIZED`,`QUEUED`,`RUNNING`], IngestionStatus)][]"))
+                      if len(running_ingestions) > 0:
+                          print(f"INFO: Dataset {name} has one or more currently running ingestions. Skipping refresh.")
+                          print('DEBUG: running_ingestions=', running_ingestions)
                           continue
                       print(f"INFO: Refreshing dataset {name}")
                       res = quicksight.create_ingestion(
