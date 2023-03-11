@@ -209,7 +209,7 @@ Conditions:
     Fn::And:
       - !Condition NeedDataBucketsKms
       - !Condition NeedCURTable
-  NeedDatasource: !Equals [ !Ref "AWS::Region", "eu-west-3" ] # In eu-west-3 CFN QS Dataset resource is not availble yet.
+  NeedDatasource: !Not [ !Equals [ !Ref "AWS::Region", "eu-west-3" ] ] # In eu-west-3 CFN QS Dataset resource is not availble yet.
 
 
 Resources:
@@ -1100,7 +1100,7 @@ Resources:
                   url = event.get('ResponseURL')
                   body = {
                       'Status': status,
-                      'Reason': reason + '\nSee more: ' + log_url,
+                      'Reason': reason[:2000] + '\nSee more: ' + log_url,
                       'PhysicalResourceId': physical_id,
                       'StackId': event.get('StackId'),
                       'RequestId': event.get('RequestId'),
