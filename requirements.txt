@@ -4,6 +4,4 @@ deepmerge
 PyYAML
 requests
 six>=1.15
-pygments
-pygments_pprint_sql
 questionary>=1.10
