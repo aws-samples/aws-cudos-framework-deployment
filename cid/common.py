@@ -249,7 +249,7 @@ class Cid():
             resources = {}
             try:
                 if source.startswith('https://'):
-                    resp = requests.get(source)
+                    resp = requests.get(source, timeout=10)
                     assert resp.status_code in [200, 201], f'Error {resp.status_code} while loading url. {resp.text}'
                     resources = yaml.safe_load(resp.text)
                 else:
