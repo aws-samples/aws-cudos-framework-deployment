@@ -351,6 +351,7 @@ class Cid():
         if not dashboard_definition.get('datasets'):
             dashboard_definition['datasets'] = {}
 
+        for dataset_name in required_datasets_names:
             # First try to find the dataset with the id
             dataset = self.qs.describe_dataset(id=dataset_name)
             if isinstance(dataset, Dataset):
