@@ -350,7 +350,7 @@ class Cid():
         # Find datasets for template or defintion
         if not dashboard_definition.get('datasets'):
             dashboard_definition['datasets'] = {}
-        for dataset_name in required_datasets:
+
             # First try to find the dataset with the id
             dataset = self.qs.describe_dataset(id=dataset_name)
             if dataset:
@@ -358,7 +358,9 @@ class Cid():
                 dashboard_definition['datasets'][dataset_name] = dataset.arn
                 continue
 
-            # Then find dataset by name by scanning all datasets with matching name AND if possible matching fields
+            # Then search dataset by name.
+            # This is not ideal as there can be several with the same name,
+            # but if dataset is created manually we cannot use id.
             for ds in self.qs.datasets.values():
                 if not isinstance(ds, Dataset) or ds.name != dataset_name:
                     continue

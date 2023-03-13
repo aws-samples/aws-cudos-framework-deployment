@@ -1,0 +1,59 @@
+
+name: Security Scan
+
+on:
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  python-scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - {python-version: '3.7' }
+          - {python-version: '3.10' }
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U bandit toml pip-audit setuptools .
+      - name: Bandit Scan
+        run: |
+          bandit -c pyproject.toml -r .
+      - name: Pip Audit
+        run: |
+          pip-audit
+
+  cfn-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+      - name: Install CFN tools
+        run: |
+          gem install cfn-nag
+      - name: CFN Nag scan
+        run: |
+          cfn_nag_scan --input-path  ./cfn-templates/cid-cfn.yml
+      - name: Install cfn-lint
+        run: |
+          pip install cfn-lint
+      - name: CFN Lint
+        run: |
+          cfn-lint ./cfn-templates/cid-cfn.yml
