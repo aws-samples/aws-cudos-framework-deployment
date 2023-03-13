@@ -3,15 +3,21 @@ import logging
 import click
 
 from cid.common import Cid
-from cid.utils import get_parameters, set_parameters
+from cid.utils import get_parameters, set_parameters, get_latest_tool_version
 from cid._version import __version__
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 version = f'{__version__} Beta'
+latest_version = get_latest_tool_version()
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
 
+if __version__ != latest_version and latest_version != 'UNDEFINED':
+    
+    print('\033[93mUPDATE AVAILABLE\033[0m')
+    print(f'\033[93mA new version {latest_version} is available, please consider update cid-cmd package via pip\033[0m\n\n')
+    logger.info(f'A new version {latest_version} is available, please consider update cid-cmd package via pip')
 
 def cid_command(func):
     def wrapper(ctx, **kwargs):
@@ -83,6 +89,20 @@ def map(ctx, **kwargs):
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@cid_command
+def csv2view(ctx, **kwargs):
+    """Create account sql code from CSV file
+
+    \b
+    Command options:
+     --input                         csv file
+     --name                          Athena View name
+    """
+    ctx.obj.csv2view(**kwargs)
+
+
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.option('--share-with-account', help='Share dashboard with all users in the current account', is_flag=True, default=None)
 @click.option('--quicksight-delete-failed-datasource', help='Delete datasoruce if creation failed', is_flag=True, default=None)
 @cid_command
@@ -104,7 +124,7 @@ def deploy(ctx, **kwargs):
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
-     --resources TEXT                      CID resources file (yaml)
+     --resources TEXT                      CID resources yaml file or url
     """
     ctx.obj.deploy(**kwargs)
 
@@ -113,13 +133,14 @@ def deploy(ctx, **kwargs):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def export(ctx, **kwargs):
-    """Deploy Dashboard
+    """Expot Dashboard
     
     \b
     Command options:
         --analysis-name       Analysis you want to share (not needed if analysis-id is provided).
         --analysis-id         ID of analysis you want to share (open analysis in browser and copy id from url)
         --template-id         Template Id
+        --dashboard-id        Target Dashboard Id
         --template-version    Version description vX.Y.Z
         --reader-account      Account id with howm you want to share or *
         --output              A filename (.yaml)

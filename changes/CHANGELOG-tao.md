@@ -1,5 +1,32 @@
 # What's new in TAO Dashboard
 
+## TAO Dashboard v2.0.0:
+
+**Important:** Update to this version requires cid-cmd v0.2.12. Please update cid-cmd first before updating the dashboard. During the update you'd need to provide a path to s3 folder where your Trusted Advisor data is stored. QuickSight dataset ta-organizational-view will be updated, please make a copy if you've made any customizations to the dataset. To update run these commands in your CloudShell (recommended) or other terminal:
+
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id ta-organizational-view --recursive
+```
+
+**Changes:**
+
+**Performance Improvements:** Added Athena view to limit amount of data loaded to QuickSight SPICE and extracted heavy calculation fields from dashboard to dataset level   
+**New tab Security Hub Checks:** Added visuals with detailed view for Security Hub checks delivered to AWS Trusted Advisor:
+* Security Hub Flagged resources by month
+* Security Hub Flagged resources by Top Accounts
+* Security Hub Flagged Resources
+
+**New tab AWS Well Architected reviews:** Added visuals with detailed view for AWS Well Architected reviews details delivered to AWS Trusted Advisor:
+* Identified High Risk Items by Workload
+* Identified High Risk Items by Category
+* Well-Architected Reviews Detailed View
+
+**Fault Tolerance tab**: Added visuals for Amazon ElastiCache and MemoryDB Multi-AZ clusters which alert customers when they're running in a Single-AZ configuration in order to improve fault tolerance, and enhanced availability of their Redis clusters.
+
+**Cost Optimization tab**: fixed total calculation for Cost Optimization checks
+
 ## TAO Dashboard v1.5:
 Added Account and IsSuppressed controls to the Performance and Fault Tolerance tabs
 

@@ -8,7 +8,6 @@ from cid.helpers.quicksight.resource import CidQsResource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import is_unattendent_mode
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -101,22 +100,50 @@ class Dashboard(CidQsResource):
         return self._status
 
     def display_status(self) -> None:
+          
         print('\nDashboard status:')
         print(f"  Name (id): {self.name} ({self.id})")
         print(f"  Status: {self.status}")
         print(f"  Health: {'healthy' if self.health else 'unhealthy'}")
+        
         if self.status_detail:
             print(f"  Status detail: {self.status_detail}")
+            
+        cid_version = None
+        cid_version_latest = None
+        
+        try:
+            cid_version = self.deployedTemplate.cid_version
+        except ValueError:
+            logger.debug("The cid version of the deployed dashboard could not be retrieved")
+            cid_version = "N/A"
+
+        try:
+            cid_version_latest = self.sourceTemplate.cid_version if isinstance(self.sourceTemplate, CidQsTemplate) else "N/A"
+        except ValueError:
+            logger.debug("The latest version of the dashboard could not be retrieved")
+            cid_version_latest = "N/A"
+            print(f"  CID Version     {cid_version}")
+            print(f"  TemplateVersion {self.deployed_version} ")
+
         if self.latest:
-            print(f"  Version: {self.deployed_version}")
+            logger.debug("The dashboard is up-to-date")
+            logger.debug(f"CID Version {cid_version}")
+            logger.debug(f"TemplateVersion {self.deployed_version} ")
         else:
-            print(f"  Version (deployed, latest): {self.deployed_version}, {self.latest_version}")
+            print(f"  CID Version     {str(cid_version): <6} --> {str(cid_version_latest): <6}")
+            print(f"  TemplateVersion {str(self.deployed_version): <6} --> {str(self.latest_version): <6}")
+
+            logger.debug("An update is available")
+            logger.debug(f"CID Version      {str(cid_version): <9} --> {str(cid_version_latest): <6}")
+            logger.debug(f"TemplateVersion  {str(self.deployed_version): <9} -->  {str(self.latest_version): <6}")
+            
         if self.datasets:
             print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
         print('\n')
         if click.confirm('Display dashboard raw data?'):
             print(json.dumps(self.raw, indent=4, sort_keys=True, default=str))
-    
+   
     def display_url(self, url_template: str, launch: bool = False, **kwargs) -> None:
         url = url_template.format(dashboard_id=self.id, **kwargs)
         print(f"#######\n####### {self.name} is available at: " + url + "\n#######")

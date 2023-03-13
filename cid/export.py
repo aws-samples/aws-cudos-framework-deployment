@@ -39,11 +39,13 @@ def export_analysis(qs):
             for page in response_iterator:
                 analyzes.extend(page.get('AnalysisSummaryList'))
             if len(analyzes) == 100:
-                logger.info('Too many analyzes. Will show first 100')
+                logger.info('Too many analyses. Will show first 100')
         except qs.client.exceptions.AccessDeniedException:
             logger.info("AccessDeniedException while discovering analyses")
         else:
             analyzes = list(filter(lambda a: a['Status']=='CREATION_SUCCESSFUL', analyzes ))
+            if not analyzes:
+                raise CidCritical("No analyses was found, please save your dashboard as an analyse first")
             choices = {a['Name']:a for a in sorted(analyzes, key=lambda a: a['LastUpdatedTime'])[::-1]}
             choice = get_parameter(
                 'analysis-name',
@@ -90,11 +92,19 @@ def export_analysis(qs):
         }
 
         for key, value in dataset_data['PhysicalTableMap'].items():
+            if 'RelationalTable' not in value \
+                or 'DataSourceArn' not in value['RelationalTable'] \
+                or 'Schema' not in value['RelationalTable']:
+                raise CidCritical(f'Dataset {key} does not seems to be Antena dataset. Only Athena datasets are supported.' )
             value['RelationalTable']['DataSourceArn'] = '${athena_datasource_arn}'
             value['RelationalTable']['Schema'] = '${athena_database_name}'
+        for key, value in dataset_data.get('LogicalTableMap', {}).items():
+            if 'Source' in value and "DataSetArn" in value['Source']:
+                #FIXME add value['Source']['DataSetArn'] to the list of dataset_arn s 
+                raise CidCritical(f"DataSet {dataset.raw['Name']} contains unsupported join. Please replace join of {value.get('Alias')} from DataSet to DataSource")
+
 
         datasets[dataset_arn] = dataset_data
-
 
     template_id = get_parameter(
         'template-id',
@@ -105,7 +115,7 @@ def export_analysis(qs):
     template_version_description = get_parameter(
         'template-version-description',
         message='Enter version description',
-        default='vX.X.X' # FIXME: can we get the version from Analysis?
+        default='vX.X.X' # FIXME: get version from analysis / template
     )
 
     logger.info('Updating template')
@@ -119,7 +129,7 @@ def export_analysis(qs):
                 "DataSetReferences": dataset_references
             }
         },
-        "VersionDescription": template_version_description, # well actually version is not used, but i leave it as a reminder to update
+        "VersionDescription": template_version_description,
     }
     logger.debug(f'Template params = {params}')
     try:
@@ -137,7 +147,7 @@ def export_analysis(qs):
 
     time.sleep(5)
 
-    reader_account = get_parameter(
+    reader_account_id = get_parameter(
         'reader-account',
         message='Enter account id to share the template with or *',
         default='*'
@@ -146,12 +156,18 @@ def export_analysis(qs):
         TemplateId=template_id,
         GrantPermissions=[
             {
-                "Principal": {"AWS": reader_account} if reader_account != '*' else '*',
+                "Principal": f'arn:aws:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
                 'Actions': [
                     "quicksight:DescribeTemplate",
                 ]
             },
         ],
+    )
+
+    dashboard_id = get_parameter(
+        'dashboard-id',
+        message='dashboard id (will be used in url of dashboard)',
+        default=analysis['Name'].replace(' ', '-').lower()
     )
 
     resources = {}
@@ -164,7 +180,7 @@ def export_analysis(qs):
         'templateId': template_id,
         'sourceAccountId': qs.account_id,
         'region': qs.session.region_name,
-        'dashboardId': analysis['Name'].replace(' ', '-'),
+        'dashboardId': dashboard_id,
         'dependsOn':{
             'datasets': [dataset['Name'].replace(' ', '-') for dataset in datasets.values()]
         }
