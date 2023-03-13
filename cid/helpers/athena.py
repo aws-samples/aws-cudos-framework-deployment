@@ -268,25 +268,16 @@ class Athena(CidBase):
                 return False
 
     def get_query_results(self, query_id):
+        """ Get Query Results """
         return self.client.get_query_results(QueryExecutionId=query_id)
 
     def parse_response_as_table(self, response, include_header=False):
+        """ Return a query response as a table. """
         result = []
         starting_row = 0 if include_header else 1
         for row in response['ResultSet']['Rows'][starting_row:]:
             result.append([data.get('VarCharValue', '') for data in row['Data']])
         return result
-
-    def get_s3_obj_as_text(self, s3path, encoding: str='utf-8'):
-        """ Get an s3 object as a paht
-        s3path - an s3 path string. s3://bucket/path/file.ext
-        """
-        s3 = self.session.client('s3', region_name=self.region)
-        bucket = s3path.split('/')[2]
-        key = '/'.join(s3path.split('/')[3:])
-        with BytesIO() as fileobject:
-            s3.download_fileobj(bucket, key, fileobject)
-            return fileobject.getvalue().decode(encoding)
 
     def query(self, sql, include_header=False, **kwargs) -> list:
         """ Execute Athena Query and return a result"""
@@ -300,6 +291,7 @@ class Athena(CidBase):
 
 
     def discover_views(self, views: dict={}) -> None:
+        """ Discover views from a given list of view names and cahe them. """
         for view_name in views:
             try:
                 self.get_table_metadata(TableName=view_name)
@@ -308,6 +300,7 @@ class Athena(CidBase):
 
 
     def wait_for_view(self, view_name: str, poll_interval=1, timeout=60) -> None:
+        """ Wait for a View to be created. """
         deadline = time.time() + timeout
         while time.time() <= deadline:
             self.discover_views([view_name])
@@ -401,10 +394,8 @@ class Athena(CidBase):
         return diff(existing_sql, tmp_sql)
 
 
-
-
     def process_views(self, views):
-        """ returns a dict of discovered views. Going to each view and try to discover all FROM
+        """ returns a dict of discovered views. Going to each view and try to discover recursively all "FROM" dependanices
         """
         all_views = {}
         def _recursively_process_view(view):
