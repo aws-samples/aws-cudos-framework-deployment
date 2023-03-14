@@ -9,7 +9,7 @@ from io import StringIO
 from pkg_resources import resource_string
 
 from cid.base import CidBase
-from cid.utils import get_parameter, get_parameters
+from cid.utils import get_parameter, get_parameters, cid_print
 from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
 
@@ -401,7 +401,7 @@ class Athena(CidBase):
         def _recursively_process_view(view):
             """ process recursively views and add all dependency views to the global dict
             """
-            logger.debug(f"Processing '{view}'")
+            cid_print(f"Processing Athena View: <BOLD>{view}<END>")
             athena_type = None
             if self.query(f"SHOW VIEWS LIKE '{view}'", include_header=True):
                 athena_type = 'view'
