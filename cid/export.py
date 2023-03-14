@@ -70,6 +70,8 @@ def choose_analysis(qs):
 
 
 def export_analysis(qs, athena):
+    """ Export analysis to yaml resource File
+    """
 
     enable_multiline_in_yaml()
     # Choose Analysis to share
@@ -341,6 +343,7 @@ def export_analysis(qs, athena):
 
     with open(output, "w") as output_file:
         output_file.write(yaml.safe_dump(resources, sort_keys=False))
+    cid_print(f'Output: <BOLD>{output}<END>')
 
 
 if __name__ == "__main__": # for testing
