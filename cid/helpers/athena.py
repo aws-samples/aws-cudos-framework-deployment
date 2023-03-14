@@ -401,7 +401,7 @@ class Athena(CidBase):
         def _recursively_process_view(view):
             """ process recursively views and add all dependency views to the global dict
             """
-            cid_print(f"Processing Athena View: <BOLD>{view}<END>")
+            cid_print(f"    Processing Athena View: <BOLD>{view}<END>")
             athena_type = None
             if self.query(f"SHOW VIEWS LIKE '{view}'", include_header=True):
                 athena_type = 'view'

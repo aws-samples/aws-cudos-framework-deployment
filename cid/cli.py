@@ -137,13 +137,17 @@ def export(ctx, **kwargs):
     
     \b
     Command options:
-        --analysis-name       Analysis you want to share (not needed if analysis-id is provided).
-        --analysis-id         ID of analysis you want to share (open analysis in browser and copy id from url)
-        --template-id         Template Id
-        --dashboard-id        Target Dashboard Id
-        --template-version    Version description vX.Y.Z
-        --reader-account      Account id with howm you want to share or *
-        --output              A filename (.yaml)
+        --analysis-name              Analysis you want to share (not needed if analysis-id is provided).
+        --analysis-id                ID of analysis you want to share (open analysis in browser and copy id from url)
+        --template-id                Template Id
+        --dashboard-id               Target Dashboard Id
+        --template-version           Version description vX.Y.Z
+        --reader-account             Account id with howm you want to share or *
+        --dashboard-export-method
+               (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSught Teamplate)
+        --export-known-datasets
+            (no|yes)                 If 'yes' the export will include DataSets that are already in resources file. Default = no
+        --output                     A filename (.yaml)
     """
     ctx.obj.export(**kwargs)
 
