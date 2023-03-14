@@ -322,6 +322,10 @@ def export_analysis(qs, athena):
             AwsAccountId=qs.account_id,
             AnalysisId=analysis_id,
         )['Definition']
+
+        for datasest in definition.get('DataSetIdentifierDeclarations', []):
+            # Hide region and account number of the source account
+            datasest["DataSetArn"] = 'arn:aws:quicksight:::dataset/' + datasest["DataSetArn"].split('/')[-1]
         dashboard_resource['data'] = yaml.safe_dump(definition)
 
     resources['dashboards'][analysis['Name'].upper()] = dashboard_resource
