@@ -17,24 +17,30 @@ import boto3
 
 from cid.helpers import Dataset, QuickSight, Athena
 from cid.helpers import CUR
-from cid.utils import get_parameter, get_parameters
+from cid.utils import get_parameter, get_parameters, cid_print
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
 def enable_multiline_in_yaml():
-    #https://stackoverflow.com/a/33300001
+    """ Enable multiline in yaml
+
+    credits: https://stackoverflow.com/a/33300001
+    """
     def str_presenter(dumper, data):
-      if len(data.splitlines()) > 1:  # check for multiline string
-        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
-      return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+        if len(data.splitlines()) > 1:  # check for multiline string
+            data =  re.sub(r'\s+$', '', data, flags=re.M) # Multiline does not support traling spaces
+            return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data)
     yaml.add_representer(str, str_presenter)
     yaml.representer.SafeRepresenter.add_representer(str, str_presenter) # to use with safe_dump
 
 def escape_id(id_):
+    """ Escape id """
     return re.sub('[^0-9a-zA-Z]+', '-', id_)
 
 def choose_analysis(qs):
+    """ Choose analysis """
     try:
         analyzes = []
         logger.info("Discovering analyses")
@@ -65,6 +71,7 @@ def choose_analysis(qs):
 
 def export_analysis(qs, athena):
 
+    enable_multiline_in_yaml()
     # Choose Analysis to share
     analysis_id = get_parameters().get('analysis-id') or choose_analysis(qs)
 
@@ -110,10 +117,12 @@ def export_analysis(qs, athena):
             "DataSetArn": dataset_arn
         })
 
+        cid_print(f'Found DataSet <BOLD>{dataset_name}<END>.')
         if dataset_name in athena._resources.get('datasets'):
             resources_datasets.append(dataset_name)
-            logger.info(f'DataSet {dataset_name} is in resources. Skiping.')
-            continue
+            if not get_parameters().get('export-known-datasets'):
+                cid_print(f'DataSet <BOLD>{dataset_name}<END> is in resources. Skiping.')
+                continue
 
         dataset_data = {
             "DataSetId": dataset.raw['DataSetId'],
@@ -142,14 +151,15 @@ def export_analysis(qs, athena):
 
         dep_cur = False
         for dep_view in dependancy_views[:]:
-            if cur_helper.table_is_cur(name=key):
+            if cur_helper.table_is_cur(name=dep_view):
                 dependancy_views.remove(dep_view)
                 dep_cur = True
         datasets[dataset_name] = {
             'data': dataset_data,
             'dependsOn': {'views': dependancy_views},
         }
-        if dep_cur: datasets[dataset_name]['dependsOn']['cur'] = True
+        if dep_cur:
+            datasets[dataset_name]['dependsOn']['cur'] = True
 
     all_databases = list(set(all_databases))
     if len(all_databases) > 1:
@@ -158,8 +168,9 @@ def export_analysis(qs, athena):
     if all_databases:
         athena.DatabaseName = all_databases[0]
 
+    cid_print(f'Analyzing Athena Views: {all_views}. Can take some time.')
     all_views_data = athena.process_views(all_views)
-    logger.debug(f'List of views: {all_views}')
+    cid_print(f'List of views: {str(list(all_views_data.keys()))}')
 
     # Post processing of views:
     # - Special treatment for CUR: replace cur table with a placeholder
@@ -169,6 +180,8 @@ def export_analysis(qs, athena):
     for key, view_data in all_views_data.items():
         if all_databases and isinstance(view_data.get('data'), str):
             view_data['data'] = view_data['data'].replace(f'{all_databases[0]}.', '${athena_database_name}.')
+
+        if isinstance(view_data.get('data'), str):
             view_data['data'] = view_data['data'].replace('CREATE VIEW ', 'CREATE OR REPLACE VIEW ')
 
         # Analyse dependancies: if the dependancy is CUR there is a special flag
@@ -180,7 +193,7 @@ def export_analysis(qs, athena):
                 view_data['dependsOn']['cur'] = True
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
-                    view_data['data'] = view_data['data'].replace(f'"{dep_view}"', '"${cur_table_name}"')
+                    view_data['data'] = view_data['data'].replace(f'{dep_view}', '${cur_table_name}')
                 cur_tables.append(dep_view)
             else:
                 logger.debug(f'{dep_view} is not cur')
@@ -322,7 +335,6 @@ def export_analysis(qs, athena):
         default=f"{analysis['Name'].replace(' ', '-')}.yaml"
     )
 
-    enable_multiline_in_yaml()
     with open(output, "w") as output_file:
         output_file.write(yaml.safe_dump(resources, sort_keys=False))
 
