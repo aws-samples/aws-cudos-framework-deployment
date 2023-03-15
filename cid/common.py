@@ -383,7 +383,7 @@ class Cid():
                         matching_datasets.append(ds)
                         break
 
-                if len(matching_datasets) == 0:
+                if not matching_datasets:
                     logger.warning(f'Dataset {dataset_name} is not found')
                     raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
                 elif len(matching_datasets) >= 1:
