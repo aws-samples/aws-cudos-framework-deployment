@@ -196,6 +196,7 @@ def export_analysis(qs, athena):
                 view_data['dependsOn']['cur'] = True
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
+                    # cur tables treated separately as we don't manage CUR table here
                     view_data['data'] = view_data['data'].replace(f'{dep_view_name}', '${cur_table_name}')
                 cur_tables.append(dep_view_name)
             else:
