@@ -119,11 +119,11 @@ def export_analysis(qs, athena):
             "DataSetArn": dataset_arn
         })
 
-        cid_print(f'Found DataSet <BOLD>{dataset_name}<END>.')
+        cid_print(f'    Found DataSet <BOLD>{dataset_name}<END>.')
         if dataset_name in athena._resources.get('datasets'):
             resources_datasets.append(dataset_name)
             if not get_parameters().get('export-known-datasets'):
-                cid_print(f'DataSet <BOLD>{dataset_name}<END> is in resources. Skiping.')
+                cid_print(f'    DataSet <BOLD>{dataset_name}<END> is in resources. Skiping.')
                 continue
 
         dataset_data = {
@@ -143,8 +143,9 @@ def export_analysis(qs, athena):
             value['RelationalTable']['DataSourceArn'] = '${athena_datasource_arn}'
             value['RelationalTable']['Schema'] = '${athena_database_name}'
             athena_source = value['RelationalTable']['Name']
-            dependancy_views.append(athena_source)
-            all_views.append(athena_source)
+            views_name = athena_source.split('.')[-1]
+            dependancy_views.append(views_name)
+            all_views.append(views_name)
 
         for key, value in dataset_data.get('LogicalTableMap', {}).items():
             if 'Source' in value and "DataSetArn" in value['Source']:
@@ -170,9 +171,8 @@ def export_analysis(qs, athena):
     if all_databases:
         athena.DatabaseName = all_databases[0]
 
-    cid_print(f'Analyzing Athena Views: {all_views}. Can take some time.')
+    cid_print(f'Analyzing Athena Views: <BOLD>{repr(all_views)}<BOLD>. Can take some time.')
     all_views_data = athena.process_views(all_views)
-    cid_print(f'List of views: {str(list(all_views_data.keys()))}')
 
     # Post processing of views:
     # - Special treatment for CUR: replace cur table with a placeholder
@@ -229,7 +229,7 @@ def export_analysis(qs, athena):
     dashboard_resource['dependsOn'] = {
         # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
         # We can potentially reconsider this and use IDs at some point
-        'datasets': [dataset_name for dataset_name in datasets.keys()] + resources_datasets
+        'datasets': sorted(list(set([dataset_name for dataset_name in datasets.keys()] + resources_datasets))) 
     }
     dashboard_resource['name'] = analysis['Name']
     dashboard_resource['dashboardId'] = dashboard_id
@@ -240,10 +240,10 @@ def export_analysis(qs, athena):
     else:
         dashboard_export_method = get_parameter(
             'dashboard-export-method',
-            message='Please choose dashboards method',
+            message='Please choose export method (pull a json "definition" or create a "template")',
             choices=[
-                'template',
                 'definition',
+                'template',
             ],
             default='definition',
         )
