@@ -401,7 +401,6 @@ class Athena(CidBase):
         def _recursively_process_view(view):
             """ process recursively views and add all dependency views to the global dict
             """
-            cid_print(f"    Processing Athena View: <BOLD>{view}<END>")
             athena_type = None
             if self.query(f"SHOW VIEWS LIKE '{view}'", include_header=True):
                 athena_type = 'view'
@@ -409,7 +408,8 @@ class Athena(CidBase):
                 athena_type = 'table'
             else:
                 logger.debug(f'{view} not a view and not a table. Skipping.')
-                return
+                return None
+            cid_print(f"    Processing Athena {athena_type}: <BOLD>{view}<END>")
 
             all_views[view] = {}
             if athena_type == 'view':
@@ -425,12 +425,11 @@ class Athena(CidBase):
                     #FIXME: need to add cross Database Dependancies
                     if dep_view.upper() in ('SELECT', 'VALUES'): # remove "FROM SELECT" and "FROM VALUES"
                         continue
-                    if dep_view.lower() in self._resources.get('views', []):
-                        logger.info('{dep_view} is a predefined resource. Skipping.')
-                    if dep_view not in all_views[view]["dependsOn"]['views']:
-                        all_views[view]["dependsOn"]['views'].append(dep_view)
+                    dep_view = dep_view.split('.')[-1]
                     if dep_view not in all_views:
                         _recursively_process_view(dep_view)
+                    if dep_view not in all_views[view]["dependsOn"]['views'] and dep_view in all_views:
+                        all_views[view]["dependsOn"]['views'].append(dep_view)
                 if not all_views[view]["dependsOn"]['views']:
                     del all_views[view]["dependsOn"]
 
@@ -439,6 +438,7 @@ class Athena(CidBase):
                 sql = '\n'.join([line[0] for line in sql])
 
             all_views[view]['data'] = sql.rstrip()
+            return all_views[view]
 
         for view in views:
             _recursively_process_view(view)

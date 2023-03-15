@@ -171,7 +171,7 @@ def export_analysis(qs, athena):
     if all_databases:
         athena.DatabaseName = all_databases[0]
 
-    cid_print(f'Analyzing Athena Views: <BOLD>{repr(all_views)}<BOLD>. Can take some time.')
+    cid_print(f'Analyzing Athena Views: <BOLD>{repr(all_views)}<END>. Can take some time.')
     all_views_data = athena.process_views(all_views)
 
     # Post processing of views:
@@ -190,16 +190,19 @@ def export_analysis(qs, athena):
         deps = view_data.get('dependsOn', {})
         non_cur_dep_views = []
         for dep_view in deps.get('views', []):
-            if cur_helper.table_is_cur(name=dep_view):
-                logger.debug(f'{dep_view} is cur')
+            dep_view_name = dep_view.split('.')[-1]
+            if dep_view_name in cur_tables or cur_helper.table_is_cur(name=dep_view_name):
+                logger.debug(f'{dep_view_name} is cur')
                 view_data['dependsOn']['cur'] = True
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
-                    view_data['data'] = view_data['data'].replace(f'{dep_view}', '${cur_table_name}')
-                cur_tables.append(dep_view)
+                    view_data['data'] = view_data['data'].replace(f'{dep_view_name}', '${cur_table_name}')
+                cur_tables.append(dep_view_name)
             else:
-                logger.debug(f'{dep_view} is not cur')
-                non_cur_dep_views.append(dep_view)
+                logger.debug(f'{dep_view_name} is not cur')
+                if dep_view_name not in all_views_data:
+                    logger.debug(f'{dep_view_name} skipping as not in the views list')
+                non_cur_dep_views.append(dep_view_name)
         if deps.get('views'):
              deps['views'] = non_cur_dep_views
              if not deps['views']:
@@ -212,10 +215,22 @@ def export_analysis(qs, athena):
             logger.debug(f'Skipping {key} views - it is a CUR')
             continue
         if isinstance(view_data.get('data'), str):
-            buckets = re.findall("LOCATION\n  's3://(.+?)/", view_data.get('data'))
-            for bucket in buckets:
-                logger.warning('Please replace manually location bucket with a parameter: s3://{bucket}')
-                #TODO: add parameter automatically
+            locations = re.findall("LOCATION\n  '(s3://.+?)'", view_data.get('data'))
+            for location in locations:
+                logger.info(f'Please replace manually location bucket with a parameter: s3://{location}')
+                default = get_parameter(
+                    f'{key}-s3path',
+                    'please provide default value',
+                    default=location,
+                )
+                view_data['parameters'] = {
+                    f'{key}-s3path': {
+                        'default': default,
+                        'description': f"S3 Path for {key} table",
+                    }
+                }
+                view_data['data'] = view_data['data'].replace(location, '${s3path}')
+
         resources['views'][key] = view_data
 
     logger.debug('Building dashboard resource')
