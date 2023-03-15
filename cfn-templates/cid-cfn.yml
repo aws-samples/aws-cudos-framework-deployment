@@ -270,6 +270,8 @@ Resources:
         ZipFile: |
           import os
           from datetime import datetime
+          from datetime import timedelta
+          from datetime import timezone
           import boto3
 
           ## List of DataSets can be found in cid-cmd:
@@ -303,11 +305,18 @@ Resources:
                       name = dataset['Name']
                       if dataset['ImportMode'] != 'SPICE' or name not in DATASETS_TO_REFRESH:
                           continue
-                      ingestions = quicksight.get_paginator('list_ingestions').paginate(AwsAccountId=account_id, DataSetId=dataset['DataSetId'])
-                      running_ingestions = list(ingestions.search("Ingestions[?contains([`INITIALIZED`,`QUEUED`,`RUNNING`], IngestionStatus)][]"))
-                      if len(running_ingestions) > 0:
-                          print(f"INFO: Dataset {name} has one or more currently running ingestions. Skipping refresh.")
-                          print('DEBUG: running_ingestions=', running_ingestions)
+                      scheduled_ingestion = None
+                      for ingestions_page in quicksight.get_paginator('list_ingestions').paginate(AwsAccountId=account_id, DataSetId=dataset['DataSetId']):
+                          for ingestion in ingestions_page['Ingestions']:
+                              time_since_creation = datetime.now(timezone.utc) - ingestion['CreatedTime']
+                              if ingestion['RequestSource'] == 'SCHEDULED' and time_since_creation <= timedelta(days = 1, hours = 1):
+                                  scheduled_ingestion = ingestion
+                                  break
+                          if scheduled_ingestion is not None:
+                              break
+                      if scheduled_ingestion is not None:
+                          print(f"INFO: Dataset {name} has a scheduled ingestion within the last 24 hours. Skipping manual refresh.")
+                          print('DEBUG: scheduled_ingestion=', scheduled_ingestion)
                           continue
                       print(f"INFO: Refreshing dataset {name}")
                       res = quicksight.create_ingestion(
