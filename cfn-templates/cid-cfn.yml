@@ -306,13 +306,19 @@ Resources:
                       if dataset['ImportMode'] != 'SPICE' or name not in DATASETS_TO_REFRESH:
                           continue
                       scheduled_ingestion = None
+                      stop_processing = False
                       for ingestions_page in quicksight.get_paginator('list_ingestions').paginate(AwsAccountId=account_id, DataSetId=dataset['DataSetId']):
                           for ingestion in ingestions_page['Ingestions']:
                               time_since_creation = datetime.now(timezone.utc) - ingestion['CreatedTime']
-                              if ingestion['RequestSource'] == 'SCHEDULED' and time_since_creation <= timedelta(days = 1, hours = 1):
-                                  scheduled_ingestion = ingestion
+                              if time_since_creation <= timedelta(days = 1, hours = 1):
+                                  if ingestion['RequestSource'] == 'SCHEDULED':
+                                      scheduled_ingestion = ingestion
+                                      stop_processing = True
+                              else:
+                                  stop_processing = True
+                              if stop_processing:
                                   break
-                          if scheduled_ingestion is not None:
+                          if stop_processing:
                               break
                       if scheduled_ingestion is not None:
                           print(f"INFO: Dataset {name} has a scheduled ingestion within the last 24 hours. Skipping manual refresh.")
