@@ -122,7 +122,7 @@ def deploy(ctx, **kwargs):
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
-     --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattendant mode (without terminal on-drift will have allways override behaviour)
+     --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
      --update (yes|no)                     Update if some elements are already installed. Default = 'no'
      --resources TEXT                      CID resources yaml file or url
     """
@@ -142,7 +142,7 @@ def export(ctx, **kwargs):
         --template-id                Template Id
         --dashboard-id               Target Dashboard Id
         --template-version           Version description vX.Y.Z
-        --reader-account             Account id with howm you want to share or *
+        --reader-account             Account id with whom you want to share with or *
         --dashboard-export-method
                (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSught Teamplate)
         --export-known-datasets
@@ -188,7 +188,7 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
 
     \b
 
-     --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattendant mode (without terminal on-drift will have allways override behaviour)
+     --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
 
     """
     ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)
