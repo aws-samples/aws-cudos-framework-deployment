@@ -1,6 +1,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This CloudFormation is for organization admin to to Existing Role additional Policies for managing Cloud Intelligence Dashboards Stack
+Description: This template is for organization admin who needs to delegate management of Cloud Intelligence Dashboards Stacks. This stack adds a set of policies to an Existing Role to allow full autonomy in deployment.
 Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: 'Role'
+        Parameters:
+          - RoleName
+      - Label:
+          default: Permissions in Data Collection Account
+        Parameters:
+          - QuickSightManagement
+          - CloudIntelligenceDashboadsCFNManagement
+          - CURDestination
+          - QuickSightAdmin
+      - Label:
+          default: Permissions in CUR Source Account (Payer Account)
+        Parameters:
+          - CURReplication
   cfn-lint:
     config:
       ignore_checks:
@@ -8,10 +25,15 @@ Metadata:
 Parameters:
   RoleName:
     Type: String
-    Description: Name of the role
+    Description: Name of the Existing IAM Role
   QuickSightManagement:
     Type: String
     Description: "Grant to the role rights to manage QuickSight"
+    Default: 'yes'
+    AllowedValues: ["yes", "no"]
+  QuickSightAdmin:
+    Type: String
+    Description: "(OPTIONAL) Grant QuickSight:*"
     Default: 'yes'
     AllowedValues: ["yes", "no"]
   CloudIntelligenceDashboadsCFNManagement:
@@ -33,10 +55,28 @@ Parameters:
 Conditions:
   AddQuickSightManagementPolicy: !Equals [ !Ref QuickSightManagement, "yes" ]
   AddCloudIntelligenceDashboadsCFNManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboadsCFNManagement, "yes" ]
+  AddQuickSightAdminPolicy: !Equals [ !Ref QuickSightAdmin, "yes" ]
   AddCURDestinationPolicy: !Equals [ !Ref CURDestination, "yes" ]
   AddCURReplicationPolicy: !Equals [ !Ref CURReplication, "yes" ]
 
 Resources:
+
+  QuickSightAdminPolicy:
+    Type: AWS::IAM::Policy
+    Condition: AddQuickSightAdminPolicy
+    Properties:
+      Roles:
+        - !Ref RoleName
+      PolicyName: QuickSightAdminPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: DirectoryService
+          Effect: Allow
+          Action:
+          - QuickSight:*
+          Resource: '*'
+
   QuickSightManagementPolicy:
     Type: AWS::IAM::Policy
     Condition: AddQuickSightManagementPolicy
@@ -469,3 +509,6 @@ Resources:
           - s3:ListAllMyBuckets
           Effect: Allow
           Resource: '*' # ReadOnly Policy for CFN
+
+
+# FIXME: add output role
