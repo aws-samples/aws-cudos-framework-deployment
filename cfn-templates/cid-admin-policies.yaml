@@ -1,0 +1,471 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This CloudFormation is for organization admin to to Existing Role additional Policies for managing Cloud Intelligence Dashboards Stack
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W2001
+Parameters:
+  RoleName:
+    Type: String
+    Description: Name of the role
+  QuickSightManagement:
+    Type: String
+    Description: "Grant to the role rights to manage QuickSight"
+    Default: 'yes'
+    AllowedValues: ["yes", "no"]
+  CloudIntelligenceDashboadsCFNManagement:
+    Type: String
+    Description: "Grant to the role rights to manage CloudIntelligenceDashboads via CFN"
+    Default: 'yes'
+    AllowedValues: ["yes", "no"]
+  CURDestination:
+    Type: String
+    Description: "Grant to the role rights to Cur Replication in Destination / Data Collection Account"
+    Default: 'yes'
+    AllowedValues: ["yes", "no"]
+  CURReplication:
+    Type: String
+    Description: "Grant to the role rights to Cur Replication in Source / typically in Payer Account"
+    Default: 'yes'
+    AllowedValues: ["yes", "no"]
+
+Conditions:
+  AddQuickSightManagementPolicy: !Equals [ !Ref QuickSightManagement, "yes" ]
+  AddCloudIntelligenceDashboadsCFNManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboadsCFNManagement, "yes" ]
+  AddCURDestinationPolicy: !Equals [ !Ref CURDestination, "yes" ]
+  AddCURReplicationPolicy: !Equals [ !Ref CURReplication, "yes" ]
+
+Resources:
+  QuickSightManagementPolicy:
+    Type: AWS::IAM::Policy
+    Condition: AddQuickSightManagementPolicy
+    Properties:
+      Roles:
+        - !Ref RoleName
+      PolicyName: QuickSightManagementPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: DirectoryService
+          Effect: Allow
+          Action:
+          - ds:AuthorizeApplication
+          - ds:CreateAlias
+          - ds:CreateIdentityPoolDirectory
+          - ds:DeleteDirectory
+          - ds:UnauthorizeApplication
+          Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
+
+        - Sid: IAM
+          Action:
+          - iam:AttachRolePolicy
+          - iam:CreatePolicy
+          - iam:CreatePolicyVersion
+          - iam:CreateRole
+          - iam:DeletePolicyVersion
+          - iam:DetachRolePolicy
+          Effect: Allow
+          Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
+
+        - Sid: QuickSight
+          Action:
+          - quicksight:CreateAccountSubscription
+          - quicksight:CreateAdmin
+          - quicksight:CreateUser
+          - quicksight:SearchDirectoryGroups
+          - quicksight:SetGroupMapping
+          - quicksight:Subscribe
+          - quicksight:Unsubscribe
+          - quicksight:UpdateAccountSettings
+          Effect: Allow
+          Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
+
+        - Sid: S3
+          Action:
+          - s3:ListBucket
+          - s3:GetObject
+          - s3:GetObjectVersion
+          - s3:PutObject
+          - s3:ListBucketMultipartUploads
+          - s3:GetBucketLocation
+          - s3:AbortMultipartUpload
+          - s3:ListMultipartUploadParts
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared
+          - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:aws:s3:::athena-query-result-${AWS::AccountId}
+
+        - Sid: ReadOnly
+          Action:
+          - ds:CheckAlias
+          - ds:DescribeDirectories
+          - ds:DescribeTrusts
+          - iam:GetPolicy
+          - iam:GetPolicyVersion
+          - iam:GetRole
+          - iam:ListAccountAliases
+          - iam:ListAttachedRolePolicies
+          - iam:ListEntitiesForPolicy
+          - iam:ListPolicyVersions
+          - iam:ListRoles
+          - iam:PassRole
+          - quicksight:DescribeAccountSettings
+          - quicksight:DescribeAccountSubscription
+          - quicksight:GetGroupMapping
+          - quicksight:ListUsers
+          - s3:ListAllMyBuckets
+          Effect: Allow
+          Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
+
+  CloudIntelligenceDashboadsCFNManagementPolicy:
+    Type: AWS::IAM::Policy
+    Condition: AddCloudIntelligenceDashboadsCFNManagementPolicy
+    Properties:
+      Roles:
+        - !Ref RoleName
+      PolicyName: CloudIntelligenceDashboadsCFNManagementPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: Athena
+          Action:
+          - athena:CreateWorkGroup
+          - athena:DeleteWorkGroup
+          - athena:GetWorkGroup
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/CID
+
+        - Sid: CloudFormation
+          Action:
+          - cloudformation:CreateStack
+          - cloudformation:DeleteStack
+          - cloudformation:DescribeStackEvents
+          - cloudformation:DescribeStackResource
+          - cloudformation:DescribeStacks
+          - cloudformation:GetStackPolicy
+          - cloudformation:ListChangeSets
+          - cloudformation:ListStackResources
+          - cloudformation:RollbackStack
+          - cloudformation:UpdateStack
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/Cloud-Intelligence-Dashboards/*
+
+        - Sid: EventBridge
+          Action:
+          - events:DeleteRule
+          - events:DescribeRule
+          - events:EnableRule
+          - events:PutRule
+          - events:PutTargets
+          - events:RemoveTargets
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/Cloud-Intelligence-Dashboards-SpiceRefreshRule-*
+
+        - Sid: GlueCrawler
+          Action:
+          - glue:CreateCrawler
+          - glue:DeleteCrawler
+          - glue:GetCrawler
+          - glue:StopCrawler
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/CidCrawler
+
+        - Sid: GlueDatabase
+          Action:
+          - glue:CreateDatabase
+          - glue:DeleteDatabase
+          - glue:GetDatabase
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
+
+        - Sid: GlueTable
+          Action:
+          - glue:CreateTable
+          - glue:DeleteTable
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
+
+          # !Sub??- arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+          # !Sub??- arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_cur/*
+
+
+        - Sid: IAMForCFN
+          Action:
+          - iam:AttachRolePolicy
+          - iam:CreateRole
+          - iam:DeleteRole
+          - iam:DeleteRolePolicy
+          - iam:DetachRolePolicy
+          - iam:GetRole
+          - iam:GetRolePolicy
+          - iam:PassRole
+          - iam:PutRolePolicy
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/CidSpiceRefreshExecutionRole
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashbo-ProcessPathLambdaExecuti*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashboa-InitLambdaExecutionRole*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashboards-CidCURCrawlerRole*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/CidExecRole
+
+        - Sid: LambdaForCFN
+          Action:
+          - lambda:AddPermission
+          - lambda:CreateFunction
+          - lambda:DeleteFunction
+          - lambda:DeleteLayerVersion
+          - lambda:GetFunction
+          - lambda:GetLayerVersion
+          - lambda:InvokeFunction
+          - lambda:PublishLayerVersion
+          - lambda:RemovePermission
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidProcessPath-DoNotRun
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceDashboard
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidInitialSetup-DoNotRun
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidSpiceRefreshLambda
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:CidLambdaLayer*
+
+        - Sid: QuickSightDashboard
+          Action:
+          - quicksight:CreateDashboard
+          - quicksight:DeleteDashboard
+          - quicksight:DescribeDashboard
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cid
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/kpi
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cudos
+          #FIXME add compte-optimizer and tao
+
+        - Sid: QuickSightCreateDataSource
+          Action:
+          - quicksight:CreateDataSource
+          - quicksight:DeleteDataSource
+          - quicksight:DescribeDataSource
+          - quicksight:ListTagsForResource
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:datasource/CID-*
+
+        - Sid: QuickSightDataSet
+          Action:
+          - quicksight:CreateDataSet
+          - quicksight:DeleteDataSet
+          - quicksight:DescribDataSet
+          # Add DataSetPermissions*?
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:*
+
+        - Sid: S3
+          Action:
+          - s3:CreateBucket
+          - s3:DeleteBucket
+          - s3:GetBucketLocation
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:PutBucketAcl
+          - s3:PutBucketOwnershipControls
+          - s3:PutBucketPolicy
+          - s3:PutBucketPublicAccessBlock
+          - s3:PutBucketVersioning
+          - s3:PutEncryptionConfiguration
+          - s3:PutLifecycleConfiguration
+          - s3:PutObject
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}/*
+          - !Sub arn:aws:s3:::aws-managed-cost-intelligence-dashboards-${AWS::Region}/cid-resource-lambda-layer/*
+
+        - Sid: ReadOnlyCFN
+          Action:
+          - cloudformation:GetTemplate
+          - cloudformation:GetTemplateSummary
+          - cloudformation:ListStacks
+          - cloudformation:ValidateTemplate
+          Effect: Allow
+          Resource: '*'
+
+  CURDestinationPolicy:
+    Type: AWS::IAM::Policy
+    Condition: AddCURDestinationPolicy
+    Properties:
+      Roles:
+        - !Ref RoleName
+      PolicyName: CURDestinationPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Action:
+          - cloudformation:CreateChangeSet
+          - cloudformation:CreateStack
+          - cloudformation:DeleteStack
+          - cloudformation:DescribeStackEvents
+          - cloudformation:DescribeStacks
+          - cloudformation:GetStackPolicy
+          - cloudformation:ListStackResources
+          - cloudformation:RollbackStack
+          - cloudformation:UpdateStack
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CID-CUR-Destination/*
+          Sid: CloudFormation
+        - Action:
+          - iam:CreateRole
+          - iam:DeleteRole
+          - iam:DeleteRolePolicy
+          - iam:GetRole
+          - iam:GetRolePolicy
+          - iam:PutRolePolicy
+          - iam:PassRole
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-CIDLambdaAnalyticsRole-*
+          Sid: IAM
+        - Action:
+          - lambda:CreateFunction
+          - lambda:DeleteFunction
+          - lambda:GetFunction
+          - lambda:InvokeFunction
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
+          Sid: Lambda
+        - Action:
+          - s3:CreateBucket
+          - s3:DeleteBucket
+          - s3:GetBucketLocation
+          - s3:GetBucketPolicy
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:ListBucketVersions
+          - s3:PutBucketAcl
+          - s3:PutBucketOwnershipControls
+          - s3:PutBucketPolicy
+          - s3:PutBucketPublicAccessBlock
+          - s3:PutBucketVersioning
+          - s3:PutEncryptionConfiguration
+          - s3:PutLifecycleConfiguration
+          - s3:PutObject
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared/*
+          Sid: S3
+        - Sid: ReadOnly
+          Action:
+          - cloudformation:GetTemplate
+          - cloudformation:GetTemplateSummary
+          - cloudformation:ListStacks
+          - s3:ListAllMyBuckets #?
+          Effect: Allow
+          Resource: '*' # ReadOnly Policy for CFN
+
+
+  CURReplicationPolicy:
+    Type: AWS::IAM::Policy
+    Condition: AddCURReplicationPolicy
+    Properties:
+      Roles:
+        - !Ref RoleName
+      PolicyName: CURReplicationPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: CloudFormation
+          Action:
+          - cloudformation:CreateChangeSet
+          - cloudformation:CreateStack
+          - cloudformation:DeleteStack
+          - cloudformation:RollbackStack
+          - cloudformation:UpdateStack
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CID-CUR-Replication/*
+
+        #FIXME: in non us-east-1 we need also a lambda!
+        - Sid: CostUsageReport
+          Action:
+          - cur:DeleteReportDefinition
+          - cur:PutReportDefinition
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:cur:${AWS::Region}:${AWS::AccountId}:definition/cid
+
+        - Sid: IAMForCFN
+          Action:
+          - iam:CreateRole
+          - iam:DeleteRole
+          - iam:DeleteRolePolicy
+          - iam:PutRolePolicy
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Replication-CIDLambdaAnalyticsRole-*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Replication-CrossRegionReplicationRole-*
+
+        - Sid: LambdaForCFN
+          Action:
+          - lambda:CreateFunction
+          - lambda:DeleteFunction
+          - lambda:GetFunction
+          - lambda:GetFunctionCodeSigningConfig
+          - lambda:GetRuntimeManagementConfig
+          - lambda:InvokeFunction
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
+
+        - Sid: S3
+          Action:
+          - s3:CreateBucket
+          - s3:DeleteBucket
+          - s3:DeleteBucketPolicy
+          - s3:ListBucketVersions
+          - s3:DeleteObject
+          - s3:DeleteObjectVersion
+          - s3:GetBucketLocation
+          - s3:GetBucketPolicy
+          - s3:GetObject
+          - s3:PutBucketAcl
+          - s3:PutBucketOwnershipControls
+          - s3:PutBucketPolicy
+          - s3:PutBucketPublicAccessBlock
+          - s3:PutBucketVersioning
+          - s3:PutEncryptionConfiguration
+          - s3:PutLifecycleConfiguration
+          - s3:PutObject
+          - s3:PutReplicationConfiguration
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-local
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-local/*
+
+        - Sid: ReadOnly
+          Action:
+          - cur:DescribeReportDefinitions
+          - cloudformation:DescribeStackEvents
+          - cloudformation:DescribeStacks
+          - cloudformation:GetStackPolicy
+          - cloudformation:GetTemplate
+          - cloudformation:GetTemplateSummary
+          - cloudformation:ListStackResources
+          - cloudformation:ListStacks
+          - iam:GetRole
+          - iam:GetRolePolicy
+          - iam:ListRoles
+          - iam:PassRole
+          - s3:ListBucket
+          - s3:ListAllMyBuckets
+          Effect: Allow
+          Resource: '*' # ReadOnly Policy for CFN
