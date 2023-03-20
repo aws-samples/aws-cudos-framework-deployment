@@ -17,6 +17,7 @@ resource "aws_cloudformation_stack" "cid" {
   iam_role_arn      = var.stack_iam_role
   policy_body       = var.stack_policy_body
   policy_url        = var.stack_policy_url
+  # checkov:skip=CKV_AWS_124:Stack event notifications are configurable by the user
   notification_arns = var.stack_notification_arns
   tags              = var.stack_tags
 }
