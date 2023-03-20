@@ -243,6 +243,10 @@ Resources:
                 Action: quicksight:ListDatasets
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*'
+              - Effect: Allow
+                Action: quicksight:ListIngestions
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/ingestion/*'
 
   # Currently QS has no api for managing updates, so we need to set up a scheduled lambda.
   # Once QS will provide the API for scheduling this will be removed.
@@ -266,6 +270,8 @@ Resources:
         ZipFile: |
           import os
           from datetime import datetime
+          from datetime import timedelta
+          from datetime import timezone
           import boto3
 
           ## List of DataSets can be found in cid-cmd:
@@ -298,6 +304,25 @@ Resources:
                   for dataset in page['DataSetSummaries']:
                       name = dataset['Name']
                       if dataset['ImportMode'] != 'SPICE' or name not in DATASETS_TO_REFRESH:
+                          continue
+                      scheduled_ingestion = None
+                      stop_processing = False
+                      for ingestions_page in quicksight.get_paginator('list_ingestions').paginate(AwsAccountId=account_id, DataSetId=dataset['DataSetId']):
+                          for ingestion in ingestions_page['Ingestions']:
+                              time_since_creation = datetime.now(timezone.utc) - ingestion['CreatedTime']
+                              if time_since_creation <= timedelta(days = 1, hours = 1):
+                                  if ingestion['RequestSource'] == 'SCHEDULED':
+                                      scheduled_ingestion = ingestion
+                                      stop_processing = True
+                              else:
+                                  stop_processing = True
+                              if stop_processing:
+                                  break
+                          if stop_processing:
+                              break
+                      if scheduled_ingestion is not None:
+                          print(f"INFO: Dataset {name} has a scheduled ingestion within the last 24 hours. Skipping manual refresh.")
+                          print('DEBUG: scheduled_ingestion=', scheduled_ingestion)
                           continue
                       print(f"INFO: Refreshing dataset {name}")
                       res = quicksight.create_ingestion(
@@ -1100,7 +1125,7 @@ Resources:
                   url = event.get('ResponseURL')
                   body = {
                       'Status': status,
-                      'Reason': reason + '\nSee more: ' + log_url,
+                      'Reason': reason[:2000] + '\nSee more: ' + log_url,
                       'PhysicalResourceId': physical_id,
                       'StackId': event.get('StackId'),
                       'RequestId': event.get('RequestId'),

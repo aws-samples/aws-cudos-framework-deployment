@@ -1,0 +1,4 @@
+# FILE: .bandit
+[bandit]
+exclude = ./bump-release.py,./build/*,./.venv/*
+skips = B101,B608
