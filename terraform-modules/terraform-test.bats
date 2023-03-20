@@ -16,17 +16,11 @@ setup_file() {
   export account_id=$(aws sts get-caller-identity --query Account --output text)
   export quicksight_user=$(aws quicksight list-users --aws-account-id $account_id --namespace default --query 'UserList[0].UserName' --output text)
   export template_bucket=test-cid-tf-template-$account_id
+  export cur_bucket=test-cid-tf-cur-$account_id
 
   aws quicksight describe-user --aws-account-id $account_id --user-name $quicksight_user --namespace default
   if [[ "$?" != "0" ]]; then
       echo "Missing QS User '$quicksight_user'"
-      return 1
-  fi
-
-  export cur_name=$(aws cur describe-report-definitions --query 'ReportDefinitions[0].ReportName' --output text --region us-east-1)
-  export cur_bucket=$(aws cur describe-report-definitions --query 'ReportDefinitions[0].S3Bucket' --output text --region us-east-1)
-  if [[ "$?" != "0" ]]; then
-      echo "Missing CUR"
       return 1
   fi
 
@@ -42,6 +36,13 @@ setup_file() {
   else
     echo 'Creating bucket for template'
     aws s3api create-bucket --bucket $template_bucket
+  fi
+
+  # Create a tmp bucket for CUR
+  if aws s3api head-bucket --bucket "$cur_bucket" 2>/dev/null; then
+    echo 'CUR Bucket exist'
+  else
+    aws s3api create-bucket --bucket $cur_bucket
   fi
 
   # Create workspace
@@ -108,5 +109,7 @@ teardown_file() {
   # Normal cleanup
   aws s3 rm s3://$template_bucket/ --recursive
   aws s3api delete-bucket --bucket $template_bucket
+  aws s3 rm s3://$cur_bucket/ --recursive
+  aws s3api delete-bucket --bucket $cur_bucket
   rm -rf "$tf_workspace"
 }
