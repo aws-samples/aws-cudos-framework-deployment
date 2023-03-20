@@ -282,10 +282,12 @@ Resources:
           - quicksight:DescribeDashboard
           Effect: Allow
           Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cid
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/kpi
           - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cudos
-          #FIXME add compte-optimizer and tao
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cost_intelligence_dashboard
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/kpi_dashboard
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/ta-organizational-view
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/trends-dashboard
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/compute-optimizer-dashboard
 
         - Sid: QuickSightCreateDataSource
           Action:
@@ -302,10 +304,11 @@ Resources:
           - quicksight:CreateDataSet
           - quicksight:DeleteDataSet
           - quicksight:DescribDataSet
-          # Add DataSetPermissions*?
+          - quicksight:DescribeDataSetPermissions
+          - quicksight:UpdateDataSetPermissions
           Effect: Allow
           Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:*
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic
 
         - Sid: S3
           Action:
@@ -335,7 +338,7 @@ Resources:
           - cloudformation:ListStacks
           - cloudformation:ValidateTemplate
           Effect: Allow
-          Resource: '*'
+          Resource: '*' # Read only Rights needed for CFN
 
   CURDestinationPolicy:
     Type: AWS::IAM::Policy
@@ -347,7 +350,8 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Action:
+        - Sid: CloudFormation
+          Action:
           - cloudformation:CreateChangeSet
           - cloudformation:CreateStack
           - cloudformation:DeleteStack
@@ -360,8 +364,9 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CID-CUR-Destination/*
-          Sid: CloudFormation
-        - Action:
+
+        - Sid: IAMForCFN
+          Action:
           - iam:CreateRole
           - iam:DeleteRole
           - iam:DeleteRolePolicy
@@ -372,8 +377,9 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-CIDLambdaAnalyticsRole-*
-          Sid: IAM
-        - Action:
+
+        - Sid: Lambda
+          Action:
           - lambda:CreateFunction
           - lambda:DeleteFunction
           - lambda:GetFunction
@@ -381,8 +387,9 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
-          Sid: Lambda
-        - Action:
+
+        - Sid: S3
+          Action:
           - s3:CreateBucket
           - s3:DeleteBucket
           - s3:GetBucketLocation
@@ -402,7 +409,7 @@ Resources:
           Resource:
           - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared
           - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared/*
-          Sid: S3
+
         - Sid: ReadOnly
           Action:
           - cloudformation:GetTemplate
