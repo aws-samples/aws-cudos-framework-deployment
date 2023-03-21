@@ -24,11 +24,11 @@ class AccountMap(CidBase):
     mappings = {
         'account_map': {
             'acc_metadata_details': {'account_id': 'account_id', 'account_name': 'account_name'},
-            'organisation_data': {'account_id': 'id', 'account_name': 'name', 'email': 'email'}
+            'organisation_data': {'account_id': 'id', 'account_name': 'name'}
         },
         'aws_accounts': {
-            'acc_metadata_details': {'account_id': 'account_id', 'account_name': 'account_name', 'email': 'email'},
-            'organisation_data': { 'account_id': 'id', 'account_name': 'name', 'email': 'email', 'status': 'status'},
+            'acc_metadata_details': {'account_id': 'account_id', 'account_name': 'account_name'},
+            'organisation_data': { 'account_id': 'id', 'account_name': 'name', 'status': 'status'},
             'cur_fields': ['bill_payer_account_id']
         }
     }
@@ -82,7 +82,6 @@ class AccountMap(CidBase):
                 account.update({
                     'parent_account_id': account.get('parent_account_id', '0'),
                     'account_status': account.get('account_status', 'unknown'),
-                    'account_email': account.get('account_email', 'unknown')
                 })
         return self._accounts
     
@@ -155,10 +154,7 @@ class AccountMap(CidBase):
     def get_dummy_account_mapping_sql(self, name) -> list:
         """Create dummy account mapping"""
         logger.info(f'Creating dummy account mapping for {name}')
-        template = Template(resource_string(
-            package_or_requirement='cid.builtin.core',
-            resource_name='data/queries/shared/account_map_dummy.sql',
-        ).decode('utf-8'))
+        template = self.get_template('data/queries/shared/account_map_dummy.sql')
         columns_tpl = {
             'athena_view_name': name,
             'cur_table_name': self.cur.tableName
@@ -179,8 +175,7 @@ class AccountMap(CidBase):
                     accounts.append({
                         'account_id': account.get('Id'),
                         'account_name': account.get('Name'),
-                        'account_status': account.get('Status'),
-                        'account_email': account.get('Email')
+                        'account_status': account.get('Status')
                     })
         except orgs.exceptions.AWSOrganizationsNotInUseException:
             print('AWS Organization is not enabled')
@@ -197,6 +192,15 @@ class AccountMap(CidBase):
         abs_path = Path().absolute()
 
         return Path.is_file(abs_path / file_path)
+
+
+    def get_template(self, template_name):
+        """ Create template from provided template file """
+        return Template(resource_string(
+            package_or_requirement='cid.builtin.core',
+            resource_name=template_name,
+        ).decode('utf-8'))
+
 
     def get_csv_accounts(self, file_path) -> list:
         """ Retreive accounts from CSV file """
@@ -263,17 +267,14 @@ class AccountMap(CidBase):
         if self._metadata_source == 'dummy':
             return self.get_dummy_account_mapping_sql(name)
 
-        template = Template(resource_string(
-            package_or_requirement='cid.builtin.core',
-            resource_name='data/queries/shared/account_map_org.sql',
-        ).decode('utf-8'))
+        template = self.get_template('data/queries/shared/account_map_org.sql')
 
         accounts_sql = list()
         for account in self.accounts:
             acc = account.copy()
             account_name = acc.pop('account_name').replace("'", "''")
             accounts_sql.append(
-                """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')""".format(account_name=account_name, **acc))
+                """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}')""".format(account_name=account_name, **acc))
         # Fill in TPLs
         columns_tpl = {
             'athena_view_name': name,
