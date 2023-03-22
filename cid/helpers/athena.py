@@ -373,6 +373,7 @@ class Athena(CidBase):
             print(exc)
             return None
         try:
+            # Avoid difference in the first line of diff (replace name of the view with the tmp_name)
             tmp_sql = re.sub(r'(CREATE OR REPLACE VIEW) (.+?) (AS.*)', r'\1 ' + tmp_name +  r' \3', sql)
 
             if tmp_sql == sql:
