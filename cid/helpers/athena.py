@@ -420,11 +420,17 @@ class Athena(CidBase):
                 #print("sql", sql)
                 all_views[view]["dependsOn"] = {}
                 all_views[view]["dependsOn"]['views'] = []
-                deps = re.findall(r'FROM\W+([\w.]+)', sql)
+                deps = re.findall(r'FROM\W+?([\w."]+)', sql)
                 for dep_view in deps:
                     #FIXME: need to add cross Database Dependancies
                     if dep_view.upper() in ('SELECT', 'VALUES'): # remove "FROM SELECT" and "FROM VALUES"
                         continue
+                    dep_view = dep_view.replace('"', '')
+                    if len(dep_view.split('.')) == 2:
+                        dep_database, dep_view_name = dep_view.split('.')
+                        if dep_database != self.DatabaseName:
+                            logger.error(f'The view {view} has a dependency on {dep_view}. CID cannot manage multiple Databases. Please move {dep_view_name} to Database {self.DatabaseName}. Skipping dependency.')
+                            continue
                     dep_view = dep_view.split('.')[-1]
                     if dep_view not in all_views:
                         _recursively_process_view(dep_view)
