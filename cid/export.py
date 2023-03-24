@@ -216,7 +216,7 @@ def export_analysis(qs, athena):
             logger.debug(f'Skipping {key} views - it is a CUR')
             continue
         if isinstance(view_data.get('data'), str):
-            locations = re.findall("LOCATION\n  '(s3://.+?)'", view_data.get('data'))
+            locations = re.findall(r"LOCATION\W+?'(s3://.+?)'", view_data.get('data'))
             for location in locations:
                 logger.info(f'Please replace manually location bucket with a parameter: s3://{location}')
                 default = get_parameter(
