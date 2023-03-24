@@ -225,7 +225,7 @@ def export_analysis(qs, athena):
                     default=location,
                 )
                 view_data['parameters'] = {
-                    f'{key}-s3path': {
+                    f's3path': {
                         'default': default,
                         'description': f"S3 Path for {key} table",
                     }
