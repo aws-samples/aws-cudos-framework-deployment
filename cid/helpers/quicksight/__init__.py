@@ -7,9 +7,7 @@ from pkg_resources import resource_string
 from string import Template
 from typing import Dict, List, Union
 
-import yaml
 import click
-from deepmerge import always_merger
 
 from cid.base import CidBase
 from cid.helpers import diff
@@ -41,7 +39,7 @@ class QuickSight(CidBase):
         super().__init__(session)
 
         # QuickSight clients
-        logger.info(f'Creating QuickSight client')
+        logger.info('Creating QuickSight client')
         self.client = self.session.client('quicksight')
         self.identityClient = self.session.client('quicksight', region_name=self.identityRegion)
 
@@ -1091,10 +1089,23 @@ class QuickSight(CidBase):
             }
         elif definition.get('definition'):
             create_parameters['Definition'] = definition.get('definition')
-            dataset_references = [
-                {'Identifier': key, 'DataSetArn': value}
-                for key, value in definition.get('datasets', {}).items()
-            ]
+            dataset_references = []
+            for identifier, arn in definition.get('datasets', {}).items():
+                # Fetch dataset by name (preferably) OR by id
+                dastaset_declarations = create_parameters['Definition'].get('DataSetIdentifierDeclarations', [])
+                for ds_dec in dastaset_declarations:
+                    if identifier == ds_dec['Identifier']:
+                        logger.debug('Dataset {identifier} matched by Name')
+                        break # all good
+                    elif arn.split('/')[-1] == ds_dec['DataSetArn'].split('/')[-1]:
+                        logger.debug('Dataset {identifier} matched by Id')
+                        identifier = ds_dec['Identifier']
+                        break
+                else:
+                    raise CidCritical(f'Unable to match dataset {identifier} / {arn} with any DataSetIdentifierDeclarations of dashboard {repr(dastaset_declarations)}')
+
+                dataset_references.append({'Identifier': identifier, 'DataSetArn': arn})
+
             create_parameters['SourceEntity'] = {}
             create_parameters['Definition']['DataSetIdentifierDeclarations'] = dataset_references
         else:
