@@ -162,3 +162,8 @@ class CUR(CidBase):
     @property
     def fields(self) -> list:
         return [v.get('Name') for v in self.metadata.get('Columns', list())]
+
+    @property
+    def tag_and_cost_category_fields(self) -> list:
+        """ Returns all tags and cost category fields. """
+        return [field for field in self.fields if field.startswith('resource_tags_user_') or fields.startswith('cost_category_'

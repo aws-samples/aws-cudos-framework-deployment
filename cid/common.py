@@ -260,6 +260,32 @@ class Cid():
             self.resources = always_merger.merge(self.resources, resources)
 
 
+    def get_template_parameters(self, parameters: dict, param_prefix: str=''):
+        """ Get template parameters. """
+        params = {}
+        for key, value in parameters.items():
+            if isinstance(value, str):
+                param[key] = value
+            elif isinstance(value, dict) and value.get('type') == 'cur.tag_and_cost_category_fields':
+                param[key] = get_parameter(
+                    param_name=param_prefix + key,
+                    message=f"Required parameter: {key} ({value.get('description')})",
+                    choices=self.cur.tag_and_cost_category_fields + ["'none'"],
+                )
+            elif isinstance(value, dict):
+                param[key] = value.get('value')
+                while not param[key]:
+                    param[key] = get_parameter(
+                        param_name=key,
+                        message=f"Required parameter: {key} ({value.get('description')})",
+                        default=value.get('default'),
+                        template_variables=dict(account_id=self.base.account_id),
+                    )
+            else:
+                raise CidCritical(f'Unknown parameter type for "{key}". Must be a string or a dict with value or with default key')
+        return params
+
+
     @command
     def deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard Command"""
@@ -323,10 +349,12 @@ class Cid():
             compatible = self.check_dashboard_version_compatibility(dashboard_id)
         elif dashboard_definition.get('data'):
             data = dashboard_definition.get('data')
+            params = self.get_template_parameters(dashboard_definition.get('parameters', dict()))
             if isinstance(data, dict):
+                #TODO: need to apply template to data structure as well
                 data = yaml.safe_dump(data)
             if isinstance(data, str):
-                data = Template(data).safe_substitute(get_parameters())
+                data = Template(data).safe_substitute(always_merger.merge(get_parameters(), params))
             dashboard_definition['definition'] = yaml.safe_load(data)
         elif dashboard_definition.get('file'):
             raise NotImplementedError('File option is not implemented')
@@ -1392,7 +1420,7 @@ class Cid():
             raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        template = Template(self.get_data_from_definition('view', view_definition)) 
+        template = Template(self.get_data_from_definition('view', view_definition))
 
         # Prepare template parameters
         columns_tpl = {
@@ -1401,24 +1429,12 @@ class Cid():
             'athena_database_name': self.athena.DatabaseName,
         }
 
-        for k, v in view_definition.get('parameters', dict()).items():
-            if isinstance(v, str):
-                param = {k:v}
-            elif isinstance(v, dict):
-                value = v.get('value')
-                while not value:
-                    value = get_parameter(
-                        param_name=f'view-{view_name}-{k}',
-                        message=f"Required parameter: {k} ({v.get('description')})",
-                        default=v.get('default'),
-                        template_variables=dict(account_id=self.base.account_id),
-                    )
-                param = {k:value}
-            else:
-                raise CidCritical(f'Unknown parameter type for "{k}". Must be a string or a dict with value or with default key')
-            # Add parameter
-            columns_tpl.update(param)
-        # Compile template
+        params = self.get_template_parameters(
+            view_definition.get('parameters', dict()),
+            f'view-{view_name}-'
+        )
+        columns_tpl = always_merger.merge(get_parameters(), columns_tpl)
+        columns_tpl = always_merger.merge(columns_tpl, params)
         compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query
