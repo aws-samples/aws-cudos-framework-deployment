@@ -265,17 +265,17 @@ class Cid():
         params = {}
         for key, value in parameters.items():
             if isinstance(value, str):
-                param[key] = value
+                params[key] = value
             elif isinstance(value, dict) and value.get('type') == 'cur.tag_and_cost_category_fields':
-                param[key] = get_parameter(
+                params[key] = get_parameter(
                     param_name=param_prefix + key,
                     message=f"Required parameter: {key} ({value.get('description')})",
                     choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
             elif isinstance(value, dict):
-                param[key] = value.get('value')
-                while not param[key]:
-                    param[key] = get_parameter(
+                params[key] = value.get('value')
+                while not params[key]:
+                    params[key] = get_parameter(
                         param_name=key,
                         message=f"Required parameter: {key} ({value.get('description')})",
                         default=value.get('default'),
@@ -1434,7 +1434,8 @@ class Cid():
             f'view-{view_name}-'
         )
         columns_tpl = always_merger.merge(get_parameters(), columns_tpl)
-        columns_tpl = always_merger.merge(columns_tpl, params)
+        columns_tpl = always_merger.merge(params, columns_tpl)
+        logger.debug(str(columns_tpl))
         compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query
