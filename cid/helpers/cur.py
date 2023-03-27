@@ -87,7 +87,7 @@ class CUR(CidBase):
     @property
     def tableName(self) -> str:
         if self.metadata is None:
-            raise CidCritical('Error: CUR not detected')
+            raise CidCritical('Error: Cannot detect any CUR table. Hint: Check if AWS Lake Formation is activated on your account, verify that the LakeFormationEnabled parameter is set to yes on the deployment stack')
         return self.metadata.get('Name')
 
     @property
