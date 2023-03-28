@@ -371,7 +371,7 @@ class Cid():
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                         required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
                         unmatched = {}
-                        for k,v in required_fileds.items():
+                        for k, v in required_fileds.items():
                             if k not in dataset_fields or dataset_fields[k] != v:
                                 unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
                         logger.debug(f'unmatched_fields={unmatched}')
@@ -385,7 +385,8 @@ class Cid():
 
                 if not matching_datasets:
                     logger.warning(f'Dataset {dataset_name} is not found')
-                    raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
+                    raise CidCritical(f'Failed to find a Dataset "{dataset_name}" with required fields. Please check existing DataSets. '
+                        'Deleting existing dataset before the next re-run can help.')
                 elif len(matching_datasets) >= 1:
                     if len(matching_datasets) > 1:
                         # FIXME: propose a choice?
