@@ -258,7 +258,7 @@ def export_analysis(qs, athena):
             'dashboard-export-method',
             message='Please choose export method',
             choices={
-                '[definition] Save QuickSight Dashboard Definition in file': 'definition',
+                '[definition] Save QuickSight Dashboard Definition in the file': 'definition',
                 '[template]   Generate a QuickSight Template in the current account': 'template',
             },
         )
