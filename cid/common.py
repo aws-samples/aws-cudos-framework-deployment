@@ -399,21 +399,28 @@ class Cid():
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                         required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
                         unmatched = {}
-                        for k,v in required_fileds.items():
+                        for k, v in required_fileds.items():
                             if k not in dataset_fields or dataset_fields[k] != v:
                                 unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
                         logger.debug(f'unmatched_fields={unmatched}')
                         if unmatched:
                             logger.warning(f'Found Dataset "{dataset_name}" ({ds.id}) but it is missing required fields. {(unmatched)}')
-                        matching_datasets.append(ds)
+                        else:
+                            matching_datasets.append(ds)
                     else:
                         # for definitions datasets we do not have any possibilty to check if dataset with a given name matches
                         matching_datasets.append(ds)
-                        break
 
                 if not matching_datasets:
+                    reco = ''
                     logger.warning(f'Dataset {dataset_name} is not found')
-                    raise CidCritical(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
+                    if exec_env()['shell'] == 'lambda':
+                        # We are in lambda
+                        reco = 'You can try deleting existing dataset and re-run.'
+                    else:
+                        # We are in command line mode
+                        reco = 'Please retry with --update "yes" --force --recursive flags.'
+                    raise CidCritical(f'Failed to find a Dataset "{dataset_name}" with required fields. ' + reco)
                 elif len(matching_datasets) >= 1:
                     if len(matching_datasets) > 1:
                         # FIXME: propose a choice?

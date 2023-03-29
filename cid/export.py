@@ -257,12 +257,11 @@ def export_analysis(qs, athena):
     else:
         dashboard_export_method = get_parameter(
             'dashboard-export-method',
-            message='Please choose export method (pull a json "definition" or create a "template")',
-            choices=[
-                'definition',
-                'template',
-            ],
-            default='definition',
+            message='Please choose export method',
+            choices={
+                '[definition] Save QuickSight Dashboard Definition in the file': 'definition',
+                '[template]   Generate a QuickSight Template in the current account': 'template',
+            },
         )
     if dashboard_export_method == 'template':
         template_id = get_parameter(
