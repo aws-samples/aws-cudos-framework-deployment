@@ -23,7 +23,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view
 from cid.helpers.quicksight.template import Template as CidQsTemplate
@@ -213,7 +213,7 @@ class Cid():
 
     @command
     def export(self, **kwargs):
-        export_analysis(self.qs)
+        export_analysis(self.qs, self.athena)
 
     def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """
@@ -286,8 +286,11 @@ class Cid():
 
         # Get selected dashboard definition
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
-        
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = None
+        try:
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        except CidCritical:
+            pass 
         
         if not dashboard_definition:
             if isinstance(dashboard, Dashboard):
@@ -298,68 +301,111 @@ class Cid():
         required_datasets_names = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
 
         dashboard_datasets = dashboard.datasets if dashboard else {}
-        
+
         for name, id in dashboard_datasets.items():
             if id not in self.qs.datasets:
                 logger.info(f'Removing unknown dataset "{name}" ({id}) from dashboard {dashboard_id}')
                 del dashboard_datasets[name]
 
-        # Get QuickSight template details
-        try:
-            source_template = self.qs.describe_template(
-                template_id=dashboard_definition.get('templateId'),
-                account_id=dashboard_definition.get('sourceAccountId'),
-                region=dashboard_definition.get('region', 'us-east-1')
-            )
-        except CidError as exc:
-            raise CidCritical(exc) # Cannot proceed without a valid template
-        dashboard_definition.update({'sourceTemplate': source_template})
-        print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
-        
-        compatible = self.check_dashboard_version_compatibility(dashboard_id)
-        
+        compatible = True
+        if dashboard_definition.get('templateId'):
+            # Get QuickSight template details
+            try:
+                source_template = self.qs.describe_template(
+                    template_id=dashboard_definition.get('templateId'),
+                    account_id=dashboard_definition.get('sourceAccountId'),
+                    region=dashboard_definition.get('region', 'us-east-1')
+                )
+            except CidError as exc:
+                raise CidCritical(exc) # Cannot proceed without a valid template
+            dashboard_definition['sourceTemplate'] = source_template
+            print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
+            compatible = self.check_dashboard_version_compatibility(dashboard_id)
+        elif dashboard_definition.get('data'):
+            data = dashboard_definition.get('data')
+            if isinstance(data, dict):
+                data = yaml.safe_dump(data)
+            if isinstance(data, str):
+                data = Template(data).safe_substitute(get_parameters())
+            dashboard_definition['definition'] = yaml.safe_load(data)
+        elif dashboard_definition.get('file'):
+            raise NotImplementedError('File option is not implemented')
+        else:
+            raise CidCritical('Definition of dashboard resource must contain data or template_id')
+
+
         if not recursive and compatible == False:
             if get_parameter(
-                    param_name=f'confirm-recursive',
-                    message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
-                    choices=['yes', 'no'],
-                    default='yes') != 'yes':
-                    return
+                param_name=f'confirm-recursive',
+                message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+                return
             logger.info("Swich to recursive mode")
             recursive = True
-                     
+
         if recursive:
             self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
 
-        # Prepare API parameters
+        # Find datasets for template or defintion
         if not dashboard_definition.get('datasets'):
-            dashboard_definition.update({'datasets': {}})
+            dashboard_definition['datasets'] = {}
+
         for dataset_name in required_datasets_names:
-            # Search dataset by name.
-            # This is not ideal as there can be several with the same name,
-            # but if dataset is created manually we cannot use id.
-            for ds in self.qs.datasets.values():
-                if not isinstance(ds, Dataset) or ds.name != dataset_name:
-                    continue
+            # First try to find the dataset with the id
+            dataset = self.qs.describe_dataset(id=dataset_name)
+            if isinstance(dataset, Dataset):
+                logger.debug(f'Found dataset {dataset_name} with id match = {ds.arn}')
+                dashboard_definition['datasets'][dataset_name] = dataset.arn
 
-                # check fields to make sure they match
-                dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
-                required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
-                unmatched = {}
-                for k,v in required_fileds.items():
-                    if k not in dataset_fields or dataset_fields[k] != v:
-                        unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
-                if unmatched:
-                    logger.warning(f'Dataset "{dataset_name}" ({ds.id}) is missing required fields. {(unmatched)}')
-                    continue
-
-                print(f'Using dataset {dataset_name}: {ds.id}')
-                dashboard_definition.get('datasets').update({dataset_name: ds.arn})
-                break
             else:
-                raise CidCritical(f'Dataset "{dataset_name}" is not found OR ther is missmathc in fields. Check log.')
+                # Then search dataset by name.
+                # This is not ideal as there can be several with the same name,
+                # but if dataset is created manually we cannot use id.
+                matching_datasets = []
+                for ds in self.qs.datasets.values():
+                    if not isinstance(ds, Dataset) or ds.name != dataset_name:
+                        continue
+                    if dashboard_definition.get('templateId'):
+                        # For templates we can additionaly verify dataset fields
+                        dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
+                        required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
+                        unmatched = {}
+                        for k, v in required_fileds.items():
+                            if k not in dataset_fields or dataset_fields[k] != v:
+                                unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
+                        logger.debug(f'unmatched_fields={unmatched}')
+                        if unmatched:
+                            logger.warning(f'Found Dataset "{dataset_name}" ({ds.id}) but it is missing required fields. {(unmatched)}')
+                        else:
+                            matching_datasets.append(ds)
+                    else:
+                        # for definitions datasets we do not have any possibilty to check if dataset with a given name matches
+                        matching_datasets.append(ds)
 
+                if not matching_datasets:
+                    reco = ''
+                    logger.warning(f'Dataset {dataset_name} is not found')
+                    if exec_env()['shell'] == 'lambda':
+                        # We are in lambda
+                        reco = 'You can try deleting existing dataset and re-run.'
+                    else:
+                        # We are in command line mode
+                        reco = 'Please retry with --update "yes" --force --recursive flags.'
+                    raise CidCritical(f'Failed to find a Dataset "{dataset_name}" with required fields. ' + reco)
+                elif len(matching_datasets) >= 1:
+                    if len(matching_datasets) > 1:
+                        # FIXME: propose a choice?
+                        logger.warning(
+                            f'Found {len(matching_datasets)} Datasets found with name "{dataset_name}":'
+                            f' {str([ds.id for ds in matching_datasets])}'
+                        )
+                    ds = matching_datasets[0]
+                    print(f'Using dataset {dataset_name}: {ds.id}')
+                    dashboard_definition['datasets'][dataset_name] = ds.arn
 
+        logger.debug(f"datasets: {dashboard_definition['datasets']}")
+        #FIXME: this code looks absolete
         kwargs = dict()
         local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'
         logger.info(f'Looking for local overrides file "{local_overrides}"...')
@@ -379,10 +425,10 @@ class Cid():
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
         if isinstance(dashboard, Dashboard):
             if update:
-                return self.update_dashboard(dashboard_id, recursive, required_datasets_names, dashboard_datasets,**kwargs)
+                return self.update_dashboard(dashboard_id, dashboard_definition)
             else:
                 print(f'Dashboard {dashboard_id} exists. See {_url}')
                 return dashboard_id
@@ -422,10 +468,8 @@ class Cid():
             return dashboard_id
         if not dashboard_id:
             dashboard_id = self.qs.select_dashboard(force=True)
-            dashboard = self.qs.dashboards.get(dashboard_id)
-        else:
-            # Describe dashboard by the ID given, no discovery
-            dashboard = self.qs.describe_dashboard(DashboardId=dashboard_id)
+
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
         click.echo('Getting dashboard status...', nl=False)
         if dashboard is not None:
@@ -438,7 +482,7 @@ class Cid():
             click.launch(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
         else:
             click.echo('not deployed.')
-        
+
         return dashboard_id
 
     @command
@@ -453,7 +497,7 @@ class Cid():
             if not dashboard_id:
                 print('No dashboard selected')
                 return
-            dashboard = self.qs.dashboards.get(dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         else:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
@@ -476,7 +520,7 @@ class Cid():
                 return
 
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
-            datasets = self.qs.dashboards.get(dashboard_id).datasets # save for later
+            datasets = self.qs.discover_dashboard(dashboardId=dashboard_id).datasets # save for later
         else:
             dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
             datasets = {d: None for d in (dashboard_definition or {}).get('dependsOn', {}).get('datasets', [])}
@@ -616,7 +660,7 @@ class Cid():
             # Describe dashboard by the ID given, no discovery
             self.qs.discover_dashboard(dashboardId=dashboard_id)
 
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
         if dashboard is None:
             print('not deployed.')
@@ -788,8 +832,10 @@ class Cid():
         """
             Returns True | False | None if could not check 
         """
-        
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        try:
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        except CidCritical:
+            dashboard = None
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
@@ -838,9 +884,9 @@ class Cid():
             
         return compatible
     
-    def update_dashboard(self, dashboard_id, recursive=False, required_datasets=None, dashboard_datasets=None, **kwargs):
+    def update_dashboard(self, dashboard_id, dashboard_definition):
 
-        dashboard = self.qs.dashboards.get(dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return
@@ -850,7 +896,10 @@ class Cid():
             print(f'Deployed template: {dashboard.deployedTemplate.arn}')
         else:
             print(f'Deployed template: Not available')
-        print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+        if isinstance(dashboard.sourceTemplate, CidQsTemplate):
+            print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+        else:
+            print('Unable to determine dashboard source.')
         
                             
         if dashboard.status == 'legacy':
@@ -873,7 +922,7 @@ class Cid():
         logger.debug(f"Updating {dashboard_id}")
         
         try:
-            self.qs.update_dashboard(dashboard, **kwargs)
+            self.qs.update_dashboard(dashboard, dashboard_definition)
             print('Update completed\n')
             dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)
             self.track('updated', dashboard_id)
@@ -947,7 +996,7 @@ class Cid():
             for dataset_name in missing_datasets[:]:
                 try:
                     dataset_definition = self.get_definition(type='dataset', name=dataset_name)
-                    raw_template = self.get_dataset_data_from_definition(dataset_definition)
+                    raw_template = self.get_data_from_definition('dataset', dataset_definition)
                     if raw_template:
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
@@ -1026,23 +1075,36 @@ class Cid():
                     continue
             print('\n')
 
-    def get_dataset_data_from_definition(self, dataset_definition):
-        raw_template = None
-        dataset_file = dataset_definition.get('File')
-        if dataset_file:
-            raw_template = json.loads(resource_string(
-                dataset_definition.get('providedBy'), f'data/datasets/{dataset_file}'
-            ).decode('utf-8'))
-        elif dataset_definition.get('Data'):
-            raw_template = dataset_definition.get('Data')
-        if raw_template is None:
-            raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(dataset_definition)}. Check resources file.")
-        return raw_template
+    def get_data_from_definition(self, asset_type, definition):
+        """ Returns an json object for json resource file and a text for all other definitions
+        """
+        subfolder = {
+            'dataset': 'datasets',
+            'view': 'queries',
+            'table': 'queries',
+        }.get(asset_type)
+        data = None
+        file_name = definition.get('File')
+        if file_name:
+            text = resource_string(
+                definition.get('providedBy'), f'data/{subfolder}/{file_name}'
+            ).decode('utf-8')
+            if file_name.endswith('.json') or file_name.endswith('.jsn'):
+                data = json.loads(text)
+            else:
+                data = text
+        elif definition.get('Data'):
+            data = definition.get('Data')
+        elif definition.get('data'):
+            data = definition.get('data')
+        if data is None:
+            raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(definition)}. Check resources file.")
+        return data
 
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
-        data = self.get_dataset_data_from_definition(dataset_definition)
+        data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
@@ -1174,13 +1236,49 @@ class Cid():
 
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
         if isinstance(found_dataset, Dataset):
+            update_dataset = False
             if update:
-                self.qs.update_dataset(compiled_dataset)
+                update_dataset = True
             elif found_dataset.name != compiled_dataset.get('Name'):
                 print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
+                update_dataset = True
+            if update_dataset and get_parameters().get('on-drift', 'show').lower() != 'override' and isatty() and not cur_required:
+                while True:
+                    diff = self.qs.dataset_diff(found_dataset.raw, compiled_dataset)
+                    if diff and diff['diff']:
+                        cid_print(f'<BOLD>Found a difference between existing dataset <YELLOW>{found_dataset.name}<END> <BOLD>and the one we want to deploy. <END>')
+                        cid_print(diff['printable'])
+                        choice = get_parameter(
+                            param_name='dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override',
+                            message=f'The existing dataset is different. Override?',
+                            choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
+                            default='retry diff'
+                        )
+                        if choice == 'retry diff':
+                            unset_parameter('dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override')
+                            continue
+                        elif choice == 'proceed and override':
+                            update_dataset = True
+                            break
+                        elif choice == 'keep existing':
+                            update_dataset = False
+                            break
+                        else:
+                            raise CidCritical(f'User choice is not to update {found_dataset.name}.')
+                    elif not diff:
+                        if not get_parameter(
+                            param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
+                            message=f'Cannot get sql diff for {found_dataset.name}. Continue?',
+                            choices=['override', 'exit'],
+                            default='override'
+                            ) != 'override':
+                            raise CidCritical(f'User choice is not to update {found_dataset.name}.')
+                        update_dataset = True
+                    break
+            if update_dataset:
                 self.qs.update_dataset(compiled_dataset)
             else:
-                print(f'No update requested for dataset {compiled_dataset.get("DataSetId")}')
+                print(f'No update requested for dataset {compiled_dataset.get("DataSetId")} {compiled_dataset.get("Name")}={found_dataset.name} ')
         else:
             self.qs.create_dataset(compiled_dataset)
 
@@ -1231,15 +1329,49 @@ class Cid():
                     self.glue.create_or_update_table(view_name, view_query)
                 else:
                     if 'CREATE OR REPLACE' in view_query.upper():
-                        print(f'Updating view: "{view_name}"')
-                        self.athena.execute_query(view_query)
+                        update_view = False
+                        while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
+                            cid_print(f'Analysing view {view_name}')
+                            diff = self.athena.get_view_diff(view_name, view_query)
+                            if diff and diff['diff']:
+                                cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
+                                cid_print(diff['printable'])
+                                choice = get_parameter(
+                                    param_name='view-' + view_name + '-override',
+                                    message=f'The existing view is different. Override?',
+                                    choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
+                                    default='retry diff'
+                                )
+                                if choice == 'retry diff':
+                                    unset_parameter('view-' + view_name + '-override')
+                                    continue
+                                elif choice == 'proceed and override':
+                                    update_view = True
+                                    break
+                                elif choice == 'keep existing':
+                                    update_view = False
+                                    break
+                                else:
+                                    raise CidCritical(f'User choice is not to update {view_name}.')
+                            elif not diff:
+                                if not get_yesno_parameter(
+                                    param_name='view-' + view_name + '-override',
+                                    message=f'Cannot get sql diff for {view_name}. Continue?',
+                                    default='yes'
+                                    ):
+                                    raise CidCritical(f'User choice is not to update {view_name}.')
+                                update_view = True
+                            break
+                        if update_view:
+                            print(f'Updating view: "{view_name}"')
+                            self.athena.execute_query(view_query)
                     else:
                         print(f'View "{view_name}" is not compatible with update. Skipping.')
                 assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
                 logger.info(f'View "{view_name}" updated')
             else:
                 return
-        else:
+        else: # No found -> creation
             logger.info(f'Creating view: "{view_name}"')
             if view_definition.get('type') == 'Glue_Table':
                 self.glue.create_or_update_table(view_name, view_query)
@@ -1255,22 +1387,19 @@ class Cid():
         view_definition = self.get_definition("view", name=view_name)
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
         if cur_required and self.cur.hasSavingsPlans and self.cur.hasReservations and view_definition.get('spriFile'):
-            view_file = view_definition.get('spriFile')
+            view_definition['File'] = view_definition.get('spriFile')
         elif cur_required and self.cur.hasSavingsPlans and view_definition.get('spFile'):
-            view_file = view_definition.get('spFile')
+            view_definition['File'] = view_definition.get('spFile')
         elif cur_required and self.cur.hasReservations and view_definition.get('riFile'):
-            view_file = view_definition.get('riFile')
-        elif view_definition.get('File'):
-            view_file = view_definition.get('File')
+            view_definition['File'] = view_definition.get('riFile')
+        elif view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
+            pass
         else:
             logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
             raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        template = Template(resource_string(
-            view_definition.get('providedBy'),
-            f'data/queries/{view_file}'
-        ).decode('utf-8'))
+        template = Template(self.get_data_from_definition('view', view_definition)) 
 
         # Prepare template parameters
         columns_tpl = {
