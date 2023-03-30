@@ -196,19 +196,30 @@ class Cid():
 
     def get_definition(self, type: str, name: str=None, id: str=None) -> dict:
         """ return resource definition that matches parameters """
+        res = None
         if type not in ['dashboard', 'dataset', 'view']:
             print(f'Error: {type} is not a valid type')
             raise ValueError(f'{type} is not a valid definition type')
         if type in  ['dataset', 'view'] and name:
-            return self.resources.get(f'{type}s').get(name)
+            res = self.resources.get(f'{type}s').get(name)
         elif type in ['dashboard']:
             for definition in self.resources.get(f'{type}s').values():
                 if name is not None and definition.get('name') != name:
                     continue
                 if id is not None and definition.get('dashboardId') != id:
                     continue
-                return definition
-        return None
+                res = definition
+                break
+
+        # template
+        if isinstance(res, dict):
+            name = name or res.get('name')
+            params = self.get_template_parameters(definition.get('parameters', {}), prefix=f'{type}-{name}-')
+            # FIXME: can be recursive?
+            for key, value in res.items():
+                if isinstance(value, str):
+                    res[key] = Template(value).safe_substitute(params)
+        return res
 
 
     @command
