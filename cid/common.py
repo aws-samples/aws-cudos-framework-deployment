@@ -267,8 +267,9 @@ class Cid():
             if isinstance(value, str):
                 params[key] = value
             elif isinstance(value, dict) and value.get('type') == 'cur.tag_and_cost_category_fields':
+                prefix = '' if value.get('global') else param_prefix
                 params[key] = get_parameter(
-                    param_name=param_prefix + key,
+                    param_name=prefix + key,
                     message=f"Required parameter: {key} ({value.get('description')})",
                     choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
