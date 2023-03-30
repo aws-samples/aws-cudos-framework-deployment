@@ -900,8 +900,14 @@ Resources:
                   - 'glue:ImportCatalogToGlue'
                 Resource:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${ProcessedCURPath.Folder}
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${ProcessedCURPath.Folder}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/${ProcessedCURPath.Folder}
               - Effect: Allow
                 Action:
                   - 's3:GetObject'
