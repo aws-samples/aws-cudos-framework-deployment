@@ -198,7 +198,6 @@ class Cid():
         """ return resource definition that matches parameters """
         res = None
         if type not in ['dashboard', 'dataset', 'view']:
-            print(f'Error: {type} is not a valid type')
             raise ValueError(f'{type} is not a valid definition type')
         if type in  ['dataset', 'view'] and name:
             res = self.resources.get(f'{type}s').get(name)
@@ -271,9 +270,9 @@ class Cid():
             self.resources = always_merger.merge(self.resources, resources)
 
 
-    def get_template_parameters(self, parameters: dict, param_prefix: str=''):
+    def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict={}):
         """ Get template parameters. """
-        params = {}
+        params = get_parameters()
         for key, value in parameters.items():
             if isinstance(value, str):
                 params[key] = value
@@ -286,7 +285,7 @@ class Cid():
                 )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
-                while not params[key]:
+                while params[key] == None:
                     params[key] = get_parameter(
                         param_name=key,
                         message=f"Required parameter: {key} ({value.get('description')})",
@@ -295,7 +294,7 @@ class Cid():
                     )
             else:
                 raise CidCritical(f'Unknown parameter type for "{key}". Must be a string or a dict with value or with default key')
-        return params
+        return always_merger.merge(params, others)
 
 
     @command
@@ -366,7 +365,7 @@ class Cid():
                 #TODO: need to apply template to data structure as well
                 data = yaml.safe_dump(data)
             if isinstance(data, str):
-                data = Template(data).safe_substitute(always_merger.merge(get_parameters(), params))
+                data = Template(data).safe_substitute(params)
             dashboard_definition['definition'] = yaml.safe_load(data)
         elif dashboard_definition.get('file'):
             raise NotImplementedError('File option is not implemented')
@@ -1448,12 +1447,11 @@ class Cid():
             'athena_database_name': self.athena.DatabaseName,
         }
 
-        params = self.get_template_parameters(
+        columns_tpl = self.get_template_parameters(
             view_definition.get('parameters', dict()),
-            f'view-{view_name}-'
+            f'view-{view_name}-',
+            columns_tpl,
         )
-        columns_tpl = always_merger.merge(get_parameters(), columns_tpl)
-        columns_tpl = always_merger.merge(params, columns_tpl)
         logger.debug(str(columns_tpl))
         compiled_query = template.safe_substitute(columns_tpl)
 
