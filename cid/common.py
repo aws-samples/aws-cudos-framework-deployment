@@ -213,7 +213,7 @@ class Cid():
         # template
         if isinstance(res, dict):
             name = name or res.get('name')
-            params = self.get_template_parameters(definition.get('parameters', {}), prefix=f'{type}-{name}-')
+            params = self.get_template_parameters(res.get('parameters', {}), param_prefix=f'{type}-{name}-')
             # FIXME: can be recursive?
             for key, value in res.items():
                 if isinstance(value, str):
