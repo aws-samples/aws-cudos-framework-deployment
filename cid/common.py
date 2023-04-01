@@ -190,6 +190,25 @@ class Cid():
         logger.info('Finished loading plugins')
         return plugins
 
+    def resources_with_global_parameters(self, resources):
+        """ render resources with global parameters """
+        params = self.get_template_parameters(self.resources.get('parameters', {}))
+        def _recursively_process_strings(item, str_func):
+            """ recursively update elements of a dict """
+            if isinstance(item, str):
+                return str_func(item)
+            elif isinstance(item, dict):
+                for key, value in item.copy().items():
+                    item[key] = _recursively_process_strings(value, str_func)
+                return item
+            elif isinstance(item, list):
+                return [_recursively_process_strings(value, str_func) for value in item]
+            return item
+        def _str_func(text):
+            return Template(text).safe_substitute(params)
+        return _recursively_process_strings(resources, _str_func)
+
+
     def getPlugin(self, plugin) -> dict:
         return self.plugins.get(plugin)
 
@@ -268,6 +287,7 @@ class Cid():
             except Exception as exc:
                 raise CidCritical(f'Failed to load resources from {source}: {type(exc)} {exc}')
             self.resources = always_merger.merge(self.resources, resources)
+        self.resources = self.resources_with_global_parameters(self.resources)
 
 
     def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict={}):
@@ -394,7 +414,7 @@ class Cid():
             # First try to find the dataset with the id
             dataset = self.qs.describe_dataset(id=dataset_name)
             if isinstance(dataset, Dataset):
-                logger.debug(f'Found dataset {dataset_name} with id match = {ds.arn}')
+                logger.debug(f'Found dataset {dataset_name} with id match = {dataset.arn}')
                 dashboard_definition['datasets'][dataset_name] = dataset.arn
 
             else:
