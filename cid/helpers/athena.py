@@ -259,7 +259,7 @@ class Athena(CidBase):
         if (current_status == "SUCCEEDED"):
             return query_id
         else:
-            failure_reason = response['QueryExecution']['Status']['StateChangeReason']
+            failure_reason = response.get('QueryExecution', {}).get('Status', {}).get('StateChangeReason',repr(response))
             logger.info(f'Athena query failed: {failure_reason}')
             logger.debug(f'Full query: {sql_query}')
             if fail:

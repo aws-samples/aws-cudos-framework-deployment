@@ -198,9 +198,10 @@ class Cid():
             if isinstance(item, str):
                 return str_func(item)
             elif isinstance(item, dict):
-                for key, value in item.copy().items():
-                    item[key] = _recursively_process_strings(value, str_func)
-                return item
+                res = {}
+                for key, value in item.items():
+                    res[_recursively_process_strings(key, str_func)] = _recursively_process_strings(value, str_func)
+                return res
             elif isinstance(item, list):
                 return [_recursively_process_strings(value, str_func) for value in item]
             return item
@@ -356,6 +357,7 @@ class Cid():
                 raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
         required_datasets_names = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
+        ds_map = dashboard_definition.get('datasetMap', {})
 
         dashboard_datasets = dashboard.datasets if dashboard else {}
 
@@ -445,7 +447,7 @@ class Cid():
                 if not matching_datasets:
                     reco = ''
                     logger.warning(f'Dataset {dataset_name} is not found')
-                    if exec_env()['shell'] == 'lambda':
+                    if utils.exec_env()['shell'] == 'lambda':
                         # We are in lambda
                         reco = 'You can try deleting existing dataset and re-run.'
                     else:
@@ -463,6 +465,13 @@ class Cid():
                     print(f'Using dataset {dataset_name}: {ds.id}')
                     dashboard_definition['datasets'][dataset_name] = ds.arn
 
+        # Update datasets to the mapping name if needed
+        # Dashboard definition must contain names that are specific to template. 
+        ds_map = dashboard_definition.get('datasetMap', {})
+        print(dashboard_definition['datasets'])
+        print(ds_map)
+        dashboard_definition['datasets'] = {ds_map.get(name, name): arn for name, arn in dashboard_definition['datasets'].items() }
+        print(dashboard_definition['datasets'])
         logger.debug(f"datasets: {dashboard_definition['datasets']}")
         #FIXME: this code looks absolete
         kwargs = dict()
@@ -1359,10 +1368,13 @@ class Cid():
             return
 
         # Create a view
-        logger.info(f'Getting view definition')
+        logger.info(f'Getting view definition {view_name}')
         view_definition = self.get_definition("view", name=view_name)
         if not view_definition and view_name in self.athena._metadata.keys():
             logger.info(f"Definition is unavailable but view exists: {view_name}, skipping")
+            return
+        if not view_definition:
+            logger.info(f"Definition is unavailable {view_name}")
             return
         logger.debug(f'View definition: {view_definition}')
 
@@ -1387,7 +1399,10 @@ class Cid():
                     print(f'Updating table {view_name}')
                     self.glue.create_or_update_table(view_name, view_query)
                 else:
-                    if 'CREATE OR REPLACE' in view_query.upper():
+                    if 'CREATE EXTERNAL TABLE' in view_query.upper():
+                        logger.warning('Cannot recreate table {view_name}')
+
+                    elif 'CREATE OR REPLACE' in view_query.upper():
                         update_view = False
                         while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
                             cid_print(f'Analysing view {view_name}')
@@ -1426,18 +1441,28 @@ class Cid():
                             self.athena.execute_query(view_query)
                     else:
                         print(f'View "{view_name}" is not compatible with update. Skipping.')
-                assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
-                logger.info(f'View "{view_name}" updated')
+                if 'CREATE OR REPLACE VIEW' in view_query.upper() or 'CREATE VIEW' in view_query.upper():
+                    logger.debug('Start waiting')
+                    assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
+                    logger.info(f'View "{view_name}" updated')
             else:
                 return
         else: # No found -> creation
             logger.info(f'Creating view: "{view_name}"')
             if view_definition.get('type') == 'Glue_Table':
                 self.glue.create_or_update_table(view_name, view_query)
+                logger.info(f'Table "{view_name}" created')
+            elif 'CREATE EXTERNAL TABLE' in view_query.upper():
+                print(f'Creating table: "{view_name}"')
+                try:
+                    self.athena.execute_query(view_query)
+                except CidCritical as exc:
+                    logger.exception(exc)
+                    pass
             else:
                 self.athena.execute_query(view_query)
-            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
-            logger.info(f'View "{view_name}" created')
+                assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+                logger.info(f'View "{view_name}" created')
 
 
     def get_view_query(self, view_name: str) -> str:
