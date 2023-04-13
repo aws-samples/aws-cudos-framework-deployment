@@ -307,12 +307,15 @@ class Cid():
             elif isinstance(value, dict):
                 params[key] = value.get('value')
                 while params[key] == None:
-                    params[key] = get_parameter(
-                        param_name=key,
-                        message=f"Required parameter: {key} ({value.get('description')})",
-                        default=value.get('default'),
-                        template_variables=dict(account_id=self.base.account_id),
-                    )
+                    if value.get('silentDefault') != None and get_parameters().get(key) == None:
+                        params[key] = value.get('silentDefault')
+                    else:
+                        params[key] = get_parameter(
+                            param_name=key,
+                            message=f"Required parameter: {key} ({value.get('description')})",
+                            default=value.get('default'),
+                            template_variables=dict(account_id=self.base.account_id),
+                        )
             else:
                 raise CidCritical(f'Unknown parameter type for "{key}". Must be a string or a dict with value or with default key')
         return always_merger.merge(params, others)
@@ -356,8 +359,8 @@ class Cid():
             else:
                 raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
-        required_datasets_names = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
-        ds_map = dashboard_definition.get('datasetMap', {})
+        definition_dependency_datasets = dashboard_definition.get('dependsOn', {}).get('datasets', [])
+        required_datasets_names = [dsname for dsname in definition_dependency_datasets]
 
         dashboard_datasets = dashboard.datasets if dashboard else {}
 
@@ -466,12 +469,9 @@ class Cid():
                     dashboard_definition['datasets'][dataset_name] = ds.arn
 
         # Update datasets to the mapping name if needed
-        # Dashboard definition must contain names that are specific to template. 
-        ds_map = dashboard_definition.get('datasetMap', {})
-        print(dashboard_definition['datasets'])
-        print(ds_map)
+        # Dashboard definition must contain names that are specific to template.
+        ds_map = definition_dependency_datasets if isinstance(definition_dependency_datasets, dict) else {}
         dashboard_definition['datasets'] = {ds_map.get(name, name): arn for name, arn in dashboard_definition['datasets'].items() }
-        print(dashboard_definition['datasets'])
         logger.debug(f"datasets: {dashboard_definition['datasets']}")
         #FIXME: this code looks absolete
         kwargs = dict()
