@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This template is for organization admin who needs to delegate management of Cloud Intelligence Dashboards Stacks. This stack adds a set of policies to an Existing Role to allow full autonomy in deployment.
+Description: This template is for an Organization Admin who needs to delegate management of the Cloud Intelligence Dashboards Stacks. This stack adds a set of policies to an Existing Role to allow full autonomy in deployment.
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -8,14 +8,14 @@ Metadata:
         Parameters:
           - RoleName
       - Label:
-          default: Permissions in Data Collection Account
+          default: Permissions for the Data Collection Account (where the Dashboards will be deployed)
         Parameters:
-          - QuickSightManagement
-          - CloudIntelligenceDashboadsCFNManagement
+          - CloudIntelligenceDashboardsCFNManagement
           - CURDestination
+	  - QuickSightManagement
           - QuickSightAdmin
       - Label:
-          default: Permissions in CUR Source Account (Payer Account)
+          default: Permissions for the CUR Source Account (typically a Payer Account)
         Parameters:
           - CURReplication
   cfn-lint:
@@ -25,36 +25,36 @@ Metadata:
 Parameters:
   RoleName:
     Type: String
-    Description: Name of the Existing IAM Role
+    Description: Name of the Existing IAM Role to grant the permissions to
   QuickSightManagement:
     Type: String
-    Description: "Grant to the role rights to manage QuickSight"
-    Default: 'yes'
+    Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to all QuickSight Enterprise actions as per: https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition"
+    Default: 'no'
     AllowedValues: ["yes", "no"]
   QuickSightAdmin:
     Type: String
-    Description: "(OPTIONAL) Grant QuickSight:*"
-    Default: 'yes'
+    Description: "(OPTIONAL) Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. Grant all QuickSight permissions (QuickSight:*)"
+    Default: 'no'
     AllowedValues: ["yes", "no"]
-  CloudIntelligenceDashboadsCFNManagement:
+  CloudIntelligenceDashboardsCFNManagement:
     Type: String
-    Description: "Grant to the role rights to manage CloudIntelligenceDashboads via CFN"
-    Default: 'yes'
+    Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to deploy the Cloud Intelligence Dashboards via CloudFormation"
+    Default: 'no'
     AllowedValues: ["yes", "no"]
   CURDestination:
     Type: String
-    Description: "Grant to the role rights to Cur Replication in Destination / Data Collection Account"
-    Default: 'yes'
+    Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to create an S3 bucket for replicated CUR data Data Collection Account"
+    Default: 'no'
     AllowedValues: ["yes", "no"]
   CURReplication:
     Type: String
-    Description: "Grant to the role rights to Cur Replication in Source / typically in Payer Account"
-    Default: 'yes'
+    Description: "Choose Yes only when deploying this stack in a Source/Payer account. This grants the specified role rights to create CUR & define Replication Rule in the Source Account"
+    Default: 'no'
     AllowedValues: ["yes", "no"]
 
 Conditions:
   AddQuickSightManagementPolicy: !Equals [ !Ref QuickSightManagement, "yes" ]
-  AddCloudIntelligenceDashboadsCFNManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboadsCFNManagement, "yes" ]
+  AddCloudIntelligenceDashboardsCFNManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboardsCFNManagement, "yes" ]
   AddQuickSightAdminPolicy: !Equals [ !Ref QuickSightAdmin, "yes" ]
   AddCURDestinationPolicy: !Equals [ !Ref CURDestination, "yes" ]
   AddCURReplicationPolicy: !Equals [ !Ref CURReplication, "yes" ]
@@ -159,13 +159,13 @@ Resources:
           Effect: Allow
           Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
 
-  CloudIntelligenceDashboadsCFNManagementPolicy:
+  CloudIntelligenceDashboardsCFNManagementPolicy:
     Type: AWS::IAM::Policy
-    Condition: AddCloudIntelligenceDashboadsCFNManagementPolicy
+    Condition: AddCloudIntelligenceDashboardsCFNManagementPolicy
     Properties:
       Roles:
         - !Ref RoleName
-      PolicyName: CloudIntelligenceDashboadsCFNManagementPolicy
+      PolicyName: CloudIntelligenceDashboardsCFNManagementPolicy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -221,9 +221,14 @@ Resources:
           - glue:CreateDatabase
           - glue:DeleteDatabase
           - glue:GetDatabase
+          - glue:GetDatabases
           Effect: Allow
           Resource:
           - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur/*
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_cur/*
 
         - Sid: GlueTable
           Action:
@@ -231,11 +236,9 @@ Resources:
           - glue:DeleteTable
           Effect: Allow
           Resource:
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
           - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
-
-          # !Sub??- arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
-          # !Sub??- arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_cur/*
-
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
 
         - Sid: IAMForCFN
           Action:
@@ -435,16 +438,20 @@ Resources:
           - cloudformation:CreateChangeSet
           - cloudformation:CreateStack
           - cloudformation:DeleteStack
+          - cloudformation:DescribeStackEvents
+          - cloudformation:DescribeStacks
+          - cloudformation:GetStackPolicy
+          - cloudformation:ListStackResources
           - cloudformation:RollbackStack
           - cloudformation:UpdateStack
           Effect: Allow
           Resource:
           - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CID-CUR-Replication/*
 
-        #FIXME: in non us-east-1 we need also a lambda!
         - Sid: CostUsageReport
           Action:
           - cur:DeleteReportDefinition
+          - cur:DescribeReportDefinitions
           - cur:PutReportDefinition
           Effect: Allow
           Resource:
@@ -455,11 +462,14 @@ Resources:
           - iam:CreateRole
           - iam:DeleteRole
           - iam:DeleteRolePolicy
+          - iam:GetRole
+          - iam:GetRolePolicy
+          - iam:ListRoles
+          - iam:PassRole
           - iam:PutRolePolicy
           Effect: Allow
           Resource:
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Replication-CIDLambdaAnalyticsRole-*
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Replication-CrossRegionReplicationRole-*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Replication-*
 
         - Sid: LambdaForCFN
           Action:
@@ -472,6 +482,7 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
+          - !Sub arn:aws:lambda:${AWS::Region]:${AWS::AccountId}:function:cid-CID-CURCreator
 
         - Sid: S3
           Action:
@@ -484,6 +495,7 @@ Resources:
           - s3:GetBucketLocation
           - s3:GetBucketPolicy
           - s3:GetObject
+          - s3:ListBucket
           - s3:PutBucketAcl
           - s3:PutBucketOwnershipControls
           - s3:PutBucketPolicy
@@ -500,19 +512,9 @@ Resources:
 
         - Sid: ReadOnly
           Action:
-          - cur:DescribeReportDefinitions
-          - cloudformation:DescribeStackEvents
-          - cloudformation:DescribeStacks
-          - cloudformation:GetStackPolicy
           - cloudformation:GetTemplate
           - cloudformation:GetTemplateSummary
-          - cloudformation:ListStackResources
           - cloudformation:ListStacks
-          - iam:GetRole
-          - iam:GetRolePolicy
-          - iam:ListRoles
-          - iam:PassRole
-          - s3:ListBucket
           - s3:ListAllMyBuckets
           Effect: Allow
           Resource: '*' # ReadOnly Policy for CFN
