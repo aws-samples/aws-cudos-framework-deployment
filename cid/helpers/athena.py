@@ -172,7 +172,7 @@ class Athena(CidBase):
             if 'AccessDeniedException' in str(exc):
                 raise
             else:
-                logger.debug(e, exc_info=True)
+                logger.debug(exc, exc_info=True)
                 return False
 
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
