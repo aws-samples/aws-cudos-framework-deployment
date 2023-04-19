@@ -4,9 +4,9 @@ import json
 import logging
 import functools
 from pathlib import Path
-from string import Template
 from typing import Dict
 from pkg_resources import resource_string
+from cid.helpers.template import render_from_template
 
 if sys.version_info < (3, 8):
     from importlib_metadata import entry_points
@@ -290,8 +290,8 @@ class Cid():
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         except CidCritical:
-            pass 
-        
+            pass
+
         if not dashboard_definition:
             if isinstance(dashboard, Dashboard):
                 dashboard_definition = dashboard.definition
@@ -326,7 +326,7 @@ class Cid():
             if isinstance(data, dict):
                 data = yaml.safe_dump(data)
             if isinstance(data, str):
-                data = Template(data).safe_substitute(get_parameters())
+                data = render_from_template(data, get_parameters())
             dashboard_definition['definition'] = yaml.safe_load(data)
         elif dashboard_definition.get('file'):
             raise NotImplementedError('File option is not implemented')
@@ -710,14 +710,14 @@ class Cid():
                             param_name='folder-name',
                             message='Please enter the folder name to create'
                         )
-                        folder_permissions_tpl = Template(resource_string(
+                        folder_permissions_tpl = resource_string(
                             package_or_requirement='cid.builtin.core',
                             resource_name=f'data/permissions/folder_permissions.json',
-                        ).decode('utf-8'))
+                        ).decode('utf-8')
                         columns_tpl = {
                             'PrincipalArn': self.qs.get_principal_arn()
                         }
-                        folder_permissions = json.loads(folder_permissions_tpl.safe_substitute(columns_tpl))
+                        folder_permissions = json.loads(render_from_template(folder_permissions_tpl, columns_tpl))
                         folder = self.qs.create_folder(folder_name, **folder_permissions)
                     except self.qs.client.exceptions.AccessDeniedException:
                         raise CidError('You are not allowed to create folder, unable to proceed')
@@ -748,11 +748,11 @@ class Cid():
             columns_tpl = {
                 'PrincipalArn': principal_arn
             }
-            dashboard_permissions_tpl = Template(resource_string(
+            dashboard_permissions_tpl = resource_string(
                 package_or_requirement='cid.builtin.core',
                 resource_name=template_filename,
-            ).decode('utf-8'))
-            dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
+            ).decode('utf-8')
+            dashboard_permissions = json.loads(render_from_template(dashboard_permissions_tpl, columns_tpl))
             dashboard_params = {
                 "GrantPermissions": [
                     dashboard_permissions
@@ -776,11 +776,11 @@ class Cid():
             if share_method == 'account':
                 logger.info(f'Sharing datasets/datasources with an account is not supported, skipping')
             else:
-                data_set_permissions_tpl = Template(resource_string(
+                data_set_permissions_tpl = resource_string(
                     package_or_requirement='cid.builtin.core',
                     resource_name=f'data/permissions/data_set_permissions.json',
-                ).decode('utf-8'))
-                data_set_permissions = json.loads(data_set_permissions_tpl.safe_substitute(columns_tpl))
+                ).decode('utf-8')
+                data_set_permissions = json.loads(render_from_template(data_set_permissions_tpl, columns_tpl))
 
                 _datasources: Dict[str, Datasource] = {}
                 for _id in dashboard.datasets.values():
@@ -794,11 +794,11 @@ class Cid():
                         if not _datasources.get(_datasource.id):
                             _datasources.update({_datasource.id: _datasource})
 
-                data_source_permissions_tpl = Template(resource_string(
+                data_source_permissions_tpl = resource_string(
                     package_or_requirement='cid.builtin.core',
                     resource_name=f'data/permissions/data_source_permissions.json',
-                ).decode('utf-8'))
-                data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
+                ).decode('utf-8')
+                data_source_permissions = json.loads(render_from_template(data_source_permissions_tpl, columns_tpl))
                 for k, v in _datasources.items():
                     logger.info(f'Sharing data source "{v.name}" ({k})')
                     self.qs.update_data_source_permissions(DataSourceId=k, GrantPermissions=[data_source_permissions])
@@ -1105,7 +1105,6 @@ class Cid():
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
-        template = Template(json.dumps(data))
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
         athena_datasource = None
 
@@ -1143,9 +1142,7 @@ class Cid():
                 # - if DataSource is references in existing DataSet? -> silently take that one
                 # - if athena WorkGroup defined -> Try to find a DataSource with this WorkGroup
                 # - and if still nothing -> ask an expicit choice from the user
-                pre_compiled_dataset = json.loads(template.safe_substitute())
-                dataset_name = pre_compiled_dataset.get('Name')
-
+                dataset_name = data.get('Name')
                 # let's find the schema/database and workgroup name
                 schemas = []
                 datasources = []
@@ -1236,8 +1233,7 @@ class Cid():
             'athena_database_name': self.athena.DatabaseName,
             'cur_table_name': self.cur.tableName if cur_required else None
         }
-
-        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
+        compiled_dataset = json.loads(render_from_template(json.dumps(data), columns_tpl))
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
 
@@ -1313,7 +1309,6 @@ class Cid():
             logger.info(f"Definition is unavailable but view exists: {view_name}, skipping")
             return
         logger.debug(f'View definition: {view_definition}')
-
         if recursive:
             dependency_views = view_definition.get('dependsOn', dict()).get('views', list())
             if 'cur' in dependency_views: dependency_views.remove('cur')
@@ -1325,7 +1320,7 @@ class Cid():
                     print(f'Missing dependency view: {dep_view_name}, creating')
                     logger.info(f'Missing dependency view: {dep_view_name}, creating')
                 self.create_or_update_view(dep_view_name, recursive=recursive, update=update)
-        view_query = self.get_view_query(view_name=view_name)
+        view_query = self.get_view_query(view_definition=view_definition, view_name=view_name)
         logger.debug(f'view_query: {view_query}')
         if view_name in self.athena._metadata.keys():
             logger.debug(f'View "{view_name}" exists')
@@ -1388,10 +1383,9 @@ class Cid():
             logger.info(f'View "{view_name}" created')
 
 
-    def get_view_query(self, view_name: str) -> str:
+    def get_view_query(self, view_definition, view_name: str) -> str:
         """ Returns a fully compiled AHQ """
         # View path
-        view_definition = self.get_definition("view", name=view_name)
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
         if cur_required and self.cur.hasSavingsPlans and self.cur.hasReservations and view_definition.get('spriFile'):
             view_definition['File'] = view_definition.get('spriFile')
@@ -1406,7 +1400,6 @@ class Cid():
             raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        template = Template(self.get_data_from_definition('view', view_definition)) 
 
         # Prepare template parameters
         columns_tpl = {
@@ -1433,8 +1426,11 @@ class Cid():
             # Add parameter
             columns_tpl.update(param)
         # Compile template
-        compiled_query = template.safe_substitute(columns_tpl)
-
+        compiled_query = ""
+        if view_definition.get('type') == 'Glue_Table':
+            compiled_query = render_from_template(json.dumps(self.get_data_from_definition('view', view_definition)), columns_tpl)
+        else:
+            compiled_query = render_from_template(self.get_data_from_definition('view', view_definition), columns_tpl)
         return compiled_query
 
     @command

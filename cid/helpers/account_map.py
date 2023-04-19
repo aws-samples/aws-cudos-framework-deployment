@@ -4,12 +4,12 @@ from pathlib import Path
 
 import click
 from pkg_resources import resource_string
-from string import Template
 
 from cid.base import CidBase
 from cid.helpers import Athena, CUR
 from cid.utils import get_parameter
 from cid.exceptions import CidCritical, CidError
+from cid.helpers.template import render_from_template
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class AccountMap(CidBase):
                 view_definition = self.athena._resources.get('views').get(name, dict())
                 view_file = view_definition.get('File')
 
-                template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
+                template = resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8')
 
                 # Fill in TPLs
                 columns_tpl = dict()
@@ -136,7 +136,7 @@ class AccountMap(CidBase):
                 for k,v in self.mappings.get(name).get(self._AthenaTableName).items():
                     logger.info(f'Mapping field {k} to {v}')
                     columns_tpl.update({k: v})
-                compiled_query = template.safe_substitute(columns_tpl)
+                compiled_query = render_from_template(template, columns_tpl)
                 print('compiled view.')
             else:
                 logger.info('Metadata table not found')
@@ -156,15 +156,15 @@ class AccountMap(CidBase):
     def get_dummy_account_mapping_sql(self, name) -> list:
         """Create dummy account mapping"""
         logger.info(f'Creating dummy account mapping for {name}')
-        template = Template(resource_string(
+        template = resource_string(
             package_or_requirement='cid.builtin.core',
             resource_name='data/queries/shared/account_map_dummy.sql',
-        ).decode('utf-8'))
+        ).decode('utf-8')
         columns_tpl = {
             'athena_view_name': name,
             'cur_table_name': self.cur.tableName
         }
-        compiled_query = template.safe_substitute(columns_tpl)
+        compiled_query = render_from_template(template, columns_tpl)
         return compiled_query
 
     def get_organization_accounts(self) -> list:
@@ -271,7 +271,6 @@ class AccountMap(CidBase):
                 ( VALUES ${rows} )
             ignored_table_name (account_id, account_name, parent_account_id, account_status, account_email)
         '''
-        template = Template(template_str)
         accounts_sql = list()
         for account in self.accounts:
             acc = account.copy()
@@ -283,6 +282,6 @@ class AccountMap(CidBase):
             'athena_view_name': name,
             'rows': ','.join(accounts_sql)
         }
-        compiled_query = template.safe_substitute(columns_tpl)
+        compiled_query = render_from_template(template_str, columns_tpl)
 
         return compiled_query

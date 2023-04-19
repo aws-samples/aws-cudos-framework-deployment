@@ -4,7 +4,6 @@ import uuid
 import time
 import logging
 from pkg_resources import resource_string
-from string import Template
 from typing import Dict, List, Union
 
 import click
@@ -17,6 +16,7 @@ from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical, CidError
+from cid.helpers.template import render_from_template
 
 logger = logging.getLogger(__name__)
 
@@ -409,11 +409,11 @@ class QuickSight(CidBase):
         columns_tpl = {
             'PrincipalArn': self.get_principal_arn()
         }
-        data_source_permissions_tpl = Template(resource_string(
+        data_source_permissions_tpl = resource_string(
             package_or_requirement='cid.builtin.core',
             resource_name=f'data/permissions/data_source_permissions.json',
-        ).decode('utf-8'))
-        data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
+        ).decode('utf-8')
+        data_source_permissions = json.loads(render_from_template(data_source_permissions_tpl, columns_tpl))
         datasource_name = datasource_id or "CID Athena"
         datasource_id = datasource_id or str(uuid.uuid4())
         params = {
@@ -976,11 +976,11 @@ class QuickSight(CidBase):
         columns_tpl = {
             'PrincipalArn': self.get_principal_arn()
         }
-        data_set_permissions_tpl = Template(resource_string(
+        data_set_permissions_tpl = resource_string(
             package_or_requirement='cid.builtin.core',
             resource_name=f'data/permissions/data_set_permissions.json',
-        ).decode('utf-8'))
-        data_set_permissions = json.loads(data_set_permissions_tpl.safe_substitute(columns_tpl))
+        ).decode('utf-8')
+        data_set_permissions = json.loads(render_from_template(data_set_permissions_tpl, columns_tpl))
         definition.update({
             'AwsAccountId': self.account_id,
             'Permissions': [
@@ -1034,14 +1034,14 @@ class QuickSight(CidBase):
 
         create_parameters = self._buid_params_for_create_update_dash(definition)
 
-        dashboard_permissions_tpl = Template(resource_string(
+        dashboard_permissions_tpl = resource_string(
             package_or_requirement='cid.builtin.core',
             resource_name=f'data/permissions/dashboard_permissions.json',
-        ).decode('utf-8'))
+        ).decode('utf-8')
         columns_tpl = {
             'PrincipalArn': self.get_principal_arn()
         }
-        dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
+        dashboard_permissions = json.loads(render_from_template(dashboard_permissions_tpl, columns_tpl))
         create_parameters['Permissions'] = [ dashboard_permissions ]
 
         try:
