@@ -355,7 +355,7 @@ class Cid():
             # First try to find the dataset with the id
             dataset = self.qs.describe_dataset(id=dataset_name)
             if isinstance(dataset, Dataset):
-                logger.debug(f'Found dataset {dataset_name} with id match = {ds.arn}')
+                logger.debug(f'Found dataset {dataset_name} with id match = {dataset.arn}')
                 dashboard_definition['datasets'][dataset_name] = dataset.arn
 
             else:
