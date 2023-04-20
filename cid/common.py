@@ -361,6 +361,7 @@ class Cid():
 
         definition_dependency_datasets = dashboard_definition.get('dependsOn', {}).get('datasets', [])
         required_datasets_names = [dsname for dsname in definition_dependency_datasets]
+        ds_map = definition_dependency_datasets if isinstance(definition_dependency_datasets, dict) else {}
 
         dashboard_datasets = dashboard.datasets if dashboard else {}
 
@@ -433,7 +434,8 @@ class Cid():
                     if dashboard_definition.get('templateId'):
                         # For templates we can additionaly verify dataset fields
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
-                        required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
+                        src_fields = source_template.datasets.get(ds_map.get(dataset_name, dataset_name) )
+                        required_fileds = {col.get('Name'): col.get('DataType') for col in src_fields}
                         unmatched = {}
                         for k, v in required_fileds.items():
                             if k not in dataset_fields or dataset_fields[k] != v:
@@ -470,7 +472,6 @@ class Cid():
 
         # Update datasets to the mapping name if needed
         # Dashboard definition must contain names that are specific to template.
-        ds_map = definition_dependency_datasets if isinstance(definition_dependency_datasets, dict) else {}
         dashboard_definition['datasets'] = {ds_map.get(name, name): arn for name, arn in dashboard_definition['datasets'].items() }
         logger.debug(f"datasets: {dashboard_definition['datasets']}")
         #FIXME: this code looks absolete
@@ -1093,6 +1094,8 @@ class Cid():
                 print(f'Creating dataset: {dataset_name}')
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
+                    if not dataset_definition:
+                        raise Exception(f'Failed to find dataset {dataset_name}. Check if Datasets section in your resources file has that.')
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
