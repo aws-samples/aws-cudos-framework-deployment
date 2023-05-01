@@ -12,7 +12,7 @@ Metadata:
         Parameters:
           - CloudIntelligenceDashboardsCFNManagement
           - CURDestination
-	  - QuickSightManagement
+          - QuickSightManagement
           - QuickSightAdmin
       - Label:
           default: Permissions for the CUR Source Account (typically a Payer Account)
@@ -482,7 +482,7 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
-          - !Sub arn:aws:lambda:${AWS::Region]:${AWS::AccountId}:function:cid-CID-CURCreator
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-CURCreator
 
         - Sid: S3
           Action:
