@@ -113,6 +113,7 @@ Resources:
           - quicksight:CreateAccountSubscription
           - quicksight:CreateAdmin
           - quicksight:CreateUser
+          - quicksight:CreateNamespace
           - quicksight:SearchDirectoryGroups
           - quicksight:SetGroupMapping
           - quicksight:Subscribe
@@ -158,6 +159,7 @@ Resources:
           - s3:ListAllMyBuckets
           Effect: Allow
           Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
+
 
   CloudIntelligenceDashboardsCFNManagementPolicy:
     Type: AWS::IAM::Policy
