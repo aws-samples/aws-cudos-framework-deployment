@@ -103,6 +103,7 @@ Resources:
           - iam:CreatePolicy
           - iam:CreatePolicyVersion
           - iam:CreateRole
+          - iam:PassRole
           - iam:DeletePolicyVersion
           - iam:DetachRolePolicy
           Effect: Allow
@@ -151,7 +152,6 @@ Resources:
           - iam:ListEntitiesForPolicy
           - iam:ListPolicyVersions
           - iam:ListRoles
-          - iam:PassRole
           - quicksight:DescribeAccountSettings
           - quicksight:DescribeAccountSubscription
           - quicksight:GetGroupMapping
