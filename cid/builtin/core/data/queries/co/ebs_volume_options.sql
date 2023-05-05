@@ -74,7 +74,8 @@ SELECT
         currentconfiguration_volumebaselinethroughput, ';', --  as volumebaselinethroughput
         currentconfiguration_volumeburstiops, ';', --  as volumeburstiops
         currentconfiguration_volumeburstthroughput, ';' --  as volumeburstthroughput
-    ) as option_details
+    ) as option_details,
+    tags as tags
 
 FROM
     compute_optimizer_ebs_volume_lines
@@ -150,7 +151,8 @@ UNION SELECT
         recommendationoptions_1_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
         recommendationoptions_1_configuration_volumeburstiops, ';', -- as volumeburstiops,
         recommendationoptions_1_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
-    ) as option_details
+    ) as option_details,
+    tags as tags
 
 FROM
     compute_optimizer_ebs_volume_lines
@@ -229,7 +231,8 @@ UNION SELECT
         recommendationoptions_2_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
         recommendationoptions_2_configuration_volumeburstiops, ';', -- as volumeburstiops,
         recommendationoptions_2_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
-    ) as option_details
+    ) as option_details,
+    tags as tags
 
 FROM
     compute_optimizer_ebs_volume_lines
@@ -307,7 +310,8 @@ WHERE
         recommendationoptions_3_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
         recommendationoptions_3_configuration_volumeburstiops, ';', -- as volumeburstiops,
         recommendationoptions_3_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
-    ) as option_details
+    ) as option_details,
+    tags as tags
 
 FROM
     compute_optimizer_ebs_volume_lines

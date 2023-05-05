@@ -65,6 +65,8 @@ CREATE OR REPLACE VIEW compute_optimizer_lambda_options AS
          utilizationmetrics_durationmaximum, ';'
 
        ) option_details
+   , cast('' as varchar) as tags
+
    FROM
      compute_optimizer_lambda_lines
    WHERE (functionarn LIKE '%arn:%')
@@ -117,6 +119,8 @@ UNION SELECT
          recommendationoptions_1_projectedutilizationmetrics_durationlowerbound, ';',
          recommendationoptions_1_projectedutilizationmetrics_durationupperbound, ';'
     ) option_details
+   , cast('' as varchar) as tags
+
 
 
     FROM
@@ -173,6 +177,8 @@ UNION SELECT
          recommendationoptions_2_projectedutilizationmetrics_durationlowerbound, ';',
          recommendationoptions_2_projectedutilizationmetrics_durationupperbound, ';'
     ) option_details
+   , cast('' as varchar) as tags
+
 
 
     FROM
@@ -231,6 +237,8 @@ UNION SELECT
          recommendationoptions_3_projectedutilizationmetrics_durationlowerbound, ';',
          recommendationoptions_3_projectedutilizationmetrics_durationupperbound, ';'
     ) option_details
+   , cast('' as varchar) as tags
+
 
 
     FROM

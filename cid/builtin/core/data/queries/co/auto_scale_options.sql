@@ -102,6 +102,7 @@ SELECT * FROM (
          currentconfiguration_desiredcapacity, ';'
 
        ) option_details
+   , cast('' as varchar) as tags
 
     FROM
         compute_optimizer_auto_scale_lines
@@ -207,6 +208,7 @@ UNION SELECT
          recommendationoptions_1_configuration_desiredcapacity, ';'
 
        ) option_details
+   , cast('' as varchar) as tags
 
     FROM
         compute_optimizer_auto_scale_lines
@@ -314,6 +316,7 @@ UNION SELECT
          recommendationoptions_2_configuration_desiredcapacity, ';'
 
        ) option_details
+   , cast('' as varchar) as tags
 
     FROM
         compute_optimizer_auto_scale_lines
@@ -421,6 +424,7 @@ UNION SELECT
          recommendationoptions_3_configuration_desiredcapacity, ';'
 
        ) option_details
+   , cast('' as varchar) as tags
 
     FROM
         compute_optimizer_auto_scale_lines

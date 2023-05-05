@@ -111,6 +111,7 @@ CREATE OR REPLACE VIEW compute_optimizer_ec2_instance_options AS
          utilizationmetrics_cpu_maximum, ';',
          utilizationmetrics_memory_maximum, ';'
        ) option_details
+   , tags tags
    FROM
      compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
@@ -201,6 +202,7 @@ UNION SELECT
          recommendationoptions_1_projectedutilizationmetrics_cpu_maximum, ';',
          recommendationoptions_1_projectedutilizationmetrics_memory_maximum, ';'
        ) option_details
+   , tags tags
    FROM
      compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
@@ -291,6 +293,7 @@ UNION SELECT
          recommendationoptions_2_projectedutilizationmetrics_cpu_maximum, ';',
          recommendationoptions_2_projectedutilizationmetrics_memory_maximum, ';'
    ) option_details
+   , tags as tags
    FROM
      compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
@@ -383,6 +386,7 @@ UNION SELECT
          recommendationoptions_3_projectedutilizationmetrics_cpu_maximum, ';',
          recommendationoptions_3_projectedutilizationmetrics_memory_maximum, ';'
        ) option_details
+   , tags tags
    FROM
      compute_optimizer_ec2_instance_lines
    WHERE (instancearn LIKE '%arn:%')
