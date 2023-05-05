@@ -295,10 +295,11 @@ class Cid():
         """ Get template parameters. """
         params = get_parameters()
         for key, value in parameters.items():
+            logger.debug(f'reading template parameter: {key} / {value}')
+            prefix = '' if value.get('global') else param_prefix
             if isinstance(value, str):
                 params[key] = value
             elif isinstance(value, dict) and value.get('type') == 'cur.tag_and_cost_category_fields':
-                prefix = '' if value.get('global') else param_prefix
                 params[key] = get_parameter(
                     param_name=prefix + key,
                     message=f"Required parameter: {key} ({value.get('description')})",
@@ -311,7 +312,7 @@ class Cid():
                         params[key] = value.get('silentDefault')
                     else:
                         params[key] = get_parameter(
-                            param_name=key,
+                            param_name=prefix + key,
                             message=f"Required parameter: {key} ({value.get('description')})",
                             default=value.get('default'),
                             template_variables=dict(account_id=self.base.account_id),
@@ -1308,6 +1309,15 @@ class Cid():
             'cur_table_name': self.cur.tableName if cur_required else None
         }
 
+        logger.debug(columns_tpl)
+
+        columns_tpl = self.get_template_parameters(
+            dataset_definition.get('parameters', dict()),
+            f'dataset-{dataset_id}-',
+            columns_tpl,
+        )
+        logger.debug(columns_tpl)
+
         compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
@@ -1493,7 +1503,11 @@ class Cid():
             raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        template = Template(self.get_data_from_definition('view', view_definition))
+        data = self.get_data_from_definition('view', view_definition)
+        if isinstance(data, dict):
+            template = Template(json.dumps(data))
+        else:
+            template = Template(data)
 
         # Prepare template parameters
         columns_tpl = {
@@ -1507,7 +1521,9 @@ class Cid():
             f'view-{view_name}-',
             columns_tpl,
         )
+        logger.debug(f"Rendering template for {view_name}")
         logger.debug(str(columns_tpl))
+        columns_tpl = {key: str(value) for key, value in columns_tpl.items()}
         compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query
