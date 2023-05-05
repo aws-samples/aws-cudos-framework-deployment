@@ -14,6 +14,28 @@
             "Alias": "Intermediate Table",
             "DataTransforms": [
                 {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "primary_tag",
+                                "ColumnId": "bd03d42a-c5c8-46dc-ac76-84a356bedeae",
+                                "Expression": "parseJson(tags, '$.${primary_tag_name}')"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "secondary_tag",
+                                "ColumnId": "78fe1f8a-57f5-4b14-8b41-67ffdaf0d0e6",
+                                "Expression": "parseJson(tags, '$.${secondary_tag_name}')"
+                            }
+                        ]
+                    }
+                },
+                {
                     "ProjectOperation": {
                         "ProjectedColumns": [
                             "lastrefreshtimestamp_utc",
@@ -46,7 +68,9 @@
                             "option_details",
                             "account_id",
                             "account_name",
-                            "bu"
+                            "bu",
+                            "primary_tag",
+                            "secondary_tag"
                         ]
                     }
                 },
@@ -176,6 +200,10 @@
                     {
                         "Name": "hourlyprice",
                         "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "tags",
+                        "Type": "STRING"
                     },
                     {
                         "Name": "service",
