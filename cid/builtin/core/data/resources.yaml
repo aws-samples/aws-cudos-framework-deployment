@@ -180,6 +180,13 @@ datasets:
       views:
         - compute_optimizer_all_options
         - business_units_map
+    parameters:
+      primary_tag_name:
+        default: 'application'
+        description: "primary tag (ex: application). if your are not using tags, leave default. Special characters are not allowed."
+      secondary_tag_name:
+        default: 'owner'
+        description: "secondary tag (ex: owner). if your are not using tags, leave default. Special characters are not allowed."
 
 # Athena views definitions
 views:
