@@ -107,7 +107,8 @@ Resources:
           - iam:DeletePolicyVersion
           - iam:DetachRolePolicy
           Effect: Allow
-          Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
+          Resource:
+            - !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/aws-quicksight-service-role-v0
 
         - Sid: QuickSight
           Action:
@@ -382,6 +383,7 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-CIDLambdaAnalyticsRole-*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-CIDLambdaCURCreatorRole-*
 
         - Sid: Lambda
           Action:
