@@ -298,9 +298,13 @@ Resources:
         - Sid: QuickSightCreateDataSource
           Action:
           - quicksight:CreateDataSource
+          - quicksight:PassDataSource
+          - quicksight:UpdateDataSource
           - quicksight:DeleteDataSource
           - quicksight:DescribeDataSource
           - quicksight:ListTagsForResource
+          - quicksight:DescribeDataSourcePermissions
+          - quicksight:UpdateDataSourcePermissions
           Effect: Allow
           Resource:
           - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:datasource/CID-*
@@ -309,6 +313,7 @@ Resources:
           Action:
           - quicksight:CreateDataSet
           - quicksight:DeleteDataSet
+          - quicksight:PassDataSet
           - quicksight:DescribDataSet
           - quicksight:DescribeDataSetPermissions
           - quicksight:UpdateDataSetPermissions
@@ -316,7 +321,7 @@ Resources:
           Resource:
           - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic
 
-        - Sid: S3
+        - Sid: CreateQueryResultsBucketS3
           Action:
           - s3:CreateBucket
           - s3:DeleteBucket
@@ -335,7 +340,14 @@ Resources:
           Resource:
           - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
           - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}/*
+
+        - Sid: ReadLambdaLayerS3
+          Action:
+          - s3:GetObject
+          Effect: Allow
+          Resource:
           - !Sub arn:aws:s3:::aws-managed-cost-intelligence-dashboards-${AWS::Region}/cid-resource-lambda-layer/*
+
 
         - Sid: ReadOnlyCFN
           Action:
