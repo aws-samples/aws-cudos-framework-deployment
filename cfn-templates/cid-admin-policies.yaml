@@ -175,6 +175,7 @@ Resources:
         - Sid: Athena
           Action:
           - athena:CreateWorkGroup
+          - athena:UpdateWorkGroup
           - athena:DeleteWorkGroup
           - athena:GetWorkGroup
           Effect: Allow
@@ -222,6 +223,7 @@ Resources:
         - Sid: GlueDatabase
           Action:
           - glue:CreateDatabase
+          - glue:UpdateDatabase
           - glue:DeleteDatabase
           - glue:GetDatabase
           - glue:GetDatabases
@@ -236,6 +238,7 @@ Resources:
         - Sid: GlueTable
           Action:
           - glue:CreateTable
+          - glue:UpdateTable
           - glue:DeleteTable
           Effect: Allow
           Resource:
@@ -285,6 +288,7 @@ Resources:
           Action:
           - quicksight:CreateDashboard
           - quicksight:DeleteDashboard
+          - quicksight:UpdateDashboard
           - quicksight:DescribeDashboard
           Effect: Allow
           Resource:
@@ -356,7 +360,7 @@ Resources:
           - cloudformation:ListStacks
           - cloudformation:ValidateTemplate
           Effect: Allow
-          Resource: '*' # Read only Rights needed for CFN
+          Resource: '*' # Read only Rights needed for CFN operator
 
   CURDestinationPolicy:
     Type: AWS::IAM::Policy
@@ -535,5 +539,3 @@ Resources:
           Effect: Allow
           Resource: '*' # ReadOnly Policy for CFN
 
-
-# FIXME: add output role
