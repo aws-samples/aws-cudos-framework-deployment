@@ -633,6 +633,7 @@ class Cid():
                     # try to get the database name from the dataset (might need this for later)
                     schema = next(iter(dataset.schemas), None) # FIXME: manage choice if multiple data sources
                     if schema:
+                        logger.debug(f'Picking the first of dataset databases: {dataset.schemas}')
                         self.athena.DatabaseName = schema
 
                     if get_parameter(
@@ -1226,12 +1227,15 @@ class Cid():
                     datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
                 else: # try to find dataset and get athena database
                     found_datasets = self.qs.get_datasets(name=dataset_name)
+                    logger.debug(f'Related to dataset {dataset_name}: {[ds.id for ds in found_datasets]}')
                     if found_datasets:
                         schemas = list(set(sum([d.schemas for d in found_datasets], [])))
                         datasources = list(set(sum([d.datasources for d in found_datasets], [])))
+                        logger.debug(f'Found following schemas={schemas}, related to dataset with name {dataset_name}')
                 logger.info(f'Found {len(datasources)} Athena DataSources related to the DataSet {dataset_name}')
 
                 if len(schemas) == 1:
+                    logger.debug(f'Picking the database={schemas[0]}')
                     self.athena.DatabaseName = schemas[0]
                 # else user will be suggested to choose database anyway
 
