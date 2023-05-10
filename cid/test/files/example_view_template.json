@@ -1,0 +1,39 @@
+{
+  "DataSetId": "1234567890",
+  "Name": "example_view",
+  "PhysicalTableMap": {
+    "1234567890": {
+      "RelationalTable": {
+        "DataSourceArn": "${athena_datasource_arn}",
+        "Schema": "${athena_database_name}",
+        "Name": "example_view",
+        "InputColumns": [
+          % for input_column in input_columns:
+          {
+            "Name": "${input_column['name']}",
+            "Type": "${input_column['type']}"
+          }${'' if loop.last else ','}
+          % endfor
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {
+    "1234567890": {
+      "Alias": "Intermediate Table (2)",
+      "DataTransforms": [
+        {
+          "ProjectOperation": {
+            "ProjectedColumns": [
+              % for input_column in input_columns:
+              "${input_column['name']}"${'' if loop.last else ','}
+              % endfor
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "ImportMode": "SPICE",
+  "Permissions": []
+}

@@ -1,0 +1,45 @@
+{
+  "DataSetId": "1234567890",
+  "Name": "example_view",
+  "PhysicalTableMap": {
+    "1234567890": {
+      "RelationalTable": {
+        "DataSourceArn": "some:datasource:arn",
+        "Schema": "cid_cur",
+        "Name": "example_view",
+        "InputColumns": [
+          {
+            "Name": "billing_period",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "purchase_option",
+            "Type": "STRING"
+          },
+          {
+            "Name": "product_to_location",
+            "Type": "STRING"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {
+    "1234567890": {
+      "Alias": "Intermediate Table (2)",
+      "DataTransforms": [
+        {
+          "ProjectOperation": {
+            "ProjectedColumns": [
+              "billing_period",
+              "purchase_option",
+              "product_to_location"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "ImportMode": "SPICE",
+  "Permissions": []
+}
