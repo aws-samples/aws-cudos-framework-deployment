@@ -40,7 +40,7 @@ class TestRenderFromTemplate(unittest.TestCase):
         self.assertTrue("NameError: 'athena_database_name' is not defined" in str(context.exception))
 
     def test_invalid_options_type(self):
-        '''Provinding wrong parameter type'''
+        '''Providing wrong parameter type'''
         with self.assertRaises(CidCritical) as context:
             render_from_template("","")
         self.assertTrue('mako.template.Template.render() argument after ** must be a mapping, not str' in str(context.exception))
