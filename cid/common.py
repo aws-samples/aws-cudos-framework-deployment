@@ -1234,7 +1234,7 @@ class Cid():
                         logger.debug(f'Found following schemas={schemas}, related to dataset with name {dataset_name}')
                 logger.info(f'Found {len(datasources)} Athena DataSources related to the DataSet {dataset_name}')
 
-                if len(schemas) == 1:
+                if len(schemas) == 1 and schemas[0]:
                     logger.debug(f'Picking the database={schemas[0]}')
                     self.athena.DatabaseName = schemas[0]
                 # else user will be suggested to choose database anyway
