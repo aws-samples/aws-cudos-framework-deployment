@@ -333,6 +333,8 @@ class Cid():
 
         self.qs.ensure_subscription()
 
+        self.qs.discover_dashboards()
+
         if dashboard_id is None:
             dashboard_id = get_parameter(
                 param_name='dashboard-id',
