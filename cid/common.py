@@ -333,7 +333,10 @@ class Cid():
 
         self.qs.ensure_subscription()
 
+        # In case if we cannot discover datasets, we need to discover dashboards
+        # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
         self.qs.discover_dashboards()
+
 
         if dashboard_id is None:
             dashboard_id = get_parameter(
@@ -1239,7 +1242,7 @@ class Cid():
                         logger.debug(f'Found following schemas={schemas}, related to dataset with name {dataset_name}')
                 logger.info(f'Found {len(datasources)} Athena DataSources related to the DataSet {dataset_name}')
 
-                if get_parameters().get('athena-database') and len(schemas) == 1 and schemas[0]:
+                if not get_parameters().get('athena-database') and len(schemas) == 1 and schemas[0]:
                     logger.debug(f'Picking the database={schemas[0]}')
                     self.athena.DatabaseName = schemas[0]
                 # else user will be suggested to choose database anyway
