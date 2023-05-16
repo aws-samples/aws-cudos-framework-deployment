@@ -122,7 +122,8 @@ data "aws_iam_policy_document" "bucket_policy" {
     sid    = "AllowReplicationRead"
     effect = "Allow"
     actions = [
-      "s3:List*",
+      "s3:ListBucket",
+      "s3:ListBucketVersions",
       "s3:GetBucketVersioning",
     ]
     principals {
