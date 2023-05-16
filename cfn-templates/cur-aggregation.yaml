@@ -52,7 +52,7 @@ Parameters:
 
   SourceAccountIds:
     Type: String
-    AllowedPattern: "^[0-9,]*$"
+    AllowedPattern: "^((\d{12})\,?)*$"
     Default: ''
     Description: "A comma separated list of all Source accounts that will replicate CUR Data. Ex:  12345678912,98745612312,...."
 
@@ -84,10 +84,19 @@ Resources:
     Properties:
       BucketName:
         Fn::Sub: "${ResourcePrefix}-${AWS::AccountId}-shared"
+
+      ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
+      # LoggingConfiguration:
+      #   DestinationBucketName: REPLACE_WITH_YOUR_LOGGING_BUCKET
+      #   LogFilePrefix: REPLACE_WITH_YOUR_PREFIX
+
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+              SSEAlgorithm: AES256 ## Use AWS managed KMS
+              ## If you need Customer managed KMS key, yoy can do that using following parameters:
+              # SSEAlgorithm: aws:kms
+              # KMSMasterKeyID: "REPLACE_WITH_YOUR_KEY_ARN"
       AccessControl: BucketOwnerFullControl
       OwnershipControls:
         Rules:
@@ -182,7 +191,8 @@ Resources:
                   - !Ref AWS::AccountId
                   - !Split [',', !Ref SourceAccountIds]
             Action:
-              - s3:List*
+              - s3:ListBucket
+              - s3:ListBucketVersions
               - s3:GetBucketVersioning
               - s3:PutBucketVersioning
             Resource:
@@ -205,10 +215,19 @@ Resources:
     Properties:
       BucketName:
         Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-local
+
+      ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
+      # LoggingConfiguration:
+      #   DestinationBucketName: REPLACE_WITH_YOUR_LOGGING_BUCKET
+      #   LogFilePrefix: REPLACE_WITH_YOUR_PREFIX
+
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+              SSEAlgorithm: AES256 ## Use AWS managed KMS
+              ## If you need Customer managed KMS key, yoy can do that using following parameters:
+              # SSEAlgorithm: aws:kms
+              # KMSMasterKeyID: "REPLACE_WITH_YOUR_KEY_ARN"
       AccessControl: BucketOwnerFullControl
       OwnershipControls:
         Rules:
@@ -530,7 +549,7 @@ Resources:
       cfn_nag:
         rules_to_suppress:
           - id: 'W89'
-            reason: "Lambdas do not need VPC"
+            reason: "This Lambda does not require VPC"
           - id: 'W92'
             reason: "One Time execution. No need for ReservedConcurrentExecutions"
 
@@ -649,7 +668,7 @@ Resources:
       cfn_nag:
         rules_to_suppress:
           - id: 'W89'
-            reason: "Lambdas do not need VPC"
+            reason: "This Lambda does not require VPC"
           - id: 'W92'
             reason: "One Time execution. No need for ReservedConcurrentExecutions"
 
