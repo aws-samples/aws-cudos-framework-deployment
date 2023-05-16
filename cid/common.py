@@ -1022,7 +1022,10 @@ class Cid():
         if update:
             for dataset_name in found_datasets[:]:
                 if dataset_name in known_datasets.keys():
-                    dataset_id = self.qs.get_datasets(id=known_datasets.get(dataset_name))[0].id
+                    _found_dsc = self.qs.get_datasets(id=known_datasets.get(dataset_name))
+                    if len(_found_dsc) != 1:
+                        logger.warning(f'Found more than one dataset in known datasets with name {dataset_name} {len(_found_dsc)}. Taking the first one.')
+                    dataset_id = _found_dsc[0].id
                 else:
                     datasets = self.qs.get_datasets(name=dataset_name)
                     if not datasets:
