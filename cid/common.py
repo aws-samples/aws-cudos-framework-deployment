@@ -1014,7 +1014,7 @@ class Cid():
             _ds_id = get_parameters().get(f'{dataset_name.replace("_", "-")}-dataset-id')
             if _ds_id:
                 self.qs.describe_dataset(_ds_id)
-        
+
         found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
@@ -1237,7 +1237,7 @@ class Cid():
                         logger.debug(f'Found following schemas={schemas}, related to dataset with name {dataset_name}')
                 logger.info(f'Found {len(datasources)} Athena DataSources related to the DataSet {dataset_name}')
 
-                if len(schemas) == 1 and schemas[0]:
+                if get_parameters().get('athena-database') and len(schemas) == 1 and schemas[0]:
                     logger.debug(f'Picking the database={schemas[0]}')
                     self.athena.DatabaseName = schemas[0]
                 # else user will be suggested to choose database anyway
