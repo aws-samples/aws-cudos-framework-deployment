@@ -207,8 +207,12 @@ class QuickSight(CidBase):
         if not _definition:
             # Look for dashboard definition by templateId.
             # This is for a specific usecase when a dashboard with another id points to managed template
-            logger.info(dashboard.template_id)
-            _definition = next((v for v in self.supported_dashboards.values() if 'templateId' in v and v['templateId'] == dashboard.template_id), None)
+            source_arn = dashboard.raw.get('Version', {}).get('SourceEntityArn', '')
+            if source_arn:
+                template_id = source_arn.split('/version/')[0].split('/')[-1]
+                template_account = source_arn.split(':').pop(4)
+                logger.info(template_id)
+                _definition = next((v for v in self.supported_dashboards.values() if 'templateId' in v and v['templateId'] == template_id), None)
         if not _definition:
             logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
             return None

@@ -221,8 +221,9 @@ def export_analysis(qs, athena):
                 logger.info(f'Please replace manually location bucket with a parameter: s3://{location}')
                 default = get_parameter(
                     f'{key}-s3path',
-                    'please provide default value',
-                    default=location,
+                    'Please provide default value. (You can use {account_id} variable if needed)',
+                    default=re.sub(r'(\d{12})', '{account_id}', location),
+                    template_variables={'account_id': '{account_id}'},
                 )
                 view_data['parameters'] = {
                     f's3path': {

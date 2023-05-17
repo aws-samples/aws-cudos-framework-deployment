@@ -190,25 +190,55 @@ class Cid():
         logger.info('Finished loading plugins')
         return plugins
 
+    def resources_with_global_parameters(self, resources):
+        """ render resources with global parameters """
+        params = self.get_template_parameters(self.resources.get('parameters', {}))
+        def _recursively_process_strings(item, str_func):
+            """ recursively update elements of a dict """
+            if isinstance(item, str):
+                return str_func(item)
+            elif isinstance(item, dict):
+                res = {}
+                for key, value in item.items():
+                    res[_recursively_process_strings(key, str_func)] = _recursively_process_strings(value, str_func)
+                return res
+            elif isinstance(item, list):
+                return [_recursively_process_strings(value, str_func) for value in item]
+            return item
+        def _str_func(text):
+            return Template(text).safe_substitute(params)
+        return _recursively_process_strings(resources, _str_func)
+
+
     def getPlugin(self, plugin) -> dict:
         return self.plugins.get(plugin)
 
 
     def get_definition(self, type: str, name: str=None, id: str=None) -> dict:
         """ return resource definition that matches parameters """
+        res = None
         if type not in ['dashboard', 'dataset', 'view']:
-            print(f'Error: {type} is not a valid type')
             raise ValueError(f'{type} is not a valid definition type')
         if type in  ['dataset', 'view'] and name:
-            return self.resources.get(f'{type}s').get(name)
+            res = self.resources.get(f'{type}s').get(name)
         elif type in ['dashboard']:
             for definition in self.resources.get(f'{type}s').values():
                 if name is not None and definition.get('name') != name:
                     continue
                 if id is not None and definition.get('dashboardId') != id:
                     continue
-                return definition
-        return None
+                res = definition
+                break
+
+        # template
+        if isinstance(res, dict):
+            name = name or res.get('name')
+            params = self.get_template_parameters(res.get('parameters', {}), param_prefix=f'{type}-{name}-')
+            # FIXME: can be recursive?
+            for key, value in res.items():
+                if isinstance(value, str):
+                    res[key] = Template(value).safe_substitute(params)
+        return res
 
 
     @command
@@ -258,6 +288,38 @@ class Cid():
             except Exception as exc:
                 raise CidCritical(f'Failed to load resources from {source}: {type(exc)} {exc}')
             self.resources = always_merger.merge(self.resources, resources)
+        self.resources = self.resources_with_global_parameters(self.resources)
+
+
+    def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict={}):
+        """ Get template parameters. """
+        params = get_parameters()
+        for key, value in parameters.items():
+            logger.debug(f'reading template parameter: {key} / {value}')
+            prefix = '' if value.get('global') else param_prefix
+            if isinstance(value, str):
+                params[key] = value
+            elif isinstance(value, dict) and value.get('type') == 'cur.tag_and_cost_category_fields':
+                params[key] = get_parameter(
+                    param_name=prefix + key,
+                    message=f"Required parameter: {key} ({value.get('description')})",
+                    choices=self.cur.tag_and_cost_category_fields + ["'none'"],
+                )
+            elif isinstance(value, dict):
+                params[key] = value.get('value')
+                while params[key] == None:
+                    if value.get('silentDefault') != None and get_parameters().get(key) == None:
+                        params[key] = value.get('silentDefault')
+                    else:
+                        params[key] = get_parameter(
+                            param_name=prefix + key,
+                            message=f"Required parameter: {key} ({value.get('description')})",
+                            default=value.get('default'),
+                            template_variables=dict(account_id=self.base.account_id),
+                        )
+            else:
+                raise CidCritical(f'Unknown parameter type for "{key}". Must be a string or a dict with value or with default key')
+        return always_merger.merge(params, others)
 
 
     @command
@@ -270,6 +332,11 @@ class Cid():
         """ Deploy Dashboard """
 
         self.qs.ensure_subscription()
+
+        # In case if we cannot discover datasets, we need to discover dashboards
+        # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
+        self.qs.discover_dashboards()
+
 
         if dashboard_id is None:
             dashboard_id = get_parameter(
@@ -298,7 +365,9 @@ class Cid():
             else:
                 raise ValueError(f'Cannot find dashboard with id={dashboard_id} in resources file.')
 
-        required_datasets_names = dashboard_definition.get('dependsOn', dict()).get('datasets', list())
+        definition_dependency_datasets = dashboard_definition.get('dependsOn', {}).get('datasets', [])
+        required_datasets_names = [dsname for dsname in definition_dependency_datasets]
+        ds_map = definition_dependency_datasets if isinstance(definition_dependency_datasets, dict) else {}
 
         dashboard_datasets = dashboard.datasets if dashboard else {}
 
@@ -323,10 +392,12 @@ class Cid():
             compatible = self.check_dashboard_version_compatibility(dashboard_id)
         elif dashboard_definition.get('data'):
             data = dashboard_definition.get('data')
+            params = self.get_template_parameters(dashboard_definition.get('parameters', dict()))
             if isinstance(data, dict):
+                #TODO: need to apply template to data structure as well
                 data = yaml.safe_dump(data)
             if isinstance(data, str):
-                data = Template(data).safe_substitute(get_parameters())
+                data = Template(data).safe_substitute(params)
             dashboard_definition['definition'] = yaml.safe_load(data)
         elif dashboard_definition.get('file'):
             raise NotImplementedError('File option is not implemented')
@@ -369,7 +440,8 @@ class Cid():
                     if dashboard_definition.get('templateId'):
                         # For templates we can additionaly verify dataset fields
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
-                        required_fileds = {col.get('Name'): col.get('DataType') for col in source_template.datasets.get(dataset_name)}
+                        src_fields = source_template.datasets.get(ds_map.get(dataset_name, dataset_name) )
+                        required_fileds = {col.get('Name'): col.get('DataType') for col in src_fields}
                         unmatched = {}
                         for k, v in required_fileds.items():
                             if k not in dataset_fields or dataset_fields[k] != v:
@@ -386,7 +458,7 @@ class Cid():
                 if not matching_datasets:
                     reco = ''
                     logger.warning(f'Dataset {dataset_name} is not found')
-                    if exec_env()['shell'] == 'lambda':
+                    if utils.exec_env()['shell'] == 'lambda':
                         # We are in lambda
                         reco = 'You can try deleting existing dataset and re-run.'
                     else:
@@ -404,6 +476,9 @@ class Cid():
                     print(f'Using dataset {dataset_name}: {ds.id}')
                     dashboard_definition['datasets'][dataset_name] = ds.arn
 
+        # Update datasets to the mapping name if needed
+        # Dashboard definition must contain names that are specific to template.
+        dashboard_definition['datasets'] = {ds_map.get(name, name): arn for name, arn in dashboard_definition['datasets'].items() }
         logger.debug(f"datasets: {dashboard_definition['datasets']}")
         #FIXME: this code looks absolete
         kwargs = dict()
@@ -563,6 +638,7 @@ class Cid():
                     # try to get the database name from the dataset (might need this for later)
                     schema = next(iter(dataset.schemas), None) # FIXME: manage choice if multiple data sources
                     if schema:
+                        logger.debug(f'Picking the first of dataset databases: {dataset.schemas}')
                         self.athena.DatabaseName = schema
 
                     if get_parameter(
@@ -943,7 +1019,7 @@ class Cid():
             _ds_id = get_parameters().get(f'{dataset_name.replace("_", "-")}-dataset-id')
             if _ds_id:
                 self.qs.describe_dataset(_ds_id)
-        
+
         found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
@@ -951,7 +1027,10 @@ class Cid():
         if update:
             for dataset_name in found_datasets[:]:
                 if dataset_name in known_datasets.keys():
-                    dataset_id = self.qs.get_datasets(id=known_datasets.get(dataset_name))[0].id
+                    _found_dsc = self.qs.get_datasets(id=known_datasets.get(dataset_name))
+                    if len(_found_dsc) != 1:
+                        logger.warning(f'Found more than one dataset in known datasets with name {dataset_name} {len(_found_dsc)}. Taking the first one.')
+                    dataset_id = _found_dsc[0].id
                 else:
                     datasets = self.qs.get_datasets(name=dataset_name)
                     if not datasets:
@@ -1025,6 +1104,8 @@ class Cid():
                 print(f'Creating dataset: {dataset_name}')
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
+                    if not dataset_definition:
+                        raise Exception(f'Failed to find dataset {dataset_name}. Check if Datasets section in your resources file has that.')
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
@@ -1154,12 +1235,15 @@ class Cid():
                     datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
                 else: # try to find dataset and get athena database
                     found_datasets = self.qs.get_datasets(name=dataset_name)
+                    logger.debug(f'Related to dataset {dataset_name}: {[ds.id for ds in found_datasets]}')
                     if found_datasets:
                         schemas = list(set(sum([d.schemas for d in found_datasets], [])))
                         datasources = list(set(sum([d.datasources for d in found_datasets], [])))
+                        logger.debug(f'Found following schemas={schemas}, related to dataset with name {dataset_name}')
                 logger.info(f'Found {len(datasources)} Athena DataSources related to the DataSet {dataset_name}')
 
-                if len(schemas) == 1:
+                if not get_parameters().get('athena-database') and len(schemas) == 1 and schemas[0]:
+                    logger.debug(f'Picking the database={schemas[0]}')
                     self.athena.DatabaseName = schemas[0]
                 # else user will be suggested to choose database anyway
 
@@ -1237,6 +1321,15 @@ class Cid():
             'cur_table_name': self.cur.tableName if cur_required else None
         }
 
+        logger.debug(columns_tpl)
+
+        columns_tpl = self.get_template_parameters(
+            dataset_definition.get('parameters', dict()),
+            f'dataset-{dataset_id}-',
+            columns_tpl,
+        )
+        logger.debug(columns_tpl)
+
         compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
@@ -1307,10 +1400,13 @@ class Cid():
             return
 
         # Create a view
-        logger.info(f'Getting view definition')
+        logger.info(f'Getting view definition {view_name}')
         view_definition = self.get_definition("view", name=view_name)
         if not view_definition and view_name in self.athena._metadata.keys():
             logger.info(f"Definition is unavailable but view exists: {view_name}, skipping")
+            return
+        if not view_definition:
+            logger.info(f"Definition is unavailable {view_name}")
             return
         logger.debug(f'View definition: {view_definition}')
 
@@ -1335,7 +1431,10 @@ class Cid():
                     print(f'Updating table {view_name}')
                     self.glue.create_or_update_table(view_name, view_query)
                 else:
-                    if 'CREATE OR REPLACE' in view_query.upper():
+                    if 'CREATE EXTERNAL TABLE' in view_query.upper():
+                        logger.warning('Cannot recreate table {view_name}')
+
+                    elif 'CREATE OR REPLACE' in view_query.upper():
                         update_view = False
                         while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
                             cid_print(f'Analysing view {view_name}')
@@ -1374,18 +1473,28 @@ class Cid():
                             self.athena.execute_query(view_query)
                     else:
                         print(f'View "{view_name}" is not compatible with update. Skipping.')
-                assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
-                logger.info(f'View "{view_name}" updated')
+                if 'CREATE OR REPLACE VIEW' in view_query.upper() or 'CREATE VIEW' in view_query.upper():
+                    logger.debug('Start waiting')
+                    assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
+                    logger.info(f'View "{view_name}" updated')
             else:
                 return
         else: # No found -> creation
             logger.info(f'Creating view: "{view_name}"')
             if view_definition.get('type') == 'Glue_Table':
                 self.glue.create_or_update_table(view_name, view_query)
+                logger.info(f'Table "{view_name}" created')
+            elif 'CREATE EXTERNAL TABLE' in view_query.upper():
+                print(f'Creating table: "{view_name}"')
+                try:
+                    self.athena.execute_query(view_query)
+                except CidCritical as exc:
+                    logger.exception(exc)
+                    pass
             else:
                 self.athena.execute_query(view_query)
-            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
-            logger.info(f'View "{view_name}" created')
+                assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+                logger.info(f'View "{view_name}" created')
 
 
     def get_view_query(self, view_name: str) -> str:
@@ -1406,7 +1515,11 @@ class Cid():
             raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        template = Template(self.get_data_from_definition('view', view_definition)) 
+        data = self.get_data_from_definition('view', view_definition)
+        if isinstance(data, dict):
+            template = Template(json.dumps(data))
+        else:
+            template = Template(data)
 
         # Prepare template parameters
         columns_tpl = {
@@ -1415,24 +1528,14 @@ class Cid():
             'athena_database_name': self.athena.DatabaseName,
         }
 
-        for k, v in view_definition.get('parameters', dict()).items():
-            if isinstance(v, str):
-                param = {k:v}
-            elif isinstance(v, dict):
-                value = v.get('value')
-                while not value:
-                    value = get_parameter(
-                        param_name=f'view-{view_name}-{k}',
-                        message=f"Required parameter: {k} ({v.get('description')})",
-                        default=v.get('default'),
-                        template_variables=dict(account_id=self.base.account_id),
-                    )
-                param = {k:value}
-            else:
-                raise CidCritical(f'Unknown parameter type for "{k}". Must be a string or a dict with value or with default key')
-            # Add parameter
-            columns_tpl.update(param)
-        # Compile template
+        columns_tpl = self.get_template_parameters(
+            view_definition.get('parameters', dict()),
+            f'view-{view_name}-',
+            columns_tpl,
+        )
+        logger.debug(f"Rendering template for {view_name}")
+        logger.debug(str(columns_tpl))
+        columns_tpl = {key: str(value) for key, value in columns_tpl.items()}
         compiled_query = template.safe_substitute(columns_tpl)
 
         return compiled_query
