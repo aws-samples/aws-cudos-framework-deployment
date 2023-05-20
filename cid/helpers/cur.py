@@ -3,7 +3,7 @@ import logging
 
 from cid.base import CidBase
 from cid.helpers import Athena
-from cid.utils import get_parameter
+from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
@@ -112,37 +112,58 @@ class CUR(CidBase):
             logger.info(f'Savings Plans: {self._hasSavingsPlans}')
         return self._hasSavingsPlans
 
+
+    def table_is_cur(self, table: dict=None, name: str=None) -> bool:
+        """ return True if table metadata fits CUR definition. """
+        try:
+            table = table or self.athena.get_table_metadata(name)
+        except Exception as exc:
+            return False
+
+        if table.get('TableType') != 'EXTERNAL_TABLE':
+            return False
+        columns = [cols.get('Name') for cols in table.get('Columns')]
+        if not all([cols in columns for cols in self.curRequiredColumns]):
+            return False
+        return True
+
     @property
     def metadata(self) -> dict:
-        if not self._metadata:
-            try:
-                # Look other tables
-                tables = self.athena.list_table_metadata()
-                # Filter tables with type = 'EXTERNAL_TABLE'
-                tables = [v for v in tables if v.get('TableType') == 'EXTERNAL_TABLE']
-                # Filter tables having CUR structure
-                for table in tables.copy():
-                    columns = [c.get('Name') for c in table.get('Columns')]                    
-                    if not all([c in columns for c in self.curRequiredColumns]):
-                        tables.remove(table)
-                # Sort tables by name (desc)
-                tables.sort(key=lambda x: x.get('Name'), reverse=True)
-                if len(tables) == 1:
-                    self._metadata = tables[0]
-                    self._tableName = self._metadata.get('Name')
-                elif len(tables) > 1:
-                    self._tableName =  get_parameter(
-                        param_name='cur-table-name',
-                        message="Multiple CUR tables found, please select one",
-                        choices=[v.get('Name') for v in tables],
-                    )
-                    self._metadata = self.athena.get_table_metadata(self._tableName)
-            except Exception as e:
-                # For other errors dump the message
-                print(json.dumps(e, indent=4, sort_keys=True, default=str))
+        if self._metadata:
+            return self._metadata
 
+        if get_parameters().get('cur-table-name'):
+            self._tableName = get_parameters().get('cur-table-name')
+            self._metadata = self.athena.get_table_metadata(self._tableName)
+            if not self.table_is_cur(table=self._metadata):
+                raise CidCritical(f'Table {self._tableName} does not looks like CUR. Please check that the table exist and have fields: {self.curRequiredColumns}.')
+        else:
+            # Look all tables and filter ones with CUR fields
+            tables = [
+                tab for tab in self.athena.list_table_metadata()
+                if self.table_is_cur(table=tab)
+            ]
+
+            if len(tables) == 0:
+                logger.error('CUR table not found.')
+            elif len(tables) == 1:
+                self._metadata = tables[0]
+                self._tableName = self._metadata.get('Name')
+                logger.info(f'1 CUR table found: {self._tableName}')
+            elif len(tables) > 1:
+                self._tableName =  get_parameter(
+                    param_name='cur-table-name',
+                    message="Multiple CUR tables found, please select one",
+                    choices=sorted([v.get('Name') for v in tables], reverse=True),
+                )
+                self._metadata = self.athena.get_table_metadata(self._tableName)
         return self._metadata
 
     @property
     def fields(self) -> list:
         return [v.get('Name') for v in self.metadata.get('Columns', list())]
+
+    @property
+    def tag_and_cost_category_fields(self) -> list:
+        """ Returns all tags and cost category fields. """
+        return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]

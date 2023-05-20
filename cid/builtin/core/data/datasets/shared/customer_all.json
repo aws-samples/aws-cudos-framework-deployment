@@ -30,14 +30,6 @@
             "Type": "STRING"
           },
           {
-            "Name": "resource_tags_aws_ec2spot_fleet_request_id",
-            "Type": "STRING"
-          },
-          {
-            "Name": "resource_tags_user_application_department",
-            "Type": "STRING"
-          },
-          {
             "Name": "year",
             "Type": "STRING"
           },
@@ -59,10 +51,6 @@
           },
           {
             "Name": "product_storage",
-            "Type": "STRING"
-          },
-          {
-            "Name": "resource_tags_user_workload_type",
             "Type": "STRING"
           },
           {
@@ -94,10 +82,6 @@
             "Type": "STRING"
           },
           {
-            "Name": "resource_tags_user_name",
-            "Type": "STRING"
-          },
-          {
             "Name": "savings_plan_used_commitment",
             "Type": "DECIMAL"
           },
@@ -122,10 +106,6 @@
             "Type": "STRING"
           },
           {
-            "Name": "resource_tags_user_workload",
-            "Type": "STRING"
-          },
-          {
             "Name": "product_directory_type_description",
             "Type": "STRING"
           },
@@ -143,10 +123,6 @@
           },
           {
             "Name": "product_memory",
-            "Type": "STRING"
-          },
-          {
-            "Name": "resource_tags_aws_created_by",
             "Type": "STRING"
           },
           {
@@ -195,10 +171,6 @@
           },
           {
             "Name": "product_resource_type",
-            "Type": "STRING"
-          },
-          {
-            "Name": "resource_tags_user_application_cost_center",
             "Type": "STRING"
           },
           {
@@ -279,10 +251,6 @@
           },
           {
             "Name": "product_software_included",
-            "Type": "STRING"
-          },
-          {
-            "Name": "resource_tags_user_application",
             "Type": "STRING"
           },
           {
@@ -382,10 +350,6 @@
             "Type": "STRING"
           },
           {
-            "Name": "resource_tags_user_department",
-            "Type": "STRING"
-          },
-          {
             "Name": "line_item_currency_code",
             "Type": "STRING"
           },
@@ -407,14 +371,6 @@
           },
           {
             "Name": "reservation_end_time",
-            "Type": "STRING"
-          },
-          {
-            "Name": "cost_category_demo",
-            "Type": "STRING"
-          },
-          {
-            "Name": "resource_tags_user_owner",
             "Type": "STRING"
           },
           {
@@ -440,10 +396,6 @@
           {
             "Name": "reservation_unused_quantity",
             "Type": "DECIMAL"
-          },
-          {
-            "Name": "resource_tags_aws_autoscaling_group_name",
-            "Type": "STRING"
           },
           {
             "Name": "product_granularity",
@@ -526,10 +478,6 @@
             "Type": "DECIMAL"
           },
           {
-            "Name": "resource_tags_user_environment",
-            "Type": "STRING"
-          },
-          {
             "Name": "product_gpu_memory",
             "Type": "STRING"
           },
@@ -594,10 +542,6 @@
             "Type": "STRING"
           },
           {
-            "Name": "resource_tags_user_application_owner",
-            "Type": "STRING"
-          },
-          {
             "Name": "product_compute_family",
             "Type": "STRING"
           },
@@ -612,10 +556,6 @@
           {
             "Name": "reservation_unused_normalized_unit_quantity",
             "Type": "DECIMAL"
-          },
-          {
-            "Name": "cost_category_env",
-            "Type": "STRING"
           },
           {
             "Name": "reservation_unused_recurring_fee",
@@ -698,19 +638,11 @@
             "Type": "DECIMAL"
           },
           {
-            "Name": "resource_tags_user_cost_center",
-            "Type": "STRING"
-          },
-          {
             "Name": "bill_bill_type",
             "Type": "STRING"
           },
           {
             "Name": "product_output_mode",
-            "Type": "STRING"
-          },
-          {
-            "Name": "cost_category_team",
             "Type": "STRING"
           },
           {
@@ -886,10 +818,6 @@
             "Type": "STRING"
           },
           {
-            "Name": "resource_tags_user_application_name",
-            "Type": "STRING"
-          },
-          {
             "Name": "product_free_query_types",
             "Type": "STRING"
           },
@@ -1035,15 +963,6 @@
               "reservation_unused_quantity",
               "reservation_unused_recurring_fee",
               "reservation_upfront_value",
-              "resource_tags_aws_autoscaling_group_name",
-              "resource_tags_aws_created_by",
-              "resource_tags_aws_ec2spot_fleet_request_id",
-              "resource_tags_user_cost_center",
-              "resource_tags_user_department",
-              "resource_tags_user_environment",
-              "resource_tags_user_name",
-              "resource_tags_user_workload",
-              "resource_tags_user_workload_type",
               "product_alarm_type",
               "product_compute_family",
               "product_compute_type",
@@ -1115,20 +1034,11 @@
               "product_type",
               "product_uservolume",
               "pricing_currency",
-              "resource_tags_user_application_department",
-              "resource_tags_user_application",
-              "cost_category_demo",
-              "cost_category_env",
-              "cost_category_team",
               "product_cache_engine",
               "product_describes",
               "product_gets",
               "product_ops_items",
               "product_updates",
-              "resource_tags_user_owner",
-              "resource_tags_user_application_cost_center",
-              "resource_tags_user_application_name",
-              "resource_tags_user_application_owner",
               "product_instances",
               "product_request_description",
               "product_request_type",
