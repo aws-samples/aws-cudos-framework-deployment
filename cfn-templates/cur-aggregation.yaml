@@ -52,7 +52,7 @@ Parameters:
 
   SourceAccountIds:
     Type: String
-    AllowedPattern: "^((\d{12})\,?)*$"
+    AllowedPattern: "^((\\d{12})\\,?)*$"
     Default: ''
     Description: "A comma separated list of all Source accounts that will replicate CUR Data. Ex:  12345678912,98745612312,...."
 
