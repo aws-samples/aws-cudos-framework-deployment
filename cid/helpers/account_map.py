@@ -9,7 +9,7 @@ from string import Template
 from cid.base import CidBase
 from cid.helpers import Athena, CUR
 from cid.utils import get_parameter
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ class AccountMap(CidBase):
         try:
             if self.accounts:
                 logger.info('Account information found, skipping autodiscovery')
-                raise Exception
+                raise CidError('Account information found, skipping autodiscovery')
             if not self._AthenaTableName:
                 # Autodiscover
                 print('\tautodiscovering...', end='')
@@ -105,7 +105,7 @@ class AccountMap(CidBase):
                 if not len(tables):
                     logger.info('Metadata table not found')
                     print('account metadata not detected')
-                    raise Exception
+                    raise CidError('account metadata not detected')
                 table = next(iter(tables))
                 logger.info(f"Detected metadata table {table.get('Name')}")
                 accounts = table.get('Columns')
@@ -141,7 +141,7 @@ class AccountMap(CidBase):
             else:
                 logger.info('Metadata table not found')
                 print('account metadata not detected')
-                raise Exception
+                raise CidError('Metadata table not found')
         except:
             # TODO: Handle exceptions
             compiled_query = self.create_account_mapping_sql(name)

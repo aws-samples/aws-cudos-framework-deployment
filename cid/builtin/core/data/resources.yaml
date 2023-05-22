@@ -89,7 +89,6 @@ datasets:
   summary_view:
     File: cid/summary_view.json
     dependsOn:
-      cur: true
       views:
         - summary_view
         - ri_sp_mapping

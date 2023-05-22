@@ -6,6 +6,8 @@ import platform
 import requests
 from functools import lru_cache as cache
 from collections.abc import Iterable
+import inspect
+from typing import Any, Dict
 
 from boto3.session import Session
 import questionary
@@ -132,6 +134,7 @@ def cid_print(value, **kwargs) -> None:
     colors = {
         'PURPLE': '\033[95m',
         'CYAN': '\033[96m',
+        'GREY': '\033[90m',
         'DARKCYAN': '\033[36m',
         'BLUE': '\033[94m',
         'GREEN': '\033[92m',
@@ -255,3 +258,11 @@ def unset_parameter(param_name):
         value = params[param_name]
         del params[param_name]
         logger.info(f'Cleared {param_name}={value}, from parameters')
+
+
+def inject_variables(source: str, variables: Dict[str, Any]) -> str:
+    """Inject variables into string"""
+    for key, value in variables.items():
+        source = source.replace(key, value)
+
+    return source

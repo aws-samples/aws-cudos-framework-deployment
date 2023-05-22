@@ -100,7 +100,7 @@ class IAM(CidBase):
                 role = self.client.create_role(
                     RoleName=role_name,
                     Path='/cid/',
-                    AssumeRolePolicyDocument=assume_doc.render(),
+                    AssumeRolePolicyDocument=assume_doc.render()
                 )['Role']
                 logger.debug(f'Created role: {role}')
             except self.client.exceptions.EntityAlreadyExistsException as exc:
@@ -177,6 +177,27 @@ class IAM(CidBase):
             self.client.delete_role(RoleName=role_name)
         except self.client.exceptions.DeleteConflictException:
             logger.debug(f'Role  {role_name!r} is still used. Skipping')
+
+    def create_role(self, role_name: str, assume_role_policy_document: str) -> str:
+        """Create IAM role with a specified name and role policy document for assuming the role"""
+        response = self.client.create_role(RoleName=role_name, AssumeRolePolicyDocument=assume_role_policy_document, Tags=self.default_tag_list)
+        return response["Role"]["Arn"]
+
+    def get_role_arn(self, role_name: str) -> str:
+        """Get the role's ARN based on the role's name"""
+        response = self.client.get_role(RoleName=role_name)
+        return response["Role"]["Arn"]
+
+    def attach_policy(self, role_name: str, policy_arn: str) -> None:
+        """Attach an IAM policy to an IAM role"""
+        self.client.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
+
+    def create_policy_from_json(self, policy_name: str, policy_document: str) -> str:
+        """Create an IAM policy from a json document and returns its ARN"""
+        response = self.client.create_policy(PolicyName=policy_name, PolicyDocument=policy_document, Tags=self.default_tag_list)
+
+        return response["Policy"]["Arn"]
+
 
 def merge_policy_docs_on_resource_level(old_doc, new_doc):
     """ Returs a merged doc with statement from 2 IAM policy documents.

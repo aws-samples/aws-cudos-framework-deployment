@@ -1,5 +1,12 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.77.0
+
+* OPTICS Explorer: Added 'Forecast Spend' visual allowing to forecast AWS spend by any dimension available in top level filters e.g. by particular Service, Operation, Region, Account etc.
+* Amazon S3: Fix for storage calculation in 'Daily Storage Bucket Explorer' visual
+* Data Transfer: Fix to exclude Direct Connect hourly charges from data transfer amount calculations
+* Storage: Fix to filter out empty values in 'TOP 20 EBS Volumes Previous Month' and 'TOP 20 EBS Snapshots Previous Month'
+
 ## CUDOS - 4.76.1
 
 * Storage : Fix for 'EBS Storage Unit Cost' visual not showing data

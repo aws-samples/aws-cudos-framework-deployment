@@ -1,4 +1,6 @@
 import logging
+from typing import Dict, List, Optional
+from functools import lru_cache as cache
 
 from boto3.session import Session
 from cid.exceptions import CidCritical
@@ -50,6 +52,16 @@ class CidBase():
     @session.setter
     def session(self, value):
         self._session = value
+        
+    @property
+    @cache(maxsize=None)
+    def aws_partition(self) -> Optional[str]:
+        for partition in self._session.get_available_partitions():
+            for region in self._session.get_available_regions('quicksight', partition):
+                if region == self.region:
+                    return partition
+        
+        return None
 
     @property
     def username(self) -> str:
@@ -61,3 +73,18 @@ class CidBase():
             else:
                 return '/'.join(arn.split('/')[1:])
         return self._user.get('UserName')
+    
+    @property
+    def default_tag_list(self) -> List[Dict[str, str]]:
+        return [
+            {
+                'Key': 'CreatedBy',
+                'Value': 'cid'
+            },
+        ]
+    
+    @property
+    def default_tag_dict(self) -> Dict[str, str]:
+        return {
+            x['Key']: x['Value'] for x in self.default_tag_list
+        }
