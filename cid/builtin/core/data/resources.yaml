@@ -13,6 +13,9 @@ dashboards:
         - compute_savings_plan_eligible_spend
         - s3_view
         - customer_all
+    versions:
+      minTemplateVersion: 189
+      minTemplateDescription: "v4.75.0"
 
   CID:
     name: Cost Intelligence Dashboard
@@ -24,6 +27,9 @@ dashboards:
         - ec2_running_cost
         - compute_savings_plan_eligible_spend
         - s3_view
+    versions:
+      minTemplateVersion: 3
+      minTemplateDescription: "v3.1.0"
 
   KPI:
     name: KPI Dashboard
@@ -37,6 +43,9 @@ dashboards:
         - kpi_s3_storage_all
         - kpi_tracker
         - summary_view
+    versions:
+      minTemplateVersion: 9
+      minTemplateDescription: "v1.2.1"
 
   TAO:
     name: Trusted Advisor Organizational View
@@ -45,6 +54,9 @@ dashboards:
     dependsOn:
       datasets:
         - ta-organizational-view
+    versions:
+      minTemplateVersion: 13
+      minTemplateDescription: "v1.4.0"
 
   Trends:
     name: Trends Dashboard
@@ -55,6 +67,9 @@ dashboards:
         - monthly-bill-by-account
         - monthly-anomaly-detection
         - daily-anomaly-detection
+    versions:
+      minTemplateVersion: 1
+      minTemplateDescription: "v5.0.0"
 
   Compute Optimizer:
     name: Compute Optimizer Dashboard
@@ -63,6 +78,9 @@ dashboards:
     dependsOn:
       datasets:
         - compute_optimizer_all_options
+    versions:
+      minTemplateVersion: 3
+      minTemplateDescription: "v1.1.1"
 
 
 # QuickSight DataSets definitions
@@ -133,7 +151,7 @@ datasets:
     File: tao/dataset.json
     dependsOn:
       views:
-        - ta_organizational_view_reports
+        - ta_org_view
 
   # Trends
   daily-anomaly-detection:
@@ -284,6 +302,11 @@ views:
       s3FolderPath:
         default: 's3://costoptimizationdata{account_id}/trusted-advisor/trusted-advisor-data'
         description: Trusted Advisor Organization View report S3 path
+  ta_org_view:
+    File: tao/ta_org_view.sql
+    dependsOn:
+      views:
+        - ta_organizational_view_reports
 
   # Compute Optimiser (CO)
   compute_optimizer_ec2_instance_lines:

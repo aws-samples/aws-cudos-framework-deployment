@@ -1,7 +1,9 @@
 import os
 import sys
+import inspect
 import logging
 import platform
+import requests
 from functools import lru_cache as cache
 from collections.abc import Iterable
 import inspect
@@ -18,6 +20,18 @@ logger = logging.getLogger(__name__)
 params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
+PYPI_URL = "https://pypi.org/pypi/cid-cmd/json"
+
+def get_latest_tool_version():
+    res_json = {}
+    try:
+        r = requests.get(PYPI_URL,timeout=3)
+        r.raise_for_status()
+        res_json = r.json()
+    except requests.exceptions as exec:
+        logger.debug(exec, exc_info=True)
+    finally:
+        return res_json.get("info", {}).get("version", "UNDEFINED")
 
 @cache(maxsize=None)
 def isatty():
@@ -108,6 +122,41 @@ def get_boto_client(service_name, **kwargs):
     except Exception as e:
         logger.debug(e, exc_info=True)
         raise
+
+
+def cid_print(value, **kwargs) -> None:
+    ''' Print AND log
+    ex:
+        violets, roses = 'violets', 'roses'
+        cid_print(f'{roses} are <BOLD><RED>red<END>, {violets} are <BLUE><UNDERLINE>blue<END>')
+
+    '''
+    colors = {
+        'PURPLE': '\033[95m',
+        'CYAN': '\033[96m',
+        'DARKCYAN': '\033[36m',
+        'BLUE': '\033[94m',
+        'GREEN': '\033[92m',
+        'YELLOW': '\033[93m',
+        'RED': '\033[91m',
+        'BOLD': '\033[1m',
+        'UNDERLINE': '\033[4m',
+        'END': '\033[0m',
+    }
+
+    msg = str(value)
+    log_msg = str(msg)
+    for col, val in colors.items():
+        msg = msg.replace(f'<{col}>', val)
+        log_msg = log_msg.replace(f'<{col}>', '')
+    try:
+        mod = inspect.getmodule(inspect.stack()[1][0])
+        name = mod.__name__ if mod else __name__
+        logging.getLogger(name).debug(log_msg)
+    except Exception as exc:
+        logger.debug('cid_print: {exc}')
+    print(msg, **kwargs)
+
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():

@@ -3,11 +3,12 @@
 [![PyPI version](https://badge.fury.io/py/cid-cmd.svg)](https://badge.fury.io/py/cid-cmd)
 
 ## Welcome to Cloud Intelligence Dashboards (CUDOS Framework) automation repository
-This repository contains CloudFormation templates and Command Line tool (cid-cmd) for managing various dashboards provided in AWS Well Architected LAB [Cloud Intelligence Dashboards](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/).
+This repository contains CloudFormation templates, Terraform modules, and a Command Line tool (cid-cmd) for managing various dashboards provided in AWS Well Architected LAB [Cloud Intelligence Dashboards](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/).
 
 There are several ways we can manage dashboards:
-1. CloudFormation Template (using cid-cmd tool in lambda) 
-2. Using cid-cmd tool from command line
+1. [CloudFormation Template](./cfn-templates/cid-cfn.yml) (using cid-cmd tool in lambda)
+2. [Terraform module](./terraform-modules/cid-dashboards/README.md) (wrapper around CloudFormation Template)
+3. Using cid-cmd tool from command line
 
 We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home).
 
@@ -64,6 +65,8 @@ Update dashboard and all dependenies (Datasets and Athena View). WARNING: this w
 cid-cmd update --force --recursive
 ```
 #### Show Dashboard status
+Show dashboards status
+
 ```bash
 cid-cmd status
 ```
@@ -74,9 +77,15 @@ cid-cmd share
 ```
 
 #### Delete Dashboard and all dependencies unused by other
+Delete Dashboards and all dependencies unused by other CID-managed dashboards.(including QuickSight datasets, Athena views and tables)
 ```bash
 cid-cmd delete
 ```
+#### Delete Command Options:
+```
+ --dashboard-id TEXT QuickSight dashboard id 
+ --athena-database TEXT Athena database
+ ```
 
 #### Export
 The command `export` lets you download or share a customized dashboard with another AWS Account. It takes the QuickSight Analysis as an input and generates all the assets needed to deploy your Analysis into another AWS Account. This command will generate a yaml file with a description of the Dashboard and all required Datasets. Also this command generates a QuickSight Template in the current AWS Account that can be used for Dashboard deployment in other accounts. The resource file can be used with all other cid commands. Both accounts must have relevant Athena Views and Tables.
@@ -96,6 +105,13 @@ cid-cmd deploy --resources ./mydashboard.yaml
 cid-cmd --help
 ```
 
+#### CSV to Athena View
+Generate and SQL file for Athena View for CSV file
+
+```
+cid-cmd csv2view --input my_mapping.csv --name my_mapping
+```
+This command generates a SQL file that you can execute. Please mind [Athena Service Limit for Query Size](https://docs.aws.amazon.com/athena/latest/ug/service-limits.html#service-limits-query-string-length).
 
 ## Troubleshooting 
 

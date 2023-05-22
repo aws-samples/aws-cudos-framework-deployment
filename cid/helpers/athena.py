@@ -17,7 +17,7 @@ class Athena(CidBase):
     defaults = {
         'CatalogName': 'AwsDataCatalog',
         'DatabaseName': 'customer_cur_data',
-        'WorkGroup': 'primary'
+        'WorkGroup': 'CID'
     }
     _CatalogName = None
     _DatabaseName = None
@@ -115,6 +115,9 @@ class Athena(CidBase):
     def WorkGroup(self) -> str:
         """ Select AWS Athena workgroup """
         if not self._WorkGroup:
+            if get_parameters().get('athena-workgroup'):
+                self.WorkGroup = get_parameters().get('athena-workgroup')
+                return self._WorkGroup
             logger.info('Selecting Athena workgroup...')
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
