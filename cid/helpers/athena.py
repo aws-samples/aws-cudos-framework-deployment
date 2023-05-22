@@ -451,3 +451,29 @@ class Athena(CidBase):
             _recursively_process_view(view)
 
         return all_views
+    
+    def create_workgroup(self, workgroup_name: str, s3_bucket_name: str) -> None:
+        """Crete a new Athena Workgroup"""
+        try:
+            self.client.create_work_group(
+                    Name=workgroup_name,
+                    Configuration={
+                        'ResultConfiguration': {
+                            'OutputLocation': f's3://{s3_bucket_name}',
+                            'EncryptionConfiguration': {
+                                'EncryptionOption': 'SSE_S3',
+                            },
+                        },
+                        'EnforceWorkGroupConfiguration': True,
+                    }
+            )
+        except self.client.exceptions.InvalidRequestException as ex:
+            if ex.response.get('Message') == 'WorkGroup is already created':
+                logger.info(f'Work group {workgroup_name} already exists')
+                raise CidError() from ex
+            else:
+                raise
+        except Exception as ex:
+            logger.debug(ex, exc_info=True)
+            logger.info(f'Work group {workgroup_name} cannot be created: {ex}')
+            raise CidError() from ex
