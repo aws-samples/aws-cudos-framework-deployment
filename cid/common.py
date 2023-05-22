@@ -1287,8 +1287,9 @@ class Cid():
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")} {compiled_dataset.get("Name")}={found_dataset.name} ')
         else:
-            self.qs.create_dataset(compiled_dataset)
-
+            dataset_id = self.qs.create_dataset(compiled_dataset)
+            if dataset_id is not None and len(dataset_id) > 0 and compiled_dataset.get("ImportMode") == "SPICE":
+                    self.qs.ensure_dataset_refresh_schedule(dataset_id, "cid")
         return True
 
 
