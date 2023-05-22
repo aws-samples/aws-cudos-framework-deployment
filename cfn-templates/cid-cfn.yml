@@ -25,6 +25,7 @@ Metadata:
       - Label:
           default: 'Technical Parameters. Please do not change.'
         Parameters:
+          - LakeFormationEnabled
           - AthenaWorkgroup
           - AthenaQueryResultsBucket
           - DatabaseName
@@ -40,6 +41,8 @@ Metadata:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
       PrerequisitesQuickSightPermissions:
         default: "I understand that I need to manually give Permission to QuickSight to access CUR bucket and Query results bucket. Then manually refresh datasets after deploying this CFN."
+      LakeFormationEnabled:
+        default: "I have LakeFormation permission model in place for this account & my cfn deployment credentials have administrative rights on LakeFormation"
       QuickSightUser:
         default: "User name of QuickSight user (as displayed in QuickSight admin panel). Dashboards created by this template will be owned by this user."
       CURBucketPath:
@@ -128,7 +131,7 @@ Parameters:
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.12
+    Default: 0.2.13
     Description: A version of CID package
   Suffix:
     Type: String
@@ -161,7 +164,7 @@ Parameters:
     AllowedValues: ["yes", "no"]
   OptimizationDataCollectionBucketPath:
     Type: String
-    Description: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /optics-data-collector folder. You can leave the variable {account_id} in place, it will be replaced by current account ID automatically.
+    Description: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /trusted-advisor and/or /compute-optimizer folders. You can leave the variable {account_id} in place, it will be replaced by current account ID automatically.
     Default: "s3://costoptimizationdata{account_id}"
   LambdaLayerBucketPrefix:
     Type: String
@@ -175,7 +178,11 @@ Parameters:
     Type: String
     Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encypted with KMS. Also you can set it to '*'."
     Default: "*"
-
+  LakeFormationEnabled:
+    Type: String
+    Description: Choose 'yes' if Lake Formation permission model is in place for the account
+    Default: "no"
+    AllowedValues: ["yes", "no"]
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
@@ -210,7 +217,17 @@ Conditions:
       - !Condition NeedDataBucketsKms
       - !Condition NeedCURTable
   NeedDatasource: !Not [ !Equals [ !Ref "AWS::Region", "eu-west-3" ] ] # In eu-west-3 CFN QS Dataset resource is not availble yet.
-
+  NeedLakeFormationEnabled:
+    Fn::And:
+      - !Equals [ !Ref LakeFormationEnabled, "yes" ]
+      - Fn::Or:
+        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+  NeedLakeFormationCrawlerPermision:
+    Fn::And:
+      - !Equals [ !Ref LakeFormationEnabled, "yes" ]
+      - !Condition NeedCURTable
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -243,6 +260,10 @@ Resources:
                 Action: quicksight:ListDatasets
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*'
+              - Effect: Allow
+                Action: quicksight:ListIngestions
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/ingestion/*'
 
   # Currently QS has no api for managing updates, so we need to set up a scheduled lambda.
   # Once QS will provide the API for scheduling this will be removed.
@@ -266,6 +287,8 @@ Resources:
         ZipFile: |
           import os
           from datetime import datetime
+          from datetime import timedelta
+          from datetime import timezone
           import boto3
 
           ## List of DataSets can be found in cid-cmd:
@@ -298,6 +321,25 @@ Resources:
                   for dataset in page['DataSetSummaries']:
                       name = dataset['Name']
                       if dataset['ImportMode'] != 'SPICE' or name not in DATASETS_TO_REFRESH:
+                          continue
+                      scheduled_ingestion = None
+                      stop_processing = False
+                      for ingestions_page in quicksight.get_paginator('list_ingestions').paginate(AwsAccountId=account_id, DataSetId=dataset['DataSetId']):
+                          for ingestion in ingestions_page['Ingestions']:
+                              time_since_creation = datetime.now(timezone.utc) - ingestion['CreatedTime']
+                              if time_since_creation <= timedelta(days = 1, hours = 1):
+                                  if ingestion['RequestSource'] == 'SCHEDULED':
+                                      scheduled_ingestion = ingestion
+                                      stop_processing = True
+                              else:
+                                  stop_processing = True
+                              if stop_processing:
+                                  break
+                          if stop_processing:
+                              break
+                      if scheduled_ingestion is not None:
+                          print(f"INFO: Dataset {name} has a scheduled ingestion within the last 24 hours. Skipping manual refresh.")
+                          print('DEBUG: scheduled_ingestion=', scheduled_ingestion)
                           continue
                       print(f"INFO: Refreshing dataset {name}")
                       res = quicksight.create_ingestion(
@@ -875,8 +917,14 @@ Resources:
                   - 'glue:ImportCatalogToGlue'
                 Resource:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${ProcessedCURPath.Folder}
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${ProcessedCURPath.Folder}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/${ProcessedCURPath.Folder}
               - Effect: Allow
                 Action:
                   - 's3:GetObject'
@@ -1018,6 +1066,89 @@ Resources:
                   - athena:ListWorkGroups
                   - athena:GetDatabase
                 Resource: '*'  # This is needed to allow Autodetection in CID-CMD
+
+
+  DataLakeSettingsCidExecRolePerm:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabled
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt CidExecRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref "AWS::AccountId"
+          Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        
+  DataLakeSettingsCidExecRolePermTable:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabled
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt CidExecRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        TableResource:
+          CatalogId: !Ref "AWS::AccountId"
+          DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          TableWildcard: {}
+
+  DataLakeSettingsCidCrawlerRolePerm:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationCrawlerPermision
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt CidCURCrawlerRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref "AWS::AccountId"
+          Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+
+  DataLakeSettingsCidCrawlerRolePermTable:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationCrawlerPermision
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt CidCURCrawlerRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        TableResource:
+          CatalogId: !Ref "AWS::AccountId"
+          DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          TableWildcard: {}
+
+  DataLakeSettingQuickSightAdminUserPerm:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabled
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+      Permissions:
+        - ALL
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref "AWS::AccountId"
+          Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+
+  DataLakeSettingQuickSightAdminUserPermTable:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabled
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+      Permissions:
+        - ALL
+      Resource:
+        TableResource:
+          CatalogId: !Ref "AWS::AccountId"
+          DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          TableWildcard: {}
+
 
   KmsPoliciyForCidExecRole:
     Type: AWS::IAM::Policy

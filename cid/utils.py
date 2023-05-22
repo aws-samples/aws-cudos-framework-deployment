@@ -134,6 +134,7 @@ def cid_print(value, **kwargs) -> None:
     colors = {
         'PURPLE': '\033[95m',
         'CYAN': '\033[96m',
+        'GREY': '\033[90m',
         'DARKCYAN': '\033[36m',
         'BLUE': '\033[94m',
         'GREEN': '\033[92m',

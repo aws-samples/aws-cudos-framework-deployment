@@ -1,13 +1,16 @@
-from io import StringIO
+import re
+import csv
 import json
+import time
+import uuid
 import logging
 from string import Template
-import time, csv
-
+from io import StringIO
 from pkg_resources import resource_string
 
 from cid.base import CidBase
-from cid.utils import get_parameter, get_parameters
+from cid.utils import get_parameter, get_parameters, cid_print
+from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
@@ -22,7 +25,6 @@ class Athena(CidBase):
     _CatalogName = None
     _DatabaseName = None
     _WorkGroup = None
-    ahq_queries = None
     _metadata = dict()
     _resources = dict()
     _client = None
@@ -65,46 +67,48 @@ class Athena(CidBase):
     @property
     def DatabaseName(self) -> str:
         """ Check if Athena database exist """
+        if self._DatabaseName: return self._DatabaseName
 
-        if not self._DatabaseName:
-            if get_parameters().get('athena-database'):
-                self._DatabaseName = get_parameters().get('athena-database')
-                try:
-                    if not self.get_database(self._DatabaseName):
-                        raise CidCritical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
-                except Exception as exc:
-                    if 'AccessDeniedException' in str(exc):
-                        logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
-                        return self._DatabaseName
-                    raise
-            # Get AWS Athena databases
-            athena_databases = self.list_databases()
-            if not len(athena_databases):
-                self._status = 'AWS Athena databases not found'
-                raise CidCritical(self._status)
-            if len(athena_databases) == 1:
-                self._DatabaseName = athena_databases.pop().get('Name')
-            elif len(athena_databases) > 1:
-                # Remove empty databases from the list
-                for d in athena_databases:
-                    tables = self.list_table_metadata(
-                        DatabaseName=d.get('Name'),
-                        max_items=1000, # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
-                    )
-                    if not len(tables):
-                        athena_databases.remove(d)
-                # Select default database if present
-                default_database = [d for d in athena_databases if d['Name'] == self.defaults.get('DatabaseName')]
-                if len(default_database):
-                    self._DatabaseName = default_database.pop().get('Name')
-                else:
-                    # Ask user
-                    self._DatabaseName = get_parameter(
-                        param_name='athena-database',
-                        message="Select AWS Athena database to use",
-                        choices=[d['Name'] for d in athena_databases],
-                    )
-            logger.info(f'Using Athena database: {self._DatabaseName}')
+        if get_parameters().get('athena-database'):
+            self._DatabaseName = get_parameters().get('athena-database')
+            try:
+                if not self.get_database(self._DatabaseName):
+                    raise CidCritical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
+            except Exception as exc:
+                if 'AccessDeniedException' in str(exc):
+                    logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
+                    return self._DatabaseName
+                raise
+        # Get AWS Athena databases
+        athena_databases = self.list_databases()
+        if not len(athena_databases):
+            self._status = 'AWS Athena databases not found'
+            raise CidCritical(self._status)
+        if len(athena_databases) == 1:
+            # Silently choose an existing database
+            self._DatabaseName = athena_databases.pop().get('Name')
+        elif len(athena_databases) > 1:
+            # Remove empty databases from the list
+            for d in athena_databases:
+                tables = self.list_table_metadata(
+                    DatabaseName=d.get('Name'),
+                    max_items=1000, # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
+                )
+                if not len(tables):
+                    athena_databases.remove(d)
+            # Select default database if present
+            default_databases = [d for d in athena_databases if d['Name'] == self.defaults.get('DatabaseName')]
+            if len(default_databases):
+                # Silently choose an existing default database
+                self._DatabaseName = default_databases.pop().get('Name')
+            else:
+                # Ask user
+                self._DatabaseName = get_parameter(
+                    param_name='athena-database',
+                    message="Select AWS Athena database to use",
+                    choices=[d['Name'] for d in athena_databases],
+                )
+        logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
 
     @DatabaseName.setter
@@ -122,16 +126,17 @@ class Athena(CidBase):
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
             if len(workgroups) == 1:
+                # Silently choose the only workgroup that is available
                 self.WorkGroup = workgroups.pop().get('Name')
             elif len(workgroups) > 1:
                 # Select default workgroup if present
-                default_workgroup = next(iter([wg.get('Name') for wg in workgroups if wg['Name'] == self.defaults.get('WorkGroup')]), None)
+                default_workgroup = next(iter([wgr.get('Name') for wgr in workgroups if wgr['Name'] == self.defaults.get('WorkGroup')]), None)
                 if default_workgroup: logger.info(f'Found "{default_workgroup}" as a default workgroup')
                 # Ask user
                 self.WorkGroup = get_parameter(
                     param_name='athena-workgroup',
                     message="Select AWS Athena workgroup to use",
-                    choices=[d['Name'] for d in workgroups],
+                    choices=[wgr['Name'] for wgr in workgroups],
                     default=default_workgroup
                 )
             logger.info(f'Selected workgroup: "{self._WorkGroup}"')
@@ -159,7 +164,7 @@ class Athena(CidBase):
     def get_database(self, DatabaseName: str=None) -> bool:
         """ Check if AWS Datacalog and Athena database exist """
         if not DatabaseName:
-            DatabaseName=self.DatabaseName
+            DatabaseName = self.DatabaseName
         try:
             self.client.get_database(CatalogName=self.CatalogName, DatabaseName=DatabaseName).get('Database')
             return True
@@ -167,7 +172,7 @@ class Athena(CidBase):
             if 'AccessDeniedException' in str(exc):
                 raise
             else:
-                logger.debug(e, exc_info=True)
+                logger.debug(exc, exc_info=True)
                 return False
 
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
@@ -224,8 +229,8 @@ class Athena(CidBase):
         try:
             # Start Athena query
             response = self.client.start_query_execution(
-                QueryString=sql_query, 
-                QueryExecutionContext=execution_context, 
+                QueryString=sql_query,
+                QueryExecutionContext=execution_context,
                 WorkGroup=self.WorkGroup
             )
 
@@ -241,7 +246,6 @@ class Athena(CidBase):
             logger.debug(f'Full query: {sql_query}')
             raise CidCritical(f'Athena query failed: {e}')
 
-
         current_status = query_status['QueryExecution']['Status']['State']
 
         # Poll for the current status of query as long as its not finished
@@ -252,123 +256,42 @@ class Athena(CidBase):
             # Sleep before polling again
             time.sleep(sleep_duration)
 
-        # Return result, either positive or negative
         if (current_status == "SUCCEEDED"):
             return query_id
-        elif not fail:
-            return False
         else:
-            failure_reason = response['QueryExecution']['Status']['StateChangeReason']
-            logger.error(f'Athena query failed: {failure_reason}')
-            logger.info(f'Full query: {sql_query}')
-            raise CidCritical(f'Athena query failed: {failure_reason}')
+            failure_reason = response.get('QueryExecution', {}).get('Status', {}).get('StateChangeReason',repr(response))
+            logger.info(f'Athena query failed: {failure_reason}')
+            logger.debug(f'Full query: {sql_query}')
+            if fail:
+                raise CidCritical(f'Athena query failed: {failure_reason}')
+            else:
+                return False
 
     def get_query_results(self, query_id):
+        """ Get Query Results """
         return self.client.get_query_results(QueryExecutionId=query_id)
-    
-    def get_query_execution(self, query_id):
-        return self.client.get_query_execution(QueryExecutionId=query_id)
 
-    def parse_response_as_list(self, response, include_header=False):
-        data = list()
-
-        # Get results rows, either with or without the header row
-        rows = response['ResultSet']['Rows'] if include_header else response['ResultSet']['Rows'][1:]
-
-        for row in rows:
-            for r in row['Data']:
-                data.append(r['VarCharValue'] if 'VarCharValue' in r else '')
-
-        return data
-
-    def query_results_to_csv(self, query_id, return_header=False):
-        # Get query results
-        response = self.client.get_query_results(QueryExecutionId=query_id)
-
-        # Get results rows, either with or without the header row
-        rows = response['ResultSet']['Rows'] if return_header else response['ResultSet']['Rows'][1:]
-
-        if rows:
-            # Write rows to StringIO in CSV format
-            buf = StringIO()
-            csv_writer = csv.writer(buf, delimiter=',')
-
-            for row in rows:
-                csv_writer.writerow([x['VarCharValue'] if 'VarCharValue' in x else None for x in row['Data']])
-
-            # Strip whitespaces from CSVified string and return it
-            return buf.getvalue().rstrip('\n')
-        else:
-            return None
-
-    def show_columns(self, table_name):
-        sql_query = f'SHOW COLUMNS in {table_name}'
-        query_id = self.execute_query(sql_query=sql_query)
-
-        describe = self.query_results_to_csv(query_id).split('\n')
-
-        # Athena is weird.. Remove whitespaces.
-        result = [elem.rstrip() for elem in describe]
-
+    def parse_response_as_table(self, response, include_header=False):
+        """ Return a query response as a table. """
+        result = []
+        starting_row = 0 if include_header else 1
+        for row in response['ResultSet']['Rows'][starting_row:]:
+            result.append([data.get('VarCharValue', '') for data in row['Data']])
         return result
 
-    def parse_selected_tables(self, month_list):
-        d = {}
-
-        for month in month_list:
-            split = month.split('_')
-
-        payer = split[1]
-        year = split[2][:4]
-        month = split[2][4:]
-
-        if payer in d:
-            d[payer].append((year, month))
-        else:
-            d[payer] = list()
-            d[payer].append((year, month))
-        
-        return d
-
-    # AHQ functions
-    def execute_ahq(self, query_id, **kwargs) -> list:
-        """ Execute Athena Query by name """
-        # Load query
-        query = self.get_ahq(query_id, **kwargs)
-        # Execute query
-        execution_id = self.execute_query(query)
+    def query(self, sql, include_header=False, **kwargs) -> list:
+        """ Execute Athena Query and return a result"""
+        logger.debug(f'query={sql}')
+        execution_id = self.execute_query(sql, **kwargs)
         results = self.get_query_results(execution_id)
-        # Return results as list
-        return self.parse_response_as_list(results)
-
-
-    def get_ahq(self, query_id, **kwargs) -> str:
-        """ Returns a fully compiled AHQ """
-        # Query path
-        query_file = self.get_ahqs().get(query_id).get('File')
-
-        template = Template(resource_string(__name__, f'../queries/{query_file}').decode('utf-8'))
-
-        # Fill in TPLs
-        columns_tpl = dict()
-        columns_tpl.update(**kwargs)
-        compiled_query = template.safe_substitute(columns_tpl)
-
-        return compiled_query
-
-
-    def get_ahqs(self) -> dict:
-        """ Return a list of all availiable AHQs """
-        
-        if not self.ahq_queries:            
-            # Load queries
-            queries_files = resource_string(__name__, '../queries/ahq-queries.json')
-            self.ahq_queries = json.loads(queries_files).get('query_templates')
-
-        return self.ahq_queries
+        #logger.debug(f'results = {json.dumps(results, indent=2)}')
+        prarsed = self.parse_response_as_table(results, include_header)
+        logger.debug(f'prarsed res = {json.dumps(prarsed, indent=2)}')
+        return prarsed
 
 
     def discover_views(self, views: dict={}) -> None:
+        """ Discover views from a given list of view names and cahe them. """
         for view_name in views:
             try:
                 self.get_table_metadata(TableName=view_name)
@@ -377,6 +300,7 @@ class Athena(CidBase):
 
 
     def wait_for_view(self, view_name: str, poll_interval=1, timeout=60) -> None:
+        """ Wait for a View to be created. """
         deadline = time.time() + timeout
         while time.time() <= deadline:
             self.discover_views([view_name])
@@ -437,30 +361,93 @@ class Athena(CidBase):
             if name in self._metadata: del self._metadata[name]
             logger.info(f'View {name} deleted')
         return True
-    
-    def create_workgroup(self, workgroup_name: str, s3_bucket_name: str) -> None:
-        """Crete a new Athena Workgroup"""
+
+    def get_view_diff(self, name, sql):
+        """ returns a diff between existing and new viws. """
+        tmp_name = 'cid_tmp_deleteme'
+        existing_sql = ''
         try:
-            self.client.create_work_group(
-                    Name=workgroup_name,
-                    Configuration={
-                        'ResultConfiguration': {
-                            'OutputLocation': f's3://{s3_bucket_name}',
-                            'EncryptionConfiguration': {
-                                'EncryptionOption': 'SSE_S3',
-                            },
-                        },
-                        'EnforceWorkGroupConfiguration': True,
-                    },
-                    Tags=self.default_tag_list
-            )
-        except self.client.exceptions.InvalidRequestException as ex:
-            if ex.response.get('Message') == 'WorkGroup is already created':
-                logger.info(f'Work group {workgroup_name} already exists')
-                raise CidError() from ex
+            existing_sql = self.query(f'SHOW CREATE VIEW {name}', include_header=True)
+            existing_sql = '\n'.join([line[0] for line in existing_sql][1:])
+        except Exception as exc:
+            print(exc)
+            return None
+        try:
+            # Avoid difference in the first line of diff (replace name of the view with the tmp_name)
+            tmp_sql = re.sub(r'(CREATE OR REPLACE VIEW) (.+?) (AS.*)', r'\1 ' + tmp_name +  r' \3', sql)
+
+            if tmp_sql == sql:
+                raise CidError(f"Cannot get diff: same sql {repr(sql)}")
+            self.query(tmp_sql)
+            tmp_sql = self.query(f'SHOW CREATE VIEW {tmp_name}', include_header=True)
+            tmp_sql = '\n'.join([line[0] for line in tmp_sql][1:])
+        except Exception as exc:
+            print(exc)
+            return None
+        finally:
+            try:
+                self.query(f'DROP VIEW IF EXISTS {tmp_name};', fail=False)
+            except Exception as exc:
+                logger.debug(f'Cannot delete temporary view {tmp_name}: {exc}')
+
+        existing_sql = re.sub('"(.+?)"', r'\1', existing_sql) # remove quotes
+        tmp_sql = re.sub('"(.+?)"', r'\1', tmp_sql) # remove quotes
+        return diff(existing_sql, tmp_sql)
+
+
+    def process_views(self, views):
+        """ returns a dict of discovered views. Going to each view and try to discover recursively all "FROM" dependanices
+        """
+        all_views = {}
+        def _recursively_process_view(view):
+            """ process recursively views and add all dependency views to the global dict
+            """
+            athena_type = None
+            if self.query(f"SHOW VIEWS LIKE '{view}'", include_header=True):
+                athena_type = 'view'
+            elif self.query(f"SHOW TABLES LIKE '{view}'", include_header=True):
+                athena_type = 'table'
             else:
-                raise
-        except Exception as ex:
-            logger.debug(ex, exc_info=True)
-            logger.info(f'Work group {workgroup_name} cannot be created: {ex}')
-            raise CidError() from ex
+                logger.debug(f'{view} not a view and not a table. Skipping.')
+                return None
+            cid_print(f"    Processing Athena {athena_type}: <BOLD>{view}<END>")
+
+            all_views[view] = {}
+            if athena_type == 'view':
+                sql = self.query(f'SHOW CREATE VIEW {view}', include_header=True)
+                if not sql:
+                    return
+                sql = '\n'.join([line[0] for line in sql])
+                #print("sql", sql)
+                all_views[view]["dependsOn"] = {}
+                all_views[view]["dependsOn"]['views'] = []
+                deps = re.findall(r'FROM\W+?([\w."]+)', sql)
+                for dep_view in deps:
+                    #FIXME: need to add cross Database Dependancies
+                    if dep_view.upper() in ('SELECT', 'VALUES'): # remove "FROM SELECT" and "FROM VALUES"
+                        continue
+                    dep_view = dep_view.replace('"', '')
+                    if len(dep_view.split('.')) == 2:
+                        dep_database, dep_view_name = dep_view.split('.')
+                        if dep_database != self.DatabaseName:
+                            logger.error(f'The view {view} has a dependency on {dep_view}. CID cannot manage multiple Databases. Please move {dep_view_name} to Database {self.DatabaseName}. Skipping dependency.')
+                            continue
+                    dep_view = dep_view.split('.')[-1]
+                    if dep_view not in all_views:
+                        _recursively_process_view(dep_view)
+                    if dep_view not in all_views[view]["dependsOn"]['views'] and dep_view in all_views:
+                        all_views[view]["dependsOn"]['views'].append(dep_view)
+                if not all_views[view]["dependsOn"]['views']:
+                    del all_views[view]["dependsOn"]
+
+            elif athena_type == 'table':
+                sql = self.query(f'SHOW CREATE TABLE {view}', include_header=True)
+                sql = '\n'.join([line[0] for line in sql])
+
+            all_views[view]['data'] = sql.rstrip()
+            return all_views[view]
+
+        for view in views:
+            _recursively_process_view(view)
+
+        return all_views
