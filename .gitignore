@@ -22,6 +22,14 @@ __pycache__/
 /.pytest_cache
 /.mypy_cache
 
+# Terraform specific
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+.tftest.*
+
 # Environments
 .env
 .venv

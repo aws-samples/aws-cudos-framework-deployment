@@ -3,11 +3,12 @@
 [![PyPI version](https://badge.fury.io/py/cid-cmd.svg)](https://badge.fury.io/py/cid-cmd)
 
 ## Welcome to Cloud Intelligence Dashboards (CUDOS Framework) automation repository
-This repository contains CloudFormation templates and Command Line tool (cid-cmd) for managing various dashboards provided in AWS Well Architected LAB [Cloud Intelligence Dashboards](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/).
+This repository contains CloudFormation templates, Terraform modules, and a Command Line tool (cid-cmd) for managing various dashboards provided in AWS Well Architected LAB [Cloud Intelligence Dashboards](https://www.wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/).
 
 There are several ways we can manage dashboards:
-1. CloudFormation Template (using cid-cmd tool in lambda) 
-2. Using cid-cmd tool from command line
+1. [CloudFormation Template](./cfn-templates/cid-cfn.yml) (using cid-cmd tool in lambda)
+2. [Terraform module](./terraform-modules/cid-dashboards/README.md) (wrapper around CloudFormation Template)
+3. Using cid-cmd tool from command line
 
 We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home).
 
