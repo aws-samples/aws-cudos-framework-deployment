@@ -1284,12 +1284,15 @@ class Cid():
                     break
             if update_dataset:
                 self.qs.update_dataset(compiled_dataset)
+                if compiled_dataset.get("ImportMode") == "SPICE":
+                    dataset_id = compiled_dataset.get('DataSetId')
+                    self.qs.ensure_dataset_refresh_schedule(dataset_id, "cid")
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")} {compiled_dataset.get("Name")}={found_dataset.name} ')
         else:
             dataset_id = self.qs.create_dataset(compiled_dataset)
-            if dataset_id is not None and len(dataset_id) > 0 and compiled_dataset.get("ImportMode") == "SPICE":
-                    self.qs.ensure_dataset_refresh_schedule(dataset_id, "cid")
+            if dataset_id and compiled_dataset.get("ImportMode") == "SPICE":
+                self.qs.ensure_dataset_refresh_schedule(dataset_id, "cid")
         return True
 
 

@@ -1037,18 +1037,18 @@ class QuickSight(CidBase):
                 AwsAccountId=self.account_id,
                 DataSetId=dataset_id
             )
-            if "RefreshSchedules" in refresh_schedules and len(refresh_schedules["RefreshSchedules"]) > 0:
+            if refresh_schedules.get("RefreshSchedules"):
                 logger.info(f'Dataset {dataset_id} already has scheduled refresh.')
                 return
         except self.client.exceptions.ResourceNotFoundException:
-            logger.info(f'DataSource {dataset_id} does not exist')
+            logger.error(f'DataSource {dataset_id} does not exist')
             return
         except self.client.exceptions.AccessDeniedException:
-            logger.info(f'No quicksight:ListDataSets permission or missing DataSetId {dataset_id}')
+            logger.warning(f'No quicksight:ListDataSets permission or missing DataSetId {dataset_id}')
             return
         except Exception as e:
             logger.info(f'Unable to list refresh schedules for dataset {dataset_id}.')
-            logger.info(e)
+            logger.error(e)
             return
 
         schedule = {
@@ -1069,12 +1069,12 @@ class QuickSight(CidBase):
             )
             logger.info(f'Refresh for dataset {dataset_id} scheduled.')
         except self.client.exceptions.ResourceNotFoundException:
-            logger.info(f'DataSource {dataset_id} does not exist')
+            logger.error(f'DataSource {dataset_id} does not exist')
         except self.client.exceptions.AccessDeniedException:
-            logger.info(f'No quicksight:CreateDataSet permission or missing DataSetId {dataset_id}')
+            logger.warning(f'No quicksight:CreateDataSet permission or missing DataSetId {dataset_id}')
         except Exception as e:
             logger.info(f'Unable to schedule refresh for dataset {dataset_id}.')
-            logger.info(e)
+            logger.error(e)
 
 
     def create_dashboard(self, definition: dict) -> Dashboard:
