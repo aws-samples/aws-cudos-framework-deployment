@@ -1216,6 +1216,16 @@ class Cid():
 
         datasource_id = get_parameters().get('quicksight-datasource-id')
         role_arn = get_parameters().get('quicksight-datasource-role-arn')
+        if role_arn:
+            role_name = role_arn.split('/')[-1]
+            dataset_buckets = self.get_dataset_buckets(dataset_definition)
+            try:
+                self.iam.ensure_data_source_role_exists(role_name=role_name, buckets=dataset_buckets)
+            except Exception as exc:
+                logger.debug(exc, exc_info=True)
+                logger.error('Failed to create role. will fallback to using QuickSight service role for the datasource.')
+                role_arn = None
+
         if datasource_id:
             # We have explicit choice of datasource
             try:
