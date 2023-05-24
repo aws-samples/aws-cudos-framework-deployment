@@ -138,7 +138,7 @@
 		   , CASE 
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (generation IN ('Previous')) AND (purchase_option <> 'Spot') AND (purchase_option <> 'Reserved') AND (savings_plan_offering_type NOT LIKE '%EC2%')) THEN amortized_cost ELSE 0 END "ec2_previous_generation_cost"
 		   , CASE 
-				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%')
+				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (lower(platform) NOT LIKE '%window%') 
 				AND ((adjusted_processor = 'Graviton')
 				OR (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_graviton <> ''))) 
 				 THEN amortized_cost ELSE 0 END "ec2_graviton_eligible_cost"
@@ -159,8 +159,8 @@
 		   , CASE 
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (generation IN ('Previous')) AND (purchase_option <> 'Spot') AND (purchase_option <> 'Reserved') AND (savings_plan_offering_type NOT LIKE '%EC2%')) THEN (amortized_cost * 5E-2) ELSE 0 END "ec2_previous_generation_potential_savings"  /*Uses 5% savings estimate*/ 
 		   , CASE 
-				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_graviton <> '') AND adjusted_processor <> 'AMD') THEN (amortized_cost * 2E-1)
-				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_graviton <> '') AND adjusted_processor = 'AMD') THEN (amortized_cost * 1E-1) ELSE 0 END "ec2_graviton_potential_savings"  /*Uses 20% savings estimate for intel and 10% for AMD*/ 				
+				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (lower(platform) NOT LIKE '%window%') AND (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_graviton <> '') AND adjusted_processor <> 'AMD') THEN (amortized_cost * 2E-1)
+				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (lower(platform) NOT LIKE '%window%') AND (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_graviton <> '') AND adjusted_processor = 'AMD') THEN (amortized_cost * 1E-1) ELSE 0 END "ec2_graviton_potential_savings"  /*Uses 20% savings estimate for intel and 10% for AMD*/ 				
 		   , CASE 
 				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_amd <> '') AND adjusted_processor <> 'AMD') THEN (amortized_cost * 1E-1) ELSE 0 END "ec2_amd_potential_savings"  /*Uses 10% savings estimate for intel and 0% for Graviton*/
 /*RDS*/			
