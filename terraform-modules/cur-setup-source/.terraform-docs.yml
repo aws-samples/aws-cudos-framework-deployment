@@ -1,0 +1,11 @@
+output:
+  file: README.md
+  mode: inject
+formatter: "markdown document"
+sections:
+  hide:
+    - modules
+sort:
+  by: required
+settings:
+  anchor: false
