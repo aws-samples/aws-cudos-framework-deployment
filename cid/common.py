@@ -1215,7 +1215,10 @@ class Cid():
         # We must do it here. In case if dastasource is not defined by user, we can take it from dataset
 
         datasource_id = get_parameters().get('quicksight-datasource-id')
-        role_arn = get_parameters().get('quicksight-datasource-role-arn')
+        role_arn = get_parameters().get(
+            'quicksight-datasource-role-arn',
+            'arn:aws:iam:{self.base.account_id}:role/CidQuickSightAthenaDataSource'
+        )
         if role_arn:
             role_name = role_arn.split('/')[-1]
             dataset_buckets = self.get_dataset_buckets(dataset_definition)
@@ -1223,7 +1226,7 @@ class Cid():
                 self.iam.ensure_data_source_role_exists(role_name=role_name, buckets=dataset_buckets)
             except Exception as exc:
                 logger.debug(exc, exc_info=True)
-                logger.error('Failed to create role. will fallback to using QuickSight service role for the datasource.')
+                logger.warning('Failed to create role. will fallback to using QuickSight service role for the datasource.')
                 role_arn = None
 
         if datasource_id:
