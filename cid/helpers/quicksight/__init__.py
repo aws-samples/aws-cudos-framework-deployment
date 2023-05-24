@@ -47,7 +47,7 @@ class QuickSight(CidBase):
     def user(self) -> dict:
         if not self._user:
             username = get_parameters().get('quicksight-user', None)
-            if username.lower() == 'current user':
+            if username and username.lower() == 'current user':
                 username = self.username
             if username:
                 try:
@@ -398,8 +398,7 @@ class QuickSight(CidBase):
         return self._principal_arn
 
 
-
-    def create_data_source(self, athena_workgroup, datasource_id: str=None, role_arn: str=None) -> bool:
+    def create_data_source(self, athena_workgroup, datasource_id: str=None, role_arn: str=None) -> Datasource:
         """Create a new data source"""
         logger.info('Creating Athena data source')
 
@@ -412,6 +411,7 @@ class QuickSight(CidBase):
         ).decode('utf-8'))
         data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
         datasource_name = datasource_id or "CID Athena"
+        datasource_id = datasource_id or str(uuid.uuid4())
         params = {
             "AwsAccountId": self.account_id,
             "DataSourceId": datasource_id,
@@ -460,7 +460,6 @@ class QuickSight(CidBase):
             logger.debug(e, exc_info=True)
             return None
         return None
-
 
     def create_folder(self, folder_name: str, **create_parameters) -> dict:
         """Create a new folder"""

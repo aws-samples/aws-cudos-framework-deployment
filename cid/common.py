@@ -1204,7 +1204,6 @@ class Cid():
         return buckets
 
 
-
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
