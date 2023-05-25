@@ -76,6 +76,13 @@ Resources:
           Action:
           - QuickSight:*
           Resource: '*' #Explicitly allow all on QuickSight for QuickSight Admin
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F4
+            reason: "Explicitly allow all on QuickSight for QuickSight Admin."
+          - id: W12
+            reason: "Explicitly allow all on QuickSight for QuickSight Admin."
 
   QuickSightManagementPolicy:
     Type: AWS::IAM::Policy
@@ -160,7 +167,11 @@ Resources:
           - s3:ListAllMyBuckets
           Effect: Allow
           Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W12
+            reason: "Some resources are not possible to restrict. See comments."
 
   CloudIntelligenceDashboardsCFNManagementPolicy:
     Type: AWS::IAM::Policy
@@ -352,7 +363,6 @@ Resources:
           Resource:
           - !Sub arn:aws:s3:::aws-managed-cost-intelligence-dashboards-${AWS::Region}/cid-resource-lambda-layer/*
 
-
         - Sid: ReadOnlyCFN
           Action:
           - cloudformation:GetTemplate
@@ -361,6 +371,13 @@ Resources:
           - cloudformation:ValidateTemplate
           Effect: Allow
           Resource: '*' # Read only Rights needed for CFN operator
+
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W12
+            reason: "Some resources are not possible to restrict. See comments."
+
 
   CURDestinationPolicy:
     Type: AWS::IAM::Policy
@@ -441,6 +458,12 @@ Resources:
           - s3:ListAllMyBuckets #?
           Effect: Allow
           Resource: '*' # ReadOnly Policy for CFN
+
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W12
+            reason: "Some resources are not possible to restrict. See comments."
 
 
   CURReplicationPolicy:
@@ -538,4 +561,10 @@ Resources:
           - s3:ListAllMyBuckets
           Effect: Allow
           Resource: '*' # ReadOnly Policy for CFN
+
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W12
+            reason: "Some resources are not possible to restrict. See comments."
 
