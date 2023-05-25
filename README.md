@@ -29,7 +29,7 @@ We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cl
 2. :heavy_exclamation_mark: [Specifying a Query Result Location Using a Workgroup](https://docs.aws.amazon.com/athena/latest/ug/querying.html#query-results-specify-location-workgroup)
 3. :heavy_exclamation_mark: Make sure QuickSight [Enterprise edition](https://aws.amazon.com/premiumsupport/knowledge-center/quicksight-enterprise-account/) is activated.
 
-## How to use for Dasbhoard Deployment
+## How to use cid-cmd cli tool for Dasbhoard Deployment
 
 1. Launch [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home) or your local shell
 
@@ -53,7 +53,7 @@ We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cl
 
    [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
 
-## Other Commands
+## Other CLI Commands
 
 #### Update existing Dashboards
 Update only Dashboard
@@ -135,7 +135,7 @@ CID is also provided in a form of CloudFormation telmplate that you can install.
 CID provided Terraform module to deploy CID dashboards. This module is a wrapper around CloudFormation. Under the hood, the module will deploy a CloudFormation stack which will provision the necessary resources and a custom Lambda function to create the dashboards using `cid-cmd`.
 
   1. Create a bucket for consolidating CUR [terraform-modules/cur-setup-destination/](terraform-modules/cur-setup-destination/)
-  2. Create a CUR in Payer Account(s) [cur-setup-source/](terraform-modules/cur-setup-source/)
+  2. Create a CUR in Payer Account(s) [terraform-modules/cur-setup-source/](terraform-modules/cur-setup-source/)
   3. Create Dashboards [terraform-modules/cid-dashboards/](terraform-modules/cid-dashboards/)
 
 
