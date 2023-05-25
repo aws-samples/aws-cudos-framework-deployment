@@ -126,3 +126,19 @@ This will produce a log file in the same directory that were at the tile of laun
 :heavy_exclamation_mark:Inspect the produced debug log for any sensitive information and anonymise it.
 
 We encourage you to open [new issue](https://github.com/aws-samples/aws-cudos-framework-deployment/issues/new) with description of the problem and attached debug log file.
+
+
+## Cloud Formation
+CID is also provided in a form of CloudFormation telmplate that you can install. See more in the [Well Architected Labs](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/deploy_dashboards/) site.
+
+## Terraform
+CID provided Terraform module to deploy CID dashboards. This module is a wrapper around CloudFormation. Under the hood, the module will deploy a CloudFormation stack which will provision the necessary resources and a custom Lambda function to create the dashboards using `cid-cmd`.
+
+  1. Create a bucket for consolidating CUR [terraform-modules/cur-setup-destination/](terraform-modules/cur-setup-destination/)
+  2. Create a CUR in Payer Account(s) [cur-setup-source/](terraform-modules/cur-setup-source/)
+  3. Create Dashboards [terraform-modules/cid-dashboards/](terraform-modules/cid-dashboards/)
+
+
+## Rights Management
+Typicaly CID is owned by a team FinOps team that does not have Admin access. This team needs a number of rights to install and operate CID dashboards. In order to help Admin team to provide the owners of CID with the right priveleges CID provides a [CFN template](cfn-templates/cid-admin-policies.yaml). This CFN takes as a paramter an IAM role name and can add neccesury policies to the role.
+
