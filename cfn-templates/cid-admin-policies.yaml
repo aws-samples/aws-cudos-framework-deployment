@@ -53,17 +53,17 @@ Parameters:
     AllowedValues: ["yes", "no"]
 
 Conditions:
-  AddQuickSightManagementPolicy: !Equals [ !Ref QuickSightManagement, "yes" ]
-  AddCloudIntelligenceDashboardsCFNManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboardsCFNManagement, "yes" ]
-  AddQuickSightAdminPolicy: !Equals [ !Ref QuickSightAdmin, "yes" ]
-  AddCURDestinationPolicy: !Equals [ !Ref CURDestination, "yes" ]
-  AddCURReplicationPolicy: !Equals [ !Ref CURReplication, "yes" ]
+  CreateQuickSightManagementPolicy: !Equals [ !Ref QuickSightManagement, "yes" ]
+  CreateCloudIntelligenceDashboardsCFNManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboardsCFNManagement, "yes" ]
+  CreateQuickSightAdminPolicy: !Equals [ !Ref QuickSightAdmin, "yes" ]
+  CreateCURDestinationPolicy: !Equals [ !Ref CURDestination, "yes" ]
+  CreateCURReplicationPolicy: !Equals [ !Ref CURReplication, "yes" ]
 
 Resources:
 
   QuickSightAdminPolicy:
     Type: AWS::IAM::Policy
-    Condition: AddQuickSightAdminPolicy
+    Condition: CreateQuickSightAdminPolicy
     Properties:
       Roles:
         - !Ref RoleName
@@ -75,11 +75,11 @@ Resources:
           Effect: Allow
           Action:
           - QuickSight:*
-          Resource: '*'
+          Resource: '*' #Explicitly allow all on QuickSight for QuickSight Admin
 
   QuickSightManagementPolicy:
     Type: AWS::IAM::Policy
-    Condition: AddQuickSightManagementPolicy
+    Condition: CreateQuickSightManagementPolicy
     Properties:
       Roles:
         - !Ref RoleName
@@ -164,7 +164,7 @@ Resources:
 
   CloudIntelligenceDashboardsCFNManagementPolicy:
     Type: AWS::IAM::Policy
-    Condition: AddCloudIntelligenceDashboardsCFNManagementPolicy
+    Condition: CreateCloudIntelligenceDashboardsCFNManagementPolicy
     Properties:
       Roles:
         - !Ref RoleName
@@ -364,7 +364,7 @@ Resources:
 
   CURDestinationPolicy:
     Type: AWS::IAM::Policy
-    Condition: AddCURDestinationPolicy
+    Condition: CreateCURDestinationPolicy
     Properties:
       Roles:
         - !Ref RoleName
@@ -445,7 +445,7 @@ Resources:
 
   CURReplicationPolicy:
     Type: AWS::IAM::Policy
-    Condition: AddCURReplicationPolicy
+    Condition: CreateCURReplicationPolicy
     Properties:
       Roles:
         - !Ref RoleName
