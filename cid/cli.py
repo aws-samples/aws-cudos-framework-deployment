@@ -122,6 +122,8 @@ def deploy(ctx, **kwargs):
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
+     --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
+     --update (yes|no)                     Update if some elements are already installed. Default = 'no'
      --resources TEXT                      CID resources yaml file or url
     """
     ctx.obj.deploy(**kwargs)
@@ -135,13 +137,17 @@ def export(ctx, **kwargs):
     
     \b
     Command options:
-        --analysis-name       Analysis you want to share (not needed if analysis-id is provided).
-        --analysis-id         ID of analysis you want to share (open analysis in browser and copy id from url)
-        --template-id         Template Id
-        --dashboard-id        Target Dashboard Id
-        --template-version    Version description vX.Y.Z
-        --reader-account      Account id with howm you want to share or *
-        --output              A filename (.yaml)
+        --analysis-name              Analysis you want to share (not needed if analysis-id is provided).
+        --analysis-id                ID of analysis you want to share (open analysis in browser and copy id from url)
+        --template-id                Template Id
+        --dashboard-id               Target Dashboard Id
+        --template-version           Version description vX.Y.Z
+        --reader-account             Account id with whom you want to share with or *
+        --dashboard-export-method
+               (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSught Teamplate)
+        --export-known-datasets
+            (no|yes)                 If 'yes' the export will include DataSets that are already in resources file. Default = no
+        --output                     A filename (.yaml)
     """
     ctx.obj.export(**kwargs)
 
@@ -178,7 +184,13 @@ def delete(ctx, dashboard_id, **kwargs):
 @click.option('--recursive/--norecursive', help='Recursive update all Datasets and Views (flags must be before options)', default=False)
 @cid_command
 def update(ctx, dashboard_id, force, recursive, **kwargs):
-    """Update Dashboard"""
+    """Update Dashboard
+
+    \b
+
+     --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
+
+    """
     ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)
 
 
