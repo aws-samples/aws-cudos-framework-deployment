@@ -29,7 +29,13 @@ We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cl
 2. :heavy_exclamation_mark: [Specifying a Query Result Location Using a Workgroup](https://docs.aws.amazon.com/athena/latest/ug/querying.html#query-results-specify-location-workgroup)
 3. :heavy_exclamation_mark: Make sure QuickSight [Enterprise edition](https://aws.amazon.com/premiumsupport/knowledge-center/quicksight-enterprise-account/) is activated.
 
-## How to use cid-cmd cli tool for Dasbhoard Deployment
+## Command line tool cid-cmd
+
+#### Demo: Deployment of Dashboards with cid-cmd tool
+
+   [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
+
+#### Install
 
 1. Launch [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home) or your local shell
 
@@ -45,15 +51,12 @@ We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cl
     pip3 install --upgrade cid-cmd
     ```
 
-5. Deploy the Dashboards
-    ```bash
-    cid-cmd deploy
-    ```
-### Demo
+#### Dasbhoard Deployment
 
-   [![asciicast](https://asciinema.org/a/467770.svg)](https://asciinema.org/a/467770)
+```bash
+cid-cmd deploy
+```
 
-## Other CLI Commands
 
 #### Update existing Dashboards
 Update only Dashboard
@@ -113,9 +116,26 @@ cid-cmd csv2view --input my_mapping.csv --name my_mapping
 ```
 This command generates a SQL file that you can execute. Please mind [Athena Service Limit for Query Size](https://docs.aws.amazon.com/athena/latest/ug/service-limits.html#service-limits-query-string-length).
 
-## Troubleshooting 
 
-If you experience unexpected behaviour of the cid-cmd script please run cid-cmd in debug mode 
+## Cloud Formation
+CID is also provided in a form of CloudFormation telmplates. See detailed instuctions in the [Well Architected Labs](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/deploy_dashboards/) site.
+
+## Terraform
+CID offers a set of Terraform modules to deploy CUR replicaion and CID dashboards. These modules act as a wrapper around CloudFormation.
+
+  1. Create a bucket for consolidating CUR [terraform-modules/cur-setup-destination/](terraform-modules/cur-setup-destination/)
+  2. Create a CUR in Payer Account(s) [terraform-modules/cur-setup-source/](terraform-modules/cur-setup-source/)
+  3. Create Dashboards [terraform-modules/cid-dashboards/](terraform-modules/cid-dashboards/)
+
+
+## Rights Management
+The ownership of CID is usually with the FinOps team, who do not have administrative access. However, they require specific privileges to install and operate CID
+dashboards. To assist the Admin team in granting the necessary privileges to the CID owners, a CFN template is provided. This template, located at
+[CFN template](cfn-templates/cid-admin-policies.yaml), takes an IAM role name as a parameter and adds the required policies to the role.
+
+
+## Troubleshooting and Support
+If you experience unexpected behaviour of the `cid-cmd` script please run `cid-cmd` in debug mode:
 
 ```bash
 cid-cmd -vv [command]
@@ -126,19 +146,3 @@ This will produce a log file in the same directory that were at the tile of laun
 :heavy_exclamation_mark:Inspect the produced debug log for any sensitive information and anonymise it.
 
 We encourage you to open [new issue](https://github.com/aws-samples/aws-cudos-framework-deployment/issues/new) with description of the problem and attached debug log file.
-
-
-## Cloud Formation
-CID is also provided in a form of CloudFormation telmplate that you can install. See more in the [Well Architected Labs](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/deploy_dashboards/) site.
-
-## Terraform
-CID provided Terraform module to deploy CID dashboards. This module is a wrapper around CloudFormation. Under the hood, the module will deploy a CloudFormation stack which will provision the necessary resources and a custom Lambda function to create the dashboards using `cid-cmd`.
-
-  1. Create a bucket for consolidating CUR [terraform-modules/cur-setup-destination/](terraform-modules/cur-setup-destination/)
-  2. Create a CUR in Payer Account(s) [terraform-modules/cur-setup-source/](terraform-modules/cur-setup-source/)
-  3. Create Dashboards [terraform-modules/cid-dashboards/](terraform-modules/cid-dashboards/)
-
-
-## Rights Management
-Typicaly CID is owned by a team FinOps team that does not have Admin access. This team needs a number of rights to install and operate CID dashboards. In order to help Admin team to provide the owners of CID with the right priveleges CID provides a [CFN template](cfn-templates/cid-admin-policies.yaml). This CFN takes as a paramter an IAM role name and can add neccesury policies to the role.
-
