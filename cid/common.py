@@ -25,7 +25,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, IAM, csv2view
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
@@ -83,6 +83,14 @@ class Cid():
         print('\tRegion: {}'.format(self.base.session.region_name))
         logger.info(f'AWS region: {self.base.session.region_name}')
         print('\n')
+
+    @property
+    def iam(self) -> IAM:
+        if not self._clients.get('iam'):
+            self._clients.update({
+                'iam': IAM(self.base.session)
+            })
+        return self._clients.get('iam')
 
     @property
     def qs(self) -> QuickSight:
@@ -1182,6 +1190,19 @@ class Cid():
             raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(definition)}. Check resources file.")
         return data
 
+    def get_dataset_buckets(self, dataset_definition):
+        buckets = []
+        data = self.get_dataset_data_from_definition(dataset_definition)
+        cur_required = dataset_definition.get('dependsOn', dict()).get('cur', False)
+        if cur_required:
+            location = self.athena.get_table_metadata(self.cur.tableName).get('Parameters',{}).get('location', '')
+            if location and location.startswith('s3://'):
+                buckets.append(location.split('/')[2])
+        for par in get_parameters().values():
+            if isinstance(par, str) and par.startswith('s3://'):
+                buckets.append(par.split('/')[2])
+        return buckets
+
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
@@ -1194,7 +1215,20 @@ class Cid():
         # We must do it here. In case if dastasource is not defined by user, we can take it from dataset
 
         datasource_id = get_parameters().get('quicksight-datasource-id')
-        role_arn = get_parameters().get('quicksight-datasource-role-arn')
+        role_arn = get_parameters().get(
+            'quicksight-datasource-role-arn',
+            'arn:aws:iam:{self.base.account_id}:role/CidQuickSightAthenaDataSource'
+        )
+        if role_arn:
+            role_name = role_arn.split('/')[-1]
+            dataset_buckets = self.get_dataset_buckets(dataset_definition)
+            try:
+                self.iam.ensure_data_source_role_exists(role_name=role_name, buckets=dataset_buckets)
+            except Exception as exc:
+                logger.debug(exc, exc_info=True)
+                logger.warning('Failed to create role. will fallback to using QuickSight service role for the datasource.')
+                role_arn = None
+
         if datasource_id:
             # We have explicit choice of datasource
             try:

@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 class QuickSight(CidBase):
     # Define defaults
     cidAccountId = '223485597511'
-    _AthenaWorkGroup: str = None
     _dashboards: Dict[str, Dashboard] = None
     _datasets: Dict[str, Dataset] = None
     _datasources: Dict[str, Datasource] = None
@@ -45,17 +44,11 @@ class QuickSight(CidBase):
 
 
     @property
-    def AthenaWorkGroup(self) -> str:
-        return self._AthenaWorkGroup
-    
-    @AthenaWorkGroup.setter
-    def AthenaWorkGroup(self, value):
-        self._AthenaWorkGroup = value
-
-    @property
     def user(self) -> dict:
         if not self._user:
-            username = get_parameters().get('quicksight-user', self.username)
+            username = get_parameters().get('quicksight-user', None)
+            if username and username.lower() == 'current user':
+                username = self.username
             if username:
                 try:
                     self._user =  self.describe_user(username)
@@ -362,7 +355,7 @@ class QuickSight(CidBase):
             return self._principal_arn
 
         # No parameters provided, let's ask user. Following parameter is not supposed to be used by CLI users.
-        quicksight_owner = get_parameter('quicksight-owner-choice',
+        quicksight_owner = get_parameter('quicksight-owner',
             message='You have not provided quicksight-user or quicksight-group. Do you what your objects to be owned by a user or a group?',
             choices=[
                 'group cid-owners (recommended)',
@@ -403,7 +396,6 @@ class QuickSight(CidBase):
             exit(1)
 
         return self._principal_arn
-
 
 
     def create_data_source(self, athena_workgroup, datasource_id: str=None, role_arn: str=None) -> Datasource:
