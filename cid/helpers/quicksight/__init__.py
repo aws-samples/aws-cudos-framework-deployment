@@ -2,6 +2,7 @@ import re
 import json
 import uuid
 import time
+import random
 import logging
 from pkg_resources import resource_string
 from string import Template
@@ -10,7 +11,7 @@ from typing import Dict, List, Union
 import click
 
 from cid.base import CidBase
-from cid.helpers import diff
+from cid.helpers import diff, timezone
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
@@ -1027,6 +1028,53 @@ class QuickSight(CidBase):
         dataset_id = definition.get('DataSetId')
         self.datasets.pop(dataset_id, None) # invalidate cache
         return self.describe_dataset(dataset_id)
+
+
+    def ensure_dataset_refresh_schedule(self, dataset_id, schedule_id):
+        """ Ensure that dataset has scheduled refresh """
+        try:
+            refresh_schedules = self.client.list_refresh_schedules(
+                AwsAccountId=self.account_id,
+                DataSetId=dataset_id
+            )
+            if refresh_schedules.get("RefreshSchedules"):
+                logger.info(f'Dataset {dataset_id} already has scheduled refresh.')
+                return
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.error(f'DataSource {dataset_id} does not exist')
+            return
+        except self.client.exceptions.AccessDeniedException:
+            logger.warning(f'No quicksight:ListDataSets permission or missing DataSetId {dataset_id}')
+            return
+        except Exception as e:
+            logger.info(f'Unable to list refresh schedules for dataset {dataset_id}.')
+            logger.error(e)
+            return
+
+        schedule = {
+            'ScheduleId': schedule_id,
+            'ScheduleFrequency': {
+                'Interval': 'DAILY',
+                'Timezone': timezone.get_default_timezone(),
+                'TimeOfTheDay': f"{random.randrange(2, 5):02d}:{random.randrange(0, 60):02d}" # between 02:00 and 04:59
+            },
+            'RefreshType': 'FULL_REFRESH',
+        }
+        try:
+            logger.info(f'Scheduling refresh for dataset {dataset_id}.')
+            self.client.create_refresh_schedule(
+                DataSetId=dataset_id,
+                AwsAccountId=self.account_id,
+                Schedule=schedule
+            )
+            logger.info(f'Refresh for dataset {dataset_id} scheduled.')
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.error(f'DataSource {dataset_id} does not exist')
+        except self.client.exceptions.AccessDeniedException:
+            logger.warning(f'No quicksight:CreateDataSet permission or missing DataSetId {dataset_id}')
+        except Exception as e:
+            logger.info(f'Unable to schedule refresh for dataset {dataset_id}.')
+            logger.error(e)
 
 
     def create_dashboard(self, definition: dict) -> Dashboard:
