@@ -348,7 +348,7 @@ Resources:
           - quicksight:DeleteDataSetRefreshProperties
           Effect: Allow
           Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:arn:aws:quicksight:us-east-1:645863895025:dataset/*/refresh-schedule/* # DataSetIDs are dynamic as well as shcedule ids
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/refresh-schedule/* # DataSetIDs are dynamic as well as shcedule ids
 
         - Sid: CreateQueryResultsBucketS3
           Action:
