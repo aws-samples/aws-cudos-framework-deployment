@@ -140,7 +140,7 @@ class InitCurCommand(Command):  # pylint: disable=too-few-public-methods
         except CidError:
             print(f'\tGlue crawler...\t\tExists ({self.cid_crawler_name})')
         except Exception as ex:  # pylint: disable=broad-except
-            logger.exception('ERROR: %s', ex)
+            # logger.exception('ERROR: %s', ex)
             print('\tGlue crawler...\t\tERROR: Could not create crawler')
 
     def _create_glue_table(self):
