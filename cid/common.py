@@ -333,6 +333,11 @@ class Cid():
 
         self.qs.ensure_subscription()
 
+        # In case if we cannot discover datasets, we need to discover dashboards
+        # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
+        self.qs.discover_dashboards()
+
+
         if dashboard_id is None:
             dashboard_id = get_parameter(
                 param_name='dashboard-id',
@@ -633,6 +638,7 @@ class Cid():
                     # try to get the database name from the dataset (might need this for later)
                     schema = next(iter(dataset.schemas), None) # FIXME: manage choice if multiple data sources
                     if schema:
+                        logger.debug(f'Picking the first of dataset databases: {dataset.schemas}')
                         self.athena.DatabaseName = schema
 
                     if get_parameter(
@@ -1013,7 +1019,7 @@ class Cid():
             _ds_id = get_parameters().get(f'{dataset_name.replace("_", "-")}-dataset-id')
             if _ds_id:
                 self.qs.describe_dataset(_ds_id)
-        
+
         found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
@@ -1021,7 +1027,10 @@ class Cid():
         if update:
             for dataset_name in found_datasets[:]:
                 if dataset_name in known_datasets.keys():
-                    dataset_id = self.qs.get_datasets(id=known_datasets.get(dataset_name))[0].id
+                    _found_dsc = self.qs.get_datasets(id=known_datasets.get(dataset_name))
+                    if len(_found_dsc) != 1:
+                        logger.warning(f'Found more than one dataset in known datasets with name {dataset_name} {len(_found_dsc)}. Taking the first one.')
+                    dataset_id = _found_dsc[0].id
                 else:
                     datasets = self.qs.get_datasets(name=dataset_name)
                     if not datasets:
@@ -1226,12 +1235,15 @@ class Cid():
                     datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
                 else: # try to find dataset and get athena database
                     found_datasets = self.qs.get_datasets(name=dataset_name)
+                    logger.debug(f'Related to dataset {dataset_name}: {[ds.id for ds in found_datasets]}')
                     if found_datasets:
                         schemas = list(set(sum([d.schemas for d in found_datasets], [])))
                         datasources = list(set(sum([d.datasources for d in found_datasets], [])))
+                        logger.debug(f'Found following schemas={schemas}, related to dataset with name {dataset_name}')
                 logger.info(f'Found {len(datasources)} Athena DataSources related to the DataSet {dataset_name}')
 
-                if len(schemas) == 1:
+                if not get_parameters().get('athena-database') and len(schemas) == 1 and schemas[0]:
+                    logger.debug(f'Picking the database={schemas[0]}')
                     self.athena.DatabaseName = schemas[0]
                 # else user will be suggested to choose database anyway
 
@@ -1252,13 +1264,13 @@ class Cid():
                             f"{datasource.name} {datasource.id} (workgroup={datasource.AthenaParameters.get('WorkGroup')})": datasource.id
                             for datasource in datasources_with_workgroup
                         }
-                        datasource_choices['Create New DataSource'] = None
+                        datasource_choices['Create New DataSource'] = 'Create New DataSource'
                         datasource_id = get_parameter(
                             param_name='quicksight-datasource-id',
                             message=f"Please choose DataSource (Choose the first one if not sure).",
                             choices=datasource_choices,
                         )
-                        if not datasource_id:
+                        if not datasource_id or datasource_id == 'Create New DataSource':
                             datasource_id = 'CID-CMD-Athena'
                             logger.info(f'Creating DataSource {datasource_id}')
                             athena_datasource = self.qs.create_data_source(

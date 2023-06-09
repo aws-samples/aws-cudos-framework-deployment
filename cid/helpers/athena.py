@@ -151,7 +151,7 @@ class Athena(CidBase):
         if _workgroup.get('State') == 'DISABLED':
             raise CidCritical(f'Athena Workgroup "{name}" is disabled.')
         if not _workgroup.get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation'):
-            raise CidCritical(f'Athena Workgroup "{name}" must have an output location s3 bucket configured in the region {self.region}.')
+            raise CidCritical(f'Athena Workgroup "{name}" must have an output location s3 bucket configured in the region {self.region}. See https://{self.region}.console.aws.amazon.com/athena/home?#/workgroups .')
         self._WorkGroup = name
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
