@@ -22,6 +22,8 @@ Metadata:
           - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
           - DeployComputeOptimizerDashboard
+          - PrimaryTagName
+          - SecondaryTagName
       - Label:
           default: 'Technical Parameters. Please do not change.'
         Parameters:
@@ -79,6 +81,10 @@ Metadata:
         default: "Existing Glue Data Catalog"
       DataBuketsKmsKeyArns:
         default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encypted with KMS. Also you can set it to '*'."
+      PrimaryTagName:
+        Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
+      SecondaryTagName:
+        Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
   cfn-lint:
     config:
       ignore_checks:
@@ -183,6 +189,17 @@ Parameters:
     Description: Choose 'yes' if Lake Formation permission model is in place for the account
     Default: "no"
     AllowedValues: ["yes", "no"]
+  PrimaryTagName:
+    Type: String
+    Description: Choose a tag name. Currently used only in Compute Optimizer dashboard.
+    Default: ""
+    AllowedValues: "/[^\s]*/"
+  SecondaryTagName:
+    Type: String
+    Description: Choose a tag name. Currently used only in Compute Optimizer dashboard.
+    Default: ""
+    AllowedValues: "/[^\s]*/"
+
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
@@ -1384,6 +1401,8 @@ Resources:
         view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
         view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
         view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ec2_instance'
+        primary_tag_name: !Sub '${PrimaryTagName}'
+        secondary_tag_name: !Sub '${SecondaryTagName}'
 
 Outputs:
   CostIntelligenceDashboardURL:
