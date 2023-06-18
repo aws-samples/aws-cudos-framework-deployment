@@ -87,7 +87,7 @@ class CUR(CidBase):
     @property
     def tableName(self) -> str:
         if self.metadata is None:
-            raise CidCritical('Error: Cannot detect any CUR table. Hint: Check if AWS Lake Formation is activated. Currently CID is not supporting it.')
+            raise CidCritical('Error: Cannot detect any CUR table. Hint: Check if AWS Lake Formation is activated on your account, verify that the LakeFormationEnabled parameter is set to yes on the deployment stack')
         return self.metadata.get('Name')
 
     @property
@@ -162,3 +162,8 @@ class CUR(CidBase):
     @property
     def fields(self) -> list:
         return [v.get('Name') for v in self.metadata.get('Columns', list())]
+
+    @property
+    def tag_and_cost_category_fields(self) -> list:
+        """ Returns all tags and cost category fields. """
+        return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
