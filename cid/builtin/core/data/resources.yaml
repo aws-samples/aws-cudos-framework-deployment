@@ -123,26 +123,36 @@ datasets:
     dependsOn:
       views:
         - kpi_ebs_snap
+      schedules:
+        - default
   kpi_ebs_storage_all:
     File: kpi/kpi_ebs_storage_all.json
     dependsOn:
       views:
        - kpi_ebs_storage_all
+      schedules:
+        - default
   kpi_instance_all:
     File: kpi/kpi_instance_all.json
     dependsOn:
       views:
         - kpi_instance_all
+      schedules:
+        - default
   kpi_s3_storage_all:
     File: kpi/kpi_s3_storage_all.json
     dependsOn:
       views:
         - kpi_s3_storage_all
+      schedules:
+        - default
   kpi_tracker:
     File: kpi/kpi_tracker.json
     dependsOn:
       views:
         - kpi_tracker
+      schedules:
+        - default
 
 
   # Trusted Advisor (TAO)
@@ -394,3 +404,12 @@ views:
         - aws_accounts
   ta_descriptions:
     File: shared/ta_descriptions.sql
+
+# Refresh Schedules for QuickSight DataSets
+schedules:
+  default:
+    id: cid
+    schedule_frequency_interval: DAILY
+    schedule_frequency_timezone: 'Europe/Berlin'
+    schedule_frequency_time_range: '02:00-05:00'
+    refresh_type: FULL_REFRESH
