@@ -6,31 +6,31 @@ We provide Terraform modules for your convenience in deploying CID dashboards.
 
 Currently, the following modules are provided:
 
-### [cur-setup-source](./cur-setup-source/README.md)
+### [cur-setup-destination](./cur-setup-destination/README.md) (Data Collection Account CUR Setup)
 
-Terraform module to set up a Cost and Usage Report in a source (payer) account
+Terraform module to set up a Cost and Usage Report in the data collection
+account for use in Cost Intelligence Dashboards. The module creates an S3 bucket
+with the necessary permissions for replicating CUR data from one or more payer
+accounts. If the data collection account is part of a different payer and is not
+covered in the CUR from the source accounts, the module can create a new Cost
+and Usage Report local to the data collection account.
+
+Review [module documentation](./cur-setup-destination/README.md) for details
+on module requirements, inputs, and outputs.
+
+### [cur-setup-source](./cur-setup-source/README.md) (Payer Account CUR Setup)
+
+Terraform module to set up a Cost and Usage Report in a payer account
 for use in Cost Intelligence Dashboards. The module creates an S3 bucket with
 the necessary permissions and configuration to replicate CUR data to the
-destination/aggregation account. If you are deploying Cost Intelligence Dashboards
+data collection account. If you are deploying Cost Intelligence Dashboards
 for a multi-payer environment, you can deploy one instance of this module for
 each payer account. 
 
 Review [module documentation](./cur-setup-source/README.md) for details
 on module requirements, inputs, and outputs.
 
-### [cur-setup-destination](./cur-setup-destination/README.md)
-
-Terraform module to set up a Cost and Usage Report in a destination/aggregation
-account for use in Cost Intelligence Dashboards. The module creates an S3 bucket
-with the necessary permissions for replicating CUR data from one or more source
-accounts. If the aggregation account is part of a different payer and is not
-covered in the CUR from the source accounts, the module can create a new Cost
-and Usage Report local to the aggregation account.
-
-Review [module documentation](./cur-setup-destination/README.md) for details
-on module requirements, inputs, and outputs.
-
-### [cid-dashboards](./cid-dashboards/README.md)
+### [cid-dashboards](./cid-dashboards/README.md) (Dashboard Deployment)
 
 Terraform module to deploy CID dashboards. This module is a wrapper around
 CloudFormation to allow you to deploy CID dashboards using your existing
@@ -77,11 +77,16 @@ specifying a branch name instead of a tag name*
 
 ### Step 1: CUR Setup
 
-If you have not set up CUR for use with CID dashboards, deploy the
+If you have not set up CUR for use with CID dashboards, first deploy the
 [cur-setup-destination](./cur-setup-destination/README.md) module to your
-data collection account. Then, in your payer account(s), deploy the
-[cur-setup-source](./cur-setup-source/README.md) module. You can choose to
-deploy both modules in a single Terraform root module/workspace
+**data collection account.**
+
+After deploying the module to your data collection account, deploy the
+[cur-setup-source](./cur-setup-source/README.md) module to your **payer account(s).**
+
+*Note: You can choose to deploy both modules in a single Terraform root module/workspace.
+If you do this, you must properly pass the S3 Bucket ARN from the `cur-setup-destination` module
+so that Terraform can infer the dependency correctly.*
 
 #### Example Usage
 
@@ -89,31 +94,31 @@ deploy both modules in a single Terraform root module/workspace
 # cur_setup.tf
 
 provider "aws" {
-  profile = "src"
+  profile = "payer"
   region  = "us-west-2"
-  alias   = "src"
+  alias   = "payer"
 }
 
 provider "aws" {
-  profile = "src"
+  profile = "payer"
   region  = "us-east-1"
-  alias   = "src_useast1"
+  alias   = "payer_useast1"
 }
 
 provider "aws" {
-  profile = "dst"
+  profile = "data_collection"
   region  = "us-west-2"
-  alias   = "dst"
+  alias   = "data_collection"
 }
 
 provider "aws" {
-  profile = "dst"
+  profile = "data_collection"
   region  = "us-east-1"
-  alias   = "dst_useast1"
+  alias   = "data_collection_useast1"
 }
 
 # Configure exactly one destination account
-module "cur_destination" {
+module "cur_data_collection_account" {
   source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination
 
   source_account_ids = ["1234567890"]
@@ -122,30 +127,30 @@ module "cur_destination" {
   # Provider alias for us-east-1 must be passed explicitly (required for CUR setup)
   # Optionally, you may pass the default aws provider explicitly as well
   providers = {
-    aws         = aws.dst
-    aws.useast1 = aws.dst_useast1
+    aws         = aws.data_collection
+    aws.useast1 = aws.data_collection_useast1
   }
 }
 
 # Configure one or more source (payer) accounts
-module "cur_source" {
+module "cur_payer" {
   source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-source"
 
-  destination_bucket_arn = module.cur_destination.cur_bucket_arn
+  destination_bucket_arn = module.cur_data_collection_account.cur_bucket_arn
 
   # Provider alias for us-east-1 must be passed explicitly (required for CUR setup)
   # Optionally, you may pass the default aws provider explicitly as well
   providers = {
-    aws         = aws.src
-    aws.useast1 = aws.src_useast1
+    aws         = aws.payer
+    aws.useast1 = aws.payer_useast1
   }
 }
 ```
 
 ### Step 2: Dashboard Prerequisite Setup
 
-After enabling CUR, either manually or with Terraform as described above,
-a few steps are necessary to prepare for dashboard deployment:
+After enabling CUR with Terraform as describe above, a few steps are necessary
+to prepare for dashboard deployment:
   1. Complete prerequisites in [Before You Start](../../README.md#before-you-start) including Quicksight setup
   2. Create an S3 bucket to upload the CloudFormation template
 
