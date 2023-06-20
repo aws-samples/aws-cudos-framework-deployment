@@ -1,5 +1,5 @@
 import boto3
-from tzlocal.windows_tz import win_tz, tz_win
+from tzlocal.windows_tz import win_tz
 from tzlocal import get_localzone_name
 
 from cid.utils import exec_env
@@ -44,7 +44,7 @@ def get_timezone_from_aws_region(region):
 
 def get_default_timezone():
     """ Get timzone best guess from Shell or from Region. """
-    if exec_env()['terminal'] not in ('cloudshell', 'lambda'):
+    if exec_env()['terminal'] in ('cloudshell', 'lambda'):
         region = boto3.session.Session().region_name
         return get_timezone_from_aws_region(region)
     else:
@@ -55,14 +55,3 @@ def get_all_timezones():
     """Get all zones"""
     # zoneinfo is not working with 3.7, 3.8
     return sorted(list(win_tz.values()))
-
-def get_execution_timezone(proposed_tz):
-    """Get timezone from provided parameter or best guess from shell or from region"""
-    if proposed_tz and proposed_tz in tz_win:
-        return proposed_tz
-
-    if exec_env()['terminal'] not in ('lambda'):
-        region = boto3.session.Session().region_name
-        return get_timezone_from_aws_region(region)
-    else:
-        return get_localzone_name()
