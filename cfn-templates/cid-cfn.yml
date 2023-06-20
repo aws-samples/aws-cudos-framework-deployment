@@ -103,8 +103,7 @@ Parameters:
     Description: See https://quicksight.aws.amazon.com/sn/admin#users
   QuickSightDataSetRefreshSchedule:
     Type: String
-    MinLength: 3
-    Default: cron(0 4 * * ? *)
+    Default: ''
     Description: REQUIRED - cron expression on when to refresh spice datasets daily outside of business hours. Default is 4 AM utc, this should work for most customers in US and EU time zones.'
   CURBucketPath:
     Type: String
