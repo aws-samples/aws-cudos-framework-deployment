@@ -73,8 +73,13 @@ dashboards:
 
   Compute Optimizer:
     name: Compute Optimizer Dashboard
-    templateId: compute_optimizer
+
+    templateId: compute-optimizer-dashboard-22
+    sourceAccountId: '478914801489'
+
+ #   templateId: compute_optimizer
     dashboardId: compute-optimizer-dashboard
+ 
     dependsOn:
       datasets:
         - compute_optimizer_all_options
