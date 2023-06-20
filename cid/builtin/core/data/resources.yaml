@@ -408,8 +408,8 @@ views:
 # Refresh Schedules for QuickSight DataSets
 schedules:
   default:
-    id: cid
-    schedule_frequency_interval: DAILY
-    schedule_frequency_timezone: 'Europe/Berlin'
-    schedule_frequency_time_range: '02:00-05:00'
-    refresh_type: FULL_REFRESH
+    ScheduleId: cid
+    ScheduleFrequency:
+      Interval: DAILY
+      TimeOfTheDay: '02:00-05:00'
+    RefreshType: FULL_REFRESH
