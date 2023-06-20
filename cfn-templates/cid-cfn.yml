@@ -193,12 +193,12 @@ Parameters:
     Type: String
     Description: Choose a tag name for Primary Tag. Currently used only in Compute Optimizer dashboard.
     Default: ""
-    AllowedValues: "[a-zA-Z0-9_]*"
+    AllowedPattern: "[a-zA-Z0-9_]*"
   SecondaryTagName:
     Type: String
     Description: Choose a tag name for Secondary Tag. Currently used only in Compute Optimizer dashboard.
     Default: ""
-    AllowedValues: "[a-zA-Z0-9_]*"
+    AllowedPattern: "[a-zA-Z0-9_]*"
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
