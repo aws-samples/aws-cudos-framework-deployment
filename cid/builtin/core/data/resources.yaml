@@ -84,7 +84,7 @@ dashboards:
       datasets:
         - compute_optimizer_all_options
     versions:
-      minTemplateVersion: 3
+      minTemplateVersion: 0
       minTemplateDescription: "v1.1.1"
 
 
