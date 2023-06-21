@@ -9,12 +9,12 @@ SELECT
     'ebs_volume' as module,
     'ebs_volume' as recommendationsourcetype,
     finding as finding,
-    cast ('' as varchar) as reason,
+    cast (NULL as varchar(1)) as reason,
     lookbackperiodindays as lookbackperiodindays,
     currentperformancerisk as currentperformancerisk,
     errorcode as errorcode,
     errormessage as errormessage,
-    cast ('' as varchar) as ressouce_details,
+    cast (NULL as varchar(1)) as ressouce_details,
 
     CONCAT(
         utilizationmetrics_volumereadopspersecondmaximum, ';',
@@ -25,7 +25,7 @@ SELECT
 
     'Current' as option_name,
     currentconfiguration_volumetype as option_from,
-    cast ('' as varchar) as option_to,
+    cast (NULL as varchar(1)) as option_to,
     recommendationoptions_1_estimatedmonthlysavings_currency as currency,
     try_cast(current_monthlyprice as double) as monthlyprice,
     try(cast(current_monthlyprice as double) / 730  ) as hourlyprice,
@@ -74,7 +74,8 @@ SELECT
         currentconfiguration_volumebaselinethroughput, ';', --  as volumebaselinethroughput
         currentconfiguration_volumeburstiops, ';', --  as volumeburstiops
         currentconfiguration_volumeburstthroughput, ';' --  as volumeburstthroughput
-    ) as option_details
+    ) as option_details,
+    tags as tags
 
 FROM
     compute_optimizer_ebs_volume_lines
@@ -91,13 +92,13 @@ UNION SELECT
     'ebs_volume' as module,
     'ebs_volume' as recommendationsourcetype,
     finding as finding,
-    cast ('' as varchar) as reason,
+    cast (NULL as varchar(1)) as reason,
     lookbackperiodindays as lookbackperiodindays,
     currentperformancerisk as currentperformancerisk,
     errorcode as errorcode,
     errormessage as errormessage,
-    cast ('' as varchar) as ressouce_details,
-    cast ('' as varchar) as utilizationmetrics,
+    cast (NULL as varchar(1)) as ressouce_details,
+    cast (NULL as varchar(1)) as utilizationmetrics,
 
     'Option 1' as option_name,
     currentconfiguration_volumetype as option_from,
@@ -150,7 +151,8 @@ UNION SELECT
         recommendationoptions_1_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
         recommendationoptions_1_configuration_volumeburstiops, ';', -- as volumeburstiops,
         recommendationoptions_1_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
-    ) as option_details
+    ) as option_details,
+    tags as tags
 
 FROM
     compute_optimizer_ebs_volume_lines
@@ -169,13 +171,13 @@ UNION SELECT
     'ebs_volume' as module,
     'ebs_volume' as recommendationsourcetype,
     finding as finding,
-    cast ('' as varchar) as reason,
+    cast (NULL as varchar(1)) as reason,
     lookbackperiodindays as lookbackperiodindays,
     currentperformancerisk as currentperformancerisk,
     errorcode as errorcode,
     errormessage as errormessage,
-    cast ('' as varchar) as ressouce_details,
-    cast ('' as varchar) as utilizationmetrics,
+    cast (NULL as varchar(1)) as ressouce_details,
+    cast (NULL as varchar(1)) as utilizationmetrics,
 
     'Option 2' as option_name,
     currentconfiguration_volumetype as option_from,
@@ -229,7 +231,8 @@ UNION SELECT
         recommendationoptions_2_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
         recommendationoptions_2_configuration_volumeburstiops, ';', -- as volumeburstiops,
         recommendationoptions_2_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
-    ) as option_details
+    ) as option_details,
+    tags as tags
 
 FROM
     compute_optimizer_ebs_volume_lines
@@ -247,13 +250,13 @@ WHERE
     'ebs_volume' as module,
     'ebs_volume' as recommendationsourcetype,
     finding as finding,
-    cast ('' as varchar) as reason,
+    cast (NULL as varchar(1)) as reason,
     lookbackperiodindays as lookbackperiodindays,
     currentperformancerisk as currentperformancerisk,
     errorcode as errorcode,
     errormessage as errormessage,
-    cast ('' as varchar) as ressouce_details,
-    cast ('' as varchar) as utilizationmetrics,
+    cast (NULL as varchar(1)) as ressouce_details,
+    cast (NULL as varchar(1)) as utilizationmetrics,
 
 
     'Option 3' as option_name,
@@ -307,7 +310,8 @@ WHERE
         recommendationoptions_3_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
         recommendationoptions_3_configuration_volumeburstiops, ';', -- as volumeburstiops,
         recommendationoptions_3_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
-    ) as option_details
+    ) as option_details,
+    tags as tags
 
 FROM
     compute_optimizer_ebs_volume_lines

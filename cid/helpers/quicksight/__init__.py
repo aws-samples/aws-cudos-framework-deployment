@@ -224,7 +224,7 @@ class QuickSight(CidBase):
         # Check for extra informations from resource definition
         version_obj = _definition.get('versions', dict())
         min_template_version = _safe_int(version_obj.get('minTemplateVersion'))
-        default_description_version = _safe_int(version_obj.get('minTemplateDescription'))
+        default_description_version = version_obj.get('minTemplateDescription')
 
         # Fetch template referenced as dashboard source (if any)
         _template_arn = dashboard.version.get('SourceEntityArn')
@@ -254,6 +254,7 @@ class QuickSight(CidBase):
                     logger.info(f'Unable to describe template for {dashboardId}, {e}')
             else:
                 logger.info("Minimum template version could not be found for Dashboard {dashboardId}: {_template_arn}, deployed template could not be described")
+
 
         # Fetch datasets
         for dataset in dashboard.version.get('DataSetArns'):
