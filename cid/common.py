@@ -1321,11 +1321,12 @@ class Cid():
             'cur_table_name': self.cur.tableName if cur_required else None
         }
 
-        logger.debug(columns_tpl)
+        logger.debug(f'dataset_id={dataset_id}')
+        logger.debug(f'columns_tpl={columns_tpl}')
 
         columns_tpl = self.get_template_parameters(
             dataset_definition.get('parameters', dict()),
-            f'dataset-{dataset_id}-',
+            f"dataset-{dataset_id or data.get('DataSetId')}-",
             columns_tpl,
         )
         logger.debug(columns_tpl)
