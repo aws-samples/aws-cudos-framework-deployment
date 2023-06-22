@@ -350,14 +350,6 @@
                     "Type": "string"
                 },
                 {
-                    "Name": "effectiverecommendationpreferencescpuvendorarchitectures",
-                    "Type": "string"
-                },
-                {
-                    "Name": "effectiverecommendationpreferencesenhancedinfrastructuremetrics",
-                    "Type": "string"
-                },
-                {
                     "Name": "effectiverecommendationpreferencesinferredworkloadtypes",
                     "Type": "string"
                 },
@@ -375,6 +367,14 @@
                 },
                 {
                     "Name": "recommendationoptions_3_migrationeffort",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiverecommendationpreferencescpuvendorarchitectures",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiverecommendationpreferencesenhancedinfrastructuremetrics",
                     "Type": "string"
                 }
             ],
