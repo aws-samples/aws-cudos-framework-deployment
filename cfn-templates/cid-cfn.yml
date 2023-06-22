@@ -137,7 +137,7 @@ Parameters:
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.17
+    Default: 0.2.18
     Description: A version of CID package
   Suffix:
     Type: String
@@ -191,12 +191,12 @@ Parameters:
     AllowedValues: ["yes", "no"]
   PrimaryTagName:
     Type: String
-    Description: Choose a tag name for Primary Tag. Currently used only in Compute Optimizer dashboard.
+    Description: Choose a tag name for Primary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leve empty if not sure.
     Default: ""
     AllowedPattern: "[a-zA-Z0-9_]*"
   SecondaryTagName:
     Type: String
-    Description: Choose a tag name for Secondary Tag. Currently used only in Compute Optimizer dashboard.
+    Description: Choose a tag name for Secondary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leve empty if not sure.
     Default: ""
     AllowedPattern: "[a-zA-Z0-9_]*"
 
@@ -1401,8 +1401,8 @@ Resources:
         view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
         view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
         view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ec2_instance'
-        primary_tag_name: !Sub '${PrimaryTagName}'
-        secondary_tag_name: !Sub '${SecondaryTagName}'
+        dataset-compute-optimizer-all-options-primary-tag-name: !Sub '${PrimaryTagName}'
+        dataset-compute-optimizer-all-options-secondary-tag-name: !Sub '${SecondaryTagName}'
 
 Outputs:
   CostIntelligenceDashboardURL:
