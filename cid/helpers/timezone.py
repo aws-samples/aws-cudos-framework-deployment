@@ -44,7 +44,7 @@ def get_timezone_from_aws_region(region):
 
 def get_default_timezone():
     """ Get timzone best guess from Shell or from Region. """
-    if exec_env()['terminal'] not in ('cloudshell', 'lambda'):
+    if exec_env()['terminal'] in ('cloudshell', 'lambda'):
         region = boto3.session.Session().region_name
         return get_timezone_from_aws_region(region)
     else:
