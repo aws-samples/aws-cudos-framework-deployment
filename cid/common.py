@@ -1380,7 +1380,7 @@ class Cid():
                 if compiled_dataset.get("ImportMode") == "SPICE":
                     dataset_id = compiled_dataset.get('DataSetId')
                     schedules_definitions = []
-                    for schedule_name in dataset_definition.get('dependsOn', {}).get('schedules', []):
+                    for schedule_name in dataset_definition.get('schedules', []):
                         schedules_definitions.append(self.get_definition("schedule", name=schedule_name))
                         self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions)
             else:
@@ -1389,7 +1389,7 @@ class Cid():
             dataset_id = self.qs.create_dataset(compiled_dataset)
             if dataset_id and compiled_dataset.get("ImportMode") == "SPICE":
                 schedules_definitions = []
-                for schedule_name in dataset_definition.get('dependsOn', {}).get('schedules', []):
+                for schedule_name in dataset_definition.get('schedules', []):
                     schedules_definitions.append(self.get_definition("schedule", name=schedule_name))
                     self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions)
         return True
