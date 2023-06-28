@@ -1,8 +1,5 @@
 CREATE OR REPLACE VIEW compute_optimizer_auto_scale_options AS
 
-
-
-
 SELECT * FROM (
 
     SELECT
