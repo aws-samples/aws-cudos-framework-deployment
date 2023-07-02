@@ -342,6 +342,7 @@ Resources:
           - quicksight:UpdateRefreshSchedule
           - quicksight:DeleteRefreshSchedule
           - quicksight:DescribeRefreshSchedule
+          - quicksight:ListRefreshSchedules
           - quicksight:CreateDataSetRefreshProperties
           - quicksight:DescribeDataSetRefreshProperties
           - quicksight:UpdateDataSetRefreshProperties
