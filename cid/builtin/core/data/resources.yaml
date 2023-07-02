@@ -81,7 +81,10 @@ dashboards:
     versions:
       minTemplateVersion: 3
       minTemplateDescription: "v1.1.1"
-
+      versionMap:
+        1: 'v1.0.0'
+        2: 'v1.0.1'
+        3: 'v1.1.0'
 
 # QuickSight DataSets definitions
 datasets:
@@ -209,6 +212,13 @@ datasets:
         - business_units_map
     schedules:
       - default
+    parameters:
+      primary_tag_name:
+        default: 'application'
+        description: "primary tag (ex: application). if your are not using tags, leave default. Special characters are not allowed."
+      secondary_tag_name:
+        default: 'owner'
+        description: "secondary tag (ex: owner). if your are not using tags, leave default. Special characters are not allowed."
 
 # Athena views definitions
 views:

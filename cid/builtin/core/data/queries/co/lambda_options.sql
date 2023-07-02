@@ -18,8 +18,8 @@ CREATE OR REPLACE VIEW compute_optimizer_lambda_options AS
     ) reason
    , lookbackperiodindays lookbackperiodindays
    , currentperformancerisk as currentperformancerisk
-   , cast(NULL as varchar) errorcode
-   , cast(NULL as varchar) errormessage
+   , cast(NULL as varchar(1)) errorcode
+   , cast(NULL as varchar(1)) errormessage
    , CONCAT(
          numberofinvocations , ';',
          current_costtotal , ';',
@@ -32,8 +32,8 @@ CREATE OR REPLACE VIEW compute_optimizer_lambda_options AS
          utilizationmetrics_memorymaximum, ';'
     ) utilizationmetrics
    , 'Current' option_name
-    , cast(NULL as varchar) option_from
-   , cast(NULL as varchar) option_to
+   , cast(NULL as varchar(1)) option_from
+   , cast(NULL as varchar(1)) option_to
    , recommendationoptions_1_estimatedmonthlysavings_currency currency
    , try_cast(NULL as double) as monthlyprice
    , try_cast(NULL as double) as hourlyprice
@@ -65,6 +65,8 @@ CREATE OR REPLACE VIEW compute_optimizer_lambda_options AS
          utilizationmetrics_durationmaximum, ';'
 
        ) option_details
+   , cast('' as varchar(1)) as tags
+
    FROM
      compute_optimizer_lambda_lines
    WHERE (functionarn LIKE '%arn:%')
@@ -78,16 +80,16 @@ UNION SELECT
    , 'lambda' module
    , 'lambda' recommendationsourcetype
    , finding finding
-   , cast(NULL as varchar) reason
+   , cast(NULL as varchar(1)) reason
    , lookbackperiodindays lookbackperiodindays
    , currentperformancerisk as currentperformancerisk
-   , cast(NULL as varchar) errorcode
-   , cast(NULL as varchar) errormessage
-   , cast(NULL as varchar) ressouce_details
-   , cast(NULL as varchar) utilizationmetrics
+   , cast(NULL as varchar(1)) errorcode
+   , cast(NULL as varchar(1)) errormessage
+   , cast(NULL as varchar(1)) ressouce_details
+   , cast(NULL as varchar(1)) utilizationmetrics
    , 'Option 1' as option_name
-   , cast(NULL as varchar) option_from
-   , cast(NULL as varchar) option_to
+   , cast(NULL as varchar(1)) option_from
+   , cast(NULL as varchar(1)) option_to
    , recommendationoptions_1_estimatedmonthlysavings_currency currency
    , cast(NULL as double) monthlyprice
    , cast(NULL as double) hourlyprice
@@ -117,6 +119,8 @@ UNION SELECT
          recommendationoptions_1_projectedutilizationmetrics_durationlowerbound, ';',
          recommendationoptions_1_projectedutilizationmetrics_durationupperbound, ';'
     ) option_details
+   , cast('' as varchar(1)) as tags
+
 
 
     FROM
@@ -134,16 +138,16 @@ UNION SELECT
    , 'lambda' module
    , 'lambda' recommendationsourcetype
    , finding finding
-   , cast(NULL as varchar) reason
+   , cast(NULL as varchar(1)) reason
    , lookbackperiodindays lookbackperiodindays
    , currentperformancerisk as currentperformancerisk
-   , cast(NULL as varchar) errorcode
-   , cast(NULL as varchar) errormessage
-   , cast(NULL as varchar) ressouce_details
-   , cast(NULL as varchar) utilizationmetrics
+   , cast(NULL as varchar(1)) errorcode
+   , cast(NULL as varchar(1)) errormessage
+   , cast(NULL as varchar(1)) ressouce_details
+   , cast(NULL as varchar(1)) utilizationmetrics
    , 'Option 2' as option_name
-   , cast(NULL as varchar) option_from
-   , cast(NULL as varchar) option_to
+   , cast(NULL as varchar(1)) option_from
+   , cast(NULL as varchar(1)) option_to
    , recommendationoptions_2_estimatedmonthlysavings_currency currency
    , cast(NULL as double) monthlyprice
    , cast(NULL as double) hourlyprice
@@ -173,6 +177,8 @@ UNION SELECT
          recommendationoptions_2_projectedutilizationmetrics_durationlowerbound, ';',
          recommendationoptions_2_projectedutilizationmetrics_durationupperbound, ';'
     ) option_details
+   , cast('' as varchar(1)) as tags
+
 
 
     FROM
@@ -192,16 +198,16 @@ UNION SELECT
    , 'lambda' module
    , 'lambda' recommendationsourcetype
    , finding finding
-   , cast(NULL as varchar) reason
+   , cast(NULL as varchar(1)) reason
    , lookbackperiodindays lookbackperiodindays
    , currentperformancerisk as currentperformancerisk
-   , cast(NULL as varchar) errorcode
-   , cast(NULL as varchar) errormessage
-   , cast(NULL as varchar) ressouce_details
-   , cast(NULL as varchar) utilizationmetrics
+   , cast(NULL as varchar(1)) errorcode
+   , cast(NULL as varchar(1)) errormessage
+   , cast(NULL as varchar(1)) ressouce_details
+   , cast(NULL as varchar(1)) utilizationmetrics
    , 'Option 3' as option_name
-   , cast(NULL as varchar) option_from
-   , cast(NULL as varchar) option_to
+   , cast(NULL as varchar(1)) option_from
+   , cast(NULL as varchar(1)) option_to
    , recommendationoptions_3_estimatedmonthlysavings_currency currency
    , cast(NULL as double) monthlyprice
    , cast(NULL as double) hourlyprice
@@ -231,6 +237,8 @@ UNION SELECT
          recommendationoptions_3_projectedutilizationmetrics_durationlowerbound, ';',
          recommendationoptions_3_projectedutilizationmetrics_durationupperbound, ';'
     ) option_details
+   , cast(NULL as varchar(1)) as tags
+
 
 
     FROM

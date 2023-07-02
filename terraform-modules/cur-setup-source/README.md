@@ -1,4 +1,4 @@
-# CID Terraform Module: cur-setup-destination
+# CID Terraform Module: cur-setup-source
 
 Terraform module to set up a Cost and Usage Report in a source (payer) account
 for use in Cost Intelligence Dashboards. The module creates an S3 bucket with the necessary

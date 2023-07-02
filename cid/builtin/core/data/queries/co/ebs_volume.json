@@ -216,6 +216,14 @@
                 {
                     "Name": "recommendationoptions_3_estimatedmonthlysavings_value",
                     "Type": "string"
+                },
+                {
+                    "Name": "currentConfiguration_rootVolume",
+                    "Type": "string"
+                },
+                {
+                    "Name": "tags",
+                    "Type": "string"
                 }
             ],
             "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",

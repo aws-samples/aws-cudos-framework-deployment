@@ -22,6 +22,8 @@ Metadata:
           - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
           - DeployComputeOptimizerDashboard
+          - PrimaryTagName
+          - SecondaryTagName
       - Label:
           default: 'Technical Parameters. Please do not change.'
         Parameters:
@@ -79,6 +81,10 @@ Metadata:
         default: "Existing Glue Data Catalog"
       DataBuketsKmsKeyArns:
         default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encypted with KMS. Also you can set it to '*'."
+      PrimaryTagName:
+        Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
+      SecondaryTagName:
+        Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
   cfn-lint:
     config:
       ignore_checks:
@@ -130,7 +136,7 @@ Parameters:
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.13
+    Default: 0.2.18
     Description: A version of CID package
   Suffix:
     Type: String
@@ -182,6 +188,19 @@ Parameters:
     Description: Choose 'yes' if Lake Formation permission model is in place for the account
     Default: "no"
     AllowedValues: ["yes", "no"]
+  PrimaryTagName:
+    Type: String
+    Description: Choose a tag name for Primary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leve as is if not sure.
+    Default: "owner"
+    MinLength: 1 # cid cmd do not accept empty parameters
+    AllowedPattern: "[a-zA-Z0-9_]*"
+  SecondaryTagName:
+    Type: String
+    Description: Choose a tag name for Secondary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leve as is if not sure.
+    Default: "environment"
+    MinLength: 1 # cid cmd do not accept empty parameters
+    AllowedPattern: "[a-zA-Z0-9_]*"
+
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
@@ -1383,6 +1402,8 @@ Resources:
         view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
         view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
         view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ec2_instance'
+        dataset-compute-optimizer-all-options-primary-tag-name: !Sub '${PrimaryTagName}'
+        dataset-compute-optimizer-all-options-secondary-tag-name: !Sub '${SecondaryTagName}'
 
 Outputs:
   CostIntelligenceDashboardURL:

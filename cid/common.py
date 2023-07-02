@@ -1264,13 +1264,13 @@ class Cid():
                             f"{datasource.name} {datasource.id} (workgroup={datasource.AthenaParameters.get('WorkGroup')})": datasource.id
                             for datasource in datasources_with_workgroup
                         }
-                        datasource_choices['Create New DataSource'] = None
+                        datasource_choices['Create New DataSource'] = 'Create New DataSource'
                         datasource_id = get_parameter(
                             param_name='quicksight-datasource-id',
                             message=f"Please choose DataSource (Choose the first one if not sure).",
                             choices=datasource_choices,
                         )
-                        if not datasource_id:
+                        if not datasource_id or datasource_id == 'Create New DataSource':
                             datasource_id = 'CID-CMD-Athena'
                             logger.info(f'Creating DataSource {datasource_id}')
                             athena_datasource = self.qs.create_data_source(
@@ -1321,11 +1321,12 @@ class Cid():
             'cur_table_name': self.cur.tableName if cur_required else None
         }
 
-        logger.debug(columns_tpl)
+        logger.debug(f'dataset_id={dataset_id}')
+        logger.debug(f'columns_tpl={columns_tpl}')
 
         columns_tpl = self.get_template_parameters(
             dataset_definition.get('parameters', dict()),
-            f'dataset-{dataset_id}-',
+            f"dataset-{dataset_id or data.get('DataSetId')}-",
             columns_tpl,
         )
         logger.debug(columns_tpl)

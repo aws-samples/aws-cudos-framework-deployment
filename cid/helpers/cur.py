@@ -120,7 +120,7 @@ class CUR(CidBase):
         except Exception as exc:
             return False
 
-        if table.get('TableType') != 'EXTERNAL_TABLE':
+        if table.get('TableType') not in ['EXTERNAL_TABLE', 'VIRTUAL_VIEW']:
             return False
         columns = [cols.get('Name') for cols in table.get('Columns')]
         if not all([cols in columns for cols in self.curRequiredColumns]):
