@@ -160,6 +160,7 @@ def export_analysis(qs, athena):
         datasets[dataset_name] = {
             'data': dataset_data,
             'dependsOn': {'views': dependancy_views},
+            'schedules': ['default'], #FIXME: need to read a real schedule
         }
         if dep_cur:
             datasets[dataset_name]['dependsOn']['cur'] = True
