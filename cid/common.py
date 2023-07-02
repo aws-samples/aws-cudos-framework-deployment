@@ -1178,10 +1178,6 @@ class Cid():
                 data = json.loads(text)
             else:
                 data = text
-        elif definition.get('Data'):
-            data = definition.get('Data')
-        elif definition.get('data'):
-            data = definition.get('data')
         if data is None:
             raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(definition)}. Check resources file.")
         return data
