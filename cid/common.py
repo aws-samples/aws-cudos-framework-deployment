@@ -275,7 +275,7 @@ class Cid():
         '''
         if get_parameters().get('resources'):
             source = get_parameters().get('resources')
-            logging.info(f'Loading resources from {source}')
+            logger.info(f'Loading resources from {source}')
             resources = {}
             try:
                 if source.startswith('https://'):
