@@ -1,8 +1,14 @@
+''' Helper functions for dataset schedules
+'''
+import logging
+
 import boto3
 from tzlocal.windows_tz import win_tz
 from tzlocal import get_localzone_name
 
 from cid.utils import exec_env
+
+logger = logging.getLogger(__name__)
 
 MAPPING_REGION_2_TIMEZONE = {
     "us-east-1": "America/New_York",
@@ -13,7 +19,6 @@ MAPPING_REGION_2_TIMEZONE = {
     "ap-east-1": "Asia/Hong_Kong",
     "ap-south-1": "Asia/Kolkata",
     "ap-southeast-3": "Asia/Jakarta",
-    "ap-south-1": "Asia/Kolkata",
     "ap-southeast-4": "Australia/Melbourne",
     "ap-northeast-3": "Asia/Tokyo",
     "ap-northeast-2": "Asia/Seoul",
@@ -39,16 +44,22 @@ MAPPING_REGION_2_TIMEZONE = {
 
 def get_timezone_from_aws_region(region):
     """ Get Timezone from AWS region. """
+    if region not in MAPPING_REGION_2_TIMEZONE:
+        logger.warning('Unkown region {region}. please create a github issue to add it.')
     return MAPPING_REGION_2_TIMEZONE.get(region)
 
 
 def get_default_timezone():
     """ Get timzone best guess from Shell or from Region. """
+
+    # In a case of running lambda of chloudshell the local timezone does not make much sense
+    # so we take the one from the region
     if exec_env()['terminal'] in ('cloudshell', 'lambda'):
         region = boto3.session.Session().region_name
         return get_timezone_from_aws_region(region)
-    else:
-        return get_localzone_name()
+
+    # for all other cases use local timezone of the shell
+    return get_localzone_name()
 
 
 def get_all_timezones():
