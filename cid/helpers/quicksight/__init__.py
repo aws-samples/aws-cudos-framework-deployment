@@ -1055,12 +1055,13 @@ class QuickSight(CidBase):
         # get all existing schedules for the given dataset
         try:
             existing_schedules = self.get_dataset_refresh_schedules(dataset_id)
-            if existing_schedules:
-                logger.info(f'Dataset {dataset_id} already has scheduled refresh.')
-                return
         except CidError as exc:
-            existing_schedules = []
             logger.debug(exc, exc_info=True)
+            logger.warning(
+                f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
+                ' Please make sure scheduled refresh is configured manualy.'
+            )
+            return
 
         if schedules:
             if exec_env()['terminal'] in ('lambda'):
@@ -1102,9 +1103,8 @@ class QuickSight(CidBase):
             schedule["RefreshType"] = schedule.get("RefreshType", "FULL_REFRESH")
             if "providedBy" in schedule:
                 del schedule["providedBy"]
-            
-            if not existing_schedule:
 
+            if not existing_schedule:
                 # Avoid adding a new schedule  when customer already has put a schedule manually as this can lead to additional charges.
                 same_schedules_but_different_id = [
                     existing for existing in existing_schedules 
@@ -1119,7 +1119,6 @@ class QuickSight(CidBase):
                         f' but with different id. Skipping to avoid duplication. Please delete all manually created schedules for dataset {dataset_id}'
                     )
                     continue
-            
                 logger.debug(f'Creating refresh schedule with id {schedule["ScheduleId"]} for dataset {dataset_id}.')
                 try:
                     self.client.create_refresh_schedule(
@@ -1129,14 +1128,13 @@ class QuickSight(CidBase):
                     )
                     logger.debug(f'Refresh schedule with id {schedule["ScheduleId"]} for dataset {dataset_id} is created.')
                 except self.client.exceptions.ResourceNotFoundException:
-                    logger.error(f'Unable to create refresh schedule with id "{schedule["ScheduleId"]}".'
-                                f' Dataset {dataset_id} does not exist.')
+                    logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]}. Dataset {dataset_id} does not exist.')
                 except self.client.exceptions.AccessDeniedException:
-                    logger.error(f'Unable to create refresh schedule with id "{schedule["ScheduleId"]}".'
-                                f' No quicksight:CreateDataSet permission or missing DataSetId {dataset_id}')
+                    logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]}. Please add quicksight:CreateDataSet permission.')
                 except Exception as exc:
-                    logger.error(f'Unable to create refresh schedule with id "{schedule["ScheduleId"]}" for dataset "{dataset_id}": {str(exc)}')
+                    logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
             else: 
+                # schedule exists so we need to update
                 logger.debug(f'Updating refresh schedule with id {schedule["ScheduleId"]} for dataset {dataset_id}.')
                 try:
                     self.client.update_refresh_schedule(
@@ -1146,21 +1144,16 @@ class QuickSight(CidBase):
                     )
                     logger.debug(f'Refresh schedule with id {schedule["ScheduleId"]} for dataset {dataset_id} is updated.')
                 except self.client.exceptions.ResourceNotFoundException:
-                    logger.error(f'Unable to Updqte refresh schedule with id "{schedule["ScheduleId"]}".'
-                                f' Dataset {dataset_id} does not exist.')
+                    logger.error(f'Unable to update refresh schedule with id {schedule["ScheduleId"]}. Dataset {dataset_id} does not exist.')
                 except self.client.exceptions.AccessDeniedException:
-                    logger.error(f'Unable to Updqte refresh schedule with id "{schedule["ScheduleId"]}".'
-                                f' No quicksight:UpdqteDataSet permission or missing DataSetId {dataset_id}')
+                    logger.error(f'Unable to update refresh schedule with id {schedule["ScheduleId"]}. Please add quicksight:UpdqteDataSet permission.')
                 except Exception as exc:
-                    logger.error(f'Unable to Updqte refresh schedule with id "{schedule["ScheduleId"]}" for dataset "{dataset_id}": {str(exc)}')
+                    logger.error(f'Unable to update refresh schedule with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
 
-        # Verify if there is at least one schedule and warn user if there none
+        # Verify if there is at least one schedule and warn user if not
         try:
-            if not self.get_refresh_schedules(dataset_id):
-                logger.warn(
-                    f'There is no refresh schedule for dataset "{dataset_id}". '
-                    f'Please create a refresh schedule manually.'
-                )
+            if not self.get_dataset_refresh_schedules(dataset_id):
+                logger.warning(f'There is no refresh schedule for dataset "{dataset_id}". Please create a refresh schedule manually.' )
         except CidError:
             pass
 
