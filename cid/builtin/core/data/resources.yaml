@@ -127,8 +127,6 @@ datasets:
       cur: true
       views:
         - ${cur_table_name}
-    schedules:
-      - default
 
   # KPI DataSets
   kpi_ebs_snap:
