@@ -15,7 +15,7 @@ from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
-from cid.utils import get_parameter, get_parameters, exec_env
+from cid.utils import get_parameter, get_parameters, exec_env, cid_print
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
@@ -1106,14 +1106,8 @@ class QuickSight(CidBase):
 
             if not existing_schedule:
                 # Avoid adding a new schedule  when customer already has put a schedule manually as this can lead to additional charges.
-                same_schedules_but_different_id = [
-                    existing for existing in existing_schedules 
-                    if (schedule.get("RefreshType") == existing.get("RefreshType") 
-                        and schedule["ScheduleFrequency"].get("Interval") == existing["ScheduleFrequency"].get("Interval") 
-                        and schedule["ScheduleId"] != existing["ScheduleId"]
-                    )
-                ]
-                if same_schedules_but_different_id:
+                schedules_with_different_id = [existing for existing in existing_schedules if schedule["ScheduleId"] != existing["ScheduleId"] ]
+                if schedules_with_different_id:
                     logger.info(
                         f'Found the same schedule {schedule.get("RefreshType")} / {schedule["ScheduleFrequency"].get("Interval")}'
                         f' but with different id. Skipping to avoid duplication. Please delete all manually created schedules for dataset {dataset_id}'
