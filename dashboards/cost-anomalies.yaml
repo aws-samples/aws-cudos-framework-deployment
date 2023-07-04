@@ -1,0 +1,121 @@
+dashboards:
+  AWS COST ANOMALIES DASHBOARD:
+    dependsOn:
+      datasets:
+      - ca_summary_view
+    name: AWS Cost Anomalies Dashboard
+    dashboardId: aws-cost-anomalies-dashboard
+    templateId: aws-cost-anomalies-dashboard
+    sourceAccountId: '774028859993'
+    region: us-east-1
+datasets:
+  ca_summary_view:
+    data:
+      DataSetId: ca_summary_view
+      Name: ca_summary_view
+      PhysicalTableMap:
+        3cec5d27-cc1d-4503-9b2e-c2bf0ce7b389:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: cost_anomalies
+            InputColumns:
+            - Name: year
+              Type: STRING
+            - Name: month
+              Type: STRING
+            - Name: anomalyid
+              Type: STRING
+            - Name: dimensionvalue
+              Type: STRING
+            - Name: anomaly_start_date
+              Type: DATETIME
+            - Name: anomalylastupdatedate
+              Type: DATETIME
+            - Name: maximpact
+              Type: INTEGER
+            - Name: totalactualspend
+              Type: INTEGER
+            - Name: totalexpectedspend
+              Type: INTEGER
+            - Name: tota_impact
+              Type: INTEGER
+            - Name: totalimpactpercentage
+              Type: INTEGER
+            - Name: duration
+              Type: INTEGER
+            - Name: monitorarn
+              Type: STRING
+            - Name: region
+              Type: STRING
+            - Name: service
+              Type: STRING
+            - Name: linkedaccount
+              Type: STRING
+            - Name: linkedaccountname
+              Type: STRING
+            - Name: usagetype
+              Type: STRING
+      LogicalTableMap:
+        0e0f5f65-03fe-4bbd-b40d-34a68730292e:
+          Alias: cost_anomalies
+          DataTransforms:
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - year
+              - month
+              - anomalyid
+              - dimensionvalue
+              - anomaly_start_date
+              - anomalylastupdatedate
+              - maximpact
+              - totalactualspend
+              - totalexpectedspend
+              - tota_impact
+              - totalimpactpercentage
+              - duration
+              - monitorarn
+              - region
+              - service
+              - linkedaccount
+              - linkedaccountname
+              - usagetype
+          Source:
+            PhysicalTableId: 3cec5d27-cc1d-4503-9b2e-c2bf0ce7b389
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - cost_anomalies
+views:
+  cost_anomalies:
+    data: |-
+      CREATE OR REPLACE VIEW cost_anomalies AS
+      SELECT DISTINCT
+        "year"
+      , "month"
+      , payer_id
+      , anomalyid
+      , dimensionvalue
+      , CAST("from_iso8601_timestamp"("anomalystartdate") AS date) anomaly_start_date
+      , CAST("from_iso8601_timestamp"("anomalyenddate") AS date) anomalylastupdatedate
+      , CAST(maximpact AS int) maximpact
+      , CAST(totalactualspend AS int) totalactualspend
+      , CAST(totalexpectedspend AS int) totalexpectedspend
+      , CAST(totalimpact AS int) tota_impact
+      , CAST(totalimpactpercentage AS int) totalimpactpercentage
+      , EXTRACT(DAY FROM (CAST("from_iso8601_timestamp"("anomalyenddate") AS date) - CAST("from_iso8601_timestamp"("anomalystartdate") AS date))) duration
+      , monitorarn
+      , region
+      , service
+      , linkedaccount
+      , linkedaccountname
+      , usagetype
+      FROM
+        "optimization_data"."cost_anomaly_data"
+      WHERE ("date_parse"("concat"("year", "month", "day"), '%Y%m%d') >= (current_timestamp - INTERVAL  '1' MONTH))
+      GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
