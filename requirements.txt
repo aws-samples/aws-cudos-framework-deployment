@@ -4,4 +4,5 @@ deepmerge
 PyYAML
 requests
 six>=1.15
+tzlocal
 questionary>=1.10

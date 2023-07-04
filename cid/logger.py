@@ -28,7 +28,7 @@ def add_logging_level(name, num):
     setattr(logging, method, log_to_root)
 
 
-def set_cid_logger(verbosity, log_filename):
+def set_cid_logger(verbosity=2, log_filename=None):
 
     add_logging_level('TRACE', logging.DEBUG - 5)
 
@@ -42,13 +42,12 @@ def set_cid_logger(verbosity, log_filename):
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
-    # Console handler logs everything down to ERROR level
+    # Console handler logs everything down to WARNING level
     ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
+    ch.setLevel(logging.WARNING)
     formatter = logging.Formatter('%(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-
 
     if verbosity:
         # Limit Logging level to DEBUG, base level is WARNING

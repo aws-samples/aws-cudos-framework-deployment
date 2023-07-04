@@ -10,12 +10,12 @@ from typing import Dict, List, Union
 import click
 
 from cid.base import CidBase
-from cid.helpers import diff
+from cid.helpers import diff, timezone, randtime
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
-from cid.utils import get_parameter, get_parameters
+from cid.utils import get_parameter, get_parameters, exec_env, cid_print
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
@@ -1033,6 +1033,123 @@ class QuickSight(CidBase):
         self.datasets.pop(dataset_id, None) # invalidate cache
         return self.describe_dataset(dataset_id)
 
+
+    def get_dataset_refresh_schedules(self, dataset_id):
+        """Returns refresh schedules for given dataset id"""
+        try:
+            refresh_schedules = self.client.list_refresh_schedules(
+                AwsAccountId=self.account_id,
+                DataSetId=dataset_id
+            )
+            return refresh_schedules.get("RefreshSchedules")
+        except self.client.exceptions.ResourceNotFoundException as exc:
+            raise CidError(f'DataSource {dataset_id} does not exist') from exc
+        except self.client.exceptions.AccessDeniedException as exc:
+            raise CidError(f'No quicksight:ListDataSets permission') from exc
+        except Exception as exc:
+            raise CidError(f'Unable to list refresh schedules for dataset {dataset_id}: {str(exc)}') from exc
+
+
+    def ensure_dataset_refresh_schedule(self, dataset_id, schedules: list):
+        """ Ensures that dataset has scheduled refresh """
+        # get all existing schedules for the given dataset
+        try:
+            existing_schedules = self.get_dataset_refresh_schedules(dataset_id)
+        except CidError as exc:
+            logger.debug(exc, exc_info=True)
+            logger.warning(
+                f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
+                ' Please make sure scheduled refresh is configured manualy.'
+            )
+            return
+
+        if schedules:
+            if exec_env()['terminal'] in ('lambda'):
+                schedule_frequency_timezone = get_parameters().get("timezone", timezone.get_default_timezone())
+            else:
+                schedule_frequency_timezone = get_parameter("timezone",
+                    message='Please select timezone for datasets scheduled refresh time',
+                    choices=timezone.get_all_timezones(),
+                    default=timezone.get_default_timezone()
+                )
+
+        for schedule in schedules:
+
+            # Get the list of exising schedules with the same id
+            existing_schedule = None
+            for existing in existing_schedules:
+                if schedule["ScheduleId"] == existing["ScheduleId"]:
+                    existing_schedule = existing
+                    break
+
+            # Verify that all schedule parameters are set
+            schedule["ScheduleId"] = schedule.get("ScheduleId", "cid")
+            if "ScheduleFrequency" not in schedule:
+                schedule["ScheduleFrequency"] = {}
+            schedule["ScheduleFrequency"]["Timezone"] = schedule_frequency_timezone
+            try:
+                schedule["ScheduleFrequency"]["TimeOfTheDay"] = randtime.get_random_time_from_range(
+                    self.account_id + dataset_id, 
+                    schedule["ScheduleFrequency"].get("TimeOfTheDay", "")
+                )
+            except Exception as exc:
+                logger.error(
+                    f'Invalid timerange for schedule with id "{schedule["ScheduleId"]}"'
+                    f' and dataset {dataset_id}: {str(exc)} ... skipping.'
+                    f' Please create dataset refresh schedule manually.'
+                )
+                continue
+            schedule["ScheduleFrequency"]["Interval"] = schedule["ScheduleFrequency"].get("Interval", "DAILY")
+            schedule["RefreshType"] = schedule.get("RefreshType", "FULL_REFRESH")
+            if "providedBy" in schedule:
+                del schedule["providedBy"]
+
+            if not existing_schedule:
+                # Avoid adding a new schedule  when customer already has put a schedule manually as this can lead to additional charges.
+                schedules_with_different_id = [existing for existing in existing_schedules if schedule["ScheduleId"] != existing["ScheduleId"] ]
+                if schedules_with_different_id:
+                    logger.info(
+                        f'Found the same schedule {schedule.get("RefreshType")} / {schedule["ScheduleFrequency"].get("Interval")}'
+                        f' but with different id. Skipping to avoid duplication. Please delete all manually created schedules for dataset {dataset_id}'
+                    )
+                    continue
+                logger.debug(f'Creating refresh schedule with id {schedule["ScheduleId"]} for dataset {dataset_id}.')
+                try:
+                    self.client.create_refresh_schedule(
+                        DataSetId=dataset_id,
+                        AwsAccountId=self.account_id,
+                        Schedule=schedule
+                    )
+                    logger.debug(f'Refresh schedule with id {schedule["ScheduleId"]} for dataset {dataset_id} is created.')
+                except self.client.exceptions.ResourceNotFoundException:
+                    logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]}. Dataset {dataset_id} does not exist.')
+                except self.client.exceptions.AccessDeniedException:
+                    logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]}. Please add quicksight:CreateDataSet permission.')
+                except Exception as exc:
+                    logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
+            else: 
+                # schedule exists so we need to update
+                logger.debug(f'Updating refresh schedule with id {schedule["ScheduleId"]} for dataset {dataset_id}.')
+                try:
+                    self.client.update_refresh_schedule(
+                        DataSetId=dataset_id,
+                        AwsAccountId=self.account_id,
+                        Schedule=schedule
+                    )
+                    logger.debug(f'Refresh schedule with id {schedule["ScheduleId"]} for dataset {dataset_id} is updated.')
+                except self.client.exceptions.ResourceNotFoundException:
+                    logger.error(f'Unable to update refresh schedule with id {schedule["ScheduleId"]}. Dataset {dataset_id} does not exist.')
+                except self.client.exceptions.AccessDeniedException:
+                    logger.error(f'Unable to update refresh schedule with id {schedule["ScheduleId"]}. Please add quicksight:UpdqteDataSet permission.')
+                except Exception as exc:
+                    logger.error(f'Unable to update refresh schedule with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
+
+        # Verify if there is at least one schedule and warn user if not
+        try:
+            if not self.get_dataset_refresh_schedules(dataset_id):
+                logger.warning(f'There is no refresh schedule for dataset "{dataset_id}". Please create a refresh schedule manually.' )
+        except CidError:
+            pass
 
     def create_dashboard(self, definition: dict) -> Dashboard:
         """ Creates an AWS QuickSight dashboard """

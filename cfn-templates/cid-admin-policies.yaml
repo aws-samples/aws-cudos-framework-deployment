@@ -336,6 +336,21 @@ Resources:
           Resource:
           - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic
 
+        - Sid: QuickSightDataSetSchedule
+          Action:
+          - quicksight:CreateRefreshSchedule
+          - quicksight:UpdateRefreshSchedule
+          - quicksight:DeleteRefreshSchedule
+          - quicksight:DescribeRefreshSchedule
+          - quicksight:ListRefreshSchedules
+          - quicksight:CreateDataSetRefreshProperties
+          - quicksight:DescribeDataSetRefreshProperties
+          - quicksight:UpdateDataSetRefreshProperties
+          - quicksight:DeleteDataSetRefreshProperties
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/refresh-schedule/* # DataSetIDs are dynamic as well as shcedule ids
+
         - Sid: CreateQueryResultsBucketS3
           Action:
           - s3:CreateBucket

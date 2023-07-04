@@ -95,22 +95,30 @@ datasets:
       views:
         - summary_view
         - ri_sp_mapping
+    schedules:
+      - default
   ec2_running_cost:
     File: cid/ec2_running_cost.json
     dependsOn:
       views:
         - ec2_running_cost
+    schedules:
+      - default
   compute_savings_plan_eligible_spend:
     File: cid/compute.json
     dependsOn:
       views:
         - compute_savings_plan_eligible_spend
+    schedules:
+      - default
   s3_view:
     File: cid/s3_view.json
     dependsOn:
       views:
         - s3_view
         - account_map
+    schedules:
+      - default
 
   # Shared DataSets
   customer_all:
@@ -126,26 +134,36 @@ datasets:
     dependsOn:
       views:
         - kpi_ebs_snap
+    schedules:
+      - default
   kpi_ebs_storage_all:
     File: kpi/kpi_ebs_storage_all.json
     dependsOn:
       views:
        - kpi_ebs_storage_all
+    schedules:
+      - default
   kpi_instance_all:
     File: kpi/kpi_instance_all.json
     dependsOn:
       views:
         - kpi_instance_all
+    schedules:
+      - default
   kpi_s3_storage_all:
     File: kpi/kpi_s3_storage_all.json
     dependsOn:
       views:
         - kpi_s3_storage_all
+    schedules:
+      - default
   kpi_tracker:
     File: kpi/kpi_tracker.json
     dependsOn:
       views:
         - kpi_tracker
+    schedules:
+      - default
 
 
   # Trusted Advisor (TAO)
@@ -154,6 +172,8 @@ datasets:
     dependsOn:
       views:
         - ta_org_view
+    schedules:
+      - default
 
   # Trends
   daily-anomaly-detection:
@@ -161,11 +181,15 @@ datasets:
     dependsOn:
       views:
         - daily_anomaly_detection
+    schedules:
+      - default
   monthly-anomaly-detection:
     File: trends/monthly_anomaly_detection.json
     dependsOn:
       views:
         - monthly_anomaly_detection
+    schedules:
+      - default
   monthly-bill-by-account:
     spriFile: trends/monthly_bill_by_account_sp_ri.json
     spFile: trends/monthly_bill_by_account_sp.json
@@ -174,7 +198,8 @@ datasets:
     dependsOn:
       views:
         - monthly_bill_by_account
-
+    schedules:
+      - default
 
   # Compute Optimiser (CO)
   compute_optimizer_all_options:
@@ -183,6 +208,8 @@ datasets:
       views:
         - compute_optimizer_all_options
         - business_units_map
+    schedules:
+      - default
     parameters:
       primary_tag_name:
         default: 'application'
@@ -404,3 +431,12 @@ views:
         - aws_accounts
   ta_descriptions:
     File: shared/ta_descriptions.sql
+
+# Refresh Schedules for QuickSight DataSets
+schedules:
+  default:
+    ScheduleId: cid
+    ScheduleFrequency:
+      Interval: DAILY
+      TimeOfTheDay: '02:00-05:00'
+    RefreshType: FULL_REFRESH

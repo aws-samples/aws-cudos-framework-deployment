@@ -217,9 +217,9 @@ class Cid():
     def get_definition(self, type: str, name: str=None, id: str=None) -> dict:
         """ return resource definition that matches parameters """
         res = None
-        if type not in ['dashboard', 'dataset', 'view']:
+        if type not in ['dashboard', 'dataset', 'view', 'schedule']:
             raise ValueError(f'{type} is not a valid definition type')
-        if type in  ['dataset', 'view'] and name:
+        if type in ['dataset', 'view', 'schedule'] and name:
             res = self.resources.get(f'{type}s').get(name)
         elif type in ['dashboard']:
             for definition in self.resources.get(f'{type}s').values():
@@ -275,7 +275,7 @@ class Cid():
         '''
         if get_parameters().get('resources'):
             source = get_parameters().get('resources')
-            logging.info(f'Loading resources from {source}')
+            logger.info(f'Loading resources from {source}')
             resources = {}
             try:
                 if source.startswith('https://'):
@@ -1378,11 +1378,21 @@ class Cid():
                     break
             if update_dataset:
                 self.qs.update_dataset(compiled_dataset)
+                if compiled_dataset.get("ImportMode") == "SPICE":
+                    dataset_id = compiled_dataset.get('DataSetId')
+                    schedules_definitions = []
+                    for schedule_name in dataset_definition.get('schedules', []):
+                        schedules_definitions.append(self.get_definition("schedule", name=schedule_name))
+                        self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions)
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")} {compiled_dataset.get("Name")}={found_dataset.name} ')
         else:
-            self.qs.create_dataset(compiled_dataset)
-
+            dataset_id = self.qs.create_dataset(compiled_dataset)
+            if dataset_id and compiled_dataset.get("ImportMode") == "SPICE":
+                schedules_definitions = []
+                for schedule_name in dataset_definition.get('schedules', []):
+                    schedules_definitions.append(self.get_definition("schedule", name=schedule_name))
+                    self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions)
         return True
 
 
