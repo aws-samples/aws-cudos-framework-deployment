@@ -45,8 +45,8 @@ MAPPING_REGION_2_TIMEZONE = {
 def get_timezone_from_aws_region(region):
     """ Get Timezone from AWS region. """
     if region not in MAPPING_REGION_2_TIMEZONE:
-        logger.warning('Unkown region {region}. please create a github issue to add it.')
-    return MAPPING_REGION_2_TIMEZONE.get(region)
+        logger.warning(f'Unkown region {region}. please create a github issue to add it.')
+    return MAPPING_REGION_2_TIMEZONE.get(region, "America/New_York")
 
 
 def get_default_timezone():
