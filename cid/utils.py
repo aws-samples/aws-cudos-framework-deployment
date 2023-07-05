@@ -3,6 +3,7 @@ import sys
 import inspect
 import logging
 import platform
+from typing import Any
 import requests
 from functools import lru_cache as cache
 from collections.abc import Iterable
@@ -256,3 +257,11 @@ def unset_parameter(param_name):
         value = params[param_name]
         del params[param_name]
         logger.info(f'Cleared {param_name}={value}, from parameters')
+
+
+def inject_variables(source: str, variables: dict[str, Any]) -> str:
+    """Inject variables into string"""
+    for key, value in variables.items():
+        source = source.replace(key, value)
+
+    return source

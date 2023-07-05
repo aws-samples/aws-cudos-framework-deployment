@@ -1565,3 +1565,9 @@ class Cid():
         for v in ['account_map', 'aws_accounts']:
             self.accountMap.create(v)
 
+    @command
+    def initqs(self, **kwargs):
+        """ Initialize QuickSight resources for deployment """
+        from commands import InitQsCommand
+        cmd = InitQsCommand(cid=self, **kwargs)
+        result = cmd.execute()

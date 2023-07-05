@@ -225,5 +225,11 @@ def share(ctx, dashboard_id, **kwargs):
     
     ctx.obj.share(dashboard_id)
 
+@cid_command
+def initqs(ctx, **kwargs):
+    """Initialize QuickSight resources for deployment"""
+
+    ctx.obj.initqs(**kwargs)
+
 if __name__ == '__main__':
     main()
