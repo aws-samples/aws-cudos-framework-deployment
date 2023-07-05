@@ -1433,4 +1433,4 @@ views:
       , usagetype
       FROM
         "optimization_data"."cost_anomaly_data"
-      WHERE ("date_parse"("concat"("year", "month", "day"), '%Y%m%d') >= (current_timestamp - INTERVAL  '1' MONTH))
+      WHERE ("date_parse"("concat"("year", "month", "day"), '%Y%m%d') >= (current_timestamp - INTERVAL  '3' MONTH))
