@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 def pseudo_random_generator(hashable_string: str, maximum: int=100) -> int:
     """Gernerate a pseudo random integer number, but the same for any given hashable_string identifier """
-    hash_hex = hashlib.md5(bytes(hashable_string, "utf-8"), usedforsecurity=False).hexdigest()[:16] # nosec B303 - not used for security
+    hash_hex = hashlib.md5(bytes(hashable_string, "utf-8")).hexdigest()[:16] # nosec B303, B324 - not used for security
     bigint_value = int.from_bytes(bytes.fromhex(hash_hex), 'little', signed=True)
     return bigint_value % int(maximum)
 
