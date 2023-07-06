@@ -665,7 +665,7 @@ ALL_TIMEZONES = '''
     W-SU
     WET
     Zulu
-'''.strip()
+'''.strip().split()
 
 
 def get_timezone_from_aws_region(region):
