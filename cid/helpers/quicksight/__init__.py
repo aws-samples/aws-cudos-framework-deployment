@@ -1070,7 +1070,7 @@ class QuickSight(CidBase):
                 default_timezone = timezone.get_default_timezone()
                 schedule_frequency_timezone = get_parameter("timezone",
                     message='Please select timezone for datasets scheduled refresh.',
-                    choices=list(set(timezone.get_all_timezones() + [default_timezone]))‚ ,
+                    choices=list(set(timezone.get_all_timezones() + [default_timezone]))‚ 
                     default=default_timezone
                 )
             if not schedule_frequency_timezone:
