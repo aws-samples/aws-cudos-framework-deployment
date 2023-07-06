@@ -1067,11 +1067,15 @@ class QuickSight(CidBase):
             if exec_env()['terminal'] in ('lambda'):
                 schedule_frequency_timezone = get_parameters().get("timezone", timezone.get_default_timezone())
             else:
+                default_timezone = timezone.get_default_timezone()
                 schedule_frequency_timezone = get_parameter("timezone",
-                    message='Please select timezone for datasets scheduled refresh time',
-                    choices=timezone.get_all_timezones(),
-                    default=timezone.get_default_timezone()
+                    message='Please select timezone for datasets scheduled refresh.',
+                    choices=list(set(timezone.get_all_timezones() + [default_timezone]))‚ ,
+                    default=default_timezone
                 )
+            if not schedule_frequency_timezone:
+                logger.warning(f'Cannot get timezone. Please provide --timezone parameter. Please make sure scheduled refresh is configured manualy.')
+                return
 
         for schedule in schedules:
 
