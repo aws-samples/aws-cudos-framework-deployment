@@ -65,4 +65,7 @@ def get_default_timezone():
 def get_all_timezones():
     """Get all zones"""
     # zoneinfo is not working with 3.7, 3.8
-    return sorted(list(win_tz.values()))
+ 
+    return sorted(list(set(
+        list(win_tz.values()) + list(MAPPING_REGION_2_TIMEZONE.values())
+    )))

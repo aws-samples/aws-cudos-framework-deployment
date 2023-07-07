@@ -136,7 +136,7 @@ Parameters:
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.19
+    Default: 0.2.22
     Description: A version of CID package
   Suffix:
     Type: String
