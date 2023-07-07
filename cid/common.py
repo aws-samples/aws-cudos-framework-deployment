@@ -31,6 +31,7 @@ from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
 from cid.exceptions import CidError, CidCritical
+from cid.commands import InitQsCommand
 
 logger = logging.getLogger(__name__)
 
@@ -1568,6 +1569,5 @@ class Cid():
     @command
     def initqs(self, **kwargs):
         """ Initialize QuickSight resources for deployment """
-        from commands import InitQsCommand
         cmd = InitQsCommand(cid=self, **kwargs)
         result = cmd.execute()
