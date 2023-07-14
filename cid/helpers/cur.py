@@ -139,13 +139,17 @@ class CUR(CidBase):
                 raise CidCritical(f'Table {self._tableName} does not looks like CUR. Please check that the table exist and have fields: {self.curRequiredColumns}.')
         else:
             # Look all tables and filter ones with CUR fields
+            all_tables = self.athena.list_table_metadata()
+            if len(all_tables) == 0:
+                logger.error(f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}. If you see these tables, please check if there if AWS Lake Formation is activated.')
+
             tables = [
-                tab for tab in self.athena.list_table_metadata()
+                tab for tab in all_tables
                 if self.table_is_cur(table=tab)
             ]
 
             if len(tables) == 0:
-                logger.error('CUR table not found.')
+                logger.error(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.curRequiredColumns}.')
             elif len(tables) == 1:
                 self._metadata = tables[0]
                 self._tableName = self._metadata.get('Name')
