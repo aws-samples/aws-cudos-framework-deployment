@@ -1,6 +1,7 @@
 import re
 import csv
 import logging
+from io import StringIO
 
 from cid.exceptions import CidCritical
 
@@ -8,8 +9,14 @@ logger = logging.getLogger(__name__)
 
 def escape(text, character='_'):
     """ escape for sql statement """
-    return re.sub('[^0-9a-zA-Z]+', character, text)
+    return re.sub('[^0-9a-zA-Z]+', character, str(text))
 
+def read_nonblank_lines(lines):
+    """ returns non blank lines from file"""
+    for line in lines:
+        line_rstrip = line.rstrip()
+        if line_rstrip:
+            yield line_rstrip
 
 def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> None:
     """ Make an sql mapping from sql """
@@ -17,10 +24,14 @@ def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> Non
 
     sniffer = csv.Sniffer()
     try:
-        with open(input_file_name) as file_:
-            dialect = sniffer.sniff(file_.read(2000))
-            file_.seek(0)
-            data = [d for d in csv.DictReader(file_, dialect=dialect)]
+        # AWS Organization returns a CSV with a BOM (byte order mark) character = U+FEFF to specify encoding
+        first_character = open(input_file_name).read(1)
+        encoding = 'utf-8-sig' if first_character == '\ufeff' else 'utf-8'
+
+        with open(input_file_name, encoding=encoding) as file_:
+            text = '\n'.join([line for line in read_nonblank_lines(file_)]) # AWS Organization produces a CSV with empty lines
+            dialect = sniffer.sniff(text)
+            data = [row for row in csv.DictReader(StringIO(text), dialect=dialect)]
             
     except FileNotFoundError:
         raise CidCritical(f'File not found: {repr(input_file_name)}')
