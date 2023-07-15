@@ -18,10 +18,8 @@ def read_nonblank_lines(lines):
         if line_rstrip:
             yield line_rstrip
 
-def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> None:
-    """ Make an sql mapping from sql """
-    logger.debug(f"input {input_file_name}")
-
+def read_csv(input_file_name):
+    """ Read CSV """
     sniffer = csv.Sniffer()
     try:
         # AWS Organization returns a CSV with a BOM (byte order mark) character = U+FEFF to specify encoding
@@ -31,8 +29,8 @@ def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> Non
         with open(input_file_name, encoding=encoding) as file_:
             text = '\n'.join([line for line in read_nonblank_lines(file_)]) # AWS Organization produces a CSV with empty lines
             dialect = sniffer.sniff(text)
-            data = [row for row in csv.DictReader(StringIO(text), dialect=dialect)]
-            
+            data = [row for row in csv.DictReader(StringIO(text), dialect=dialect, skipinitialspace=True)]
+
     except FileNotFoundError:
         raise CidCritical(f'File not found: {repr(input_file_name)}')
     except PermissionError:
@@ -41,9 +39,14 @@ def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> Non
         raise CidCritical(f'{repr(input_file_name)} is a directory!')
     except Exception as _err:
         raise CidCritical(_err)
+    return data
+
+def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> None:
+    """ Make an sql mapping from sql """
+    logger.debug(f"input {input_file_name}")
     
+    data = read_csv(input_file_name)
     lines = []
-    
     for line in data:
         arr = ", ".join([f'\'{escape(val, " ")}\'' for val in line.values()])
         lines.append(f'ROW({arr})')
