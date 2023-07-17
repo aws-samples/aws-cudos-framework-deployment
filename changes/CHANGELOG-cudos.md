@@ -1,6 +1,6 @@
 # What's new in CUDOS Dashboard
 
-## CUDOS - 4.78.0
+## CUDOS - 4.78.1
 * **Executive: Billing Summary**: Renamed label for Total bar to Amortized cost on *'Total Savings and Discounts details'* visual
 
 ## CUDOS - 4.78.0
