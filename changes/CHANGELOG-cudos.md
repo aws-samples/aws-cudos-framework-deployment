@@ -1,5 +1,8 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.78.1
+* **Executive: Billing Summary**: Renamed label for Total bar to Amortized cost on *'Total Savings and Discounts details'* visual
+
 ## CUDOS - 4.78.0
 * **Executive: Billing Summary**: Added '*Total Savings and Discounts details*' and '*Total Savings and Discounts, %*' visuals showing SP, RI, Spot savings, Refunds, Credits and Discounts in one place. '*Discounts Previous Month*' visual now shows also SP, RI, Spot savings and renamed to '*Savings and Discounts Previous Month: RI SP Savings, Spot Savings, Credits, Refunds, Others*'
 * **Messaging and Streaming** (formerly Message Brokers tab): Added visual '*Idle Amazon Kinesis Data Streams and Consumers*' which lists all idle Amazon Kinesis Data Streams and Consumers. Added breakdown by operation to '*TOP 20 Amazon Kinesis resources*' visual
