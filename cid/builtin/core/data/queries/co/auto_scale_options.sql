@@ -47,47 +47,45 @@ SELECT * FROM (
    , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_very_low
-
-    , GREATEST(
+   , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow'
                OR recommendationoptions_1_migrationeffort = 'Low'    )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow'
                OR recommendationoptions_2_migrationeffort = 'Low'    )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow'
                OR recommendationoptions_3_migrationeffort = 'Low'    )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
       ) as max_estimatedmonthlysavings_value_low
-    , GREATEST(
+   , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow'
                OR recommendationoptions_1_migrationeffort = 'Low'
                OR recommendationoptions_1_migrationeffort = 'Medium'    )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow'
                OR recommendationoptions_2_migrationeffort = 'Low'
                OR recommendationoptions_2_migrationeffort = 'Medium'    )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow'
                OR recommendationoptions_3_migrationeffort = 'Low'
                OR recommendationoptions_3_migrationeffort = 'Medium'    )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
-
    , CONCAT(
          currentperformancerisk, ';',
          currentconfiguration_instancetype, ';',
@@ -149,50 +147,49 @@ UNION SELECT
    , recommendationoptions_1_estimatedmonthlysavings_currency currency
    , TRY(CAST(recommendationoptions_1_ondemandprice AS double) * 730) monthlyprice
    , TRY(CAST(recommendationoptions_1_ondemandprice AS double)) hourlyprice
-   , TRY(CAST(recommendationoptions_1_estimatedmonthlysavings_value as double)) as estimatedmonthlysavings_value
+   , TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) as estimatedmonthlysavings_value
    , TRY((CAST(current_ondemandprice as double) - CAST(recommendationoptions_1_ondemandprice as double)) * 730) as estimatedmonthly_ondemand_cost_change
    , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_very_low
-
-    , GREATEST(
+   , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow'
                OR recommendationoptions_1_migrationeffort = 'Low'    )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow'
                OR recommendationoptions_2_migrationeffort = 'Low'    )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow'
                OR recommendationoptions_3_migrationeffort = 'Low'    )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
       ) as max_estimatedmonthlysavings_value_low
-    , GREATEST(
+   , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow'
                OR recommendationoptions_1_migrationeffort = 'Low'
                OR recommendationoptions_1_migrationeffort = 'Medium'    )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow'
                OR recommendationoptions_2_migrationeffort = 'Low'
                OR recommendationoptions_2_migrationeffort = 'Medium'    )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow'
                OR recommendationoptions_3_migrationeffort = 'Low'
                OR recommendationoptions_3_migrationeffort = 'Medium'    )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
    , CONCAT(
          recommendationoptions_1_performancerisk, ';',
@@ -256,52 +253,50 @@ UNION SELECT
    , recommendationoptions_2_estimatedmonthlysavings_currency currency
    , TRY(CAST(recommendationoptions_2_ondemandprice AS double) * 730) monthlyprice
    , TRY(CAST(recommendationoptions_2_ondemandprice AS double)) hourlyprice
-   , TRY(CAST(recommendationoptions_2_estimatedmonthlysavings_value as double)) as estimatedmonthlysavings_value
+   , TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) as estimatedmonthlysavings_value
    , TRY((CAST(current_ondemandprice as double) - CAST(recommendationoptions_2_ondemandprice as double)) * 730) as estimatedmonthly_ondemand_cost_change
    , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_very_low
-
-    , GREATEST(
+   , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow'
                OR recommendationoptions_1_migrationeffort = 'Low'    )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow'
                OR recommendationoptions_2_migrationeffort = 'Low'    )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow'
                OR recommendationoptions_3_migrationeffort = 'Low'    )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
       ) as max_estimatedmonthlysavings_value_low
-    , GREATEST(
+   , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow'
                OR recommendationoptions_1_migrationeffort = 'Low'
                OR recommendationoptions_1_migrationeffort = 'Medium'    )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow'
                OR recommendationoptions_2_migrationeffort = 'Low'
                OR recommendationoptions_2_migrationeffort = 'Medium'    )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow'
                OR recommendationoptions_3_migrationeffort = 'Low'
                OR recommendationoptions_3_migrationeffort = 'Medium'    )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
-
    , CONCAT(
          recommendationoptions_2_performancerisk, ';',
          recommendationoptions_2_configuration_instancetype, ';',
@@ -365,50 +360,49 @@ UNION SELECT
    , recommendationoptions_3_estimatedmonthlysavings_currency currency
    , TRY(CAST(recommendationoptions_3_ondemandprice AS double) * 730) monthlyprice
    , TRY(CAST(recommendationoptions_3_ondemandprice AS double)) hourlyprice
-   , TRY(CAST(recommendationoptions_3_estimatedmonthlysavings_value as double)) as estimatedmonthlysavings_value
+   , TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) as estimatedmonthlysavings_value
    , TRY((CAST(current_ondemandprice as double) - CAST(recommendationoptions_3_ondemandprice as double)) * 730) as estimatedmonthly_ondemand_cost_change
    , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow' )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_very_low
-
-    , GREATEST(
+   , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow'
                OR recommendationoptions_1_migrationeffort = 'Low'    )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow'
                OR recommendationoptions_2_migrationeffort = 'Low'    )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow'
                OR recommendationoptions_3_migrationeffort = 'Low'    )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
       ) as max_estimatedmonthlysavings_value_low
-    , GREATEST(
+   , GREATEST(
        CASE WHEN((recommendationoptions_1_migrationeffort = ''
                OR recommendationoptions_1_migrationeffort = 'VeryLow'
                OR recommendationoptions_1_migrationeffort = 'Low'
                OR recommendationoptions_1_migrationeffort = 'Medium'    )
-              AND recommendationoptions_1_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_1_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_1_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_1_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_2_migrationeffort = ''
                OR recommendationoptions_2_migrationeffort = 'VeryLow'
                OR recommendationoptions_2_migrationeffort = 'Low'
                OR recommendationoptions_2_migrationeffort = 'Medium'    )
-              AND recommendationoptions_2_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_2_estimatedmonthlysavings_value as double) ELSE 0E0 END,
+              AND recommendationoptions_2_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_2_ondemandprice AS double)) * 730) ELSE 0E0 END,
        CASE WHEN((recommendationoptions_3_migrationeffort = ''
                OR recommendationoptions_3_migrationeffort = 'VeryLow'
                OR recommendationoptions_3_migrationeffort = 'Low'
                OR recommendationoptions_3_migrationeffort = 'Medium'    )
-              AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
+              AND recommendationoptions_3_ondemandprice != '')          THEN TRY((CAST(current_ondemandprice AS double) - CAST(recommendationoptions_3_ondemandprice AS double)) * 730) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
    , CONCAT(
          recommendationoptions_3_performancerisk, ';',

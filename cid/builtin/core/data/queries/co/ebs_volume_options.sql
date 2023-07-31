@@ -158,7 +158,7 @@ FROM
     compute_optimizer_ebs_volume_lines
 WHERE
     volumearn LIKE '%arn:%'
-  AND recommendationoptions_1_estimatedmonthlysavings_currency <> ''
+  AND recommendationoptions_1_configuration_volumetype <> ''
 
 
 UNION SELECT
@@ -238,7 +238,7 @@ FROM
     compute_optimizer_ebs_volume_lines
 WHERE
     volumearn LIKE '%arn:%'
-  AND recommendationoptions_2_estimatedmonthlysavings_currency <> ''
+  AND recommendationoptions_2_configuration_volumetype <> ''
 
   UNION SELECT
     TRY(date_parse(lastrefreshtimestamp_utc,'%Y-%m-%d %H:%i:%s')) as lastrefreshtimestamp_utc,
@@ -317,5 +317,5 @@ FROM
     compute_optimizer_ebs_volume_lines
 WHERE
     volumearn LIKE '%arn:%'
-  AND recommendationoptions_3_estimatedmonthlysavings_currency <> ''
+  AND recommendationoptions_3_configuration_volumetype <> ''
 )

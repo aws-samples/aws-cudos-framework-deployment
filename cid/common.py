@@ -1166,7 +1166,11 @@ class Cid():
         }.get(asset_type)
         data = None
         file_name = definition.get('File')
-        if file_name:
+        if definition.get('Data'):
+            data = definition.get('Data')
+        elif definition.get('data'):
+            data = definition.get('data')
+        elif file_name:
             text = resource_string(
                 definition.get('providedBy'), f'data/{subfolder}/{file_name}'
             ).decode('utf-8')
@@ -1174,10 +1178,6 @@ class Cid():
                 data = json.loads(text)
             else:
                 data = text
-        elif definition.get('Data'):
-            data = definition.get('Data')
-        elif definition.get('data'):
-            data = definition.get('data')
         if data is None:
             raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(definition)}. Check resources file.")
         return data
