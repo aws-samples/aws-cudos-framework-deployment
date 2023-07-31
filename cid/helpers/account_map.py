@@ -5,6 +5,7 @@ Account Map is needed for mapping account id to account name and other attribute
 import os
 import logging
 from pathlib import Path
+from functools import lru_cache
 
 from string import Template
 from pkg_resources import resource_string
@@ -103,11 +104,9 @@ class AccountMap(CidBase):
                 })
         return self._accounts
 
+    @lru_cache(1000)
     def detect_metadata_table(self, name):
         """ detect metatable with the list of accounts """
-        if self._athena_table_name:
-            return self._athena_table_name
-        # Autodiscover
         cid_print('Autodiscovering metadata table')
 
         # FIXME: This will only work for current Athena Database. We might want to check optimization_data base as well
@@ -118,17 +117,17 @@ class AccountMap(CidBase):
             cid_print('Account metadata not detected')
             return None
         for table in tables:
-            logger.info(f"Detected metadata table {table.get('Name')}")
+            table_name = table.get('Name')
+            logger.debug(f"Detected table {table_name}")
             field_found = [col.get('Name') for col in table.get('Columns')]
-            field_required = list(self.mappings.get(name).get(table.get('Name')).values())
-            logger.info(f"Detected fields: {field_found}")
-            logger.info(f"Required fields: {field_required}")
+            field_required = list(self.mappings.get(name).get(table_name).values())
             # Check if we have all the required fields
             if all(field in field_found for field in field_required):
-                logger.info('All required fields found')
-                self._athena_table_name = table.get('Name')
-                return self._athena_table_name
+                logger.info(f'All required fields found in {table_name} ')
+                return table.get('Name')
             logger.info('Missing required fields')
+            logger.info(f"Detected fields: {field_found}")
+            logger.info(f"Required fields: {field_required}")
         return None
 
 
@@ -140,9 +139,10 @@ class AccountMap(CidBase):
             if self.accounts:
                 logger.info('Account information found, skipping autodiscovery')
                 raise CidError('Account information found, skipping autodiscovery')
-            if not get_parameters().get('account-map-source'):
-                self.detect_metadata_table(name)
+            if get_parameters().get('account-map-source'):
+                raise CidError('Skipping autodiscovery')
 
+            self._athena_table_name = self.detect_metadata_table(name)
             if not self._athena_table_name:
                 raise CidError('Metadata table not found')
 
@@ -158,10 +158,10 @@ class AccountMap(CidBase):
                 'cur_table_name': self.cur.tableName # only for trends
             }
             for key, val in self.mappings.get(name).get(self._athena_table_name).items():
-                logger.info(f'Mapping field {key} to {val}')
+                logger.debug(f'Mapping field {key} to {val}')
                 columns_tpl[key] = val
             compiled_query = template.safe_substitute(columns_tpl)
-            cid_print('compiled view.')
+            logger.debug('compiled view.')
 
         except CidError as exc:
             logger.info(exc)
