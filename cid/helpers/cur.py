@@ -146,22 +146,19 @@ class CUR(CidBase):
                     f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}.'
                     f' (Hint: If you see tables in this Database, please check AWS Lake Formation permissions)'
                 )
-            tables = [
-                tab for tab in all_tables
-                if self.table_is_cur(table=tab)
-            ]
+            cur_tables = [tab for tab in all_tables if self.table_is_cur(table=tab)]
 
-            if not tables:
+            if not cur_tables:
                 raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.curRequiredColumns}.')
-            if len(tables) == 1:
-                self._metadata = tables[0]
+            if len(cur_tables) == 1:
+                self._metadata = cur_tables[0]
                 self._tableName = self._metadata.get('Name')
                 logger.info('1 CUR table found: %s', self._tableName)
-            elif len(tables) > 1:
+            elif len(cur_tables) > 1:
                 self._tableName =  get_parameter(
                     param_name='cur-table-name',
                     message="Multiple CUR tables found, please select one",
-                    choices=sorted([v.get('Name') for v in tables], reverse=True),
+                    choices=sorted([v.get('Name') for v in cur_tables], reverse=True),
                 )
                 self._metadata = self.athena.get_table_metadata(self._tableName)
         return self._metadata
