@@ -118,12 +118,13 @@ class CUR(CidBase):
         try:
             table = table or self.athena.get_table_metadata(name)
         except Exception as exc:
+            logger.debug(exc)
             return False
 
         if table.get('TableType') not in ['EXTERNAL_TABLE', 'VIRTUAL_VIEW']:
             return False
         columns = [cols.get('Name') for cols in table.get('Columns')]
-        if not all([cols in columns for cols in self.curRequiredColumns]):
+        if not all(cols in columns for cols in self.curRequiredColumns):
             return False
         return True
 
@@ -140,20 +141,22 @@ class CUR(CidBase):
         else:
             # Look all tables and filter ones with CUR fields
             all_tables = self.athena.list_table_metadata()
-            if len(all_tables) == 0:
-                logger.error(f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}. If you see these tables, please check if there if AWS Lake Formation is activated.')
-
+            if not all_tables:
+                raise CidCritical(
+                    f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}.'
+                    f' (Hint: If you see tables in this Database, please check AWS Lake Formation permissions)'
+                )
             tables = [
                 tab for tab in all_tables
                 if self.table_is_cur(table=tab)
             ]
 
-            if len(tables) == 0:
-                logger.error(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.curRequiredColumns}.')
-            elif len(tables) == 1:
+            if not tables:
+                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.curRequiredColumns}.')
+            if len(tables) == 1:
                 self._metadata = tables[0]
                 self._tableName = self._metadata.get('Name')
-                logger.info(f'1 CUR table found: {self._tableName}')
+                logger.info('1 CUR table found: %s', self._tableName)
             elif len(tables) > 1:
                 self._tableName =  get_parameter(
                     param_name='cur-table-name',
