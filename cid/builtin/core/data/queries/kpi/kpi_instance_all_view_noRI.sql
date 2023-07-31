@@ -93,7 +93,7 @@
 			cur_all.*  
 		   , CASE 
 				WHEN (product_code = 'AmazonEC2' AND lower(platform) NOT LIKE '%window%') THEN latest_graviton 
-				WHEN (product_code = 'AmazonRDS' AND database_engine in ('Aurora MySQL','Aurora PostgreSQL','MariaDB','PostgreSQL')) THEN latest_graviton 
+				WHEN (product_code = 'AmazonRDS' AND database_engine in ('Aurora MySQL','Aurora PostgreSQL','MariaDB','PostgreSQL','MySQL')) THEN latest_graviton 
 				WHEN (product_code = 'AmazonES') THEN latest_graviton
 				WHEN (product_code = 'AmazonElastiCache') THEN latest_graviton
 				END "latest_graviton"
@@ -170,20 +170,22 @@
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonRDS') AND ("instance_type" <> '') AND (purchase_option = 'OnDemand')) THEN adjusted_amortized_cost ELSE 0 END "rds_ondemand_cost"				
 		   , CASE 
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonRDS') AND (adjusted_processor = 'Graviton')) THEN amortized_cost 
-				WHEN (("charge_type" = 'Usage') AND ("product_code" = 'AmazonRDS') AND ("instance_type" <> '') AND (database_engine in ('Aurora MySQL','Aurora PostgreSQL','MariaDB','PostgreSQL')) AND (adjusted_processor <> 'Graviton')  AND (latest_graviton <> '')) THEN amortized_cost ELSE 0 END "rds_graviton_eligible_cost"
+				WHEN (("charge_type" = 'Usage') AND ("product_code" = 'AmazonRDS') AND ("instance_type" <> '') AND (database_engine in ('Aurora MySQL','Aurora PostgreSQL','MariaDB','PostgreSQL','MySQL')) AND (adjusted_processor <> 'Graviton')  AND (latest_graviton <> '')) THEN amortized_cost ELSE 0 END "rds_graviton_eligible_cost"
 		   , CASE 
-				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonRDS') AND ("instance_type" <> '') AND (database_engine in ('Aurora MySQL','Aurora PostgreSQL','MariaDB','PostgreSQL')) AND (adjusted_processor = 'Graviton')) THEN amortized_cost ELSE 0 END "rds_graviton_cost"
+				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonRDS') AND ("instance_type" <> '') AND (database_engine in ('Aurora MySQL','Aurora PostgreSQL','MariaDB','PostgreSQL','MySQL')) AND (adjusted_processor = 'Graviton')) THEN amortized_cost ELSE 0 END "rds_graviton_cost"
 		   , CASE 
 				WHEN ("charge_type" NOT LIKE '%Usage%') THEN 0 
 				WHEN ("product_code" <> 'AmazonRDS') THEN 0 
 				WHEN (adjusted_processor = 'Graviton') THEN 0 
 				WHEN (latest_graviton = '') THEN 0 
-				WHEN ((latest_graviton <> '') AND purchase_option = 'OnDemand' AND (database_engine in ('Aurora MySQL','Aurora PostgreSQL','MariaDB','PostgreSQL'))) THEN (amortized_cost * 1E-1) ELSE 0 END "rds_graviton_potential_savings"  /*Uses 10% savings estimate*/	
+				WHEN ((latest_graviton <> '') AND purchase_option = 'OnDemand' AND (database_engine in ('Aurora MySQL','Aurora PostgreSQL','MariaDB','PostgreSQL','MySQL'))) THEN (amortized_cost * 1E-1) ELSE 0 END "rds_graviton_potential_savings"  /*Uses 10% savings estimate*/	
 		   , CASE 
 				WHEN (("purchase_option" in ('Reserved','SavingsPlan')) AND ("product_code" = 'AmazonRDS')) THEN ("adjusted_amortized_cost" - "amortized_cost") ELSE 0 END "rds_commit_savings"	
 		   , CASE 
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonRDS') AND ("instance_type" <> '') AND (purchase_option = 'OnDemand')) THEN (amortized_cost * 2E-1) ELSE 0 END "rds_commit_potential_savings"  /*Uses 20% savings estimate*/ 				
-				
+			, (CASE WHEN (((("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonRDS')) AND ("instance_type" <> '')) AND (database_engine IN ('Oracle'))) THEN adjusted_amortized_cost ELSE 0 END) "rds_oracle_cost"
+			, (CASE WHEN (((("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonRDS')) AND ("instance_type" <> '')) AND (database_engine IN ('SQL Server'))) THEN adjusted_amortized_cost ELSE 0 END) "rds_sql_server_cost"
+	
 /*ElastiCache*/			
 		   , CASE 
 				WHEN ("product_code" = 'AmazonElastiCache') THEN adjusted_amortized_cost ELSE 0 END "elasticache_all_cost"	 

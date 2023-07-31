@@ -1,5 +1,16 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.78.1
+* **Executive: Billing Summary**: Renamed label for Total bar to Amortized cost on *'Total Savings and Discounts details'* visual
+
+## CUDOS - 4.78.0
+* **Executive: Billing Summary**: Added '*Total Savings and Discounts details*' and '*Total Savings and Discounts, %*' visuals showing SP, RI, Spot savings, Refunds, Credits and Discounts in one place. '*Discounts Previous Month*' visual now shows also SP, RI, Spot savings and renamed to '*Savings and Discounts Previous Month: RI SP Savings, Spot Savings, Credits, Refunds, Others*'
+* **Messaging and Streaming** (formerly Message Brokers tab): Added visual '*Idle Amazon Kinesis Data Streams and Consumers*' which lists all idle Amazon Kinesis Data Streams and Consumers. Added breakdown by operation to '*TOP 20 Amazon Kinesis resources*' visual
+* **Executive: RI/SP Summary**: Added SP Commitment per Hour and SP Unused Commitment per Hour columns to '*Reserved Instance & Savings Plan Tracker*'
+* **Amazon DynamoDB**: '*Total DynamoDB Usage Cost Per Operation*' visual now includes RI covered capacity and shows breakdown by DynamoDB categories and renamed to '*DynamoDB Cost Per Category*'
+* **Amazon S3**: '*Daily Storage Bucket Explorer*' and '*Daily Cost Bucket Explorer*' visuals switched from previous 3 month filters to last 90 days to capture data from current month
+* **Data Transfer**: Daily visuals '*Data Transfer GB per Service*' and '*Data Transfer Daily GB per Operations*' switched from previous 3 month filters to last 90 days to capture data from current month. Added ability to drill down to operation and usage type for '*Data Transfer Costs per Type*' and '*Data Transfer GB per Service*' visuals
+
 ## CUDOS - 4.77.0
 
 * OPTICS Explorer: Added 'Forecast Spend' visual allowing to forecast AWS spend by any dimension available in top level filters e.g. by particular Service, Operation, Region, Account etc.

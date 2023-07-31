@@ -399,6 +399,14 @@
                     {
                         "Name": "lambda_graviton_potential_savings",
                         "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "rds_oracle_cost",
+                        "Type": "DECIMAL"
+                    },
+                    {
+                        "Name": "rds_sql_server_cost",
+                        "Type": "DECIMAL"
                     }
                 ]
             }
@@ -518,7 +526,9 @@
                             "lambda_usage_cost",
                             "lambda_graviton_eligible_cost",
                             "lambda_graviton_cost",
-                            "lambda_graviton_potential_savings"
+                            "lambda_graviton_potential_savings",
+                            "rds_oracle_cost",
+                            "rds_sql_server_cost"
                         ]
                     }
                 }
