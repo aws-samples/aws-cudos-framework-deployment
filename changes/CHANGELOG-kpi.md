@@ -1,5 +1,20 @@
 # What's new in the KPI Dashboard
 
+## KPI - 2.0.0
+Important: Update to this version requires cid-cmd v0.2.23. Please update cid-cmd first before updating the dashboard. During the update QuickSight datasets and Athena views will be updated, please make a copy if you've made any customizations. To update run these commands in your CloudShell (recommended) or other terminal:
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id kpi_dashboard --recursive
+```
+
+* KPI Tracker: Added new KPI 'RDS Open Source Engines Coverage'
+* Metrics Summary: Added RDS visual showing 'RDS Oracle Coverage', 'RDS SQL Server Coverage', 'RDS Open Source Engines Coverage', 'RDS Graviton Coverage'
+* RDS: RDS Graviton coverage and savings estimations moved to the new RDS tab. Added visuals 'Top 10 Accounts Spend for Amazon RDS running on Graviton Processors', 'Top 10 Accounts Spend for Amazon RDS running on Other Processors' 
+* RDS: Added section RDS Engines with Licensing Options with visuals 'Spend trend of RDS Engine Oracle, SQL Server by License Model', 'Potential Savings by migrating RDS Engine Oracle, SQL Server to Open Source engines', 'Top 10 Accounts Spend for RDS Engine Oracle, SQL Server', 'Coverage by Database Engines for Amazon Relational Database Service' and 'RDS Oracle, SQL Server  Instances and Potential Savings'
+
+  
+
 ## KPI - 1.2.1
 * Other Graviton: Fixed potential savings filter to show a correct monthly value.
 
