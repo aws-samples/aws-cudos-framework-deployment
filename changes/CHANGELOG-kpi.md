@@ -11,8 +11,7 @@ cid-cmd update --dashboard-id kpi_dashboard --recursive
 > [!WARNING]
 > You will be prompted to override KPI dashboard views and datasets with v2.0.0 versions. It's required to choose **proceed and override** for kpi_instance_all and kpi_tracker views and datasets while you can choose **keep existing** for others. Any customizations done to visuals for which you've selected **proceed and override** will be overwritten hence it's important to save copies of them in case you would like to re-implement them after update. You'll be able to see the diff of the changes before selecting an option.
 
-> [!NOTE]
-> Release notes:
+Release notes:
 * KPI Tracker: Added new KPI 'RDS Open Source Engines Coverage'
 * Metrics Summary: Added RDS visual showing 'RDS Oracle Coverage', 'RDS SQL Server Coverage', 'RDS Open Source Engines Coverage', 'RDS Graviton Coverage'
 * RDS: RDS Graviton coverage and savings estimations moved to the new RDS tab. Added visuals 'Top 10 Accounts Spend for Amazon RDS running on Graviton Processors', 'Top 10 Accounts Spend for Amazon RDS running on Other Processors' 
