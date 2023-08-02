@@ -1,12 +1,17 @@
 # What's new in the KPI Dashboard
 
 ## KPI - 2.0.0
-Important: Update to this version requires cid-cmd v0.2.23. Please update cid-cmd first before updating the dashboard. During the update QuickSight datasets and Athena views will be updated, please make a copy if you've made any customizations. To update run these commands in your CloudShell (recommended) or other terminal:
+[!IMPORTANT] 
+
+Update to this version requires cid-cmd v0.2.23. Please update cid-cmd first before updating the dashboard. During the update QuickSight datasets and Athena views will be updated, please make a copy if you've made any customizations. To update run these commands in your CloudShell (recommended) or other terminal:
 ```
 python3 -m ensurepip --upgrade
 pip3 install --upgrade cid-cmd
 cid-cmd update --dashboard-id kpi_dashboard --recursive
 ```
+[!WARNING]
+
+You will be prompted to override KPI dashboard views and datasets with v2.0.0 versions. It's required to choose **proceed and override** for kpi_instance_all and kpi_tracker views and datasets while you can choose **keep existing** for others. Any customizations done to visuals for which you've selected **proceed and override** will be overwritten hence it's important to save copies of them in case you would like to re-implement them after update. You'll be able to see the diff of the changes before selecting an option.
 
 * KPI Tracker: Added new KPI 'RDS Open Source Engines Coverage'
 * Metrics Summary: Added RDS visual showing 'RDS Oracle Coverage', 'RDS SQL Server Coverage', 'RDS Open Source Engines Coverage', 'RDS Graviton Coverage'
