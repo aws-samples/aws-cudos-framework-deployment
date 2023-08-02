@@ -1,9 +1,8 @@
 # What's new in the KPI Dashboard
 
 ## KPI - 2.0.0
-[!IMPORTANT] 
-
-Update to this version requires cid-cmd v0.2.23. Please update cid-cmd first before updating the dashboard. During the update QuickSight datasets and Athena views will be updated, please make a copy if you've made any customizations. To update run these commands in your CloudShell (recommended) or other terminal:
+> [!IMPORTANT] 
+> Update to this version requires cid-cmd v0.2.23. Please update cid-cmd first before updating the dashboard. During the update QuickSight datasets and Athena views will be updated, please make a copy if you've made any customizations. To update run these commands in your CloudShell (recommended) or other terminal:
 ```
 python3 -m ensurepip --upgrade
 pip3 install --upgrade cid-cmd
