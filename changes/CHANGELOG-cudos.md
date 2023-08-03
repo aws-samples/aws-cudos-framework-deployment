@@ -3,7 +3,7 @@
 ## CUDOS - 4.79
 * **Data Transfer and Networking**: Added 'Public IPv4 addresses' section with 'Public IPv4 Cost and Projection (Last 30 days)', 'Public IPv4 Cost and Projection per Account (Last 30 days)' and 'Public IPv4 ENIs and Elastic IPs used more than 1 hr (Last 30 days)' visuals allowing to estimate cost impact for [Public IPv4 charges effective from February 1, 2024](https://aws.amazon.com/blogs/aws/new-aws-public-ipv4-address-charge-public-ip-insights/) and monitor cost of idle Elastic IP addresses 
 * **Compute**: Added section 'Amazon EC2 Spot Instances Savings' with best practices recommendations for Spot tools and usage optimization. Added visual 'EC2 Spot Savings Detailed View' which provides breakdown of Spot savings per platform, instance type, region and availability zone
-* **Compute**: Fix for 'TOP 20 "ECS Fargate", "EKS Fargate" and "EKS Control Plane" cost' and 
+* **Compute**: Fix for 'TOP 20 "ECS Fargate", "EKS Fargate" and "EKS Control Plane" cost' visual 
 * **Compute**: Removed 'EC2 Coverage in Normalized Hours (Last 30 days)' as it duplicates details available in 'EC2 Compute Unit Cost and Normalized Hours by Purchase Option' visual excluding empty resource ids
 * **Databases** and **Monitoring and Observability**: Added references to [Cloud Financial Framework](https://catalog.workshops.aws/awscff/en-US) guidances in respective recommendations sections
 
