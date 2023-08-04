@@ -75,7 +75,7 @@ class Dataset(CidQsResource):
                     alias = left_alias
                 join_clauses[alias] = join.get('OnClause')
             else:
-                data['Data'][name]['columns'] = [f'Unsupported source {source}']
+                data['Data'][name] = {'columns': [f'Unsupported diff for source {source}']}
         for alias, join in join_clauses.items():
             if isinstance(data['Data'].get(alias), dict) :
                 data['Data'][alias]['clause'] = join
