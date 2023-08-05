@@ -62,12 +62,13 @@ Conditions:
 Resources:
 
   QuickSightAdminPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Condition: CreateQuickSightAdminPolicy
     Properties:
+      ManagedPolicyName: CidQuickSightAdminPolicy
+      Description: 'CloudIntelligenceDashboards Policy for QuickSight Full Admin'
       Roles:
         - !Ref RoleName
-      PolicyName: QuickSightAdminPolicy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -85,12 +86,13 @@ Resources:
             reason: "Explicitly allow all on QuickSight for QuickSight Admin."
 
   QuickSightManagementPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Condition: CreateQuickSightManagementPolicy
     Properties:
+      ManagedPolicyName: CidQuickSightManagementPolicy
+      Description: 'CloudIntelligenceDashboards Policy for QuickSight initial setup'
       Roles:
         - !Ref RoleName
-      PolicyName: QuickSightManagementPolicy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -174,12 +176,13 @@ Resources:
             reason: "Some resources are not possible to restrict. See comments."
 
   CloudIntelligenceDashboardsCFNManagementPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Condition: CreateCloudIntelligenceDashboardsCFNManagementPolicy
     Properties:
+      ManagedPolicyName: CidCloudIntelligenceDashboardsCFNManagementPolicy
+      Description: 'CloudIntelligenceDashboards Policy for CFN deployment'
       Roles:
         - !Ref RoleName
-      PolicyName: CloudIntelligenceDashboardsCFNManagementPolicy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -395,12 +398,13 @@ Resources:
 
 
   CURDestinationPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Condition: CreateCURDestinationPolicy
     Properties:
+      ManagedPolicyName: CidCURDestinationPolicy
+      Description: 'CloudIntelligenceDashboards Policy for Deployment of CUR at Destination (Data Collection Account)'
       Roles:
         - !Ref RoleName
-      PolicyName: CURDestinationPolicy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -465,6 +469,15 @@ Resources:
           - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared
           - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared/*
 
+        - Sid: CostUsageReport
+          Action:
+          - cur:DeleteReportDefinition
+          - cur:DescribeReportDefinitions
+          - cur:PutReportDefinition
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/cid
+
         - Sid: ReadOnly
           Action:
           - cloudformation:GetTemplate
@@ -482,12 +495,13 @@ Resources:
 
 
   CURReplicationPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Condition: CreateCURReplicationPolicy
     Properties:
+      ManagedPolicyName: CidCURReplicationPolicy
+      Description: 'CloudIntelligenceDashboards Policy for CUR Creating and Stting Replication'
       Roles:
         - !Ref RoleName
-      PolicyName: CURReplicationPolicy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -513,7 +527,7 @@ Resources:
           - cur:PutReportDefinition
           Effect: Allow
           Resource:
-          - !Sub arn:aws:cur:${AWS::Region}:${AWS::AccountId}:definition/cid
+          - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/cid
 
         - Sid: IAMForCFN
           Action:
