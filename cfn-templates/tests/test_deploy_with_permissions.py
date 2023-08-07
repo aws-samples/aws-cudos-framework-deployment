@@ -1,10 +1,10 @@
-""" Test of Dashboard creation with the right permission. 
+""" Test of Dashboard creation with the right permission.
 
 Test CID creation via CFN with the correct roles
 
-Personas: 
+Personas:
     - Admin: a person with full admin access
-    - Finops who neede to deploy CID via CFN 
+    - Finops who neede to deploy CID via CFN
 
 Procedure:
     1. Admin creates a role and adds policies to the role
@@ -38,11 +38,11 @@ account_id = boto3.client('sts').get_caller_identity()['Account']
 
 
 def delete_bucket(name): # FIXME: move to tools
-    """delete all content and the bucket""" 
+    """delete all content and the bucket"""
     s3r = boto3.resource('s3')
     try:
         s3r.Bucket(name).object_versions.delete()
-    except Exception:
+    except Exception: # nosec B110 pylint: disable=broad-exception-caught
         pass
     s3c = boto3.client('s3')
     try:
@@ -66,58 +66,55 @@ def watch_stacks(cloudformation, stacks=None): # FIXME: move to tools
     """ watch stacks while they are IN_PROGRESS and/or until they are deleted"""
     stacks = stacks or []
     last_update = {stack: None for stack in stacks}
-    while True:
+    in_progress = True
+    while stacks and in_progress:
+        time.sleep(5)
         in_progress = False
         for stack in stacks[:]:
             # Check events
+            events = []
             try:
                 events = cloudformation.describe_stack_events(StackName=stack)['StackEvents']
             except cloudformation.exceptions.ClientError as exc:
                 if 'does not exist' in exc.response['Error']['Message']:
                     stacks.remove(stack)
                 logger.info(f'Stack {stack} does not exist any more.')
-            else:
-                for event in events:
-                    if not last_update.get(stack) or last_update.get(stack) < event['Timestamp']:
-                        line = '\t'.join([
-                            event['Timestamp'].strftime("%H:%M:%S"),
-                            stack,
-                            event['LogicalResourceId'],
-                            event['ResourceStatus'],
-                            event.get('ResourceStatusReason',''),
-                        ])
-                        color = END
-                        if '_COMPLETE' in line:
-                            color = GREEN
-                        elif '_FAILED' in line or 'failed to create' in line:
-                            color = RED
-                        logger.info(f'{color}{line}{END}')
-                        last_update[stack] = event['Timestamp']
-            # Check stack status
+            for event in events:
+                if last_update.get(stack) and last_update.get(stack) >= event['Timestamp']:
+                    continue
+                line = '\t'.join([
+                    event['Timestamp'].strftime("%H:%M:%S"),
+                    stack,
+                    event['LogicalResourceId'],
+                    event['ResourceStatus'],
+                    event.get('ResourceStatusReason',''),
+                ])
+                color = END
+                if '_COMPLETE' in line:
+                    color = GREEN
+                elif '_FAILED' in line or 'failed to create' in line:
+                    color = RED
+                logger.info(f'{color}{line}{END}')
+                last_update[stack] = event['Timestamp']
             try:
+                # Check stack status
                 current_stack = cloudformation.describe_stacks(StackName=stack)['Stacks'][0]
                 if 'IN_PROGRESS' in current_stack['StackStatus']:
                     in_progress = True
-            except:
-                pass
-            # Check nested stacks and add them to tracking
-            try:
+                # Check nested stacks and add them to tracking
                 for res in cloudformation.list_stack_resources(StackName=stack)['StackResourceSummaries']:
                     if res['ResourceType'] == 'AWS::CloudFormation::Stack':
                         name = res['PhysicalResourceId'].split('/')[-2]
                         if name not in stacks:
                             stacks.append(name)
-            except:
+            except: # nosec B110 using in tests; pylint: disable=bare-except
                 pass
-        if not stacks or not in_progress:
-            break
-        time.sleep(5)
 
 def get_qs_user(): # FIXME: move to tools
     """ get any valid qs user """
-    qs = boto3.client('quicksight')
-    users = qs.list_users(AwsAccountId=account_id, Namespace='default')['UserList']
-    assert users, 'No QS users, pleas craete one.'
+    qs_ = boto3.client('quicksight')
+    users = qs_.list_users(AwsAccountId=account_id, Namespace='default')['UserList']
+    assert users, 'No QS users, pleas craete one.' # nosec B101:assert_used
     return users[0]['UserName']
 
 def timeit(method): # FIXME: move to tools
@@ -174,10 +171,10 @@ def create_finops_role():
         }),
     )
     logger.info(f'Role Created {role_arn}')
-    
+
     logger.info('As admin creating permissions for Finops')
     admin_cfn.create_stack(
-        StackName="cid-admin", 
+        StackName="cid-admin",
         TemplateURL=upload_to_s3('cfn-templates/cid-admin-policies.yaml'),
         Parameters=[
             {"ParameterKey": 'RoleName', "ParameterValue":'TestFinopsRole'},
@@ -212,7 +209,7 @@ def create_cid_as_finops():
     logger.info('As Fionps Creating CUR')
     finops_cfn = finops_session.client('cloudformation')
     finops_cfn.create_stack(
-        StackName="CID-CUR-Destination", 
+        StackName="CID-CUR-Destination",
         TemplateURL=upload_to_s3('cfn-templates/cur-aggregation.yaml'),
         Parameters=[
             {"ParameterKey": 'DestinationAccountId', "ParameterValue": account_id},
@@ -227,7 +224,7 @@ def create_cid_as_finops():
 
     logger.info('As Finops Creating Dashboards')
     finops_cfn.create_stack(
-        StackName="Cloud-Intelligence-Dashboards", 
+        StackName="Cloud-Intelligence-Dashboards",
         TemplateURL=upload_to_s3('cfn-templates/cid-cfn.yml'),
         Parameters=[
             {"ParameterKey": 'PrerequisitesQuickSight', "ParameterValue": 'yes'},
@@ -242,14 +239,16 @@ def create_cid_as_finops():
 
 def test_dashboard_exists():
     """check that dashboard exists"""
-    dash = boto3.client('quicksight').describe_dashboard(AwsAccountId=account_id, DashboardId='cudos')['Dashboard']
+    dash = boto3.client('quicksight').describe_dashboard(
+        AwsAccountId=account_id,
+        DashboardId='cudos'
+    )['Dashboard']
     logger.info(f"Dashboard exists with status = {dash['Version']['Status']}")
 
 def teardown():
     """Cleanup the test"""
     admin_cfn = boto3.client('cloudformation')
     admin_iam = boto3.client('iam')
-
 
     logger.info('Logging is as Finops person')
     credentials = boto3.client('sts').assume_role(
@@ -270,19 +269,19 @@ def teardown():
     logger.info("Deleting Dasbhoards stack")
     try:
         finops_cfn.delete_stack(StackName="Cloud-Intelligence-Dashboards")
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         logger.info(exc)
     logger.info("Deleting CUR stack")
     try:
         finops_cfn.delete_stack(StackName="CID-CUR-Destination")
-    except Exception as exc:
+    except Exception as exc: # pylint: disable=broad-exception-caught
         logger.info(exc)
     logger.info("Deleting Admin stack")
     watch_stacks(admin_cfn, ["Cloud-Intelligence-Dashboards", "CID-CUR-Destination"])
 
     try:
         admin_cfn.delete_stack(StackName="cid-admin")
-    except Exception as exc:
+    except Exception as exc: # pylint: disable=broad-exception-caught
         logger.info(exc)
     logger.info("Waiting for all deletions to complete")
     watch_stacks(admin_cfn, ["cid-admin"])
@@ -292,7 +291,7 @@ def teardown():
         for policy in admin_iam.list_role_policies(RoleName='TestFinopsRole')['PolicyNames']:
             admin_iam.delete_role_policy(RoleName='TestFinopsRole', PolicyName=policy)
         admin_iam.delete_role(RoleName='TestFinopsRole')
-    except Exception as exc:
+    except Exception as exc: # pylint: disable=broad-exception-caught
         logger.info(exc)
 
     logger.info("Cleanup tmp bucket")
