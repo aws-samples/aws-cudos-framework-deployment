@@ -296,7 +296,6 @@ def teardown():
 
     logger.info("Cleanup tmp bucket")
     delete_bucket(f'{account_id}-cid-tests-deleteme')
-    delete_bucket(f'{account_id}-cid-tests-deleteme')
     logger.info("Teardown done")
 
 
