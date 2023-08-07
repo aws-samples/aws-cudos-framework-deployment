@@ -80,10 +80,12 @@ Resources:
     Metadata:
       cfn_nag:
         rules_to_suppress:
-          - id: F4
+          - id: F5
             reason: "Explicitly allow all on QuickSight for QuickSight Admin."
-          - id: W12
+          - id: W13
             reason: "Explicitly allow all on QuickSight for QuickSight Admin."
+          - id: W28
+            reason: "No Replacement needed"
 
   QuickSightManagementPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -172,8 +174,10 @@ Resources:
     Metadata:
       cfn_nag:
         rules_to_suppress:
-          - id: W12
+          - id: W13
             reason: "Some resources are not possible to restrict. See comments."
+          - id: W28
+            reason: "No Replacement needed"
 
   CloudIntelligenceDashboardsCFNManagementPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -393,8 +397,10 @@ Resources:
     Metadata:
       cfn_nag:
         rules_to_suppress:
-          - id: W12
+          - id: W13
             reason: "Some resources are not possible to restrict. See comments."
+          - id: W28
+            reason: "No Replacement needed"
 
 
   CURDestinationPolicy:
@@ -497,8 +503,10 @@ Resources:
     Metadata:
       cfn_nag:
         rules_to_suppress:
-          - id: W12
+          - id: W13
             reason: "Some resources are not possible to restrict. See comments."
+          - id: W28
+            reason: "No Replacement needed"
 
 
   CURReplicationPolicy:
@@ -608,6 +616,8 @@ Resources:
     Metadata:
       cfn_nag:
         rules_to_suppress:
-          - id: W12
+          - id: W13
             reason: "Some resources are not possible to restrict. See comments."
+          - id: W28
+            reason: "No Replacement needed"
 
