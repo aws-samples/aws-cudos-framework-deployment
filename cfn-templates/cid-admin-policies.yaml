@@ -478,6 +478,13 @@ Resources:
           Resource:
           - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/cid
 
+        - Sid: CostUsageReportForDelete
+          Action:
+          - cur:DescribeReportDefinitions
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/
+
         - Sid: ReadOnly
           Action:
           - cloudformation:GetTemplate
@@ -528,6 +535,13 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/cid
+
+        - Sid: CostUsageReportForDelete
+          Action:
+          - cur:DescribeReportDefinitions
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/
 
         - Sid: IAMForCFN
           Action:
