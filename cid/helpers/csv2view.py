@@ -1,27 +1,40 @@
 import re
 import csv
 import logging
+from io import StringIO
 
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
-def escape(text, character='_'):
+def escape_sql(text, character='_'):
     """ escape for sql statement """
-    return re.sub('[^0-9a-zA-Z]+', character, text)
+    return re.sub('[^0-9a-zA-Z]+', character, str(text))
 
+def escape_text(text, character='_'):
+    """ escape for sql statement """
+    return str(text).replace("'", "''")
 
-def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> None:
-    """ Make an sql mapping from sql """
-    logger.debug(f"input {input_file_name}")
+def read_nonblank_lines(lines):
+    """ returns non blank lines from file"""
+    for line in lines:
+        line_rstrip = line.rstrip()
+        if line_rstrip:
+            yield line_rstrip
 
+def read_csv(input_file_name):
+    """ Read CSV """
     sniffer = csv.Sniffer()
     try:
-        with open(input_file_name) as file_:
-            dialect = sniffer.sniff(file_.read(2000))
-            file_.seek(0)
-            data = [d for d in csv.DictReader(file_, dialect=dialect)]
-            
+        # AWS Organization returns a CSV with a BOM (byte order mark) character = U+FEFF to specify encoding
+        first_character = open(input_file_name).read(1)
+        encoding = 'utf-8-sig' if first_character == '\ufeff' else 'utf-8'
+
+        with open(input_file_name, encoding=encoding) as file_:
+            text = '\n'.join([line for line in read_nonblank_lines(file_)]) # AWS Organization produces a CSV with empty lines
+            dialect = sniffer.sniff(text)
+            data = [row for row in csv.DictReader(StringIO(text), dialect=dialect, skipinitialspace=True)]
+
     except FileNotFoundError:
         raise CidCritical(f'File not found: {repr(input_file_name)}')
     except PermissionError:
@@ -30,11 +43,16 @@ def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> Non
         raise CidCritical(f'{repr(input_file_name)} is a directory!')
     except Exception as _err:
         raise CidCritical(_err)
+    return data
+
+def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> None:
+    """ Make an sql mapping from sql """
+    logger.debug(f"input {input_file_name}")
     
+    data = read_csv(input_file_name)
     lines = []
-    
     for line in data:
-        arr = ", ".join([f'\'{escape(val, " ")}\'' for val in line.values()])
+        arr = ", ".join([f'\'{escape_text(val, " ")}\'' for val in line.values()])
         lines.append(f'ROW({arr})')
 
     if not lines:
@@ -43,10 +61,10 @@ def csv2view(input_file_name: str, name: str, output_file_name: str=None) -> Non
     headers = data[0].keys()
     
     row_lines = '\n, '.join(lines)
-    cols = ', '.join([escape(c.lower()) for c in headers ])
+    cols = ', '.join([escape_sql(c.lower()) for c in headers ])
 
     sql = (f'''
-CREATE OR REPLACE VIEW {escape(name.lower())} AS
+CREATE OR REPLACE VIEW {escape_sql(name.lower())} AS
 SELECT *
 FROM
 (
