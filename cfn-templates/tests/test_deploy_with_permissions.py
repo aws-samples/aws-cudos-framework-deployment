@@ -37,7 +37,7 @@ UNDERLINE = '\033[4m'
 account_id = boto3.client('sts').get_caller_identity()['Account']
 
 
-def delete_bucket(name): # FIXME: move to tools
+def delete_bucket(name): # move to tools
     """delete all content and the bucket"""
     s3r = boto3.resource('s3')
     try:
@@ -50,7 +50,7 @@ def delete_bucket(name): # FIXME: move to tools
     except s3c.exceptions.NoSuchBucket:
         pass
 
-def upload_to_s3(filename): # FIXME: move to tools
+def upload_to_s3(filename): # move to tools
     """upload file object to a temporary bucket and return a public url"""
     path = os.path.basename(filename)
     s3c = boto3.client('s3')
@@ -62,7 +62,24 @@ def upload_to_s3(filename): # FIXME: move to tools
     s3c.upload_file(filename, bucket, path)
     return f'https://{bucket}.s3.amazonaws.com/{path}'
 
-def watch_stacks(cloudformation, stacks=None): # FIXME: move to tools
+def format_event(stack, event): # move to tools
+    """format event line"""
+    line = '\t'.join([
+        event['Timestamp'].strftime("%H:%M:%S"),
+        stack,
+        event['LogicalResourceId'],
+        event['ResourceStatus'],
+        event.get('ResourceStatusReason',''),
+    ])
+    color = END
+    if '_COMPLETE' in line:
+        color = GREEN
+    elif '_FAILED' in line or 'failed to create' in line:
+        color = RED
+    return f'{color}{line}{END}'
+
+
+def watch_stacks(cloudformation, stacks=None): # move to tools
     """ watch stacks while they are IN_PROGRESS and/or until they are deleted"""
     stacks = stacks or []
     last_update = {stack: None for stack in stacks}
@@ -78,23 +95,11 @@ def watch_stacks(cloudformation, stacks=None): # FIXME: move to tools
             except cloudformation.exceptions.ClientError as exc:
                 if 'does not exist' in exc.response['Error']['Message']:
                     stacks.remove(stack)
-                logger.info(f'Stack {stack} does not exist any more.')
+                logger.info(exc.response['Error']['Message'])
             for event in events:
                 if last_update.get(stack) and last_update.get(stack) >= event['Timestamp']:
                     continue
-                line = '\t'.join([
-                    event['Timestamp'].strftime("%H:%M:%S"),
-                    stack,
-                    event['LogicalResourceId'],
-                    event['ResourceStatus'],
-                    event.get('ResourceStatusReason',''),
-                ])
-                color = END
-                if '_COMPLETE' in line:
-                    color = GREEN
-                elif '_FAILED' in line or 'failed to create' in line:
-                    color = RED
-                logger.info(f'{color}{line}{END}')
+                logger.info(format_event(stack, event))
                 last_update[stack] = event['Timestamp']
             try:
                 # Check stack status
@@ -110,14 +115,14 @@ def watch_stacks(cloudformation, stacks=None): # FIXME: move to tools
             except: # nosec B110 using in tests; pylint: disable=bare-except
                 pass
 
-def get_qs_user(): # FIXME: move to tools
+def get_qs_user(): # move to tools
     """ get any valid qs user """
     qs_ = boto3.client('quicksight')
     users = qs_.list_users(AwsAccountId=account_id, Namespace='default')['UserList']
     assert users, 'No QS users, pleas craete one.' # nosec B101:assert_used
     return users[0]['UserName']
 
-def timeit(method): # FIXME: move to tools
+def timeit(method): # move to tools
     """timing decorator"""
     def timed(*args, **kwargs):
         start = time.time()
@@ -170,7 +175,7 @@ def create_finops_role():
             ]
         }),
     )
-    logger.info(f'Role Created {role_arn}')
+    logger.info('Role Created %s', role_arn)
 
     logger.info('As admin creating permissions for Finops')
     admin_cfn.create_stack(
@@ -243,7 +248,7 @@ def test_dashboard_exists():
         AwsAccountId=account_id,
         DashboardId='cudos'
     )['Dashboard']
-    logger.info(f"Dashboard exists with status = {dash['Version']['Status']}")
+    logger.info("Dashboard exists with status = %s", dash['Version']['Status'])
 
 def teardown():
     """Cleanup the test"""
