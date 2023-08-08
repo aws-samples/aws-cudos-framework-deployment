@@ -250,6 +250,12 @@ def test_dashboard_exists():
     )['Dashboard']
     logger.info("Dashboard exists with status = %s", dash['Version']['Status'])
 
+def test_dataset_scheduled():
+    """check that dataset and schedule exist"""
+    schedules = boto3.client('quicksight').list_refresh_schedules(AwsAccountId=account_id, DataSetId='d01a936f-2b8f-49dd-8f95-d9c7130c5e46')['RefreshSchedules']
+    if not schedules:
+        raise Exception('Schedules not set') #pylint: disable=broad-exception-raised
+
 def teardown():
     """Cleanup the test"""
     admin_cfn = boto3.client('cloudformation')
@@ -308,11 +314,13 @@ def teardown():
 def main():
     """ main """
     try:
+        teardown()
         create_finops_role()
         create_cid_as_finops()
         test_dashboard_exists()
     finally:
-        teardown()
+        pass
+        #teardown()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
