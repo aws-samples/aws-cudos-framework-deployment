@@ -33,4 +33,5 @@ FROM
    , ROW ('eu-south-2', 'Spain', 'Madrid', '40.41', '-3.70', 'Europe/Madrid')
    , ROW ('eu-central-2', 'Switzerland', 'Zurich', '47.37', '8.54', 'Europe/Zurich')
    , ROW ('me-central-1', 'UAE', 'Dubai', '25.27', '55.29', 'Asia/Dubai')
+   , ROW ('il-central-1', 'Israel', 'Tel Aviv', '32.08', '34.78', 'Asia/Jerusalem')
 )  ignored_table_name (region_name, region_country, region_city, region_latitude, region_longitude, region_timezone)
