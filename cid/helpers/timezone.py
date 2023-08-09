@@ -39,6 +39,7 @@ MAPPING_REGION_2_TIMEZONE = {
     "sa-east-1": "America/Sao_Paulo",
     "us-gov-east-1": "US/Eastern",
     "us-gov-west-1": "US/Pacific",
+    "il-central-1": "Asia/Jerusalem",
 }
 
 
