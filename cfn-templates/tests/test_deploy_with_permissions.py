@@ -4,7 +4,7 @@ Test CID creation via CFN with the correct roles
 
 Personas:
     - Admin: a person with full admin access
-    - Finops who neede to deploy CID via CFN
+    - Finops who needs to deploy CID via CFN
 
 Procedure:
     1. Admin creates a role and adds policies to the role
@@ -314,13 +314,16 @@ def teardown():
 def main():
     """ main """
     try:
-        teardown()
+        teardown() #Try to remove previous attempt
         create_finops_role()
         create_cid_as_finops()
         test_dashboard_exists()
+        test_dataset_scheduled()
     finally:
-        pass
-        #teardown()
+        for index in range(10):
+            print(f'Press Ctrl+C if you want to avoid teardown: {9-index}\a') # beeep
+            time.sleep(1)
+        teardown()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
