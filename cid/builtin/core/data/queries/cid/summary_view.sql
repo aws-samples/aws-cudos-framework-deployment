@@ -20,7 +20,7 @@
      WHEN ("line_item_usage_type" LIKE '%Spot%') THEN 'Spot'
      ELSE 'OnDemand' END "purchase_option"
  ,CASE
-  WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_savings_plan_a_r_n"
+ -- WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_savings_plan_a_r_n"
  -- WHEN ("reservation_reservation_a_r_n" <> '') THEN "reservation_reservation_a_r_n"
   WHEN ("line_item_line_item_type" = 'Usage') THEN ''
   ELSE '' END "ri_sp_arn"
@@ -52,7 +52,7 @@
  , "line_item_legal_entity" "legal_entity"
  , "bill_billing_entity" "billing_entity"
  , "pricing_unit" "pricing_unit"
- , "count"(DISTINCT "Line_item_resource_id") "resource_id_count"
+ , "approx_distinct"("Line_item_resource_id") "resource_id_count"
  , sum(CASE
  -- WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "line_item_usage_amount"
  -- WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "line_item_usage_amount"

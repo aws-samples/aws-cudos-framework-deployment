@@ -77,8 +77,6 @@ setup_file() {
       DeployTAODashboard="no"\
       AthenaWorkgroup=""\
       AthenaQueryResultsBucket=""\
-      CURDatabaseName=""\
-      CURPath=""\
       CURTableName=""\
       CidVersion="$cid_version"\
       QuickSightDataSetRefreshSchedule="cron(0 4 * * ? *)"\
@@ -110,6 +108,7 @@ setup_file() {
 }
 
 @test "Delete stack (5 mins)" {
+  # FIXME: process multiple stacksets on cleanup
   export stackname=$(aws cloudformation describe-stacks --query 'Stacks[?Description==`Deployment of Cloud Intelligence Dashboards`].StackName' --output text)
   aws cloudformation delete-stack --stack-name "$stackname"
   aws cloudformation wait stack-delete-complete  --stack-name "$stackname"
@@ -121,8 +120,8 @@ setup_file() {
   [ "$output" = "0" ]
 }
 
-@test "Datasets are deleted" {
-  run aws quicksight list-data-sets --aws-account-id $account_id --query 'length(DataSetSummaries)' --output text
+@test "Main datasets are deleted" {
+  run aws quicksight list-data-sets --aws-account-id $account_id --query 'length(DataSetSummaries[?Name==`summary_view`])' --output text
   [ "$status" -eq 0 ]
   [ "$output" = "0" ]
 }
@@ -140,8 +139,10 @@ setup_file() {
 }
 
 teardown_file() {
+  export region=$(aws configure get region)
   # Additional teardown steps in case of failure
   aws s3 rm s3://aws-athena-query-results-cid-$account_id-$region --recursive || echo "no bucket"
   aws s3api delete-bucket --bucket aws-athena-query-results-cid-$account_id-$region || echo "no bucket"
+  aws athena delete-work-group --work-group CID --recursive-delete-option
 }
 

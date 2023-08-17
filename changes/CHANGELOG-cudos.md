@@ -1,5 +1,30 @@
 # What's new in CUDOS Dashboard
 
+## CUDOS - 4.77.0
+
+* OPTICS Explorer: Added 'Forecast Spend' visual allowing to forecast AWS spend by any dimension available in top level filters e.g. by particular Service, Operation, Region, Account etc.
+* Amazon S3: Fix for storage calculation in 'Daily Storage Bucket Explorer' visual
+* Data Transfer: Fix to exclude Direct Connect hourly charges from data transfer amount calculations
+* Storage: Fix to filter out empty values in 'TOP 20 EBS Volumes Previous Month' and 'TOP 20 EBS Snapshots Previous Month'
+
+## CUDOS - 4.76.1
+
+* Storage : Fix for 'EBS Storage Unit Cost' visual not showing data
+* Amazon S3: Added account tooltip to 'Total Cost per Bucket Previous Month by Operation' visual
+
+## CUDOS - 4.76.0
+
+* Databases and Compute: Added ability to switch between Instance Hours, Normalized Hours and Cost with the top level control 'Usage Unit’. Normalized Hours allows you to get more precise tracking of your usage taking into account size of the instances. Learn more about normalized hours in recommendations sections of each tab
+* Databases: Service Select control changed to multi-select allowing to focus on multiple services at once
+* Databases: New visuals 'RI Coverage per region | engine | instance type or family (for size flexible), 'Daily RI coverage' (with ability to set RI coverage goal for the reference), 'Total RI Coverage %'. These new visuals and also 'Database Daily Elasticity' and 'Daily Cost' visuals can be switched between Instance Hours, Normalized Hours and Cost with 'Usage Unit' control
+* Databases: Added ability to switch between Instance Family, Instance Type and Processor type with 'Group By' control 
+* Databases: 'Cost by Database Engines' visuals shows engines for all database services
+* Compute: 'EC2 Compute Unit Cost', 'EC2 Coverage by Purchase Option', 'EC2 Hours by Platform', 'EC2 Coverage (Last 30 days)', 'EC2 Daily Compute Unit Cost by Purchase Option' visuals can be switched between nstance Hours, Normalized Hours and Cost with 'Usage Unit' top level control
+* Compute: Added ability to switch between Instance Family, Instance Type and Processor type with 'Group By' control 
+* Compute: New visual 'EC2 Daily Compute Unit Cost and Usage'
+* Data Transfer: Update in Data Transfer types categorization logic to capture S3 to Direct Connect data transfer under 'Region to Direct Connect' category
+
+
 ## CUDOS - 4.75
 
 * Databases: Added 'Daily Storage Cost' visual which shows detailed storage cost breakdown and can be used to track GP3 volumes adoption for Amazon RDS and OpenSearch 

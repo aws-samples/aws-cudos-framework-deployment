@@ -3,15 +3,21 @@ import logging
 import click
 
 from cid.common import Cid
-from cid.utils import get_parameters, set_parameters
+from cid.utils import get_parameters, set_parameters, get_latest_tool_version
 from cid._version import __version__
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 version = f'{__version__} Beta'
+latest_version = get_latest_tool_version()
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
 
+if __version__ != latest_version and latest_version != 'UNDEFINED':
+    
+    print('\033[93mUPDATE AVAILABLE\033[0m')
+    print(f'\033[93mA new version {latest_version} is available, please consider update cid-cmd package via pip\033[0m\n\n')
+    logger.info(f'A new version {latest_version} is available, please consider update cid-cmd package via pip')
 
 def cid_command(func):
     def wrapper(ctx, **kwargs):
@@ -29,6 +35,9 @@ def cid_command(func):
         except CidCritical as exc:
             logger.debug(exc, exc_info=True)
             logger.critical(exc)
+        except CidError as exc:
+            logger.debug(exc, exc_info=True)
+            logger.error(exc)
         params = get_parameters()
         logger.info('Next time you can use following command:')
         logger.info('   cid-cmd ' + ctx.info_name
@@ -80,6 +89,20 @@ def map(ctx, **kwargs):
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@cid_command
+def csv2view(ctx, **kwargs):
+    """Create account sql code from CSV file
+
+    \b
+    Command options:
+     --input                         csv file
+     --name                          Athena View name
+    """
+    ctx.obj.csv2view(**kwargs)
+
+
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.option('--share-with-account', help='Share dashboard with all users in the current account', is_flag=True, default=None)
 @click.option('--quicksight-delete-failed-datasource', help='Delete datasoruce if creation failed', is_flag=True, default=None)
 @cid_command
@@ -101,7 +124,9 @@ def deploy(ctx, **kwargs):
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
      --account-map-file TEXT               csv file path relative to current directory (if autodiscovery impossible and csv selected as a source )
-     --resources TEXT                      CID resources file (yaml)
+     --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
+     --update (yes|no)                     Update if some elements are already installed. Default = 'no'
+     --resources TEXT                      CID resources yaml file or url
     """
     ctx.obj.deploy(**kwargs)
 
@@ -110,16 +135,21 @@ def deploy(ctx, **kwargs):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def export(ctx, **kwargs):
-    """Deploy Dashboard
+    """Expot Dashboard
     
     \b
     Command options:
-        --analysis-name       Analysis you want to share (not needed if analysis-id is provided).
-        --analysis-id         ID of analysis you want to share (open analysis in browser and copy id from url)
-        --template-id         Template Id
-        --template-version    Version description vX.Y.Z
-        --reader-account      Account id with howm you want to share or *
-        --output              A filename (.yaml)
+        --analysis-name              Analysis you want to share (not needed if analysis-id is provided).
+        --analysis-id                ID of analysis you want to share (open analysis in browser and copy id from url)
+        --template-id                Template Id
+        --dashboard-id               Target Dashboard Id
+        --template-version           Version description vX.Y.Z
+        --reader-account             Account id with whom you want to share with or *
+        --dashboard-export-method
+               (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSught Teamplate)
+        --export-known-datasets
+            (no|yes)                 If 'yes' the export will include DataSets that are already in resources file. Default = no
+        --output                     A filename (.yaml)
     """
     ctx.obj.export(**kwargs)
 
@@ -156,7 +186,13 @@ def delete(ctx, dashboard_id, **kwargs):
 @click.option('--recursive/--norecursive', help='Recursive update all Datasets and Views (flags must be before options)', default=False)
 @cid_command
 def update(ctx, dashboard_id, force, recursive, **kwargs):
-    """Update Dashboard"""
+    """Update Dashboard
+
+    \b
+
+     --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
+
+    """
     ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)
 
 

@@ -1,22 +1,22 @@
-import json
-import logging
 import re
-import time
+import json
 import uuid
+import time
+import logging
 from pkg_resources import resource_string
 from string import Template
 from typing import Dict, List, Union
 
 import click
-from deepmerge import always_merger
 
 from cid.base import CidBase
+from cid.helpers import diff
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import get_parameter, get_parameters
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class QuickSight(CidBase):
         super().__init__(session)
 
         # QuickSight clients
-        logger.info(f'Creating QuickSight client')
+        logger.info('Creating QuickSight client')
         self.client = self.session.client('quicksight')
         self.identityClient = self.session.client('quicksight', region_name=self.identityRegion)
 
@@ -186,68 +186,139 @@ class QuickSight(CidBase):
 
 
     def discover_dashboard(self, dashboardId: str) -> Dashboard:
-        """Discover single dashboard"""
+        """Discover a single dashboard: describe and pull downstream info (datasets, related templates and views) """
+
+        def _safe_int(value, default=None):
+            """Safe int from string"""
+            return int(str(value)) if str(value).isdecimal() else default
+
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
-        try:
-            _template_arn = dashboard.version.get('SourceEntityArn')
-            _template_id = str(_template_arn.split('/')[1])
-            _template_version = int(_template_arn.split('/')[-1])
-            _template = self.describe_template(template_id=_template_id, version_number=_template_version)
-            if isinstance(_template, CidQsTemplate):
-                dashboard.deployedTemplate = _template
-        except Exception as e:
-                logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {_template_id}, {e}')
+        if not dashboard:
+            raise CidCritical(f'Dashboard {dashboardId} was not found')
         # Look for dashboard definition by DashboardId
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
-            # Look for dashboard definition by templateId
-            logger.info(dashboard.template_id)
-            _definition = next((v for v in self.supported_dashboards.values() if v['templateId'] == dashboard.template_id), None)
+            # Look for dashboard definition by templateId.
+            # This is for a specific usecase when a dashboard with another id points to managed template
+            source_arn = dashboard.raw.get('Version', {}).get('SourceEntityArn', '')
+            if source_arn:
+                template_id = source_arn.split('/version/')[0].split('/')[-1]
+                template_account = source_arn.split(':').pop(4)
+                logger.info(template_id)
+                _definition = next((v for v in self.supported_dashboards.values() if 'templateId' in v and v['templateId'] == template_id), None)
         if not _definition:
             logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
-        else:
-            logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.template_arn})')
-            dashboard.definition = _definition
-            logger.info(f'Found definition for "{dashboard.name}" ({dashboard.template_arn})')
-            for dataset in dashboard.version.get('DataSetArns'):
-                dataset_id = dataset.split('/')[-1]
+            return None
+
+        logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.template_arn})')
+        dashboard.definition = _definition
+        logger.info(f'Found definition for "{dashboard.name}" ({dashboard.template_arn})')
+
+        # Check for extra informations from resource definition
+        version_obj = _definition.get('versions', dict())
+        min_template_version = _safe_int(version_obj.get('minTemplateVersion'))
+        default_description_version = _safe_int(version_obj.get('minTemplateDescription'))
+
+        # Fetch template referenced as dashboard source (if any)
+        _template_arn = dashboard.version.get('SourceEntityArn')
+        if _template_arn and isinstance(_template_arn, str) \
+            and len(_template_arn.split(':')) > 5 \
+            and _template_arn.split(':')[5].startswith('template/'):
+
+            params = {
+                "template_id": _template_arn.split('/')[1],
+                "account_id": _template_arn.split(':')[4],
+                "region": _template_arn.split(':')[3]
+            }
+
+            if '/version/' in _template_arn:
+                params['version_number'] = _safe_int(_template_arn.split('/version/')[-1])
+            elif min_template_version:
+                logger.info(f"Using default version number {min_template_version} in place")
+                params['version_number'] = min_template_version
+
+            if 'version_number' in params:
                 try:
-                    _dataset = self.describe_dataset(id=dataset_id)
-                    if not isinstance(_dataset, Dataset):
-                        logger.info(f'Dataset "{dataset_id}" is missing')
-                    else:
-                        logger.info(f"Detected dataset: \"{_dataset.name}\" ({_dataset.id} in {dashboard.name})")
-                        dashboard.datasets.update({_dataset.name: _dataset.id})
-                except self.client.exceptions.AccessDeniedException:
-                    logger.info(f'Access denied describing DataSetId {dataset_id} for Dashboard {dashboardId}')
-                except self.client.exceptions.InvalidParameterValueException:
-                    logger.info(f'Invalid dataset {dataset_id}')
-            templateAccountId = _definition.get('sourceAccountId')
-            templateId = _definition.get('templateId')
-            region = _definition.get('region', 'us-east-1')
+                    _template = self.describe_template(**params)
+                    if isinstance(_template, CidQsTemplate):
+                        dashboard.deployedTemplate = _template
+                except Exception as e:
+                    logger.debug(e, exc_info=True)
+                    logger.info(f'Unable to describe template for {dashboardId}, {e}')
+            else:
+                logger.info("Minimum template version could not be found for Dashboard {dashboardId}: {_template_arn}, deployed template could not be described")
+
+        # Fetch datasets
+        for dataset in dashboard.version.get('DataSetArns'):
+            dataset_id = dataset.split('/')[-1]
             try:
-                template = self.describe_template(templateId, account_id=templateAccountId, region=region)
+                _dataset = self.describe_dataset(id=dataset_id)
+                if not isinstance(_dataset, Dataset):
+                    logger.info(f'Dataset "{dataset_id}" is missing')
+                else:
+                    logger.info(f"Detected dataset: \"{_dataset.name}\" ({_dataset.id} in {dashboard.name})")
+                    dashboard.datasets.update({_dataset.name: _dataset.id})
+            except self.client.exceptions.AccessDeniedException:
+                logger.info(f'Access denied describing DataSetId {dataset_id} for Dashboard {dashboardId}')
+            except self.client.exceptions.InvalidParameterValueException:
+                logger.info(f'Invalid dataset {dataset_id}')
+        logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
+
+        # Fetch the latest version of sourceTemplate referenced in definition
+        source_template_account_id = _definition.get('sourceAccountId')
+        template_id = _definition.get('templateId')
+        region = _definition.get('region', 'us-east-1')
+        if template_id:
+            try:
+                logger.debug(f'Loading latest source template {template_id} from source account {source_template_account_id} in {region}')
+                template = self.describe_template(template_id, account_id=source_template_account_id, region=region)
                 dashboard.sourceTemplate = template
             except Exception as e:
                 logger.debug(e, exc_info=True)
-                logger.info(f'Unable to describe template {templateId} in {templateAccountId} ({region})')
+                logger.info(f'Unable to describe template {template_id} in {source_template_account_id} ({region})')
 
-            # recoursively add views
-            all_views = []
-            def _recoursive_add_view(view):
-                all_views.append(view)
-                for dep_view in (self.supported_views.get(view) or {}).get('dependsOn', {}).get('views', []):
-                    _recoursive_add_view(dep_view)
-            for dataset_name in dashboard.datasets.keys():
-                for view in (self.supported_datasets.get(dataset_name) or {}).get('dependsOn', {}).get('views', []):
-                    _recoursive_add_view(view)
-            dashboard.views = all_views
-            self._dashboards = self._dashboards or {}
-            self._dashboards.update({dashboardId: dashboard})
-            logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
-            logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
-            return dashboard
+        # Checking for version override in template definition
+        for dashboard_template in [dashboard.deployedTemplate, dashboard.sourceTemplate]:
+            if not isinstance(dashboard_template, CidQsTemplate)\
+                or int(dashboard_template.version) <= 0 \
+                or not version_obj:
+                    continue
+
+            logger.debug("versions object found in template")
+            version_map = version_obj.get('versionMap', dict())
+            description_override = version_map.get(int(dashboard_template.version))
+
+            try:
+                if description_override:
+                    logger.info(f"Template description is overrided with: {description_override}")
+                    description_override = str(description_override)
+                    dashboard_template.raw['Version']['Description'] = description_override
+                else:
+                    if min_template_version and default_description_version:
+                        if int(dashboard_template.version) <= min_template_version:
+                            logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
+                            dashboard_template.raw['Version']['Description'] = default_description_version
+            except ValueError as val_error:
+                logger.debug(val_error,  exc_info=True)
+                logger.info("The provided values of the versions object are not well formed, please use int for template version and str for template description")
+            except Exception as e:
+                logger.debug(e, exc_info=True)
+                logger.info("Unable to override template description")
+
+        # Fetch all views recursively
+        all_views = []
+        def _recoursive_add_view(view):
+            all_views.append(view)
+            for dep_view in (self.supported_views.get(view) or {}).get('dependsOn', {}).get('views', []):
+                _recoursive_add_view(dep_view)
+        for dataset_name in dashboard.datasets.keys():
+            for view in (self.supported_datasets.get(dataset_name) or {}).get('dependsOn', {}).get('views', []):
+                _recoursive_add_view(view)
+        dashboard.views = all_views
+        self._dashboards = self._dashboards or {}
+        self._dashboards[dashboardId] = dashboard
+        logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
+        return dashboard
 
     def ensure_group_exists(self, groupname='cid-owners', description='Created by Cloud Intelligence Dashboards'):
         try:
@@ -261,7 +332,7 @@ class QuickSight(CidBase):
                 AwsAccountId=self.account_id,
                 GroupName=groupname,
                 Namespace='default',
-                description=description,
+                Description=description,
             ).get('Group')
         except self.client.exceptions.AccessDeniedException as e:
             raise CidCritical('Cannot access groups. (AccessDenied). Please use quicksight-user parameter '
@@ -340,11 +411,11 @@ class QuickSight(CidBase):
             resource_name=f'data/permissions/data_source_permissions.json',
         ).decode('utf-8'))
         data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
-        datasource_id = datasource_id or str(uuid.uuid4())
+        datasource_name = datasource_id or "CID Athena"
         params = {
             "AwsAccountId": self.account_id,
             "DataSourceId": datasource_id,
-            "Name": "CID Athena",
+            "Name": datasource_name,
             "Type": "ATHENA",
             "DataSourceParameters": {
                 "AthenaParameters": {
@@ -380,10 +451,10 @@ class QuickSight(CidBase):
                     except self.client.exceptions.AccessDeniedException as e:
                         logger.info('Access denied deleting Athena datasource')
                 return None
-            return datasource_id
+            return datasource
         except self.client.exceptions.ResourceExistsException:
             logger.error('Data source already exists')
-            return datasource_id
+            return self.describe_data_source(datasource_id, update=True)
         except self.client.exceptions.AccessDeniedException as e:
             logger.info('Access denied creating Athena datasource')
             logger.debug(e, exc_info=True)
@@ -528,7 +599,11 @@ class QuickSight(CidBase):
     def select_dashboard(self, force=False) -> str:
         """ Select from a list of discovered dashboards """
         selection = list()
-        dashboard_id = None
+
+        dashboard_id = get_parameters().get('dashboard-id')
+        if dashboard_id:
+            return dashboard_id
+
         if not self.dashboards:
             return None
         choices = {}
@@ -842,10 +917,10 @@ class QuickSight(CidBase):
             except self.client.exceptions.UnsupportedUserEditionException:
                 raise CidCritical('AWS QuickSight Enterprise Edition is required')
             except self.client.exceptions.ResourceNotFoundException:
-                raise CidCritical(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
+                raise CidError(f'Error: Template {template_id} is not available in account {account_id} and region {region}')
             except Exception as e:
                 logger.debug(e, exc_info=True)
-                raise CidCritical(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
+                raise CidError(f'Error: {e} - Cannot find {template_id} in account {account_id}.')
         return self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}')
 
     def describe_user(self, username: str) -> dict:
@@ -936,8 +1011,8 @@ class QuickSight(CidBase):
         return dataset_id
 
 
-    def update_dataset(self, definition: dict) -> str:
-        """ Creates an AWS QuickSight dataset """
+    def update_dataset(self, definition: dict) -> Dataset:
+        """ Update an AWS QuickSight dataset """
         definition.update({'AwsAccountId': self.account_id})
         logger.info(f'Updating dataset {definition.get("Name")}')
 
@@ -946,18 +1021,16 @@ class QuickSight(CidBase):
             del definition['Permissions']
         response = self.client.update_data_set(**definition)
         logger.info(f'Dataset {definition.get("Name")} is updated')
-        return True
+        dataset_id = definition.get('DataSetId')
+        self.datasets.pop(dataset_id, None) # invalidate cache
+        return self.describe_dataset(dataset_id)
 
 
-    def create_dashboard(self, definition: dict, **kwargs) -> Dashboard:
+    def create_dashboard(self, definition: dict) -> Dashboard:
         """ Creates an AWS QuickSight dashboard """
-        DataSetReferences = list()
-        for k, v in definition.get('datasets', dict()).items():
-            DataSetReferences.append({
-                'DataSetPlaceholder': k,
-                'DataSetArn': v
-            })
-        
+
+        create_parameters = self._buid_params_for_create_update_dash(definition)
+
         dashboard_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
             resource_name=f'data/permissions/dashboard_permissions.json',
@@ -966,22 +1039,8 @@ class QuickSight(CidBase):
             'PrincipalArn': self.get_principal_arn()
         }
         dashboard_permissions = json.loads(dashboard_permissions_tpl.safe_substitute(columns_tpl))
-        create_parameters = {
-            'AwsAccountId': self.account_id,
-            'DashboardId': definition.get('dashboardId'),
-            'Name': definition.get('name'),
-            'Permissions': [
-                dashboard_permissions
-            ],
-            'SourceEntity': {
-                'SourceTemplate': {
-                    'Arn': f"{definition.get('sourceTemplate').arn}/version/{definition.get('sourceTemplate').version}",
-                    'DataSetReferences': DataSetReferences
-                }
-            }
-        }
-        
-        create_parameters = always_merger.merge(create_parameters, kwargs)
+        create_parameters['Permissions'] = [ dashboard_permissions ]
+
         try:
             logger.info(f'Creating dashboard "{definition.get("name")}"')
             logger.debug(create_parameters)
@@ -1006,28 +1065,54 @@ class QuickSight(CidBase):
         return dashboard
 
 
-    def update_dashboard(self, dashboard: Dashboard, **kwargs):
-        """ Updates an AWS QuickSight dashboard """
-        DataSetReferences = list()
-        for k, v in dashboard.datasets.items():
-            DataSetReferences.append({
-                'DataSetPlaceholder': k,
-                'DataSetArn': self.datasets.get(v).arn
-            })
+    def _buid_params_for_create_update_dash(self, definition: dict, permissions: bool=True) -> Dict:
 
-        update_parameters = {
+        create_parameters = {
             'AwsAccountId': self.account_id,
-            'DashboardId': dashboard.id,
-            'Name': dashboard.name,
-            'SourceEntity': {
-                'SourceTemplate': {
-                    'Arn': f"{dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}",
-                    'DataSetReferences': DataSetReferences
-                }
-            }
+            'DashboardId': definition.get('dashboardId'),
+            'Name': definition.get('name'),
         }
 
-        update_parameters = always_merger.merge(update_parameters, kwargs)
+        if definition.get('sourceTemplate'):
+            dataset_references = [
+                {'DataSetPlaceholder': key, 'DataSetArn': value}
+                for key, value in definition.get('datasets', {}).items()
+            ]
+            create_parameters['SourceEntity'] = {
+                'SourceTemplate': {
+                    'Arn': f"{definition.get('sourceTemplate').arn}/version/{definition.get('sourceTemplate').version}",
+                    'DataSetReferences': dataset_references
+                }
+            }
+        elif definition.get('definition'):
+            create_parameters['Definition'] = definition.get('definition')
+            dataset_references = []
+            for identifier, arn in definition.get('datasets', {}).items():
+                # Fetch dataset by name (preferably) OR by id
+                dastaset_declarations = create_parameters['Definition'].get('DataSetIdentifierDeclarations', [])
+                for ds_dec in dastaset_declarations:
+                    if identifier == ds_dec['Identifier']:
+                        logger.debug('Dataset {identifier} matched by Name')
+                        break # all good
+                    elif arn.split('/')[-1] == ds_dec['DataSetArn'].split('/')[-1]:
+                        logger.debug('Dataset {identifier} matched by Id')
+                        identifier = ds_dec['Identifier']
+                        break
+                else:
+                    raise CidCritical(f'Unable to match dataset {identifier} / {arn} with any DataSetIdentifierDeclarations of dashboard {repr(dastaset_declarations)}')
+
+                dataset_references.append({'Identifier': identifier, 'DataSetArn': arn})
+
+            create_parameters['SourceEntity'] = {}
+            create_parameters['Definition']['DataSetIdentifierDeclarations'] = dataset_references
+        else:
+            logger.debug(f'Defintion = {definition}')
+            raise CidCritical('Dashboard definition must contain sourceTemplate or definition')
+        return create_parameters
+
+    def update_dashboard(self, dashboard: Dashboard, definition):
+        """ Updates an AWS QuickSight dashboard """
+        update_parameters = self._buid_params_for_create_update_dash(definition)
         logger.info(f'Updating dashboard "{dashboard.name}"')
         logger.debug(f"Update parameters: {update_parameters}")
         update_status = self.client.update_dashboard(**update_parameters)
@@ -1086,3 +1171,10 @@ class QuickSight(CidBase):
         update_status = self.client.update_template_permissions(**update_parameters)
         logger.debug(update_status)
         return update_status
+
+    def dataset_diff(self, raw1, raw2):
+        """ get dataset diff """
+        return diff(
+            Dataset(raw1).to_diffable_structure(),
+            Dataset(raw2).to_diffable_structure(),
+        )
