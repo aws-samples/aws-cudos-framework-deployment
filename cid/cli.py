@@ -1,29 +1,28 @@
+import sys
 import logging
 
 import click
 
 from cid.common import Cid
-from cid.utils import get_parameters, set_parameters, get_latest_tool_version
+from cid.utils import get_parameters, set_parameters, get_latest_tool_version, cid_print
 from cid._version import __version__
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
 version = f'{__version__} Beta'
 latest_version = get_latest_tool_version()
-prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
-print(f'{prog_name} {version}\n')
+PROG_NAME = "CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
+cid_print(f'{PROG_NAME} {version}\n', file=sys.stderr)
 
 if __version__ != latest_version and latest_version != 'UNDEFINED':
-    
-    print('\033[93mUPDATE AVAILABLE\033[0m')
-    print(f'\033[93mA new version {latest_version} is available, please consider update cid-cmd package via pip\033[0m\n\n')
-    logger.info(f'A new version {latest_version} is available, please consider update cid-cmd package via pip')
+    cid_print('\033[93mUPDATE AVAILABLE\033[0m', file=sys.stderr)
+    cid_print(f'\033[93mA new version {latest_version} is available, please consider update cid-cmd package via pip\033[0m\n\n', file=sys.stderr)
 
 def cid_command(func):
     def wrapper(ctx, **kwargs):
         # Complete kwargs with other parameters
         if len(ctx.args) % 2 != 0:
-            print(f"Unknown extra argument, or an option without value {ctx.args}")
+            cid_print(f"Unknown extra argument, or an option without value {ctx.args}")
             exit(-1)
         for i in range(0, len(ctx.args), 2):
             kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
@@ -197,10 +196,13 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
+@click.option('-u', '--url', help='AWS Console url', default=None)
+@click.option('--signed/--no-signed', help='Use Signed URL', is_flag=True, default=True)
+@click.option('-p', '--only-print', help='Only Print url, do not open', is_flag=True, default=False)
 @cid_command
-def open(ctx, dashboard_id, **kwargs):
+def open(ctx, dashboard_id, url, signed, only_print, **kwargs):
     """Open Dashboard in browser"""
-    ctx.obj.open(dashboard_id, **kwargs)
+    ctx.obj.open_signed(dashboard_id, url, signed, only_print, **kwargs)
 
 
 @click.option('-v', '--verbose', count=True)

@@ -3,7 +3,7 @@ import sys
 import json
 import logging
 import functools
-from pathlib import Path
+import webbrowser
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
@@ -23,9 +23,9 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, exec_env
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, get_signed_url
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
@@ -49,8 +49,10 @@ class Cid():
         self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
         self._logger = None
+        self.qs_url_params = {}
 
     def aws_login(self):
+        """ login aws account """
         params = {
             'profile_name': None,
             'region_name': None,
@@ -58,31 +60,28 @@ class Cid():
             'aws_secret_access_key': None,
             'aws_session_token': None
         }
-        for key in params.keys():
+        for key in params:
             value = get_parameters().get(key.replace('_', '-'))
-            if  value != None:
+            if  value is not None:
                 params[key] = value
 
-        print('Checking AWS environment...')
+        cid_print('Checking AWS environment...', file=sys.stderr)
         try:
             self.base = CidBase(session=utils.get_boto_session(**params))
-            if self.base.session.profile_name:
-                print(f'\tprofile name: {self.base.session.profile_name}')
-                logger.info(f'AWS profile name: {self.base.session.profile_name}')
-            self.qs_url_params = {
-                'account_id': self.base.account_id,
-                'region': self.base.session.region_name
-            }
-        except (NoCredentialsError, CredentialRetrievalError):
-            raise CidCritical('Error: Not authenticated, please check AWS credentials')
-        except ClientError as e:
-            raise CidCritical(f'ClientError: {e}')
-        print(f'\taccountId: {self.base.account_id}\n\tAWS userId: {self.base.username}')
-        logger.info(f'AWS accountId: {self.base.account_id}')
-        logger.info(f'AWS userId: {self.base.username}')
-        print('\tRegion: {}'.format(self.base.session.region_name))
-        logger.info(f'AWS region: {self.base.session.region_name}')
-        print('\n')
+        except (NoCredentialsError, CredentialRetrievalError) as exc:
+            raise CidCritical('Error: Not authenticated, please check AWS credentials') from exc
+        except ClientError as exc:
+            raise CidCritical(f'ClientError: {exc}') from exc
+        self.qs_url_params = {
+            'account_id': self.base.account_id,
+            'region': self.base.session.region_name
+        }
+        if self.base.session.profile_name:
+            cid_print(f'\tProfile name: {self.base.session.profile_name}', file=sys.stderr)
+        cid_print(f'\tAccountId: {self.base.account_id}', file=sys.stderr)
+        cid_print(f'\tUserId: {self.base.username}', file=sys.stderr)
+        cid_print(f'\tRegion: {self.base.session.region_name}', file=sys.stderr)
+        cid_print('\n', file=sys.stderr)
 
     @property
     def qs(self) -> QuickSight:
@@ -171,7 +170,7 @@ class Cid():
             _entry_points = [ep for ep in entry_points() if ep.group == 'cid.plugins']
 
         plugins = dict()
-        print('Loading plugins...')
+        cid_print('Loading plugins...', file=sys.stderr)
         logger.info(f'Located {len(_entry_points)} plugin(s)')
         for ep in _entry_points:
             if ep.value in plugins.keys():
@@ -179,14 +178,14 @@ class Cid():
                 continue
             logger.info(f'Loading plugin: {ep.name} ({ep.value})')
             plugin = Plugin(ep.value)
-            print(f"\t{ep.name} loaded")
+            cid_print(f"\t{ep.name} loaded", file=sys.stderr)
             plugins.update({ep.value: plugin})
             try:
                 self.resources = always_merger.merge(
                     self.resources, plugin.provides())
             except AttributeError:
                 pass
-        print('\n')
+        cid_print("\n", file=sys.stderr)
         logger.info('Finished loading plugins')
         return plugins
 
@@ -534,31 +533,39 @@ class Cid():
 
 
     @command
-    def open(self, dashboard_id, **kwargs):
+    def open_signed(self, dashboard_id, url=None, signed=None, only_show_url=None, **kwargs):
         """Open QuickSight dashboard in browser"""
 
-        aws_execution_env = os.environ.get('AWS_EXECUTION_ENV', '')
-        if  aws_execution_env == 'CloudShell' or aws_execution_env.startswith('AWS_Lambda'):
-            print(f"Operation is not supported in {aws_execution_env}")
-            return dashboard_id
-        if not dashboard_id:
-            dashboard_id = self.qs.select_dashboard(force=True)
+        if not url:
+            if not dashboard_id:
+                dashboard_id = self.qs.select_dashboard(force=True)
 
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            logger.info('Getting dashboard status...')
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            if not dashboard:
+                logger.error(f'Dashboard {dashboard_id} not deployed.')
+                return
 
-        click.echo('Getting dashboard status...', nl=False)
-        if dashboard is not None:
-            if dashboard.version.get('Status') not in ['CREATION_SUCCESSFUL']:
-                print(json.dumps(dashboard.version.get('Errors'),
-                      indent=4, sort_keys=True, default=str))
-                click.echo(
-                    f'\nDashboard is unhealthy, please check errors above.')
-            click.echo('healthy, opening...')
-            click.launch(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
-        else:
-            click.echo('not deployed.')
+            if dashboard.version.get('Status') not in ['CREATION_SUCCESSFUL', 'UPDATE_SUCCESSFUL']:
+                logger.warning(json.dumps(dashboard.version.get('Errors'),
+                        indent=4, sort_keys=True, default=str))
+                logger.warning('Dashboard is unhealthy, please check errors above.')
+            logger.info('healthy, opening...')
+            url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
-        return dashboard_id
+        if signed:
+            url = get_signed_url(destination=url)
+
+        if only_show_url:
+            cid_print(url)
+            return
+        if exec_env()['terminal'] == 'CloudShell':
+            logger.warning(f"Operation is not supported in {exec_env()}")
+            return
+
+        webbrowser.open(url)
+
+        return
 
     @command
     def status(self, dashboard_id, **kwargs):
