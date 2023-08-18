@@ -25,12 +25,13 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view
+from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
 from cid.exceptions import CidError, CidCritical
+from cid.commands import InitQsCommand
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +108,14 @@ class Cid():
                 'glue': Glue(self.base.session)
             })
         return self._clients.get('glue')
+    
+    @property
+    def organizations(self) -> Organizations:
+        if not self._clients.get('organizations'):
+            self._clients.update({
+                'organizations': Organizations(self.base.session)
+            })
+        return self._clients.get('organizations')
 
     @property
     def cur(self) -> CUR:
@@ -1565,3 +1574,7 @@ class Cid():
         for v in ['account_map', 'aws_accounts']:
             self.accountMap.create(v)
 
+    @command
+    def initqs(self, **kwargs):
+        """ Initialize QuickSight resources for deployment """
+        return InitQsCommand(cid=self, **kwargs).execute()
