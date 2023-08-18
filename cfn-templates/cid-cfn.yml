@@ -136,7 +136,7 @@ Parameters:
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.22
+    Default: 0.2.24
     Description: A version of CID package
   Suffix:
     Type: String
@@ -1071,6 +1071,15 @@ Resources:
                   - quicksight:DescribeTemplate
                   - quicksight:DescribeAccountSubscription
                 Resource: '*' # This is needed to allow Autodetection in CID-CMD
+              - Effect: Allow
+                Action:
+                - quicksight:CreateRefreshSchedule
+                - quicksight:UpdateRefreshSchedule
+                - quicksight:DeleteRefreshSchedule
+                - quicksight:DescribeRefreshSchedule
+                - quicksight:ListRefreshSchedules
+                Resource:
+                - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic as well as shcedule ids
               - Effect: Allow
                 Action:
                   - athena:StartQueryExecution

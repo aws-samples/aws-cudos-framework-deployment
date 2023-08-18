@@ -70,6 +70,10 @@ spend_all.billing_period
 , instance_all.lambda_graviton_cost
 , instance_all.lambda_graviton_eligible_cost
 , instance_all.lambda_graviton_potential_savings
+, instance_all.rds_license
+, instance_all.rds_no_license
+, instance_all.rds_sql_server_cost
+, instance_all.rds_oracle_cost
 FROM
   (((((account_map
 LEFT JOIN (
@@ -107,6 +111,8 @@ LEFT JOIN (
    , "sum"("rds_graviton_potential_savings") "rds_graviton_potential_savings"
    , "sum"("rds_commit_potential_savings") "rds_commit_potential_savings"
    , "sum"("rds_commit_savings") "rds_commit_savings"
+   , "sum"((CASE WHEN ("license_model" IN ('License included', 'Bring your own license')) THEN 1 ELSE 0 END)) "rds_license"
+   , "sum"((CASE WHEN ("license_model" LIKE 'No license required') THEN 1 ELSE 0 END)) "rds_no_license"
    , "sum"("elasticache_all_cost") "elasticache_all_cost"
    , "sum"("elasticache_ondemand_cost") "elasticache_ondemand_cost"
    , "sum"("elasticache_graviton_cost") "elasticache_graviton_cost"
@@ -142,6 +148,8 @@ LEFT JOIN (
    , "sum"("lambda_graviton_cost") "lambda_graviton_cost"
    , "sum"("lambda_graviton_eligible_cost") "lambda_graviton_eligible_cost"
    , "sum"("lambda_graviton_potential_savings") "lambda_graviton_potential_savings"
+   , "sum"("rds_sql_server_cost") "rds_sql_server_cost"
+   , "sum"("rds_oracle_cost") "rds_oracle_cost"
    FROM
      kpi_instance_all
    GROUP BY 1, 2, 3
