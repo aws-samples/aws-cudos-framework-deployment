@@ -1,5 +1,6 @@
 """ Command Init QuickSight
 """
+import time
 import logging
 
 from cid.commands.command_base import Command
@@ -26,12 +27,11 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
         """Execute the initilization"""
         self._create_quicksight_enterprise_subscription()  # No tagging available
 
-
     def _create_quicksight_enterprise_subscription(self):
         """Enable QuickSight Enterprise if not enabled already"""
         cid_print('Analysing QuickSight Status')
-        if self.cid.qs.edition in ('ENTERPRISE', 'ENTERPRISE_AND_Q'):
-            cid_print(f'QuickSight Edition is {self.cid.qs.edition}')
+        if self.cid.qs.edition(fresh=True) in ('ENTERPRISE', 'ENTERPRISE_AND_Q'):
+            cid_print(f'QuickSight Edition is {self.cid.qs.edition()}')
             return
 
         cid_print(
@@ -49,22 +49,27 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
             cid_print('\tInitalization cancelled')
             return
 
-        counter = 0
-        while True:
+        for counter in range(MAX_ITERATIONS):
             email = self._get_email_for_quicksight()
             account_name = self._get_account_name_for_quicksight()
             params = self._get_quicksight_params(email, account_name)
-            counter += 1
             try:
                 response = self.cid.qs.client.create_account_subscription(**params)
-                cid_print(f'QuickSight Edition is {response}')
+                logger.debug(f'create_account_subscription resp: {response}')
+                if response.get('Status') != 200:
+                    raise CidCritical(f'Subscription answer is not 200: {response}')
                 break
             except Exception as exc: #pylint: disable=broad-exception-caught
                 cid_print(f'\tQuickSight Edition...\tError ({exc}). Please, try again or press CTRL + C to interrupt.')
                 unset_parameter('qs-account-name')
                 unset_parameter('qs-notification-email')
-                if counter >= MAX_ITERATIONS:
+                if counter == MAX_ITERATIONS - 1:
                     raise CidCritical('Quicksight setup failed') from exc
+        cid_print('\tWaiting for activation. Can take a minute or 2')
+        while self.cid.qs.edition(fresh=True) not in ('ENTERPRISE', 'ENTERPRISE_AND_Q'):
+            print(self.cid.qs.edition(fresh=True))
+            time.sleep(5)
+        cid_print(f'\tQuickSight Edition is {self.cid.qs.edition()}.')
 
     def _get_quicksight_params(self, email, account_name):
         """Create dictionary of quicksight subscription initialization parameters"""
@@ -80,42 +85,36 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
 
     def _get_account_name_for_quicksight(self):
         """Get the account name for quicksight"""        
-        account_name = get_parameter('qs-account-name', 'QuickSight Account Name', default=self.cid.organizations.get_account_name())
-
-        if account_name == '':
-            print(
-                '\n\tPlease, choose a descriptive name for your QuickSight account. '
-                'This will be used later to share it with your users. This can NOT be changed later.'
+        for _ in range(MAX_ITERATIONS):
+            account_name = get_parameter(
+                'qs-account-name', 
+                message=(
+                    '\n\tPlease, choose a descriptive name for your QuickSight account. '
+                    'This will be used later to share it with your users. This can NOT be changed later.'
+                ),
+                default=self.cid.organizations.get_account_name()
             )
-
-        counter = 0
-        while not account_name or account_name == '':
-            counter += 1
-            account_name = get_parameter('qs-account-name', 'QuickSight Account Name', default=self.cid.organizations.get_account_name())
-            if account_name == '':
-                print('\t The account name must not be empty. Please, try again.')
-                unset_parameter('qs-account-name')
-                if counter >= MAX_ITERATIONS:
-                    raise CidCritical('Failed to read QuickSight Account Name')
-        return account_name
+            if account_name:
+                return account_name
+            print('\t The account name must not be empty. Please, try again.')
+            unset_parameter('qs-account-name')
+        else: #pylint: disable=W0120:useless-else-on-loop
+            raise CidCritical('Failed to read QuickSight Account Name')
 
     def _get_email_for_quicksight(self):
-        """Get email for quicksight"""        
-        email = get_parameter('qs-notification-email', 'Notification email', default=self.cid.organizations.get_account_email())
-
-        if email == '':
-            print(
-                '\n\tQuicksight needs an email address that you want it to send notifications to '
-                'regarding your Amazon QuickSight account or Amazon QuickSight subscription.'
+        """Get email for quicksight"""
+        for _ in range(MAX_ITERATIONS):
+            email = get_parameter(
+                'qs-notification-email', 
+                message=(
+                    'Amazon QuickSight needs your email address to send notifications '
+                    'regarding your Amazon QuickSight account.'
+                ),
+                default=self.cid.organizations.get_account_email()
             )
-
-        counter = 0
-        while not email or '@' not in email or '.' not in email:
-            counter += 1
-            email = get_parameter('qs-notification-email', 'Notification email', default=self.cid.organizations.get_account_email())
-            if '@' not in email or '.' not in email:
-                print(f'\t{email} does not seem to be a valid email. Please, try again.')
-                unset_parameter('qs-notification-email')
-                if counter >= MAX_ITERATIONS:
-                    raise CidCritical('Failed to read email')
-        return email
+            if '@' in email and '.' in email:
+                return email
+            cid_print(f'\t{email} does not seem to be a valid email. Please, try again.')
+            unset_parameter('qs-notification-email')
+        else: #pylint: disable=W0120:useless-else-on-loop
+            raise CidCritical('Failed to read email')
