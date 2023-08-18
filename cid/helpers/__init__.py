@@ -5,6 +5,7 @@ from cid.helpers.diff import diff
 from cid.helpers.quicksight import QuickSight, Dashboard, Dataset, Datasource, Template
 from cid.helpers.csv2view import csv2view
 from cid.helpers.signed_url import get_signed_url
+from cid.helpers.organizations import Organizations
 
 __all__ = [
     "Athena",
@@ -17,5 +18,6 @@ __all__ = [
     "Template",
     "diff",
     "csv2view",
+    "Organizations",
     "get_signed_url",
 ]

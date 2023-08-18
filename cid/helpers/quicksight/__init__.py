@@ -32,6 +32,7 @@ class QuickSight(CidBase):
     _user: dict = None
     _principal_arn: dict = None
     _group: dict = None
+    _subscription_info: dict = None
     client = None
 
     def __init__(self, session, resources=None) -> None:
@@ -108,9 +109,11 @@ class QuickSight(CidBase):
             logger.info(f'Using QuickSight identity region: {self._identityRegion}')
         return self._identityRegion
 
-    @property
-    def edition(self) -> Union[str, None]:
-        if not hasattr(self, '_subscription_info'):
+    def edition(self, fresh: bool=False) -> str:
+        """ get QuickSight Edition
+        :fresh: set to True if you want it fresh (not cached)
+        """
+        if fresh or not hasattr(self, '_subscription_info'):
             self._subscription_info = self.describe_account_subscription()
         return self._subscription_info.get('Edition')
 
@@ -154,16 +157,13 @@ class QuickSight(CidBase):
 
         return self._datasources
 
-
     def ensure_subscription(self) -> None:
         """Ensure that the QuickSight subscription is active"""
-
-        if not self.edition:
-            raise CidCritical('QuickSight is not activated')
-        elif self.edition != 'STANDARD':
-            logger.info(f'QuickSight subscription: {self._subscription_info}')
-        else:
-            raise CidCritical(f'QuickSight Enterprise edition is required, you have {self.edition}')
+        if not self.edition(fresh=True):
+            raise CidCritical('QuickSight is not activated. Plase run `cid-cmd initqs` command, or activate QuickSight from the console.')
+        if self.edition() == 'STANDARD':
+            raise CidCritical(f'QuickSight Enterprise edition is required, you have {self.edition}.')
+        logger.info(f'QuickSight subscription: {self._subscription_info}')
 
     def describe_account_subscription(self) -> dict:
         """Returns the account subscription details"""
@@ -171,12 +171,10 @@ class QuickSight(CidBase):
 
         try:
             result = self.client.describe_account_subscription(AwsAccountId=self.account_id).get('AccountInfo')
-        except self.client.exceptions.AccessDeniedException as e:
-            """
-            In case we lack privileges to DescribeAccountSubscription API
-            we use ListDashboards API call that throws UnsupportedUserEditionException
-            in case the account doesn't have Enterprise edition
-            """
+        except self.client.exceptions.AccessDeniedException:
+            # In case we lack privileges to DescribeAccountSubscription API
+            # we use ListDashboards API call that throws UnsupportedUserEditionException
+            # in case the account doesn't have Enterprise edition
             logger.info('Insufficient privileges to describe account subscription, working around')
             try:
                 self.client.list_dashboards(AwsAccountId=self.account_id).get('AccountInfo')
