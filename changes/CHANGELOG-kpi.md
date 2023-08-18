@@ -1,5 +1,24 @@
 # What's new in the KPI Dashboard
 
+## KPI - 2.0.0
+> [!IMPORTANT] 
+> Update to this version requires cid-cmd v0.2.23. Please update cid-cmd first before updating the dashboard. During the update QuickSight datasets and Athena views will be updated, please make a copy if you've made any customizations. To update run these commands in your CloudShell (recommended) or other terminal:
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id kpi_dashboard --recursive
+```
+> [!WARNING]
+> You will be prompted to override KPI dashboard views and datasets with v2.0.0 versions. It's required to choose **proceed and override** for kpi_instance_all and kpi_tracker views and datasets while you can choose **keep existing** for others. Any customizations done to visuals for which you've selected **proceed and override** will be overwritten hence it's important to save copies of them in case you would like to re-implement them after update. You'll be able to see the diff of the changes before selecting an option.
+
+Release notes:
+* KPI Tracker: Added new KPI 'RDS Open Source Engines Coverage'
+* Metrics Summary: Added RDS visual showing 'RDS Oracle Coverage', 'RDS SQL Server Coverage', 'RDS Open Source Engines Coverage', 'RDS Graviton Coverage'
+* RDS: RDS Graviton coverage and savings estimations moved to the new RDS tab. Added visuals 'Top 10 Accounts Spend for Amazon RDS running on Graviton Processors', 'Top 10 Accounts Spend for Amazon RDS running on Other Processors' 
+* RDS: Added section RDS Engines with Licensing Options with visuals 'Spend trend of RDS Engine Oracle, SQL Server by License Model', 'Potential Savings by migrating RDS Engine Oracle, SQL Server to Open Source engines', 'Top 10 Accounts Spend for RDS Engine Oracle, SQL Server', 'Coverage by Database Engines for Amazon Relational Database Service' and 'RDS Oracle, SQL Server  Instances and Potential Savings'
+
+  
+
 ## KPI - 1.2.1
 * Other Graviton: Fixed potential savings filter to show a correct monthly value.
 

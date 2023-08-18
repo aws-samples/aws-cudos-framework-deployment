@@ -1,26 +1,41 @@
-import csv
+""" Create an Account Map
+
+Account Map is needed for mapping account id to account name and other attributes (Business Unit, Scope, Cost Center or other)
+"""
+import os
 import logging
 from pathlib import Path
+from functools import lru_cache
 
-import click
-from pkg_resources import resource_string
 from string import Template
+from pkg_resources import resource_string
 
 from cid.base import CidBase
 from cid.helpers import Athena, CUR
-from cid.utils import get_parameter
+from cid.utils import get_parameter, get_parameters, cid_print, unset_parameter
 from cid.exceptions import CidCritical, CidError
+from cid.helpers.csv2view import read_csv
 
 logger = logging.getLogger(__name__)
 
 class AccountMap(CidBase):
+    """
+    Create an account_map view or aws_accounts view with following mandatory fields:
+        account_id
+        account_name
+        parent_account_id (only used in trends)
+        account_status (only used in trends)
+        account_email (only used in trends)
+
+    aws_accounts is only used in trends.
+    """
     defaults = {
         'MetadataTableNames': ['acc_metadata_details', 'organisation_data']
-    } 
-    _clients = dict()
-    _accounts = list()
+    }
+    _clients = {}
+    _accounts = []
     _metadata_source: str = None
-    _AthenaTableName: str = None
+    _athena_table_name: str = None
     mappings = {
         'account_map': {
             'acc_metadata_details': {'account_id': 'account_id', 'account_name': 'account_name'},
@@ -33,19 +48,19 @@ class AccountMap(CidBase):
         }
     }
 
-    def __init__(self, session) -> None:
-        super().__init__(session)
 
     @property
     def athena(self) -> Athena:
+        """ Getter for Athena """
         if not self._clients.get('athena'):
             self._clients.update({
                 'athena': Athena(self.session)
             })
         return self._clients.get('athena')
-    
+
     @athena.setter
     def athena(self, client) -> Athena:
+        """ Setter for Athena """
         if not self._clients.get('athena'):
             self._clients.update({
                 'athena': client
@@ -54,10 +69,12 @@ class AccountMap(CidBase):
 
     @property
     def cur(self) -> CUR:
+        """ Getter for CUR """
         return self._clients.get('cur')
-    
+
     @cur.setter
     def cur(self, client) -> CUR:
+        """ Setter for CUR """
         if not self._clients.get('cur'):
             self._clients.update({
                 'cur': client
@@ -66,7 +83,8 @@ class AccountMap(CidBase):
 
     @property
     def accounts(self) -> dict:
-        if self._accounts:            
+        """ Get Accoutns with the right mapping """
+        if self._accounts:
             # Required keys mapping, used in renaming below
             key_mapping = {
                 'accountid': 'account_id',
@@ -85,73 +103,74 @@ class AccountMap(CidBase):
                     'account_email': account.get('account_email', 'unknown')
                 })
         return self._accounts
-    
+
+    @lru_cache(1000)
+    def detect_metadata_table(self, name):
+        """ detect metatable with the list of accounts """
+        cid_print('Autodiscovering metadata table')
+
+        # FIXME: This will only work for current Athena Database. We might want to check optimization_data base as well
+        tables = self.athena.list_table_metadata()
+        tables = [t for t in tables if t.get('TableType') == 'EXTERNAL_TABLE'] #filter only tables
+        tables = [t for t in tables if t.get('Name') in self.defaults.get('MetadataTableNames')] #filter only with support names
+        if not tables:
+            cid_print('Account metadata not detected')
+            return None
+        for table in tables:
+            table_name = table.get('Name')
+            logger.debug(f"Detected table {table_name}")
+            field_found = [col.get('Name') for col in table.get('Columns')]
+            field_required = list(self.mappings.get(name).get(table_name).values())
+            # Check if we have all the required fields
+            if all(field in field_found for field in field_required):
+                logger.info(f'All required fields found in {table_name} ')
+                return table.get('Name')
+            logger.info('Missing required fields')
+            logger.info(f"Detected fields: {field_found}")
+            logger.info(f"Required fields: {field_required}")
+        return None
+
+
     def create(self, name) -> bool:
         """Create account map"""
-        
-        print(f'\nCreating {name}...')
-        logger.info(f'Creating account mapping "{name}"...')
+
+        cid_print(f'Creating account mapping <BOLD>{name}<END>')
         try:
             if self.accounts:
                 logger.info('Account information found, skipping autodiscovery')
                 raise CidError('Account information found, skipping autodiscovery')
-            if not self._AthenaTableName:
-                # Autodiscover
-                print('\tautodiscovering...', end='')
-                logger.info('Autodiscovering metadata table...')
-                tables = self.athena.list_table_metadata()
-                tables = [t for t in tables if t.get('TableType') == 'EXTERNAL_TABLE']
-                tables = [t for t in tables if t.get('Name') in self.defaults.get('MetadataTableNames')]
-                if not len(tables):
-                    logger.info('Metadata table not found')
-                    print('account metadata not detected')
-                    raise CidError('account metadata not detected')
-                table = next(iter(tables))
-                logger.info(f"Detected metadata table {table.get('Name')}")
-                accounts = table.get('Columns')
-                field_found = [v.get('Name') for v in accounts]
-                field_required = list(self.mappings.get(name).get(table.get('Name')).values())
-                logger.info(f"Detected fields: {field_found}")
-                logger.info(f"Required fields: {field_required}")
-                # Check if we have all the required fields
-                if all(v in field_found for v in field_required):
-                    logger.info('All required fields found')
-                    self._AthenaTableName = table.get('Name')
-                else:
-                    logger.info('Missing required fields')
-            if self._AthenaTableName:
-                # Query path
-                view_definition = self.athena._resources.get('views').get(name, dict())
-                view_file = view_definition.get('File')
+            if get_parameters().get('account-map-source'):
+                raise CidError('Skipping autodiscovery')
 
-                template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
-
-                # Fill in TPLs
-                columns_tpl = dict()
-                parameters = {
-                    'metadata_table_name': self._AthenaTableName,
-                    'cur_table_name': self.cur.tableName
-                }
-                columns_tpl.update(**parameters)
-                for k,v in self.mappings.get(name).get(self._AthenaTableName).items():
-                    logger.info(f'Mapping field {k} to {v}')
-                    columns_tpl.update({k: v})
-                compiled_query = template.safe_substitute(columns_tpl)
-                print('compiled view.')
-            else:
-                logger.info('Metadata table not found')
-                print('account metadata not detected')
+            self._athena_table_name = self.detect_metadata_table(name)
+            if not self._athena_table_name:
                 raise CidError('Metadata table not found')
-        except:
-            # TODO: Handle exceptions
+
+            # Query path
+            view_definition = self.athena._resources.get('views').get(name, {})
+            view_file = view_definition.get('File')
+
+            template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
+
+            # Fill in TPLs
+            columns_tpl = {
+                'metadata_table_name': self._athena_table_name,
+                'cur_table_name': self.cur.tableName # only for trends
+            }
+            for key, val in self.mappings.get(name).get(self._athena_table_name).items():
+                logger.debug(f'Mapping field {key} to {val}')
+                columns_tpl[key] = val
+            compiled_query = template.safe_substitute(columns_tpl)
+            logger.debug('compiled view.')
+
+        except CidError as exc:
+            logger.info(exc)
             compiled_query = self.create_account_mapping_sql(name)
 
         # Execute query
-        click.echo('\tcreating view...', nl=False)
-        query_id = self.athena.execute_query(sql_query=compiled_query)
-        # Get results as list
-        response = self.athena.get_query_results(query_id)
-        click.echo('done')
+        cid_print('Creating Athena view')
+        self.athena.query(compiled_query)
+        cid_print(f'Created account mapping <BOLD>{name}<END>')
 
     def get_dummy_account_mapping_sql(self, name) -> list:
         """Create dummy account mapping"""
@@ -170,27 +189,25 @@ class AccountMap(CidBase):
     def get_organization_accounts(self) -> list:
         """ Retreive AWS Organization account """
         # Init clients
+        accounts = []
         orgs = self.session.client('organizations')
         try:
-            paginator = orgs.get_paginator('list_accounts')
-            page_iterator = paginator.paginate()
-            accounts = list()
-            for page in page_iterator:
+            for page in orgs.get_paginator('list_accounts').paginate():
                 for account in page['Accounts']:
                     accounts.append({
                         'account_id': account.get('Id'),
                         'account_name': account.get('Name'),
-                        'account_status': account.get('Status'),
-                        'account_email': account.get('Email')
+                        'account_status': account.get('Status'), #Only for Trends
+                        'account_email': account.get('Email'), #Only for Trends
                     })
         except orgs.exceptions.AWSOrganizationsNotInUseException:
-            print('AWS Organization is not enabled')
+            cid_print('AWS Organization is not enabled')
         except orgs.exceptions.AccessDeniedException:
-            print('no access.')
-        except Exception as e:
-            print(e)
-        finally:
-            return accounts
+            cid_print('No access to AWS Organization.')
+        except Exception as exc: #pylint: disable=broad-exception-caught
+            cid_print(exc)
+
+        return accounts
 
     def check_file_exists(self, file_path) -> bool:
         """ Checks if the givven file exists """
@@ -201,9 +218,10 @@ class AccountMap(CidBase):
 
     def get_csv_accounts(self, file_path) -> list:
         """ Retreive accounts from CSV file """
-        with open(file_path) as f:
-            accounts = [{str(k).lower().replace(" ", "_"): str(v) for k, v in row.items()}
-                        for row in csv.DictReader(f, skipinitialspace=True)]
+        accounts = [
+            {str(k).lower().replace(" ", "_"): str(v) for k, v in row.items()}
+            for row in read_csv(file_path)
+        ]
 
         return accounts
 
@@ -213,9 +231,9 @@ class AccountMap(CidBase):
         logger.info('Metadata source selection')
         # Ask user which method to use to retreive account list
         account_map_sources = {
-            'CSV file (relative path required)': 'csv',
-            'AWS Organizations (one time account listing)': 'organization',
             'Dummy (CUR account data, no names)': 'dummy',
+            'AWS Organizations (one time account listing)': 'organization',
+            'CSV file (relative path required)': 'csv',
         }
         selected_source = get_parameter(
             param_name='account-map-source',
@@ -233,23 +251,22 @@ class AccountMap(CidBase):
                     param_name='account-map-file',
                     message="Enter file path",
                 )
+                mapping_file = os.path.expanduser(mapping_file)
                 finished = self.check_file_exists(mapping_file)
                 if not finished:
-                    click.echo('File not found, ', nl=False)
-            click.echo('\nCollecting account info...', nl=False)
+                    cid_print(f'File not found: {mapping_file}')
+                    unset_parameter('account-map-file')
+            cid_print(f'\nReading {mapping_file}')
             self._accounts = self.get_csv_accounts(mapping_file)
-            logger.info(f'Found {len(self._accounts)} accounts')
-            click.echo(f' {len(self.accounts)} collected')
+            cid_print(f'{len(self.accounts)} accounts collected')
         elif self._metadata_source == 'organization':
-            click.echo('\nCollecting account info...', nl=False)
+            cid_print('\nCollecting account info from AWS Organizations')
             self._accounts = self.get_organization_accounts()
-            logger.info(f'Found {len(self._accounts)} accounts')
-            click.echo(f' {len(self.accounts)} collected')
+            cid_print(f'{len(self.accounts)} accounts collected')
         elif self._metadata_source == 'dummy':
-            click.echo('Notice: Dummy account mapping will be created')
+            cid_print('Notice: Dummy account mapping will be created.')
         else:
-            print('Unsupported selection')
-            return False
+            cid_print('Unsupported selection')
 
     def create_account_mapping_sql(self, name) -> str:
         """ Returns account mapping Athena query """
@@ -272,12 +289,12 @@ class AccountMap(CidBase):
             ignored_table_name (account_id, account_name, parent_account_id, account_status, account_email)
         '''
         template = Template(template_str)
-        accounts_sql = list()
+        accounts_sql = []
+        row_template = """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')"""
         for account in self.accounts:
             acc = account.copy()
             account_name = acc.pop('account_name').replace("'", "''")
-            accounts_sql.append(
-                """ROW ('{account_id}', '{account_name}:{account_id}', '{parent_account_id}', '{account_status}', '{account_email}')""".format(account_name=account_name, **acc))
+            accounts_sql.append(row_template.format(account_name=account_name, **acc))
         # Fill in TPLs
         columns_tpl = {
             'athena_view_name': name,
