@@ -32,6 +32,7 @@ class QuickSight(CidBase):
     _user: dict = None
     _principal_arn: dict = None
     _group: dict = None
+    _subscription_info: dict = None
     client = None
 
     def __init__(self, session, resources=None) -> None:
@@ -109,7 +110,10 @@ class QuickSight(CidBase):
         return self._identityRegion
 
     def edition(self, fresh: bool=False) -> str:
-        if not hasattr(self, '_subscription_info'):
+        """ get QuickSight Edition
+        :fresh: set to True if you want it fresh (not cached)
+        """
+        if fresh or not hasattr(self, '_subscription_info'):
             self._subscription_info = self.describe_account_subscription()
         return self._subscription_info.get('Edition')
 

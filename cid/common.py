@@ -1577,5 +1577,4 @@ class Cid():
     @command
     def initqs(self, **kwargs):
         """ Initialize QuickSight resources for deployment """
-        cmd = InitQsCommand(cid=self, **kwargs)
-        result = cmd.execute()
+        return InitQsCommand(cid=self, **kwargs).execute()

@@ -38,14 +38,12 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
             '<BOLD><RED>IMPORTANT<END>: <BOLD>Amazion QuickSight Enterprise Edition is required for Cost Intelligence Dashboard. '
             'This will lead to costs in your AWS account (https://aws.amazon.com/quicksight/pricing/).<END>'
         )
-        if not self.cid.all_yes:
-            enable_quicksight_enterprise = get_yesno_parameter(
-                param_name='enable-quicksight-enterprise', message='Please, confirm enabling of Amazion QuickSight Enterprise', default='no'
-            )
-        else:
-            enable_quicksight_enterprise = True
 
-        if not enable_quicksight_enterprise:
+        if not self.cid.all_yes and not get_yesno_parameter(
+                param_name='enable-quicksight-enterprise',
+                message='Please, confirm enabling of Amazion QuickSight Enterprise',
+                default='no'
+            ):
             cid_print('\tInitalization cancelled')
             return
 
@@ -65,23 +63,19 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
                 unset_parameter('qs-notification-email')
                 if counter == MAX_ITERATIONS - 1:
                     raise CidCritical('Quicksight setup failed') from exc
-        cid_print('\tWaiting for activation. Can take a minute or 2')
         while self.cid.qs.edition(fresh=True) not in ('ENTERPRISE', 'ENTERPRISE_AND_Q'):
-            print(self.cid.qs.edition(fresh=True))
             time.sleep(5)
         cid_print(f'\tQuickSight Edition is {self.cid.qs.edition()}.')
 
     def _get_quicksight_params(self, email, account_name):
         """Create dictionary of quicksight subscription initialization parameters"""
-        params = {
+        return {
             'Edition': 'ENTERPRISE',
             'AuthenticationMethod': 'IAM_AND_QUICKSIGHT',
             'AwsAccountId': self.cid.base.account_id,
             'AccountName': account_name,  # Should be a parameter with a reasonable default
             'NotificationEmail': email,  # Read the value from account parameters as a default
         }
-
-        return params
 
     def _get_account_name_for_quicksight(self):
         """Get the account name for quicksight"""        
