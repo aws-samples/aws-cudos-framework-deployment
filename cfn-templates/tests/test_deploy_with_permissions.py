@@ -315,7 +315,7 @@ def main():
     """ main """
     try:
         teardown() #Try to remove previous attempt
-    except:
+    except Exception: # nosec B110; pylint:  disable=W0718:broad-exception-caught
         pass
 
     try:
