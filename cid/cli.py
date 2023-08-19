@@ -198,11 +198,16 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @click.option('-u', '--url', help='AWS Console url', default=None)
 @click.option('--signed/--no-signed', help='Use Signed URL', is_flag=True, default=True)
-@click.option('-p', '--only-print', help='Only Print url, do not open', is_flag=True, default=False)
+@click.option('-c', '--command', help='Use a specific command to open url.', default="")
 @cid_command
-def open(ctx, dashboard_id, url, signed, only_print, **kwargs):
-    """Open Dashboard in browser"""
-    ctx.obj.open_signed(dashboard_id, url, signed, only_print, **kwargs)
+def open(ctx, dashboard_id, url, signed, command, **kwargs):
+    """Open Dashboard url in a default browser
+    
+    usage example: 
+
+        cid-cmd open --command 'open -na firefox --args -private-window {url}' 
+    """
+    ctx.obj.open_signed(dashboard_id, url, signed, command, **kwargs)
 
 
 @click.option('-v', '--verbose', count=True)
