@@ -115,6 +115,9 @@ class QuickSight(CidBase):
         """
         if fresh or not hasattr(self, '_subscription_info'):
             self._subscription_info = self.describe_account_subscription()
+        status = self._subscription_info.get('AccountSubscriptionStatus')
+        if status != 'ACCOUNT_CREATED':
+            return None
         return self._subscription_info.get('Edition')
 
     @property

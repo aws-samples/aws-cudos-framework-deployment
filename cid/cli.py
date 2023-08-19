@@ -225,9 +225,18 @@ def share(ctx, dashboard_id, **kwargs):
     
     ctx.obj.share(dashboard_id)
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def initqs(ctx, **kwargs):
-    """Initialize QuickSight resources for deployment"""
+    """Initialize Amazon QuickSight
+
+    \b
+
+     --enable-quicksight-enterprise (yes|no) Confirm the activation of QuickSight
+     --account-name NAME                     Unique QuickSight account name (Unique across all AWS users) 
+     --notification-email EMAIL              User's email for QuickSight notificaitons
+    """
 
     ctx.obj.initqs(**kwargs)
 
