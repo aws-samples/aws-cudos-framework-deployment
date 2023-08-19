@@ -4,7 +4,7 @@ import json
 import shlex
 import logging
 import functools
-import subprocess
+import subprocess #nosec B404
 import webbrowser
 from string import Template
 from typing import Dict
