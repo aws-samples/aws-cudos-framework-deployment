@@ -546,17 +546,14 @@ class Cid():
     @command
     def open_signed(self, dashboard_id, url=None, signed=None, command=None, **kwargs):
         """Open QuickSight dashboard in browser"""
-
         if not url:
             if not dashboard_id:
                 dashboard_id = self.qs.select_dashboard(force=True)
-
             logger.info('Getting dashboard status...')
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
             if not dashboard:
                 logger.error(f'Dashboard {dashboard_id} not deployed.')
                 return
-
             if dashboard.version.get('Status') not in ['CREATION_SUCCESSFUL', 'UPDATE_SUCCESSFUL']:
                 logger.warning(json.dumps(dashboard.version.get('Errors'),
                         indent=4, sort_keys=True, default=str))
@@ -568,7 +565,7 @@ class Cid():
         if command:
             if '{url}' not in command:
                 raise CidCritical('Command must contain {url}. Check `cid-cmd open --help`.')
-            subprocess.call(shlex.split(command.format(url=url))) #nosec B605
+            subprocess.call(shlex.split(command.format(url=url))) #nosec B605 B603
             return
         if exec_env()['terminal'] == 'CloudShell':
             logger.warning(f"Operation is not supported in {exec_env()}")
