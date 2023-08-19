@@ -566,7 +566,7 @@ class Cid():
             url = get_signed_url(destination=url)
 
         if only_show_url:
-            cid_print(url)
+            print(url)
             return
         if exec_env()['terminal'] == 'CloudShell':
             logger.warning(f"Operation is not supported in {exec_env()}")
