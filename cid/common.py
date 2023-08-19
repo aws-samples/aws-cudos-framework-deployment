@@ -300,7 +300,7 @@ class Cid():
         self.resources = self.resources_with_global_parameters(self.resources)
 
 
-    def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict={}):
+    def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict=None):
         """ Get template parameters. """
         params = get_parameters()
         for key, value in parameters.items():
@@ -314,10 +314,21 @@ class Cid():
                     message=f"Required parameter: {key} ({value.get('description')})",
                     choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
+            elif isinstance(value, dict) and value.get('type') == 'athena':
+                if 'query' not in value:
+                    raise CidCritical('Failed to get parameter {key}: paramter with type ahena must have query value.')
+                query = value['query']
+                try:
+                    res = self.athena.query(query)[0]
+                except (self.athena.client.exceptions.ClientError, CidError) as exc:
+                    raise CidCritical('Failed to get parameter {key}') from exc
+                if not res:
+                    raise CidCritical('Failed to get parameter {key}, {value}. Athena returns empty result')
+                params[key] = res[0]
             elif isinstance(value, dict):
                 params[key] = value.get('value')
-                while params[key] == None:
-                    if value.get('silentDefault') != None and get_parameters().get(key) == None:
+                while params[key] is None:
+                    if value.get('silentDefault') is not None and get_parameters().get(key) is None:
                         params[key] = value.get('silentDefault')
                     else:
                         params[key] = get_parameter(
@@ -328,7 +339,7 @@ class Cid():
                         )
             else:
                 raise CidCritical(f'Unknown parameter type for "{key}". Must be a string or a dict with value or with default key')
-        return always_merger.merge(params, others)
+        return always_merger.merge(params, others or {})
 
 
     @command
