@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import shlex
 import logging
 import functools
 import subprocess
@@ -567,7 +568,7 @@ class Cid():
         if command:
             if '{url}' not in command:
                 raise CidCritical('Command must contain {url}. Check `cid-cmd open --help`.')
-            subprocess.call(command.format(url=url), shell=True) #nosec B605
+            subprocess.call(shlex.split(command.format(url=url))) #nosec B605
             return
         if exec_env()['terminal'] == 'CloudShell':
             logger.warning(f"Operation is not supported in {exec_env()}")
