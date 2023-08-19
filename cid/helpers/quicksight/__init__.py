@@ -180,16 +180,16 @@ class QuickSight(CidBase):
             # in case the account doesn't have Enterprise edition
             logger.info('Insufficient privileges to describe account subscription, working around')
             try:
-                self.client.list_dashboards(AwsAccountId=self.account_id).get('AccountInfo')
-                result = {'Edition': 'ENTERPRISE'}
-            except self.client.exceptions.UnsupportedUserEditionException as e:
-                logger.debug(f'UnsupportedUserEditionException means edition is STANDARD: {e}')
-                result = {'Edition': 'STANDARD'}
-        except self.client.exceptions.ResourceNotFoundException as e:
-            logger.debug(e, exc_info=True)
-            logger.info('QuickSight not activated')
-        except Exception as e:
-            logger.debug(e, exc_info=True)
+                self.client.list_dashboards(AwsAccountId=self.account_id)
+                result = {'Edition': 'ENTERPRISE', 'AccountSubscriptionStatus': 'ACCOUNT_CREATED'}
+            except self.client.exceptions.UnsupportedUserEditionException as exc:
+                logger.debug(f'UnsupportedUserEditionException means edition is STANDARD: {exc}')
+                result = {'Edition': 'STANDARD', 'AccountSubscriptionStatus': 'ACCOUNT_CREATED'}
+        except self.client.exceptions.ResourceNotFoundException as exc:
+            logger.debug(exc, exc_info=True)
+            logger.info('QuickSight not activated?')
+        except Exception as exc:
+            logger.debug(exc, exc_info=True)
         return result
 
 
