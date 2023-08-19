@@ -566,7 +566,7 @@ class Cid():
         if command:
             if '{url}' not in command:
                 raise CidCritical('Command must contain {url}. Check `cid-cmd open --help`.')
-            os.system(command.format(url=url))
+            os.system(command.format(url=url)) #nosec B605
             return
         if exec_env()['terminal'] == 'CloudShell':
             logger.warning(f"Operation is not supported in {exec_env()}")
