@@ -186,7 +186,6 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
     """Update Dashboard
 
     \b
-
      --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
 
     """
@@ -195,17 +194,20 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
-@click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
+@click.option('-d', '--dashboard-id', help='QuickSight dashboard id', default=None)
 @click.option('-u', '--url', help='AWS Console url', default=None)
-@click.option('--signed/--no-signed', help='Use Signed URL', is_flag=True, default=True)
-@click.option('-c', '--command', help='Use a specific command to open url.', default="")
+@click.option('--signed/--no-signed', help='Use Signed URL (default)', is_flag=True, default=True)
+@click.option('-c', '--command', help='Use a specific command to open url. Otherwise will use default browser if not specified.', default="")
 @cid_command
 def open(ctx, dashboard_id, url, signed, command, **kwargs):
     """Open Dashboard url in a default browser
-    
-    usage example: 
 
-        cid-cmd open --command 'open -na firefox --args -private-window {url}' 
+    \b
+    usage example:
+        Mac:
+           cid-cmd open --command 'open -na firefox --args -private-window "{url}"' --dashboard-id "cudos"
+        Windows:
+           cid-cmd open --command 'start firefox --private-window "{url}"' --dashboard-id "cudos"
     """
     ctx.obj.open_signed(dashboard_id, url, signed, command, **kwargs)
 
