@@ -223,8 +223,10 @@ class Cid():
         return self.plugins.get(plugin)
 
 
-    def get_definition(self, type: str, name: str=None, id: str=None) -> dict:
-        """ return resource definition that matches parameters """
+    def get_definition(self, type: str, name: str=None, id: str=None, noparams: bool=False) -> dict:
+        """ return resource definition that matches parameters 
+        :noparams: do not process parameters as they may not exist by this time
+        """
         res = None
         if type not in ['dashboard', 'dataset', 'view', 'schedule']:
             raise ValueError(f'{type} is not a valid definition type')
@@ -240,7 +242,7 @@ class Cid():
                 break
 
         # template
-        if isinstance(res, dict):
+        if isinstance(res, dict) and not noparams:
             name = name or res.get('name')
             params = self.get_template_parameters(res.get('parameters', {}), param_prefix=f'{type}-{name}-')
             # FIXME: can be recursive?
@@ -316,14 +318,14 @@ class Cid():
                 )
             elif isinstance(value, dict) and value.get('type') == 'athena':
                 if 'query' not in value:
-                    raise CidCritical('Failed to get parameter {key}: paramter with type ahena must have query value.')
+                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: paramter with type ahena must have query value.')
                 query = value['query']
                 try:
                     res = self.athena.query(query)[0]
-                except (self.athena.client.exceptions.ClientError, CidError) as exc:
-                    raise CidCritical('Failed to get parameter {key}') from exc
+                except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
+                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
                 if not res:
-                    raise CidCritical('Failed to get parameter {key}, {value}. Athena returns empty result')
+                    raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty result')
                 params[key] = res[0]
             elif isinstance(value, dict):
                 params[key] = value.get('value')
@@ -1094,7 +1096,7 @@ class Cid():
             print('\nLooking by DataSetId defined in template...', end='')
             for dataset_name in missing_datasets[:]:
                 try:
-                    dataset_definition = self.get_definition(type='dataset', name=dataset_name)
+                    dataset_definition = self.get_definition(type='dataset', name=dataset_name, noparams=True)
                     raw_template = self.get_data_from_definition('dataset', dataset_definition)
                     if raw_template:
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
@@ -1351,6 +1353,7 @@ class Cid():
         )
         logger.debug(columns_tpl)
 
+        print(template.safe_substitute(columns_tpl))
         compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
