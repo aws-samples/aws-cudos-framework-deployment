@@ -1352,9 +1352,13 @@ class Cid():
             columns_tpl,
         )
         logger.debug(columns_tpl)
-
-        print(template.safe_substitute(columns_tpl))
-        compiled_dataset = json.loads(template.safe_substitute(columns_tpl))
+        compiled_dataset_text = template.safe_substitute(columns_tpl)
+        try:
+            compiled_dataset = json.loads(compiled_dataset_text)
+        except json.JSONDecodeError as exc:
+            logger.error('The json of dataset is not correct. Please check parameters of the dasbhoard.')
+            logger.debug(compiled_dataset_text)
+            raise
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
 
