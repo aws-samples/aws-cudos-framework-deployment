@@ -281,6 +281,7 @@ Resources:
           - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashbo-ProcessPathLambdaExecuti*
           - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashboa-InitLambdaExecutionRole*
           - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashboards-CidCURCrawlerRole*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/CidQuickSightDataSourceRole
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidExecRole
 
         - Sid: LambdaForCFN
