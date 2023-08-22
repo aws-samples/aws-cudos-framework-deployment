@@ -117,6 +117,7 @@ def deploy(ctx, **kwargs):
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
      --quicksight-datasource-id TEXT       QuickSight Datasource ARN (if not found one with provided Athena workgroup)
+     --quicksight-datasource-role  TEXT    IAM Role Name to be used on QuckSight Datasource Creation (if not provided, the Default QuckSight Role will be used)
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
