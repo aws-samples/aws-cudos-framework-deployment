@@ -35,6 +35,7 @@ Metadata:
           - CidVersion
           - GlueDataCatalog
           - Suffix
+          - QuickSightDataSourceRoleName
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
           - DataBuketsKmsKeyArns
@@ -73,6 +74,8 @@ Metadata:
         default: "Cid Version - Please do not change"
       Suffix:
         default: "Suffix - Please do not change"
+      QuickSightDataSourceRoleName:
+        default: "IAM Role Name to be used on QuckSight Datasource Creation (if not provided, the default QuckSight Role will be used)."
       QuickSightDataSetRefreshSchedule:
         default: "QuickSight DataSet Refresh Schedule. Must be a valid cron or empty. If empty refresh will be disabled."
       LambdaLayerBucketPrefix:
@@ -110,7 +113,11 @@ Parameters:
   QuickSightDataSetRefreshSchedule:
     Type: String
     Default: ''
-    Description: REQUIRED - cron expression on when to refresh spice datasets daily outside of business hours. Default is 4 AM utc, this should work for most customers in US and EU time zones.'
+    Description: 'Cron expression on when to refresh spice datasets via Lambda. Only needed if some difficulities with refresh scheduling via API.'
+  QuickSightDataSourceRoleName:
+    Type: String
+    Default: 'CidQuickSightDataSourceRole'
+    Description: 'IAM Role Name to be used on QuckSight Datasource Creation (if not provided, the Default QuckSight Role will be used)'
   CURBucketPath:
     Type: String
     MinLength: 3
@@ -246,6 +253,18 @@ Conditions:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
       - !Condition NeedCURTable
+  NeedQuickSightDataSourceRole:
+    Fn::And:
+      - !Condition NeedDatasource
+      - !Not [!Equals [ !Ref QuickSightDataSourceRoleName, "" ]]
+  NeedQuickSightDataSourceRoleAndCUR:
+    Fn::And:
+      - !Condition NeedQuickSightDataSourceRole
+      - !Condition NeedCUR
+  NeedQuickSightDataSourceRoleAndODC:
+    Fn::And:
+      - !Condition NeedQuickSightDataSourceRole
+      - !Condition NeedDataCollectionLab
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -964,6 +983,154 @@ Resources:
       Roles:
         - !Ref CidCURCrawlerRole
 
+  QuickSightDataSourceRole:
+    Type: AWS::IAM::Role
+    Condition: NeedQuickSightDataSourceRole
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - quicksight.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      RoleName: !Sub '${QuickSightDataSourceRoleName}${Suffix}'
+      Policies:
+        - PolicyName: CidExecPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - athena:BatchGetQueryExecution
+                  - athena:CancelQueryExecution
+                  - athena:GetCatalogs
+                  - athena:GetExecutionEngine
+                  - athena:GetExecutionEngines
+                  - athena:GetNamespace
+                  - athena:GetNamespaces
+                  - athena:GetQueryExecution
+                  - athena:GetQueryExecutions
+                  - athena:GetQueryResults
+                  - athena:GetQueryResultsStream
+                  - athena:GetTable
+                  - athena:GetTables
+                  - athena:ListQueryExecutions
+                  - athena:RunQuery
+                  - athena:StartQueryExecution
+                  - athena:StopQueryExecution
+                  - athena:ListWorkGroups
+                  - athena:ListEngineVersions
+                  - athena:GetWorkGroup
+                  - athena:GetDataCatalog
+                  - athena:GetDatabase
+                  - athena:GetTableMetadata
+                  - athena:ListDataCatalogs
+                  - athena:ListDatabases
+                  - athena:ListTableMetadata
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - glue:CreateDatabase
+                  - glue:DeleteDatabase
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:UpdateDatabase
+                  - glue:CreateTable
+                  - glue:DeleteTable
+                  - glue:BatchDeleteTable
+                  - glue:UpdateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:BatchCreatePartition
+                  - glue:CreatePartition
+                  - glue:DeletePartition
+                  - glue:BatchDeletePartition
+                  - glue:UpdatePartition
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:BatchGetPartition
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                Resource:
+                  Fn::If:
+                    - NeedAthenaQueryResultsBucket
+                    - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
+                    - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucketMultipartUploads
+                  - s3:ListMultipartUploadParts
+                  - s3:AbortMultipartUpload
+                  - s3:CreateBucket
+                  - s3:PutObject
+                  - s3:PutBucketPublicAccessBlock
+                Resource:
+                  Fn::If:
+                    - NeedAthenaQueryResultsBucket
+                    - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
+                    - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
+              - Effect: Allow
+                Action: 
+                  - lakeformation:GetDataAccess
+                Resource: "*"
+
+  QuickSightDataSourceRolePolicyForODCBucket:
+    Type: AWS::IAM::Policy
+    Condition: NeedQuickSightDataSourceRoleAndODC
+    Properties:
+      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: CidAllowDecryptDataBuketsKmsKeyArns,
+            Effect: Allow
+            Action: 'kms:Decrypt'
+            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+          - Sid: CidAllowListBucket
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Sub arn:aws:s3:::${ProcessedODCPath.Bucket}
+          - Sid: CidAllowReadBucket
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub arn:aws:s3:::${ProcessedODCPath.Bucket}/*
+      Roles:
+        - !Ref QuickSightDataSourceRole
+  QuickSightDataSourceRolePolicyForCURBucket:
+    Type: AWS::IAM::Policy
+    Condition: NeedQuickSightDataSourceRoleAndCUR
+    Properties:
+      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: CidAllowDecryptDataBuketsKmsKeyArns
+            Effect: Allow
+            Action: 'kms:Decrypt'
+            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+          - Sid: CidAllowListBucket
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Sub arn:aws:s3:::${ProcessedCURPath.Bucket}
+          - Sid: CidAllowReadBucket
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub arn:aws:s3:::${ProcessedCURPath.Bucket}/*
+      Roles:
+        - !Ref QuickSightDataSourceRole
+
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
     Condition: NeedDatasource
@@ -975,6 +1142,7 @@ Resources:
       DataSourceParameters:
         AthenaParameters:
           WorkGroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+          RoleArn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", !Ref AWS::NoValue ]
       Permissions:
         - Actions:
             - 'quicksight:DescribeDataSource'
@@ -1318,6 +1486,7 @@ Resources:
         dashboard-id: cost_intelligence_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1337,6 +1506,7 @@ Resources:
         dashboard-id: cudos
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1359,6 +1529,7 @@ Resources:
         dashboard-id: kpi_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1383,6 +1554,7 @@ Resources:
         dashboard-id: ta-organizational-view
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1402,6 +1574,7 @@ Resources:
         dashboard-id: compute-optimizer-dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
