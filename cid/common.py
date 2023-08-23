@@ -544,7 +544,7 @@ class Cid():
 
 
     @command
-    def open_signed(self, dashboard_id, url=None, signed=None, command=None, **kwargs):
+    def open_signed(self, dashboard_id, url=None, signed=None, command=None, **_):
         """Open QuickSight dashboard in browser"""
         if not url:
             if not dashboard_id:
@@ -561,7 +561,8 @@ class Cid():
             logger.info('healthy, opening...')
             url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
         if signed:
-            url = get_signed_url(destination=url)
+            cid_print('Please do not share the url')
+            url = get_signed_url(self.base.session, destination=url)
         if command:
             if '{url}' not in command:
                 raise CidCritical('Command must contain {url}. Check `cid-cmd open --help`.')
@@ -570,7 +571,7 @@ class Cid():
         if exec_env()['terminal'] == 'CloudShell':
             logger.warning(f"Operation is not supported in {exec_env()}")
             return
-        webbrowser.open(url)
+        webbrowser.open(url) #open in default browser
 
 
     @command

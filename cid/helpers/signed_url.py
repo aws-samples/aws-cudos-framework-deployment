@@ -3,16 +3,19 @@
 import json
 from urllib import parse
 
-import boto3
 import requests
 from cid.exceptions import CidError
 
-def get_signed_url(destination="https://console.aws.amazon.com/", profile_name=None):
+def get_signed_url(session, destination="https://console.aws.amazon.com/", duration=43200):
     """ Returns a presigned URL generated from your AWS CLI credentials.
+
+    :session: boto3 sesson
+    :destination: destination url
+    :duration: DurationSeconds max 43200s = 12h
 
     credits -> https://gist.github.com/ottokruse/1c0f79d51cdaf82a3885f9b532df1ce5
     """
-    creds = boto3.Session(profile_name=profile_name).get_credentials()
+    creds = session.get_credentials()
     if not creds:
         raise CidError("Failed to get credentials. Please make sure you have AWS session credentials in this shell.")
     url_credentials = {
@@ -21,7 +24,7 @@ def get_signed_url(destination="https://console.aws.amazon.com/", profile_name=N
         'sessionToken': creds.token,   
     }
     request_parameters = "?Action=getSigninToken"
-    request_parameters += "&DurationSeconds=43200"
+    request_parameters += f"&DurationSeconds={duration}"
     request_parameters += "&Session=" + parse.quote_plus(json.dumps(url_credentials))
     request_url = "https://signin.aws.amazon.com/federation" + request_parameters
 
