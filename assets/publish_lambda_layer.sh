@@ -31,6 +31,17 @@ aws cloudformation list-stack-instances \
     else
       echo "Uploaded successfuly"
     fi
+    echo "uploading cid-latest.zip to $region"
+    output=$(aws s3api put-object \
+      --bucket "$bucket" \
+      --key cid-resource-lambda-layer/cid-latest.zip \
+      --body ./cid-$CID_VERSION.zip)
+    if [ $? -ne 0 ]; then
+      echo "Error: $output"
+    else
+      echo "Uploaded successfuly"
+    fi
+
   done
 
 echo 'Cleanup'
