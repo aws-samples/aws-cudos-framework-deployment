@@ -117,7 +117,7 @@ Parameters:
   QuickSightDataSourceRoleName:
     Type: String
     Default: 'CidQuickSightDataSourceRole'
-    Description: 'IAM Role Name to be used on QuckSight Datasource Creation (if not provided, the Default QuckSight Role will be used)'
+    Description: 'IAM Role Name to be used on QuckSight Datasource Creation (if not provided, the Default QuckSight Role will be used). Must not be an existing Role.'
   CURBucketPath:
     Type: String
     MinLength: 3
