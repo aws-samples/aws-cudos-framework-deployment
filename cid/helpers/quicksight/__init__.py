@@ -732,10 +732,10 @@ class QuickSight(CidBase):
     def describe_dashboard(self, poll: bool=False, **kwargs) -> Union[None, Dashboard]:
         """ Describes an AWS QuickSight dashboard
         Keyword arguments:
-        DashboardId
-
+            DashboardId
+            poll_interval
         """
-        poll_interval = kwargs.get('poll_interval', 1)
+        poll_interval = kwargs.get('poll_interval', 5)
         try:
             dashboard: Dashboard = None
             current_status = None
@@ -747,7 +747,12 @@ class QuickSight(CidBase):
                     time.sleep(poll_interval)
                 elif poll:
                     logger.info(f'Polling for dashboard {kwargs.get("DashboardId")}')
-                response = self.client.describe_dashboard(AwsAccountId=self.account_id, **kwargs).get('Dashboard')
+                try:
+                    response = self.client.describe_dashboard(AwsAccountId=self.account_id, **kwargs).get('Dashboard')
+                except self.client.exceptions.ThrottlingException:
+                    logger.debug('Got ThrottlingException will sleep for 5 sec')
+                    time.sleep(5)
+                    continue
                 logger.debug(response)
                 dashboard = Dashboard(response)
                 current_status = dashboard.version.get('Status')
