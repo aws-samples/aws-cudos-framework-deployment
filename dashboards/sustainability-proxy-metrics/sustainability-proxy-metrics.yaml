@@ -1021,7 +1021,7 @@ views:
       FROM
         (${athena_database_name}.${cur_table_name} cur
       INNER JOIN sus_aws_regions ON ("product_region" = sus_aws_regions.region_name))
-      WHERE ((((product_region <> '') AND (product_region <> 'global')) AND ((product_operation LIKE 'RunInstances%') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))) AND (line_item_usage_start_date > (current_date - INTERVAL  '1' MONTH)))
+      WHERE ((product_region <> '') AND (product_region <> 'global')) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL '1' MONTH)) AND (line_item_usage_start_date > (current_date - INTERVAL '1' MONTH))
       GROUP BY bill_payer_account_id, line_item_usage_start_date, product_region, region_city, region_latitude, is95PercentRenewable, region_longitude
   sus_network:
     dependsOn:
