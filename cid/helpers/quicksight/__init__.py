@@ -1062,7 +1062,7 @@ class QuickSight(CidBase):
         try:
             existing_schedules = self.get_dataset_refresh_schedules(dataset_id)
         except CidError as exc:
-            logger.debug(exc, exc_info=True)
+            logger.debug(f'List refresh schedule throws: {exc}')
             logger.warning(
                 f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
                 ' Please make sure scheduled refresh is configured manualy.'
