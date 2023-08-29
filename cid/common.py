@@ -729,7 +729,7 @@ class Cid():
         self.qs.discover_datasets()
         used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
         for v in list(self.qs._datasets.values()):
-            if v.arn not in used_datasets and click.confirm(f'Delete unused dataset {v.name}?'):
+            if v.id not in used_datasets and click.confirm(f'Delete unused dataset {v.name}?'):
                 logger.info(f'Deleting dataset {v.name} ({v.arn})')
                 self.qs.delete_dataset(v.id)
                 logger.info(f'Deleted dataset {v.name} ({v.arn})')
