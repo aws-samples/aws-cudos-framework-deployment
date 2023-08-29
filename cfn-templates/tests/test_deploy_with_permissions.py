@@ -314,7 +314,10 @@ def teardown():
 def main():
     """ main """
     try:
-        teardown() #Try to remove previous attempt
+        try:
+            teardown() #Try to remove previous attempt
+        except:
+            pass
         create_finops_role()
         create_cid_as_finops()
         test_dashboard_exists()
