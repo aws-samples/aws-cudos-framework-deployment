@@ -1051,7 +1051,7 @@ class QuickSight(CidBase):
         except self.client.exceptions.ResourceNotFoundException as exc:
             raise CidError(f'DataSet {dataset_id} does not exist') from exc
         except self.client.exceptions.AccessDeniedException as exc:
-            raise CidError(f'AccessDenied when reading refresh schedule for {dataset_id}') from exc
+            raise CidError(f'AccessDenied') from exc
         except Exception as exc:
             raise CidError(f'Unable to list refresh schedules for dataset {dataset_id}: {str(exc)}') from exc
 
