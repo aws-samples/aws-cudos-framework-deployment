@@ -1049,9 +1049,9 @@ class QuickSight(CidBase):
             )
             return refresh_schedules.get("RefreshSchedules")
         except self.client.exceptions.ResourceNotFoundException as exc:
-            raise CidError(f'DataSource {dataset_id} does not exist') from exc
+            raise CidError(f'DataSet {dataset_id} does not exist') from exc
         except self.client.exceptions.AccessDeniedException as exc:
-            raise CidError(f'No quicksight:ListDataSets permission') from exc
+            raise CidError(f'AccessDenied when reading refresh schedule for {dataset_id}') from exc
         except Exception as exc:
             raise CidError(f'Unable to list refresh schedules for dataset {dataset_id}: {str(exc)}') from exc
 
@@ -1080,7 +1080,7 @@ class QuickSight(CidBase):
                     default=default_timezone
                 )
             if not schedule_frequency_timezone:
-                logger.warning(f'Cannot get timezone. Please provide --timezone parameter. Please make sure scheduled refresh is configured manualy.')
+                logger.warning('Cannot get timezone. Please provide --timezone parameter. Please make sure scheduled refresh is configured manualy.')
                 return
 
         for schedule in schedules:
