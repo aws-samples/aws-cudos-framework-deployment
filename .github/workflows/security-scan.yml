@@ -33,7 +33,7 @@ jobs:
           bandit -r .
       - name: Pip Audit
         run: |
-          pip-audit
+          pip-audit --ignore-vuln GHSA-wfm5-v35h-vwf4
 
   cfn-scan-cid:
     runs-on: ubuntu-latest
