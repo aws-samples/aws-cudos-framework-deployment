@@ -33,7 +33,9 @@ jobs:
           pip install -U .
       - name: Pip Audit
         run: |
-          pip-audit
+          # GHSA-wfm5-v35h-vwf4  gitpython is a dependency of pip-audit not cid-cmd
+          # GHSA-cwvm-v4w8-q58c  gitpython is a dependency of pip-audit not cid-cmd
+          pip-audit --ignore-vuln GHSA-wfm5-v35h-vwf4 --ignore-vuln GHSA-cwvm-v4w8-q58c
 
   python-pylint-cid:
     runs-on: ubuntu-latest
