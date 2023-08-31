@@ -364,14 +364,19 @@ class QuickSight(CidBase):
             return self._principal_arn
 
         # No parameters provided, let's ask user. Following parameter is not supposed to be used by CLI users.
-        choices = [
-            'select group',
-            f'current user {self.username}',
-            'select user'
-        ]
         auth_type = self.describe_account_subscription().get('AuthenticationType')
         if auth_type not in ["ACTIVE_DIRECTORY", 'IAM_IDENTITY_CENTER']:
-            choices.insert(0, 'group cid-owners (recommended)') # cannot create groups if managed by AD or IAM IC
+            choices = [
+                'group cid-owners (recommended)', 
+                'select group',
+                f'current user {self.username}',
+                'select user',
+            ]
+        else: # cannot create groups if managed by AD or IAM IC. And cannot read users.
+            choices = [
+                'select group',
+                'select user',
+            ]
         quicksight_owner = get_parameter('quicksight-owner-choice',
             message='You have not provided quicksight-user or quicksight-group. Do you what your objects to be owned by a user or a group?',
             choices=choices,
@@ -379,15 +384,13 @@ class QuickSight(CidBase):
         )
 
         if quicksight_owner.startswith("current user"):
-            username = self.username # try with default user, works for IAM users
-            if username:
-                try:
-                    self._user =  self.describe_user(username)
-                except Exception as exc:
-                    logger.debug(exc, stack_info=True)
-                    logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated?')
+            try:
+                self._user =  self.describe_user(self.username) # Only works for IAM
+            except Exception as exc:
+                logger.debug(exc, stack_info=True)
+                logger.error(f'Failed to find your QuickSight username ({exc}). Is QuickSight activated? Is there a user ({self.username})?')
             if not self._user:
-                self._user = self.select_user()
+                self._user = self.select_user() # fallback to user choice
             if not self._user:
                 raise CidCritical('Cannot get QuickSight username. Is Enteprise subscription activated in QuickSight?')
             logger.info(f"Using QuickSight user {self._user.get('UserName')}")
@@ -410,11 +413,8 @@ class QuickSight(CidBase):
             self._principal_arn = group.get('Arn')
 
         if not self._principal_arn:
-            logger.critical('Cannot find principal_arn. Please provide --quicksight-username or --quicksight-groupname')
-            exit(1)
-
+            raise CidCritical('Cannot find principal_arn. Please provide --quicksight-username or --quicksight-groupname')
         return self._principal_arn
-
 
 
     def create_data_source(self, athena_workgroup, datasource_id: str=None, role_arn: str=None) -> Datasource:
