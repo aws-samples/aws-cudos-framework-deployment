@@ -49,7 +49,7 @@ jobs:
           pip install pylint
       - name: PyLint
         run: |
-          pylint .cid/
+          pylint ./cid/
 
   cfn-scan-cid:
     runs-on: ubuntu-latest
