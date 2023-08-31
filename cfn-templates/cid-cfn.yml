@@ -260,7 +260,7 @@ Conditions:
   NeedQuickSightDataSourceRole:
     Fn::And:
       - !Condition NeedDatasource
-      - [!Equals [ !Ref QuickSightDataSourceRoleName, "CidQuickSightDataSourceRole" ]]
+      - !Equals [ !Ref QuickSightDataSourceRoleName, "CidQuickSightDataSourceRole" ]
   NeedQuickSightDataSourceRoleAndCUR:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
@@ -1146,7 +1146,7 @@ Resources:
       DataSourceParameters:
         AthenaParameters:
           WorkGroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-          RoleArn: !If [ UseQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", !Ref AWS::NoValue ]
+          RoleArn: !If [ UseQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRoleName}", !Ref AWS::NoValue ]
       Permissions:
         - Actions:
             - 'quicksight:DescribeDataSource'

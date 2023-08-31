@@ -228,7 +228,7 @@ def create_cid_as_finops():
     logger.info('Stack created')
 
     logger.info('As Finops Creating Dashboards')
-    finops_cfn.create_stack(
+    res = finops_cfn.create_stack(
         StackName="Cloud-Intelligence-Dashboards",
         TemplateURL=upload_to_s3('cfn-templates/cid-cfn.yml'),
         Parameters=[
@@ -239,6 +239,7 @@ def create_cid_as_finops():
         ],
         Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
     )
+    print(res)
     watch_stacks(admin_cfn, ["Cloud-Intelligence-Dashboards"])
     logger.info('Stack created')
 
