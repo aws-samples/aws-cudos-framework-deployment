@@ -115,6 +115,9 @@ class QuickSight(CidBase):
         """
         if fresh or not hasattr(self, '_subscription_info'):
             self._subscription_info = self.describe_account_subscription()
+        status = self._subscription_info.get('AccountSubscriptionStatus')
+        if status != 'ACCOUNT_CREATED':
+            return None
         return self._subscription_info.get('Edition')
 
     @property
@@ -177,16 +180,16 @@ class QuickSight(CidBase):
             # in case the account doesn't have Enterprise edition
             logger.info('Insufficient privileges to describe account subscription, working around')
             try:
-                self.client.list_dashboards(AwsAccountId=self.account_id).get('AccountInfo')
-                result = {'Edition': 'ENTERPRISE'}
-            except self.client.exceptions.UnsupportedUserEditionException as e:
-                logger.debug(f'UnsupportedUserEditionException means edition is STANDARD: {e}')
-                result = {'Edition': 'STANDARD'}
-        except self.client.exceptions.ResourceNotFoundException as e:
-            logger.debug(e, exc_info=True)
-            logger.info('QuickSight not activated')
-        except Exception as e:
-            logger.debug(e, exc_info=True)
+                self.client.list_dashboards(AwsAccountId=self.account_id)
+                result = {'Edition': 'ENTERPRISE', 'AccountSubscriptionStatus': 'ACCOUNT_CREATED'}
+            except self.client.exceptions.UnsupportedUserEditionException as exc:
+                logger.debug(f'UnsupportedUserEditionException means edition is STANDARD: {exc}')
+                result = {'Edition': 'STANDARD', 'AccountSubscriptionStatus': 'ACCOUNT_CREATED'}
+        except self.client.exceptions.ResourceNotFoundException as exc:
+            logger.debug(exc, exc_info=True)
+            logger.info('QuickSight not activated?')
+        except Exception as exc:
+            logger.debug(exc, exc_info=True)
         return result
 
 
@@ -729,10 +732,10 @@ class QuickSight(CidBase):
     def describe_dashboard(self, poll: bool=False, **kwargs) -> Union[None, Dashboard]:
         """ Describes an AWS QuickSight dashboard
         Keyword arguments:
-        DashboardId
-
+            DashboardId
+            poll_interval
         """
-        poll_interval = kwargs.get('poll_interval', 1)
+        poll_interval = kwargs.get('poll_interval', 5)
         try:
             dashboard: Dashboard = None
             current_status = None
@@ -744,7 +747,12 @@ class QuickSight(CidBase):
                     time.sleep(poll_interval)
                 elif poll:
                     logger.info(f'Polling for dashboard {kwargs.get("DashboardId")}')
-                response = self.client.describe_dashboard(AwsAccountId=self.account_id, **kwargs).get('Dashboard')
+                try:
+                    response = self.client.describe_dashboard(AwsAccountId=self.account_id, **kwargs).get('Dashboard')
+                except self.client.exceptions.ThrottlingException:
+                    logger.debug('Got ThrottlingException will sleep for 5 sec')
+                    time.sleep(5)
+                    continue
                 logger.debug(response)
                 dashboard = Dashboard(response)
                 current_status = dashboard.version.get('Status')

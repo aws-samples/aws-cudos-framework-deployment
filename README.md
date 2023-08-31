@@ -79,6 +79,14 @@ cid-cmd status
 cid-cmd share
 ```
 
+#### Initialize Amazon QuickSight
+One time action to intialize Amazon QuickSight Enerprise Edition.
+
+```bash
+cid-cmd initqs
+```
+
+
 #### Delete Dashboard and all dependencies unused by other
 Delete Dashboards and all dependencies unused by other CID-managed dashboards.(including QuickSight datasets, Athena views and tables)
 ```bash
@@ -129,9 +137,7 @@ CID offers a set of Terraform modules to deploy CUR replicaion and CID dashboard
 
 
 ## Rights Management
-The ownership of CID is usually with the FinOps team, who do not have administrative access. However, they require specific privileges to install and operate CID
-dashboards. To assist the Admin team in granting the necessary privileges to the CID owners, a CFN template is provided. This template, located at
-[CFN template](cfn-templates/cid-admin-policies.yaml), takes an IAM role name as a parameter and adds the required policies to the role.
+The ownership of CID is usually with the FinOps team, who do not have administrative access. However, they require specific privileges to install and operate CID dashboards. To assist the Admin team in granting the necessary privileges to the CID owners, a CFN template is provided. This template, located at [CFN template](cfn-templates/cid-admin-policies.yaml), takes an IAM role name as a parameter and adds the required policies to the role.
 
 
 ## Troubleshooting and Support
@@ -143,6 +149,6 @@ cid-cmd -vv [command]
     
 This will produce a log file in the same directory that were at the tile of launch of cid-cmd. 
 
-:heavy_exclamation_mark:Inspect the produced debug log for any sensitive information and anonymise it.
+:heavy_exclamation_mark:Inspect the produced debug log for any sensitive information and anonymize it.
 
 We encourage you to open [new issue](https://github.com/aws-samples/aws-cudos-framework-deployment/issues/new) with description of the problem and attached debug log file.

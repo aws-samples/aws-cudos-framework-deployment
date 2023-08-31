@@ -744,7 +744,7 @@ views:
          , ROW ('eu-north-1', 'Sweden', 'Stockholm', '59.33', '18.07', 1)
          , ROW ('eu-west-1', 'Ireland', 'Dublin', '53.28', '-7.71', 1)
          , ROW ('us-east-2', 'USA', 'Ohio', '40.36', '-82.91', 1)
-         , ROW ('us-gov-west-1', 'USA', 'Oregon', '39.53', '-119.88', 0)
+         , ROW ('us-gov-west-1', 'USA', 'Oregon', '39.53', '-119.88', 1)
          , ROW ('us-west-1', 'USA', 'N. California', '36.55', '-119.89', 1)
          , ROW ('us-west-2', 'USA', 'Oregon', '43.82', '-120.33', 1)
          , ROW ('ap-east-1', 'Hong Kong', 'Hong Kong', '22.28', '114.15', 0)
@@ -1021,7 +1021,7 @@ views:
       FROM
         (${athena_database_name}.${cur_table_name} cur
       INNER JOIN sus_aws_regions ON ("product_region" = sus_aws_regions.region_name))
-      WHERE ((((product_region <> '') AND (product_region <> 'global')) AND ((product_operation LIKE 'RunInstances%') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))) AND (line_item_usage_start_date > (current_date - INTERVAL  '1' MONTH)))
+      WHERE ((product_region <> '') AND (product_region <> 'global')) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL '1' MONTH)) AND (line_item_usage_start_date > (current_date - INTERVAL '1' MONTH))
       GROUP BY bill_payer_account_id, line_item_usage_start_date, product_region, region_city, region_latitude, is95PercentRenewable, region_longitude
   sus_network:
     dependsOn:

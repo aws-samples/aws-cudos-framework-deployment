@@ -4,12 +4,12 @@ import inspect
 import logging
 import platform
 from typing import Any, Dict
-import requests
 from functools import lru_cache as cache
 from collections.abc import Iterable
 
-from boto3.session import Session
+import requests
 import questionary
+from boto3.session import Session
 from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError, ProfileNotFound
 
 from cid.exceptions import CidCritical
@@ -257,3 +257,4 @@ def unset_parameter(param_name):
         value = params[param_name]
         del params[param_name]
         logger.info(f'Cleared {param_name}={value}, from parameters')
+
