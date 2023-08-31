@@ -1,5 +1,5 @@
 [MAIN]
-exit-zero=True
+fail-under=7.79
 
 [FORMAT]
 max-line-length=240
