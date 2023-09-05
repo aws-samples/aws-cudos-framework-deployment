@@ -723,20 +723,27 @@ class Cid():
 
     @command
     def cleanup(self, **kwargs):
-        """Delete unused resources (QuickSight datasets, Athena views)"""
+        """Delete unused resources (QuickSight datasets not used in Dashboards)"""
 
         self.qs.discover_dashboards()
         self.qs.discover_datasets()
-        used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
-        for v in list(self.qs._datasets.values()):
-            if v.arn not in used_datasets and click.confirm(f'Delete unused dataset {v.name}?'):
-                logger.info(f'Deleting dataset {v.name} ({v.arn})')
-                self.qs.delete_dataset(v.id)
-                logger.info(f'Deleted dataset {v.name} ({v.arn})')
-                print(f'Deleted dataset {v.name} ({v.arn})')
-            else:
-                print(f'Dataset {v.name} ({v.arn}) is in use')
-
+        references = {}
+        for dashboard in self.qs.dashboards.values():
+            for dataset_id in dashboard.datasets.values():
+                if dataset_id not in references:
+                    references[dataset_id] = []
+                references[dataset_id].append(dashboard.id)
+        for dataset in self.qs._datasets.values():
+            if dataset.id in references:
+                cid_print(f'Dataset {dataset.name} ({dataset.id}) is in use ({", ".join(references[dataset.id])})')
+                continue
+            if get_yesno_parameter(f'confirm-delete-dataset-{dataset.id}',
+                message=f'Delete dataset "{dataset.name}" (not used in dashboards, but can be used in analysis)?',
+                default='no',
+                ):
+                logger.info(f'Deleting dataset {dataset.name} ({dataset.id})')
+                self.qs.delete_dataset(dataset.id)
+                cid_print(f'Deleted dataset {dataset.name} ({dataset.id})')
 
     @command
     def share(self, dashboard_id, **kwargs):
