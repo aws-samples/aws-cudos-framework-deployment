@@ -502,23 +502,6 @@ class Cid():
         # Dashboard definition must contain names that are specific to template.
         dashboard_definition['datasets'] = {ds_map.get(name, name): arn for name, arn in dashboard_definition['datasets'].items() }
         logger.debug(f"datasets: {dashboard_definition['datasets']}")
-        #FIXME: this code looks absolete
-        kwargs = dict()
-        local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'
-        logger.info(f'Looking for local overrides file "{local_overrides}"...')
-        try:
-            with open(local_overrides, 'r', encoding='utf-8') as r:
-                try:
-                    print('found')
-                    if click.confirm(f'Use local overrides from {local_overrides}?'):
-                        kwargs = json.load(r)
-                        print('loaded')
-                except Exception as e:
-                    # Catch exception and dump a reason
-                    click.echo('failed to load, dumping error message')
-                    print(json.dumps(e, indent=4, sort_keys=True, default=str))
-        except FileNotFoundError:
-            logger.info('local overrides file not found')
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
