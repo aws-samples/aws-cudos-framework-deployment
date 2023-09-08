@@ -9,6 +9,7 @@ from io import StringIO
 from pkg_resources import resource_string
 
 from cid.base import CidBase
+from cid.helpers.s3 import S3
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
@@ -125,10 +126,13 @@ class Athena(CidBase):
             logger.info('Selecting Athena workgroup...')
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
-            if len(workgroups) == 1:
+            FORCE_DEBUG = True
+            if FORCE_DEBUG or len(workgroups) == 0:
+                self.WorkGroup = self._ensure_workgroup(name=self.defaults.get('WorkGroup'))  
+            elif len(workgroups) == 1:
                 # Silently choose the only workgroup that is available
                 self.WorkGroup = workgroups.pop().get('Name')
-            elif len(workgroups) > 1:
+            else:
                 # Select default workgroup if present
                 default_workgroup = next(iter([wgr.get('Name') for wgr in workgroups if wgr['Name'] == self.defaults.get('WorkGroup')]), None)
                 if default_workgroup: logger.info(f'Found "{default_workgroup}" as a default workgroup')
@@ -155,6 +159,32 @@ class Athena(CidBase):
         self._WorkGroup = name
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
+    def _ensure_workgroup(self, name: str) -> str:
+        try:
+            account_id = self.account_id
+            bucket_name = f'{self.defaults.get("WorkGroup").lower()}-{account_id}-result-bucket'
+            s3 = S3(session=self.session)
+            s3.ensure_bucket(name=bucket_name)
+            response = self.client.create_work_group(
+                Name=name,
+                Configuration={
+                    'ResultConfiguration': {
+                        'OutputLocation': f's3://{bucket_name}',
+                        'EncryptionConfiguration': {
+                            'EncryptionOption': 'SSE_S3',
+                        },
+                        'AclConfiguration': {
+                            'S3AclOption': 'BUCKET_OWNER_FULL_CONTROL'
+                        }
+                    },
+                }
+            )
+            return name
+        except self.client.exceptions.InvalidRequestException as ex:
+            return name
+        except Exception as ex:
+            raise CidCritical() from ex
+        
     def list_data_catalogs(self) -> list:
         return self.client.list_data_catalogs().get('DataCatalogsSummary')
     
