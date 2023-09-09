@@ -98,7 +98,7 @@ SELECT * FROM (
         COALESCE(utilizationmetrics_cpu_maximum, 'na'), ';',
         COALESCE(utilizationmetrics_memory_maximum, 'na'), ';',
         COALESCE(currentconfiguration_desiredcapacity, 'na'), ';'
-    ) AS option_details,
+    ) AS option_details
    , cast(NULL as varchar(1)) as tags
 
     FROM
@@ -415,7 +415,7 @@ UNION SELECT
         COALESCE(recommendationoptions_3_projectedutilizationmetrics_cpu_maximum, 'na'), ';',
         COALESCE(recommendationoptions_3_projectedutilizationmetrics_memory_maximum, 'na'), ';',
         COALESCE(recommendationoptions_3_configuration_desiredcapacity, 'na')
-    ) AS option_details,
+    ) AS option_details
 
    , cast(NULL as varchar(1)) as tags
 
