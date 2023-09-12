@@ -100,17 +100,17 @@ CREATE OR REPLACE VIEW compute_optimizer_ec2_instance_options AS
     ) as max_estimatedmonthlysavings_value_medium
 
    , CONCAT(
-         currentperformancerisk, ';',
-         currentinstancetype, ';',
-         '', ';',
-         current_memory, ';',
-         current_vcpus, ';',
-         current_network, ';',
-         current_storage, ';',
-         '', ';',
-         utilizationmetrics_cpu_maximum, ';',
-         utilizationmetrics_memory_maximum, ';'
-       ) option_details
+        COALESCE(currentperformancerisk, 'na'), ';',
+        COALESCE(currentinstancetype, 'na'), ';',
+        COALESCE('', 'na'), ';',
+        COALESCE(current_memory, 'na'), ';',
+        COALESCE(current_vcpus, 'na'), ';',
+        COALESCE(current_network, 'na'), ';',
+        COALESCE(current_storage, 'na'), ';',
+        COALESCE('', 'na'), ';',
+        COALESCE(utilizationmetrics_cpu_maximum, 'na'), ';',
+        COALESCE(utilizationmetrics_memory_maximum, 'na'), ';'
+   ) option_details
    , tags tags
    FROM
      compute_optimizer_ec2_instance_lines
@@ -184,24 +184,24 @@ UNION SELECT
               AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
    , CONCAT(
-         recommendationoptions_1_performancerisk, ';',
-         recommendationoptions_1_instancetype, ';',
-         recommendationoptions_1_migrationeffort, ';',
-         recommendationoptions_1_memory, ';',
-         recommendationoptions_1_vcpus, ';',
-         recommendationoptions_1_network, ';',
-         recommendationoptions_1_storage, ';',
-         CONCAT(
-            (CASE WHEN (recommendationoptions_1_platformdifferences_isarchitecturedifferent = 'true') THEN 'Architecture ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_1_platformdifferences_ishypervisordifferent = 'true') THEN 'Hypervisor ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_1_platformdifferences_isinstancestoreavailabilitydifferent = 'true') THEN 'InstanceStoreAvailability ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_1_platformdifferences_isnetworkinterfacedifferent = 'true') THEN 'NetworkInterface ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_1_platformdifferences_isstorageinterfacedifferent = 'true') THEN 'StorageInterface ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_1_platformdifferences_isvirtualizationtypedifferent = 'true') THEN 'VirtualizationType ' ELSE '' END)
-         ), ';',
-         recommendationoptions_1_projectedutilizationmetrics_cpu_maximum, ';',
-         recommendationoptions_1_projectedutilizationmetrics_memory_maximum, ';'
-       ) option_details
+        COALESCE(recommendationoptions_1_performancerisk, 'na'), ';',
+        COALESCE(recommendationoptions_1_instancetype, 'na'), ';',
+        COALESCE(recommendationoptions_1_migrationeffort, 'na'), ';',
+        COALESCE(recommendationoptions_1_memory, 'na'), ';',
+        COALESCE(recommendationoptions_1_vcpus, 'na'), ';',
+        COALESCE(recommendationoptions_1_network, 'na'), ';',
+        COALESCE(recommendationoptions_1_storage, 'na'), ';',
+        CONCAT(
+           (CASE WHEN (COALESCE(recommendationoptions_1_platformdifferences_isarchitecturedifferent, 'na') = 'true') THEN 'Architecture ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_1_platformdifferences_ishypervisordifferent, 'na') = 'true') THEN 'Hypervisor ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_1_platformdifferences_isinstancestoreavailabilitydifferent, 'na') = 'true') THEN 'InstanceStoreAvailability ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_1_platformdifferences_isnetworkinterfacedifferent, 'na') = 'true') THEN 'NetworkInterface ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_1_platformdifferences_isstorageinterfacedifferent, 'na') = 'true') THEN 'StorageInterface ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_1_platformdifferences_isvirtualizationtypedifferent, 'na') = 'true') THEN 'VirtualizationType ' ELSE '' END)
+        ), ';',
+        COALESCE(recommendationoptions_1_projectedutilizationmetrics_cpu_maximum, 'na'), ';',
+        COALESCE(recommendationoptions_1_projectedutilizationmetrics_memory_maximum, 'na'), ';'
+   ) option_details
    , tags tags
    FROM
      compute_optimizer_ec2_instance_lines
@@ -275,23 +275,23 @@ UNION SELECT
               AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
    , CONCAT(
-         recommendationoptions_2_performancerisk, ';',
-         recommendationoptions_2_instancetype, ';',
-         recommendationoptions_2_migrationeffort, ';',
-         recommendationoptions_2_memory, ';',
-         recommendationoptions_2_vcpus, ';',
-         recommendationoptions_2_network, ';',
-         recommendationoptions_2_storage, ';',
-         CONCAT(
-            (CASE WHEN (recommendationoptions_2_platformdifferences_isarchitecturedifferent = 'true') THEN 'Architecture ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_2_platformdifferences_ishypervisordifferent = 'true') THEN 'Hypervisor ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_2_platformdifferences_isinstancestoreavailabilitydifferent = 'true') THEN 'InstanceStoreAvailability ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_2_platformdifferences_isnetworkinterfacedifferent = 'true') THEN 'NetworkInterface ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_2_platformdifferences_isstorageinterfacedifferent = 'true') THEN 'StorageInterface ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_2_platformdifferences_isvirtualizationtypedifferent = 'true') THEN 'VirtualizationType ' ELSE '' END)
-         ), ';',
-         recommendationoptions_2_projectedutilizationmetrics_cpu_maximum, ';',
-         recommendationoptions_2_projectedutilizationmetrics_memory_maximum, ';'
+        COALESCE(recommendationoptions_2_performancerisk, 'na'), ';',
+        COALESCE(recommendationoptions_2_instancetype, 'na'), ';',
+        COALESCE(recommendationoptions_2_migrationeffort, 'na'), ';',
+        COALESCE(recommendationoptions_2_memory, 'na'), ';',
+        COALESCE(recommendationoptions_2_vcpus, 'na'), ';',
+        COALESCE(recommendationoptions_2_network, 'na'), ';',
+        COALESCE(recommendationoptions_2_storage, 'na'), ';',
+        CONCAT(
+           (CASE WHEN (COALESCE(recommendationoptions_2_platformdifferences_isarchitecturedifferent, 'na') = 'true') THEN 'Architecture ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_2_platformdifferences_ishypervisordifferent, 'na') = 'true') THEN 'Hypervisor ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_2_platformdifferences_isinstancestoreavailabilitydifferent, 'na') = 'true') THEN 'InstanceStoreAvailability ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_2_platformdifferences_isnetworkinterfacedifferent, 'na') = 'true') THEN 'NetworkInterface ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_2_platformdifferences_isstorageinterfacedifferent, 'na') = 'true') THEN 'StorageInterface ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_2_platformdifferences_isvirtualizationtypedifferent, 'na') = 'true') THEN 'VirtualizationType ' ELSE '' END)
+        ), ';',
+        COALESCE(recommendationoptions_2_projectedutilizationmetrics_cpu_maximum, 'na'), ';',
+        COALESCE(recommendationoptions_2_projectedutilizationmetrics_memory_maximum, 'na'), ';'
    ) option_details
    , tags as tags
    FROM
@@ -368,24 +368,24 @@ UNION SELECT
               AND recommendationoptions_3_estimatedmonthlysavings_currency != '') THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
    , CONCAT(
-         recommendationoptions_3_performancerisk, ';',
-         recommendationoptions_3_instancetype, ';',
-         recommendationoptions_3_migrationeffort, ';',
-         recommendationoptions_3_memory, ';',
-         recommendationoptions_3_vcpus, ';',
-         recommendationoptions_3_network, ';',
-         recommendationoptions_3_storage, ';',
-         CONCAT(
-            (CASE WHEN (recommendationoptions_3_platformdifferences_isarchitecturedifferent = 'true') THEN 'Architecture ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_3_platformdifferences_ishypervisordifferent = 'true') THEN 'Hypervisor ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_3_platformdifferences_isinstancestoreavailabilitydifferent = 'true') THEN 'InstanceStoreAvailability ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_3_platformdifferences_isnetworkinterfacedifferent = 'true') THEN 'NetworkInterface ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_3_platformdifferences_isstorageinterfacedifferent = 'true') THEN 'StorageInterface ' ELSE '' END),
-            (CASE WHEN (recommendationoptions_3_platformdifferences_isvirtualizationtypedifferent = 'true') THEN 'VirtualizationType ' ELSE '' END)
-         ), ';',
-         recommendationoptions_3_projectedutilizationmetrics_cpu_maximum, ';',
-         recommendationoptions_3_projectedutilizationmetrics_memory_maximum, ';'
-       ) option_details
+        COALESCE(recommendationoptions_3_performancerisk, 'na'), ';',
+        COALESCE(recommendationoptions_3_instancetype, 'na'), ';',
+        COALESCE(recommendationoptions_3_migrationeffort, 'na'), ';',
+        COALESCE(recommendationoptions_3_memory, 'na'), ';',
+        COALESCE(recommendationoptions_3_vcpus, 'na'), ';',
+        COALESCE(recommendationoptions_3_network, 'na'), ';',
+        COALESCE(recommendationoptions_3_storage, 'na'), ';',
+        CONCAT(
+           (CASE WHEN (COALESCE(recommendationoptions_3_platformdifferences_isarchitecturedifferent, 'na') = 'true') THEN 'Architecture ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_3_platformdifferences_ishypervisordifferent, 'na') = 'true') THEN 'Hypervisor ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_3_platformdifferences_isinstancestoreavailabilitydifferent, 'na') = 'true') THEN 'InstanceStoreAvailability ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_3_platformdifferences_isnetworkinterfacedifferent, 'na') = 'true') THEN 'NetworkInterface ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_3_platformdifferences_isstorageinterfacedifferent, 'na') = 'true') THEN 'StorageInterface ' ELSE '' END),
+           (CASE WHEN (COALESCE(recommendationoptions_3_platformdifferences_isvirtualizationtypedifferent, 'na') = 'true') THEN 'VirtualizationType ' ELSE '' END)
+        ), ';',
+        COALESCE(recommendationoptions_3_projectedutilizationmetrics_cpu_maximum, 'na'), ';',
+        COALESCE(recommendationoptions_3_projectedutilizationmetrics_memory_maximum, 'na'), ';'
+   ) option_details
    , tags tags
    FROM
      compute_optimizer_ec2_instance_lines
