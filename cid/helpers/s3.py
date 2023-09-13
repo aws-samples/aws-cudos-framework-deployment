@@ -1,5 +1,6 @@
 import json
 import logging
+import botocore
 
 from cid.base import CidBase
 
@@ -10,14 +11,13 @@ class S3(CidBase):
 
     def __init__(self, session):
         super().__init__(session)
-        # QuickSight client
         self.client = self.session.client('s3', region_name=self.region)
         
     def ensure_bucket(self, name: str) -> str:
         try:
             response = self.client.head_bucket(Bucket=name)
             return name
-        except Exception as ex:
+        except botocore.exceptions.ClientError as ex:
             response = self.client.create_bucket(
                 ACL='private',
                 Bucket=name
@@ -33,5 +33,23 @@ class S3(CidBase):
                         },
                     ]
                 }
+            )
+            
+            response = self.client.put_bucket_lifecycle_configuration(
+                Bucket=name,
+                LifecycleConfiguration={
+                    'Rules': [
+                        {
+                            'Expiration': {
+                                'Days': 14,
+                            },
+                            'Filter': {
+                                'Prefix': '/',
+                            },
+                            'ID': 'ExpireAfter14Days',
+                            'Status': 'Enabled',
+                        },
+                    ],
+                },
             )
             return name            

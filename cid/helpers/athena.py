@@ -126,8 +126,7 @@ class Athena(CidBase):
             logger.info('Selecting Athena workgroup...')
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
-            FORCE_DEBUG = True
-            if FORCE_DEBUG or len(workgroups) == 0:
+            if 1==1 or len(workgroups) == 0:
                 self.WorkGroup = self._ensure_workgroup(name=self.defaults.get('WorkGroup'))  
             elif len(workgroups) == 1:
                 # Silently choose the only workgroup that is available
@@ -161,8 +160,8 @@ class Athena(CidBase):
 
     def _ensure_workgroup(self, name: str) -> str:
         try:
-            account_id = self.account_id
-            bucket_name = f'{self.defaults.get("WorkGroup").lower()}-{account_id}-result-bucket'
+            # "${AWS::Partition}-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}"
+            bucket_name = f'{self.partition}-athena-query-results-cid-{self.account_id}-{self.region}'
             s3 = S3(session=self.session)
             s3.ensure_bucket(name=bucket_name)
             response = self.client.create_work_group(
@@ -183,7 +182,7 @@ class Athena(CidBase):
         except self.client.exceptions.InvalidRequestException as ex:
             return name
         except Exception as ex:
-            raise CidCritical() from ex
+            raise CidCritical('Failed to create Athena work group') from ex
         
     def list_data_catalogs(self) -> list:
         return self.client.list_data_catalogs().get('DataCatalogsSummary')
