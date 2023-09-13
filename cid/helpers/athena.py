@@ -126,7 +126,7 @@ class Athena(CidBase):
             logger.info('Selecting Athena workgroup...')
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
-            if 1==1 or len(workgroups) == 0:
+            if len(workgroups) == 0:
                 self.WorkGroup = self._ensure_workgroup(name=self.defaults.get('WorkGroup'))  
             elif len(workgroups) == 1:
                 # Silently choose the only workgroup that is available
