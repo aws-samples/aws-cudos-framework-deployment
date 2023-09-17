@@ -379,8 +379,8 @@ class Cid():
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         except CidCritical:
-            pass 
-        
+            pass
+
         if not dashboard_definition:
             if isinstance(dashboard, Dashboard):
                 dashboard_definition = dashboard.definition
@@ -445,8 +445,13 @@ class Cid():
             dashboard_definition['datasets'] = {}
 
         for dataset_name in required_datasets_names:
+            dataset = None
             # First try to find the dataset with the id
-            dataset = self.qs.describe_dataset(id=dataset_name)
+            try:
+                dataset = self.qs.describe_dataset(id=dataset_name)
+            except Exception as exc:
+                logger.debug(f'Failed to describe_dataset {dataset_name} {exc}')
+
             if isinstance(dataset, Dataset):
                 logger.debug(f'Found dataset {dataset_name} with id match = {dataset.arn}')
                 dashboard_definition['datasets'][dataset_name] = dataset.arn
@@ -515,7 +520,7 @@ class Cid():
 
         print(f'Deploying dashboard {dashboard_id}')
         try:
-            dashboard = self.qs.create_dashboard(dashboard_definition, **kwargs)
+            dashboard = self.qs.create_dashboard(dashboard_definition)
             print(f"\n#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
             self.track('created', dashboard_id)
         except self.qs.client.exceptions.ResourceExistsException:
