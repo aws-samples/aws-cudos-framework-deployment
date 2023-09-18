@@ -3,7 +3,7 @@ import sys
 import json
 import logging
 import functools
-from pathlib import Path
+import webbrowser
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
@@ -50,6 +50,7 @@ class Cid():
         self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
         self._logger = None
+        self.qs_url_params = None
 
     def aws_login(self):
         params = {
@@ -61,29 +62,26 @@ class Cid():
         }
         for key in params.keys():
             value = get_parameters().get(key.replace('_', '-'))
-            if  value != None:
+            if  value is not None:
                 params[key] = value
 
-        print('Checking AWS environment...')
+        cid_print('Checking AWS environment...')
         try:
             self.base = CidBase(session=utils.get_boto_session(**params))
             if self.base.session.profile_name:
-                print(f'\tprofile name: {self.base.session.profile_name}')
-                logger.info(f'AWS profile name: {self.base.session.profile_name}')
+                cid_print(f'\tprofile name: {self.base.session.profile_name}')
             self.qs_url_params = {
                 'account_id': self.base.account_id,
                 'region': self.base.session.region_name
             }
-        except (NoCredentialsError, CredentialRetrievalError):
-            raise CidCritical('Error: Not authenticated, please check AWS credentials')
-        except ClientError as e:
-            raise CidCritical(f'ClientError: {e}')
-        print(f'\taccountId: {self.base.account_id}\n\tAWS userId: {self.base.username}')
-        logger.info(f'AWS accountId: {self.base.account_id}')
-        logger.info(f'AWS userId: {self.base.username}')
-        print('\tRegion: {}'.format(self.base.session.region_name))
-        logger.info(f'AWS region: {self.base.session.region_name}')
-        print('\n')
+        except (NoCredentialsError, CredentialRetrievalError) as exc:
+            raise CidCritical('Error: Not authenticated, please check AWS credentials') from exc
+        except ClientError as exc:
+            raise CidCritical(f'Cannot login AWS. {exc}') from exc
+        cid_print(f'\tAWS accountId: {self.base.account_id}')
+        cid_print(f'\tAWS userId:    {self.base.username}')
+        cid_print(f'\tAWS region:    {self.base.session.region_name}')
+        cid_print('\n')
 
     @property
     def qs(self) -> QuickSight:
@@ -108,7 +106,7 @@ class Cid():
                 'glue': Glue(self.base.session)
             })
         return self._clients.get('glue')
-    
+
     @property
     def organizations(self) -> Organizations:
         if not self._clients.get('organizations'):
@@ -273,12 +271,13 @@ class Cid():
                 method=method,
                 url=endpoint,
                 data=json.dumps(payload),
+                timeout=300,
                 headers={'Content-Type': 'application/json'}
             )
             if res.status_code != 200:
-                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {self.base.account_id}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
-        except Exception as e:
-            logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
+                logger.debug(f"This will not fail the deployment. There has been an issue logging action {action} for dashboard {dashboard_id} and account {self.base.account_id}, server did not respond with a 200 response,actual  status: {res.status_code}, response data {res.text}. This issue will be ignored")
+        except Exception as exc:
+            logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(exc)} . This issue will be ignored")
 
 
     def load_resources(self):
@@ -297,7 +296,7 @@ class Cid():
                     with open(source, encoding='utf-8') as file_:
                         resources = yaml.safe_load(file_)
             except Exception as exc:
-                raise CidCritical(f'Failed to load resources from {source}: {type(exc)} {exc}')
+                raise CidCritical(f'Failed to load resources from {source}') from exc
             self.resources = always_merger.merge(self.resources, resources)
         self.resources = self.resources_with_global_parameters(self.resources)
 
@@ -359,7 +358,6 @@ class Cid():
         # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
         self.qs.discover_dashboards()
 
-
         if dashboard_id is None:
             dashboard_id = get_parameter(
                 param_name='dashboard-id',
@@ -379,8 +377,8 @@ class Cid():
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         except CidCritical:
-            pass 
-        
+            pass
+
         if not dashboard_definition:
             if isinstance(dashboard, Dashboard):
                 dashboard_definition = dashboard.definition
@@ -429,8 +427,8 @@ class Cid():
 
         if not recursive and compatible == False:
             if get_parameter(
-                param_name=f'confirm-recursive',
-                message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
+                param_name='confirm-recursive',
+                message='This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
                 return
@@ -463,9 +461,9 @@ class Cid():
                         # For templates we can additionaly verify dataset fields
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                         src_fields = source_template.datasets.get(ds_map.get(dataset_name, dataset_name) )
-                        required_fileds = {col.get('Name'): col.get('DataType') for col in src_fields}
+                        required_fields = {col.get('Name'): col.get('DataType') for col in src_fields}
                         unmatched = {}
-                        for k, v in required_fileds.items():
+                        for k, v in required_fields.items():
                             if k not in dataset_fields or dataset_fields[k] != v:
                                 unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
                         logger.debug(f'unmatched_fields={unmatched}')
@@ -494,9 +492,9 @@ class Cid():
                             f'Found {len(matching_datasets)} Datasets found with name "{dataset_name}":'
                             f' {str([ds.id for ds in matching_datasets])}'
                         )
-                    ds = matching_datasets[0]
-                    print(f'Using dataset {dataset_name}: {ds.id}')
-                    dashboard_definition['datasets'][dataset_name] = ds.arn
+                    ds_ = matching_datasets[0]
+                    print(f'Using dataset {dataset_name}: {ds_.id}')
+                    dashboard_definition['datasets'][dataset_name] = ds_.arn
 
         # Update datasets to the mapping name if needed
         # Dashboard definition must contain names that are specific to template.
@@ -521,12 +519,12 @@ class Cid():
         except self.qs.client.exceptions.ResourceExistsException:
             print('error, already exists')
             print(f"#######\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
-        except Exception as e:
+        except Exception as exc:
             # Catch exception and dump a reason
-            logger.debug(e, exc_info=True)
-            print(f'failed with an error message: {e}')
+            logger.debug(exc, exc_info=True)
+            logger.error(f'Deploy failed with an error message: {exc}')
             self.delete(dashboard_id)
-            raise CidCritical(f'Deploy failed: {e}')
+            raise CidCritical('Deploy failed') from exc
 
         if get_yesno_parameter(
                 param_name=f'share-with-account',
@@ -551,17 +549,16 @@ class Cid():
 
         dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
-        click.echo('Getting dashboard status...', nl=False)
+        cid_print('Getting dashboard status...')
         if dashboard is not None:
             if dashboard.version.get('Status') not in ['CREATION_SUCCESSFUL']:
                 print(json.dumps(dashboard.version.get('Errors'),
                       indent=4, sort_keys=True, default=str))
-                click.echo(
-                    f'\nDashboard is unhealthy, please check errors above.')
-            click.echo('healthy, opening...')
-            click.launch(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
+                cid_print('\nDashboard is unhealthy, please check errors above.')
+            cid_print('healthy, opening...')
+            webbrowser.open(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
         else:
-            click.echo('not deployed.')
+            cid_print('not deployed.')
 
         return dashboard_id
 
@@ -585,7 +582,7 @@ class Cid():
             dashboard.display_status()
             dashboard.display_url(self.qs_url, **self.qs_url_params)
         else:
-            click.echo('not deployed.')
+            cid_print('not deployed.')
 
     @command
     def delete(self, dashboard_id, **kwargs):
@@ -607,16 +604,16 @@ class Cid():
 
         try:
             # Execute query
-            click.echo('Deleting dashboard...', nl=False)
+            cid_print('Deleting dashboard...')
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print(f'Dashboard {dashboard_id} deleted')
             self.track('deleted', dashboard_id)
         except self.qs.client.exceptions.ResourceNotFoundException:
             print('not found')
-        except Exception as e:
+        except Exception as exc:
             # Catch exception and dump a reason
-            logger.debug(e, exc_info=True)
-            print(f'failed with an error message: {e}')
+            logger.debug(exc, exc_info=True)
+            print(f'failed with an error message: {exc}')
             return dashboard_id
 
         print('Processing dependencies')
@@ -800,20 +797,20 @@ class Cid():
                         )
                         folder_permissions_tpl = Template(resource_string(
                             package_or_requirement='cid.builtin.core',
-                            resource_name=f'data/permissions/folder_permissions.json',
+                            resource_name='data/permissions/folder_permissions.json',
                         ).decode('utf-8'))
                         columns_tpl = {
                             'PrincipalArn': self.qs.get_principal_arn()
                         }
                         folder_permissions = json.loads(folder_permissions_tpl.safe_substitute(columns_tpl))
                         folder = self.qs.create_folder(folder_name, **folder_permissions)
-                    except self.qs.client.exceptions.AccessDeniedException:
-                        raise CidError('You are not allowed to create folder, unable to proceed')
+                    except self.qs.client.exceptions.AccessDeniedException as exc:
+                        raise CidError('You are not allowed to create folder, unable to proceed') from exc
 
             self.qs.create_folder_membership(folder.get('FolderId'), dashboard.id, 'DASHBOARD')
             for _id in dashboard.datasets.values():
                 self.qs.create_folder_membership(folder.get('FolderId'), _id, 'DATASET')
-            print(f'Sharing complete')
+            print('Sharing complete')
         elif share_method in ['account', 'user']:
             if share_method == 'account':
                 principal_arn = f"arn:aws:quicksight:{self.qs.identityRegion}:{self.qs.account_id}:namespace/default"
@@ -862,7 +859,7 @@ class Cid():
 
             # Update DataSet permissions
             if share_method == 'account':
-                logger.info(f'Sharing datasets/datasources with an account is not supported, skipping')
+                logger.info('Sharing datasets/datasources with an account is not supported, skipping')
             else:
                 data_set_permissions_tpl = Template(resource_string(
                     package_or_requirement='cid.builtin.core',
@@ -916,9 +913,7 @@ class Cid():
 
 
     def check_dashboard_version_compatibility(self, dashboard_id):
-        
-        """
-            Returns True | False | None if could not check 
+        """ Returns True | False | None if could not check 
         """
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
@@ -934,7 +929,7 @@ class Cid():
             print(f"Cannot access QuickSight source template for {dashboard_id}")
             return None
         try:
-            cid_version = dashboard.deployedTemplate.cid_version            
+            cid_version = dashboard.deployedTemplate.cid_version
         except ValueError:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
             cid_version = "N/A"
@@ -946,7 +941,7 @@ class Cid():
             cid_version_latest = "N/A"
 
         if dashboard.latest:
-            print("You are up to date!")       
+            print("You are up to date!")
             print(f"  CID Version      {cid_version}")
             print(f"  TemplateVersion  {dashboard.deployed_version} ")
 
@@ -954,7 +949,7 @@ class Cid():
             logger.debug(f"CID Version      {cid_version}")
             logger.debug(f"TemplateVersion  {dashboard.deployed_version} ")
         else:
-            print(f"An update is available:")
+            print("An update is available:")
             print("                   Deployed -> Latest")
             print(f"  CID Version      {str(cid_version): <9}   {str(cid_version_latest): <6}")
             print(f"  TemplateVersion  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <6}")
@@ -967,11 +962,10 @@ class Cid():
         compatible = None
         try:
             compatible = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
-        except ValueError as e:
-            logger.info(e)
-            
+        except ValueError as exc:
+            logger.info(exc)
         return compatible
-    
+
     def update_dashboard(self, dashboard_id, dashboard_definition):
 
         dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
@@ -988,8 +982,7 @@ class Cid():
             print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         else:
             print('Unable to determine dashboard source.')
-        
-                            
+
         if dashboard.status == 'legacy':
             if get_parameter(
                 param_name=f'confirm-update',
@@ -1008,16 +1001,16 @@ class Cid():
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')
         logger.debug(f"Updating {dashboard_id}")
-        
+
         try:
             self.qs.update_dashboard(dashboard, dashboard_definition)
             print('Update completed\n')
             dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)
             self.track('updated', dashboard_id)
-        except Exception as e:
+        except Exception as exc:
             # Catch exception and dump a reason
-            logger.debug(e, exc_info=True)
-            print(f'failed with an error message: {e}')
+            logger.debug(exc, exc_info=True)
+            print(f'failed with an error message: {exc}')
 
         return dashboard_id
 
@@ -1117,11 +1110,11 @@ class Cid():
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
                     if not dataset_definition:
-                        raise Exception(f'Failed to find dataset {dataset_name}. Check if Datasets section in your resources file has that.')
-                except Exception as e:
+                        raise CidError(f'Failed to find dataset {dataset_name}. Check if Datasets section in your resources file has that.')
+                except Exception as exc:
                     logger.critical('dashboard definition is broken, unable to proceed.')
                     logger.critical(f'dataset definition not found: {dataset_name}')
-                    logger.critical(e, exc_info=True)
+                    logger.critical(exc, exc_info=True)
                     raise
                 try:
                     if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
@@ -1129,19 +1122,19 @@ class Cid():
                         print(f'Dataset "{dataset_name}" created')
                     else:
                         print(f'Dataset "{dataset_name}" creation failed, collect debug log for more info')
-                except self.qs.client.exceptions.AccessDeniedException as e:
+                except self.qs.client.exceptions.AccessDeniedException as exc:
                     print(f'Unable to create dataset  "{dataset_name}", missing permissions')
                     logger.info(f'Unable to create dataset  "{dataset_name}", missing permissions')
-                    logger.debug(e, exc_info=True)
-                except Exception as e:
-                    logger.debug(e, exc_info=True)
+                    logger.debug(exc, exc_info=True)
+                except Exception as exc:
+                    logger.debug(exc, exc_info=True)
                     raise
 
         # Last chance to enter DataSetIds manually by user
         if len(missing_datasets):
             missing_str = '\n - '.join(missing_datasets)
             print(f'\nThere are still {len(missing_datasets)} datasets missing: \n - {missing_str}')
-            print(f"\nCan't move forward without full list, please manually create datasets and provide DataSetIds")
+            print("\nCan't move forward without full list, please manually create datasets and provide DataSetIds")
             # Loop over the list unless we get it empty
             while len(missing_datasets):
                 # Make a copy and then get an item from the list
@@ -1150,9 +1143,9 @@ class Cid():
                     param_name=f'{dataset_name}-dataset-id',
                     message=f'DataSetId/Arn for {dataset_name}'
                 )
-                id = _id.split('/')[-1]
+                _id = _id.split('/')[-1]
                 try:
-                    _dataset = self.qs.describe_dataset(id)
+                    _dataset = self.qs.describe_dataset(_id)
                     if _dataset.name != dataset_name:
                         print(f"\tFound dataset with a different name: {_dataset.name}, please provide another one")
                         unset_parameter(f'{dataset_name}-dataset-id')
@@ -1161,9 +1154,9 @@ class Cid():
                     missing_datasets.remove(dataset_name)
                     print(f'\tFound valid "{_dataset.name}" dataset, using')
                     logger.info(f'\tFound valid "{_dataset.name}" ({_dataset.id}) dataset, using')
-                except Exception as e:
-                    logger.debug(e, exc_info=True)
-                    print(f"\tProvided DataSetId '{id}' can't be found\n")
+                except Exception as exc:
+                    logger.debug(exc, exc_info=True)
+                    print(f"\tProvided DataSetId '{_id}' can't be found\n")
                     unset_parameter(f'{dataset_name}-dataset-id')
                     continue
             print('\n')
@@ -1199,7 +1192,7 @@ class Cid():
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
-        cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
+        cur_required = dataset_definition.get('dependsOn', {}).get('cur')
         athena_datasource = None
 
         # Manage datasource
@@ -1345,8 +1338,8 @@ class Cid():
         compiled_dataset_text = template.safe_substitute(columns_tpl)
         try:
             compiled_dataset = json.loads(compiled_dataset_text)
-        except json.JSONDecodeError as exc:
-            logger.error('The json of dataset is not correct. Please check parameters of the dasbhoard.')
+        except json.JSONDecodeError:
+            logger.error('The json of dataset is not correct. Please check parameters of the dashboard.')
             logger.debug(compiled_dataset_text)
             raise
         if dataset_id:
@@ -1368,7 +1361,7 @@ class Cid():
                         cid_print(diff['printable'])
                         choice = get_parameter(
                             param_name='dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override',
-                            message=f'The existing dataset is different. Override?',
+                            message='The existing dataset is different. Override?',
                             choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
                             default='retry diff'
                         )
@@ -1539,8 +1532,7 @@ class Cid():
         elif view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
             pass
         else:
-            logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
-            raise Exception(f'\nCannot find view {view_name}')
+            raise CidError(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
 
         # Load TPL file
         data = self.get_data_from_definition('view', view_definition)
