@@ -515,7 +515,7 @@ class Cid():
 
         print(f'Deploying dashboard {dashboard_id}')
         try:
-            dashboard = self.qs.create_dashboard(dashboard_definition, **kwargs)
+            dashboard = self.qs.create_dashboard(dashboard_definition)
             print(f"\n#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
             self.track('created', dashboard_id)
         except self.qs.client.exceptions.ResourceExistsException:
