@@ -907,7 +907,7 @@ Resources:
 
   CidCURCrawlerRole:
     Type: AWS::IAM::Role
-    Condition: logs:
+    Condition: NeedCURTable
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
