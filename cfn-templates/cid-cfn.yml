@@ -17,7 +17,7 @@ Metadata:
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
       - Label:
-          default: Trusted Advisor and Compute Optimizer Dashboards. To deploy theese two dashboard, you must first deploy the Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
+          default: Trusted Advisor and Compute Optimizer Dashboards. To deploy these two dashboard, you must first deploy the Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
         Parameters:
           - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
@@ -80,7 +80,7 @@ Metadata:
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
       DataBuketsKmsKeyArns:
-        default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encypted with KMS. Also you can set it to '*'."
+        default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
       PrimaryTagName:
         Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
       SecondaryTagName:
@@ -159,7 +159,7 @@ Parameters:
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: Deploy Trusted Advisor Organisational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: Deploy Trusted Advisor Organizational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
@@ -181,7 +181,7 @@ Parameters:
     Default: "AwsDataCatalog"
   DataBuketsKmsKeyArns:
     Type: String
-    Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encypted with KMS. Also you can set it to '*'."
+    Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
     Default: "*"
   LakeFormationEnabled:
     Type: String
@@ -242,7 +242,7 @@ Conditions:
         - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
         - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
         - !Equals [ !Ref DeployKPIDashboard, "yes" ]
-  NeedLakeFormationCrawlerPermision:
+  NeedLakeFormationCrawlerPermissions:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
       - !Condition NeedCURTable
@@ -422,7 +422,7 @@ Resources:
             EncryptionOption: SSE_S3
           OutputLocation: !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/', !Sub 's3://${AthenaQueryResultsBucket}/' ]
 
-  CustomRessourceFunctionInit:
+  CustomResourceFunctionInit:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub "CidInitialSetup-DoNotRun${Suffix}"
@@ -629,8 +629,8 @@ Resources:
   InitialSetup:
     Type: Custom::CustomResource
     Properties:
-      ServiceToken: !GetAtt CustomRessourceFunctionInit.Arn
-      Tags: # Hacky way to manage conditional dependancies
+      ServiceToken: !GetAtt CustomResourceFunctionInit.Arn
+      Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreConditionalDependsOnAthenaQueryResultsBucket
           Value: !If [NeedAthenaQueryResultsBucket, !Ref MyAthenaQueryResultsBucket, '']
         - Key: IgnoreConditionalDependsOnAthenaWorkgroup
@@ -659,7 +659,7 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
-  CustomRessourceProcessPath:
+  CustomResourceProcessPath:
     Type: AWS::Lambda::Function
     Properties:
       Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
@@ -749,18 +749,18 @@ Resources:
               return True
 
   ProcessedCURPath:
-    Type: Custom::CustomRessourceProcessPath
+    Type: Custom::CustomResourceProcessPath
     Condition: NeedCUR
     Properties:
-      ServiceToken: !GetAtt CustomRessourceProcessPath.Arn
+      ServiceToken: !GetAtt CustomResourceProcessPath.Arn
       s3path: !Ref CURBucketPath
       type: 'CUR'
 
   ProcessedODCPath:
-    Type: Custom::CustomRessourceProcessPath
+    Type: Custom::CustomResourceProcessPath
     Condition: NeedDataCollectionLab
     Properties:
-      ServiceToken: !GetAtt CustomRessourceProcessPath.Arn
+      ServiceToken: !GetAtt CustomResourceProcessPath.Arn
       s3path: !Ref OptimizationDataCollectionBucketPath
 
   CidDatabase:
@@ -907,7 +907,7 @@ Resources:
 
   CidCURCrawlerRole:
     Type: AWS::IAM::Role
-    Condition: NeedCURTable
+    Condition: logs:
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -1079,7 +1079,7 @@ Resources:
                 - quicksight:DescribeRefreshSchedule
                 - quicksight:ListRefreshSchedules
                 Resource:
-                - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic as well as shcedule ids
+                - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic as well as schedule ids
               - Effect: Allow
                 Action:
                   - athena:StartQueryExecution
@@ -1107,7 +1107,7 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-        
+
   DataLakeSettingsCidExecRolePermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationEnabled
@@ -1124,7 +1124,7 @@ Resources:
 
   DataLakeSettingsCidCrawlerRolePerm:
     Type: AWS::LakeFormation::Permissions
-    Condition: NeedLakeFormationCrawlerPermision
+    Condition: NeedLakeFormationCrawlerPermissions
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt CidCURCrawlerRole.Arn
@@ -1137,7 +1137,7 @@ Resources:
 
   DataLakeSettingsCidCrawlerRolePermTable:
     Type: AWS::LakeFormation::Permissions
-    Condition: NeedLakeFormationCrawlerPermision
+    Condition: NeedLakeFormationCrawlerPermissions
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt CidCURCrawlerRole.Arn
@@ -1343,7 +1343,7 @@ Resources:
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
-      Tags: # Hacky way to manage conditional dependancies
+      Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
 
@@ -1365,7 +1365,7 @@ Resources:
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
-      Tags: # Hacky way to manage conditional dependancies
+      Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
         - Key: IgnoreNeedCUDOSDashboard
