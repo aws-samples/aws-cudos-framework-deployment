@@ -652,7 +652,7 @@ class QuickSight(CidBase):
         try:
             user_list = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
         except self.client.exceptions.AccessDeniedException as exc:
-            raise CidCritical('AccessDenied for listing users, your can explictly provide --quicksight-user parameter') from exc
+            raise CidCritical('AccessDenied for listing users, your can explicitly provide --quicksight-user parameter') from exc
 
         user_name = get_parameter(
             param_name='quicksight-user',
@@ -668,7 +668,7 @@ class QuickSight(CidBase):
         try:
             groups = self.identityClient.list_groups(AwsAccountId=self.account_id, Namespace='default').get('GroupList')
         except self.client.exceptions.AccessDeniedException as exc:
-            raise CidCritical('AccessDenied for listing groups, your can explictly provide --quicksight-group parameter') from exc
+            raise CidCritical('AccessDenied for listing groups, your can explicitly provide --quicksight-group parameter') from exc
 
         group_name = get_parameter(
             param_name='quicksight-group',
@@ -845,7 +845,7 @@ class QuickSight(CidBase):
         return result
 
 
-    def get_datasources(self, id: str=None, name: str=None, type: str=None, athena_workgroup_name: str=None, healthy: bool=True) -> List[Datasource]:
+    def get_datasources(self, id: str=None, name: str=None, type: str=None, athena_role_arn: str=None, athena_workgroup_name: str=None, healthy: bool=True) -> List[Datasource]:
         """ get datasource that matches parameters """
         result = []
         for datasource in self.datasources.values():
@@ -858,6 +858,8 @@ class QuickSight(CidBase):
             if type is not None and datasource.type != type:
                 continue
             if athena_workgroup_name is not None and datasource.AthenaParameters.get('WorkGroup') != athena_workgroup_name:
+                continue
+            if athena_role_arn is not None and datasource.AthenaParameters.get('RoleArn') != athena_role_arn:
                 continue
             result.append(datasource)
         return result
