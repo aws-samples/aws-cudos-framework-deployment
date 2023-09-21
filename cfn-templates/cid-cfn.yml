@@ -171,7 +171,7 @@ Parameters:
     Type: String
     Description: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /trusted-advisor and/or /compute-optimizer folders. You can leave the variable {account_id} in place, it will be replaced by current account ID automatically.
     Default: "s3://costoptimizationdata{account_id}"
-    AllowedPattern: '^s3://[a-z0-9](.)+[a-zA-Z0-9/]$'
+    AllowedPattern: '^s3://[a-zA-Z0-9-_{}/]*$'
   LambdaLayerBucketPrefix:
     Type: String
     Description: An S3 bucket with a Lambda layer
