@@ -133,15 +133,21 @@ class Athena(CidBase):
                 self.WorkGroup = workgroups.pop().get('Name')
             else:
                 # Select default workgroup if present
+                if self.defaults.get('WorkGroup') not in {wgr['Name'] for wgr in workgroups}:
+                    workgroups.append({'Name': f"{self.defaults.get('WorkGroup')} (create new)"})
                 default_workgroup = next(iter([wgr.get('Name') for wgr in workgroups if wgr['Name'] == self.defaults.get('WorkGroup')]), None)
                 if default_workgroup: logger.info(f'Found "{default_workgroup}" as a default workgroup')
                 # Ask user
-                self.WorkGroup = get_parameter(
+                selected_workgroup = get_parameter(
                     param_name='athena-workgroup',
                     message="Select AWS Athena workgroup to use",
                     choices=[wgr['Name'] for wgr in workgroups],
                     default=default_workgroup
                 )
+                if ' (create new)' in selected_workgroup:
+                    selected_workgroup = selected_workgroup.replace(' (create new)', '')
+                self.WorkGroup = self._ensure_workgroup(name=selected_workgroup)
+                
             logger.info(f'Selected workgroup: "{self._WorkGroup}"')
         return self._WorkGroup
 

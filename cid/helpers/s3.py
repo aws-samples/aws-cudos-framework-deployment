@@ -2,7 +2,7 @@ import json
 import logging
 import botocore
 
-from cid.base import CidBase
+from cid.base import CidBase, CidException
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,9 @@ class S3(CidBase):
             response = self.client.head_bucket(Bucket=name)
             return name
         except botocore.exceptions.ClientError as ex:
+            if int(ex.response['Error']['Code']) != 404:
+                raise CidException(f"Cannot check bucket {ex}!")
+            
             response = self.client.create_bucket(
                 ACL='private',
                 Bucket=name
