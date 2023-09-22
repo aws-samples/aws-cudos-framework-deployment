@@ -130,7 +130,7 @@ class Athena(CidBase):
                 self.WorkGroup = self._ensure_workgroup(name=self.defaults.get('WorkGroup'))  
             elif len(workgroups) == 1:
                 # Silently choose the only workgroup that is available
-                self.WorkGroup = workgroups.pop().get('Name')
+                self.WorkGroup = self._ensure_workgroup(name=workgroups.pop().get('Name'))
             else:
                 # Select default workgroup if present
                 if self.defaults.get('WorkGroup') not in {wgr['Name'] for wgr in workgroups}:
