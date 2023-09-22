@@ -67,13 +67,13 @@ SELECT
     ) as max_estimatedmonthlysavings_value_medium,
 
     CONCAT(
-        currentperformancerisk, ';', --  as performancerisk
-        currentconfiguration_volumetype, ';', --  as volumetype
-        currentconfiguration_volumesize, ';', --  as volumesize
-        currentconfiguration_volumebaselineiops, ';', --  as volumebaselineiops
-        currentconfiguration_volumebaselinethroughput, ';', --  as volumebaselinethroughput
-        currentconfiguration_volumeburstiops, ';', --  as volumeburstiops
-        currentconfiguration_volumeburstthroughput, ';' --  as volumeburstthroughput
+        COALESCE(currentperformancerisk, 'na'), ';',
+        COALESCE(currentconfiguration_volumetype, 'na'), ';',
+        COALESCE(currentconfiguration_volumesize, 'na'), ';',
+        COALESCE(currentconfiguration_volumebaselineiops, 'na'), ';',
+        COALESCE(currentconfiguration_volumebaselinethroughput, 'na'), ';',
+        COALESCE(currentconfiguration_volumeburstiops, 'na'), ';',
+        COALESCE(currentconfiguration_volumeburstthroughput, 'na'), ';'
     ) as option_details,
     tags as tags
 
@@ -144,14 +144,15 @@ UNION SELECT
     ) as max_estimatedmonthlysavings_value_medium,
 
     CONCAT(
-        recommendationoptions_1_performancerisk, ';', -- as performancerisk,
-        recommendationoptions_1_configuration_volumetype, ';', -- as volumetype,
-        recommendationoptions_1_configuration_volumesize, ';', -- as volumesize,
-        recommendationoptions_1_configuration_volumebaselineiops, ';', -- as volumebaselineiops,
-        recommendationoptions_1_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
-        recommendationoptions_1_configuration_volumeburstiops, ';', -- as volumeburstiops,
-        recommendationoptions_1_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
+        COALESCE(recommendationoptions_1_performancerisk, 'na'), ';',
+        COALESCE(recommendationoptions_1_configuration_volumetype, 'na'), ';',
+        COALESCE(recommendationoptions_1_configuration_volumesize, 'na'), ';',
+        COALESCE(recommendationoptions_1_configuration_volumebaselineiops, 'na'), ';',
+        COALESCE(recommendationoptions_1_configuration_volumebaselinethroughput, 'na'), ';',
+        COALESCE(recommendationoptions_1_configuration_volumeburstiops, 'na'), ';',
+        COALESCE(recommendationoptions_1_configuration_volumeburstthroughput, 'na'), ';'
     ) as option_details,
+
     tags as tags
 
 FROM
@@ -224,14 +225,15 @@ UNION SELECT
 
 
     CONCAT(
-        recommendationoptions_2_performancerisk, ';', -- as performancerisk,
-        recommendationoptions_2_configuration_volumetype, ';', -- as volumetype,
-        recommendationoptions_2_configuration_volumesize, ';', -- as volumesize,
-        recommendationoptions_2_configuration_volumebaselineiops, ';', -- as volumebaselineiops,
-        recommendationoptions_2_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
-        recommendationoptions_2_configuration_volumeburstiops, ';', -- as volumeburstiops,
-        recommendationoptions_2_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
+        COALESCE(recommendationoptions_2_performancerisk, 'na'), ';',
+        COALESCE(recommendationoptions_2_configuration_volumetype, 'na'), ';',
+        COALESCE(recommendationoptions_2_configuration_volumesize, 'na'), ';',
+        COALESCE(recommendationoptions_2_configuration_volumebaselineiops, 'na'), ';',
+        COALESCE(recommendationoptions_2_configuration_volumebaselinethroughput, 'na'), ';',
+        COALESCE(recommendationoptions_2_configuration_volumeburstiops, 'na'), ';',
+        COALESCE(recommendationoptions_2_configuration_volumeburstthroughput, 'na'), ';'
     ) as option_details,
+
     tags as tags
 
 FROM
@@ -303,14 +305,15 @@ WHERE
     ) as max_estimatedmonthlysavings_value_medium,
 
     CONCAT(
-        recommendationoptions_3_performancerisk, ';', -- as performancerisk,
-        recommendationoptions_3_configuration_volumetype, ';', -- as volumetype,
-        recommendationoptions_3_configuration_volumesize, ';', -- as volumesize,
-        recommendationoptions_3_configuration_volumebaselineiops, ';', -- as volumebaselineiops,
-        recommendationoptions_3_configuration_volumebaselinethroughput, ';', -- as volumebaselinethroughput,
-        recommendationoptions_3_configuration_volumeburstiops, ';', -- as volumeburstiops,
-        recommendationoptions_3_configuration_volumeburstthroughput, ';' -- as volumeburstthroughput,
+        COALESCE(recommendationoptions_3_performancerisk, 'na'), ';',
+        COALESCE(recommendationoptions_3_configuration_volumetype, 'na'), ';',
+        COALESCE(recommendationoptions_3_configuration_volumesize, 'na'), ';',
+        COALESCE(recommendationoptions_3_configuration_volumebaselineiops, 'na'), ';',
+        COALESCE(recommendationoptions_3_configuration_volumebaselinethroughput, 'na'), ';',
+        COALESCE(recommendationoptions_3_configuration_volumeburstiops, 'na'), ';',
+        COALESCE(recommendationoptions_3_configuration_volumeburstthroughput, 'na'), ';'
     ) as option_details,
+
     tags as tags
 
 FROM

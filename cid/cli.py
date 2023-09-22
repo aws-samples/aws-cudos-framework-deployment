@@ -117,6 +117,7 @@ def deploy(ctx, **kwargs):
      --glue-data-catalog TEXT              Glue data catalog
      --cur-table-name TEXT                 CUR table name
      --quicksight-datasource-id TEXT       QuickSight Datasource ARN (if not found one with provided Athena workgroup)
+     --quicksight-datasource-role-arn TEXT IAM Role used for DataSource Creation (if not provided, will use the default QS Role). Must have access to Athena and S3 buckets.
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
@@ -144,7 +145,7 @@ def export(ctx, **kwargs):
         --template-version           Version description vX.Y.Z
         --reader-account             Account id with whom you want to share with or *
         --dashboard-export-method
-               (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSught Teamplate)
+               (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSight Template)
         --export-known-datasets
             (no|yes)                 If 'yes' the export will include DataSets that are already in resources file. Default = no
         --output                     A filename (.yaml)
@@ -166,7 +167,7 @@ def status(ctx, dashboard_id, **kwargs):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def delete(ctx, dashboard_id, **kwargs):
-    """Delete Dashboard and all dependencies unused by other CID-managed dasboards
+    """Delete Dashboard and all dependencies unused by other CID-managed dashboards
     (including QuickSight datasets, Athena views and tables)
 
     \b
@@ -235,7 +236,7 @@ def initqs(ctx, **kwargs):
 
      --enable-quicksight-enterprise (yes|no) Confirm the activation of QuickSight
      --account-name NAME                     Unique QuickSight account name (Unique across all AWS users) 
-     --notification-email EMAIL              User's email for QuickSight notificaitons
+     --notification-email EMAIL              User's email for QuickSight notifications
     """
 
     ctx.obj.initqs(**kwargs)
