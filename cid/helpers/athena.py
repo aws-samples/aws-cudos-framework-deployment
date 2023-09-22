@@ -178,7 +178,7 @@ class Athena(CidBase):
                     buckets.append(f'{bucket_name} (create new)')
                 bucket_name = get_parameter(
                     param_name='athena-result-bucket',
-                    message="Select S3 bucket to use with Amazon Athena",
+                    message=f"Select S3 bucket to use with Amazon Athena Workgroup [{name}]",
                     choices=[bucket for bucket in buckets]
                 )
                 if ' (create new)' in bucket_name:
