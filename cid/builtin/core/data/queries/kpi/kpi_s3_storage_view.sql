@@ -163,6 +163,14 @@
 		, CASE WHEN s3_analytics_usage_quantity > 0 THEN 'in use' ELSE 'not in use' END AS s3_analytics_in_use
 		, CASE WHEN "s3_intelligent-tiering_storage_usage_quantity" > 0 THEN 'in use' ELSE 'not in use' END AS s3_int_in_use
 		, s3_standard_storage_cost * s3_standard_savings AS s3_standard_storage_potential_savings 
+		-->>SAVINGS: estimate for non-standard, currently lumped into one group from IT to Glacier, based on the current KPI method for potential
+		, ("s3_standard-ia_storage_cost" +
+			"s3_onezone-ia_storage_cost" +
+			"s3_intelligent-tiering_storage_cost" +
+			s3_glacier_instant_retrieval_storage_cost +
+			s3_glacier_flexible_retrieval_storage_cost +
+			s3_glacier_deep_archive_storage_storage_cost) / (1 - s3_standard_savings) s3_storage_current_savings
+		--<<SAVINGS
 		, s3_all_cost
 		, s3_all_storage_cost
 		, s3_all_storage_usage_quantity

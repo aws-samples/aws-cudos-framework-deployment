@@ -261,7 +261,56 @@
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AWSLambda') AND (adjusted_processor = 'Graviton')) THEN amortized_cost ELSE 0 END "lambda_graviton_cost"
 		   , CASE 
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AWSLambda') AND (adjusted_processor <> 'Graviton')) THEN amortized_cost*.2 ELSE 0 END "lambda_graviton_potential_savings"  /*Uses 20% savings estimate*/ 		
-		
+/*Savings estimation*/
+			-->>SAVINGS: 
+			-- EC2 Graviton current savings
+			, CASE 
+				WHEN (adjusted_processor = 'Graviton') AND ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') THEN (amortized_cost / 8E-1) 
+				ELSE 0 END "ec2_graviton_current_savings"
+			-- EC2 AMD current savings
+			, CASE 
+				WHEN (adjusted_processor = 'AMD') AND ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') THEN (amortized_cost / 9E-1) 
+				ELSE 0 END "ec2_amd_current_savings"
+			-- Spot current savings
+			, CASE WHEN ("charge_type" LIKE '%Usage%') AND 
+				("product_code" = 'AmazonEC2') AND 
+				("instance_type" <> '') AND 
+				("operation" LIKE '%RunInstances%') AND 
+				(purchase_option = 'Spot') AND (NOT (savings_plan_offering_type LIKE '%EC2%')) THEN (adjusted_amortized_cost / 5.5E-1) 
+				ELSE 0 END "ec2_spot_current_savings"
+			-- Latest generation current savings
+			, CASE WHEN ("charge_type" LIKE '%Usage%') AND 
+				("product_code" = 'AmazonEC2') AND 
+				("instance_type" <> '') AND 
+				("operation" LIKE '%RunInstances%') AND 
+				(generation IN ('Current')) AND 
+				(purchase_option <> 'Spot') AND 
+				(purchase_option <> 'Reserved') AND 
+				(NOT (savings_plan_offering_type LIKE '%EC2%')) THEN (amortized_cost / 9.5E-1) 
+				ELSE 0 END "ec2_latest_generation_current_savings"
+			-- RDS Graviton current savings
+			, CASE WHEN (adjusted_processor = 'Graviton') AND 
+				("charge_type" LIKE '%Usage%') AND 
+				("product_code" = 'AmazonRDS') AND 
+				(purchase_option = 'OnDemand') AND 
+				(database_engine IN ('Aurora MySQL', 'Aurora PostgreSQL', 'MariaDB', 'PostgreSQL')) THEN (amortized_cost / 9E-1) 
+				ELSE 0 END "rds_graviton_current_savings" 
+			-- ElastiCache Graviton current savings
+			, CASE WHEN (adjusted_processor = 'Graviton') AND 
+				("charge_type" LIKE '%Usage%') AND 
+				("product_code" = 'AmazonElastiCache') THEN (amortized_cost / .95) 
+				ELSE 0 END "elasticache_graviton_current_savings"
+			-- AOS Graviton current saving
+			, CASE WHEN ("charge_type" = 'Usage') AND 
+				("product_code" = 'AmazonES') AND 
+				(adjusted_processor = 'Graviton') THEN (amortized_cost / .95) 
+				ELSE 0 END "opensearch_graviton_current_savings"
+			-- Lambda Graviton current saving
+			, CASE WHEN ("charge_type" LIKE '%Usage%') AND 
+				("product_code" = 'AWSLambda') AND 
+				(adjusted_processor = 'Graviton') THEN (amortized_cost / 8E-1) 
+				ELSE 0 END "lambda_graviton_current_savings"
+			--<<SAVINGS		
 		FROM 
 			cur_all cur_all
 			LEFT JOIN instance_map ON (instance_map.product = product_code AND instance_map.family = instance_type_family) 
