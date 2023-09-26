@@ -122,7 +122,7 @@ ebs_spend_with_unit_cost AS (
 	END AS "estimated_gp3_unit_cost"
    -->>SAVINGS: look at inverse from a current gp3 perspective
 	, CASE 
-		WHEN volume_api_name = 'gp3' THEN (cost_storage_gb_mo/8E-1) / usage_storage_gb_mo
+		WHEN volume_api_name = 'gp3' THEN (cost_storage_gb_mo/0.8) / usage_storage_gb_mo
 		ELSE 0 
 	END "estimated_gp2_unit_cost"
    --<<SAVINGS
@@ -171,11 +171,9 @@ ebs_before_map AS (
 	, sum(CASE 
 		WHEN (volume_api_name = 'gp3') THEN 
 		(
-			(
-				(cost_storage_gb_mo/8E-1) + 
-				((estimated_gp2_unit_cost*5E-1) * equiv_gp2_usage_added_throughput_gibps_mo)
-			) + 
-			((estimated_gp2_unit_cost*6E-2) * equiv_gp2_usage_added_iops_mo)
+			(cost_storage_gb_mo/0.8) + 
+			(estimated_gp2_unit_cost * 0.5 * equiv_gp2_usage_added_throughput_gibps_mo) +
+			(estimated_gp2_unit_cost * 0.06 * equiv_gp2_usage_added_iops_mo)
 		) ELSE 0 
 		END) ebs_gp2_potential_cost
 	--<<SAVINGS
