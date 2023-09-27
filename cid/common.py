@@ -502,23 +502,6 @@ class Cid():
         # Dashboard definition must contain names that are specific to template.
         dashboard_definition['datasets'] = {ds_map.get(name, name): arn for name, arn in dashboard_definition['datasets'].items() }
         logger.debug(f"datasets: {dashboard_definition['datasets']}")
-        #FIXME: this code looks absolete
-        kwargs = dict()
-        local_overrides = f'work/{self.base.account_id}/{dashboard_id}.json'
-        logger.info(f'Looking for local overrides file "{local_overrides}"...')
-        try:
-            with open(local_overrides, 'r', encoding='utf-8') as r:
-                try:
-                    print('found')
-                    if click.confirm(f'Use local overrides from {local_overrides}?'):
-                        kwargs = json.load(r)
-                        print('loaded')
-                except Exception as e:
-                    # Catch exception and dump a reason
-                    click.echo('failed to load, dumping error message')
-                    print(json.dumps(e, indent=4, sort_keys=True, default=str))
-        except FileNotFoundError:
-            logger.info('local overrides file not found')
 
         _url = self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params)
 
@@ -532,7 +515,7 @@ class Cid():
 
         print(f'Deploying dashboard {dashboard_id}')
         try:
-            dashboard = self.qs.create_dashboard(dashboard_definition, **kwargs)
+            dashboard = self.qs.create_dashboard(dashboard_definition)
             print(f"\n#######\n####### Congratulations!\n####### {dashboard_definition.get('name')} is available at: {_url}\n#######")
             self.track('created', dashboard_id)
         except self.qs.client.exceptions.ResourceExistsException:
@@ -723,20 +706,27 @@ class Cid():
 
     @command
     def cleanup(self, **kwargs):
-        """Delete unused resources (QuickSight datasets, Athena views)"""
+        """Delete unused resources (QuickSight datasets not used in Dashboards)"""
 
         self.qs.discover_dashboards()
         self.qs.discover_datasets()
-        used_datasets = [x for v in self.qs.dashboards.values() for x in v.datasets.values() ]
-        for v in list(self.qs._datasets.values()):
-            if v.arn not in used_datasets and click.confirm(f'Delete unused dataset {v.name}?'):
-                logger.info(f'Deleting dataset {v.name} ({v.arn})')
-                self.qs.delete_dataset(v.id)
-                logger.info(f'Deleted dataset {v.name} ({v.arn})')
-                print(f'Deleted dataset {v.name} ({v.arn})')
-            else:
-                print(f'Dataset {v.name} ({v.arn}) is in use')
-
+        references = {}
+        for dashboard in self.qs.dashboards.values():
+            for dataset_id in dashboard.datasets.values():
+                if dataset_id not in references:
+                    references[dataset_id] = []
+                references[dataset_id].append(dashboard.id)
+        for dataset in self.qs._datasets.values():
+            if dataset.id in references:
+                cid_print(f'Dataset {dataset.name} ({dataset.id}) is in use ({", ".join(references[dataset.id])})')
+                continue
+            if get_yesno_parameter(f'confirm-delete-dataset-{dataset.id}',
+                message=f'Delete dataset "{dataset.name}" (not used in dashboards, but can be used in analysis)?',
+                default='no',
+                ):
+                logger.info(f'Deleting dataset {dataset.name} ({dataset.id})')
+                self.qs.delete_dataset(dataset.id)
+                cid_print(f'Deleted dataset {dataset.name} ({dataset.id})')
 
     @command
     def share(self, dashboard_id, **kwargs):
@@ -1246,15 +1236,15 @@ class Cid():
                 })
             except Exception as exc:
                 raise CidCritical(
-                    f'quicksight-datasource-id={datasource_id} not found or not in a valid state. {exc}'
-                )
+                    f'quicksight-datasource-id={datasource_id} not found or not in a valid state.'
+                ) from exc
         else:
                 # We have no explicit DataSource in parameters
                 # QuickSight DataSources are not obvious for customer so we will try to do our best guess
                 # - if there is just one? -> silently take that one
                 # - if DataSource is references in existing DataSet? -> silently take that one
                 # - if athena WorkGroup defined -> Try to find a DataSource with this WorkGroup
-                # - and if still nothing -> ask an expicit choice from the user
+                # - and if still nothing -> ask an explicit choice from the user
                 pre_compiled_dataset = json.loads(template.safe_substitute())
                 dataset_name = pre_compiled_dataset.get('Name')
 
@@ -1284,7 +1274,10 @@ class Cid():
                 else:
                     #try to find a datasource with defined workgroup
                     workgroup = self.athena.WorkGroup
-                    datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=workgroup)
+                    datasources_with_workgroup = self.qs.get_datasources(
+                        athena_workgroup_name=workgroup,
+                        athena_role_arn=role_arn,
+                    )
                     logger.info(f'Found {len(datasources_with_workgroup)} Athena DataSources with WorkGroup={workgroup}.')
                     if len(datasources_with_workgroup) == 1:
                         athena_datasource = datasources_with_workgroup[0]
@@ -1399,7 +1392,7 @@ class Cid():
                         else:
                             raise CidCritical(f'User choice is not to update {found_dataset.name}.')
                     elif not diff:
-                        if not get_parameter(
+                        if get_parameter(
                             param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
                             message=f'Cannot get sql diff for {found_dataset.name}. Continue?',
                             choices=['override', 'exit'],

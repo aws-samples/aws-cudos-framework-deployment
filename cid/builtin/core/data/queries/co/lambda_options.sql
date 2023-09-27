@@ -56,15 +56,15 @@ CREATE OR REPLACE VIEW compute_optimizer_lambda_options AS
     ) as max_estimatedmonthlysavings_value_medium
 
    , CONCAT(
-         currentperformancerisk, ';', -- '-'
-         currentconfiguration_memorysize, ';',
-         current_costaverage, ';',
-         current_costaverage, ';',
-         utilizationmetrics_durationaverage, ';',
-         '', ';',
-         utilizationmetrics_durationmaximum, ';'
+          COALESCE(currentperformancerisk, 'na'), ';',
+          COALESCE(currentconfiguration_memorysize, 'na'), ';',
+          COALESCE(current_costaverage, 'na'), ';',
+          COALESCE(current_costaverage, 'na'), ';',
+          COALESCE(utilizationmetrics_durationaverage, 'na'), ';',
+          '', ';',
+          COALESCE(utilizationmetrics_durationmaximum, 'na'), ';'
+      ) option_details
 
-       ) option_details
    , cast('' as varchar(1)) as tags
 
    FROM
@@ -111,17 +111,15 @@ UNION SELECT
         CASE WHEN recommendationoptions_3_estimatedmonthlysavings_currency != '' THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
    , CONCAT(
-         '', ';',  --no performance risk
-         recommendationoptions_1_configuration_memorysize, ';',
-         recommendationoptions_1_costlow, ';',
-         recommendationoptions_1_costhigh, ';',
-         recommendationoptions_1_projectedutilizationmetrics_durationexpected,
-         recommendationoptions_1_projectedutilizationmetrics_durationlowerbound, ';',
-         recommendationoptions_1_projectedutilizationmetrics_durationupperbound, ';'
-    ) option_details
+          '', ';',  --no performance risk
+          COALESCE(recommendationoptions_1_configuration_memorysize, 'na'), ';',
+          COALESCE(recommendationoptions_1_costlow, 'na'), ';',
+          COALESCE(recommendationoptions_1_costhigh, 'na'), ';',
+          COALESCE(recommendationoptions_1_projectedutilizationmetrics_durationexpected, 'na'), ';',
+          COALESCE(recommendationoptions_1_projectedutilizationmetrics_durationlowerbound, 'na'), ';',
+          COALESCE(recommendationoptions_1_projectedutilizationmetrics_durationupperbound, 'na'), ';'
+      ) option_details
    , cast('' as varchar(1)) as tags
-
-
 
     FROM
         compute_optimizer_lambda_lines
@@ -169,14 +167,14 @@ UNION SELECT
         CASE WHEN recommendationoptions_3_estimatedmonthlysavings_currency != '' THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
    , CONCAT(
-         '', ';',  --no performance risk
-         recommendationoptions_2_configuration_memorysize, ';',
-         recommendationoptions_2_costlow, ';',
-         recommendationoptions_2_costhigh, ';',
-         recommendationoptions_2_projectedutilizationmetrics_durationexpected,
-         recommendationoptions_2_projectedutilizationmetrics_durationlowerbound, ';',
-         recommendationoptions_2_projectedutilizationmetrics_durationupperbound, ';'
-    ) option_details
+          '', ';',  --no performance risk
+          COALESCE(recommendationoptions_2_configuration_memorysize, 'na'), ';',
+          COALESCE(recommendationoptions_2_costlow, 'na'), ';',
+          COALESCE(recommendationoptions_2_costhigh, 'na'), ';',
+          COALESCE(recommendationoptions_2_projectedutilizationmetrics_durationexpected, 'na'), ';',
+          COALESCE(recommendationoptions_2_projectedutilizationmetrics_durationlowerbound, 'na'), ';',
+          COALESCE(recommendationoptions_2_projectedutilizationmetrics_durationupperbound, 'na'), ';'
+      ) option_details
    , cast('' as varchar(1)) as tags
 
 
@@ -229,17 +227,15 @@ UNION SELECT
         CASE WHEN recommendationoptions_3_estimatedmonthlysavings_currency != '' THEN TRY_CAST(recommendationoptions_3_estimatedmonthlysavings_value as double) ELSE 0E0 END
     ) as max_estimatedmonthlysavings_value_medium
    , CONCAT(
-         '', ';',  --no performance risk
-         recommendationoptions_3_configuration_memorysize, ';',
-         recommendationoptions_3_costlow, ';',
-         recommendationoptions_3_costhigh, ';',
-         recommendationoptions_3_projectedutilizationmetrics_durationexpected,
-         recommendationoptions_3_projectedutilizationmetrics_durationlowerbound, ';',
-         recommendationoptions_3_projectedutilizationmetrics_durationupperbound, ';'
-    ) option_details
+          '', ';',  --no performance risk
+          COALESCE(recommendationoptions_3_configuration_memorysize, 'na'), ';',
+          COALESCE(recommendationoptions_3_costlow, 'na'), ';',
+          COALESCE(recommendationoptions_3_costhigh, 'na'), ';',
+          COALESCE(recommendationoptions_3_projectedutilizationmetrics_durationexpected, 'na'), ';',
+          COALESCE(recommendationoptions_3_projectedutilizationmetrics_durationlowerbound, 'na'), ';',
+          COALESCE(recommendationoptions_3_projectedutilizationmetrics_durationupperbound, 'na'), ';'
+      ) option_details
    , cast(NULL as varchar(1)) as tags
-
-
 
     FROM
         compute_optimizer_lambda_lines
