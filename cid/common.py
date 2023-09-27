@@ -1387,7 +1387,7 @@ class Cid():
                         else:
                             raise CidCritical(f'User choice is not to update {found_dataset.name}.')
                     elif not diff:
-                        if not get_parameter(
+                        if get_parameter(
                             param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
                             message=f'Cannot get sql diff for {found_dataset.name}. Continue?',
                             choices=['override', 'exit'],
