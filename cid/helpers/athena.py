@@ -236,15 +236,17 @@ class Athena(CidBase):
 
             # Get Query ID
             query_id = response.get('QueryExecutionId')
-
-            # Get Query Status
+            if not query_id:
+                logger.debug(f'Full query: {sql_query}')
+                raise CidCritical(f'Athena cannot start query. Answer is: {response}')
+            # Get Query Status for the first time
             query_status = self.client.get_query_execution(QueryExecutionId=query_id)
-        except self.client.exceptions.InvalidRequestException as e:
+        except self.client.exceptions.InvalidRequestException as exc:
             logger.debug(f'Full query: {sql_query}')
-            raise CidCritical(f'InvalidRequestException: {e}')
-        except Exception as e:
+            raise CidCritical(f'InvalidRequestException: {exc}') from exc
+        except Exception as exc:
             logger.debug(f'Full query: {sql_query}')
-            raise CidCritical(f'Athena query failed: {e}')
+            raise CidCritical(f'Athena query failed: {exc}') from exc
 
         current_status = query_status['QueryExecution']['Status']['State']
 
@@ -256,16 +258,14 @@ class Athena(CidBase):
             # Sleep before polling again
             time.sleep(sleep_duration)
 
-        if (current_status == "SUCCEEDED"):
+        if current_status == "SUCCEEDED":
             return query_id
-        else:
-            failure_reason = response.get('QueryExecution', {}).get('Status', {}).get('StateChangeReason',repr(response))
-            logger.info(f'Athena query failed: {failure_reason}')
-            logger.debug(f'Full query: {sql_query}')
-            if fail:
-                raise CidCritical(f'Athena query failed: {failure_reason}')
-            else:
-                return False
+        failure_reason = response.get('QueryExecution', {}).get('Status', {}).get('StateChangeReason',repr(response))
+        logger.info(f'Athena query failed: {failure_reason}')
+        logger.debug(f'Full query: {sql_query}')
+        if fail:
+            raise CidCritical(f'Athena query failed: {failure_reason}')
+        return False
 
     def get_query_results(self, query_id):
         """ Get Query Results """
