@@ -75,7 +75,7 @@ Metadata:
       Suffix:
         default: "Suffix - Please do not change"
       QuickSightDataSourceRoleName:
-        default: "IAM Role Name to be used on QuckSight Datasource Creation (if not provided, the default QuckSight Role will be used)."
+        default: "IAM Role Name to be used on QuickSight Datasource Creation (if not provided, the default QuickSight Role will be used)."
       QuickSightDataSetRefreshSchedule:
         default: "QuickSight DataSet Refresh Schedule. Must be a valid cron or empty. If empty refresh will be disabled."
       LambdaLayerBucketPrefix:
@@ -1004,61 +1004,48 @@ Resources:
       Path: /
       RoleName: !Sub '${QuickSightDataSourceRoleName}${Suffix}'
       Policies:
-        - PolicyName: CidExecPolicy
+        - PolicyName: AthenaAccess
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - athena:BatchGetQueryExecution
-                  - athena:CancelQueryExecution
-                  - athena:GetCatalogs
-                  - athena:GetExecutionEngine
-                  - athena:GetExecutionEngines
-                  - athena:GetNamespace
-                  - athena:GetNamespaces
                   - athena:GetQueryExecution
-                  - athena:GetQueryExecutions
-                  - athena:GetQueryResults
-                  - athena:GetQueryResultsStream
-                  - athena:GetTable
-                  - athena:GetTables
-                  - athena:ListQueryExecutions
-                  - athena:RunQuery
                   - athena:StartQueryExecution
-                  - athena:StopQueryExecution
-                  - athena:ListWorkGroups
-                  - athena:ListEngineVersions
-                  - athena:GetWorkGroup
-                  - athena:GetDataCatalog
-                  - athena:GetDatabase
-                  - athena:GetTableMetadata
-                  - athena:ListDataCatalogs
-                  - athena:ListDatabases
-                  - athena:ListTableMetadata
-                Resource: '*'
+                  - athena:GetQueryResultsStream
+                  - athena:GetQueryResults
+                Resource:
+                  Fn::If:
+                   - NeedAthenaWorkgroup
+                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
+                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
+
               - Effect: Allow
                 Action:
-                  - glue:CreateDatabase
-                  - glue:DeleteDatabase
-                  - glue:GetDatabase
-                  - glue:GetDatabases
-                  - glue:UpdateDatabase
-                  - glue:CreateTable
-                  - glue:DeleteTable
-                  - glue:BatchDeleteTable
-                  - glue:UpdateTable
-                  - glue:GetTable
-                  - glue:GetTables
-                  - glue:BatchCreatePartition
-                  - glue:CreatePartition
-                  - glue:DeletePartition
-                  - glue:BatchDeletePartition
-                  - glue:UpdatePartition
-                  - glue:GetPartition
-                  - glue:GetPartitions
-                  - glue:BatchGetPartition
+                  - athena:ListDataCatalogs
                 Resource: '*'
+
+              - Effect: Allow
+                Action:
+                  - glue:GetTable
+                  - glue:GetPartitions
+                Resource:
+                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                   - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                   - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
+
+              - Effect: Allow
+                Action:
+                  - athena:ListDatabases
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
+
               - Effect: Allow
                 Action:
                   - s3:GetBucketLocation
@@ -1083,15 +1070,15 @@ Resources:
                     - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
                     - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
               - Effect: Allow
-                Action: 
+                Action:
                   - lakeformation:GetDataAccess
-                Resource: "*"
+                Resource: "*" # required https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-underlying-data.html
 
   QuickSightDataSourceRolePolicyForODCBucket:
     Type: AWS::IAM::Policy
     Condition: NeedQuickSightDataSourceRoleAndODC
     Properties:
-      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyName: S3Access
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -1115,7 +1102,7 @@ Resources:
     Type: AWS::IAM::Policy
     Condition: NeedQuickSightDataSourceRoleAndCUR
     Properties:
-      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyName: S3Access
       PolicyDocument:
         Version: 2012-10-17
         Statement:
