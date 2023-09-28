@@ -1195,10 +1195,11 @@ class Cid():
         return data
 
     def create_datasource(self, datasource_id) -> str:
-        role_arn = None
-        role_name = get_parameters().get('quicksight-datasource-name')
-        if role_name:
-            role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+        role_arn = get_parameters().get('quicksight-datasource-role-arn')
+        if not role_arn:
+            role_name = get_parameters().get('quicksight-datasource-role')
+            if role_name:
+                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
         athena_datasource = self.qs.create_data_source(
             athena_workgroup=self.athena.WorkGroup,
             datasource_id=datasource_id,
