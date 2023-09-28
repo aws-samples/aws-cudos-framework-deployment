@@ -9,6 +9,7 @@ from io import StringIO
 from pkg_resources import resource_string
 
 from cid.base import CidBase
+from cid.helpers.s3 import S3
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
@@ -125,20 +126,28 @@ class Athena(CidBase):
             logger.info('Selecting Athena workgroup...')
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
-            if len(workgroups) == 1:
+            if len(workgroups) == 0:
+                self.WorkGroup = self._ensure_workgroup(name=self.defaults.get('WorkGroup'))  
+            elif len(workgroups) == 1:
                 # Silently choose the only workgroup that is available
-                self.WorkGroup = workgroups.pop().get('Name')
-            elif len(workgroups) > 1:
+                self.WorkGroup = self._ensure_workgroup(name=workgroups.pop().get('Name'))
+            else:
                 # Select default workgroup if present
+                if self.defaults.get('WorkGroup') not in {wgr['Name'] for wgr in workgroups}:
+                    workgroups.append({'Name': f"{self.defaults.get('WorkGroup')} (create new)"})
                 default_workgroup = next(iter([wgr.get('Name') for wgr in workgroups if wgr['Name'] == self.defaults.get('WorkGroup')]), None)
                 if default_workgroup: logger.info(f'Found "{default_workgroup}" as a default workgroup')
                 # Ask user
-                self.WorkGroup = get_parameter(
+                selected_workgroup = get_parameter(
                     param_name='athena-workgroup',
-                    message="Select AWS Athena workgroup to use",
+                    message="Select Amazon Athena workgroup to use",
                     choices=[wgr['Name'] for wgr in workgroups],
                     default=default_workgroup
                 )
+                if ' (create new)' in selected_workgroup:
+                    selected_workgroup = selected_workgroup.replace(' (create new)', '')
+                self.WorkGroup = self._ensure_workgroup(name=selected_workgroup)
+                
             logger.info(f'Selected workgroup: "{self._WorkGroup}"')
         return self._WorkGroup
 
@@ -155,6 +164,64 @@ class Athena(CidBase):
         self._WorkGroup = name
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
+    def _ensure_workgroup(self, name: str) -> str:
+        try:
+            s3 = S3(session=self.session)
+            bucket_name = f'{self.partition}-athena-query-results-cid-{self.account_id}-{self.region}'
+            
+            workgroup = self.client.get_work_group(WorkGroup=name)
+            # "${AWS::Partition}-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}"
+            if not workgroup.get('WorkGroup', {}).get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation', None):
+                s3 = S3(session=self.session)
+                buckets = s3.list_buckets(region_name=self.region)
+                if bucket_name not in buckets:
+                    buckets.append(f'{bucket_name} (create new)')
+                bucket_name = get_parameter(
+                    param_name='athena-result-bucket',
+                    message=f"Select S3 bucket to use with Amazon Athena Workgroup [{name}]",
+                    choices=[bucket for bucket in buckets]
+                )
+                if ' (create new)' in bucket_name:
+                    bucket_name = bucket_name.replace(' (create new)', '')
+                s3.ensure_bucket(name=bucket_name)
+                response = self.client.update_work_group(
+                    WorkGroup=name,
+                    Description='string',
+                    ConfigurationUpdates={
+                        'ResultConfigurationUpdates': {
+                            'OutputLocation': f's3://{bucket_name}',
+                            'EncryptionConfiguration': {
+                                'EncryptionOption': 'SSE_S3',
+                            },
+                            'AclConfiguration': {
+                                'S3AclOption': 'BUCKET_OWNER_FULL_CONTROL'
+                            }
+                        }
+                    }
+                )
+            return name
+        except self.client.exceptions.InvalidRequestException as ex:
+            # Workgroup does not exist
+            if 'WorkGroup is not found' in ex.response.get('Error', {}).get('Message'):
+                s3.ensure_bucket(name=bucket_name)
+                response = self.client.create_work_group(
+                    Name=name,
+                    Configuration={
+                        'ResultConfiguration': {
+                            'OutputLocation': f's3://{bucket_name}',
+                            'EncryptionConfiguration': {
+                                'EncryptionOption': 'SSE_S3',
+                            },
+                            'AclConfiguration': {
+                                'S3AclOption': 'BUCKET_OWNER_FULL_CONTROL'
+                            }
+                        },
+                    }
+                )
+                return name
+        except Exception as ex:
+            raise CidCritical('Failed to create Athena work group') from ex
+                
     def list_data_catalogs(self) -> list:
         return self.client.list_data_catalogs().get('DataCatalogsSummary')
     

@@ -44,6 +44,10 @@ class CidBase():
         return self.session.region_name
 
     @property
+    def partition(self) -> str:
+        return self.session.get_partition_for_region(region_name=self.region_name)
+
+    @property
     def session(self) -> Session:
         return self._session
 
