@@ -5,7 +5,7 @@ rm -rf build
 
 echo 'Building a layer'
 mkdir -p ./python
-pip3 install . -t ./python
+python3 -m pip install . -t ./python
 zip -qr cid-$CID_VERSION.zip ./python
 ls -l cid-$CID_VERSION.zip
 rm -rf ./python
