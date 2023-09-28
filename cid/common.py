@@ -1194,6 +1194,20 @@ class Cid():
             raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(definition)}. Check resources file.")
         return data
 
+    def create_datasource(self, datasource_id) -> str:
+        role_arn = get_parameters().get('quicksight-datasource-role-arn')
+        if not role_arn:
+            role_name = get_parameters().get('quicksight-datasource-role')
+            if role_name:
+                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+        athena_datasource = self.qs.create_data_source(
+            athena_workgroup=self.athena.WorkGroup,
+            datasource_id=datasource_id,
+            role_arn=role_arn
+        )
+        return athena_datasource
+
+
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
@@ -1206,18 +1220,14 @@ class Cid():
         # We must do it here. In case if dastasource is not defined by user, we can take it from dataset
 
         datasource_id = get_parameters().get('quicksight-datasource-id')
-        role_arn = get_parameters().get('quicksight-datasource-role-arn')
+
         if datasource_id:
             # We have explicit choice of datasource
             try:
                 athena_datasource = self.qs.describe_data_source(datasource_id)
             except self.qs.client.exceptions.ResourceNotFoundException:
                 logger.info(f'DataSource {datasource_id} not found. Creating.')
-                athena_datasource = self.qs.create_data_source(
-                    athena_workgroup=self.athena.WorkGroup,
-                    datasource_id=datasource_id,
-                    role_arn=role_arn
-                )
+                athena_datasource = self.create_datasource(datasource_id)
             except self.qs.client.exceptions.AccessDeniedException:
                 logger.warning(f'AccessDenied reading QuickSight DataSource {datasource_id}. Trying to continue.')
                 athena_datasource = Datasource(raw={
@@ -1288,11 +1298,7 @@ class Cid():
                         if not datasource_id or datasource_id == 'Create New DataSource':
                             datasource_id = 'CID-CMD-Athena'
                             logger.info(f'Creating DataSource {datasource_id}')
-                            athena_datasource = self.qs.create_data_source(
-                                athena_workgroup=self.athena.WorkGroup,
-                                datasource_id=datasource_id,
-                                role_arn=role_arn
-                            )
+                            athena_datasource = self.create_datasource(datasource_id)
                         else:
                             athena_datasource = self.qs.get_datasources(id=datasource_id)[0]
                         logger.info(f'Using  DataSource = {athena_datasource.id}')

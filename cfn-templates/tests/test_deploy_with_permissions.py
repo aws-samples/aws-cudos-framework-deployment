@@ -119,7 +119,7 @@ def get_qs_user(): # move to tools
     """ get any valid qs user """
     qs_ = boto3.client('quicksight')
     users = qs_.list_users(AwsAccountId=account_id, Namespace='default')['UserList']
-    assert users, 'No QS users, pleas craete one.' # nosec B101:assert_used
+    assert users, 'No QS users, pleas create one.' # nosec B101:assert_used
     return users[0]['UserName']
 
 def timeit(method): # move to tools
@@ -211,7 +211,7 @@ def create_cid_as_finops():
     )
     logger.info('Finops Session created')
 
-    logger.info('As Fionps Creating CUR')
+    logger.info('As Finops Creating CUR')
     finops_cfn = finops_session.client('cloudformation')
     finops_cfn.create_stack(
         StackName="CID-CUR-Destination",
@@ -228,7 +228,7 @@ def create_cid_as_finops():
     logger.info('Stack created')
 
     logger.info('As Finops Creating Dashboards')
-    finops_cfn.create_stack(
+    res = finops_cfn.create_stack(
         StackName="Cloud-Intelligence-Dashboards",
         TemplateURL=upload_to_s3('cfn-templates/cid-cfn.yml'),
         Parameters=[
@@ -239,8 +239,10 @@ def create_cid_as_finops():
         ],
         Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
     )
+    logger.debug(res)
     watch_stacks(admin_cfn, ["Cloud-Intelligence-Dashboards"])
     logger.info('Stack created')
+
 
 def test_dashboard_exists():
     """check that dashboard exists"""
@@ -250,11 +252,52 @@ def test_dashboard_exists():
     )['Dashboard']
     logger.info("Dashboard exists with status = %s", dash['Version']['Status'])
 
+
 def test_dataset_scheduled():
     """check that dataset and schedule exist"""
     schedules = boto3.client('quicksight').list_refresh_schedules(AwsAccountId=account_id, DataSetId='d01a936f-2b8f-49dd-8f95-d9c7130c5e46')['RefreshSchedules']
     if not schedules:
         raise Exception('Schedules not set') #pylint: disable=broad-exception-raised
+
+def test_ingestion_successful():
+    """check that first ingestion is successful"""
+    qs = boto3.client('quicksight')
+
+    timeout_seconds = 300
+    dataset_name = 'summary_view' # Please note that there can be already another dataset in with the same name
+
+    logger.info('Waiting for the first ingestion')
+    dataset_id = None
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        datasets = {}
+        for dst in  qs.list_data_sets(AwsAccountId=account_id)['DataSetSummaries']:
+            datasets[dst["Name"]]= dst["DataSetId"]
+        if dataset_name in datasets:
+            dataset_id = datasets[dataset_name]
+            break
+        time.sleep(2)
+    else:
+        raise AssertionError('Timeout while waiting for dataset')
+
+    logger.info('Waiting for the first ingestion results')
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        ingestions = qs.list_ingestions(AwsAccountId=account_id, DataSetId=dataset_id)['Ingestions']
+        if not ingestions:
+            time.sleep(2)
+            continue
+        latest = sorted(ingestions, key=lambda x: x['CreatedTime'])[-1]
+        logger.debug(latest['IngestionStatus'])
+        if latest['IngestionStatus'] == 'FAILED':
+            raise AssertionError(f"ingestion of dataset {dataset_name} FAILED: {latest['ErrorInfo']}")
+        elif latest['IngestionStatus'] == 'COMPLETED':
+            logger.info('Ingestion Successful')
+            logger.debug(latest)
+            break
+    else:
+        raise AssertionError(f'Timeout while waiting for {dataset_name} dataset ingestion.')
+
 
 def teardown():
     """Cleanup the test"""
@@ -277,7 +320,7 @@ def teardown():
 
     logger.info("Deleting bucket")
     delete_bucket(f'cid-{account_id}-shared') # Cannot be done by CFN
-    logger.info("Deleting Dasbhoards stack")
+    logger.info("Deleting Dashboards stack")
     try:
         finops_cfn.delete_stack(StackName="Cloud-Intelligence-Dashboards")
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -314,14 +357,21 @@ def teardown():
 def main():
     """ main """
     try:
-        teardown() #Try to remove previous attempt
+        try:
+            teardown() #Try to remove previous attempt
+        except Exception as exc: # pylint: disable=broad-exception-caught
+            logger.debug(exc)
         create_finops_role()
         create_cid_as_finops()
         test_dashboard_exists()
         test_dataset_scheduled()
+        test_ingestion_successful()
+    except Exception as exc:
+        logger.error(exc)
+        raise
     finally:
         for index in range(10):
-            print(f'Press Ctrl+C if you want to avoid teardown: {9-index}\a') # beeep
+            print(f'Press Ctrl+C if you want to avoid teardown: {9-index}\a') # beep
             time.sleep(1)
         teardown()
 
