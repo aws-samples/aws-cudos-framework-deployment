@@ -1277,7 +1277,6 @@ class Cid():
                     workgroup = self.athena.WorkGroup
                     datasources_with_workgroup = self.qs.get_datasources(
                         athena_workgroup_name=workgroup,
-                        athena_role_arn=role_arn,
                     )
                     logger.info(f'Found {len(datasources_with_workgroup)} Athena DataSources with WorkGroup={workgroup}.')
                     if len(datasources_with_workgroup) == 1:
