@@ -12,7 +12,10 @@ cid-cmd update --dashboard-id ta-organizational-view --recursive
 **Changes:**
 
 **Fault Tolerance tab:** Added historical trends for all checks
-**Bug fixes and improvements:** Historical trends visuals across all tabs now include not only actual checks to better represent trends. Bug fix for detailed view visuals across all tabs to exclude duplicates in some corner cases 
+
+**Bug fixes and improvements:**:
+ * Historical trends visuals across all tabs now include not only actual checks to better represent trends. 
+ * Bug fix for detailed view visuals across all tabs to exclude duplicates in some corner cases 
 
 ## TAO Dashboard v2.0.0:
 
