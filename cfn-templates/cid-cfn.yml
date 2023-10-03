@@ -1088,7 +1088,7 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: CidAllowDecryptDataBuketsKmsKeyArns,
+          - Sid: CidAllowDecryptDataBuketsKmsKeyArns
             Effect: Allow
             Action: 'kms:Decrypt'
             Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
