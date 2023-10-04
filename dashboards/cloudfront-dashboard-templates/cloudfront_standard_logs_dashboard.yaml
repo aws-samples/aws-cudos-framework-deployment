@@ -1,16 +1,16 @@
 dashboards:
-  CLOUDFRONT_STANDARD_LOGS ANALYSIS:
-    name: cloudfront_standard_logs analysis
-    templateId: cloudfront_standard_logs
-    sourceAccountId: 001055268041
-    region: us-east-1
-    dashboardId: cloudfront_standard_logs_dashboard
+  CLOUDFRONT_STANDARD_LOGS_DASHBOARD:
     dependsOn:
       datasets:
       - cloudfront_standard_logs
+    name: cloudfront_standard_logs_dashboard
+    dashboardId: cloudfront-standard-logs-dashboard
+    templateId: cloudfront-standard-logs-dashboard
+    sourceAccountId: '536475555964'
+    region: us-east-1
 datasets:
   cloudfront_standard_logs:
-    Data:
+    data:
       DataSetId: 9e15b9c8-cbf0-42d3-a7bc-a4adecb0b2f4
       Name: cloudfront_standard_logs
       PhysicalTableMap:
@@ -137,4 +137,70 @@ datasets:
           Source:
             PhysicalTableId: cb9b13e4-29ff-406d-8de2-796770b3ac79
       ImportMode: SPICE
-views: {}
+    dependsOn:
+      views:
+      - cloudfront_standard_logs
+    schedules:
+    - default
+views:
+  cloudfront_standard_logs:
+    dependsOn:
+      views:
+      - cloudfront_standard_logs_table
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.cloudfront_standard_logs AS
+      SELECT *
+      FROM
+        "cloudfront_standard_logs_table"
+      WHERE (date > (current_date - INTERVAL  '7' DAY))
+  cloudfront_standard_logs_table:
+    data: |-
+      CREATE EXTERNAL TABLE `cloudfront_standard_logs_table`(
+        `date` date,
+        `time` string,
+        `location` string,
+        `bytes` bigint,
+        `request_ip` string,
+        `method` string,
+        `host` string,
+        `uri` string,
+        `status` int,
+        `referrer` string,
+        `user_agent` string,
+        `query_string` string,
+        `cookie` string,
+        `result_type` string,
+        `request_id` string,
+        `host_header` string,
+        `request_protocol` string,
+        `request_bytes` bigint,
+        `time_taken` float,
+        `xforwarded_for` string,
+        `ssl_protocol` string,
+        `ssl_cipher` string,
+        `response_result_type` string,
+        `http_version` string,
+        `fle_status` string,
+        `fle_encrypted_fields` int,
+        `c_port` int,
+        `time_to_first_byte` float,
+        `x_edge_detailed_result_type` string,
+        `sc_content_type` string,
+        `sc_content_len` bigint,
+        `sc_range_start` bigint,
+        `sc_range_end` bigint)
+      ROW FORMAT DELIMITED
+        FIELDS TERMINATED BY '\t'
+      STORED AS INPUTFORMAT
+        'org.apache.hadoop.mapred.TextInputFormat'
+      OUTPUTFORMAT
+        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+      LOCATION
+        '${s3path}'
+      TBLPROPERTIES (
+        'skip.header.line.count'='2',
+        'transient_lastDdlTime'='1691653869')
+    parameters:
+      s3path:
+        default: s3://prod-workshop-cloudfront-standard-logs/
+        description: S3 Path for cloudfront_standard_logs_table table
