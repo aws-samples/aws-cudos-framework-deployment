@@ -1,0 +1,140 @@
+dashboards:
+  CLOUDFRONT_STANDARD_LOGS ANALYSIS:
+    name: cloudfront_standard_logs analysis
+    templateId: cloudfront_standard_logs
+    sourceAccountId: 001055268041
+    region: us-east-1
+    dashboardId: cloudfront_standard_logs_dashboard
+    dependsOn:
+      datasets:
+      - cloudfront_standard_logs
+datasets:
+  cloudfront_standard_logs:
+    Data:
+      DataSetId: 9e15b9c8-cbf0-42d3-a7bc-a4adecb0b2f4
+      Name: cloudfront_standard_logs
+      PhysicalTableMap:
+        cb9b13e4-29ff-406d-8de2-796770b3ac79:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: cloudfront_standard_logs
+            InputColumns:
+            - Name: date
+              Type: DATETIME
+            - Name: time
+              Type: STRING
+            - Name: location
+              Type: STRING
+            - Name: bytes
+              Type: INTEGER
+            - Name: request_ip
+              Type: STRING
+            - Name: method
+              Type: STRING
+            - Name: host
+              Type: STRING
+            - Name: uri
+              Type: STRING
+            - Name: status
+              Type: INTEGER
+            - Name: referrer
+              Type: STRING
+            - Name: user_agent
+              Type: STRING
+            - Name: query_string
+              Type: STRING
+            - Name: cookie
+              Type: STRING
+            - Name: result_type
+              Type: STRING
+            - Name: request_id
+              Type: STRING
+            - Name: host_header
+              Type: STRING
+            - Name: request_protocol
+              Type: STRING
+            - Name: request_bytes
+              Type: INTEGER
+            - Name: time_taken
+              Type: DECIMAL
+            - Name: xforwarded_for
+              Type: STRING
+            - Name: ssl_protocol
+              Type: STRING
+            - Name: ssl_cipher
+              Type: STRING
+            - Name: response_result_type
+              Type: STRING
+            - Name: http_version
+              Type: STRING
+            - Name: fle_status
+              Type: STRING
+            - Name: fle_encrypted_fields
+              Type: INTEGER
+            - Name: c_port
+              Type: INTEGER
+            - Name: time_to_first_byte
+              Type: DECIMAL
+            - Name: x_edge_detailed_result_type
+              Type: STRING
+            - Name: sc_content_type
+              Type: STRING
+            - Name: sc_content_len
+              Type: INTEGER
+            - Name: sc_range_start
+              Type: INTEGER
+            - Name: sc_range_end
+              Type: INTEGER
+      LogicalTableMap:
+        e482f4dc-0666-4a23-9de2-2b8ea2c667ae:
+          Alias: cloudfront_standard_logs
+          DataTransforms:
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: Device
+                ColumnId: 4c0795ca-5389-4310-90fa-076b14ea6b66
+                Expression: ifelse((contains({user_agent},"android",CASE_INSENSITIVE)
+                  OR contains({user_agent},"iphone", CASE_INSENSITIVE) OR contains({user_agent},"ipad",
+                  CASE_INSENSITIVE)),'Mobile', 'Desktop')
+          - ProjectOperation:
+              ProjectedColumns:
+              - date
+              - time
+              - location
+              - bytes
+              - request_ip
+              - method
+              - host
+              - uri
+              - status
+              - referrer
+              - user_agent
+              - query_string
+              - cookie
+              - result_type
+              - request_id
+              - host_header
+              - request_protocol
+              - request_bytes
+              - time_taken
+              - xforwarded_for
+              - ssl_protocol
+              - ssl_cipher
+              - response_result_type
+              - http_version
+              - fle_status
+              - fle_encrypted_fields
+              - c_port
+              - time_to_first_byte
+              - x_edge_detailed_result_type
+              - sc_content_type
+              - sc_content_len
+              - sc_range_start
+              - sc_range_end
+              - Device
+          Source:
+            PhysicalTableId: cb9b13e4-29ff-406d-8de2-796770b3ac79
+      ImportMode: SPICE
+views: {}
