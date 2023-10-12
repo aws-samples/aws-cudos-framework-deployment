@@ -93,7 +93,7 @@ class QuickSight(CidBase):
             except self.client.exceptions.AccessDeniedException as exc:
                 logger.debug(exc)
                 pattern = f'Operation is being called from endpoint {self.region}, but your identity region is (.*). Please use the (.*) endpoint.'
-                match = re.search(pattern, e.response['Error']['Message'])
+                match = re.search(pattern, exc.response['Error']['Message'])
                 if match:
                     logger.info(f'Switching QuickSight identity region to {match.group(1)}')
                     self._identityRegion = match.group(1)
