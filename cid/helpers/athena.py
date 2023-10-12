@@ -167,7 +167,7 @@ class Athena(CidBase):
     def _ensure_workgroup(self, name: str) -> str:
         try:
             s3 = S3(session=self.session)
-            bucket_name = f'{self.partition}-athena-query-results-cid-{self.account_id}-{self.region}'
+            bucket_name = f'{self.partition}-athena-query-results-cid-{self.account_id}-{self.region}-debug'
             
             workgroup = self.client.get_work_group(WorkGroup=name)
             # "${AWS::Partition}-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}"
