@@ -23,10 +23,18 @@ class S3(CidBase):
             if int(ex.response['Error']['Code']) != 404:
                 raise CidError(f"Cannot check bucket {ex}!")
             
+            parameters = {
+                'ACL': 'private',
+                'Bucket': name
+            }
+            
+            if self.region != 'us-east-1':
+                parameters.update({'CreateBucketConfiguration': {'LocationConstraint': self.region}})
+            
             response = self.client.create_bucket(
-                ACL='private',
-                Bucket=name
+                **parameters
             )
+            
             response = self.client.put_bucket_encryption(
                 Bucket=name,
                 ServerSideEncryptionConfiguration={
