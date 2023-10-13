@@ -1,0 +1,292 @@
+dashboards:
+  CLOUDFRONT_REALTIME_LOGS_DASHBOARD:
+    dependsOn:
+      datasets:
+      - cloudfront_realtime_logs
+    name: cloudfront_realtime_logs_dashboard
+    dashboardId: cloudfront-realtime-logs-dashboard
+    templateId: cloudfront-realtime-logs-dashboard
+    sourceAccountId: '536475555964'
+    region: us-east-1
+datasets:
+  cloudfront_realtime_logs:
+    data:
+      DataSetId: 1ab8ec71-7d31-4f56-bc0c-36f72f430612
+      Name: cloudfront_realtime_logs
+      PhysicalTableMap:
+        24ed250c-dca7-41e6-9375-eb10bb21c036:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: cloudfront_realtime_logs
+            InputColumns:
+            - Name: timestamp
+              Type: DECIMAL
+            - Name: c_ip
+              Type: STRING
+            - Name: time_to_first_byte
+              Type: DECIMAL
+            - Name: sc_status
+              Type: INTEGER
+            - Name: sc_bytes
+              Type: INTEGER
+            - Name: cs_method
+              Type: STRING
+            - Name: cs_protocol
+              Type: STRING
+            - Name: cs_host
+              Type: STRING
+            - Name: cs_uri_stem
+              Type: STRING
+            - Name: cs_bytes
+              Type: INTEGER
+            - Name: x_edge_location
+              Type: STRING
+            - Name: x_edge_request_id
+              Type: STRING
+            - Name: x_host_header
+              Type: STRING
+            - Name: time_taken
+              Type: DECIMAL
+            - Name: cs_protocol_version
+              Type: STRING
+            - Name: c_ip_version
+              Type: STRING
+            - Name: cs_user_agent
+              Type: STRING
+            - Name: cs_referer
+              Type: STRING
+            - Name: cs_cookie
+              Type: STRING
+            - Name: cs_uri_query
+              Type: STRING
+            - Name: x_edge_response_result_type
+              Type: STRING
+            - Name: x_forwarded_for
+              Type: STRING
+            - Name: ssl_protocol
+              Type: STRING
+            - Name: ssl_cipher
+              Type: STRING
+            - Name: x_edge_result_type
+              Type: STRING
+            - Name: fle_encrypted_fields
+              Type: STRING
+            - Name: fle_status
+              Type: STRING
+            - Name: sc_content_type
+              Type: STRING
+            - Name: sc_content_len
+              Type: INTEGER
+            - Name: sc_range_start
+              Type: INTEGER
+            - Name: sc_range_end
+              Type: INTEGER
+            - Name: c_port
+              Type: INTEGER
+            - Name: x_edge_detailed_result_type
+              Type: STRING
+            - Name: c_country
+              Type: STRING
+            - Name: cs_accept_encoding
+              Type: STRING
+            - Name: cs_accept
+              Type: STRING
+            - Name: cache_behavior_path_pattern
+              Type: STRING
+            - Name: cs_headers
+              Type: STRING
+            - Name: cs_header_names
+              Type: STRING
+            - Name: cs_headers_count
+              Type: INTEGER
+            - Name: primary_distribution_id
+              Type: STRING
+            - Name: primary_distribution_dns_name
+              Type: STRING
+            - Name: origin_fbl
+              Type: DECIMAL
+            - Name: origin_lbl
+              Type: DECIMAL
+            - Name: asn
+              Type: INTEGER
+            - Name: year
+              Type: INTEGER
+            - Name: month
+              Type: INTEGER
+            - Name: day
+              Type: INTEGER
+            - Name: hour
+              Type: INTEGER
+      LogicalTableMap:
+        854093d8-2af6-45f1-b925-f9c7e88e4eee:
+          Alias: cloudfront_realtime_logs
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: timestamp
+              NewColumnType: DATETIME
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: Device
+                ColumnId: d3aacc58-7568-4027-be4d-af6c07b4cfe7
+                Expression: ifelse((contains({cs_user_agent},"android",CASE_INSENSITIVE)
+                  OR contains({cs_user_agent},"iphone", CASE_INSENSITIVE) OR contains({cs_user_agent},"ipad",
+                  CASE_INSENSITIVE)),'Mobile', 'Desktop')
+          - TagColumnOperation:
+              ColumnName: c_country
+              Tags:
+              - ColumnGeographicRole: COUNTRY
+          - ProjectOperation:
+              ProjectedColumns:
+              - timestamp
+              - c_ip
+              - time_to_first_byte
+              - sc_status
+              - sc_bytes
+              - cs_method
+              - cs_protocol
+              - cs_host
+              - cs_uri_stem
+              - cs_bytes
+              - x_edge_location
+              - x_edge_request_id
+              - x_host_header
+              - time_taken
+              - cs_protocol_version
+              - c_ip_version
+              - cs_user_agent
+              - cs_referer
+              - cs_cookie
+              - cs_uri_query
+              - x_edge_response_result_type
+              - x_forwarded_for
+              - ssl_protocol
+              - ssl_cipher
+              - x_edge_result_type
+              - fle_encrypted_fields
+              - fle_status
+              - sc_content_type
+              - sc_content_len
+              - sc_range_start
+              - sc_range_end
+              - c_port
+              - x_edge_detailed_result_type
+              - c_country
+              - cs_accept_encoding
+              - cs_accept
+              - cache_behavior_path_pattern
+              - cs_headers
+              - cs_header_names
+              - cs_headers_count
+              - primary_distribution_id
+              - primary_distribution_dns_name
+              - origin_fbl
+              - origin_lbl
+              - asn
+              - year
+              - month
+              - day
+              - hour
+              - Device
+          Source:
+            PhysicalTableId: 24ed250c-dca7-41e6-9375-eb10bb21c036
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - cloudfront_realtime_logs
+    schedules:
+    - default
+views:
+  cloudfront_realtime_logs:
+    dependsOn:
+      views:
+      - cloudfront_realtime_logs_table
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.cloudfront_realtime_logs AS
+      SELECT *
+      FROM
+        "cloudfront_realtime_logs_table"
+      WHERE (from_unixtime(timestamp) > (current_date - INTERVAL  '7' DAY))
+  cloudfront_realtime_logs_table:
+    data: |-
+      CREATE EXTERNAL TABLE `cloudfront_realtime_logs_table`(
+        `timestamp` float,
+        `c_ip` string,
+        `time_to_first_byte` float,
+        `sc_status` int,
+        `sc_bytes` int,
+        `cs_method` string,
+        `cs_protocol` string,
+        `cs_host` string,
+        `cs_uri_stem` string,
+        `cs_bytes` int,
+        `x_edge_location` string,
+        `x_edge_request_id` string,
+        `x_host_header` string,
+        `time_taken` float,
+        `cs_protocol_version` string,
+        `c_ip_version` string,
+        `cs_user_agent` string,
+        `cs_referer` string,
+        `cs_cookie` string,
+        `cs_uri_query` string,
+        `x_edge_response_result_type` string,
+        `x_forwarded_for` string,
+        `ssl_protocol` string,
+        `ssl_cipher` string,
+        `x_edge_result_type` string,
+        `fle_encrypted_fields` string,
+        `fle_status` string,
+        `sc_content_type` string,
+        `sc_content_len` bigint,
+        `sc_range_start` bigint,
+        `sc_range_end` bigint,
+        `c_port` int,
+        `x_edge_detailed_result_type` string,
+        `c_country` string,
+        `cs_accept_encoding` string,
+        `cs_accept` string,
+        `cache_behavior_path_pattern` string,
+        `cs_headers` string,
+        `cs_header_names` string,
+        `cs_headers_count` int,
+        `primary_distribution_id` string,
+        `primary_distribution_dns_name` string,
+        `origin_fbl` float,
+        `origin_lbl` float,
+        `asn` int)
+      PARTITIONED BY (
+        `year` int,
+        `month` int,
+        `day` int,
+        `hour` int)
+      ROW FORMAT DELIMITED
+        FIELDS TERMINATED BY '\t'
+      STORED AS INPUTFORMAT
+        'org.apache.hadoop.mapred.TextInputFormat'
+      OUTPUTFORMAT
+        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+      LOCATION
+        '${s3path}'
+      TBLPROPERTIES (
+        'has_encrypted_data'='false',
+        'projection.day.digits'='2',
+        'projection.day.range'='01,31',
+        'projection.day.type'='integer',
+        'projection.enabled'='true',
+        'projection.hour.digits'='2',
+        'projection.hour.range'='00,23',
+        'projection.hour.type'='integer',
+        'projection.month.digits'='2',
+        'projection.month.range'='01,12',
+        'projection.month.type'='integer',
+        'projection.year.digits'='4',
+        'projection.year.range'='2023,2030',
+        'projection.year.type'='integer',
+        'storage.location.template'='${s3path}${year}/${month}/${day}/${hour}',
+        'transient_lastDdlTime'='1691656083')
+    parameters:
+      s3path:
+        default: s3://prod-workshop-cloudfront-realtime-logs/
+        description: S3 Path for cloudfront_realtime_logs_table table
