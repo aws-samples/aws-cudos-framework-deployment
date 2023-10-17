@@ -258,7 +258,7 @@ class QuickSight(CidBase):
 
 
         # Fetch datasets
-        for dataset in dashboard.version.get('DataSetArns'):
+        for dataset in dashboard.version.get('DataSetArns', []):
             dataset_id = dataset.split('/')[-1]
             try:
                 _dataset = self.describe_dataset(id=dataset_id)
