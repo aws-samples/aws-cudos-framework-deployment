@@ -648,8 +648,25 @@ class QuickSight(CidBase):
 
     def select_user(self):
         """ Select a user from the list of users """
+        all_users = []
+        next_token = None
         try:
-            user_list = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default').get('UserList')
+            while True:
+                if next_token:
+                    response = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default', NextToken=next_token)
+                else:
+                    response = self.identityClient.list_users(AwsAccountId=self.account_id, Namespace='default')
+
+                user_list = response.get('UserList', [])
+                all_users.extend(user_list)
+
+                next_token = response.get('NextToken')
+                if not next_token:
+                    break
+
+            # Sort the users by UserName
+            user_list = sorted(all_users, key=lambda x: x.get('UserName'))
+
         except self.client.exceptions.AccessDeniedException as exc:
             raise CidCritical('AccessDenied for listing users, your can explicitly provide --quicksight-user parameter') from exc
 

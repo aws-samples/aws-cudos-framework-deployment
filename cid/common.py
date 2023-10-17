@@ -825,6 +825,7 @@ class Cid():
                 template_filename = 'data/permissions/dashboard_permissions_namespace.json'
             elif share_method == 'user':
                 template_filename = 'data/permissions/dashboard_permissions.json'
+                print('Fetching QuickSight users. Duration will scale with the number of users.')
                 user = self.qs.select_user()
                 while not user:
                     user_name = get_parameter(
