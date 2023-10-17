@@ -1010,41 +1010,19 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - athena:ListDataCatalogs
                   - lakeformation:GetDataAccess
+                  - athena:ListDataCatalogs
                   - athena:ListDatabases
                   - athena:ListTableMetadata
                 Resource: "*" # required https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-underlying-data.html
                               # Cannot restrict this. See https://docs.aws.amazon.com/athena/latest/ug/datacatalogs-example-policies.html#datacatalog-policy-listing-data-catalogs
-
               - Effect: Allow
                 Action:
-                  - athena:ListDatabases
-                  - s3:PutObject
-                  - s3:GetObject
-                  - s3:ListBucket
-                  - s3:GetBucketLocation
                   - glue:GetPartitions
                   - glue:GetDatabases
                   - glue:GetTable
                   - glue:GetTables
-                  - athena:ListDatabases
-                  - athena:ListDataCatalogs
-                  - athena:ListDatabases
-                  - athena:GetQueryExecution
-                  - athena:GetQueryResults
-                  - athena:StartQueryExecution
-                  - athena:GetQueryResultsStream
-                  - athena:ListTableMetadata
-                  - s3:ListBucketVersions
-
                 Resource:
-                  - Fn::If:
-                      - NeedDatabase
-                      - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
-                      - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
-                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
                   - Fn::If:
                      - NeedDatabase
@@ -1054,6 +1032,22 @@ Resources:
                      - NeedDatabase
                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
+              - Effect: Allow
+                Action:
+                  - athena:ListDatabases
+                  - athena:ListDataCatalogs
+                  - athena:ListDatabases
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:StartQueryExecution
+                  - athena:GetQueryResultsStream
+                  - athena:ListTableMetadata
+                Resource:
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                      - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
                   - Fn::If:
                      - NeedAthenaWorkgroup
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
