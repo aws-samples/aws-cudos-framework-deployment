@@ -1010,75 +1010,66 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - lakeformation:GetDataAccess
                   - athena:ListDataCatalogs
-                Resource: '*' # Cannot restrict this. See https://docs.aws.amazon.com/athena/latest/ug/datacatalogs-example-policies.html#datacatalog-policy-listing-data-catalogs
-
+                  - athena:ListDatabases
+                  - athena:ListTableMetadata
+                Resource: "*" # required https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-underlying-data.html
+                              # Cannot restrict this. See https://docs.aws.amazon.com/athena/latest/ug/datacatalogs-example-policies.html#datacatalog-policy-listing-data-catalogs
+              - Effect: Allow
+                Action:
+                  - glue:GetPartitions
+                  - glue:GetDatabases
+                  - glue:GetTable
+                  - glue:GetTables
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                  - Fn::If:
+                     - NeedDatabase
+                     - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                     - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - Fn::If:
+                     - NeedDatabase
+                     - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
+                     - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
               - Effect: Allow
                 Action:
                   - athena:ListDatabases
+                  - athena:ListDataCatalogs
+                  - athena:ListDatabases
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:StartQueryExecution
+                  - athena:GetQueryResultsStream
+                  - athena:ListTableMetadata
                 Resource:
                   - Fn::If:
                       - NeedDatabase
                       - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
                       - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
-              # - Effect: Allow
-              #   Action:
-              #     - athena:ListDatabases
-              #     - athena:ListTableMetadata
-              #   Resource:
-              #     - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
-              - Effect: Allow
-                Action:
-                  - glue:GetDatabases
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
-              - Effect: Allow
-                Action:
-                  - glue:GetTable
-                  - glue:GetPartitions
-                Resource:
-                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
-                   - Fn::If:
-                      - NeedDatabase
-                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
-                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
-                   - Fn::If:
-                      - NeedDatabase
-                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
-                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
-              - Effect: Allow
-                Action:
-                  - athena:GetQueryExecution
-                  - athena:StartQueryExecution
-                  - athena:GetQueryResultsStream
-                  - athena:GetQueryResults
-                Resource:
-                  Fn::If:
-                   - NeedAthenaWorkgroup
-                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
-                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
+                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
+                  - Fn::If:
+                     - NeedAthenaWorkgroup
+                     - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
+                     - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
               - Effect: Allow
                 Action:
                   - s3:GetBucketLocation
                   - s3:ListBucket
-                Resource:
-                  Fn::If:
-                    - NeedAthenaQueryResultsBucket
-                    - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
-                    - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}'
-              - Effect: Allow
-                Action:
                   - s3:GetObject
                   - s3:PutObject
+                  - s3:ListBucketMultipartUploads
+                  - s3:ListMultipartUploadParts
+                  - s3:AbortMultipartUpload
                 Resource:
-                  Fn::If:
-                    - NeedAthenaQueryResultsBucket
-                    - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
-                    - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
-              - Effect: Allow
-                Action:
-                  - lakeformation:GetDataAccess
-                Resource: "*" # required https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-underlying-data.html
+                  - Fn::If:
+                      - NeedAthenaQueryResultsBucket
+                      - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}'
+                      - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}'
+                  - Fn::If:
+                      - NeedAthenaQueryResultsBucket
+                      - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
+                      - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
 
   QuickSightDataSourceRolePolicyForODCBucket:
     Type: AWS::IAM::Policy
