@@ -1,0 +1,191 @@
+dashboards:
+  DATATRANSFER COST ANALYSIS DASHBOARD ENHANCED:
+    dependsOn:
+      datasets:
+      - data_transfer_view
+    name: DataTransfer Cost Analysis Dashboard Enhanced
+    dashboardId: datatransfer-cost-analysis-dashboard
+    templateId: data-transfer-aga-est-cost-analysis-template-enhanced-v5
+    sourceAccountId: '869004330191'
+    region: us-east-1
+datasets:
+  data_transfer_view:
+    data:
+      DataSetId: a75d09be-4c81-46df-8ae1-f83eb2ed10cc
+      Name: data_transfer_view
+      PhysicalTableMap:
+        62e77300-66ee-4669-b257-4823ffd5678a:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+        f578e7c1-d15d-4068-bb25-988a092a7333:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: data_transfer_view
+            InputColumns:
+            - Name: product_family
+              Type: STRING
+            - Name: product_servicecode
+              Type: STRING
+            - Name: product_servicename
+              Type: STRING
+            - Name: product_code
+              Type: STRING
+            - Name: usage_date
+              Type: DATETIME
+            - Name: billing_period
+              Type: DATETIME
+            - Name: payer_account_id
+              Type: STRING
+            - Name: linked_account_id
+              Type: STRING
+            - Name: product_name
+              Type: STRING
+            - Name: charge_type
+              Type: STRING
+            - Name: operation
+              Type: STRING
+            - Name: region
+              Type: STRING
+            - Name: usage_type
+              Type: STRING
+            - Name: from_location
+              Type: STRING
+            - Name: to_location
+              Type: STRING
+            - Name: from_location_type
+              Type: STRING
+            - Name: resource_id
+              Type: STRING
+            - Name: tbs
+              Type: DECIMAL
+            - Name: usage_quantity
+              Type: DECIMAL
+            - Name: blended_cost
+              Type: DECIMAL
+            - Name: unblended_cost
+              Type: DECIMAL
+            - Name: public_cost
+              Type: DECIMAL
+            - Name: blended_rate
+              Type: STRING
+            - Name: unblended_rate
+              Type: STRING
+            - Name: public_ondemand_rate
+              Type: STRING
+            - Name: data_transfer_type
+              Type: STRING
+      LogicalTableMap:
+        2d4d4fbe-5008-43cb-a002-6951663be497:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 62e77300-66ee-4669-b257-4823ffd5678a
+        50f036da-ca3a-4045-a3a1-e565ff5e04cd:
+          Alias: data_transfer_view
+          Source:
+            PhysicalTableId: f578e7c1-d15d-4068-bb25-988a092a7333
+        51e586f9-b55e-46cd-8e90-e7c0017fdfce:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - product_family
+              - product_servicecode
+              - product_servicename
+              - product_code
+              - usage_date
+              - billing_period
+              - payer_account_id
+              - linked_account_id
+              - product_name
+              - charge_type
+              - operation
+              - region
+              - usage_type
+              - from_location
+              - to_location
+              - from_location_type
+              - resource_id
+              - tbs
+              - usage_quantity
+              - blended_cost
+              - unblended_cost
+              - public_cost
+              - blended_rate
+              - unblended_rate
+              - public_ondemand_rate
+              - data_transfer_type
+              - account_id
+              - account_name
+          Source:
+            JoinInstruction:
+              LeftOperand: 50f036da-ca3a-4045-a3a1-e565ff5e04cd
+              RightOperand: 2d4d4fbe-5008-43cb-a002-6951663be497
+              Type: LEFT
+              OnClause: '{linked_account_id} = {account_id}'
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - data_transfer_view
+    schedules:
+    - default
+views:
+  account_map:
+    dependsOn:
+      cur: true
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.account_map AS
+      SELECT DISTINCT
+        line_item_usage_account_id account_id
+      , "max_by"(bill_payer_account_id, line_item_usage_start_date) parent_account_id
+      , "max_by"(line_item_usage_account_id, line_item_usage_start_date) account_name
+      , "max_by"(line_item_usage_account_id, line_item_usage_start_date) account_email_id
+      FROM
+        "${cur_table_name}"
+      GROUP BY line_item_usage_account_id
+  data_transfer_view:
+    dependsOn:
+      cur: true
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.data_transfer_view AS
+      SELECT
+        product_product_family product_family
+      , product_servicecode
+      , product_servicename
+      , line_item_product_code product_code
+      , line_item_usage_start_date usage_date
+      , bill_billing_period_start_date billing_period
+      , bill_payer_account_id payer_account_id
+      , line_item_usage_account_id linked_account_id
+      , product_product_name product_name
+      , line_item_line_item_type charge_type
+      , line_item_operation operation
+      , product_region region
+      , line_item_usage_type usage_type
+      , product_from_location from_location
+      , product_to_location to_location
+      , product_from_location_type from_location_type
+      , line_item_resource_id resource_id
+      , ("sum"((CASE WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) / 1024) TBs
+      , "sum"((CASE WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) usage_quantity
+      , "sum"(line_item_blended_cost) blended_cost
+      , "sum"(line_item_unblended_cost) unblended_cost
+      , "sum"(pricing_public_on_demand_cost) public_cost
+      , line_item_blended_rate blended_rate
+      , line_item_unblended_rate unblended_rate
+      , pricing_public_on_demand_rate public_ondemand_rate
+      , product_transfer_type data_transfer_type
+      FROM
+        ${athena_database_name}.${cur_table_name}
+      WHERE ((((line_item_usage_type LIKE '%Bytes%') AND (((line_item_usage_type LIKE '%In%') OR (line_item_usage_type LIKE '%Out%')) OR (line_item_usage_type LIKE '%Regional%'))) AND (line_item_line_item_type IN ('PrivateRateDiscount', 'Usage', 'EdpDiscount'))) AND ((((year = "format_datetime"(current_timestamp, 'YYYY')) AND (month = "format_datetime"(current_timestamp, 'MM'))) OR ((year = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '2' MONTH), 'YYYY')) AND ((month = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '2' MONTH), 'MM')) OR (month = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '2' MONTH), 'M'))))) OR ((year = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '1' MONTH), 'YYYY')) AND ((month = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '1' MONTH), 'MM')) OR (month = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '1' MONTH), 'M'))))))
+      GROUP BY line_item_product_code, line_item_usage_start_date, bill_billing_period_start_date, line_item_usage_account_id, bill_payer_account_id, product_product_name, line_item_line_item_type, line_item_operation, product_region, product_product_family, product_servicecode, product_servicename, line_item_usage_type, product_from_location, product_to_location, product_from_location_type, line_item_resource_id, line_item_blended_rate, product_transfer_type, product_usagetype, pricing_public_on_demand_cost, pricing_public_on_demand_rate, line_item_unblended_rate, line_item_unblended_cost, line_item_blended_cost
