@@ -433,10 +433,10 @@ Resources:
             Status: 'Enabled'
             ExpirationInDays: 7
     Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: W3045 # Consider using AWS::S3::BucketPolicy instead of AccessControl
-            reason: "Standard setup for Athena results bucket"
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045 #Consider using AWS::S3::BucketPolicy instead of AccessControl; standard Athena results setup
 
   MyAthenaWorkGroup:
     Type: AWS::Athena::WorkGroup
