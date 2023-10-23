@@ -432,6 +432,11 @@ Resources:
           - Id: DeleteContent
             Status: 'Enabled'
             ExpirationInDays: 7
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W3045 # Consider using AWS::S3::BucketPolicy instead of AccessControl
+            reason: "Standard setup for Athena results bucket"
 
   MyAthenaWorkGroup:
     Type: AWS::Athena::WorkGroup
