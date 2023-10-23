@@ -1075,7 +1075,7 @@ Resources:
     Type: AWS::IAM::Policy
     Condition: NeedQuickSightDataSourceRoleAndODC
     Properties:
-      PolicyName: S3Access
+      PolicyName: QuickSightDataSource-S3AccessODC
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -1099,7 +1099,7 @@ Resources:
     Type: AWS::IAM::Policy
     Condition: NeedQuickSightDataSourceRoleAndCUR
     Properties:
-      PolicyName: S3Access
+      PolicyName: QuickSightDataSource-S3AccessCUR
       PolicyDocument:
         Version: 2012-10-17
         Statement:
