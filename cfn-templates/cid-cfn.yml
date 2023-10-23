@@ -432,6 +432,11 @@ Resources:
           - Id: DeleteContent
             Status: 'Enabled'
             ExpirationInDays: 7
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045 #Consider using AWS::S3::BucketPolicy instead of AccessControl; standard Athena results setup
 
   MyAthenaWorkGroup:
     Type: AWS::Athena::WorkGroup
@@ -1075,7 +1080,7 @@ Resources:
     Type: AWS::IAM::Policy
     Condition: NeedQuickSightDataSourceRoleAndODC
     Properties:
-      PolicyName: S3Access
+      PolicyName: QuickSightDataSource-S3AccessODC
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -1099,7 +1104,7 @@ Resources:
     Type: AWS::IAM::Policy
     Condition: NeedQuickSightDataSourceRoleAndCUR
     Properties:
-      PolicyName: S3Access
+      PolicyName: QuickSightDataSource-S3AccessCUR
       PolicyDocument:
         Version: 2012-10-17
         Statement:
