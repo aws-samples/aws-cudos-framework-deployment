@@ -1047,6 +1047,7 @@ Resources:
                   - athena:StartQueryExecution
                   - athena:GetQueryResultsStream
                   - athena:ListTableMetadata
+                  - athena:GetTableMetadata
                 Resource:
                   - Fn::If:
                       - NeedDatabase
