@@ -287,7 +287,7 @@ class Cid():
         ''' load additional resources from command line parameters
         '''
         if self.get_resources('resources'):
-            source = get_parameters().get('resources')
+            source = self.get_resources('resources')
             logger.info(f'Loading resources from {source}')
             resources = {}
             try:
