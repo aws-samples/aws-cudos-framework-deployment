@@ -280,6 +280,8 @@ class Cid():
         except Exception as e:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
+    def get_page(self, source):
+        return requests.get(source, timeout=10)
 
     def load_resources(self):
         ''' load additional resources from command line parameters
@@ -290,7 +292,7 @@ class Cid():
             resources = {}
             try:
                 if source.startswith('https://'):
-                    resp = requests.get(source, timeout=10)
+                    resp = self.get_page(source)
                     assert resp.status_code in [200, 201], f'Error {resp.status_code} while loading url. {resp.text}'
                     resources = yaml.safe_load(resp.text)
                 else:
