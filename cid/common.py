@@ -280,11 +280,13 @@ class Cid():
         except Exception as e:
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
+    def get_resources(self, resources):
+        return get_parameters().get(resources)
 
     def load_resources(self):
         ''' load additional resources from command line parameters
         '''
-        if get_parameters().get('resources'):
+        if self.get_resources('resources'):
             source = get_parameters().get('resources')
             logger.info(f'Loading resources from {source}')
             resources = {}
