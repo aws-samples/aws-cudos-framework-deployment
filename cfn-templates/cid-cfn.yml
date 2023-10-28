@@ -269,7 +269,9 @@ Conditions:
   NeedQuickSightDataSourceRoleAndODC:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
-      - !Condition NeedDataCollectionLab
+      - Fn::Or:
+        - !Condition NeedDataCollectionLab
+        - !Condition NeedCUR # For CUR related dashboards we still need access to data collection for additional data (account map)
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
