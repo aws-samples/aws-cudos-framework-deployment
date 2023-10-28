@@ -266,12 +266,6 @@ Conditions:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
       - !Condition NeedCUR
-  NeedQuickSightDataSourceRoleAndODC:
-    Fn::And:
-      - !Condition NeedQuickSightDataSourceRole
-      - Fn::Or:
-        - !Condition NeedDataCollectionLab
-        - !Condition NeedCUR # For CUR related dashboards we still need access to data collection for additional data (account map)
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -789,7 +783,7 @@ Resources:
 
   ProcessedODCPath:
     Type: Custom::CustomResourceProcessPath
-    Condition: NeedDataCollectionLab
+    #Condition: NeedDataCollectionLab #Need to process ODC lab path regardless dashboards. CUR dashboards need ODC for account map
     Properties:
       ServiceToken: !GetAtt CustomResourceProcessPath.Arn
       s3path: !Ref OptimizationDataCollectionBucketPath
@@ -1081,7 +1075,7 @@ Resources:
 
   QuickSightDataSourceRolePolicyForODCBucket:
     Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceRoleAndODC
+    Condition: NeedQuickSightDataSourceRole     # We need ODC bucket even if ODC dashboards are not activated  (ex: for account map)
     Properties:
       PolicyName: QuickSightDataSource-S3AccessODC
       PolicyDocument:
