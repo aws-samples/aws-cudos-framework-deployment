@@ -385,14 +385,35 @@ class Cid():
 
 
         if dashboard_id is None:
-            dashboard_id = get_parameter(
-                param_name='dashboard-id',
-                message="Please select dashboard to install",
-                choices={
-                   f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
-                   for k, dashboard in self.resources.get('dashboards').items()
-                },
-            )
+            while True:
+                category_options = ['Foundational', 'Advanced', 'Additional'] + \
+                    sorted(list(set([
+                        f"{dashboard.get('category', 'Custom')}"
+                        for k, dashboard in self.resources.get('dashboards').items()
+                        if f"{dashboard.get('category', 'Custom')}" not in ('Foundational', 'Advanced', 'Additional')
+                    ])))
+                category = get_parameter(
+                    param_name='category',
+                    message="Please select a category of dashboard to install",
+                    choices=category_options,
+                )
+                print(category)
+                dashboard_options = {
+                    f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
+                    for k, dashboard in self.resources.get('dashboards').items() 
+                    if dashboard.get('category', 'Custom') == category
+                }
+                dashboard_options['<<< back'] = '<<< back'
+                dashboard_id = get_parameter(
+                    param_name='dashboard-id',
+                    message="Please select dashboard to install",
+                    choices=dashboard_options,
+                )
+                if dashboard_id != '<<< back':
+                    break
+                unset_parameter('category')
+                unset_parameter('dashboard-id')
+
         if not dashboard_id:
             print('No dashboard selected')
             return

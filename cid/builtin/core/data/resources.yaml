@@ -2,6 +2,7 @@
 # QuickSight Dashboards definitions
 dashboards:
   CUDOS:
+    category: 'Foundational'
     name: CUDOS Dashboard
     templateId: cudos_dashboard_v3
     dashboardId: cudos
@@ -18,6 +19,7 @@ dashboards:
       minTemplateDescription: "v4.75.0"
 
   CID:
+    category: 'Foundational'
     name: Cost Intelligence Dashboard
     templateId: Cost_Intelligence_Dashboard
     dashboardId: cost_intelligence_dashboard
@@ -32,6 +34,7 @@ dashboards:
       minTemplateDescription: "v3.1.0"
 
   KPI:
+    category: 'Foundational'
     name: KPI Dashboard
     templateId: kpi_dashboard
     dashboardId: kpi_dashboard
@@ -48,6 +51,7 @@ dashboards:
       minTemplateDescription: "v1.2.1"
 
   TAO:
+    category: 'Advanced'
     name: Trusted Advisor Organizational View
     templateId: ta-organizational-view
     dashboardId: ta-organizational-view
@@ -59,6 +63,7 @@ dashboards:
       minTemplateDescription: "v1.4.0"
 
   Trends:
+    category: 'Additional'
     name: Trends Dashboard
     templateId: cudos-trends-dashboard-template
     dashboardId: trends-dashboard
@@ -72,6 +77,7 @@ dashboards:
       minTemplateDescription: "v5.0.0"
 
   Compute Optimizer:
+    category: 'Advanced'
     name: Compute Optimizer Dashboard
     templateId: compute_optimizer
     dashboardId: compute-optimizer-dashboard
