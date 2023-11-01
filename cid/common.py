@@ -316,7 +316,7 @@ class Cid():
         '''
         catalog_url = get_parameters().get('catalog') or self.catalog_url
         try:
-            catalog = yaml.safe_load(self.get_page(catalog_url))
+            catalog = yaml.safe_load(self.get_page(catalog_url).text)
         except requests.exceptions.HTTPError as exc:
             logger.warning(f'Failed to load catalog url: {exc}')
             logger.debug(exc, exc_info=True)
