@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import urllib
 import logging
 import functools
 from pathlib import Path
@@ -50,6 +51,7 @@ class Cid():
         self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
         self._logger = None
+        self.catalog_url = 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/dashboards/catalog.yaml'
 
     def aws_login(self):
         params = {
@@ -281,27 +283,47 @@ class Cid():
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
     def get_page(self, source):
-        return requests.get(source, timeout=10)
+        resp = requests.get(source, timeout=10)
+        resp.raise_for_status()
+        return resp
 
     def load_resources(self):
         ''' load additional resources from command line parameters
         '''
+        self.load_catalog()
         if get_parameters().get('resources'):
             source = get_parameters().get('resources')
-            logger.info(f'Loading resources from {source}')
-            resources = {}
-            try:
-                if source.startswith('https://'):
-                    resp = self.get_page(source)
-                    assert resp.status_code in [200, 201], f'Error {resp.status_code} while loading url. {resp.text}'
-                    resources = yaml.safe_load(resp.text)
-                else:
-                    with open(source, encoding='utf-8') as file_:
-                        resources = yaml.safe_load(file_)
-            except Exception as exc:
-                raise CidCritical(f'Failed to load resources from {source}: {type(exc)} {exc}')
-            self.resources = always_merger.merge(self.resources, resources)
+            self.load_resource_file(source)
         self.resources = self.resources_with_global_parameters(self.resources)
+
+    def load_resource_file(self, source):
+        ''' load additional resources from resource file
+        '''
+        logger.debug(f'Loading resources from {source}')
+        resources = {}
+        try:
+            if source.startswith('https://'):
+                resources = yaml.safe_load(self.get_page(source).text)
+            else:
+                with open(source, encoding='utf-8') as file_:
+                    resources = yaml.safe_load(file_)
+        except Exception as exc:
+            raise CidCritical(f'Failed to load resources from {source}.') from exc
+        self.resources = always_merger.merge(self.resources, resources)
+
+    def load_catalog(self, catalog_url=None):
+        ''' load additional resources from catalog
+        '''
+        catalog_url = get_parameters().get('catalog') or self.catalog_url
+        try:
+            catalog = yaml.safe_load(self.get_page(catalog_url))
+        except requests.exceptions.HTTPError as exc:
+            logger.warning(f'Failed to load catalog url: {exc}')
+            logger.debug(exc, exc_info=True)
+            return
+        for resource_ref in catalog.get('Resources'):
+            url = urllib.parse.urljoin(catalog_url, resource_ref.get("Url"))
+            self.load_resource_file(url)
 
 
     def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict=None):

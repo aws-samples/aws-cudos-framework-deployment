@@ -1,0 +1,6 @@
+Resources:
+  - Url: cost-anomalies/cost-anomalies.yaml
+  - Url: sustainability-proxy-metrics/sustainability-proxy-metrics.yaml
+  - Url: cloudfront-dashboard-templates/cloudfront_standard_logs_dashboard.yaml
+  - Url: cloudfront-dashboard-templates/cloudfront_realtime_logs_dashboard.yaml
+  - Url: data-transfer/DataTransfer-Cost-Analysis-Dashboard.yaml
