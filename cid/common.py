@@ -383,8 +383,8 @@ class Cid():
         # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
         self.qs.discover_dashboards()
 
-
-        if dashboard_id is None:
+        dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
+        if not dashboard_id:
             while True:
                 category_options = ['Foundational', 'Advanced', 'Additional'] + \
                     sorted(list(set([
@@ -397,10 +397,9 @@ class Cid():
                     message="Please select a category of dashboard to install",
                     choices=category_options,
                 )
-                print(category)
                 dashboard_options = {
                     f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
-                    for k, dashboard in self.resources.get('dashboards').items() 
+                    for k, dashboard in self.resources.get('dashboards').items()
                     if dashboard.get('category', 'Custom') == category
                 }
                 dashboard_options['<<< back'] = '<<< back'
