@@ -308,7 +308,8 @@ class Cid():
                 with open(source, encoding='utf-8') as file_:
                     resources = yaml.safe_load(file_)
         except Exception as exc:
-            raise CidCritical(f'Failed to load resources from {source}.') from exc
+            logger.warning(f'Failed to load resources from {source}: {exc}')
+            return
         self.resources = always_merger.merge(self.resources, resources)
 
     def load_catalog(self, catalog_url=None):
@@ -385,33 +386,31 @@ class Cid():
 
         dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
         if not dashboard_id:
+            standard_categories = ['Foundational', 'Advanced', 'Additional']
+            all_categories = set([f"{dashboard.get('category', 'Custom')}" for dashboard in self.resources.get('dashboards').values()])
+            non_standard_categories = [cat for cat in all_categories if cat not in standard_categories]
             while True:
-                category_options = ['Foundational', 'Advanced', 'Additional'] + \
-                    sorted(list(set([
-                        f"{dashboard.get('category', 'Custom')}"
-                        for k, dashboard in self.resources.get('dashboards').items()
-                        if f"{dashboard.get('category', 'Custom')}" not in ('Foundational', 'Advanced', 'Additional')
-                    ])))
+                category_options =  standard_categories + sorted(non_standard_categories)
                 category = get_parameter(
                     param_name='category',
-                    message="Please select a category of dashboard to install",
+                    message="Please select a category of dashboard to deploy",
                     choices=category_options,
                 )
-                dashboard_options = {
-                    f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
-                    for k, dashboard in self.resources.get('dashboards').items()
-                    if dashboard.get('category', 'Custom') == category
-                }
+                dashboard_options = {}
+                for dashboard in self.resources.get('dashboards').values():
+                    if dashboard.get('category', 'Custom') == category:
+                        dashboard_options[f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
                 dashboard_options['<<< back'] = '<<< back'
                 dashboard_id = get_parameter(
                     param_name='dashboard-id',
-                    message="Please select dashboard to install",
+                    message="Please select a dashboard to deploy",
                     choices=dashboard_options,
                 )
-                if dashboard_id != '<<< back':
-                    break
-                unset_parameter('category')
-                unset_parameter('dashboard-id')
+                if dashboard_id == '<<< back':
+                    unset_parameter('category')
+                    unset_parameter('dashboard-id')
+                    continue
+                break
 
         if not dashboard_id:
             print('No dashboard selected')

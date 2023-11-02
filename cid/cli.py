@@ -111,6 +111,7 @@ def deploy(ctx, **kwargs):
     
     \b
     Command options:
+     --category TEXT                       The dashboards category to choose from. Not needed if dashboard-id provided directly
      --dashboard-id TEXT                   QuickSight dashboard id (cudos, cost_intelligence_dashboard, kpi_dashboard, ta-organizational-view, trends-dashboard etc)
      --athena-database TEXT                Athena database
      --athena-workgroup TEXT               Athena workgroup
@@ -134,7 +135,7 @@ def deploy(ctx, **kwargs):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def export(ctx, **kwargs):
-    """Expot Dashboard
+    """Export Dashboard
     
     \b
     Command options:
@@ -148,6 +149,7 @@ def export(ctx, **kwargs):
                (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSight Template)
         --export-known-datasets
             (no|yes)                 If 'yes' the export will include DataSets that are already in resources file. Default = no
+        --category TEXT              The dashboards category. Default = Custom
         --output                     A filename (.yaml)
     """
     ctx.obj.export(**kwargs)

@@ -262,6 +262,7 @@ def export_analysis(qs, athena):
     }
     dashboard_resource['name'] = analysis['Name']
     dashboard_resource['dashboardId'] = dashboard_id
+    dashboard_resource['category'] = get_parameters().get('category', 'Custom')
 
     dashboard_export_method = None
     if get_parameters().get('template-id'):
