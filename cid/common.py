@@ -389,25 +389,20 @@ class Cid():
             standard_categories = ['Foundational', 'Advanced', 'Additional']
             all_categories = set([f"{dashboard.get('category', 'Custom')}" for dashboard in self.resources.get('dashboards').values()])
             non_standard_categories = [cat for cat in all_categories if cat not in standard_categories]
-            while True:
-                category_options =  standard_categories + sorted(non_standard_categories)
-                category = get_parameter(
-                    param_name='category',
-                    message="Please select a category of dashboard to deploy",
-                    choices=category_options,
-                )
-                dashboard_options = {}
+            categories =  standard_categories + sorted(non_standard_categories)
+            dashboard_options = {}
+            for category in categories:
+                dashboard_options[f'{category.upper()}'] = '[category]'
                 for dashboard in self.resources.get('dashboards').values():
                     if dashboard.get('category', 'Custom') == category:
-                        dashboard_options[f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
-                dashboard_options['<<< back'] = '<<< back'
+                        dashboard_options[f"  [{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
+            while True:
                 dashboard_id = get_parameter(
                     param_name='dashboard-id',
                     message="Please select a dashboard to deploy",
                     choices=dashboard_options,
                 )
-                if dashboard_id == '<<< back':
-                    unset_parameter('category')
+                if dashboard_id == '[category]':
                     unset_parameter('dashboard-id')
                     continue
                 break
