@@ -467,7 +467,7 @@ class Cid():
                     if not isinstance(ds, Dataset) or ds.name != dataset_name:
                         continue
                     if dashboard_definition.get('templateId'):
-                        # For templates we can additionaly verify dataset fields
+                        # For templates we can additionally verify dataset fields
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                         src_fields = source_template.datasets.get(ds_map.get(dataset_name, dataset_name) )
                         required_fileds = {col.get('Name'): col.get('DataType') for col in src_fields}
@@ -481,7 +481,7 @@ class Cid():
                         else:
                             matching_datasets.append(ds)
                     else:
-                        # for definitions datasets we do not have any possibilty to check if dataset with a given name matches
+                        # for definitions datasets we do not have any possibility to check if dataset with a given name matches
                         matching_datasets.append(ds)
 
                 if not matching_datasets:
@@ -924,10 +924,7 @@ class Cid():
 
 
     def check_dashboard_version_compatibility(self, dashboard_id):
-        
-        """
-            Returns True | False | None if could not check 
-        """
+        """ Returns True | False | None if could not check """
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         except CidCritical:
@@ -935,14 +932,14 @@ class Cid():
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
-        if not isinstance(dashboard.deployedTemplate, CidQsTemplate): 
+        if not isinstance(dashboard.deployedTemplate, CidQsTemplate):
             print(f'Dashboard "{dashboard_id}" does not have a versioned template')
             return None
         if not isinstance(dashboard.sourceTemplate, CidQsTemplate):
             print(f"Cannot access QuickSight source template for {dashboard_id}")
             return None
         try:
-            cid_version = dashboard.deployedTemplate.cid_version            
+            cid_version = dashboard.deployedTemplate.cid_version
         except ValueError:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
             cid_version = "N/A"
@@ -954,7 +951,7 @@ class Cid():
             cid_version_latest = "N/A"
 
         if dashboard.latest:
-            print("You are up to date!")       
+            print("You are up to date!")
             print(f"  CID Version      {cid_version}")
             print(f"  TemplateVersion  {dashboard.deployed_version} ")
 
@@ -977,9 +974,9 @@ class Cid():
             compatible = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
         except ValueError as e:
             logger.info(e)
-            
+
         return compatible
-    
+
     def update_dashboard(self, dashboard_id, dashboard_definition):
 
         dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
@@ -996,8 +993,7 @@ class Cid():
             print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         else:
             print('Unable to determine dashboard source.')
-        
-                            
+
         if dashboard.status == 'legacy':
             if get_parameter(
                 param_name=f'confirm-update',
@@ -1016,7 +1012,7 @@ class Cid():
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')
         logger.debug(f"Updating {dashboard_id}")
-        
+
         try:
             self.qs.update_dashboard(dashboard, dashboard_definition)
             print('Update completed\n')
