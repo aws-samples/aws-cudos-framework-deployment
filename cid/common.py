@@ -108,7 +108,7 @@ class Cid():
                 'glue': Glue(self.base.session)
             })
         return self._clients.get('glue')
-    
+
     @property
     def organizations(self) -> Organizations:
         if not self._clients.get('organizations'):
