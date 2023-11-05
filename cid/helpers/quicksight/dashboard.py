@@ -104,7 +104,8 @@ class Dashboard(CidQsResource):
         """Display status of dashboard"""
 
         cid_print('\n<BOLD>Dashboard status:<END>')
-        cid_print(f"  <BOLD>Name (id)<:END> {self.name} ({self.id})")
+        cid_print(f"  <BOLD>Id:<END>        {self.id}")
+        cid_print(f"  <BOLD>Name:<END>      {self.name}")
         cid_print(f"  <BOLD>Health:<END>    {'<GREEN>healthy<END>' if self.health else '<RED>unhealthy<END>'}")
         cid_print(f"  <BOLD>Status:<END>    {'<GREEN>' + self.status + '<END>' if self.health else '<RED>' + self.status + '<END>'}")
 
@@ -133,12 +134,12 @@ class Dashboard(CidQsResource):
             cid_print(f"  <BOLD>Version:<END>   <YELLOW>{str(cid_version): <8} --> {str(cid_version_latest): <8}<END>")
             cid_print(f"  <BOLD>VersionId:<END> <YELLOW>{str(self.deployed_version): <8} --> {str(self.latest_version): <8}<END>")
 
-        cid_print('  Owners:')
+        cid_print('  <BOLD>Owners:<END>')
         try:
             permissions = self.qs.get_dashboard_permissions(self.id)
             for permission in permissions:
                 if 'quicksight:UpdateDashboardPermissions' in permission["Actions"]:
-                    cid_print('    ' +permission["Principal"].split('user/default/')[-1])
+                    cid_print('    ' + permission["Principal"].split('user/default/')[-1])
         except Exception as exc:
             if "AccessDenied" in str(exc):
                 cid_print('     <RED>AccessDenied<END>')
