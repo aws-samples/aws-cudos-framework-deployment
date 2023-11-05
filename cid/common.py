@@ -112,7 +112,7 @@ class Cid():
                 'glue': Glue(self.base.session)
             })
         return self._clients.get('glue')
-    
+
     @property
     def organizations(self) -> Organizations:
         if not self._clients.get('organizations'):
@@ -399,7 +399,8 @@ class Cid():
                 dashboard_options[f'{category.upper()}'] = '[category]'
                 for dashboard in self.resources.get('dashboards').values():
                     if dashboard.get('category', 'Custom') == category:
-                        dashboard_options[f"  [{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
+                        check = '✓' if dashboard.get('dashboardId') in self.qs.dashboards else ' '
+                        dashboard_options[f" {check}[{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
             while True:
                 dashboard_id = get_parameter(
                     param_name='dashboard-id',
@@ -476,13 +477,13 @@ class Cid():
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
                 return
-            logger.info("Swich to recursive mode")
+            logger.info("Switch to recursive mode")
             recursive = True
 
         if recursive:
             self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
 
-        # Find datasets for template or defintion
+        # Find datasets for template or definition
         if not dashboard_definition.get('datasets'):
             dashboard_definition['datasets'] = {}
 
@@ -507,12 +508,12 @@ class Cid():
                     if not isinstance(ds, Dataset) or ds.name != dataset_name:
                         continue
                     if dashboard_definition.get('templateId'):
-                        # For templates we can additionaly verify dataset fields
+                        # For templates we can additionally verify dataset fields
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                         src_fields = source_template.datasets.get(ds_map.get(dataset_name, dataset_name) )
-                        required_fileds = {col.get('Name'): col.get('DataType') for col in src_fields}
+                        required_fields = {col.get('Name'): col.get('DataType') for col in src_fields}
                         unmatched = {}
-                        for k, v in required_fileds.items():
+                        for k, v in required_fields.items():
                             if k not in dataset_fields or dataset_fields[k] != v:
                                 unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
                         logger.debug(f'unmatched_fields={unmatched}')
@@ -1056,7 +1057,7 @@ class Cid():
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')
         logger.debug(f"Updating {dashboard_id}")
-        
+
         try:
             self.qs.update_dashboard(dashboard, dashboard_definition)
             print('Update completed\n')
