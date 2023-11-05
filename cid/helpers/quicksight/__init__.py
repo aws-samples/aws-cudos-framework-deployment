@@ -549,7 +549,7 @@ class QuickSight(CidBase):
         except Exception as exc:
             logger.debug(exc, exc_info=True)
 
-    def discover_dashboards(self, display: bool=False, refresh: bool=False) -> None:
+    def discover_dashboards(self, refresh: bool=False) -> None:
         """ Discover deployed dashboards """
         if refresh or self._dashboards is None:
             self._dashboards = {}
@@ -572,15 +572,6 @@ class QuickSight(CidBase):
                 self.discover_dashboard(dashboard_id)
                 # Update progress bar
                 bar.update(0, 'Complete')
-        if not display:
-            return
-        for dashboard in self._dashboards.values():
-            if dashboard.health:
-                health = 'healthy'
-            else:
-                health = 'unhealthy'
-            print(f'\t{dashboard.name} ({dashboard.id}, {health}, {dashboard.status})')
-
 
     def list_dashboards(self) -> list:
         parameters = {

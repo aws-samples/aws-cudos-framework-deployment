@@ -951,29 +951,21 @@ class Cid():
             cid_version_latest = "N/A"
 
         if dashboard.latest:
-            print("You are up to date!")
-            print(f"  CID Version      {cid_version}")
-            print(f"  TemplateVersion  {dashboard.deployed_version} ")
-
-            logger.debug("The dashboard is up-to-date")
-            logger.debug(f"CID Version      {cid_version}")
-            logger.debug(f"TemplateVersion  {dashboard.deployed_version} ")
+            cid_print("You are up to date!")
+            cid_print(f"  Version    {cid_version}")
+            cid_print(f"  VersionId  {dashboard.deployed_version} ")
         else:
-            print(f"An update is available:")
-            print("                   Deployed -> Latest")
-            print(f"  CID Version      {str(cid_version): <9}   {str(cid_version_latest): <6}")
-            print(f"  TemplateVersion  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <6}")
-
-            logger.debug("An update is available")
-            logger.debug(f"CID Version      {str(cid_version): <9} --> {str(cid_version_latest): <6}")
-            logger.debug(f"TemplateVersion  {str(dashboard.deployedTemplate.version): <9} -->  {dashboard.latest_version: <6}")
+            cid_print(f"An update is available:")
+            cid_print("              Deployed -> Latest")
+            cid_print(f"  Version    {str(cid_version): <9}   {str(cid_version_latest): <9}")
+            cid_print(f"  VersionId  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <9}")
 
         # Check if version are compatible
         compatible = None
         try:
             compatible = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
-        except ValueError as e:
-            logger.info(e)
+        except ValueError as exc:
+            logger.info(exc)
 
         return compatible
 
