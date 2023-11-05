@@ -309,6 +309,8 @@ class Cid():
         try:
             if source.startswith('https://'):
                 resources = yaml.safe_load(self.get_page(source).text)
+                if not isinstance(resources, dict):
+                    raise CidCritical(f'Failed to load {source}. Got {type(resources)} ({repr(resources)[:150]}...)')
             else:
                 with open(source, encoding='utf-8') as file_:
                     resources = yaml.safe_load(file_)
