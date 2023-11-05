@@ -326,7 +326,7 @@ class Cid():
             logger.warning(f'Failed to load catalog url: {exc}')
             logger.debug(exc, exc_info=True)
             return
-        for resource_ref in catalog.get('Resources'):
+        for resource_ref in catalog.get('Resources', []):
             url = urllib.parse.urljoin(catalog_url, resource_ref.get("Url"))
             self.load_resource_file(url)
 
