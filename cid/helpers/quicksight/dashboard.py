@@ -103,13 +103,13 @@ class Dashboard(CidQsResource):
     def display_status(self) -> None:
         """Display status of dashboard"""
 
-        cid_print('\nDashboard status:')
-        cid_print(f"  Name (id): {self.name} ({self.id})")
-        cid_print(f"  Health: {'<GREEN>healthy<END>' if self.health else '<RED>unhealthy<END>'}")
-        cid_print(f"  Status: {'<GREEN>' + self.status + '<END>' if self.health else '<RED>' + self.status + '<END>'}")
+        cid_print('\n<BOLD>Dashboard status:<END>')
+        cid_print(f"  <BOLD>Name (id)<:END> {self.name} ({self.id})")
+        cid_print(f"  <BOLD>Health:<END>    {'<GREEN>healthy<END>' if self.health else '<RED>unhealthy<END>'}")
+        cid_print(f"  <BOLD>Status:<END>    {'<GREEN>' + self.status + '<END>' if self.health else '<RED>' + self.status + '<END>'}")
 
         if self.status_detail:
-            cid_print(f"  Status detail: {self.status_detail}")
+            cid_print(f"  <BOLD>Status detail:<END> {self.status_detail}")
 
         cid_version = "N/A"
         cid_version_latest =  "N/A"
@@ -126,12 +126,12 @@ class Dashboard(CidQsResource):
             logger.debug("The latest version of the dashboard could not be retrieved")
 
         if self.latest:
-            cid_print(f"  Version   <GREEN>{cid_version}<END> (latest)")
-            cid_print(f"  VersionId <GREEN>{self.deployed_version}<END> (latest)")
+            cid_print(f"  <BOLD>Version:<END>   <GREEN>{cid_version}<END> (latest)")
+            cid_print(f"  <BOLD>VersionId:<END> <GREEN>{self.deployed_version}<END> (latest)")
         else:
             logger.debug("An update is available")
-            cid_print(f"  Version   <YELLOW>{str(cid_version): <8} --> {str(cid_version_latest): <8}<END>")
-            cid_print(f"  VersionId <YELLOW>{str(self.deployed_version): <8} --> {str(self.latest_version): <8}<END>")
+            cid_print(f"  <BOLD>Version:<END>   <YELLOW>{str(cid_version): <8} --> {str(cid_version_latest): <8}<END>")
+            cid_print(f"  <BOLD>VersionId:<END> <YELLOW>{str(self.deployed_version): <8} --> {str(self.latest_version): <8}<END>")
 
         cid_print('  Owners:')
         try:
@@ -144,7 +144,7 @@ class Dashboard(CidQsResource):
                 cid_print('     <RED>AccessDenied<END>')
 
         if self.datasets:
-            cid_print(f"  Datasets:")
+            cid_print(f"  <BOLD>Datasets:<END>")
             for dataset_name, dataset_id in  sorted(self.datasets.items()):
                 status = self.qs.get_dataset_last_ingestion(dataset_id) or '<BLUE>DIRECT<END>'
                 cid_print(f'    {dataset_name: <36} ({dataset_id: <36}) {status}')
