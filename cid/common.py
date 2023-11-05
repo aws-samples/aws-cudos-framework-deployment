@@ -51,7 +51,9 @@ class Cid():
         self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
         self._logger = None
-        self.catalog_url = 'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/dashboards/catalog.yaml'
+        self.catalog_urls = [
+            'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/dashboards/catalog.yaml',
+        ]
 
     def aws_login(self):
         params = {
@@ -290,7 +292,10 @@ class Cid():
     def load_resources(self):
         ''' load additional resources from command line parameters
         '''
-        self.load_catalog()
+        if get_parameters().get('catalog'):
+            self.catalog_urls = get_parameters().get('catalog').split(',')
+        for catalog_url in self.catalog_urls:
+            self.load_catalog(catalog_url)
         if get_parameters().get('resources'):
             source = get_parameters().get('resources')
             self.load_resource_file(source)
@@ -312,10 +317,9 @@ class Cid():
             return
         self.resources = always_merger.merge(self.resources, resources)
 
-    def load_catalog(self, catalog_url=None):
+    def load_catalog(self, catalog_url):
         ''' load additional resources from catalog
         '''
-        catalog_url = get_parameters().get('catalog') or self.catalog_url
         try:
             catalog = yaml.safe_load(self.get_page(catalog_url).text)
         except requests.exceptions.HTTPError as exc:
