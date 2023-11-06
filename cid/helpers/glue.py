@@ -13,7 +13,6 @@ class Glue(CidBase):
         # QuickSight client
         self.client = self.session.client('glue', region_name=self.region)
 
-
     def create_or_update_table(self, view_name: str, view_query: str) -> None:
         table = json.loads(view_query)
         try:
@@ -32,3 +31,11 @@ class Glue(CidBase):
             )
         except self.client.exceptions.EntityNotFoundException:
             return True
+
+    def create_or_update_crawler(self, crawler_definition) -> None:
+        try:
+            self.client.create_crawler(**crawler_definition)
+        except self.client.exceptions.AlreadyExistsException:
+            logger.info(f'Updating crawler')
+            self.client.update_table(**crawler_definition)
+

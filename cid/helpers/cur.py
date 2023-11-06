@@ -2,7 +2,7 @@ import json
 import logging
 
 from cid.base import CidBase
-from cid.helpers import Athena
+from cid.helpers import Athena, Glue
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
@@ -53,7 +53,6 @@ class CUR(CidBase):
     _hasReservations = None
     _configured = None
     _status = str()
-    
 
     def __init__(self, session) -> None:
         super().__init__(session)
@@ -142,25 +141,27 @@ class CUR(CidBase):
             # Look all tables and filter ones with CUR fields
             all_tables = self.athena.list_table_metadata()
             if not all_tables:
-                raise CidCritical(
+                logger.warning(
                     f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}.'
                     f' (Hint: If you see tables in this Database, please check AWS Lake Formation permissions)'
                 )
             cur_tables = [tab for tab in all_tables if self.table_is_cur(table=tab)]
 
             if not cur_tables:
-                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.curRequiredColumns}.')
-            if len(cur_tables) == 1:
-                self._metadata = cur_tables[0]
-                self._tableName = self._metadata.get('Name')
-                logger.info('1 CUR table found: %s', self._tableName)
-            elif len(cur_tables) > 1:
-                self._tableName =  get_parameter(
-                    param_name='cur-table-name',
-                    message="Multiple CUR tables found, please select one",
-                    choices=sorted([v.get('Name') for v in cur_tables], reverse=True),
-                )
-                self._metadata = self.athena.get_table_metadata(self._tableName)
+                logger.warning(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.curRequiredColumns}.')
+
+            choices = sorted([v.get('Name') for v in cur_tables], reverse=True)
+
+            answer =  get_parameter(
+                param_name='cur-table-name',
+                message="Multiple CUR tables found, please select one",
+                choices=choices + ['Create a CUR table and Crawler'],
+            )
+            if answer == 'Create a CUR table and Crawler':
+                self._tableName = self.create_cur_table_and_crawler()
+            else:
+                self._tableName = answer
+            self._metadata = self.athena.get_table_metadata(self._tableName)
         return self._metadata
 
     @property
@@ -171,3 +172,10 @@ class CUR(CidBase):
     def tag_and_cost_category_fields(self) -> list:
         """ Returns all tags and cost category fields. """
         return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
+
+    def create_cur_table_and_crawler(self):
+        glue = Glue(self.session)
+        table = glue.create_or_update_table(cur_table_definition)
+        glue.create_or_update_crawler(cur_crawler_definition)
+        glue.wait_for_crawler_to_finish()
+        return table
