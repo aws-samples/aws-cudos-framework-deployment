@@ -52,7 +52,7 @@ Metadata:
       CURBucketPath:
         default: "Path to Cost and Usage report"
       DeployCUDOSDashboard:
-        default: "Deploy CUDOS Dashboard v4 [use for cleanup of old version only]"
+        default: "CUDOS Dashboard v4 - Deprecated [set 'no' to delete]"
       DeployCUDOSv5:
         default: "Deploy CUDOS v5 Dashboard"
       DeployCostIntelligenceDashboard:
@@ -146,7 +146,7 @@ Parameters:
   CidVersion:
     Type: String
     MinLength: 5
-    Default: 0.2.31
+    Default: 0.2.30
     Description: A version of CID package
   Suffix:
     Type: String
