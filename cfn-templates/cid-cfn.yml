@@ -38,7 +38,7 @@ Metadata:
           - QuickSightDataSourceRoleName
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
-          - DataBuketsKmsKeyArns
+          - DataBucketsKmsKeyArns
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -82,7 +82,7 @@ Metadata:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
-      DataBuketsKmsKeyArns:
+      DataBucketsKmsKeyArns:
         default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
       PrimaryTagName:
         Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
@@ -113,11 +113,11 @@ Parameters:
   QuickSightDataSetRefreshSchedule:
     Type: String
     Default: ''
-    Description: 'Cron expression on when to refresh spice datasets via Lambda. Only needed if some difficulities with refresh scheduling via API.'
+    Description: 'Cron expression on when to refresh spice datasets via Lambda. Only needed if some difficulties with refresh scheduling via API.'
   QuickSightDataSourceRoleName:
     Type: String
     Default: 'CidQuickSightDataSourceRole'
-    Description: "IAM Role Name to be used on QuckSight Datasource Creation. If empty - then the Default QuckSight Role will be used; if provided other existing role, will use that Role; if name equal to 'CidQuickSightDataSourceRole', then a role will be created by this CloudFromation)."
+    Description: "IAM Role Name to be used on QuickSight Datasource Creation. If empty - then the Default QuickSight Role will be used; if provided other existing role, will use that Role; if name equal to 'CidQuickSightDataSourceRole', then a role will be created by this CloudFromation)."
   CURBucketPath:
     Type: String
     MinLength: 3
@@ -187,7 +187,7 @@ Parameters:
     Type: String
     Description: Existing Glue Data Catalog
     Default: "AwsDataCatalog"
-  DataBuketsKmsKeyArns:
+  DataBucketsKmsKeyArns:
     Type: String
     Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
     Default: "*"
@@ -198,7 +198,7 @@ Parameters:
     AllowedValues: ["yes", "no"]
   PrimaryTagName:
     Type: String
-    Description: Choose a tag name for Primary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leve as is if not sure.
+    Description: Choose a tag name for Primary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leave as is if not sure.
     Default: "owner"
     MinLength: 1 # cid cmd do not accept empty parameters
     AllowedPattern: "[a-zA-Z0-9_]*"
@@ -237,12 +237,12 @@ Conditions:
       - !Equals [ !Ref CURTableName, "" ]
       - !Condition NeedCUR
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  NeedDataBucketsKms: !Equals [ !Ref DataBuketsKmsKeyArns, "" ]
+  NeedDataBucketsKms: !Equals [ !Ref DataBucketsKmsKeyArns, "" ]
   NeedDataBucketsKmsAndNeedCURTable:
     Fn::And:
       - !Condition NeedDataBucketsKms
       - !Condition NeedCURTable
-  NeedDatasource: !Not [ !Equals [ !Ref "AWS::Region", "eu-west-3" ] ] # In eu-west-3 CFN QS Dataset resource is not availble yet.
+  NeedDatasource: !Not [ !Equals [ !Ref "AWS::Region", "eu-west-3" ] ] # In eu-west-3 CFN QS Dataset resource is not available yet.
   NeedLakeFormationEnabled:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
@@ -598,7 +598,7 @@ Resources:
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
 
-  InitLambdaExecutionRoleWorkGroupPoliciy:
+  InitLambdaExecutionRoleWorkGroupPolicy:
     Type: AWS::IAM::Policy
     Condition: NeedAthenaWorkgroup
     Properties:
@@ -612,7 +612,7 @@ Resources:
       Roles:
         - !Ref InitLambdaExecutionRole
 
-  InitLambdaExecutionRoleBucketPoliciy:
+  InitLambdaExecutionRoleBucketPolicy:
     Type: AWS::IAM::Policy
     Condition: NeedAthenaQueryResultsBucket
     Properties:
@@ -635,7 +635,7 @@ Resources:
       Roles:
         - !Ref InitLambdaExecutionRole
 
-  InitLambdaExecutionRoleStartCrawlerPoliciy:
+  InitLambdaExecutionRoleStartCrawlerPolicy:
     Type: AWS::IAM::Policy
     Condition: NeedCURTable
     Properties:
@@ -663,11 +663,11 @@ Resources:
         - Key: IgnoreConditionalDependsOnDatabase
           Value: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
         - Key: IgnoreConditionalDependsOnPolicy1
-          Value: !If [NeedAthenaWorkgroup, !Ref InitLambdaExecutionRoleWorkGroupPoliciy, '']
+          Value: !If [NeedAthenaWorkgroup, !Ref InitLambdaExecutionRoleWorkGroupPolicy, '']
         - Key: IgnoreConditionalDependsOnPolicy2
-          Value: !If [NeedAthenaQueryResultsBucket, !Ref InitLambdaExecutionRoleBucketPoliciy, '']
+          Value: !If [NeedAthenaQueryResultsBucket, !Ref InitLambdaExecutionRoleBucketPolicy, '']
         - Key: IgnoreConditionalDependsOnPolicy3
-          Value: !If [NeedCURTable, !Ref InitLambdaExecutionRoleStartCrawlerPoliciy, '']
+          Value: !If [NeedCURTable, !Ref InitLambdaExecutionRoleStartCrawlerPolicy, '']
 
   ProcessPathLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -974,7 +974,7 @@ Resources:
                 Resource:
                   Fn::Sub: 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
 
-  KmsPoliciyForCidCURCrawlerRole:
+  KmsPolicyForCidCURCrawlerRole:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKmsAndNeedCURTable
     Properties:
@@ -985,7 +985,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
       Roles:
         - !Ref CidCURCrawlerRole
 
@@ -1081,10 +1081,10 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: CidAllowDecryptDataBuketsKmsKeyArns
+          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
             Effect: Allow
             Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
           - Sid: CidAllowListBucket
             Effect: Allow
             Action: s3:ListBucket
@@ -1105,10 +1105,10 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: CidAllowDecryptDataBuketsKmsKeyArns
+          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
             Effect: Allow
             Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
           - Sid: CidAllowListBucket
             Effect: Allow
             Action: s3:ListBucket
@@ -1182,7 +1182,7 @@ Resources:
                   - glue:GetTables
                   - glue:GetPartitions
                   - glue:CreateTable
-                Resource: "*" # This is needed to allow Autodetection in CID-CMD
+                Resource: "*" # This is needed to allow Autodetect in CID-CMD
               - Effect: Allow
                 Action:
                   - s3:ListBucket
@@ -1229,7 +1229,7 @@ Resources:
                   - quicksight:DescribeUser
                   - quicksight:DescribeTemplate
                   - quicksight:DescribeAccountSubscription
-                Resource: '*' # This is needed to allow Autodetection in CID-CMD
+                Resource: '*' # This is needed to allow Autodetect in CID-CMD
               - Effect: Allow
                 Action:
                 - quicksight:CreateRefreshSchedule
@@ -1251,7 +1251,7 @@ Resources:
                   - athena:ListTableMetadata
                   - athena:ListWorkGroups
                   - athena:GetDatabase
-                Resource: '*'  # This is needed to allow Autodetection in CID-CMD
+                Resource: '*'  # This is needed to allow Autodetect in CID-CMD
 
 
   DataLakeSettingsCidExecRolePerm:
@@ -1336,7 +1336,7 @@ Resources:
           TableWildcard: {}
 
 
-  KmsPoliciyForCidExecRole:
+  KmsPolicyForCidExecRole:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKms
     Properties:
@@ -1347,7 +1347,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
       Roles:
         - !Ref CidExecRole
 
