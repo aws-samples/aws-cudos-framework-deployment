@@ -1,18 +1,18 @@
 import click
 import json
 import logging
-import os
 from typing import Dict
 
 from cid.helpers.quicksight.resource import CidQsResource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
-from cid.utils import is_unattendent_mode
+from cid.utils import cid_print, get_yesno_parameter
+from cid.helpers.quicksight.resource import CidQsResource
 
 logger = logging.getLogger(__name__)
 
 
 class Dashboard(CidQsResource):
-    def __init__(self, raw: dict) -> None:
+    def __init__(self, raw: dict, qs=None) -> None:
         super().__init__(raw)
         # Initialize properties
         self.datasets: Dict[str, str] = {}
@@ -22,6 +22,7 @@ class Dashboard(CidQsResource):
         self.status_detail = str()
         # Source template in origin account
         self.sourceTemplate: CidQsTemplate = None
+        self.qs = qs
 
     @property
     def id(self) -> str:
@@ -100,53 +101,59 @@ class Dashboard(CidQsResource):
         return self._status
 
     def display_status(self) -> None:
-          
-        print('\nDashboard status:')
-        print(f"  Name (id): {self.name} ({self.id})")
-        print(f"  Status: {self.status}")
-        print(f"  Health: {'healthy' if self.health else 'unhealthy'}")
-        
+        """Display status of dashboard"""
+
+        cid_print('\n<BOLD>Dashboard status:<END>')
+        cid_print(f"  <BOLD>Id:<END>        {self.id}")
+        cid_print(f"  <BOLD>Name:<END>      {self.name}")
+        cid_print(f"  <BOLD>Health:<END>    {'<GREEN>healthy<END>' if self.health else '<RED>unhealthy<END>'}")
+        cid_print(f"  <BOLD>Status:<END>    {'<GREEN>' + self.status + '<END>' if self.health else '<RED>' + self.status + '<END>'}")
+
         if self.status_detail:
-            print(f"  Status detail: {self.status_detail}")
-            
-        cid_version = None
-        cid_version_latest = None
-        
+            cid_print(f"  <BOLD>Status detail:<END> {self.status_detail}")
+
+        cid_version = "N/A"
+        cid_version_latest =  "N/A"
+
         try:
             cid_version = self.deployedTemplate.cid_version
         except ValueError:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
-            cid_version = "N/A"
 
         try:
-            cid_version_latest = self.sourceTemplate.cid_version if isinstance(self.sourceTemplate, CidQsTemplate) else "N/A"
+            if isinstance(self.sourceTemplate, CidQsTemplate):
+                cid_version_latest = self.sourceTemplate.cid_version
         except ValueError:
             logger.debug("The latest version of the dashboard could not be retrieved")
-            cid_version_latest = "N/A"
-            print(f"  CID Version     {cid_version}")
-            print(f"  TemplateVersion {self.deployed_version} ")
 
         if self.latest:
-            logger.debug("The dashboard is up-to-date")
-            logger.debug(f"CID Version {cid_version}")
-            logger.debug(f"TemplateVersion {self.deployed_version} ")
+            cid_print(f"  <BOLD>Version:<END>   <GREEN>{cid_version}<END> (latest)")
+            cid_print(f"  <BOLD>VersionId:<END> <GREEN>{self.deployed_version}<END> (latest)")
         else:
-            print(f"  CID Version     {str(cid_version): <6} --> {str(cid_version_latest): <6}")
-            print(f"  TemplateVersion {str(self.deployed_version): <6} --> {str(self.latest_version): <6}")
-
             logger.debug("An update is available")
-            logger.debug(f"CID Version      {str(cid_version): <9} --> {str(cid_version_latest): <6}")
-            logger.debug(f"TemplateVersion  {str(self.deployed_version): <9} -->  {str(self.latest_version): <6}")
-            
+            cid_print(f"  <BOLD>Version:<END>   <YELLOW>{str(cid_version): <8} --> {str(cid_version_latest): <8}<END>")
+            cid_print(f"  <BOLD>VersionId:<END> <YELLOW>{str(self.deployed_version): <8} --> {str(self.latest_version): <8}<END>")
+
+        cid_print('  <BOLD>Owners:<END>')
+        try:
+            permissions = self.qs.get_dashboard_permissions(self.id)
+            for permission in permissions:
+                if 'quicksight:UpdateDashboardPermissions' in permission["Actions"]:
+                    cid_print('    ' + permission["Principal"].split('user/default/')[-1])
+        except Exception as exc:
+            if "AccessDenied" in str(exc):
+                cid_print('     <RED>AccessDenied<END>')
+
         if self.datasets:
-            print(f"  Datasets: {', '.join(sorted(self.datasets.keys()))}")
+            cid_print(f"  <BOLD>Datasets:<END>")
+            for dataset_name, dataset_id in  sorted(self.datasets.items()):
+                status = self.qs.get_dataset_last_ingestion(dataset_id) or '<BLUE>DIRECT<END>'
+                cid_print(f'    {dataset_name: <36} ({dataset_id: <36}) {status}')
+
         print('\n')
-        if click.confirm('Display dashboard raw data?'):
+        if get_yesno_parameter('display-raw', 'Display dashboard raw data?', default='yes'):
             print(json.dumps(self.raw, indent=4, sort_keys=True, default=str))
-   
+
     def display_url(self, url_template: str, launch: bool = False, **kwargs) -> None:
         url = url_template.format(dashboard_id=self.id, **kwargs)
         print(f"#######\n####### {self.name} is available at: " + url + "\n#######")
-        _supported_env = os.environ.get('AWS_EXECUTION_ENV') not in ['CloudShell', 'AWS_Lambda']
-        if _supported_env and not is_unattendent_mode() and launch and click.confirm('Do you wish to open it in your browser?'):
-            click.launch(url)
