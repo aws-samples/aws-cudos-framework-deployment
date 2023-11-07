@@ -4,6 +4,7 @@ dashboards:
   CUDOS:
     category: 'Foundational'
     name: CUDOS Dashboard
+    deprecationNotice: ' DEPRECATED. Replaced with CUDOS Dashboard v5.'
     templateId: cudos_dashboard_v3
     dashboardId: cudos
     localConfigs: ["update-dashboard.json"]

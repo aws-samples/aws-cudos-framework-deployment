@@ -401,6 +401,8 @@ class Cid():
                 dashboard_options[f'{category.upper()}'] = '[category]'
                 for dashboard in self.resources.get('dashboards').values():
                     if dashboard.get('category', 'Custom') == category:
+                        if dashboard.get('deprecationNotice'):
+                            continue
                         check = '✓' if dashboard.get('dashboardId') in self.qs.dashboards else ' '
                         dashboard_options[f" {check}[{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
             while True:
