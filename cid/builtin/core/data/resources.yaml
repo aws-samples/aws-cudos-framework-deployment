@@ -18,7 +18,7 @@ dashboards:
       minTemplateDescription: "v4.75.0"
   CUDOSv5:
     name: CUDOS Dashboard v5
-    templateId: cudos_dashboard_v5
+    templateId: cudos_v5
     dashboardId: cudos_v5
     dependsOn:
       datasets:
