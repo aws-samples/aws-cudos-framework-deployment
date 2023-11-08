@@ -1,5 +1,6 @@
 dashboards:
   SUS-DASH:
+    category: 'Additional'
     dependsOn:
       datasets:
       - aws_regions

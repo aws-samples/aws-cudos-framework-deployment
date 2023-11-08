@@ -1,5 +1,6 @@
 dashboards:
   AWS COST ANOMALIES DASHBOARD:
+    category: 'Advanced'
     dependsOn:
       datasets:
       - ca_summary_view

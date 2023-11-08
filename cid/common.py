@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import urllib
 import logging
 import functools
 from pathlib import Path
@@ -50,6 +51,9 @@ class Cid():
         self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
         self._logger = None
+        self.catalog_urls = [
+            'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/dashboards/catalog.yaml',
+        ]
 
     def aws_login(self):
         params = {
@@ -281,27 +285,52 @@ class Cid():
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
     def get_page(self, source):
-        return requests.get(source, timeout=10)
+        resp = requests.get(source, timeout=10)
+        resp.raise_for_status()
+        return resp
 
     def load_resources(self):
         ''' load additional resources from command line parameters
         '''
+        if get_parameters().get('catalog'):
+            self.catalog_urls = get_parameters().get('catalog').split(',')
+        for catalog_url in self.catalog_urls:
+            self.load_catalog(catalog_url)
         if get_parameters().get('resources'):
             source = get_parameters().get('resources')
-            logger.info(f'Loading resources from {source}')
-            resources = {}
-            try:
-                if source.startswith('https://'):
-                    resp = self.get_page(source)
-                    assert resp.status_code in [200, 201], f'Error {resp.status_code} while loading url. {resp.text}'
-                    resources = yaml.safe_load(resp.text)
-                else:
-                    with open(source, encoding='utf-8') as file_:
-                        resources = yaml.safe_load(file_)
-            except Exception as exc:
-                raise CidCritical(f'Failed to load resources from {source}: {type(exc)} {exc}')
-            self.resources = always_merger.merge(self.resources, resources)
+            self.load_resource_file(source)
         self.resources = self.resources_with_global_parameters(self.resources)
+
+    def load_resource_file(self, source):
+        ''' load additional resources from resource file
+        '''
+        logger.debug(f'Loading resources from {source}')
+        resources = {}
+        try:
+            if source.startswith('https://'):
+                resources = yaml.safe_load(self.get_page(source).text)
+                if not isinstance(resources, dict):
+                    raise CidCritical(f'Failed to load {source}. Got {type(resources)} ({repr(resources)[:150]}...)')
+            else:
+                with open(source, encoding='utf-8') as file_:
+                    resources = yaml.safe_load(file_)
+        except Exception as exc:
+            logger.warning(f'Failed to load resources from {source}: {exc}')
+            return
+        self.resources = always_merger.merge(self.resources, resources)
+
+    def load_catalog(self, catalog_url):
+        ''' load additional resources from catalog
+        '''
+        try:
+            catalog = yaml.safe_load(self.get_page(catalog_url).text)
+        except requests.exceptions.HTTPError as exc:
+            logger.warning(f'Failed to load catalog url: {exc}')
+            logger.debug(exc, exc_info=True)
+            return
+        for resource_ref in catalog.get('Resources', []):
+            url = urllib.parse.urljoin(catalog_url, resource_ref.get("Url"))
+            self.load_resource_file(url)
 
 
     def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict=None):
@@ -361,16 +390,32 @@ class Cid():
         # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
         self.qs.discover_dashboards()
 
+        dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
+        if not dashboard_id:
+            standard_categories = ['Foundational', 'Advanced', 'Additional'] # Show these categories first
+            all_categories = set([f"{dashboard.get('category', 'Other')}" for dashboard in self.resources.get('dashboards').values()])
+            non_standard_categories = [cat for cat in all_categories if cat not in standard_categories]
+            categories =  standard_categories + sorted(non_standard_categories)
+            dashboard_options = {}
+            for category in categories:
+                dashboard_options[f'{category.upper()}'] = '[category]'
+                for dashboard in self.resources.get('dashboards').values():
+                    if dashboard.get('deprecationNotice'):
+                        continue
+                    if dashboard.get('category', 'Other') == category:
+                        check = '✓' if dashboard.get('dashboardId') in self.qs.dashboards else ' '
+                        dashboard_options[f" {check}[{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
+            while True:
+                dashboard_id = get_parameter(
+                    param_name='dashboard-id',
+                    message="Please select a dashboard to deploy",
+                    choices=dashboard_options,
+                )
+                if dashboard_id == '[category]':
+                    unset_parameter('dashboard-id')
+                    continue
+                break
 
-        if dashboard_id is None:
-            dashboard_id = get_parameter(
-                param_name='dashboard-id',
-                message="Please select dashboard to install",
-                choices={
-                   f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
-                   for k, dashboard in self.resources.get('dashboards').items()
-                },
-            )
         if not dashboard_id:
             print('No dashboard selected')
             return
@@ -436,13 +481,13 @@ class Cid():
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
                 return
-            logger.info("Swich to recursive mode")
+            logger.info("Switch to recursive mode")
             recursive = True
 
         if recursive:
             self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
 
-        # Find datasets for template or defintion
+        # Find datasets for template or definition
         if not dashboard_definition.get('datasets'):
             dashboard_definition['datasets'] = {}
 
@@ -470,9 +515,9 @@ class Cid():
                         # For templates we can additionally verify dataset fields
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                         src_fields = source_template.datasets.get(ds_map.get(dataset_name, dataset_name) )
-                        required_fileds = {col.get('Name'): col.get('DataType') for col in src_fields}
+                        required_fields = {col.get('Name'): col.get('DataType') for col in src_fields}
                         unmatched = {}
-                        for k, v in required_fileds.items():
+                        for k, v in required_fields.items():
                             if k not in dataset_fields or dataset_fields[k] != v:
                                 unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
                         logger.debug(f'unmatched_fields={unmatched}')

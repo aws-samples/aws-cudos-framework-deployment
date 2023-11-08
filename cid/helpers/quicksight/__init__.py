@@ -606,8 +606,6 @@ class QuickSight(CidBase):
 
     def select_dashboard(self, force=False) -> str:
         """ Select from a list of discovered dashboards """
-        selection = list()
-
         dashboard_id = get_parameters().get('dashboard-id')
         if dashboard_id:
             return dashboard_id
@@ -618,14 +616,18 @@ class QuickSight(CidBase):
         for dashboard in self.dashboards.values():
             health = 'healthy' if dashboard.health else 'unhealthy'
             key = f'{dashboard.name} ({dashboard.arn}, {health}, {dashboard.status})'
-            if ((dashboard.latest or not dashboard.health) and not force):
+            notice = dashboard.definition.get('deprecationNotice', '')
+            if notice:
+                key = f'{key} {notice}'
+            if ((dashboard.latest or not dashboard.health or notice) and not force):
                 choices[key] = None
             else:
                 choices[key] = dashboard.id
+
         try:
             dashboard_id = get_parameter(
                 param_name='dashboard-id',
-                message="Please select installation(s) from the list",
+                message="Please select dashboard from the list",
                 choices=choices,
                 none_as_disabled=True,
             )
