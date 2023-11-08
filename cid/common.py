@@ -52,7 +52,7 @@ class Cid():
         set_parameters(kwargs, self.all_yes)
         self._logger = None
         self.catalog_urls = [
-            'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/dashboards/catalog.yaml',
+            'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/dashboards/catalog.yaml',
         ]
 
     def aws_login(self):
