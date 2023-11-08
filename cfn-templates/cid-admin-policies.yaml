@@ -278,9 +278,9 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidSpiceRefreshExecutionRole
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashbo-ProcessPathLambdaExecuti*
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashboa-InitLambdaExecutionRole*
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-Dashboards-CidCURCrawlerRole*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-ProcessPathLambdaExec*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-InitLambdaExecutionRole*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-CidCURCrawlerRole*
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidQuickSightDataSourceRole
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidExecRole
 
