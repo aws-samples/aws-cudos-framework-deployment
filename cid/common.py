@@ -392,17 +392,17 @@ class Cid():
 
         dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
         if not dashboard_id:
-            standard_categories = ['Foundational', 'Advanced', 'Additional']
-            all_categories = set([f"{dashboard.get('category', 'Custom')}" for dashboard in self.resources.get('dashboards').values()])
+            standard_categories = ['Foundational', 'Advanced', 'Additional'] # Show these categories first
+            all_categories = set([f"{dashboard.get('category', 'Other')}" for dashboard in self.resources.get('dashboards').values()])
             non_standard_categories = [cat for cat in all_categories if cat not in standard_categories]
             categories =  standard_categories + sorted(non_standard_categories)
             dashboard_options = {}
             for category in categories:
                 dashboard_options[f'{category.upper()}'] = '[category]'
                 for dashboard in self.resources.get('dashboards').values():
-                    if dashboard.get('category', 'Custom') == category:
-                        if dashboard.get('deprecationNotice'):
-                            continue
+                    if dashboard.get('deprecationNotice'):
+                        continue
+                    if dashboard.get('category', 'Other') == category:
                         check = '✓' if dashboard.get('dashboardId') in self.qs.dashboards else ' '
                         dashboard_options[f" {check}[{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
             while True:
