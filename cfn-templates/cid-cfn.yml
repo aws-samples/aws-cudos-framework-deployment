@@ -726,9 +726,9 @@ Resources:
                   s3path = s3path.replace('{account_id}', account_id)
                   parts = s3path.split('/')
                   data['Bucket'] = parts[0]
-                  if not bucket_exists(data['Bucket']) and type_.lower() != 'delete':
-                      raise Exception(f'Bucket {parts[0]} does not exist. Please check prerequisites. Just creating a bucket is not enough.')
                   if properties.get('type', '') == 'CUR':
+                      if not bucket_exists(data['Bucket']) and type_.lower() != 'delete':
+                          raise Exception(f'Bucket {parts[0]} does not exist. Please check prerequisites. Just creating a bucket is not enough.')
                       # detect Type of CUR and choose the right partitions structure
                       if len(parts[1:]) == 1: # most likely it is created by CFN or similar
                           data['Partitions'] = partitions['managed_by_cfn']
