@@ -1,8 +1,10 @@
 import os
 import sys
+import math
 import inspect
 import logging
 import platform
+import datetime
 from typing import Any, Dict
 from functools import lru_cache as cache
 from collections.abc import Iterable
@@ -166,7 +168,7 @@ def set_parameters(parameters: dict, all_yes: bool=None) -> None:
         global _all_yes
         _all_yes = all_yes
 
-def is_unattendent_mode() -> bool:
+def is_unattended_mode() -> bool:
     return _all_yes
 
 def get_parameters():
@@ -258,3 +260,20 @@ def unset_parameter(param_name):
         del params[param_name]
         logger.info(f'Cleared {param_name}={value}, from parameters')
 
+
+def ago(time):
+    """ Calculate a '3 hours ago' type string from a python datetime.
+    credits: https://gist.github.com/tonyblundell/2652369
+    """
+    units = {
+        'days': lambda diff: diff.days,
+        'hours': lambda diff: diff.seconds / 3600,
+        'minutes': lambda diff: diff.seconds % 3600 / 60,
+    }
+    diff = datetime.datetime.now().replace(tzinfo=time.tzinfo) - time
+    for unit in units:
+        dur = math.floor(units[unit](diff)) # Run the lambda function to get a duration
+        if dur > 0:
+            unit = unit[:-dur] if dur == 1 else unit # De-pluralize if duration is 1 ('1 day' vs '2 days')
+            return '%s %s ago' % (dur, unit)
+    return 'just now'

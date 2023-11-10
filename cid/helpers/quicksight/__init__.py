@@ -15,7 +15,7 @@ from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
-from cid.utils import get_parameter, get_parameters, exec_env, cid_print
+from cid.utils import get_parameter, get_parameters, exec_env, cid_print, ago
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
@@ -549,7 +549,7 @@ class QuickSight(CidBase):
         except Exception as exc:
             logger.debug(exc, exc_info=True)
 
-    def discover_dashboards(self, display: bool=False, refresh: bool=False) -> None:
+    def discover_dashboards(self, refresh: bool=False) -> None:
         """ Discover deployed dashboards """
         if refresh or self._dashboards is None:
             self._dashboards = {}
@@ -572,15 +572,6 @@ class QuickSight(CidBase):
                 self.discover_dashboard(dashboard_id)
                 # Update progress bar
                 bar.update(0, 'Complete')
-        if not display:
-            return
-        for dashboard in self._dashboards.values():
-            if dashboard.health:
-                health = 'healthy'
-            else:
-                health = 'unhealthy'
-            print(f'\t{dashboard.name} ({dashboard.id}, {health}, {dashboard.status})')
-
 
     def list_dashboards(self) -> list:
         parameters = {
@@ -615,8 +606,6 @@ class QuickSight(CidBase):
 
     def select_dashboard(self, force=False) -> str:
         """ Select from a list of discovered dashboards """
-        selection = list()
-
         dashboard_id = get_parameters().get('dashboard-id')
         if dashboard_id:
             return dashboard_id
@@ -627,14 +616,18 @@ class QuickSight(CidBase):
         for dashboard in self.dashboards.values():
             health = 'healthy' if dashboard.health else 'unhealthy'
             key = f'{dashboard.name} ({dashboard.arn}, {health}, {dashboard.status})'
-            if ((dashboard.latest or not dashboard.health) and not force):
+            notice = dashboard.definition.get('deprecationNotice', '')
+            if notice:
+                key = f'{key} {notice}'
+            if ((dashboard.latest or not dashboard.health or notice) and not force):
                 choices[key] = None
             else:
                 choices[key] = dashboard.id
+
         try:
             dashboard_id = get_parameter(
                 param_name='dashboard-id',
-                message="Please select installation(s) from the list",
+                message="Please select dashboard from the list",
                 choices=choices,
                 none_as_disabled=True,
             )
@@ -792,7 +785,7 @@ class QuickSight(CidBase):
                     time.sleep(5)
                     continue
                 logger.debug(response)
-                dashboard = Dashboard(response)
+                dashboard = Dashboard(response, qs=self)
                 current_status = dashboard.version.get('Status')
                 if not poll:
                     break
@@ -905,6 +898,33 @@ class QuickSight(CidBase):
                 return None
 
         return self._datasets.get(id, None)
+
+    def get_dataset_last_ingestion(self, dataset_id) -> str:
+        """returns human friendly status of the latest ingestion"""
+        try:
+            ingestions = self.client.list_ingestions(
+                DataSetId=dataset_id,
+                AwsAccountId=self.account_id,
+            ).get('Ingestions', [])
+        except self.client.exceptions.ResourceNotFoundException:
+            return '<RED>NotFound<END>'
+        except self.client.exceptions.AccessDeniedException:
+            return '<YELLOW>AccessDenied<END>'
+        if not ingestions:
+            return None
+        last_ingestion = ingestions[0] # Suppose it is the latest
+        status = last_ingestion.get('IngestionStatus')
+        time_ago = ago(last_ingestion.get('CreatedTime'))
+        if last_ingestion.get('ErrorInfo', {}).get('Type') == "DATA_SET_NOT_SPICE":
+            return '<BLUE>DIRECT_QUERY<END>'
+        if status in ('COMPLETED',):
+            status = f'<GREEN>{status}<END>'
+            time_in_mins = int(int(last_ingestion.get('IngestionTimeInSeconds', 0) or 0) / 60)
+            return f"{status} ({time_in_mins} mins, {last_ingestion['RowInfo']['RowsIngested']} rows) {time_ago}"
+        if status in ('FAILED', 'CANCELLED'):
+            status = f'<RED>{status}<END>'
+            return f"{status} ({last_ingestion['ErrorInfo']['Type']} {last_ingestion['ErrorInfo']['Message']}) {time_ago}"
+        return f'{status} {time_ago}'
 
     def discover_datasets(self, _datasets: list=None):
         """ Discover datasets in the account """
@@ -1346,6 +1366,10 @@ class QuickSight(CidBase):
         update_status = self.client.update_template_permissions(**update_parameters)
         logger.debug(update_status)
         return update_status
+
+    def get_dashboard_permissions(self, dashboard_id):
+        """ get_dashboard_permissions """
+        return self.client.describe_dashboard_permissions(AwsAccountId=self.account_id, DashboardId=dashboard_id)['Permissions']
 
     def dataset_diff(self, raw1, raw2):
         """ get dataset diff """

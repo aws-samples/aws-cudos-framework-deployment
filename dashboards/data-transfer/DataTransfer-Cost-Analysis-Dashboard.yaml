@@ -1,5 +1,6 @@
 dashboards:
   DATATRANSFER COST ANALYSIS DASHBOARD ENHANCED:
+    category: 'Additional'
     dependsOn:
       datasets:
       - data_transfer_view
