@@ -2,7 +2,7 @@
 # QuickSight Dashboards definitions
 dashboards:
   CUDOS:
-    category: 'Foundational'
+    category: 'Deprecated'
     name: CUDOS Dashboard
     templateId: cudos_dashboard_v3
     dashboardId: cudos
@@ -19,6 +19,7 @@ dashboards:
       minTemplateVersion: 189
       minTemplateDescription: "v4.75.0"
   CUDOSv5:
+    category: 'Foundational'
     name: CUDOS Dashboard v5
     templateId: cudos_v5
     dashboardId: cudos-v5
