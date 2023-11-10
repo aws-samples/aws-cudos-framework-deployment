@@ -6,6 +6,7 @@ dashboards:
     name: CUDOS Dashboard
     templateId: cudos_dashboard_v3
     dashboardId: cudos
+    deprecationNotice: "This version of the CUDOS deprecated. Deploy CUDOS Dashboard v5 instead"
     localConfigs: ["update-dashboard.json"]
     dependsOn:
       datasets:
