@@ -19,7 +19,7 @@ dashboards:
   CUDOSv5:
     name: CUDOS Dashboard v5
     templateId: cudos_v5
-    dashboardId: cudos_v5
+    dashboardId: cudos-v5
     dependsOn:
       datasets:
         - summary_view
