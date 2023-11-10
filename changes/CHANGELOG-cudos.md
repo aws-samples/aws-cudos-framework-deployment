@@ -1,5 +1,23 @@
 # What's new in CUDOS Dashboard
 
+# CUDOS v5
+
+# CUDOS - 5.0.0
+**Important!** Learn more about CUDOS v5 and how to deploy in our [FAQ](https://catalog.workshops.aws/awscid/en-US/faqs#cudos-v5-faqs) page.
+
+**Changes**
+* Re-designed dataset structure. All datasets used by CUDOS v5 use fast QuickSight SPICE storage which reduces time required to load visuals. CUDOS v5 is using 3 datasets:
+    1. **summary_view** with historical data for last 7 months (by default) and with daily granularity for latest 3 months without resource details. See source code [here](https://github.com/aws-samples/aws-cudos-framework-deployment/blob/cudos_v5_cfn_changes/cid/builtin/core/data/queries/cid/summary_view_sp_ri.sql)
+    2. **resource_view** with cost and usage details for every resource for last 30 days with daily granularity. See source code [here](https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/cid/builtin/core/data/queries/cudos/resource_view_sp_ri.sql)
+    3. **hourly_view** with hourly granularity for last 30 days without resource level details. See source code [here](https://github.com/aws-samples/aws-cudos-framework-deployment/blob/cudos_v5_cfn_changes/cid/builtin/core/data/queries/cudos/hourly_view_sp_ri.sql)
+    Datasets **customer_all**, **ec2_running_cost** and **savings_plans_eligible_spend** are not used by CUDOS v5. 
+* **Executive: MoM Trends**: Introducing Service Category from [FOCUS](https://focus.finops.org/#specification) specification. Added visual '*Amortized Cost by Service Category*' with AWS services categorization according to FOCUS.
+* **Executive: MoM Trends**: Added '*Top 10 resources daily spend*' and '*Top 20 resources Cost and Usage*' which show top resources for selected dimentions on any other visual on the 'MoM Trends' tab.
+* **AI/ML**: Added Amazon Bedrock section with detailed visuals including Amazon Bedrock spend by Account, by Region, by Pricing Model, by UsageType Group and '*Bedrock Daily Cost per Resource (Model)*' and '*Bedrock Detailed Resource View*'.
+* **All tabs**: Improved styling in the table and pivot visuals
+
+# CUDOS v4 - Deprecated
+
 ## CUDOS - 4.79
 * **Data Transfer and Networking**: Added 'Public IPv4 addresses' section with 'Public IPv4 Cost and Projection (Last 30 days)', 'Public IPv4 Cost and Projection per Account (Last 30 days)' and 'Public IPv4 ENIs and Elastic IPs used more than 1 hr (Last 30 days)' visuals allowing to estimate cost impact for [Public IPv4 charges effective from February 1, 2024](https://aws.amazon.com/blogs/aws/new-aws-public-ipv4-address-charge-public-ip-insights/) and monitor cost of idle Elastic IP addresses 
 * **Compute**: Added section 'Amazon EC2 Spot Instances Savings' with best practices recommendations for Spot tools and usage optimization. Added visual 'EC2 Spot Savings Detailed View' which provides breakdown of Spot savings per platform, instance type, region and availability zone
