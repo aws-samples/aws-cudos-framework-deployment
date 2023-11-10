@@ -17,6 +17,18 @@ dashboards:
     versions:
       minTemplateVersion: 189
       minTemplateDescription: "v4.75.0"
+  CUDOSv5:
+    name: CUDOS Dashboard v5
+    templateId: cudos_v5
+    dashboardId: cudos-v5
+    dependsOn:
+      datasets:
+        - summary_view
+        - hourly_view
+        - resource_view
+    versions:
+      minTemplateVersion: 1
+      minTemplateDescription: "v5.0.0"
 
   CID:
     category: 'Foundational'
@@ -94,7 +106,7 @@ dashboards:
 
 # QuickSight DataSets definitions
 datasets:
-  # CID Shared DataSets
+  # Shared DataSet between CUDOS, CID and KPI
   summary_view:
     File: cid/summary_view.json
     dependsOn:
@@ -103,6 +115,7 @@ datasets:
         - ri_sp_mapping
     schedules:
       - default
+  # CID dataset
   ec2_running_cost:
     File: cid/ec2_running_cost.json
     dependsOn:
@@ -110,6 +123,7 @@ datasets:
         - ec2_running_cost
     schedules:
       - default
+  # CID dataset
   compute_savings_plan_eligible_spend:
     File: cid/compute.json
     dependsOn:
@@ -117,6 +131,7 @@ datasets:
         - compute_savings_plan_eligible_spend
     schedules:
       - default
+  # CID dataset
   s3_view:
     File: cid/s3_view.json
     dependsOn:
@@ -126,14 +141,28 @@ datasets:
     schedules:
       - default
 
-  # Shared DataSets
+  # CUDOS v4 dataset
   customer_all:
     File: shared/customer_all.json
     dependsOn:
       cur: true
       views:
         - ${cur_table_name}
-
+  # CUDOS v5 datasets
+  hourly_view:
+    File: cudos/hourly_view.json
+    dependsOn:
+      views: 
+        - hourly_view
+      schedules:
+        - default
+  resource_view:
+    File: cudos/resource_view.json
+    dependsOn:
+      views: 
+        - resource_view
+      schedules:
+        - default
   # KPI DataSets
   kpi_ebs_snap:
     File: kpi/kpi_ebs_snap.json
@@ -260,7 +289,20 @@ views:
     File: cid/ri_sp_mapping.sql
     dependsOn:
       cur: true
-
+  hourly_view:
+    spriFile: cudos/hourly_view_sp_ri.sql
+    spFile: cudos/hourly_view_sp.sql
+    riFile: cudos/hourly_view_ri.sql
+    File: cudos/hourly_view.sql
+    dependsOn:
+      cur: true 
+  resource_view:
+    spriFile: cudos/resource_view_sp_ri.sql
+    spFile: cudos/resource_view_sp.sql
+    riFile: cudos/resource_view_ri.sql
+    File: cudos/resource_view.sql
+    dependsOn:
+      cur: true 
   # Trends
   daily_anomaly_detection:
     File: trends/daily_anomaly_detection.sql
