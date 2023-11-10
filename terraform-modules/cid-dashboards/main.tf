@@ -7,6 +7,7 @@ resource "aws_s3_object" "template" {
   key         = var.template_key
   source      = "${path.module}/../../cfn-templates/cid-cfn.yml"
   source_hash = filemd5("${path.module}/../../cfn-templates/cid-cfn.yml")
+  tags        = var.stack_tags
 }
 
 resource "aws_cloudformation_stack" "cid" {
