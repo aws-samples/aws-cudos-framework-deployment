@@ -2,26 +2,26 @@ AWSTemplateFormatVersion: "2010-09-09"
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      - 
+      -
         Label:
           default: "Common Parameters Configuration"
         Parameters:
           - DestinationAccountId
           - ResourcePrefix
           - CreateCUR
-      - 
+      -
         Label:
-          default: "Destination Account specific parameters (fill only on Destination Account)"
+          default: "Parameters needed in Destination (Data Collection) Account only"
         Parameters:
           - SourceAccountIds
 
     ParameterLabels:
       DestinationAccountId:
-        default: "Destination Account Id"
+        default: "Destination (Data Collection) Account Account Id"
       ResourcePrefix:
-        default: "Prefix used for all named resources, including S3 Bucket"
+        default: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
       SourceAccountIds:
-        default: "Source Account Ids"
+        default: "Source Account Ids (Comma separated list)"
 
 
 Parameters:
@@ -112,7 +112,7 @@ Resources:
         Rules:
           - Id: Object&Version Expiration
             Status: Enabled
-            NoncurrentVersionExpirationInDays: 32 # 1 month 
+            NoncurrentVersionExpirationInDays: 32 # 1 month
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -204,7 +204,7 @@ Resources:
 ###########################################################################
 
 ####
-# S3 Bucket with replication 
+# S3 Bucket with replication
 ####
 
   SourceS3:
@@ -470,7 +470,7 @@ Resources:
     Type: AWS::Lambda::Function
     Condition: DeployCURViaLambda
     Properties:
-      Runtime: python3.9
+      Runtime: python3.10
       FunctionName:
         Fn::Sub: ${ResourcePrefix}-CID-CURCreator
       Handler: index.lambda_handler
@@ -629,7 +629,7 @@ Resources:
 
 
           def register_deployment(action,dashboards):
-              message=f"Succesfully logged  {action} for {dashboards}"
+              message=f"Successfully logged  {action} for {dashboards}"
               for dashboard_id in dashboards:
                   if action == 'CREATE':
                       message=execute_request('PUT',dashboard_id,'created_via')
@@ -638,8 +638,8 @@ Resources:
                   elif action == 'DELETE':
                       message=execute_request('DELETE',dashboard_id,'deleted_via')
                   if message is None:
-                      message=f"Succesfully logged  {action} for {dashboards} "
-              #Do not stop deployment if we're not able to succesfully record this deployment, still return true
+                      message=f"Successfully logged  {action} for {dashboards} "
+              #Do not stop deployment if we're not able to successfully record this deployment, still return true
               return ("True",message)
 
 
