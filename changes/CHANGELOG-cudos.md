@@ -5,7 +5,7 @@
 # CUDOS - 5.0.0
 **Important!** Learn more about CUDOS v5 and how to deploy in our [FAQ](https://catalog.workshops.aws/awscid/en-US/faqs#cudos-v5-faqs) page.
 
-**CHanges**
+**Changes**
 * Re-designed dataset structure. All datasets used by CUDOS v5 use fast QuickSight SPICE storage which reduces time required to load visuals. CUDOS v5 is using 3 datasets:
     1. **summary_view** with historical data for last 7 months (by default) and with daily granularity for latest 3 months without resource details. See source code [here](https://github.com/aws-samples/aws-cudos-framework-deployment/blob/cudos_v5_cfn_changes/cid/builtin/core/data/queries/cid/summary_view_sp_ri.sql)
     2. **resource_view** with cost and usage details for every resource for last 30 days with daily granularity. See source code [here](https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/cid/builtin/core/data/queries/cudos/resource_view_sp_ri.sql)
