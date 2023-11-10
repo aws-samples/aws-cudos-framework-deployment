@@ -150,7 +150,7 @@ data "aws_iam_policy_document" "s3_assume_role" {
     effect = "Allow"
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "s3.amazonaws.com",
         "batchoperations.s3.amazonaws.com",
@@ -196,7 +196,7 @@ resource "aws_iam_role" "replication" {
   path               = "/${var.resource_prefix}/"
   assume_role_policy = data.aws_iam_policy_document.s3_assume_role.json
   inline_policy {
-    name = "S3Replication"
+    name   = "S3Replication"
     policy = data.aws_iam_policy_document.replication.json
   }
 }
