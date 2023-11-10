@@ -399,12 +399,16 @@ class Cid():
             dashboard_options = {}
             for category in categories:
                 dashboard_options[f'{category.upper()}'] = '[category]'
+                counter = 0
                 for dashboard in self.resources.get('dashboards').values():
                     if dashboard.get('deprecationNotice'):
                         continue
                     if dashboard.get('category', 'Other') == category:
                         check = '✓' if dashboard.get('dashboardId') in self.qs.dashboards else ' '
                         dashboard_options[f" {check}[{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
+                        counter += 1
+                if not counter: # remove empty categories
+                    del dashboard_options[f'{category.upper()}']
             while True:
                 dashboard_id = get_parameter(
                     param_name='dashboard-id',
