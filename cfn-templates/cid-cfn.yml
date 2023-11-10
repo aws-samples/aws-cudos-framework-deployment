@@ -1531,7 +1531,7 @@ Resources:
       Name: !Sub 'CUDOSv5Dashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
-        dashboard-id: cudos_v5
+        dashboard-id: cudos-v5
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
