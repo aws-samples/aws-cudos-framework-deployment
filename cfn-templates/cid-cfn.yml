@@ -13,7 +13,7 @@ Metadata:
           default: CUDOS, Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually (Dashboard data will appear within 24h after CUR creation).
         Parameters:
           - CURBucketPath
-          - DeployCUDOSDashboard
+          - DeployCUDOSv5
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
       - Label:
@@ -38,6 +38,7 @@ Metadata:
           - QuickSightDataSourceRoleName
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
+          - DeployCUDOSDashboard
           - DataBucketsKmsKeyArns
     ParameterLabels:
       PrerequisitesQuickSight:
@@ -51,7 +52,9 @@ Metadata:
       CURBucketPath:
         default: "Path to Cost and Usage report"
       DeployCUDOSDashboard:
-        default: "Deploy CUDOS Dashboard"
+        default: "CUDOS Dashboard v4 - Deprecated [set 'no' to delete]"
+      DeployCUDOSv5:
+        default: "Deploy CUDOS v5 Dashboard"
       DeployCostIntelligenceDashboard:
         default: "Deploy CostIntelligenceDashboard"
       DeployKPIDashboard:
@@ -151,9 +154,14 @@ Parameters:
     Default: ""
   DeployCUDOSDashboard:
     Type: String
-    Description: Deploy CUDOS Dashboard
+    Description: Set to 'no' to remove deprecated (v4) version of CUDOS Dashboard
     Default: "no"
     AllowedValues: ["yes", "no"]
+  DeployCUDOSv5:
+    Type: String
+    Description: Deploy CUDOS v5 Dashboard
+    Default: "no"
+    AllowedValues: ["yes", "no"]  
   DeployCostIntelligenceDashboard:
     Type: String
     Description: Deploy Cost Intelligence Dashboard
@@ -211,6 +219,7 @@ Parameters:
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+  NeedCUDOSv5: !Equals [ !Ref DeployCUDOSv5, "yes" ]
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
@@ -218,6 +227,7 @@ Conditions:
   NeedCUR:
     Fn::Or:
       - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+      - !Equals [ !Ref DeployCUDOSv5, "yes" ]
       - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
       - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedDataCollectionLab:
@@ -248,6 +258,7 @@ Conditions:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
       - Fn::Or:
         - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCUDOSv5, "yes" ]
         - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
         - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedLakeFormationCrawlerPermissions:
@@ -1511,7 +1522,28 @@ Resources:
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
-
+  CUDOSv5Dashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedCUDOSv5
+    DependsOn:
+      - InitialSetup
+    Properties:
+      Name: !Sub 'CUDOSv5Dashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: cudos-v5
+        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+        quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
+        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        quicksight-user: !Ref QuickSightUser
+        account-map-source: 'dummy' #initial
+        share-with-account: 'yes'
+      Tags: # Hacky way to manage conditional dependencies
+        - Key: IgnoreNeedCostIntelligenceDashboard
+          Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
   KPIDashboard:
     Type: Custom::CidDashboard
     Condition: NeedKPIDashboard
@@ -1591,6 +1623,10 @@ Outputs:
     Description: "URL of CUDOSDashboard"
     Condition: NeedCUDOSDashboard
     Value: !GetAtt CUDOSDashboard.DashboardURL
+  CUDOSv5DashboardURL:
+    Description: "URL of CUDOS Dashboard v5"
+    Condition: NeedCUDOSv5
+    Value: !GetAtt CUDOSv5Dashboard.DashboardURL
   KPIDashboardURL:
     Description: "URL of KPIDashboard"
     Condition: NeedKPIDashboard
