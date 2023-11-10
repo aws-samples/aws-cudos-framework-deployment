@@ -23,7 +23,7 @@ with open('cid/_version.py', "w") as f:
 
 tx = open('cfn-templates/cid-cfn.yml').read()
 with open('cfn-templates/cid-cfn.yml', "w") as f:
-	f.write(tx.replace(f" Default: {old_ver}", f" Default: {new_ver}"))
+	f.write(tx.replace(f"{old_ver}", f"{new_ver}"))
 
 
 os.system('git diff HEAD --unified=0')
