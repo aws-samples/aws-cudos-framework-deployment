@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards
+Description: Deployment of Cloud Intelligence Dashboards v0.2.35
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -32,7 +32,6 @@ Metadata:
           - AthenaQueryResultsBucket
           - DatabaseName
           - CURTableName
-          - CidVersion
           - GlueDataCatalog
           - Suffix
           - QuickSightDataSourceRoleName
@@ -73,8 +72,6 @@ Metadata:
         default: "Database Name - Please do not change"
       CURTableName:
         default: "CUR Table Name - Please do not change"
-      CidVersion:
-        default: "Cid Version - Please do not change"
       Suffix:
         default: "Suffix - Please do not change"
       QuickSightDataSourceRoleName:
@@ -143,11 +140,6 @@ Parameters:
     Type: String
     Default: ''
     Description: Leave Empty
-  CidVersion:
-    Type: String
-    MinLength: 5
-    Default: 0.2.35
-    Description: A version of CID package
   Suffix:
     Type: String
     Description: Leave Empty. Do not use this Suffix it is not fully supported. For testing purposes only.
@@ -161,7 +153,7 @@ Parameters:
     Type: String
     Description: Deploy CUDOS v5 Dashboard
     Default: "no"
-    AllowedValues: ["yes", "no"]  
+    AllowedValues: ["yes", "no"]
   DeployCostIntelligenceDashboard:
     Type: String
     Description: Deploy Cost Intelligence Dashboard
@@ -461,7 +453,7 @@ Resources:
   CustomResourceFunctionInit:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "CidInitialSetup-DoNotRun${Suffix}"
+      FunctionName: !Sub "CidCustomResourceFunctionInit-DoNotRun${Suffix}"
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
       Runtime: python3.9
@@ -662,7 +654,7 @@ Resources:
       Roles:
         - !Ref InitLambdaExecutionRole
 
-  InitialSetup:
+  Setup:
     Type: Custom::CustomResource
     Properties:
       ServiceToken: !GetAtt CustomResourceFunctionInit.Arn
@@ -699,7 +691,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
-      FunctionName: !Sub "CidProcessPath-DoNotRun${Suffix}"
+      FunctionName: !Sub "CidCustomResourceProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
       Runtime: python3.9
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
@@ -784,7 +776,7 @@ Resources:
                       return False
               return True
 
-  ProcessedCURPath:
+  CURPath:
     Type: Custom::CustomResourceProcessPath
     Condition: NeedCUR
     Properties:
@@ -792,7 +784,7 @@ Resources:
       s3path: !Ref CURBucketPath
       type: 'CUR'
 
-  ProcessedODCPath:
+  ODCPath:
     Type: Custom::CustomResourceProcessPath
     #Condition: NeedDataCollectionLab #Need to process ODC lab path regardless dashboards. CUR dashboards need ODC for account map
     Properties:
@@ -818,7 +810,7 @@ Resources:
       DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
       Targets:
         S3Targets:
-          - Path: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
+          - Path: !Sub 's3://${CURPath.Bucket}/${CURPath.Path}/'
             Exclusions:
               - '**.json'
               - '**.yml'
@@ -855,7 +847,7 @@ Resources:
       CatalogId: !Ref "AWS::AccountId"
       DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
       TableInput:
-        Name: !GetAtt ProcessedCURPath.Folder
+        Name: !GetAtt CURPath.Folder
         Owner: owner
         Retention: 0
         TableType: EXTERNAL_TABLE
@@ -866,7 +858,7 @@ Resources:
         StorageDescriptor:
           BucketColumns: []
           Compressed: false
-          Location: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
+          Location: !Sub 's3://${CURPath.Bucket}/${CURPath.Path}/'
           NumberOfBuckets: -1
           InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
           OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
@@ -939,7 +931,7 @@ Resources:
             - {"Name": "savings_plan_start_time", "Type": "string" }
             - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
-        PartitionKeys: !GetAtt ProcessedCURPath.Partitions
+        PartitionKeys: !GetAtt CURPath.Partitions
 
   CidCURCrawlerRole:
     Type: AWS::IAM::Role
@@ -977,13 +969,13 @@ Resources:
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
                   - Fn::If:
                       - NeedDatabase
-                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${ProcessedCURPath.Folder}
-                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/${ProcessedCURPath.Folder}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${CURPath.Folder}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/${CURPath.Folder}
               - Effect: Allow
                 Action:
                   - 's3:GetObject'
                 Resource:
-                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
+                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${CURPath.Bucket}/${CURPath.Path}/*'
 
   KmsPolicyForCidCURCrawlerRole:
     Type: AWS::IAM::Policy
@@ -1103,13 +1095,13 @@ Resources:
           - Sid: CidAllowListBucket
             Effect: Allow
             Action: s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${ProcessedODCPath.Bucket}
+            Resource: !Sub arn:aws:s3:::${ODCPath.Bucket}
           - Sid: CidAllowReadBucket
             Effect: Allow
             Action:
               - s3:GetObject
               - s3:GetObjectVersion
-            Resource: !Sub arn:aws:s3:::${ProcessedODCPath.Bucket}/*
+            Resource: !Sub arn:aws:s3:::${ODCPath.Bucket}/*
       Roles:
         - !Ref QuickSightDataSourceRole
   QuickSightDataSourceRolePolicyForCURBucket:
@@ -1127,13 +1119,13 @@ Resources:
           - Sid: CidAllowListBucket
             Effect: Allow
             Action: s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${ProcessedCURPath.Bucket}
+            Resource: !Sub arn:aws:s3:::${CURPath.Bucket}
           - Sid: CidAllowReadBucket
             Effect: Allow
             Action:
               - s3:GetObject
               - s3:GetObjectVersion
-            Resource: !Sub arn:aws:s3:::${ProcessedCURPath.Bucket}/*
+            Resource: !Sub arn:aws:s3:::${CURPath.Bucket}/*
       Roles:
         - !Ref QuickSightDataSourceRole
 
@@ -1157,7 +1149,7 @@ Resources:
             - 'quicksight:UpdateDataSource'
             - 'quicksight:DeleteDataSource'
             - 'quicksight:UpdateDataSourcePermissions'
-          Principal: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+          Principal: !Sub 'arn:${AWS::Partition}:quicksight:${Setup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
 
   CidExecRole:
     Type: AWS::IAM::Role
@@ -1328,7 +1320,7 @@ Resources:
     Condition: NeedLakeFormationEnabled
     Properties:
       DataLakePrincipal:
-        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${Setup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
       Permissions:
         - ALL
       Resource:
@@ -1341,7 +1333,7 @@ Resources:
     Condition: NeedLakeFormationEnabled
     Properties:
       DataLakePrincipal:
-        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${Setup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
       Permissions:
         - ALL
       Resource:
@@ -1476,7 +1468,7 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: !Sub 'cid-resource-lambda-layer/cid-${CidVersion}.zip'
+        S3Key: 'cid-resource-lambda-layer/cid-0.2.35.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.9
 
@@ -1484,7 +1476,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedCostIntelligenceDashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'CloudIntelligenceDashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1504,7 +1496,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedCUDOSDashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'CUDOSDashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1526,7 +1518,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedCUDOSv5
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'CUDOSv5Dashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1548,7 +1540,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedKPIDashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'KPIDashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1573,7 +1565,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedTAODashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'TAODashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1593,7 +1585,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedComputeOptimizerDashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'ComputeOptimizerDashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
