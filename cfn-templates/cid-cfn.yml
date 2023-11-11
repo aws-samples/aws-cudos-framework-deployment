@@ -910,6 +910,7 @@ Resources:
             - {"Name": "product_product_name", "Type": "string" }
             - {"Name": "product_region", "Type": "string" }
             - {"Name": "product_servicecode", "Type": "string" }
+            - {"Name": "product_storage", "Type": "string" }
             - {"Name": "product_tenancy", "Type": "string" }
             - {"Name": "product_to_location", "Type": "string" }
             - {"Name": "product_volume_api_name", "Type": "string" }
