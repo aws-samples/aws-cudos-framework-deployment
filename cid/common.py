@@ -17,14 +17,13 @@ else:
 import yaml
 import click
 import requests
-from deepmerge import always_merger
 from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
 
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
 from cid.helpers.quicksight.template import Template as CidQsTemplate
@@ -195,10 +194,9 @@ class Cid():
             print(f"\t{ep.name} loaded")
             plugins.update({ep.value: plugin})
             try:
-                self.resources = always_merger.merge(
-                    self.resources, plugin.provides())
+                self.resources = merge_objects(self.resources, plugin.provides(), depth=1)
             except AttributeError:
-                pass
+                logger.warning(f'Failed to load {ep.name}')
         print('\n')
         logger.info('Finished loading plugins')
         return plugins
@@ -317,7 +315,7 @@ class Cid():
         except Exception as exc:
             logger.warning(f'Failed to load resources from {source}: {exc}')
             return
-        self.resources = always_merger.merge(self.resources, resources)
+        self.resources = merge_objects(self.resources, resources, depth=1)
 
     def load_catalog(self, catalog_url):
         ''' load additional resources from catalog
@@ -372,7 +370,7 @@ class Cid():
                         )
             else:
                 raise CidCritical(f'Unknown parameter type for "{key}". Must be a string or a dict with value or with default key')
-        return always_merger.merge(params, others or {})
+        return merge_objects(params, others or {}, depth=1)
 
 
     @command

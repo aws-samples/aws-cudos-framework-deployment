@@ -277,3 +277,22 @@ def ago(time):
             unit = unit[:-dur] if dur == 1 else unit # De-pluralize if duration is 1 ('1 day' vs '2 days')
             return '%s %s ago' % (dur, unit)
     return 'just now'
+
+
+def merge_objects(obj1, obj2, depth=2):
+    """ merging objects with a depth
+
+    unit tests: cid/test/python/test_merge.py
+    """
+    if isinstance(obj1, dict) and isinstance(obj2, dict):
+        result = obj1.copy()
+        for key, value in obj2.items():
+            if depth > 0 and key in result and isinstance(result[key], (dict, list)) and isinstance(value, (dict, list)):
+                result[key] = merge_objects(result[key], value, depth - 1)
+            else:
+                result[key] = value
+        return result
+    elif isinstance(obj1, list) and isinstance(obj2, list):
+        return obj1 + obj2
+    else:
+        return obj2  # If types don't match or if one of them is not a dict or list, prefer the second object.

@@ -1,6 +1,5 @@
 boto3>=1.26
 Click>=8.0
-deepmerge
 PyYAML
 requests
 six>=1.15
