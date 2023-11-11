@@ -11,21 +11,42 @@ logger = logging.getLogger(__name__)
 
 class CUR(CidBase):
     curRequiredColumns = [
+        'bill_bill_type',
+        'bill_billing_entity',
+        'bill_billing_period_end_date',
+        'bill_billing_period_start_date',
+        'bill_invoice_id',
+        'bill_payer_account_id',
         'identity_line_item_id',
         'identity_time_interval',
-        'bill_invoice_id',
-        'bill_billing_entity',
-        'bill_bill_type',
-        'bill_payer_account_id',
-        'bill_billing_period_start_date',
-        'bill_billing_period_end_date',
-        'line_item_usage_account_id',
+        'line_item_legal_entity',
+        'line_item_line_item_description',
         'line_item_line_item_type',
-        'line_item_usage_start_date',
-        'line_item_usage_end_date',
-        'line_item_product_code',
-        'line_item_usage_type',
         'line_item_operation',
+        'line_item_product_code',
+       #'line_item_resource_id',
+        'line_item_unblended_cost',
+        'line_item_usage_account_id',
+        'line_item_usage_amount',
+        'line_item_usage_end_date',
+        'line_item_usage_start_date',
+        'line_item_usage_type',
+        'pricing_term',
+        'pricing_unit',
+        'product_database_engine',
+        'product_deployment_option',
+        'product_from_location',
+        'product_group',
+        'product_instance_type',
+        'product_instance_type_family',
+        'product_operating_system',
+        'product_product_family',
+        'product_product_name',
+        'product_region',
+        'product_servicecode',
+        'product_storage',
+        'product_to_location',
+        'product_volume_api_name',
     ]
     riRequiredColumns = [
         'reservation_reservation_a_r_n',
@@ -113,20 +134,21 @@ class CUR(CidBase):
         return self._hasSavingsPlans
 
 
-    def table_is_cur(self, table: dict=None, name: str=None) -> bool:
+    def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
         """ return True if table metadata fits CUR definition. """
         try:
             table = table or self.athena.get_table_metadata(name)
         except Exception as exc:
             logger.debug(exc)
-            return False
+            return False if not return_reason else (False, f'cannot get table {name}. {exc}.')
 
-        if table.get('TableType') not in ['EXTERNAL_TABLE', 'VIRTUAL_VIEW']:
-            return False
+        table_name = table.get('Name')
         columns = [cols.get('Name') for cols in table.get('Columns')]
-        if not all(cols in columns for cols in self.curRequiredColumns):
-            return False
-        return True
+        missing_columns = [col for col in self.curRequiredColumns if col not in columns]
+        if missing_columns:
+            return False if not return_reason else (False, f"Table {table_name} does not contain columns: {','.join(missing_columns)}. You can try ALTER TABLE {table_name} ADD COLUMNS (missing_column string).")
+
+        return True if not return_reason else (True, 'all good')
 
     @property
     def metadata(self) -> dict:
@@ -136,8 +158,9 @@ class CUR(CidBase):
         if get_parameters().get('cur-table-name'):
             self._tableName = get_parameters().get('cur-table-name')
             self._metadata = self.athena.get_table_metadata(self._tableName)
-            if not self.table_is_cur(table=self._metadata):
-                raise CidCritical(f'Table {self._tableName} does not looks like CUR. Please check that the table exist and have fields: {self.curRequiredColumns}.')
+            res, message = self.table_is_cur(table=self._metadata, return_reason=True)
+            if not res:
+                raise CidCritical(f'Table {self._tableName} does not look like CUR. {message}')
         else:
             # Look all tables and filter ones with CUR fields
             all_tables = self.athena.list_table_metadata()
