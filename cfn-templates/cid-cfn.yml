@@ -894,6 +894,7 @@ Resources:
             - {"Name": "pricing_offering_class", "Type": "string" }
             - {"Name": "pricing_public_on_demand_cost", "Type": "double" }
             - {"Name": "pricing_purchase_option", "Type": "string" }
+            - {"Name": "pricing_term", "Type": "string" }
             - {"Name": "pricing_unit", "Type": "string" }
             - {"Name": "product_cache_engine", "Type": "string" }
             - {"Name": "product_current_generation", "Type": "string" }
