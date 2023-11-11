@@ -528,7 +528,6 @@ Resources:
           def on_delete():
               # Delete bucket (CF cannot delete if they are non-empty)
               # and delete WorkGroup (CF cannot do that)
-              return (True, 'on_delete is disabled. you will need to delete bucket and workgroup on your own')
               s3 = boto3.resource('s3')
               log = []
 
