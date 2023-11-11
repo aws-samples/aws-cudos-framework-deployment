@@ -121,13 +121,13 @@ class Athena(CidBase):
         """ Select AWS Athena workgroup """
         if not self._WorkGroup:
             if get_parameters().get('athena-workgroup'):
-                self.WorkGroup = get_parameters().get('athena-workgroup')
+                self.WorkGroup = self._ensure_workgroup(name=get_parameters().get('athena-workgroup'))
                 return self._WorkGroup
             logger.info('Selecting Athena workgroup...')
             workgroups = self.list_work_groups()
             logger.info(f'Found {len(workgroups)} workgroups: {", ".join([wg.get("Name") for wg in workgroups])}')
             if len(workgroups) == 0:
-                self.WorkGroup = self._ensure_workgroup(name=self.defaults.get('WorkGroup'))  
+                self.WorkGroup = self._ensure_workgroup(name=self.defaults.get('WorkGroup'))
             elif len(workgroups) == 1:
                 # Silently choose the only workgroup that is available
                 self.WorkGroup = self._ensure_workgroup(name=workgroups.pop().get('Name'))
