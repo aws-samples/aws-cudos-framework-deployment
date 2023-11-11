@@ -171,8 +171,8 @@ used `stack_parameters`.
 module "cid_dashboards" {
     source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cid-dashboards"
 
-    stack_name       = "Cloud-Intelligence-Dashboards"
-    template_bucket  = "UPDATEME" # Update with 
+    stack_name      = "Cloud-Intelligence-Dashboards"
+    template_bucket = "UPDATEME" # Update with S3 bucket name
     stack_parameters = {
       "PrerequisitesQuickSight"            = "yes"
       "PrerequisitesQuickSightPermissions" = "yes"
