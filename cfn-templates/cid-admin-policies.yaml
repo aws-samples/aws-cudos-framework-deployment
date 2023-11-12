@@ -300,6 +300,7 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidProcessPath-DoNotRun
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceProcessPath-DoNotRun
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceDashboard
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceFunctionInit-DoNotRun
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidSpiceRefreshLambda
