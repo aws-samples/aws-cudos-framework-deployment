@@ -112,6 +112,7 @@ datasets:
   summary_view:
     File: cid/summary_view.json
     dependsOn:
+      cur: True
       views:
         - account_map
         - summary_view
