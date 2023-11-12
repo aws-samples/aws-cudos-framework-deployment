@@ -18,7 +18,7 @@ import os
 import json
 import time
 import logging
-import subprocess
+import subprocess #nosec B404
 
 import boto3
 import click
@@ -43,7 +43,7 @@ TMP_BUCKET = f'{TMP_BUCKET_PREFIX}-{region}'
 
 def build_layer():
     """delete all content and the bucket"""
-    layer_file = subprocess.check_output('./assets/build_lambda_layer.sh').decode().strip()
+    layer_file = subprocess.check_output('./assets/build_lambda_layer.sh').decode().strip() #nosec B603
     upload_to_s3(layer_file, path=f'cid-resource-lambda-layer/{layer_file}')
 
 def delete_bucket(name): # move to tools
