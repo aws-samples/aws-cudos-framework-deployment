@@ -13,11 +13,11 @@ CREATE OR REPLACE VIEW hourly_view AS
     , "line_item_usage_start_date" "usage_date"
     , "bill_payer_account_id" "payer_account_id"
     , "line_item_usage_account_id" "linked_account_id"
-    , CAST('' AS varchar) "savings_plan_a_r_n"
+    , "savings_plan_savings_plan_a_r_n" "savings_plan_a_r_n"
     , "reservation_reservation_a_r_n" "reservation_a_r_n"
     , "sum"("line_item_unblended_cost") "unblended_cost"
     , "sum"("reservation_effective_cost") "reservation_effective_cost"
-    , CAST(0 AS double) "savings_plan_effective_cost"
+    , "sum"("savings_plan_savings_plan_effective_cost") "savings_plan_effective_cost"
     , "sum"("line_item_usage_amount") "usage_quantity"
     FROM
       "${cur_table_name}"
