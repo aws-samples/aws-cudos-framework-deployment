@@ -112,7 +112,6 @@ datasets:
   summary_view:
     File: cid/summary_view.json
     dependsOn:
-      cur: True
       views:
         - account_map
         - summary_view
@@ -156,7 +155,6 @@ datasets:
   hourly_view:
     File: cudos/hourly_view.json
     dependsOn:
-      cur: true
       views:
         - hourly_view
         - account_map
@@ -165,7 +163,6 @@ datasets:
   resource_view:
     File: cudos/resource_view.json
     dependsOn:
-      cur: true
       views:
         - resource_view
         - account_map
