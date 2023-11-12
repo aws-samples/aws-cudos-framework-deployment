@@ -295,11 +295,13 @@ Resources:
           - lambda:InvokeFunction
           - lambda:PublishLayerVersion
           - lambda:RemovePermission
+          - lambda:UpdateFunctionConfiguration
+          - lambda:UpdateFunctionCode
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidProcessPath-DoNotRun
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceDashboard
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidInitialSetup-DoNotRun
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceFunctionInit-DoNotRun
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidSpiceRefreshLambda
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:CidLambdaLayer*
 
@@ -450,6 +452,8 @@ Resources:
           - lambda:DeleteFunction
           - lambda:GetFunction
           - lambda:InvokeFunction
+          - lambda:UpdateFunctionConfiguration
+          - lambda:UpdateFunctionCode
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
@@ -574,6 +578,8 @@ Resources:
           - lambda:GetFunctionCodeSigningConfig
           - lambda:GetRuntimeManagementConfig
           - lambda:InvokeFunction
+          - lambda:UpdateFunctionConfiguration
+          - lambda:UpdateFunctionCode
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
