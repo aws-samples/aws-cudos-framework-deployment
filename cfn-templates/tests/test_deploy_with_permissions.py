@@ -12,14 +12,16 @@ Procedure:
     3. Verify dashboard exists
     3. Delete all in reverse order
 
-This must be executed with admin priveleges.
+This must be executed with admin privileges.
 """
 import os
 import json
 import time
 import logging
+import subprocess
 
 import boto3
+import click
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +36,15 @@ END = '\033[0m'
 BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 
+region = boto3.session.Session().region_name
 account_id = boto3.client('sts').get_caller_identity()['Account']
+TMP_BUCKET_PREFIX =  f'cid-{account_id}-test'
+TMP_BUCKET = f'{TMP_BUCKET_PREFIX}-{region}'
 
+def build_layer():
+    """delete all content and the bucket"""
+    layer_file = subprocess.check_output('./assets/build_lambda_layer.sh').decode().strip()
+    upload_to_s3(layer_file, path=f'cid-resource-lambda-layer/{layer_file}')
 
 def delete_bucket(name): # move to tools
     """delete all content and the bucket"""
@@ -50,11 +59,11 @@ def delete_bucket(name): # move to tools
     except s3c.exceptions.NoSuchBucket:
         pass
 
-def upload_to_s3(filename): # move to tools
+def upload_to_s3(filename, path=None): # move to tools
     """upload file object to a temporary bucket and return a public url"""
-    path = os.path.basename(filename)
+    path = path or os.path.basename(filename)
     s3c = boto3.client('s3')
-    bucket = f'{account_id}-cid-tests-deleteme'
+    bucket = TMP_BUCKET
     try:
         s3c.create_bucket(Bucket=bucket)
     except s3c.exceptions.BucketAlreadyExists:
@@ -133,52 +142,63 @@ def timeit(method): # move to tools
     return timed
 
 
-def create_finops_role():
+def create_finops_role(update):
     """ Create a finops role and grant needed permissions. """
     admin_cfn = boto3.client('cloudformation')
     admin_iam = boto3.client('iam')
 
     logger.info('As admin creating role for Finops')
-    role_arn = admin_iam.create_role(
-        Path='/',
-        RoleName='TestFinopsRole',
-        AssumeRolePolicyDocument=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": {"AWS": f"arn:aws:iam::{account_id}:root" },
-                    "Action": "sts:AssumeRole",
-                }
-            ]
-        }),
-        Description='string'
-    )['Role']['Arn']
-    admin_iam.put_role_policy(
-        RoleName='TestFinopsRole',
-        PolicyName='finops-access-to-bucket-with-cfn',
-        PolicyDocument=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "ReadTestBucket",
-                    "Effect": "Allow",
-                    "Action": [
-                        "s3:List*",
-                        "s3:Get*"
-                    ],
-                    "Resource": [
-                        f"arn:aws:s3:::{account_id}-cid-tests-deleteme",
-                        f"arn:aws:s3:::{account_id}-cid-tests-deleteme/*"
-                    ]
-                },
-            ]
-        }),
-    )
-    logger.info('Role Created %s', role_arn)
+    try:
+        role_arn = admin_iam.create_role(
+            Path='/',
+            RoleName='TestFinopsRole',
+            AssumeRolePolicyDocument=json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {"AWS": f"arn:aws:iam::{account_id}:root" },
+                        "Action": "sts:AssumeRole",
+                    }
+                ]
+            }),
+            Description='string'
+        )['Role']['Arn']
+        logger.info('Role Created %s', role_arn)
+    except admin_iam.exceptions.EntityAlreadyExistsException as exc:
+        if update:
+            print ('role exists')
+        else:
+            raise
+
+    try:
+        admin_iam.put_role_policy(
+            RoleName='TestFinopsRole',
+            PolicyName='finops-access-to-bucket-with-cfn',
+            PolicyDocument=json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "ReadTestBucket",
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:List*",
+                            "s3:Get*"
+                        ],
+                        "Resource": [
+                            f"arn:aws:s3:::{TMP_BUCKET}",
+                            f"arn:aws:s3:::{TMP_BUCKET}/*"
+                        ]
+                    },
+                ]
+            }),
+        )
+    except Exception:
+        raise
+
 
     logger.info('As admin creating permissions for Finops')
-    admin_cfn.create_stack(
+    params = dict(
         StackName="cid-admin",
         TemplateURL=upload_to_s3('cfn-templates/cid-admin-policies.yaml'),
         Parameters=[
@@ -191,11 +211,18 @@ def create_finops_role():
         ],
         Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
     )
+    try:
+        admin_cfn.create_stack(**params)
+    except admin_cfn.exceptions.AlreadyExistsException:
+        try:
+            admin_cfn.update_stack(**params)
+        except admin_cfn.exceptions.ClientError as exc:
+            if not "No updates are to be performed" in str(exc): raise
     watch_stacks(admin_cfn, ["cid-admin"])
     logger.info('Stack created')
 
 
-def create_cid_as_finops():
+def create_cid_as_finops(update):
     """creates cid with finops role"""
     admin_cfn = boto3.client('cloudformation')
 
@@ -213,7 +240,7 @@ def create_cid_as_finops():
 
     logger.info('As Finops Creating CUR')
     finops_cfn = finops_session.client('cloudformation')
-    finops_cfn.create_stack(
+    params = dict(
         StackName="CID-CUR-Destination",
         TemplateURL=upload_to_s3('cfn-templates/cur-aggregation.yaml'),
         Parameters=[
@@ -224,11 +251,19 @@ def create_cid_as_finops():
         ],
         Capabilities=['CAPABILITY_IAM'],
     )
+    try:
+        finops_cfn.create_stack(**params)
+    except finops_cfn.exceptions.AlreadyExistsException:
+        try:
+            finops_cfn.update_stack(**params)
+        except finops_cfn.exceptions.ClientError as exc:
+            if not "No updates are to be performed" in str(exc): raise
+
     watch_stacks(admin_cfn, ["CID-CUR-Destination"])
     logger.info('Stack created')
 
     logger.info('As Finops Creating Dashboards')
-    res = finops_cfn.create_stack(
+    params = dict(
         StackName="Cloud-Intelligence-Dashboards",
         TemplateURL=upload_to_s3('cfn-templates/cid-cfn.yml'),
         Parameters=[
@@ -236,10 +271,18 @@ def create_cid_as_finops():
             {"ParameterKey": 'PrerequisitesQuickSightPermissions', "ParameterValue": 'yes'},
             {"ParameterKey": 'QuickSightUser', "ParameterValue": get_qs_user()},
             {"ParameterKey": 'DeployCUDOSDashboard', "ParameterValue": 'yes'},
+            {"ParameterKey": 'DeployCUDOSv5', "ParameterValue": 'yes'},
+            {"ParameterKey": 'LambdaLayerBucketPrefix', "ParameterValue": TMP_BUCKET_PREFIX},
         ],
         Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
     )
-    logger.debug(res)
+    try:
+        finops_cfn.create_stack(**params)
+    except finops_cfn.exceptions.AlreadyExistsException:
+        try:
+            finops_cfn.update_stack(**params)
+        except finops_cfn.exceptions.ClientError as exc:
+            if not "No updates are to be performed" in str(exc): raise
     watch_stacks(admin_cfn, ["Cloud-Intelligence-Dashboards"])
     logger.info('Stack created')
 
@@ -349,20 +392,25 @@ def teardown():
         logger.info(exc)
 
     logger.info("Cleanup tmp bucket")
-    delete_bucket(f'{account_id}-cid-tests-deleteme')
+    delete_bucket(TMP_BUCKET)
     logger.info("Teardown done")
 
 
 @timeit
-def main():
+@click.command()
+@click.option('--update', help='Try to update first', is_flag=True)
+@click.option('--keep', help='No teardown', is_flag=True)
+def main(update, keep):
     """ main """
     try:
-        try:
-            teardown() #Try to remove previous attempt
-        except Exception as exc: # pylint: disable=broad-exception-caught
-            logger.debug(exc)
-        create_finops_role()
-        create_cid_as_finops()
+        if not update:
+            try:
+                teardown() #Try to remove previous attempt
+            except Exception as exc: # pylint: disable=broad-exception-caught
+                logger.debug(exc)
+        build_layer()
+        create_finops_role(update)
+        create_cid_as_finops(update)
         test_dashboard_exists()
         test_dataset_scheduled()
         test_ingestion_successful()
@@ -370,10 +418,11 @@ def main():
         logger.error(exc)
         raise
     finally:
-        for index in range(10):
-            print(f'Press Ctrl+C if you want to avoid teardown: {9-index}\a') # beep
-            time.sleep(1)
-        teardown()
+        if not keep:
+            for index in range(10):
+                print(f'Press Ctrl+C if you want to avoid teardown: {9-index}\a') # beep
+                time.sleep(1)
+            teardown()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
