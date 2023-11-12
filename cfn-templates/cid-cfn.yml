@@ -1210,6 +1210,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - athena:GetWorkGroup
+                  - athena:CreateWorkGroup
+                  - athena:UpdateWorkGroup
                 Resource:
                   Fn::If:
                    - NeedAthenaWorkgroup
@@ -1227,6 +1229,7 @@ Resources:
                 Resource: "*" # This is needed to allow Autodetect in CID-CMD
               - Effect: Allow
                 Action:
+                  - s3:CreateBucket
                   - s3:ListBucket
                   - s3:ListBucketMultipartUploads
                   - s3:ListMultipartUploadParts
