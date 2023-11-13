@@ -24,7 +24,7 @@ class CUR(CidBase):
         'line_item_line_item_type',
         'line_item_operation',
         'line_item_product_code',
-       #'line_item_resource_id',
+        'line_item_resource_id',
         'line_item_unblended_cost',
         'line_item_usage_account_id',
         'line_item_usage_amount',
@@ -74,7 +74,7 @@ class CUR(CidBase):
     _hasReservations = None
     _configured = None
     _status = str()
-    
+
 
     def __init__(self, session) -> None:
         super().__init__(session)
@@ -97,7 +97,7 @@ class CUR(CidBase):
 
     @property
     def configured(self) -> bool:
-        """ Check if AWS Datacalog and Athena database exist """
+        """ Check if AWS Data Catalog and Athena database exist """
         if self._configured is None:
             if self.athena.CatalogName and self.athena.DatabaseName:
                 self._configured = True
