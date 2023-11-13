@@ -113,6 +113,7 @@ datasets:
     File: cid/summary_view.json
     dependsOn:
       views:
+        - account_map
         - summary_view
         - ri_sp_mapping
     schedules:
@@ -154,15 +155,17 @@ datasets:
   hourly_view:
     File: cudos/hourly_view.json
     dependsOn:
-      views: 
+      views:
         - hourly_view
+        - account_map
       schedules:
         - default
   resource_view:
     File: cudos/resource_view.json
     dependsOn:
-      views: 
+      views:
         - resource_view
+        - account_map
       schedules:
         - default
   # KPI DataSets

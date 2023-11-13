@@ -278,9 +278,7 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidSpiceRefreshExecutionRole
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-ProcessPathLambdaExec*
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-InitLambdaExecutionRole*
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-CidCURCrawlerRole*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-* #Roles created by CFN stack. Name is hardcoded here
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidQuickSightDataSourceRole
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidExecRole
 
@@ -289,18 +287,23 @@ Resources:
           - lambda:AddPermission
           - lambda:CreateFunction
           - lambda:DeleteFunction
-          - lambda:DeleteLayerVersion
           - lambda:GetFunction
-          - lambda:GetLayerVersion
           - lambda:InvokeFunction
-          - lambda:PublishLayerVersion
           - lambda:RemovePermission
+          - lambda:UpdateFunctionConfiguration
+          - lambda:UpdateFunctionCode
+          - lambda:PublishLayerVersion
+          - lambda:GetLayerVersion
+          - lambda:DeleteLayerVersion
           Effect: Allow
           Resource:
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidProcessPath-DoNotRun
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceDashboard
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidInitialSetup-DoNotRun
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidSpiceRefreshLambda
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:Cid*
+          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidProcessPath-DoNotRun
+          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceProcessPath-DoNotRun
+          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceDashboard
+          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceFunctionInit-DoNotRun
+          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidInitialSetup-DoNotRun #legacy
+          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidSpiceRefreshLambda
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:CidLambdaLayer*
 
         - Sid: QuickSightDashboard
@@ -311,7 +314,7 @@ Resources:
           - quicksight:DescribeDashboard
           Effect: Allow
           Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cudos
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cudos*
           - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cost_intelligence_dashboard
           - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/kpi_dashboard
           - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/ta-organizational-view
@@ -337,7 +340,7 @@ Resources:
           - quicksight:CreateDataSet
           - quicksight:DeleteDataSet
           - quicksight:PassDataSet
-          - quicksight:DescribDataSet
+          - quicksight:DescribeDataSet
           - quicksight:DescribeDataSetPermissions
           - quicksight:UpdateDataSetPermissions
           Effect: Allow
@@ -357,7 +360,7 @@ Resources:
           - quicksight:DeleteDataSetRefreshProperties
           Effect: Allow
           Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/refresh-schedule/* # DataSetIDs are dynamic as well as shcedule ids
+          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/refresh-schedule/* # DataSetIDs are dynamic as well as schedule ids
 
         - Sid: CreateQueryResultsBucketS3
           Action:
@@ -450,6 +453,8 @@ Resources:
           - lambda:DeleteFunction
           - lambda:GetFunction
           - lambda:InvokeFunction
+          - lambda:UpdateFunctionConfiguration
+          - lambda:UpdateFunctionCode
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
@@ -515,7 +520,7 @@ Resources:
     Condition: CreateCURReplicationPolicy
     Properties:
       ManagedPolicyName: CidCURReplicationPolicy
-      Description: 'CloudIntelligenceDashboards Policy for CUR Creating and Stting Replication'
+      Description: 'CloudIntelligenceDashboards Policy for CUR Creating and Setting Replication'
       Roles:
         - !Ref RoleName
       PolicyDocument:
@@ -574,6 +579,8 @@ Resources:
           - lambda:GetFunctionCodeSigningConfig
           - lambda:GetRuntimeManagementConfig
           - lambda:InvokeFunction
+          - lambda:UpdateFunctionConfiguration
+          - lambda:UpdateFunctionCode
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
