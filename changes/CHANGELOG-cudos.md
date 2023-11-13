@@ -14,6 +14,8 @@
 * **Executive: MoM Trends**: Introducing Service Category from [FOCUS](https://focus.finops.org/#specification) specification. Added visual '*Amortized Cost by Service Category*' with AWS services categorization according to FOCUS.
 * **Executive: MoM Trends**: Added '*Top 10 resources daily spend*' and '*Top 20 resources Cost and Usage*' which show top resources for selected dimentions on any other visual on the 'MoM Trends' tab.
 * **AI/ML**: Added Amazon Bedrock section with detailed visuals including Amazon Bedrock spend by Account, by Region, by Pricing Model, by UsageType Group and '*Bedrock Daily Cost per Resource (Model)*' and '*Bedrock Detailed Resource View*'.
+* **AI/ML**: Improved Usage Type Group on *'SageMaker spend per Usage Type Group'* visual to include SageMaker Canvas, Batch Transform and Asynchronous Inference
+* **Databases**: *'Daily Storage Cost'* visual now includes category for RDS Aurora I/O Optimized Storage. Improved date formatting to show day month and year in *'Daily Cost by Instance Family|Instance Type|Processor Type for All*' visual
 * **All tabs**: Improved styling in the table and pivot visuals
 
 # CUDOS v4 - Deprecated
