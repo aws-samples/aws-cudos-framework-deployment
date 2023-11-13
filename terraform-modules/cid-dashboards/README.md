@@ -16,8 +16,9 @@ resources and a custom Lambda function to create the dashboards using `cid-cmd`.
 module "cid_dashboards" {
     source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cid-dashboards"
 
-    stack_name       = "Cloud-Intelligence-Dashboards"
-    template_bucket  = "UPDATEME"
+    stack_name      = "Cloud-Intelligence-Dashboards"
+    template_bucket = "UPDATEME"
+  
     stack_parameters = {
       "PrerequisitesQuickSight"            = "yes"
       "PrerequisitesQuickSightPermissions" = "yes"

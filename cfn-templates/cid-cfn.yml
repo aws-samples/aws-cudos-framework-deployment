@@ -315,7 +315,7 @@ Resources:
       FunctionName:  !Sub 'CidSpiceRefreshLambda${Suffix}'
       Role: !GetAtt SpiceRefreshExecutionRole.Arn
       Description: 'Refresh QuickSight DataSets for CID'
-      Runtime: python3.9
+      Runtime: python3.10
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -450,13 +450,45 @@ Resources:
             EncryptionOption: SSE_S3
           OutputLocation: !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/', !Sub 's3://${AthenaQueryResultsBucket}/' ]
 
+  #Legacy version. Replaced by CustomResourceFunctionInit but we cannot remove it completely as it was removing workgroup on deletion of the custom resource.
+  CustomRessourceFunctionInit:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub CidInitialSetup-DoNotRun${Suffix}
+      Role: !GetAtt 'InitLambdaExecutionRole.Arn'
+      Description: "CID legacy setup"
+      Runtime: python3.10
+      Handler: 'index.lambda_handler'
+      Code:
+        ZipFile: |
+          # This is a legacy lambda. You can delete it. This was kept to disable delete workgroup functionality.
+          import json
+          import urllib3
+
+          def lambda_handler(event, context):
+              url = event.get('ResponseURL')
+              json_body = json.dumps({
+                'Status': 'SUCCESS'
+                'Reason': 'legacy'
+                'PhysicalResourceId': 'keep_it_constant'
+                'StackId': event.get('StackId')
+                'RequestId': event.get('RequestId')
+                'LogicalResourceId': event.get('LogicalResourceId')
+              })
+              try:
+                  http = urllib3.PoolManager()
+                  response = http.request('PUT', url, body=json_body, headers={'content-type' : '', 'content-length' : str(len(json_body))}, retries=False)
+                  print(f"Status code: {response}")
+              except Exception as exc:
+                  print("Failed sending PUT to CFN: " + str(exc))
+
   CustomResourceFunctionInit:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub "CidCustomResourceFunctionInit-DoNotRun${Suffix}"
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
-      Runtime: python3.9
+      Runtime: python3.10
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 300
@@ -693,7 +725,7 @@ Resources:
       Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
       FunctionName: !Sub "CidCustomResourceProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
-      Runtime: python3.9
+      Runtime: python3.10
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -893,6 +925,7 @@ Resources:
             - {"Name": "pricing_offering_class", "Type": "string" }
             - {"Name": "pricing_public_on_demand_cost", "Type": "double" }
             - {"Name": "pricing_purchase_option", "Type": "string" }
+            - {"Name": "pricing_term", "Type": "string" }
             - {"Name": "pricing_unit", "Type": "string" }
             - {"Name": "product_cache_engine", "Type": "string" }
             - {"Name": "product_current_generation", "Type": "string" }
@@ -1176,6 +1209,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - athena:GetWorkGroup
+                  - athena:CreateWorkGroup
+                  - athena:UpdateWorkGroup
                 Resource:
                   Fn::If:
                    - NeedAthenaWorkgroup
@@ -1193,6 +1228,7 @@ Resources:
                 Resource: "*" # This is needed to allow Autodetect in CID-CMD
               - Effect: Allow
                 Action:
+                  - s3:CreateBucket
                   - s3:ListBucket
                   - s3:ListBucketMultipartUploads
                   - s3:ListMultipartUploadParts
@@ -1365,7 +1401,7 @@ Resources:
       FunctionName: !Sub 'CidCustomResourceDashboard${Suffix}'
       Description: 'A lambda that manage create delete update of Athena views, QuickSight Datasets and dashboards using CID-CMD tool'
       Role: !GetAtt CidExecRole.Arn
-      Runtime: python3.9
+      Runtime: python3.10
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 2688
       Timeout: 300 # Time of discovery depend on number of dashboards
@@ -1471,7 +1507,7 @@ Resources:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
         S3Key: 'cid-resource-lambda-layer/cid-0.2.35.zip' #replace version here if needed
       CompatibleRuntimes:
-        - python3.9
+        - python3.10
 
   CostIntelligenceDashboard:
     Type: Custom::CidDashboard

@@ -25,6 +25,7 @@ class CUR(CidBase):
         'line_item_operation',
         'line_item_product_code',
         'line_item_resource_id',
+       #'line_item_resource_id',
         'line_item_unblended_cost',
         'line_item_usage_account_id',
         'line_item_usage_amount',
