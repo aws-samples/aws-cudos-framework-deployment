@@ -8,7 +8,7 @@ quicksight_datasource_id="${quicksight_datasource_id:-31c87a3c-8494-4f42-a590-c6
 
 @test "Install" {
   run cid-cmd -vv deploy  \
-    --dashboard-id cudos \
+    --dashboard-id cudos-v5 \
     --athena-database $database_name\
     --account-map-source dummy \
     --quicksight-user $quicksight_user \
@@ -45,14 +45,14 @@ quicksight_datasource_id="${quicksight_datasource_id:-31c87a3c-8494-4f42-a590-c6
 @test "Dashboard created" {
   run aws quicksight describe-dashboard \
     --aws-account-id $account_id \
-    --dashboard-id cudos
+    --dashboard-id cudos-v5
 
   [ "$status" -eq 0 ]
 }
 
 @test "Update works" {
   run cid-cmd -vv --yes update --force --recursive  \
-    --dashboard-id cudos \
+    --dashboard-id cudos-v5 \
     --quicksight-user $quicksight_user   \
 
   [ "$status" -eq 0 ]
@@ -61,7 +61,7 @@ quicksight_datasource_id="${quicksight_datasource_id:-31c87a3c-8494-4f42-a590-c6
 
 @test "Delete runs" {
   run cid-cmd -vv --yes delete \
-    --dashboard-id cudos
+    --dashboard-id cudos-v5
 
   [ "$status" -eq 0 ]
 }
@@ -69,7 +69,7 @@ quicksight_datasource_id="${quicksight_datasource_id:-31c87a3c-8494-4f42-a590-c6
 @test "Dashboard is deleted" {
   run aws quicksight describe-dashboard \
     --aws-account-id $account_id \
-    --dashboard-id cudos
+    --dashboard-id cudos-v5
 
   [ "$status" -ne 0 ]
 }
