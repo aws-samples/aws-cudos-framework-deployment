@@ -149,8 +149,10 @@ class AccountMap(CidBase):
             # Query path
             view_definition = self.athena._resources.get('views').get(name, {})
             view_file = view_definition.get('File')
-
-            template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
+            template = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name=f'data/queries/{view_file}',
+            ).decode('utf-8'))
 
             # Fill in TPLs
             columns_tpl = {
