@@ -194,7 +194,9 @@ class Cid():
             print(f"\t{ep.name} loaded")
             plugins.update({ep.value: plugin})
             try:
-                self.resources = merge_objects(self.resources, plugin.provides(), depth=1)
+                resources = plugin.provides()
+                resources.get('views', {}).pop('account_map', None)
+                self.resources = merge_objects(self.resources, resources, depth=1)
             except AttributeError:
                 logger.warning(f'Failed to load {ep.name}')
         print('\n')
@@ -315,6 +317,7 @@ class Cid():
         except Exception as exc:
             logger.warning(f'Failed to load resources from {source}: {exc}')
             return
+        resources.get('views', {}).pop('account_map', None) # Exclude account map as it is a special view
         self.resources = merge_objects(self.resources, resources, depth=1)
 
     def load_catalog(self, catalog_url):
