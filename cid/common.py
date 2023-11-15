@@ -195,7 +195,8 @@ class Cid():
             plugins.update({ep.value: plugin})
             try:
                 resources = plugin.provides()
-                resources.get('views', {}).pop('account_map', None)
+                if ep.value != 'cid.builtin.core':
+                    resources.get('views', {}).pop('account_map', None) # protect account_map from overriding
                 self.resources = merge_objects(self.resources, resources, depth=1)
             except AttributeError:
                 logger.warning(f'Failed to load {ep.name}')
