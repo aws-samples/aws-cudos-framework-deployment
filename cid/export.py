@@ -144,8 +144,12 @@ def export_analysis(qs, athena):
                 value['RelationalTable']['Schema'] = '${athena_database_name}'
                 athena_source = value['RelationalTable']['Name']
                 views_name = athena_source.split('.')[-1]
-                dependency_views.append(views_name)
-                all_views.append(views_name)
+                if views_name in athena._resources.get('views') and not get_parameters().get('export-known-datasets'):
+                    logger.debug(f'Athena viw {views_name} is in resources. Skipping')
+                    continue
+                else:
+                    dependency_views.append(views_name)
+                    all_views.append(views_name)
             elif 'CustomSql' in value and 'DataSourceArn' in value['CustomSql']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like CustomSql athena dataset")
                 value['CustomSql']['DataSourceArn'] = '${athena_datasource_arn}'
@@ -250,9 +254,13 @@ def export_analysis(qs, athena):
     logger.debug('Building dashboard resource')
     dashboard_id = get_parameter(
         'dashboard-id',
-        message='dashboard id (will be used in url of dashboard)',
-        default=escape_id(analysis['Name'].lower())
+        message='dashboard id (will be used in dashboard URL. Use lowercase, hyphens(not underscores) and make it short but understandable for humans)',
+        default=escape_id(analysis['Name'].lower().replace(' ', '-').replace('_', '-'))
     )
+    new_dashboard_id = dashboard_id.lower().replace(' ', '-').replace('_', '-')
+    if dashboard_id != new_dashboard_id:
+        cid_print('Best practices enforced: {dashboard_id} -> {new_dashboard_id}')
+        dashboard_id = new_dashboard_id
 
     dashboard_resource = {}
     dashboard_resource['dependsOn'] = {
