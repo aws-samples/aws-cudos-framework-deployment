@@ -1,12 +1,13 @@
 import os
 import sys
-from cid._version import __version__ as old_ver
 
 os.system('git checkout main')
 os.system('git pull')
 
+from cid._version import __version__ as old_ver
+
 bump='patch'
-if len(sys.argv)>1 :
+if len(sys.argv)>1:
 	bump = sys.argv[1]
 
 maj, minor, patch = map(int, old_ver.split('.'))
