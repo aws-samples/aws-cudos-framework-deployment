@@ -2,6 +2,8 @@ import os
 import sys
 from cid._version import __version__ as old_ver
 
+os.system('git checkout main')
+os.system('git pull')
 
 bump='patch'
 if len(sys.argv)>1 :
@@ -16,6 +18,8 @@ elif bump=='minor':
 else:
 	raise NotImplementedError('only patch and minor are implemented')
 
+os.system(f"git checkout -b 'release/{new_ver}'")
+
 
 tx = open('cid/_version.py').read()
 with open('cid/_version.py', "w") as f:
@@ -28,3 +32,4 @@ with open('cfn-templates/cid-cfn.yml', "w") as f:
 
 os.system('git diff HEAD --unified=0')
 print('to undo:\n git checkout HEAD -- cfn-templates/cid-cfn.yml cid/_version.py')
+print(f"to continue:\n git commit -am 'release {new_ver}'; git push origin 'release/{new_ver}'")
