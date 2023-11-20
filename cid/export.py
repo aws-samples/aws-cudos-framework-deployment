@@ -123,7 +123,7 @@ def export_analysis(qs, athena):
         if dataset_name in athena._resources.get('datasets'):
             resources_datasets.append(dataset_name)
             if not get_parameters().get('export-known-datasets'):
-                cid_print(f'    DataSet <BOLD>{dataset_name}<END> is in resources. Skiping.')
+                cid_print(f'    DataSet <BOLD>{dataset_name}<END> is in resources. Skipping.')
                 continue
 
         dataset_data = {
@@ -145,7 +145,10 @@ def export_analysis(qs, athena):
                 athena_source = value['RelationalTable']['Name']
                 views_name = athena_source.split('.')[-1]
                 dependency_views.append(views_name)
-                all_views.append(views_name)
+                if views_name in athena._resources.get('views') and not get_parameters().get('export-known-datasets'):
+                    cid_print(f'    Athena view <BOLD>{views_name}<END> is in resources. Skipping')
+                else:
+                    all_views.append(views_name)
             elif 'CustomSql' in value and 'DataSourceArn' in value['CustomSql']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like CustomSql athena dataset")
                 value['CustomSql']['DataSourceArn'] = '${athena_datasource_arn}'
@@ -250,9 +253,13 @@ def export_analysis(qs, athena):
     logger.debug('Building dashboard resource')
     dashboard_id = get_parameter(
         'dashboard-id',
-        message='dashboard id (will be used in url of dashboard)',
-        default=escape_id(analysis['Name'].lower())
+        message='dashboard id (will be used in dashboard URL. Use lowercase, hyphens(not underscores) and make it short but understandable for humans)',
+        default=escape_id(analysis['Name'].lower().replace(' ', '-').replace('_', '-'))
     )
+    new_dashboard_id = dashboard_id.lower().replace(' ', '-').replace('_', '-')
+    if dashboard_id != new_dashboard_id:
+        cid_print('Best practices enforced: {dashboard_id} -> {new_dashboard_id}')
+        dashboard_id = new_dashboard_id
 
     dashboard_resource = {}
     dashboard_resource['dependsOn'] = {
@@ -272,8 +279,8 @@ def export_analysis(qs, athena):
             'dashboard-export-method',
             message='Please choose export method',
             choices={
+                '[template]   Generate a QuickSight Template in the current account (Recommended)': 'template',
                 '[definition] Save QuickSight Dashboard Definition in the file': 'definition',
-                '[template]   Generate a QuickSight Template in the current account': 'template',
             },
         )
     if dashboard_export_method == 'template':
