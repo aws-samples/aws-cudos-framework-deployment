@@ -123,7 +123,7 @@ def export_analysis(qs, athena):
         if dataset_name in athena._resources.get('datasets'):
             resources_datasets.append(dataset_name)
             if not get_parameters().get('export-known-datasets'):
-                cid_print(f'    DataSet <BOLD>{dataset_name}<END> is in resources. Skiping.')
+                cid_print(f'    DataSet <BOLD>{dataset_name}<END> is in resources. Skipping.')
                 continue
 
         dataset_data = {
@@ -144,11 +144,10 @@ def export_analysis(qs, athena):
                 value['RelationalTable']['Schema'] = '${athena_database_name}'
                 athena_source = value['RelationalTable']['Name']
                 views_name = athena_source.split('.')[-1]
+                dependency_views.append(views_name)
                 if views_name in athena._resources.get('views') and not get_parameters().get('export-known-datasets'):
-                    logger.debug(f'Athena viw {views_name} is in resources. Skipping')
-                    continue
+                    cid_print(f'    Athena view <BOLD>{views_name}<END> is in resources. Skipping')
                 else:
-                    dependency_views.append(views_name)
                     all_views.append(views_name)
             elif 'CustomSql' in value and 'DataSourceArn' in value['CustomSql']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like CustomSql athena dataset")
@@ -280,8 +279,8 @@ def export_analysis(qs, athena):
             'dashboard-export-method',
             message='Please choose export method',
             choices={
+                '[template]   Generate a QuickSight Template in the current account (Recommended)': 'template',
                 '[definition] Save QuickSight Dashboard Definition in the file': 'definition',
-                '[template]   Generate a QuickSight Template in the current account': 'template',
             },
         )
     if dashboard_export_method == 'template':
