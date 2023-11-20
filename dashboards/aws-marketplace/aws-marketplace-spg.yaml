@@ -1,14 +1,13 @@
 dashboards:
   AWS MARKETPLACE SINGLE PANE OF GLASS (SPG):
-    category: 'Additional'
     dependsOn:
       datasets:
       - customer_all
       - marketplace_summary_view
     name: AWS Marketplace Single Pane of Glass (SPG)
-    dashboardId: aws-marketplace-single-pane-of-glass-spg-v1
+    dashboardId: aws-marketplace
     category: Custom
-    templateId: aws-marketplace-single-pane-of-glass-spg-v1
+    templateId: aws-marketplace
     sourceAccountId: '569662215076'
     region: us-east-1
 datasets:
@@ -85,13 +84,10 @@ datasets:
               Type: INTEGER
             - Name: usage_quantity
               Type: DECIMAL
-              SubType: FLOAT
             - Name: unblended_cost
               Type: DECIMAL
-              SubType: FLOAT
             - Name: amortized_cost
               Type: DECIMAL
-              SubType: FLOAT
       LogicalTableMap:
         24c5f031-8560-4547-abf1-19c159a033a4:
           Alias: Intermediate Table
@@ -235,41 +231,6 @@ datasets:
     schedules:
     - default
 views:
-  account_map:
-    dependsOn:
-      views:
-      - acc_metadata_details
-    data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.account_map AS
-      SELECT
-        account_id account_id
-      , "concat"(account_name, ': ', account_id) account_name
-      FROM
-        acc_metadata_details
-      WHERE (account_name <> '')
-  acc_metadata_details:
-    data: |-
-      CREATE EXTERNAL TABLE `acc_metadata_details`(
-        `scp_customer_id` string,
-        `customer_name` string,
-        `account_id` string,
-        `account_name` string,
-        `support_level` string,
-        `email` string)
-      ROW FORMAT SERDE
-        'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
-      STORED AS INPUTFORMAT
-        'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
-      OUTPUTFORMAT
-        'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
-      LOCATION
-        '${s3path}'
-      TBLPROPERTIES (
-        'transient_lastDdlTime'='1700190276')
-    parameters:
-      s3path:
-        default: s3://customer-cur-data-d82824a3-4799-425b-8923-e5ce61d368db/account-metadata-details
-        description: S3 Path for acc_metadata_details table
   marketplace_summary_view:
     dependsOn:
       cur: true
