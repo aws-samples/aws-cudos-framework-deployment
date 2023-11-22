@@ -677,6 +677,28 @@ views:
         global: True
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.sus_compute_ec2 AS
+      WITH tag_business_metrics AS (
+        SELECT
+          line_item_usage_start_date,
+          tagvalue,
+          SUM(buss) business_metric
+        FROM
+          ${athena_database_name}.sus_buss_kpi
+        GROUP BY
+          line_item_usage_start_date,
+          tagvalue
+      ),
+      acc_business_metrics AS (
+        SELECT
+          line_item_usage_start_date,
+          linkedaccountvalue,
+          SUM(buss) business_metric
+        FROM
+          ${athena_database_name}.sus_buss_kpi
+        GROUP BY
+          line_item_usage_start_date,
+          linkedaccountvalue
+      )
       SELECT
         cur.bill_payer_account_id
       , cur.line_item_usage_account_id
@@ -686,12 +708,12 @@ views:
       , cur.product_instance_type_family
       , cur.product_physical_processor
       , SUM((cur.line_item_usage_amount * CAST(cur.product_vcpu AS double))) vcpu_hours
-      , SUM(susTag.buss) tag_business_metric
-      , SUM(susAcc.buss) account_business_metric
+      , SUM(susTag.business_metric) tag_business_metric
+      , SUM(susAcc.business_metric) account_business_metric
       FROM
         ((${athena_database_name}.${cur_table_name} cur
-      LEFT JOIN ${athena_database_name}.sus_buss_kpi susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
-      LEFT JOIN ${athena_database_name}.sus_buss_kpi susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
+      LEFT JOIN tag_business_metrics susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
+      LEFT JOIN acc_business_metrics susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((cur.product_product_family = 'Compute Instance') AND (cur.line_item_product_code = 'AmazonEC2') AND (cur.line_item_operation LIKE 'RunInstances%') AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage', 'DiscountedUsage')))
       AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '7' MONTH)))
       GROUP BY 1, 2, 3, 4, 5, 6, 7
@@ -901,6 +923,28 @@ views:
         global: True
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.sus_compute_split AS
+      WITH tag_business_metrics AS (
+        SELECT
+          line_item_usage_start_date,
+          tagvalue,
+          SUM(buss) business_metric
+        FROM
+          ${athena_database_name}.sus_buss_kpi
+        GROUP BY
+          line_item_usage_start_date,
+          tagvalue
+      ),
+      acc_business_metrics AS (
+        SELECT
+          line_item_usage_start_date,
+          linkedaccountvalue,
+          SUM(buss) business_metric
+        FROM
+          ${athena_database_name}.sus_buss_kpi
+        GROUP BY
+          line_item_usage_start_date,
+          linkedaccountvalue
+      )
       SELECT
         cur.bill_payer_account_id
       , cur.line_item_usage_account_id
@@ -908,12 +952,12 @@ views:
       , ${tag} resource_tags_user_application
       , cur.line_item_product_code
       , SUM(cur.line_item_usage_amount) vcpu_hours
-      , SUM(susTag.buss) tag_business_metric
-      , SUM(susAcc.buss) account_business_metric
+      , SUM(susTag.business_metric) tag_business_metric
+      , SUM(susAcc.business_metric) account_business_metric
       FROM
         ((${athena_database_name}.${cur_table_name} cur
-      LEFT JOIN ${athena_database_name}.sus_buss_kpi susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
-      LEFT JOIN ${athena_database_name}.sus_buss_kpi susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
+      LEFT JOIN tag_business_metrics susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
+      LEFT JOIN acc_business_metrics susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((cur.line_item_usage_type LIKE '%Fargate-vCPU-Hours:perCPU') AND (cur.line_item_product_code IN ('AmazonEKS', 'AmazonECS')) AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage')))
       AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '7' MONTH)))
       GROUP BY 1, 2, 3, 4, 5
