@@ -2,3 +2,4 @@ Resources:
   - Url: cost-anomalies/cost-anomalies.yaml
   - Url: sustainability-proxy-metrics/sustainability-proxy-metrics.yaml
   - Url: data-transfer/DataTransfer-Cost-Analysis-Dashboard.yaml
+  - Url: aws-marketplace/aws-marketplace-spg.yaml
