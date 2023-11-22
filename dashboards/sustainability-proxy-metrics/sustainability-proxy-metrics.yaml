@@ -1012,3 +1012,10 @@ views:
          GROUP BY line_item_resource_id, bill_billing_period_start_date, product_region, pricing_unit, line_item_usage_account_id, bill_payer_account_id, 7
       )
       WHERE ((usage_per_resource_and_pricing_unit > 336) AND (pricing_unit_per_resource = 1))
+schedules:
+  default:
+    ScheduleId: cid
+    ScheduleFrequency:
+      Interval: DAILY
+      TimeOfTheDay: '02:00-05:00'
+    RefreshType: FULL_REFRESH
