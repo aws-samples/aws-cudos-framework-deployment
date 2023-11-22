@@ -7,8 +7,6 @@ dashboards:
     dashboardId: aws-marketplace
     category: Custom
     templateId: aws-marketplace
-    sourceAccountId: '569662215076'
-    region: us-east-1
 datasets:
   marketplace_view:
     data:
