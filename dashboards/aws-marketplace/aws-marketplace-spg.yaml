@@ -5,7 +5,7 @@ dashboards:
       - marketplace_view
     name: AWS Marketplace Single Pane of Glass (SPG)
     dashboardId: aws-marketplace
-    category: Custom
+    category: Additional
     templateId: aws-marketplace
 datasets:
   marketplace_view:
