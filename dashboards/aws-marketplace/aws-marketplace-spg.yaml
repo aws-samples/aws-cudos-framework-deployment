@@ -1,0 +1,170 @@
+dashboards:
+  AWS MARKETPLACE SINGLE PANE OF GLASS (SPG):
+    dependsOn:
+      datasets:
+      - marketplace_view
+    name: AWS Marketplace Single Pane of Glass (SPG)
+    dashboardId: aws-marketplace
+    category: Additional
+    templateId: aws-marketplace
+datasets:
+  marketplace_view:
+    data:
+      DataSetId: 4892730f-81b6-4ae5-9d45-8a32c974cd2b
+      Name: marketplace_view
+      PhysicalTableMap:
+        208c509d-f59c-44d2-96d2-3e146f100734:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+        a2826a94-1e6d-4bd1-8cac-5e35c9124af0:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: marketplace_view
+            InputColumns:
+            - Name: year
+              Type: STRING
+            - Name: month
+              Type: STRING
+            - Name: billing_period
+              Type: DATETIME
+            - Name: usage_date
+              Type: DATETIME
+            - Name: payer_account_id
+              Type: STRING
+            - Name: linked_account_id
+              Type: STRING
+            - Name: invoice_id
+              Type: STRING
+            - Name: charge_type
+              Type: STRING
+            - Name: charge_category
+              Type: STRING
+            - Name: product_code
+              Type: STRING
+            - Name: product_name
+              Type: STRING
+            - Name: service
+              Type: STRING
+            - Name: usage_type
+              Type: STRING
+            - Name: subscription_start_date
+              Type: DATETIME
+            - Name: subscription_end_date
+              Type: DATETIME
+            - Name: item_description
+              Type: STRING
+            - Name: availability_zone
+              Type: STRING
+            - Name: region
+              Type: STRING
+            - Name: legal_entity
+              Type: STRING
+            - Name: billing_entity
+              Type: STRING
+            - Name: pricing_unit
+              Type: STRING
+            - Name: usage_quantity
+              Type: DECIMAL
+            - Name: unblended_cost
+              Type: DECIMAL
+
+      LogicalTableMap:
+        097d3f27-562a-4d8f-bcee-bad5d5e0bc7d:
+          Alias: marketplace_view
+          Source:
+            PhysicalTableId: a2826a94-1e6d-4bd1-8cac-5e35c9124af0
+        566d0885-92f6-4005-9db6-6968263e13fa:
+          Alias: Intermediate Table
+          DataTransforms:
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - year
+              - month
+              - billing_period
+              - usage_date
+              - payer_account_id
+              - linked_account_id
+              - invoice_id
+              - charge_type
+              - charge_category
+              - product_code
+              - product_name
+              - service
+              - usage_type
+              - subscription_start_date
+              - subscription_end_date
+              - item_description
+              - availability_zone
+              - region
+              - legal_entity
+              - billing_entity
+              - pricing_unit
+              - usage_quantity
+              - unblended_cost
+              - account_id
+              - account_name
+          Source:
+            JoinInstruction:
+              LeftOperand: 097d3f27-562a-4d8f-bcee-bad5d5e0bc7d
+              RightOperand: ac72cd4f-6a48-4f09-9bbc-4dbe873a764c
+              Type: LEFT
+              OnClause: '{linked_account_id} = {account_id}'
+        ac72cd4f-6a48-4f09-9bbc-4dbe873a764c:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 208c509d-f59c-44d2-96d2-3e146f100734
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - marketplace_view
+    schedules:
+    - default
+views:
+  marketplace_view:
+    dependsOn:
+      cur: true
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.marketplace_view AS
+      SELECT
+        "year" "year"
+      , "month" "month"
+      , "bill_billing_period_start_date" "billing_period"
+      , "date_trunc"('day', "line_item_usage_start_date") "usage_date"
+      , "bill_payer_account_id" "payer_account_id"
+      , "line_item_usage_account_id" "linked_account_id"
+      , "bill_invoice_id" "invoice_id"
+      , "line_item_line_item_type" "charge_type"
+      , (CASE WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN 'Running_Usage' WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN 'Running_Usage' WHEN ("line_item_line_item_type" = 'Usage') THEN 'Running_Usage' ELSE 'non_usage' END) "charge_category"
+      , "line_item_product_code" "product_code"
+      , "product_product_name" "product_name"
+      , (CASE WHEN (("bill_billing_entity" = 'AWS Marketplace') AND (NOT ("line_item_line_item_type" LIKE '%Discount%'))) THEN "Product_Product_Name" WHEN ("product_servicecode" = '') THEN "line_item_product_code" ELSE "product_servicecode" END) "service"
+      , "line_item_usage_type" "usage_type"
+      , CAST(from_iso8601_timestamp(split_part(identity_time_interval, '/', 1)) AS timestamp) "subscription_start_date"
+      , CAST(from_iso8601_timestamp(split_part(identity_time_interval, '/', 2)) AS timestamp) "subscription_end_date"
+      , "line_item_line_item_description" "item_description"
+      , "line_item_availability_zone" "availability_zone"
+      , "product_region" "region"
+      , "line_item_legal_entity" "legal_entity"
+      , "bill_billing_entity" "billing_entity"
+      , "pricing_unit" "pricing_unit"
+      , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "line_item_usage_amount" WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "line_item_usage_amount" WHEN ("line_item_line_item_type" = 'Usage') THEN "line_item_usage_amount" ELSE 0 END)) "usage_quantity"
+      , "sum"("line_item_unblended_cost") "unblended_cost"
+      FROM
+        ${cur_table_name}
+      WHERE ((("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '36' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '36' MONTH))) AND ("bill_billing_entity" = 'AWS Marketplace'))
+      GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
