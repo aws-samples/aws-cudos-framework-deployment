@@ -10,7 +10,6 @@ class Glue(CidBase):
 
     def __init__(self, session):
         super().__init__(session)
-        # QuickSight client
         self.client = self.session.client('glue', region_name=self.region)
 
     def create_or_update_table(self, view_name: str, view_query: str) -> None:
@@ -38,4 +37,8 @@ class Glue(CidBase):
         except self.client.exceptions.AlreadyExistsException:
             logger.info(f'Updating crawler')
             self.client.update_table(**crawler_definition)
+
+    def get_crawler(self, crawler_name) -> None:
+        '''get glue crawler'''
+        return self.client.get_crawler(Name=crawler_name)['Crawler']
 

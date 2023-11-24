@@ -30,14 +30,6 @@ setup_file() {
       return 1
   fi
 
-  # Create a tmp bucket to store CFN template
-  if aws s3api head-bucket --bucket "$template_bucket" 2>/dev/null; then
-    echo 'Template Bucket exist'
-  else
-    echo 'Creating bucket for template'
-    aws s3api create-bucket --bucket $template_bucket
-  fi
-
   # Create workspace
   export tf_workspace=$(mktemp -d .tftest.XXXXXX)
 }
@@ -54,6 +46,29 @@ setup_file() {
     region = "us-east-1"
     alias  = "useast1"
   }
+  variable "use_kms" {
+    type = bool
+  }
+  resource "aws_kms_key" "s3_key" {
+    count                   = var.use_kms ? 1 : 0
+    description             = "This key is used to encrypt bucket objects"
+    deletion_window_in_days = 7
+  }
+  resource "aws_s3_bucket" "template_bucket" {
+    bucket        = "$template_bucket"
+    force_destroy = true
+  }
+  resource "aws_s3_bucket_server_side_encryption_configuration" "template_bucket" {
+    count  = var.use_kms ? 1 : 0
+    bucket = aws_s3_bucket.template_bucket.id
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.s3_key[0].arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+
   module "cur_destination" {
     source             = "./terraform-modules/cur-setup-destination"
     resource_prefix    = "$cur_prefix"
@@ -72,11 +87,15 @@ setup_file() {
       aws.useast1 = aws.useast1
     }
   }
+
   module "cid_dashboards" {
     source           = "./terraform-modules/cid-dashboards"
-    stack_name       = "$stackname"
-    template_bucket  = "$template_bucket"
+    depends_on       = [aws_s3_bucket_server_side_encryption_configuration.template_bucket]
+  
+    stack_name      = "$stackname"
+    template_bucket = aws_s3_bucket.template_bucket.id
     stack_parameters = {
+      "QuickSightDataSourceRoleName"       = ""
       "PrerequisitesQuickSight"            = "yes"
       "PrerequisitesQuickSightPermissions" = "yes"
       "QuickSightUser"                     = "$quicksight_user"
@@ -94,9 +113,23 @@ EOL
   terraform -chdir="$tf_workspace" init
 }
 
+##
+# Test Unencrypted Template Bucket
+##
 @test "terraform apply (takes up to 10 mins)" {
-  terraform -chdir="$tf_workspace" apply -auto-approve
+  terraform -chdir="$tf_workspace" apply -auto-approve -var="use_kms=false"
   terraform -chdir="$tf_workspace" state list
+}
+
+@test "terraform plan has no changes" {
+  terraform -chdir="$tf_workspace" plan -detailed-exitcode -var="use_kms=false"
+}
+
+@test "KMS-encrypted template bucket plans with no changes" {
+  # Taint the S3 object so it is re-created with KMS encryption
+  terraform -chdir="$tf_workspace" taint module.cid_dashboards.aws_s3_object.template
+  terraform -chdir="$tf_workspace" apply -auto-approve -var="use_kms=true"
+  terraform -chdir="$tf_workspace" plan -detailed-exitcode -var="use_kms=true"
 }
 
 @test "cloudformation stack is created successfully" {
@@ -124,7 +157,7 @@ EOL
 }
 
 @test "terraform destroy (takes up to 10 mins)" {
-  terraform -chdir="$tf_workspace" destroy -auto-approve
+  terraform -chdir="$tf_workspace" destroy -auto-approve -var="use_kms=true"
 }
 
 @test "cloud formation stack is deleted" {
@@ -136,6 +169,7 @@ EOL
 teardown_file() {
   # Additional teardown steps in case of failure
   export region=$(aws configure get region)
+  terraform -chdir="$tf_workspace" destroy -auto-approve -var="use_kms=true" || echo "terraform destroy failed"
   aws s3 rm s3://aws-athena-query-results-cid-$account_id-$region --recursive || echo "no bucket"
   aws s3 rm s3://$cur_prefix-$account_id-local --recursive || echo "no bucket"
   aws s3 rm s3://$cur_prefix-$account_id-shared --recursive || echo "no bucket"

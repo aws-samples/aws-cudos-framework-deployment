@@ -1,12 +1,13 @@
-'''
-Source Account                    Destination Account
-┌─────────────────────────┐       ┌──────────────────┐
-│  Analysis    Template   │       │  Master Template │
-│  ┌─┬──┬─┐    ┌──────┐   │       │    ┌──────┐      │
-│  │ │┼┼│ ├────►      ├───┼───────┼────►      │      │
-│  └─┴──┴─┘    └──────┘   │       │    └──────┘      │
-│                         │       │                  │
-└─────────────────────────┘       └──────────────────┘
+''' This module analyses Quicksight Analysis and pulls the definitions of dependencies. 
+
+Here are the types of objects that are processed:
+
+    * QuickSight Analysis
+    * QuickSight DataSets
+    * Athena Views
+    * Glue Tables
+    * Glue Crawlers
+
 '''
 import re
 import time
@@ -15,7 +16,7 @@ import logging
 import yaml
 import boto3
 
-from cid.helpers import Dataset, QuickSight, Athena
+from cid.helpers import Dataset, QuickSight, Athena, Glue
 from cid.helpers import CUR
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.exceptions import CidCritical
@@ -69,7 +70,7 @@ def choose_analysis(qs):
     return choices[choice]['AnalysisId']
 
 
-def export_analysis(qs, athena):
+def export_analysis(qs, athena, glue):
     """ Export analysis to yaml resource File
     """
 
@@ -123,7 +124,7 @@ def export_analysis(qs, athena):
         if dataset_name in athena._resources.get('datasets'):
             resources_datasets.append(dataset_name)
             if not get_parameters().get('export-known-datasets'):
-                cid_print(f'    DataSet <BOLD>{dataset_name}<END> is in resources. Skiping.')
+                cid_print(f'    DataSet <BOLD>{dataset_name}<END> is in resources. Skipping.')
                 continue
 
         dataset_data = {
@@ -145,7 +146,10 @@ def export_analysis(qs, athena):
                 athena_source = value['RelationalTable']['Name']
                 views_name = athena_source.split('.')[-1]
                 dependency_views.append(views_name)
-                all_views.append(views_name)
+                if views_name in athena._resources.get('views') and not get_parameters().get('export-known-datasets'):
+                    cid_print(f'    Athena view <BOLD>{views_name}<END> is in resources. Skipping')
+                else:
+                    all_views.append(views_name)
             elif 'CustomSql' in value and 'DataSourceArn' in value['CustomSql']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like CustomSql athena dataset")
                 value['CustomSql']['DataSourceArn'] = '${athena_datasource_arn}'
@@ -228,9 +232,35 @@ def export_analysis(qs, athena):
             logger.debug(f'Skipping {key} views - it is a CUR')
             continue
         if isinstance(view_data.get('data'), str):
+            #check if there is dependency on crawler
+            crawler_names = re.findall(r"UPDATED_BY_CRAWLER\W+?'(.+?)''", view_data.get('data'))
+            if crawler_names:
+                crawler_name = crawler_names[0]
+                crawler = {'data': glue.get_crawler(crawler_name)}
+
+                for index, target in enumerate(crawler['data'].get('Targets', [])):
+                    path = target.get('Path')
+                    logger.info(f'Please replace manually location bucket with a parameter: {path}')
+                    default = get_parameter(
+                        f'{key}-s3path',
+                        'Please provide default value. (You can use {account_id} variable if needed)',
+                        default=re.sub(r'(\d{12})', '{account_id}', path),
+                        template_variables={'account_id': '{account_id}'},
+                    )
+                    crawler['parameters'] = {
+                        f's3path': {
+                            'default': default,
+                            'description': f"S3 Path for {key} table",
+                        }
+                    }
+                    crawler['data']['Targets'][index]['Path'] = '${s3path}'
+                crawlers.append(crawler)
+
+
+            # replace location with variables
             locations = re.findall(r"LOCATION\W+?'(s3://.+?)'", view_data.get('data'))
             for location in locations:
-                logger.info(f'Please replace manually location bucket with a parameter: s3://{location}')
+                logger.info(f'Please replace manually location bucket with a parameter: {location}')
                 default = get_parameter(
                     f'{key}-s3path',
                     'Please provide default value. (You can use {account_id} variable if needed)',
@@ -250,9 +280,13 @@ def export_analysis(qs, athena):
     logger.debug('Building dashboard resource')
     dashboard_id = get_parameter(
         'dashboard-id',
-        message='dashboard id (will be used in url of dashboard)',
-        default=escape_id(analysis['Name'].lower())
+        message='dashboard id (will be used in dashboard URL. Use lowercase, hyphens(not underscores) and make it short but understandable for humans)',
+        default=escape_id(analysis['Name'].lower().replace(' ', '-').replace('_', '-'))
     )
+    new_dashboard_id = dashboard_id.lower().replace(' ', '-').replace('_', '-')
+    if dashboard_id != new_dashboard_id:
+        cid_print('Best practices enforced: {dashboard_id} -> {new_dashboard_id}')
+        dashboard_id = new_dashboard_id
 
     dashboard_resource = {}
     dashboard_resource['dependsOn'] = {
@@ -262,6 +296,7 @@ def export_analysis(qs, athena):
     }
     dashboard_resource['name'] = analysis['Name']
     dashboard_resource['dashboardId'] = dashboard_id
+    dashboard_resource['category'] = get_parameters().get('category', 'Custom')
 
     dashboard_export_method = None
     if get_parameters().get('template-id'):
@@ -271,8 +306,8 @@ def export_analysis(qs, athena):
             'dashboard-export-method',
             message='Please choose export method',
             choices={
+                '[template]   Generate a QuickSight Template in the current account (Recommended)': 'template',
                 '[definition] Save QuickSight Dashboard Definition in the file': 'definition',
-                '[template]   Generate a QuickSight Template in the current account': 'template',
             },
         )
     if dashboard_export_method == 'template':
@@ -377,6 +412,8 @@ def export_analysis(qs, athena):
 if __name__ == "__main__": # for testing
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('cid').setLevel(logging.DEBUG)
-    qs = QuickSight(boto3.session.Session(), boto3.client('sts').get_caller_identity())
-    athena = Athena(boto3.session.Session(), boto3.client('sts').get_caller_identity())
-    export_analysis(qs, athena)
+    identity = boto3.client('sts').get_caller_identity()
+    qs = QuickSight(boto3.session.Session(), identity)
+    athena = Athena(boto3.session.Session(), identity)
+    glue = Glue(boto3.session.Session(), identity)
+    export_analysis(qs, athena, glue)

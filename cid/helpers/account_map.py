@@ -83,7 +83,7 @@ class AccountMap(CidBase):
 
     @property
     def accounts(self) -> dict:
-        """ Get Accoutns with the right mapping """
+        """ Get Accounts with the right mapping """
         if self._accounts:
             # Required keys mapping, used in renaming below
             key_mapping = {
@@ -106,7 +106,7 @@ class AccountMap(CidBase):
 
     @lru_cache(1000)
     def detect_metadata_table(self, name):
-        """ detect metatable with the list of accounts """
+        """ detect meta table with the list of accounts """
         cid_print('Autodiscovering metadata table')
 
         # FIXME: This will only work for current Athena Database. We might want to check optimization_data base as well
@@ -148,9 +148,13 @@ class AccountMap(CidBase):
 
             # Query path
             view_definition = self.athena._resources.get('views').get(name, {})
-            view_file = view_definition.get('File')
-
-            template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
+            if view_definition.get('File'):
+                view_file = view_definition.get('File')
+                template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
+            elif view_definition.get('data'):
+                template = Template(str(view_definition.get('data')))
+            else:
+                raise CidError(f'{name} definition does not contain File or data: {view_definition}')
 
             # Fill in TPLs
             columns_tpl = {
@@ -187,7 +191,7 @@ class AccountMap(CidBase):
         return compiled_query
 
     def get_organization_accounts(self) -> list:
-        """ Retreive AWS Organization account """
+        """ Retrieve AWS Organization account """
         # Init clients
         accounts = []
         orgs = self.session.client('organizations')
@@ -210,14 +214,14 @@ class AccountMap(CidBase):
         return accounts
 
     def check_file_exists(self, file_path) -> bool:
-        """ Checks if the givven file exists """
+        """ Checks if the given file exists """
         # Set base paths
         abs_path = Path().absolute()
 
         return Path.is_file(abs_path / file_path)
 
     def get_csv_accounts(self, file_path) -> list:
-        """ Retreive accounts from CSV file """
+        """ Retrieve accounts from CSV file """
         accounts = [
             {str(k).lower().replace(" ", "_"): str(v) for k, v in row.items()}
             for row in read_csv(file_path)
@@ -229,7 +233,7 @@ class AccountMap(CidBase):
     def select_metadata_collection_method(self) -> str:
         """ Selects the method to collect metadata """
         logger.info('Metadata source selection')
-        # Ask user which method to use to retreive account list
+        # Ask user which method to use to retrieve account list
         account_map_sources = {
             'Dummy (CUR account data, no names)': 'dummy',
             'AWS Organizations (one time account listing)': 'organization',

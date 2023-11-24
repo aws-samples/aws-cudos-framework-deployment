@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import urllib
 import logging
 import functools
 from pathlib import Path
@@ -16,14 +17,13 @@ else:
 import yaml
 import click
 import requests
-from deepmerge import always_merger
 from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
 
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
 from cid.helpers.quicksight.template import Template as CidQsTemplate
@@ -50,6 +50,9 @@ class Cid():
         self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
         self._logger = None
+        self.catalog_urls = [
+            'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/dashboards/catalog.yaml',
+        ]
 
     def aws_login(self):
         params = {
@@ -108,7 +111,7 @@ class Cid():
                 'glue': Glue(self.base.session)
             })
         return self._clients.get('glue')
-    
+
     @property
     def organizations(self) -> Organizations:
         if not self._clients.get('organizations'):
@@ -191,10 +194,12 @@ class Cid():
             print(f"\t{ep.name} loaded")
             plugins.update({ep.value: plugin})
             try:
-                self.resources = always_merger.merge(
-                    self.resources, plugin.provides())
+                resources = plugin.provides()
+                if ep.value != 'cid.builtin.core':
+                    resources.get('views', {}).pop('account_map', None) # protect account_map from overriding
+                self.resources = merge_objects(self.resources, resources, depth=1)
             except AttributeError:
-                pass
+                logger.warning(f'Failed to load {ep.name}')
         print('\n')
         logger.info('Finished loading plugins')
         return plugins
@@ -281,27 +286,53 @@ class Cid():
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
     def get_page(self, source):
-        return requests.get(source, timeout=10)
+        resp = requests.get(source, timeout=10)
+        resp.raise_for_status()
+        return resp
 
     def load_resources(self):
         ''' load additional resources from command line parameters
         '''
+        if get_parameters().get('catalog'):
+            self.catalog_urls = get_parameters().get('catalog').split(',')
+        for catalog_url in self.catalog_urls:
+            self.load_catalog(catalog_url)
         if get_parameters().get('resources'):
             source = get_parameters().get('resources')
-            logger.info(f'Loading resources from {source}')
-            resources = {}
-            try:
-                if source.startswith('https://'):
-                    resp = self.get_page(source)
-                    assert resp.status_code in [200, 201], f'Error {resp.status_code} while loading url. {resp.text}'
-                    resources = yaml.safe_load(resp.text)
-                else:
-                    with open(source, encoding='utf-8') as file_:
-                        resources = yaml.safe_load(file_)
-            except Exception as exc:
-                raise CidCritical(f'Failed to load resources from {source}: {type(exc)} {exc}')
-            self.resources = always_merger.merge(self.resources, resources)
+            self.load_resource_file(source)
         self.resources = self.resources_with_global_parameters(self.resources)
+
+    def load_resource_file(self, source):
+        ''' load additional resources from resource file
+        '''
+        logger.debug(f'Loading resources from {source}')
+        resources = {}
+        try:
+            if source.startswith('https://'):
+                resources = yaml.safe_load(self.get_page(source).text)
+                if not isinstance(resources, dict):
+                    raise CidCritical(f'Failed to load {source}. Got {type(resources)} ({repr(resources)[:150]}...)')
+            else:
+                with open(source, encoding='utf-8') as file_:
+                    resources = yaml.safe_load(file_)
+        except Exception as exc:
+            logger.warning(f'Failed to load resources from {source}: {exc}')
+            return
+        resources.get('views', {}).pop('account_map', None) # Exclude account map as it is a special view
+        self.resources = merge_objects(self.resources, resources, depth=1)
+
+    def load_catalog(self, catalog_url):
+        ''' load additional resources from catalog
+        '''
+        try:
+            catalog = yaml.safe_load(self.get_page(catalog_url).text)
+        except requests.exceptions.HTTPError as exc:
+            logger.warning(f'Failed to load catalog url: {exc}')
+            logger.debug(exc, exc_info=True)
+            return
+        for resource_ref in catalog.get('Resources', []):
+            url = urllib.parse.urljoin(catalog_url, resource_ref.get("Url"))
+            self.load_resource_file(url)
 
 
     def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict=None):
@@ -343,7 +374,7 @@ class Cid():
                         )
             else:
                 raise CidCritical(f'Unknown parameter type for "{key}". Must be a string or a dict with value or with default key')
-        return always_merger.merge(params, others or {})
+        return merge_objects(params, others or {}, depth=1)
 
 
     @command
@@ -361,16 +392,36 @@ class Cid():
         # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
         self.qs.discover_dashboards()
 
+        dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
+        if not dashboard_id:
+            standard_categories = ['Foundational', 'Advanced', 'Additional'] # Show these categories first
+            all_categories = set([f"{dashboard.get('category', 'Other')}" for dashboard in self.resources.get('dashboards').values()])
+            non_standard_categories = [cat for cat in all_categories if cat not in standard_categories]
+            categories =  standard_categories + sorted(non_standard_categories)
+            dashboard_options = {}
+            for category in categories:
+                dashboard_options[f'{category.upper()}'] = '[category]'
+                counter = 0
+                for dashboard in self.resources.get('dashboards').values():
+                    if dashboard.get('deprecationNotice'):
+                        continue
+                    if dashboard.get('category', 'Other') == category:
+                        check = '✓' if dashboard.get('dashboardId') in self.qs.dashboards else ' '
+                        dashboard_options[f" {check}[{dashboard.get('dashboardId')}] {dashboard.get('name')}"] = dashboard.get('dashboardId')
+                        counter += 1
+                if not counter: # remove empty categories
+                    del dashboard_options[f'{category.upper()}']
+            while True:
+                dashboard_id = get_parameter(
+                    param_name='dashboard-id',
+                    message="Please select a dashboard to deploy",
+                    choices=dashboard_options,
+                )
+                if dashboard_id == '[category]':
+                    unset_parameter('dashboard-id')
+                    continue
+                break
 
-        if dashboard_id is None:
-            dashboard_id = get_parameter(
-                param_name='dashboard-id',
-                message="Please select dashboard to install",
-                choices={
-                   f"[{dashboard.get('dashboardId')}] {dashboard.get('name')}" : dashboard.get('dashboardId')
-                   for k, dashboard in self.resources.get('dashboards').items()
-                },
-            )
         if not dashboard_id:
             print('No dashboard selected')
             return
@@ -436,13 +487,13 @@ class Cid():
                 choices=['yes', 'no'],
                 default='yes') != 'yes':
                 return
-            logger.info("Swich to recursive mode")
+            logger.info("Switch to recursive mode")
             recursive = True
 
         if recursive:
             self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
 
-        # Find datasets for template or defintion
+        # Find datasets for template or definition
         if not dashboard_definition.get('datasets'):
             dashboard_definition['datasets'] = {}
 
@@ -467,12 +518,12 @@ class Cid():
                     if not isinstance(ds, Dataset) or ds.name != dataset_name:
                         continue
                     if dashboard_definition.get('templateId'):
-                        # For templates we can additionaly verify dataset fields
+                        # For templates we can additionally verify dataset fields
                         dataset_fields = {col.get('Name'): col.get('Type') for col in ds.columns}
                         src_fields = source_template.datasets.get(ds_map.get(dataset_name, dataset_name) )
-                        required_fileds = {col.get('Name'): col.get('DataType') for col in src_fields}
+                        required_fields = {col.get('Name'): col.get('DataType') for col in src_fields}
                         unmatched = {}
-                        for k, v in required_fileds.items():
+                        for k, v in required_fields.items():
                             if k not in dataset_fields or dataset_fields[k] != v:
                                 unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
                         logger.debug(f'unmatched_fields={unmatched}')
@@ -481,7 +532,7 @@ class Cid():
                         else:
                             matching_datasets.append(ds)
                     else:
-                        # for definitions datasets we do not have any possibilty to check if dataset with a given name matches
+                        # for definitions datasets we do not have any possibility to check if dataset with a given name matches
                         matching_datasets.append(ds)
 
                 if not matching_datasets:
@@ -924,10 +975,7 @@ class Cid():
 
 
     def check_dashboard_version_compatibility(self, dashboard_id):
-        
-        """
-            Returns True | False | None if could not check 
-        """
+        """ Returns True | False | None if could not check """
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         except CidCritical:
@@ -935,14 +983,14 @@ class Cid():
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
-        if not isinstance(dashboard.deployedTemplate, CidQsTemplate): 
+        if not isinstance(dashboard.deployedTemplate, CidQsTemplate):
             print(f'Dashboard "{dashboard_id}" does not have a versioned template')
             return None
         if not isinstance(dashboard.sourceTemplate, CidQsTemplate):
             print(f"Cannot access QuickSight source template for {dashboard_id}")
             return None
         try:
-            cid_version = dashboard.deployedTemplate.cid_version            
+            cid_version = dashboard.deployedTemplate.cid_version
         except ValueError:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
             cid_version = "N/A"
@@ -954,32 +1002,24 @@ class Cid():
             cid_version_latest = "N/A"
 
         if dashboard.latest:
-            print("You are up to date!")       
-            print(f"  CID Version      {cid_version}")
-            print(f"  TemplateVersion  {dashboard.deployed_version} ")
-
-            logger.debug("The dashboard is up-to-date")
-            logger.debug(f"CID Version      {cid_version}")
-            logger.debug(f"TemplateVersion  {dashboard.deployed_version} ")
+            cid_print("You are up to date!")
+            cid_print(f"  Version    {cid_version}")
+            cid_print(f"  VersionId  {dashboard.deployed_version} ")
         else:
-            print(f"An update is available:")
-            print("                   Deployed -> Latest")
-            print(f"  CID Version      {str(cid_version): <9}   {str(cid_version_latest): <6}")
-            print(f"  TemplateVersion  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <6}")
-
-            logger.debug("An update is available")
-            logger.debug(f"CID Version      {str(cid_version): <9} --> {str(cid_version_latest): <6}")
-            logger.debug(f"TemplateVersion  {str(dashboard.deployedTemplate.version): <9} -->  {dashboard.latest_version: <6}")
+            cid_print(f"An update is available:")
+            cid_print("              Deployed -> Latest")
+            cid_print(f"  Version    {str(cid_version): <9}   {str(cid_version_latest): <9}")
+            cid_print(f"  VersionId  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <9}")
 
         # Check if version are compatible
         compatible = None
         try:
             compatible = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
-        except ValueError as e:
-            logger.info(e)
-            
+        except ValueError as exc:
+            logger.info(exc)
+
         return compatible
-    
+
     def update_dashboard(self, dashboard_id, dashboard_definition):
 
         dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
@@ -996,8 +1036,7 @@ class Cid():
             print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
         else:
             print('Unable to determine dashboard source.')
-        
-                            
+
         if dashboard.status == 'legacy':
             if get_parameter(
                 param_name=f'confirm-update',
@@ -1016,7 +1055,7 @@ class Cid():
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')
         logger.debug(f"Updating {dashboard_id}")
-        
+
         try:
             self.qs.update_dashboard(dashboard, dashboard_definition)
             print('Update completed\n')

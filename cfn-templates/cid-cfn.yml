@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards
+Description: Deployment of Cloud Intelligence Dashboards v0.2.39
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -13,7 +13,7 @@ Metadata:
           default: CUDOS, Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually (Dashboard data will appear within 24h after CUR creation).
         Parameters:
           - CURBucketPath
-          - DeployCUDOSDashboard
+          - DeployCUDOSv5
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
       - Label:
@@ -32,13 +32,13 @@ Metadata:
           - AthenaQueryResultsBucket
           - DatabaseName
           - CURTableName
-          - CidVersion
           - GlueDataCatalog
           - Suffix
           - QuickSightDataSourceRoleName
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
-          - DataBuketsKmsKeyArns
+          - DeployCUDOSDashboard
+          - DataBucketsKmsKeyArns
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -51,7 +51,9 @@ Metadata:
       CURBucketPath:
         default: "Path to Cost and Usage report"
       DeployCUDOSDashboard:
-        default: "Deploy CUDOS Dashboard"
+        default: "CUDOS Dashboard v4 - Deprecated [set 'no' to delete]"
+      DeployCUDOSv5:
+        default: "Deploy CUDOS v5 Dashboard"
       DeployCostIntelligenceDashboard:
         default: "Deploy CostIntelligenceDashboard"
       DeployKPIDashboard:
@@ -70,8 +72,6 @@ Metadata:
         default: "Database Name - Please do not change"
       CURTableName:
         default: "CUR Table Name - Please do not change"
-      CidVersion:
-        default: "Cid Version - Please do not change"
       Suffix:
         default: "Suffix - Please do not change"
       QuickSightDataSourceRoleName:
@@ -82,7 +82,7 @@ Metadata:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
-      DataBuketsKmsKeyArns:
+      DataBucketsKmsKeyArns:
         default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
       PrimaryTagName:
         Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
@@ -113,11 +113,11 @@ Parameters:
   QuickSightDataSetRefreshSchedule:
     Type: String
     Default: ''
-    Description: 'Cron expression on when to refresh spice datasets via Lambda. Only needed if some difficulities with refresh scheduling via API.'
+    Description: 'Cron expression on when to refresh spice datasets via Lambda. Only needed if some difficulties with refresh scheduling via API.'
   QuickSightDataSourceRoleName:
     Type: String
     Default: 'CidQuickSightDataSourceRole'
-    Description: "IAM Role Name to be used on QuckSight Datasource Creation. If empty - then the Default QuckSight Role will be used; if provided other existing role, will use that Role; if name equal to 'CidQuickSightDataSourceRole', then a role will be created by this CloudFromation)."
+    Description: "IAM Role Name to be used on QuickSight Datasource Creation. If empty - then the Default QuickSight Role will be used; if provided other existing role, will use that Role; if name equal to 'CidQuickSightDataSourceRole', then a role will be created by this CloudFromation)."
   CURBucketPath:
     Type: String
     MinLength: 3
@@ -140,18 +140,18 @@ Parameters:
     Type: String
     Default: ''
     Description: Leave Empty
-  CidVersion:
-    Type: String
-    MinLength: 5
-    Default: 0.2.30
-    Description: A version of CID package
   Suffix:
     Type: String
     Description: Leave Empty. Do not use this Suffix it is not fully supported. For testing purposes only.
     Default: ""
   DeployCUDOSDashboard:
     Type: String
-    Description: Deploy CUDOS Dashboard
+    Description: Set to 'no' to remove deprecated (v4) version of CUDOS Dashboard
+    Default: "no"
+    AllowedValues: ["yes", "no"]
+  DeployCUDOSv5:
+    Type: String
+    Description: Deploy CUDOS v5 Dashboard
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployCostIntelligenceDashboard:
@@ -187,7 +187,7 @@ Parameters:
     Type: String
     Description: Existing Glue Data Catalog
     Default: "AwsDataCatalog"
-  DataBuketsKmsKeyArns:
+  DataBucketsKmsKeyArns:
     Type: String
     Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
     Default: "*"
@@ -198,7 +198,7 @@ Parameters:
     AllowedValues: ["yes", "no"]
   PrimaryTagName:
     Type: String
-    Description: Choose a tag name for Primary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leve as is if not sure.
+    Description: Choose a tag name for Primary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leave as is if not sure.
     Default: "owner"
     MinLength: 1 # cid cmd do not accept empty parameters
     AllowedPattern: "[a-zA-Z0-9_]*"
@@ -211,6 +211,7 @@ Parameters:
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+  NeedCUDOSv5: !Equals [ !Ref DeployCUDOSv5, "yes" ]
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
@@ -218,6 +219,7 @@ Conditions:
   NeedCUR:
     Fn::Or:
       - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+      - !Equals [ !Ref DeployCUDOSv5, "yes" ]
       - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
       - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedDataCollectionLab:
@@ -237,17 +239,18 @@ Conditions:
       - !Equals [ !Ref CURTableName, "" ]
       - !Condition NeedCUR
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  NeedDataBucketsKms: !Equals [ !Ref DataBuketsKmsKeyArns, "" ]
+  NeedDataBucketsKms: !Equals [ !Ref DataBucketsKmsKeyArns, "" ]
   NeedDataBucketsKmsAndNeedCURTable:
     Fn::And:
       - !Condition NeedDataBucketsKms
       - !Condition NeedCURTable
-  NeedDatasource: !Not [ !Equals [ !Ref "AWS::Region", "eu-west-3" ] ] # In eu-west-3 CFN QS Dataset resource is not availble yet.
+  NeedDatasource: !Not [ !Equals [ !Ref "AWS::Region", "eu-west-3" ] ] # In eu-west-3 CFN QS Dataset resource is not available yet.
   NeedLakeFormationEnabled:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
       - Fn::Or:
         - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCUDOSv5, "yes" ]
         - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
         - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedLakeFormationCrawlerPermissions:
@@ -266,10 +269,6 @@ Conditions:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
       - !Condition NeedCUR
-  NeedQuickSightDataSourceRoleAndODC:
-    Fn::And:
-      - !Condition NeedQuickSightDataSourceRole
-      - !Condition NeedDataCollectionLab
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -316,7 +315,7 @@ Resources:
       FunctionName:  !Sub 'CidSpiceRefreshLambda${Suffix}'
       Role: !GetAtt SpiceRefreshExecutionRole.Arn
       Description: 'Refresh QuickSight DataSets for CID'
-      Runtime: python3.9
+      Runtime: python3.10
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -451,13 +450,45 @@ Resources:
             EncryptionOption: SSE_S3
           OutputLocation: !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/', !Sub 's3://${AthenaQueryResultsBucket}/' ]
 
+  #Legacy version. Replaced by CustomResourceFunctionInit but we cannot remove it completely as it was removing workgroup on deletion of the custom resource.
+  CustomRessourceFunctionInit:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub CidInitialSetup-DoNotRun${Suffix}
+      Role: !GetAtt 'InitLambdaExecutionRole.Arn'
+      Description: "CID legacy setup"
+      Runtime: python3.10
+      Handler: 'index.lambda_handler'
+      Code:
+        ZipFile: |
+          # This is a legacy lambda. You can delete it. This was kept to disable delete workgroup functionality.
+          import json
+          import urllib3
+
+          def lambda_handler(event, context):
+              url = event.get('ResponseURL')
+              json_body = json.dumps({
+                'Status': 'SUCCESS'
+                'Reason': 'legacy'
+                'PhysicalResourceId': 'keep_it_constant'
+                'StackId': event.get('StackId')
+                'RequestId': event.get('RequestId')
+                'LogicalResourceId': event.get('LogicalResourceId')
+              })
+              try:
+                  http = urllib3.PoolManager()
+                  response = http.request('PUT', url, body=json_body, headers={'content-type' : '', 'content-length' : str(len(json_body))}, retries=False)
+                  print(f"Status code: {response}")
+              except Exception as exc:
+                  print("Failed sending PUT to CFN: " + str(exc))
+
   CustomResourceFunctionInit:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "CidInitialSetup-DoNotRun${Suffix}"
+      FunctionName: !Sub "CidCustomResourceFunctionInit-DoNotRun${Suffix}"
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
-      Runtime: python3.9
+      Runtime: python3.10
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 300
@@ -602,7 +633,7 @@ Resources:
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
 
-  InitLambdaExecutionRoleWorkGroupPoliciy:
+  InitLambdaExecutionRoleWorkGroupPolicy:
     Type: AWS::IAM::Policy
     Condition: NeedAthenaWorkgroup
     Properties:
@@ -616,7 +647,7 @@ Resources:
       Roles:
         - !Ref InitLambdaExecutionRole
 
-  InitLambdaExecutionRoleBucketPoliciy:
+  InitLambdaExecutionRoleBucketPolicy:
     Type: AWS::IAM::Policy
     Condition: NeedAthenaQueryResultsBucket
     Properties:
@@ -639,7 +670,7 @@ Resources:
       Roles:
         - !Ref InitLambdaExecutionRole
 
-  InitLambdaExecutionRoleStartCrawlerPoliciy:
+  InitLambdaExecutionRoleStartCrawlerPolicy:
     Type: AWS::IAM::Policy
     Condition: NeedCURTable
     Properties:
@@ -655,7 +686,7 @@ Resources:
       Roles:
         - !Ref InitLambdaExecutionRole
 
-  InitialSetup:
+  Setup:
     Type: Custom::CustomResource
     Properties:
       ServiceToken: !GetAtt CustomResourceFunctionInit.Arn
@@ -667,11 +698,11 @@ Resources:
         - Key: IgnoreConditionalDependsOnDatabase
           Value: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
         - Key: IgnoreConditionalDependsOnPolicy1
-          Value: !If [NeedAthenaWorkgroup, !Ref InitLambdaExecutionRoleWorkGroupPoliciy, '']
+          Value: !If [NeedAthenaWorkgroup, !Ref InitLambdaExecutionRoleWorkGroupPolicy, '']
         - Key: IgnoreConditionalDependsOnPolicy2
-          Value: !If [NeedAthenaQueryResultsBucket, !Ref InitLambdaExecutionRoleBucketPoliciy, '']
+          Value: !If [NeedAthenaQueryResultsBucket, !Ref InitLambdaExecutionRoleBucketPolicy, '']
         - Key: IgnoreConditionalDependsOnPolicy3
-          Value: !If [NeedCURTable, !Ref InitLambdaExecutionRoleStartCrawlerPoliciy, '']
+          Value: !If [NeedCURTable, !Ref InitLambdaExecutionRoleStartCrawlerPolicy, '']
 
   ProcessPathLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -692,9 +723,9 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
-      FunctionName: !Sub "CidProcessPath-DoNotRun${Suffix}"
+      FunctionName: !Sub "CidCustomResourceProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
-      Runtime: python3.9
+      Runtime: python3.10
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -730,9 +761,9 @@ Resources:
                   s3path = s3path.replace('{account_id}', account_id)
                   parts = s3path.split('/')
                   data['Bucket'] = parts[0]
-                  if not bucket_exists(data['Bucket']) and type_.lower() != 'delete':
-                      raise Exception(f'Bucket {parts[0]} does not exist. Please check prerequisites. Just creating a bucket is not enough.')
                   if properties.get('type', '') == 'CUR':
+                      if not bucket_exists(data['Bucket']) and type_.lower() != 'delete':
+                          raise Exception(f'Bucket {parts[0]} does not exist. Please check prerequisites. Just creating a bucket is not enough.')
                       # detect Type of CUR and choose the right partitions structure
                       if len(parts[1:]) == 1: # most likely it is created by CFN or similar
                           data['Partitions'] = partitions['managed_by_cfn']
@@ -777,7 +808,7 @@ Resources:
                       return False
               return True
 
-  ProcessedCURPath:
+  CURPath:
     Type: Custom::CustomResourceProcessPath
     Condition: NeedCUR
     Properties:
@@ -785,9 +816,9 @@ Resources:
       s3path: !Ref CURBucketPath
       type: 'CUR'
 
-  ProcessedODCPath:
+  ODCPath:
     Type: Custom::CustomResourceProcessPath
-    Condition: NeedDataCollectionLab
+    #Condition: NeedDataCollectionLab #Need to process ODC lab path regardless dashboards. CUR dashboards need ODC for account map
     Properties:
       ServiceToken: !GetAtt CustomResourceProcessPath.Arn
       s3path: !Ref OptimizationDataCollectionBucketPath
@@ -811,7 +842,7 @@ Resources:
       DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
       Targets:
         S3Targets:
-          - Path: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
+          - Path: !Sub 's3://${CURPath.Bucket}/${CURPath.Path}/'
             Exclusions:
               - '**.json'
               - '**.yml'
@@ -848,7 +879,7 @@ Resources:
       CatalogId: !Ref "AWS::AccountId"
       DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
       TableInput:
-        Name: !GetAtt ProcessedCURPath.Folder
+        Name: !GetAtt CURPath.Folder
         Owner: owner
         Retention: 0
         TableType: EXTERNAL_TABLE
@@ -859,7 +890,7 @@ Resources:
         StorageDescriptor:
           BucketColumns: []
           Compressed: false
-          Location: !Sub 's3://${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/'
+          Location: !Sub 's3://${CURPath.Bucket}/${CURPath.Path}/'
           NumberOfBuckets: -1
           InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
           OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
@@ -894,6 +925,7 @@ Resources:
             - {"Name": "pricing_offering_class", "Type": "string" }
             - {"Name": "pricing_public_on_demand_cost", "Type": "double" }
             - {"Name": "pricing_purchase_option", "Type": "string" }
+            - {"Name": "pricing_term", "Type": "string" }
             - {"Name": "pricing_unit", "Type": "string" }
             - {"Name": "product_cache_engine", "Type": "string" }
             - {"Name": "product_current_generation", "Type": "string" }
@@ -911,6 +943,7 @@ Resources:
             - {"Name": "product_product_name", "Type": "string" }
             - {"Name": "product_region", "Type": "string" }
             - {"Name": "product_servicecode", "Type": "string" }
+            - {"Name": "product_storage", "Type": "string" }
             - {"Name": "product_tenancy", "Type": "string" }
             - {"Name": "product_to_location", "Type": "string" }
             - {"Name": "product_volume_api_name", "Type": "string" }
@@ -932,7 +965,7 @@ Resources:
             - {"Name": "savings_plan_start_time", "Type": "string" }
             - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
-        PartitionKeys: !GetAtt ProcessedCURPath.Partitions
+        PartitionKeys: !GetAtt CURPath.Partitions
 
   CidCURCrawlerRole:
     Type: AWS::IAM::Role
@@ -970,15 +1003,15 @@ Resources:
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
                   - Fn::If:
                       - NeedDatabase
-                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${ProcessedCURPath.Folder}
-                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/${ProcessedCURPath.Folder}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/${CURPath.Folder}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/${CURPath.Folder}
               - Effect: Allow
                 Action:
                   - 's3:GetObject'
                 Resource:
-                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${ProcessedCURPath.Bucket}/${ProcessedCURPath.Path}/*'
+                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${CURPath.Bucket}/${CURPath.Path}/*'
 
-  KmsPoliciyForCidCURCrawlerRole:
+  KmsPolicyForCidCURCrawlerRole:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKmsAndNeedCURTable
     Properties:
@@ -989,7 +1022,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
       Roles:
         - !Ref CidCURCrawlerRole
 
@@ -1037,6 +1070,10 @@ Resources:
                      - NeedDatabase
                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/optimization_data/*
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/optimization_data
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_collection/*
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_collection
               - Effect: Allow
                 Action:
                   - athena:ListDatabases
@@ -1079,26 +1116,26 @@ Resources:
 
   QuickSightDataSourceRolePolicyForODCBucket:
     Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceRoleAndODC
+    Condition: NeedQuickSightDataSourceRole     # We need ODC bucket even if ODC dashboards are not activated  (ex: for account map)
     Properties:
       PolicyName: QuickSightDataSource-S3AccessODC
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: CidAllowDecryptDataBuketsKmsKeyArns
+          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
             Effect: Allow
             Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
           - Sid: CidAllowListBucket
             Effect: Allow
             Action: s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${ProcessedODCPath.Bucket}
+            Resource: !Sub arn:aws:s3:::${ODCPath.Bucket}
           - Sid: CidAllowReadBucket
             Effect: Allow
             Action:
               - s3:GetObject
               - s3:GetObjectVersion
-            Resource: !Sub arn:aws:s3:::${ProcessedODCPath.Bucket}/*
+            Resource: !Sub arn:aws:s3:::${ODCPath.Bucket}/*
       Roles:
         - !Ref QuickSightDataSourceRole
   QuickSightDataSourceRolePolicyForCURBucket:
@@ -1109,20 +1146,20 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: CidAllowDecryptDataBuketsKmsKeyArns
+          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
             Effect: Allow
             Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
           - Sid: CidAllowListBucket
             Effect: Allow
             Action: s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${ProcessedCURPath.Bucket}
+            Resource: !Sub arn:aws:s3:::${CURPath.Bucket}
           - Sid: CidAllowReadBucket
             Effect: Allow
             Action:
               - s3:GetObject
               - s3:GetObjectVersion
-            Resource: !Sub arn:aws:s3:::${ProcessedCURPath.Bucket}/*
+            Resource: !Sub arn:aws:s3:::${CURPath.Bucket}/*
       Roles:
         - !Ref QuickSightDataSourceRole
 
@@ -1146,7 +1183,7 @@ Resources:
             - 'quicksight:UpdateDataSource'
             - 'quicksight:DeleteDataSource'
             - 'quicksight:UpdateDataSourcePermissions'
-          Principal: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+          Principal: !Sub 'arn:${AWS::Partition}:quicksight:${Setup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
 
   CidExecRole:
     Type: AWS::IAM::Role
@@ -1172,6 +1209,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - athena:GetWorkGroup
+                  - athena:CreateWorkGroup
+                  - athena:UpdateWorkGroup
                 Resource:
                   Fn::If:
                    - NeedAthenaWorkgroup
@@ -1186,9 +1225,10 @@ Resources:
                   - glue:GetTables
                   - glue:GetPartitions
                   - glue:CreateTable
-                Resource: "*" # This is needed to allow Autodetection in CID-CMD
+                Resource: "*" # This is needed to allow Autodetect in CID-CMD
               - Effect: Allow
                 Action:
+                  - s3:CreateBucket
                   - s3:ListBucket
                   - s3:ListBucketMultipartUploads
                   - s3:ListMultipartUploadParts
@@ -1233,7 +1273,7 @@ Resources:
                   - quicksight:DescribeUser
                   - quicksight:DescribeTemplate
                   - quicksight:DescribeAccountSubscription
-                Resource: '*' # This is needed to allow Autodetection in CID-CMD
+                Resource: '*' # This is needed to allow Autodetect in CID-CMD
               - Effect: Allow
                 Action:
                 - quicksight:CreateRefreshSchedule
@@ -1255,7 +1295,7 @@ Resources:
                   - athena:ListTableMetadata
                   - athena:ListWorkGroups
                   - athena:GetDatabase
-                Resource: '*'  # This is needed to allow Autodetection in CID-CMD
+                Resource: '*'  # This is needed to allow Autodetect in CID-CMD
 
 
   DataLakeSettingsCidExecRolePerm:
@@ -1317,7 +1357,7 @@ Resources:
     Condition: NeedLakeFormationEnabled
     Properties:
       DataLakePrincipal:
-        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${Setup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
       Permissions:
         - ALL
       Resource:
@@ -1330,7 +1370,7 @@ Resources:
     Condition: NeedLakeFormationEnabled
     Properties:
       DataLakePrincipal:
-        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${InitialSetup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
+        DataLakePrincipalIdentifier: !Sub 'arn:${AWS::Partition}:quicksight:${Setup.IdentityRegion}:${AWS::AccountId}:user/default/${QuickSightUser}'
       Permissions:
         - ALL
       Resource:
@@ -1340,7 +1380,7 @@ Resources:
           TableWildcard: {}
 
 
-  KmsPoliciyForCidExecRole:
+  KmsPolicyForCidExecRole:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKms
     Properties:
@@ -1351,7 +1391,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBuketsKmsKeyArns]
+            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
       Roles:
         - !Ref CidExecRole
 
@@ -1361,7 +1401,7 @@ Resources:
       FunctionName: !Sub 'CidCustomResourceDashboard${Suffix}'
       Description: 'A lambda that manage create delete update of Athena views, QuickSight Datasets and dashboards using CID-CMD tool'
       Role: !GetAtt CidExecRole.Arn
-      Runtime: python3.9
+      Runtime: python3.10
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 2688
       Timeout: 300 # Time of discovery depend on number of dashboards
@@ -1465,15 +1505,15 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: !Sub 'cid-resource-lambda-layer/cid-${CidVersion}.zip'
+        S3Key: 'cid-resource-lambda-layer/cid-0.2.39.zip' #replace version here if needed
       CompatibleRuntimes:
-        - python3.9
+        - python3.10
 
   CostIntelligenceDashboard:
     Type: Custom::CidDashboard
     Condition: NeedCostIntelligenceDashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'CloudIntelligenceDashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1493,7 +1533,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedCUDOSDashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'CUDOSDashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1511,12 +1551,33 @@ Resources:
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
-
+  CUDOSv5Dashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedCUDOSv5
+    DependsOn:
+      - Setup
+    Properties:
+      Name: !Sub 'CUDOSv5Dashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: cudos-v5
+        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+        quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
+        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        quicksight-user: !Ref QuickSightUser
+        account-map-source: 'dummy' #initial
+        share-with-account: 'yes'
+      Tags: # Hacky way to manage conditional dependencies
+        - Key: IgnoreNeedCostIntelligenceDashboard
+          Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
   KPIDashboard:
     Type: Custom::CidDashboard
     Condition: NeedKPIDashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'KPIDashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1541,7 +1602,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedTAODashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'TAODashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1561,7 +1622,7 @@ Resources:
     Type: Custom::CidDashboard
     Condition: NeedComputeOptimizerDashboard
     DependsOn:
-      - InitialSetup
+      - Setup
     Properties:
       Name: !Sub 'ComputeOptimizerDashboard${Suffix}'
       ServiceToken: !GetAtt CidExec.Arn
@@ -1591,6 +1652,10 @@ Outputs:
     Description: "URL of CUDOSDashboard"
     Condition: NeedCUDOSDashboard
     Value: !GetAtt CUDOSDashboard.DashboardURL
+  CUDOSv5DashboardURL:
+    Description: "URL of CUDOS Dashboard v5"
+    Condition: NeedCUDOSv5
+    Value: !GetAtt CUDOSv5Dashboard.DashboardURL
   KPIDashboardURL:
     Description: "URL of KPIDashboard"
     Condition: NeedKPIDashboard
