@@ -885,9 +885,9 @@ class QuickSight(CidBase):
         deadline = time.time() + timeout
         while time.time() <= deadline:
             try:
-                _dataset = Dataset(self.client.describe_data_set(AwsAccountId=self.account_id,DataSetId=id).get('DataSet'))
+                _dataset = Dataset(self.client.describe_data_set(AwsAccountId=self.account_id, DataSetId=id).get('DataSet'))
                 logger.info(f'Saving dataset details "{_dataset.name}" ({_dataset.id})')
-                self._datasets.update({_dataset.id: _dataset})
+                self._datasets[_dataset.id] = _dataset
                 break
             except self.client.exceptions.ResourceNotFoundException:
                 logger.info(f'DataSetId {id} not found')
@@ -895,6 +895,9 @@ class QuickSight(CidBase):
                 continue
             except self.client.exceptions.AccessDeniedException:
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
+                return None
+            except self.client.exceptions.ClientError as exc:
+                logger.error(f'Error when trying to describe dataset {id}: {exc}')
                 return None
 
         return self._datasets.get(id, None)
