@@ -1269,6 +1269,7 @@ class QuickSight(CidBase):
             'AwsAccountId': self.account_id,
             'DashboardId': definition.get('dashboardId'),
             'Name': definition.get('name'),
+            'ValidationStrategy': {'Mode': 'LENIENT'},
         }
 
         if definition.get('sourceTemplate'):
