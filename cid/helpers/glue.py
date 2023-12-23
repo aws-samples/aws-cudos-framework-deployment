@@ -32,3 +32,8 @@ class Glue(CidBase):
             )
         except self.client.exceptions.EntityNotFoundException:
             return True
+
+
+    def get_crawler(self, name: str):
+        """ GetCrawler """
+        return self.client.get_crawler(Name=name)['Crawler']

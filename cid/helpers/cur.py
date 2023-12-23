@@ -2,7 +2,7 @@ import json
 import logging
 
 from cid.base import CidBase
-from cid.helpers import Athena
+from cid.helpers import Athena, Glue
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
@@ -97,6 +97,18 @@ class CUR(CidBase):
         return self._clients.get('athena')
 
     @property
+    def glue(self) -> Glue:
+        if not self._clients.get('glue'):
+            self._clients['glue'] = Glue(self.session)
+        return self._clients.get('glue')
+
+    @glue.setter
+    def glue(self, client) -> Glue:
+        if not self._clients.get('glue'):
+            self._clients['glue'] = client
+        return self._clients.get('glue')
+
+    @property
     def configured(self) -> bool:
         """ Check if AWS Data Catalog and Athena database exist """
         if self._configured is None:
@@ -168,13 +180,22 @@ class CUR(CidBase):
         column = column.lower()
         if column in [col.get('Name', '').lower() for col in self.metadata.get('Columns', [])]:
             return
+
+        crawler_name = self.metadata.get('Parameters', {}).get('UPDATED_BY_CRAWLER')
+        if crawler_name:
+            # Check Crawler Behavior - if it does not have a Configuration/CrawlerOutput/TablesAddOrUpdateBehavior == MergeNewColumns, it will override columns
+            config = json.loads(self.glue.get_crawler(crawler_name).get('Configuration', '{}'))
+            add_or_update = config.get('CrawlerOutput', {}).get('Tables', {}).get('AddOrUpdateBehavior')
+            if add_or_update != 'MergeNewColumns':
+                raise CidCritical(f'Column {column} is not found in CUR. And we were unable to add it as crawler {crawler_name} is configured to override columns.')
+
         column_type = column_type or self.get_type_of_column(column)
         try:
             self.athena.query(f'ALTER TABLE {self._tableName} ADD COLUMNS ({column} {column_type})')
         except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
             raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
-        logger.critical(f"Column '{column}' was added to CUR ({self._tableName}). Please make sure crawler do not override that columns.")
         self._metadata = self.athena.get_table_metadata(self._tableName) # refresh table metadata
+        logger.critical(f"Column '{column}' was added to CUR ({self._tableName}). Please make sure crawler do not override that columns. Crawler='{crawler_name}'")
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
         """ return True if table metadata fits CUR definition. """

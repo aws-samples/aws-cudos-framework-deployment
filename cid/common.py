@@ -125,6 +125,7 @@ class Cid():
         if not self._clients.get('cur'):
             _cur = CUR(self.base.session)
             _cur.athena = self.athena
+            _cur.glue = self.glue
             print('Checking if CUR is enabled and available...')
 
             if not _cur.configured:
