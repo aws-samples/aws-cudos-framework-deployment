@@ -1472,12 +1472,13 @@ class Cid():
 
 
     def create_or_update_view(self, view_name: str, recursive: bool=True, update: bool=False) -> None:
-        # For account mappings create a view using a special helper
-        if view_name in self._visited_views: # avoid checking a views multiple times in one cid session
+        # Avoid checking a views multiple times in one cid session
+        if view_name in self._visited_views:
             return
-        logger.info(f'Processing view: {view_name}')
         self._visited_views.append(view_name)
+        logger.info(f'Processing view: {view_name}')
 
+        # For account mappings create a view using a special helper
         if view_name in ['account_map', 'aws_accounts']:
             if view_name in self.athena._metadata.keys():
                 print(f'Account map {view_name} exists. Skipping.')
@@ -1506,7 +1507,8 @@ class Cid():
 
         if recursive:
             dependency_views = view_definition.get('dependsOn', dict()).get('views', list())
-            if 'cur' in dependency_views: dependency_views.remove('cur')
+            if 'cur' in dependency_views:
+                dependency_views.remove('cur')
             # Discover dependency views (may not be discovered earlier)
             self.athena.discover_views(dependency_views)
             logger.info(f"Dependency views: {', '.join(dependency_views)}" if dependency_views else 'No dependency views')
