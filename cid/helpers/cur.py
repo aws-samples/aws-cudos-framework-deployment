@@ -134,12 +134,36 @@ class CUR(CidBase):
             logger.info(f'Savings Plans: {self._hasSavingsPlans}')
         return self._hasSavingsPlans
 
-    def ensure_column(self, column: str, column_type: str='STRING'):
+    def get_type_of_column(self, column: str):
+        """ Return an Athena type of a given non existent CUR column """
+        # TODO: probably there is a better way to determine the column type in CUR. Pricing API? Full list of columns?
+        for ending in ['_cost', '_factor', '_quantity', '_fee']:
+            if column.endswith(ending):
+                return 'FLOAT'
+        if column.endswith('_date') and not column.endswith('_to_date'):
+            return 'DATE'
+        SPECIAL = {
+            "reservation_amortized_upfront_cost_for_usage": "FLOAT",
+            "reservation_amortized_upfront_fee_for_billing_period": "FLOAT",
+            "reservation_recurring_fee_for_usage": "FLOAT",
+            "reservation_unused_amortized_upfront_fee_for_billing_period": "FLOAT",
+            "reservation_upfront_value": "FLOAT",
+            "savings_plan_total_commitment_to_date": "FLOAT",
+            "savings_plan_savings_plan_rate": "FLOAT",
+            "savings_plan_used_commitment": "FLOAT",
+            "savings_plan_amortized_upfront_commitment_for_billing_period": "FLOAT",
+            "savings_plan_recurring_commitment_for_billing_period": "FLOAT",
+        }
+        return SPECIAL.get(column, 'STRING')
+
+    def ensure_column(self, column: str, column_type: str=None):
+        """ Ensure column is in the cur. If it is not there - add column """
         if column in [col.get('Name') for col in self.metadata.get('Columns', [])]:
-            # TODO: check type
             return
+        column_type = column_type or self.get_type_of_column(column)
         # TODO: check if crawler will override this column
         # TODO: ask user?
+        self.metadata.get('Properties')
         self.athena.query(f'ALTER TABLE {self._tableName} ADD COLUMNS ({column} {column_type})')
         self._metadata = self.athena.get_table_metadata(self._tableName) # refresh table metadata
 
