@@ -1486,14 +1486,6 @@ class Cid():
                 self.accountMap.create(view_name) #FIXME: add or_update
             return
 
-        # Process CUR columns
-        if isinstance(dependency_views.get('cur'), list):
-            for column in dependency_views.get('cur'):
-                self.cur.ensure_column(column)
-        elif isinstance(dependency_views.get('cur'), dict):
-            for column, column_type in dependency_views.get('cur').items():
-                self.cur.ensure_column(column, column_type)
-
         # Create a view
         logger.info(f'Getting view definition {view_name}')
         view_definition = self.get_definition("view", name=view_name)
@@ -1504,9 +1496,18 @@ class Cid():
             logger.info(f"Definition is unavailable {view_name}")
             return
         logger.debug(f'View definition: {view_definition}')
+        dependencies = view_definition.get('dependsOn', {})
+
+        # Process CUR columns
+        if isinstance(dependencies.get('cur'), list):
+            for column in dependencies.get('cur'):
+                self.cur.ensure_column(column)
+        elif isinstance(dependencies.get('cur'), dict):
+            for column, column_type in dependencies.get('cur').items():
+                self.cur.ensure_column(column, column_type)
 
         if recursive:
-            dependency_views = view_definition.get('dependsOn', dict()).get('views', list())
+            dependency_views = dependencies.get('views', [])
             if 'cur' in dependency_views:
                 dependency_views.remove('cur')
             # Discover dependency views (may not be discovered earlier)

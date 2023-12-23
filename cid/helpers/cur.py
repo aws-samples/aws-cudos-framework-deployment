@@ -165,14 +165,15 @@ class CUR(CidBase):
 
     def ensure_column(self, column: str, column_type: str=None):
         """ Ensure column is in the cur. If it is not there - add column """
-        if column in [col.get('Name') for col in self.metadata.get('Columns', [])]:
+        column = column.lower()
+        if column in [col.get('Name', '').lower() for col in self.metadata.get('Columns', [])]:
             return
         column_type = column_type or self.get_type_of_column(column)
         try:
             self.athena.query(f'ALTER TABLE {self._tableName} ADD COLUMNS ({column} {column_type})')
-        except self.athena.client.exceptions.ClientError as exc:
+        except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
             raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
-        logger.critical(f'Column {column} was added to CUR. Please make sure crawler do not override that columns.')
+        logger.critical(f"Column '{column}' was added to CUR ({self._tableName}). Please make sure crawler do not override that columns.")
         self._metadata = self.athena.get_table_metadata(self._tableName) # refresh table metadata
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
