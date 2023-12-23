@@ -136,23 +136,30 @@ class CUR(CidBase):
 
     def get_type_of_column(self, column: str):
         """ Return an Athena type of a given non existent CUR column """
-        # TODO: probably there is a better way to determine the column type in CUR. Pricing API? Full list of columns?
-        for ending in ['_cost', '_factor', '_quantity', '_fee']:
+        if column.startswith('cost_category_') or column.startswith('resource_tags_'):
+            return 'STRING'
+        for ending in ['_cost', '_factor', '_quantity', '_fee', '_amount', '_discount']:
             if column.endswith(ending):
-                return 'FLOAT'
+                return 'DOUBLE'
         if column.endswith('_date') and not column.endswith('_to_date'):
-            return 'DATE'
+            return 'TIMESTAMP'
         SPECIAL = {
-            "reservation_amortized_upfront_cost_for_usage": "FLOAT",
-            "reservation_amortized_upfront_fee_for_billing_period": "FLOAT",
-            "reservation_recurring_fee_for_usage": "FLOAT",
-            "reservation_unused_amortized_upfront_fee_for_billing_period": "FLOAT",
-            "reservation_upfront_value": "FLOAT",
-            "savings_plan_total_commitment_to_date": "FLOAT",
-            "savings_plan_savings_plan_rate": "FLOAT",
-            "savings_plan_used_commitment": "FLOAT",
-            "savings_plan_amortized_upfront_commitment_for_billing_period": "FLOAT",
-            "savings_plan_recurring_commitment_for_billing_period": "FLOAT",
+            "reservation_amortized_upfront_cost_for_usage": "DOUBLE",
+            "reservation_amortized_upfront_fee_for_billing_period": "DOUBLE",
+            "reservation_recurring_fee_for_usage": "DOUBLE",
+            "reservation_unused_amortized_upfront_fee_for_billing_period": "DOUBLE",
+            "reservation_upfront_value": "DOUBLE",
+            "reservation_net_amortized_upfront_cost_for_usage": "DOUBLE",
+            "reservation_net_amortized_upfront_fee_for_billing_period": "DOUBLE",
+            "reservation_net_recurring_fee_for_usage": "DOUBLE",
+            "reservation_net_unused_amortized_upfront_fee_for_billing_period": "DOUBLE",
+            "reservation_net_upfront_value": "DOUBLE",
+            "savings_plan_total_commitment_to_date": "DOUBLE",
+            "savings_plan_savings_plan_rate": "DOUBLE",
+            "savings_plan_used_commitment": "DOUBLE",
+            "savings_plan_amortized_upfront_commitment_for_billing_period": "DOUBLE",
+            "savings_plan_net_amortized_upfront_commitment_for_billing_period": "DOUBLE",
+            "savings_plan_recurring_commitment_for_billing_period": "DOUBLE",
         }
         return SPECIAL.get(column, 'STRING')
 
@@ -161,10 +168,11 @@ class CUR(CidBase):
         if column in [col.get('Name') for col in self.metadata.get('Columns', [])]:
             return
         column_type = column_type or self.get_type_of_column(column)
-        # TODO: check if crawler will override this column
-        # TODO: ask user?
-        self.metadata.get('Properties')
-        self.athena.query(f'ALTER TABLE {self._tableName} ADD COLUMNS ({column} {column_type})')
+        try:
+            self.athena.query(f'ALTER TABLE {self._tableName} ADD COLUMNS ({column} {column_type})')
+        except self.athena.client.exceptions.ClientError as exc:
+            raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
+        logger.critical(f'Column {column} was added to CUR. Please make sure crawler do not override that columns.')
         self._metadata = self.athena.get_table_metadata(self._tableName) # refresh table metadata
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
