@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class CUR(CidBase):
-    curRequiredColumns = [
+    cur_minimal_required_columns = [
         'bill_bill_type',
         'bill_billing_entity',
         'bill_billing_period_end_date',
@@ -34,22 +34,22 @@ class CUR(CidBase):
         'line_item_usage_type',
         'pricing_term',
         'pricing_unit',
-        'product_database_engine',
-        'product_deployment_option',
-        'product_from_location',
-        'product_group',
-        'product_instance_type',
-        'product_instance_type_family',
-        'product_operating_system',
-        'product_product_family',
-        'product_product_name',
-        'product_region',
-        'product_servicecode',
-        'product_storage',
-        'product_to_location',
-        'product_volume_api_name',
+       # 'product_database_engine',
+       # 'product_deployment_option',
+       # 'product_from_location',
+       # 'product_group',
+       # 'product_instance_type',
+       # 'product_instance_type_family',
+       # 'product_operating_system',
+       # 'product_product_family',
+       # 'product_product_name',
+       # 'product_region',
+       # 'product_servicecode',
+       # 'product_storage',
+       # 'product_to_location',
+       # 'product_volume_api_name',
     ]
-    riRequiredColumns = [
+    ri_required_columns = [
         'reservation_reservation_a_r_n',
         'reservation_effective_cost',
         'reservation_start_time',
@@ -58,7 +58,7 @@ class CUR(CidBase):
         'pricing_offering_class',
         'pricing_purchase_option'
     ]
-    spRequiredColumns = [
+    sp_required_columns = [
         'savings_plan_savings_plan_a_r_n',
         'savings_plan_savings_plan_effective_cost',
         'savings_plan_start_time',
@@ -96,6 +96,18 @@ class CUR(CidBase):
         return self._clients.get('athena')
 
     @property
+    def glue(self) -> Glue:
+        if not self._clients.get('glue'):
+            self._clients['glue'] = Glue(self.session)
+        return self._clients.get('glue')
+
+    @glue.setter
+    def glue(self, client) -> Glue:
+        if not self._clients.get('glue'):
+            self._clients['glue'] = client
+        return self._clients.get('glue')
+
+    @property
     def configured(self) -> bool:
         """ Check if AWS Data Catalog and Athena database exist """
         if self._configured is None:
@@ -120,19 +132,69 @@ class CUR(CidBase):
     @property
     def hasReservations(self) -> bool:
         if self._configured and self._hasReservations is None:
-            logger.debug(f'{self.riRequiredColumns}: {[c in self.fields for c in self.riRequiredColumns]}')
-            self._hasReservations=all([c in self.fields for c in self.riRequiredColumns])
+            logger.debug(f'{self.ri_required_columns}: {[c in self.fields for c in self.ri_required_columns]}')
+            self._hasReservations=all([c in self.fields for c in self.ri_required_columns])
             logger.info(f'Reserved Instances: {self._hasReservations}')
         return self._hasReservations
 
     @property
     def hasSavingsPlans(self) -> bool:
         if self._configured and self._hasSavingsPlans is None:
-            logger.debug(f'{self.spRequiredColumns}: {[c in self.fields for c in self.spRequiredColumns]}')
-            self._hasSavingsPlans=all([c in self.fields for c in self.spRequiredColumns])
+            logger.debug(f'{self.sp_required_columns}: {[c in self.fields for c in self.sp_required_columns]}')
+            self._hasSavingsPlans=all([c in self.fields for c in self.sp_required_columns])
             logger.info(f'Savings Plans: {self._hasSavingsPlans}')
         return self._hasSavingsPlans
 
+    def get_type_of_column(self, column: str):
+        """ Return an Athena type of a given non existent CUR column """
+        if column.startswith('cost_category_') or column.startswith('resource_tags_'):
+            return 'STRING'
+        for ending in ['_cost', '_factor', '_quantity', '_fee', '_amount', '_discount']:
+            if column.endswith(ending):
+                return 'DOUBLE'
+        if column.endswith('_date') and not column.endswith('_to_date'):
+            return 'TIMESTAMP'
+        SPECIAL = {
+            "reservation_amortized_upfront_cost_for_usage": "DOUBLE",
+            "reservation_amortized_upfront_fee_for_billing_period": "DOUBLE",
+            "reservation_recurring_fee_for_usage": "DOUBLE",
+            "reservation_unused_amortized_upfront_fee_for_billing_period": "DOUBLE",
+            "reservation_upfront_value": "DOUBLE",
+            "reservation_net_amortized_upfront_cost_for_usage": "DOUBLE",
+            "reservation_net_amortized_upfront_fee_for_billing_period": "DOUBLE",
+            "reservation_net_recurring_fee_for_usage": "DOUBLE",
+            "reservation_net_unused_amortized_upfront_fee_for_billing_period": "DOUBLE",
+            "reservation_net_upfront_value": "DOUBLE",
+            "savings_plan_total_commitment_to_date": "DOUBLE",
+            "savings_plan_savings_plan_rate": "DOUBLE",
+            "savings_plan_used_commitment": "DOUBLE",
+            "savings_plan_amortized_upfront_commitment_for_billing_period": "DOUBLE",
+            "savings_plan_net_amortized_upfront_commitment_for_billing_period": "DOUBLE",
+            "savings_plan_recurring_commitment_for_billing_period": "DOUBLE",
+        }
+        return SPECIAL.get(column, 'STRING')
+
+    def ensure_column(self, column: str, column_type: str=None):
+        """ Ensure column is in the cur. If it is not there - add column """
+        column = column.lower()
+        if column in [col.get('Name', '').lower() for col in self.metadata.get('Columns', [])]:
+            return
+
+        crawler_name = self.metadata.get('Parameters', {}).get('UPDATED_BY_CRAWLER')
+        if crawler_name:
+            # Check Crawler Behavior - if it does not have a Configuration/CrawlerOutput/TablesAddOrUpdateBehavior == MergeNewColumns, it will override columns
+            config = json.loads(self.glue.get_crawler(crawler_name).get('Configuration', '{}'))
+            add_or_update = config.get('CrawlerOutput', {}).get('Tables', {}).get('AddOrUpdateBehavior')
+            if add_or_update != 'MergeNewColumns':
+                raise CidCritical(f'Column {column} is not found in CUR. And we were unable to add it as crawler {crawler_name} is configured to override columns.')
+
+        column_type = column_type or self.get_type_of_column(column)
+        try:
+            self.athena.query(f'ALTER TABLE {self._tableName} ADD COLUMNS ({column} {column_type})')
+        except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
+            raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
+        self._metadata = self.athena.get_table_metadata(self._tableName) # refresh table metadata
+        logger.critical(f"Column '{column}' was added to CUR ({self._tableName}). Please make sure crawler do not override that columns. Crawler='{crawler_name}'")
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
         """ return True if table metadata fits CUR definition. """
@@ -144,7 +206,7 @@ class CUR(CidBase):
 
         table_name = table.get('Name')
         columns = [cols.get('Name') for cols in table.get('Columns')]
-        missing_columns = [col for col in self.curRequiredColumns if col not in columns]
+        missing_columns = [col for col in self.cur_minimal_required_columns if col not in columns]
         if missing_columns:
             return False if not return_reason else (False, f"Table {table_name} does not contain columns: {','.join(missing_columns)}. You can try ALTER TABLE {table_name} ADD COLUMNS (missing_column string).")
 

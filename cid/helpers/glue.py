@@ -38,7 +38,6 @@ class Glue(CidBase):
             logger.info(f'Updating crawler')
             self.client.update_table(**crawler_definition)
 
-    def get_crawler(self, crawler_name) -> None:
-        '''get glue crawler'''
-        return self.client.get_crawler(Name=crawler_name)['Crawler']
-
+    def get_crawler(self, name: str):
+        """ GetCrawler """
+        return self.client.get_crawler(Name=name)['Crawler']

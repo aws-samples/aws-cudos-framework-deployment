@@ -125,6 +125,7 @@ class Cid():
         if not self._clients.get('cur'):
             _cur = CUR(self.base.session)
             _cur.athena = self.athena
+            _cur.glue = self.glue
             print('Checking if CUR is enabled and available...')
 
             if not _cur.configured:
@@ -1472,12 +1473,13 @@ class Cid():
 
 
     def create_or_update_view(self, view_name: str, recursive: bool=True, update: bool=False) -> None:
-        # For account mappings create a view using a special helper
-        if view_name in self._visited_views: # avoid checking a views multiple times in one cid session
+        # Avoid checking a views multiple times in one cid session
+        if view_name in self._visited_views:
             return
-        logger.info(f'Processing view: {view_name}')
         self._visited_views.append(view_name)
+        logger.info(f'Processing view: {view_name}')
 
+        # For account mappings create a view using a special helper
         if view_name in ['account_map', 'aws_accounts']:
             if view_name in self.athena._metadata.keys():
                 print(f'Account map {view_name} exists. Skipping.')
@@ -1495,10 +1497,20 @@ class Cid():
             logger.info(f"Definition is unavailable {view_name}")
             return
         logger.debug(f'View definition: {view_definition}')
+        dependencies = view_definition.get('dependsOn', {})
+
+        # Process CUR columns
+        if isinstance(dependencies.get('cur'), list):
+            for column in dependencies.get('cur'):
+                self.cur.ensure_column(column)
+        elif isinstance(dependencies.get('cur'), dict):
+            for column, column_type in dependencies.get('cur').items():
+                self.cur.ensure_column(column, column_type)
 
         if recursive:
-            dependency_views = view_definition.get('dependsOn', dict()).get('views', list())
-            if 'cur' in dependency_views: dependency_views.remove('cur')
+            dependency_views = dependencies.get('views', [])
+            if 'cur' in dependency_views:
+                dependency_views.remove('cur')
             # Discover dependency views (may not be discovered earlier)
             self.athena.discover_views(dependency_views)
             logger.info(f"Dependency views: {', '.join(dependency_views)}" if dependency_views else 'No dependency views')
