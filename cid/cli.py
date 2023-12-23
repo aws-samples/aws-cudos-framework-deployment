@@ -127,6 +127,8 @@ def deploy(ctx, **kwargs):
      --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
      --update (yes|no)                     Update if some elements are already installed. Default = 'no'
      --resources TEXT                      CID resources yaml file or url
+     --category TEXT                       Comma separated list of categories of dashboards (ex: foundational,advanced )
+     --catalog TEXT                        Comma separated list of catalog files or urls (ex: foundational,advanced )
     """
     ctx.obj.deploy(**kwargs)
 

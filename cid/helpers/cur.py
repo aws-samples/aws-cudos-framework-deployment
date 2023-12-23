@@ -159,7 +159,7 @@ class CUR(CidBase):
             self._tableName = get_parameters().get('cur-table-name')
             try:
                 self._metadata = self.athena.get_table_metadata(self._tableName)
-            except self.athena.client.exceptions.EntityNotFoundException as exc:
+            except self.athena.client.exceptions.ResourceNotFoundException as exc:
                 raise CidCritical('Provided cur-table-name "{self._tableName}" is not found. Please make sure the table exists.') from exc
             res, message = self.table_is_cur(table=self._metadata, return_reason=True)
             if not res:

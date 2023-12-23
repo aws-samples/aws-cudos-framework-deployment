@@ -393,6 +393,7 @@ class Cid():
         self.qs.discover_dashboards()
 
         dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
+        category_filter = [cat for cat in get_parameters().get('category', '').upper().split(',') if cat]
         if not dashboard_id:
             standard_categories = ['Foundational', 'Advanced', 'Additional'] # Show these categories first
             all_categories = set([f"{dashboard.get('category', 'Other')}" for dashboard in self.resources.get('dashboards').values()])
@@ -400,6 +401,8 @@ class Cid():
             categories =  standard_categories + sorted(non_standard_categories)
             dashboard_options = {}
             for category in categories:
+                if category_filter and category.upper() not in category_filter:
+                    continue
                 dashboard_options[f'{category.upper()}'] = '[category]'
                 counter = 0
                 for dashboard in self.resources.get('dashboards').values():

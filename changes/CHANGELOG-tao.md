@@ -1,5 +1,8 @@
 # What's new in TAO Dashboard
 
+## TAO Dashboard v3.1.1:
+**All tabs:** bugfix to exclude flagged resources which don't appear in latest report per account, e.g. exclude fixed resources
+
 ## TAO Dashboard v3.1.0:
 **Important:** Update to this version requires cid-cmd v0.2.27. Please update cid-cmd first before updating the dashboard. During the update you'd need to provide a path to s3 folder where your Trusted Advisor data is stored. QuickSight dataset ta-organizational-view will be updated, please make a copy if you've made any customizations to the dataset. To update run these commands in your CloudShell (recommended) or other terminal:
 
