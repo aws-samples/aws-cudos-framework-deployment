@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class CUR(CidBase):
-    curRequiredColumns = [
+    cur_minimal_required_columns = [
         'bill_bill_type',
         'bill_billing_entity',
         'bill_billing_period_end_date',
@@ -34,22 +34,22 @@ class CUR(CidBase):
         'line_item_usage_type',
         'pricing_term',
         'pricing_unit',
-        'product_database_engine',
-        'product_deployment_option',
-        'product_from_location',
-        'product_group',
-        'product_instance_type',
-        'product_instance_type_family',
-        'product_operating_system',
-        'product_product_family',
-        'product_product_name',
-        'product_region',
-        'product_servicecode',
-        'product_storage',
-        'product_to_location',
-        'product_volume_api_name',
+       # 'product_database_engine',
+       # 'product_deployment_option',
+       # 'product_from_location',
+       # 'product_group',
+       # 'product_instance_type',
+       # 'product_instance_type_family',
+       # 'product_operating_system',
+       # 'product_product_family',
+       # 'product_product_name',
+       # 'product_region',
+       # 'product_servicecode',
+       # 'product_storage',
+       # 'product_to_location',
+       # 'product_volume_api_name',
     ]
-    riRequiredColumns = [
+    ri_required_columns = [
         'reservation_reservation_a_r_n',
         'reservation_effective_cost',
         'reservation_start_time',
@@ -58,7 +58,7 @@ class CUR(CidBase):
         'pricing_offering_class',
         'pricing_purchase_option'
     ]
-    spRequiredColumns = [
+    sp_required_columns = [
         'savings_plan_savings_plan_a_r_n',
         'savings_plan_savings_plan_effective_cost',
         'savings_plan_start_time',
@@ -121,19 +121,27 @@ class CUR(CidBase):
     @property
     def hasReservations(self) -> bool:
         if self._configured and self._hasReservations is None:
-            logger.debug(f'{self.riRequiredColumns}: {[c in self.fields for c in self.riRequiredColumns]}')
-            self._hasReservations=all([c in self.fields for c in self.riRequiredColumns])
+            logger.debug(f'{self.ri_required_columns}: {[c in self.fields for c in self.ri_required_columns]}')
+            self._hasReservations=all([c in self.fields for c in self.ri_required_columns])
             logger.info(f'Reserved Instances: {self._hasReservations}')
         return self._hasReservations
 
     @property
     def hasSavingsPlans(self) -> bool:
         if self._configured and self._hasSavingsPlans is None:
-            logger.debug(f'{self.spRequiredColumns}: {[c in self.fields for c in self.spRequiredColumns]}')
-            self._hasSavingsPlans=all([c in self.fields for c in self.spRequiredColumns])
+            logger.debug(f'{self.sp_required_columns}: {[c in self.fields for c in self.sp_required_columns]}')
+            self._hasSavingsPlans=all([c in self.fields for c in self.sp_required_columns])
             logger.info(f'Savings Plans: {self._hasSavingsPlans}')
         return self._hasSavingsPlans
 
+    def ensure_column(self, column: str, column_type: str='STRING'):
+        if column in [col.get('Name') for col in self.metadata.get('Columns', [])]:
+            # TODO: check type
+            return
+        # TODO: check if crawler will override this column
+        # TODO: ask user?
+        self.athena.query(f'ALTER TABLE {self._tableName} ADD COLUMNS ({column} {column_type})')
+        self._metadata = self.athena.get_table_metadata(self._tableName) # refresh table metadata
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
         """ return True if table metadata fits CUR definition. """
@@ -145,7 +153,7 @@ class CUR(CidBase):
 
         table_name = table.get('Name')
         columns = [cols.get('Name') for cols in table.get('Columns')]
-        missing_columns = [col for col in self.curRequiredColumns if col not in columns]
+        missing_columns = [col for col in self.cur_minimal_required_columns if col not in columns]
         if missing_columns:
             return False if not return_reason else (False, f"Table {table_name} does not contain columns: {','.join(missing_columns)}. You can try ALTER TABLE {table_name} ADD COLUMNS (missing_column string).")
 
@@ -176,7 +184,7 @@ class CUR(CidBase):
             cur_tables = [tab for tab in all_tables if self.table_is_cur(table=tab)]
 
             if not cur_tables:
-                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.curRequiredColumns}.')
+                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.cur_minimal_required_columns}.')
             if len(cur_tables) == 1:
                 self._metadata = cur_tables[0]
                 self._tableName = self._metadata.get('Name')

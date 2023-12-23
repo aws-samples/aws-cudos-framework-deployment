@@ -1485,6 +1485,14 @@ class Cid():
                 self.accountMap.create(view_name) #FIXME: add or_update
             return
 
+        # Process CUR columns
+        if isinstance(dependency_views.get('cur'), list):
+            for column in dependency_views.get('cur'):
+                self.cur.ensure_column(column)
+        elif isinstance(dependency_views.get('cur'), dict):
+            for column, column_type in dependency_views.get('cur').items():
+                self.cur.ensure_column(column, column_type)
+
         # Create a view
         logger.info(f'Getting view definition {view_name}')
         view_definition = self.get_definition("view", name=view_name)
