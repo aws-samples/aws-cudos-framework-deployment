@@ -102,7 +102,7 @@ class CUR(CidBase):
 
     @property
     def table_name(self) -> str:
-        """ Get Athena table name """        
+        """ Get Athena table name """
         if self.metadata is None:
             raise CidCritical('Error: Cannot detect any CUR table. Hint: Check if AWS Lake Formation is activated on your account, verify that the LakeFormationEnabled parameter is set to yes on the deployment stack')
         return self.metadata.get('Name')
