@@ -2,7 +2,6 @@
 """
 import json
 import logging
-from functools import cached_property
 
 from cid.base import CidBase
 from cid.helpers import Athena, Glue
@@ -61,27 +60,31 @@ class CUR(CidBase):
     _clients = {}
 
 
-    @cached_property
+    @property
     def athena(self) -> Athena:
         """ Get Athena Client """
-        return self._clients.get('athena') or Athena(self.session)
+        if 'athena' not in self._clients:
+            self._clients['athena'] =  Athena(self.session)
+        return self._clients['athena']
 
     @athena.setter
     def athena(self, client) -> Athena:
         """ Set Athena Client """
         self._clients['athena'] = client
-        return self._clients.get('athena')
+        return self._clients['athena']
 
-    @cached_property
+    @property
     def glue(self) -> Glue:
         """ Get Glue Client """
-        return self._clients.get('glue') or Glue(self.session)
+        if 'glue' not in self._clients:
+            self._clients['glue'] =  Glue(self.session)
+        return self._clients['glue']
 
     @glue.setter
     def glue(self, client) -> Glue:
         """ Set Glue client """
         self._clients['glue'] = client
-        return self._clients.get('glue')
+        return self._clients['glue']
 
     @property
     def table_name(self) -> str:
