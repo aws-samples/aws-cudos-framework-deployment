@@ -159,7 +159,7 @@ class AccountMap(CidBase):
             # Fill in TPLs
             columns_tpl = {
                 'metadata_table_name': self._athena_table_name,
-                'cur_table_name': self.cur.tableName # only for trends
+                'cur_table_name': self.cur.table_name # only for trends
             }
             for key, val in self.mappings.get(name).get(self._athena_table_name).items():
                 logger.debug(f'Mapping field {key} to {val}')
@@ -185,7 +185,7 @@ class AccountMap(CidBase):
         ).decode('utf-8'))
         columns_tpl = {
             'athena_view_name': name,
-            'cur_table_name': self.cur.tableName
+            'cur_table_name': self.cur.table_name
         }
         compiled_query = template.safe_substitute(columns_tpl)
         return compiled_query
