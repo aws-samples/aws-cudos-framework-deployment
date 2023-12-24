@@ -131,12 +131,12 @@ class Cid():
             if not _cur.configured:
                 raise CidCritical("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
 
-            print(f'\tAthena table: {_cur.tableName}')
-            print(f"\tResource IDs: {'yes' if _cur.hasResourceIDs else 'no'}")
-            if not _cur.hasResourceIDs:
+            print(f'\tAthena table: {_cur.table_name}')
+            print(f"\tResource IDs: {'yes' if _cur.has_resource_ids else 'no'}")
+            if not _cur.has_resource_ids:
                 raise CidCritical("Error: CUR has to be created with Resource IDs")
-            print(f"\tSavingsPlans: {'yes' if _cur.hasSavingsPlans else 'no'}")
-            print(f"\tReserved Instances: {'yes' if _cur.hasReservations else 'no'}")
+            print(f"\tSavingsPlans: {'yes' if _cur.has_savings_plans else 'no'}")
+            print(f"\tReserved Instances: {'yes' if _cur.has_reservations else 'no'}")
             print('\n')
             self._clients.update({
                 'cur': _cur
@@ -1361,7 +1361,7 @@ class Cid():
 
         # Check for required views
         _views = dataset_definition.get('dependsOn', {}).get('views', [])
-        required_views = [(self.cur.tableName if cur_required and name =='${cur_table_name}' else name) for name in _views]
+        required_views = [(self.cur.table_name if cur_required and name =='${cur_table_name}' else name) for name in _views]
 
         self.athena.discover_views(required_views)
         found_views = utils.intersection(required_views, self.athena._metadata.keys())
@@ -1370,7 +1370,7 @@ class Cid():
         if recursive:
             print(f"Detected views: {', '.join(found_views)}")
             for view_name in found_views:
-                if cur_required and view_name == self.cur.tableName:
+                if cur_required and view_name == self.cur.table_name:
                     logger.debug(f'Dependancy view {view_name} is a CUR. Skip.')
                     continue
                 if view_name == 'account_map':
@@ -1389,7 +1389,7 @@ class Cid():
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
-            'cur_table_name': self.cur.tableName if cur_required else None
+            'cur_table_name': self.cur.table_name if cur_required else None
         }
 
         logger.debug(f'dataset_id={dataset_id}')
@@ -1600,11 +1600,11 @@ class Cid():
         # View path
         view_definition = self.get_definition("view", name=view_name)
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
-        if cur_required and self.cur.hasSavingsPlans and self.cur.hasReservations and view_definition.get('spriFile'):
+        if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
             view_definition['File'] = view_definition.get('spriFile')
-        elif cur_required and self.cur.hasSavingsPlans and view_definition.get('spFile'):
+        elif cur_required and self.cur.has_savings_plans and view_definition.get('spFile'):
             view_definition['File'] = view_definition.get('spFile')
-        elif cur_required and self.cur.hasReservations and view_definition.get('riFile'):
+        elif cur_required and self.cur.has_reservations and view_definition.get('riFile'):
             view_definition['File'] = view_definition.get('riFile')
         elif view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
             pass
@@ -1621,7 +1621,7 @@ class Cid():
 
         # Prepare template parameters
         columns_tpl = {
-            'cur_table_name': self.cur.tableName if cur_required else None,
+            'cur_table_name': self.cur.table_name if cur_required else None,
             'athenaTableName': view_name,
             'athena_database_name': self.athena.DatabaseName,
         }

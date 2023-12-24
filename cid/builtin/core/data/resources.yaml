@@ -278,7 +278,7 @@ views:
         - line_item_line_item_type
         - line_item_operation
         - line_item_product_code
-        - Line_item_resource_id
+        - line_item_resource_id
         - line_item_unblended_cost
         - line_item_usage_account_id
         - line_item_usage_amount
@@ -632,3 +632,43 @@ schedules:
       Interval: DAILY
       TimeOfTheDay: '02:00-05:00'
     RefreshType: FULL_REFRESH
+
+
+crawlers:
+  CUR:
+    Properties:
+      #Name:  !Sub 'CidCrawler${Suffix}'
+      Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
+      Role:  ${crawler_role}
+      DatabaseName: "${athena_database_name}"
+      Targets:
+        S3Targets:
+          - Path: ${s3path}
+            Exclusions:
+              - '**.json'
+              - '**.yml'
+              - '**.sql'
+              - '**.csv'
+              - '**.csv.metadata'
+              - '**.gz'
+              - '**.zip'
+              - '**/cost_and_usage_data_status/*'
+              - 'aws-programmatic-access-test-object'
+      SchemaChangePolicy:
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      Schedule:
+        ScheduleExpression: cron(0 2 * * ? *)
+      Configuration: |
+        {
+          "Version":1.0,
+          "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+          },
+          "CrawlerOutput":{
+            "Tables":{
+              "AddOrUpdateBehavior":"MergeNewColumns"
+            }
+          }
+        }
