@@ -128,7 +128,7 @@ class Cid():
             _cur.glue = self.glue
             print('Checking if CUR is enabled and available...')
 
-            if not _cur.configured:
+            if not _cur.metadata:
                 raise CidCritical("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
 
             print(f'\tAthena table: {_cur.table_name}')
