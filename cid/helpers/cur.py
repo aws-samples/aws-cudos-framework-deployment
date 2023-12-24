@@ -2,6 +2,7 @@
 """
 import json
 import logging
+from functools import cache, cached_property
 
 from cid.base import CidBase
 from cid.helpers import Athena, Glue
@@ -58,47 +59,29 @@ class CUR(CidBase):
     _table_name = None
     _metadata = None
     _clients = {}
-    _has_resource_ids = None
-    _has_savings_plans = None
-    _has_reservations = None
-    _configured = None
-    _status = {}
 
 
-    @property
+    @cached_property
     def athena(self) -> Athena:
         """ Get Athena Client """
-        if not self._clients.get('athena'):
-            self._clients['athena'] = Athena(self.session)
-        return self._clients.get('athena')
+        return self._clients.get('athena') or Athena(self.session)
 
     @athena.setter
     def athena(self, client) -> Athena:
         """ Set Athena Client """
-        if not self._clients.get('athena'):
-            self._clients['athena'] = client
+        self._clients['athena'] = client
         return self._clients.get('athena')
 
-    @property
+    @cached_property
     def glue(self) -> Glue:
         """ Get Glue Client """
-        if not self._clients.get('glue'):
-            self._clients['glue'] = Glue(self.session)
-        return self._clients.get('glue')
+        return self._clients.get('glue') or Glue(self.session)
 
     @glue.setter
     def glue(self, client) -> Glue:
         """ Set Glue client """
-        if not self._clients.get('glue'):
-            self._clients['glue'] = client
+        self._clients['glue'] = client
         return self._clients.get('glue')
-
-    @property
-    def configured(self) -> bool:
-        """ Check if AWS Data Catalog and Athena database exist """
-        if self._configured is None:
-            self._configured = bool(self.athena.CatalogName and self.athena.DatabaseName)
-        return self._configured
 
     @property
     def table_name(self) -> str:
@@ -107,30 +90,20 @@ class CUR(CidBase):
             raise CidCritical('Error: Cannot detect any CUR table. Hint: Check if AWS Lake Formation is activated on your account, verify that the LakeFormationEnabled parameter is set to yes on the deployment stack')
         return self.metadata.get('Name')
 
-    @property
+    @cached_property
     def has_resource_ids(self) -> bool:
         """ Return True if CUR has resource ids """
-        if self._configured and self._has_resource_ids is None:
-            self._has_resource_ids = 'line_item_resource_id' in self.fields
-        return self._has_resource_ids
+        return 'line_item_resource_id' in self.fields
 
-    @property
+    @cached_property
     def has_reservations(self) -> bool:
         """ Return True if CUR has reservation fields """
-        if self._configured and self._has_reservations is None:
-            logger.debug(f'{self.ri_required_columns}: {[col in self.fields for col in self.ri_required_columns]}')
-            self._has_reservations = all(col in self.fields for col in self.ri_required_columns)
-            logger.info(f'Reserved Instances: {self._has_reservations}')
-        return self._has_reservations
+        return all(col in self.fields for col in self.ri_required_columns)
 
-    @property
+    @cached_property
     def has_savings_plans(self) -> bool:
         """ Return True if CUR has savings plan """
-        if self._configured and self._has_savings_plans is None:
-            logger.debug(f'{self.sp_required_columns}: {[col in self.fields for col in self.sp_required_columns]}')
-            self._has_savings_plans=all(col in self.fields for col in self.sp_required_columns)
-            logger.info(f'Savings Plans: {self._has_savings_plans}')
-        return self._has_savings_plans
+        return all(col in self.fields for col in self.sp_required_columns)
 
     def get_type_of_column(self, column: str):
         """ Return an Athena type of a given non existent CUR column """
@@ -170,18 +143,22 @@ class CUR(CidBase):
         crawler_name = self.metadata.get('Parameters', {}).get('UPDATED_BY_CRAWLER')
         if crawler_name:
             # Check Crawler Behavior - if it does not have a Configuration/CrawlerOutput/TablesAddOrUpdateBehavior == MergeNewColumns, it will override columns
-            config = json.loads(self.glue.get_crawler(crawler_name).get('Configuration', '{}'))
+            try:
+                crawler = self.glue.get_crawler(crawler_name)
+            except self.glue.client.exceptions.ClientError as exc:
+                raise CidCritical(f'Column {column} is not found in CUR ({self.table_name}). And we were unable to check if crawler {crawler_name} is configured to override columns.') from exc
+            config = json.loads(crawler.get('Configuration', '{}'))
             add_or_update = config.get('CrawlerOutput', {}).get('Tables', {}).get('AddOrUpdateBehavior')
             if add_or_update != 'MergeNewColumns':
-                raise CidCritical(f'Column {column} is not found in CUR. And we were unable to add it as crawler {crawler_name} is configured to override columns.')
+                raise CidCritical(f'Column {column} is not found in CUR ({self.table_name}). And we were unable to add it as crawler {crawler_name} is configured to override columns.')
 
         column_type = column_type or self.get_type_of_column(column)
         try:
-            self.athena.query(f'ALTER TABLE {self._table_name} ADD COLUMNS ({column} {column_type})')
+            self.athena.query(f'ALTER TABLE {self.table_name} ADD COLUMNS ({column} {column_type})')
         except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
             raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
-        self._metadata = self.athena.get_table_metadata(self._table_name) # refresh table metadata
-        logger.critical(f"Column '{column}' was added to CUR ({self._table_name}). Please make sure crawler do not override that columns. Crawler='{crawler_name}'")
+        self._metadata = self.athena.get_table_metadata(self.table_name) # refresh table metadata
+        logger.critical(f"Column '{column}' was added to CUR ({self.table_name}). Please make sure crawler do not override that columns. Crawler='{crawler_name}'")
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
         """ return True if table metadata fits CUR definition. """
