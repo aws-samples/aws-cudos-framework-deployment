@@ -2,7 +2,7 @@
 """
 import json
 import logging
-from functools import cache, cached_property
+from functools import cached_property
 
 from cid.base import CidBase
 from cid.helpers import Athena, Glue
@@ -90,17 +90,17 @@ class CUR(CidBase):
             raise CidCritical('Error: Cannot detect any CUR table. Hint: Check if AWS Lake Formation is activated on your account, verify that the LakeFormationEnabled parameter is set to yes on the deployment stack')
         return self.metadata.get('Name')
 
-    @cached_property
+    @property
     def has_resource_ids(self) -> bool:
         """ Return True if CUR has resource ids """
         return 'line_item_resource_id' in self.fields
 
-    @cached_property
+    @property
     def has_reservations(self) -> bool:
         """ Return True if CUR has reservation fields """
         return all(col in self.fields for col in self.ri_required_columns)
 
-    @cached_property
+    @property
     def has_savings_plans(self) -> bool:
         """ Return True if CUR has savings plan """
         return all(col in self.fields for col in self.sp_required_columns)
