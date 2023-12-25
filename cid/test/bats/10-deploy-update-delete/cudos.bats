@@ -56,6 +56,7 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
 @test "Update works" {
   run cid-cmd -vv --yes update --force --recursive  \
     --dashboard-id cudos-v5 \
+    --cur-table-name $cur_table \
     --quicksight-user $quicksight_user   \
 
   [ "$status" -eq 0 ]
