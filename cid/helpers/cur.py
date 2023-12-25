@@ -3,15 +3,13 @@
 import json
 import logging
 
-from cid.base import CidBase
-from cid.helpers import Athena, Glue
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
 
-class CUR(CidBase):
+class CUR():
     """ Manage AWS CUR
     """
     cur_minimal_required_columns = [
@@ -57,39 +55,11 @@ class CUR(CidBase):
     ]
     _table_name = None
     _metadata = None
-    _clients = {}
 
-<<<<<<< HEAD
-    def __init__(self, session) -> None:
-        super().__init__(session)
-=======
->>>>>>> feature-manage-cur-fields
-
-    @property
-    def athena(self) -> Athena:
-        """ Get Athena Client """
-        if 'athena' not in self._clients:
-            self._clients['athena'] =  Athena(self.session)
-        return self._clients['athena']
-
-    @athena.setter
-    def athena(self, client) -> Athena:
-        """ Set Athena Client """
-        self._clients['athena'] = client
-        return self._clients['athena']
-
-    @property
-    def glue(self) -> Glue:
-        """ Get Glue Client """
-        if 'glue' not in self._clients:
-            self._clients['glue'] =  Glue(self.session)
-        return self._clients['glue']
-
-    @glue.setter
-    def glue(self, client) -> Glue:
-        """ Set Glue client """
-        self._clients['glue'] = client
-        return self._clients['glue']
+    def __init__(self, athena, glue, s3):
+        self.athena = athena
+        self.glue = glue
+        self.s3 = s3
 
     @property
     def table_name(self) -> str:
@@ -210,8 +180,7 @@ class CUR(CidBase):
             cur_tables = [tab for tab in all_tables if self.table_is_cur(table=tab)]
 
             if not cur_tables:
-<<<<<<< HEAD
-                logger.warning(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.curRequiredColumns}.')
+                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.cur_minimal_required_columns}.')
 
             choices = sorted([v.get('Name') for v in cur_tables], reverse=True)
 
@@ -221,24 +190,10 @@ class CUR(CidBase):
                 choices=choices + ['Create a CUR table and Crawler'],
             )
             if answer == 'Create a CUR table and Crawler':
-                self._tableName = self.create_cur_table_and_crawler()
+                raise CidCritical('Create a CUR table and Crawler')
             else:
                 self._tableName = answer
             self._metadata = self.athena.get_table_metadata(self._tableName)
-=======
-                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.cur_minimal_required_columns}.')
-            if len(cur_tables) == 1:
-                self._metadata = cur_tables[0]
-                self._table_name = self._metadata.get('Name')
-                logger.info('1 CUR table found: %s', self._table_name)
-            elif len(cur_tables) > 1:
-                self._table_name =  get_parameter(
-                    param_name='cur-table-name',
-                    message="Multiple CUR tables found, please select one",
-                    choices=sorted([v.get('Name') for v in cur_tables], reverse=True),
-                )
-                self._metadata = self.athena.get_table_metadata(self._table_name)
->>>>>>> feature-manage-cur-fields
         return self._metadata
 
     @property
@@ -251,9 +206,3 @@ class CUR(CidBase):
         """ Returns all tags and cost category fields. """
         return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
 
-    def create_cur_table_and_crawler(self):
-        glue = Glue(self.session)
-        table = glue.create_or_update_table(cur_table_definition)
-        glue.create_or_update_crawler(cur_crawler_definition)
-        glue.wait_for_crawler_to_finish()
-        return table

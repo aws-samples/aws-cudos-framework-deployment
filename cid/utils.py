@@ -208,8 +208,11 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     if params.get(param_name):
         value = params[param_name]
         logger.info(f'Using {param_name}={value}, from parameters')
-        if isinstance(value, str):
-            value = value.format(**template_variables)
+        if isinstance(value, str) and template_variables:
+            try:
+                value = value.format(**template_variables)
+            except KeyError:
+                pass
         return value
 
     if choices is not None:
@@ -236,7 +239,8 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             default=default,
         ).ask()
     else: # it is a text entry
-        if isinstance(default, str):
+        if isinstance(default, str) and template_variables:
+            print(template_variables)
             default=default.format(**template_variables)
         print()
         if not isatty():
@@ -245,7 +249,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             message=f'[{param_name}] {message}:' ,
             default=default or '',
         ).ask()
-        if isinstance(result, str):
+        if isinstance(result, str) and template_variables:
             result = result.format(**template_variables)
     if (break_on_ctrl_c and result is None):
         exit(1)

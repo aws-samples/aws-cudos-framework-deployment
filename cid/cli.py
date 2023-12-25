@@ -245,5 +245,19 @@ def initqs(ctx, **kwargs):
 
     ctx.obj.initqs(**kwargs)
 
+@click.option('-v', '--verbose', count=True)
+@cid_command
+def init_cur(ctx, **kwargs):
+    """Initialize CUR
+
+    \b
+
+     --enable-quicksight-enterprise (yes|no) Confirm the activation of QuickSight
+     --account-name NAME                     Unique QuickSight account name (Unique across all AWS users) 
+     --notification-email EMAIL              User's email for QuickSight notifications
+    """
+
+    ctx.obj.init_cur(**kwargs)
+
 if __name__ == '__main__':
     main()

@@ -8,11 +8,13 @@ from pathlib import Path
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
-
 if sys.version_info < (3, 8):
     from importlib_metadata import entry_points
+    from functools import lru_cache
+    cached_property = lambda x: property(lru_cache(x))
 else:
     from importlib.metadata import entry_points
+    from functools import cached_property #since python 3.8
 
 import yaml
 import click
@@ -25,7 +27,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
+from cid.helpers import Athena, S3, IAM, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
@@ -88,60 +90,54 @@ class Cid():
         logger.info(f'AWS region: {self.base.session.region_name}')
         print('\n')
 
-    @property
+    @cached_property
     def qs(self) -> QuickSight:
-        if not self._clients.get('quicksight'):
-            self._clients.update({
-                'quicksight': QuickSight(self.base.session, resources=self.resources)
-            })
-        return self._clients.get('quicksight')
+        return QuickSight(self.base.session, resources=self.resources)
 
-    @property
+    @cached_property
     def athena(self) -> Athena:
-        if not self._clients.get('athena'):
-            self._clients.update({
-                'athena': Athena(self.base.session, resources=self.resources)
-            })
-        return self._clients.get('athena')
+        return Athena(self.base.session, resources=self.resources)
 
-    @property
+    @cached_property
     def glue(self) -> Glue:
-        if not self._clients.get('glue'):
-            self._clients.update({
-                'glue': Glue(self.base.session)
-            })
-        return self._clients.get('glue')
+        return Glue(self.base.session)
 
-    @property
+    @cached_property
+    def iam(self) -> IAM:
+        return IAM(self.base.session)
+
+    @cached_property
     def organizations(self) -> Organizations:
-        if not self._clients.get('organizations'):
-            self._clients.update({
-                'organizations': Organizations(self.base.session)
-            })
-        return self._clients.get('organizations')
+        return Organizations(self.base.session)
+
+    @cached_property
+    def s3(self) -> S3:
+        return S3(self.base.session)
 
     @property
     def cur(self) -> CUR:
         if not self._clients.get('cur'):
-            _cur = CUR(self.base.session)
-            _cur.athena = self.athena
-            _cur.glue = self.glue
-            print('Checking if CUR is enabled and available...')
+            while True:
+                try:
+                    _cur = CUR(self.athena, self.glue, self.s3)
+                    print('Checking if CUR is enabled and available...')
 
-            if not _cur.metadata:
-                raise CidCritical("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
+                    if not _cur.metadata:
+                        raise CidCritical("Error: please ensure CUR is enabled, if yes allow it some time to propagate")
 
-            print(f'\tAthena table: {_cur.table_name}')
-            print(f"\tResource IDs: {'yes' if _cur.has_resource_ids else 'no'}")
-            if not _cur.has_resource_ids:
-                raise CidCritical("Error: CUR has to be created with Resource IDs")
-            print(f"\tSavingsPlans: {'yes' if _cur.has_savings_plans else 'no'}")
-            print(f"\tReserved Instances: {'yes' if _cur.has_reservations else 'no'}")
-            print('\n')
-            self._clients.update({
-                'cur': _cur
-            })
-        return self._clients.get('cur')
+                    cid_print(f'\tAthena table: {_cur.table_name}')
+                    cid_print(f"\tResource IDs: {'yes' if _cur.has_resource_ids else 'no'}")
+                    if not _cur.has_resource_ids:
+                        raise CidCritical("Error: CUR has to be created with Resource IDs")
+                    cid_print(f"\tSavingsPlans: {'yes' if _cur.has_savings_plans else 'no'}")
+                    cid_print(f"\tReserved Instances: {'yes' if _cur.has_reservations else 'no'}")
+                    cid_print('\n')
+                    self._clients['cur'] = _cur
+                    break
+                except CidCritical as exc:
+                    logger.critical(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
+                    self.init_cur()
+        return self._clients['cur']
 
     @property
     def accountMap(self) -> AccountMap:
@@ -234,9 +230,9 @@ class Cid():
         :noparams: do not process parameters as they may not exist by this time
         """
         res = None
-        if type not in ['dashboard', 'dataset', 'view', 'schedule']:
+        if type not in ['dashboard', 'dataset', 'view', 'schedule', 'crawler']:
             raise ValueError(f'{type} is not a valid definition type')
-        if type in ['dataset', 'view', 'schedule'] and name:
+        if type in ['dataset', 'view', 'schedule', 'crawler'] and name:
             res = self.resources.get(f'{type}s').get(name)
         elif type in ['dashboard']:
             for definition in self.resources.get(f'{type}s').values():
@@ -1239,6 +1235,8 @@ class Cid():
             ).decode('utf-8')
             if file_name.endswith('.json') or file_name.endswith('.jsn'):
                 data = json.loads(text)
+            elif file_name.endswith('.yaml') or file_name.endswith('.yml'):
+                data = yaml.safe_load(text)
             else:
                 data = text
         if data is None:
@@ -1498,7 +1496,6 @@ class Cid():
             return
         logger.debug(f'View definition: {view_definition}')
         dependencies = view_definition.get('dependsOn', {})
-
         # Process CUR columns
         if isinstance(dependencies.get('cur'), list):
             for column in dependencies.get('cur'):
@@ -1535,7 +1532,7 @@ class Cid():
                     elif 'CREATE OR REPLACE' in view_query.upper():
                         update_view = False
                         while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
-                            cid_print(f'Analysing view {view_name}')
+                            cid_print(f'Analyzing view {view_name}')
                             diff = self.athena.get_view_diff(view_name, view_query)
                             if diff and diff['diff']:
                                 cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
@@ -1575,8 +1572,6 @@ class Cid():
                     logger.debug('Start waiting')
                     assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
                     logger.info(f'View "{view_name}" updated')
-            else:
-                return
         else: # No found -> creation
             logger.info(f'Creating view: "{view_name}"')
             if view_definition.get('type') == 'Glue_Table':
@@ -1593,6 +1588,47 @@ class Cid():
                 self.athena.execute_query(view_query)
                 assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
                 logger.info(f'View "{view_name}" created')
+
+        if 'crawler' in view_definition:
+            if not ('CREATE EXTERNAL TABLE' in view_query.upper() or view_definition.get('type') == 'Glue_Table'):
+                raise CidCritical(f'Crawler cannot be defined for a view ({view_name}). only for a table. Pease fix resource definitions')
+            location = self.glue.get_table(name=view_name, catalog=self.base.account_id, database=self.athena.DatabaseName).get('StorageDescriptor', {}).get('Location')
+            self.create_or_update_crawler(crawler_name=view_definition['crawler'], location=location)
+
+    def create_or_update_crawler(self, crawler_name, location):
+        """ Create or Update Crawler """
+        crawler_definition = self.get_definition("crawler", name=crawler_name)
+        data = self.get_data_from_definition('crawler', crawler_definition)
+        template = Template(json.dumps(data))
+
+        # Filter roles trusted by Glue
+        glue_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service == 'glue.amazonaws.com']].RoleName"))
+        table = [fragment for fragment in location.split('/') if fragment][-1].lower().replace('-', '_')
+        crawler_role = get_parameter(
+            'crawler-role',
+            message='Provide a crawler role name',
+            choices=glue_trusted_roles + ['<CREATE NEW>']
+        )
+        if crawler_role == '<CREATE NEW>':
+            crawler_role = 'CidCmdCurCrawlerRole'
+            self.iam.ensure_role_for_crawler(
+                s3bucket=location.split('/')[2],
+                database=self.athena.DatabaseName,
+                table=table,
+                role_name=crawler_role
+            )
+
+        if not crawler_role.startswith('arn:'):
+            crawler_role_arn = f"arn:aws:iam::{self.base.account_id}:role/{crawler_role}"
+        else:
+            crawler_role_arn = crawler_role
+        params = {
+            'athena_database_name': self.athena.DatabaseName,
+            'crawler_role_arn': crawler_role_arn,
+            'location': location,
+        }
+        compiled_definition = json.loads(template.safe_substitute(params))
+        self.glue.create_or_update_crawler(crawler_definition=compiled_definition)
 
 
     def get_view_query(self, view_name: str) -> str:
@@ -1615,7 +1651,7 @@ class Cid():
         # Load TPL file
         data = self.get_data_from_definition('view', view_definition)
         if isinstance(data, dict):
-            template = Template(json.dumps(data))
+            template = Template(yaml.safe_dump(data))
         else:
             template = Template(data)
 
@@ -1656,3 +1692,42 @@ class Cid():
     def initqs(self, **kwargs):
         """ Initialize QuickSight resources for deployment """
         return InitQsCommand(cid=self, **kwargs).execute()
+
+    @command
+    def init_cur(self, **kwargs):
+        """ Initialize CUR """
+        if get_parameters().get('view-cur-location'):
+            s3path = get_parameters().get('view-cur-location')
+        else:
+            bucket = get_parameter(
+                'view-cur-s3-bucket',
+                message='Enter a bucket with CUR',
+                choices=self.s3.list_buckets(),
+            )
+            s3path = get_parameter(
+                'view-cur-location',
+                message='Enter an S3 path. We support only 2 types of CUR path: s3://{bucket}/cur and s3://{bucket}/{prefix}/{name}/{name}',
+                default=f's3://{bucket}/cur/',
+            )
+        path_fragments = [fragment for fragment in s3path.split('/')[3:] if fragment]
+
+        if path_fragments == ['cur']: # our standard cur created by CID
+            set_parameters({
+                'view-cur-partitions': (
+                    '[{"Name":"source_account_id","Type":"string"},'
+                    '{"Name":"cur_name_1","Type":"string"},'
+                    '{"Name":"cur_name_2","Type":"string"},'
+                    '{"Name":"year","Type":"string"},'
+                    '{"Name":"month","Type":"string"}]'
+                )
+            })
+        elif path_fragments[-1] == path_fragments[-2]: # CUR that is not created by CID but still supported 
+            set_parameters({'view-cur-partitions': '[{"Name":"year","Type":"string"},{"Name":"month","Type":"string"}]'})
+        else:
+            raise NotImplementedError("We support only 2 types of CUR and this is something else.")
+
+        set_parameters({'crawler-cur-s3path': get_parameters().get('view-cur-location')})
+        cid_print('Creating / updating CUR table')
+        self.create_or_update_view(view_name='cur')
+        cid_print('Please check crawler in a few minutes https://console.aws.amazon.com/glue/home?#/v2/data-catalog/crawlers')
+        set_parameters({'cur-table-name': path_fragments[-1].lower().replace('-', '_')})
