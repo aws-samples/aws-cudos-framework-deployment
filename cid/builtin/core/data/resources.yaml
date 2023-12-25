@@ -649,7 +649,7 @@ schedules:
 crawlers:
   cur:
     data:
-      Name:  'CidCurCrawler'
+      Name:  'CidCmdCurCrawler'
       Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
       Role:  ${crawler_role_arn}
       DatabaseName: "${athena_database_name}"
@@ -685,5 +685,5 @@ crawlers:
         }
     parameters:
       s3path:
-        default: 's3://cid-{account_id}-cur/cur/{account_id}/cid/cid'
-        description: Compute Optimiser EBS report S3 path
+        default: 's3://cid-{account_id}-cur/cur/'
+        description: CUR path
