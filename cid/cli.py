@@ -246,7 +246,7 @@ def init_qs(ctx, **kwargs):
 @click.option('-v', '--verbose', count=True)
 @cid_command
 def init_cur(ctx, **kwargs):
-    """Initialize CUR
+    """Initialize CUR table
 
     \b
      --view-cur-location  s3://BUCKET/PATH   S3 path with CUR data. We support only 2 types of CUR path: 's3://{bucket}/cur' and 's3://{bucket}/{prefix}/{name}/{name}'
