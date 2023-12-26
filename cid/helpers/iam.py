@@ -258,27 +258,58 @@ class IAM(CidBase):
                 logger.info(f"Policy '{policy_name}' created successfully.")
 
             # Attach if needed
-            attached_policies = self.client.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
-            if not any(policy['PolicyArn'] == policy_arn for policy in attached_policies):
+            if not any(arn == policy_arn for arn in self.iterate_policies(role_name)):
                 self.client.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
                 logger.info(f"IAM Policy '{policy_name}' attached to the role.")
 
-        attached_policies = self.client.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
         for managed_policy_arn in managed_policies:
-            if not any(policy['PolicyArn'] == managed_policy_arn for policy in attached_policies):
+            if not any(arn == managed_policy_arn for arn in self.iterate_policies(role_name)):
                 self.client.attach_role_policy(RoleName=role_name, PolicyArn=managed_policy_arn)
                 logger.info(f"Managed Policy '{managed_policy_arn}' attached to the role.")
 
         return role_name
 
+    def iterate_policies(self, role_name, search='AttachedPolicies[].PolicyArn'):
+        yield from self.client.get_paginator('list_attached_role_policies').paginate(RoleName=role_name).search(search)
 
     def iterate_role_names(self, search='Roles[].RoleName'):
-        """ iterate role names
+        """ Iterate role names
         """
         try:
             yield from self.client.get_paginator('list_roles').paginate().search(search)
         except self.client.exceptions.ClientError as exc:
             logger.warning('Failed to read available IEM roles: {exc}. Most likely not fatal.')
+
+    def ensure_role_does_not_exist(self, role_name):
+        """ Remove a role and all policies if they are not used in other roles
+        """
+        try:
+            self.client.get_role(RoleName=role_name)
+        except self.client.exceptions.NoSuchEntityException:
+            logger.debug(f'No role {role_name}')
+            return
+
+        # Clean all attached policies
+        for arn in self.client.get_paginator('list_attached_role_policies').paginate(RoleName=role_name).search('AttachedPolicies[].PolicyArn'):
+            logger.debug(f'Detaching {arn} from {role_name}')
+            self.client.detach_role_policy(PolicyArn=arn, RoleName=role_name)
+            if 'aws:policy/service-role/' in arn:
+                continue # skip managed policies
+            for version in self.client.list_policy_versions(PolicyArn=arn)['Versions']:
+                if not version['IsDefaultVersion']:
+                    self.client.delete_policy_version(PolicyArn=arn, VersionId=version['VersionId'])
+            logger.debug(f'Deleting {arn}')
+            try:
+                self.client.delete_policy(PolicyArn=arn)
+            except self.client.exceptions.DeleteConflictException:
+                logger.debug(f'Policy {arn} is still used. Skipping')
+
+        # Delete role
+        logger.debug(f'Deleting role {role_name!r}')
+        try:
+            self.client.delete_role(RoleName=role_name)
+        except self.client.exceptions.DeleteConflictException:
+            logger.debug(f'Role {role_name!r} is still used. Skipping')
 
 
 
@@ -366,24 +397,18 @@ def test_merge_policy_docs_on_resource_level():
 
 
 def integration_test_create_delete_role():
+    """ A quicks test for creation and deletion
+    """
     iam = IAM(boto3.session.Session())
-    role_name = 'test_role'
-    role = iam.ensure_data_source_role_exists(role_name, buckets=['test'])
-    assert role
-
-    attached_policies = { p['PolicyName']:p['PolicyArn']
-        # We cannot have more than 10 policy attached to a role. No need in paginator.
-        for p in iam.client.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
-    }
+    role_name = iam.ensure_data_source_role_exists('test_role', buckets=['test'])
+    assert role_name
+    attached_policies = { pol['PolicyName']: pol['PolicyArn'] for pol in iam.iterate_policies(role_name)}
     assert 'AWSQuicksightAthenaAccess' in attached_policies
 
-    for i in range(6):
-        role = iam.ensure_data_source_role_exists(role_name, buckets=[f'test{i}'])
-    assert role
     iam.ensure_role_does_not_exist(role_name)
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    logger.setLevel(logging.DEBUG)
-    test_create_delete()
+    logging.getLogger('cid').setLevel(logging.DEBUG)
+    integration_test_create_delete_role()
