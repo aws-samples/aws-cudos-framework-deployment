@@ -1244,11 +1244,29 @@ class Cid():
         return data
 
     def create_datasource(self, datasource_id) -> str:
+        """Create datasource with given id
+        uses parameters: 'quicksight-datasource-role-arn', 'quicksight-datasource-role'
+        """
         role_arn = get_parameters().get('quicksight-datasource-role-arn')
         if not role_arn:
             role_name = get_parameters().get('quicksight-datasource-role')
             if role_name:
                 role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+
+        if not role_arn:
+            quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service == 'quicksight.amazonaws.com']].Arn"))
+            quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role.split('/')[-1] not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
+            # TODO: filter only roles with Athena and S3 policies
+            if not quicksight_trusted_roles:
+                logger.critical('Cannot find any role that trust QuickSight service. Will try the default role of QuickSight. You please make sure it is configured to access Athena and S3 buckets here: https://quicksight.aws.amazon.com/sn/admin#aws')
+            else:
+                # TODO: add option to create role
+                role_arn = get_parameter(
+                    'quicksight-datasource-role-arn',
+                    message='Please choose a QuickSight role. It must have access to Athena',
+                    choices=quicksight_trusted_roles,
+                )
+
         athena_datasource = self.qs.create_data_source(
             athena_workgroup=self.athena.WorkGroup,
             datasource_id=datasource_id,
@@ -1689,7 +1707,7 @@ class Cid():
             self.accountMap.create(v)
 
     @command
-    def initqs(self, **kwargs):
+    def init_qs(self, **kwargs):
         """ Initialize QuickSight resources for deployment """
         return InitQsCommand(cid=self, **kwargs).execute()
 
@@ -1721,10 +1739,10 @@ class Cid():
                     '{"Name":"month","Type":"string"}]'
                 )
             })
-        elif path_fragments[-1] == path_fragments[-2]: # CUR that is not created by CID but still supported 
+        elif len(path_fragments) == 3 and path_fragments[-1] == path_fragments[-2]: # CUR that is not created by CID but still supported
             set_parameters({'view-cur-partitions': '[{"Name":"year","Type":"string"},{"Name":"month","Type":"string"}]'})
         else:
-            raise NotImplementedError("We support only 2 types of CUR and this is something else.")
+            raise NotImplementedError(f"We support only 2 types of CUR and this is something else ({s3path}).")
 
         set_parameters({'crawler-cur-s3path': get_parameters().get('view-cur-location')})
         cid_print('Creating / updating CUR table')

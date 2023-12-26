@@ -227,23 +227,21 @@ def cleanup(ctx, **kwargs):
 @cid_command
 def share(ctx, dashboard_id, **kwargs):
     """Share QuickSight resources (Dashboard, Datasets, DataSource)"""
-    
     ctx.obj.share(dashboard_id)
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
-def initqs(ctx, **kwargs):
+def init_qs(ctx, **kwargs):
     """Initialize Amazon QuickSight
 
     \b
-
      --enable-quicksight-enterprise (yes|no) Confirm the activation of QuickSight
-     --account-name NAME                     Unique QuickSight account name (Unique across all AWS users) 
+     --account-name NAME                     Unique QuickSight account name (Unique across all AWS users)
      --notification-email EMAIL              User's email for QuickSight notifications
     """
 
-    ctx.obj.initqs(**kwargs)
+    ctx.obj.init_qs(**kwargs)
 
 @click.option('-v', '--verbose', count=True)
 @cid_command
@@ -251,10 +249,8 @@ def init_cur(ctx, **kwargs):
     """Initialize CUR
 
     \b
-
-     --enable-quicksight-enterprise (yes|no) Confirm the activation of QuickSight
-     --account-name NAME                     Unique QuickSight account name (Unique across all AWS users) 
-     --notification-email EMAIL              User's email for QuickSight notifications
+     --view-cur-location  s3://BUCKET/PATH   S3 path with CUR data. We support only 2 types of CUR path: 's3://{bucket}/cur' and 's3://{bucket}/{prefix}/{name}/{name}'
+     --crawler-role       ROLE               Name or ARN of crawler role
     """
 
     ctx.obj.init_cur(**kwargs)
