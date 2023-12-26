@@ -1,6 +1,6 @@
-from cid.helpers.athena import Athena
 from cid.helpers.glue import Glue
 from cid.helpers.s3 import S3
+from cid.helpers.athena import Athena
 from cid.helpers.iam import IAM
 from cid.helpers.cur import CUR
 from cid.helpers.diff import diff

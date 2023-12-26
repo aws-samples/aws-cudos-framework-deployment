@@ -1,15 +1,11 @@
 import re
-import csv
 import json
 import time
-import uuid
 import logging
-from string import Template
-from io import StringIO
-from pkg_resources import resource_string
 
 from cid.base import CidBase
-from cid.helpers.s3 import S3
+from cid.helpers import S3
+from cid.helpers import Glue
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
@@ -42,13 +38,13 @@ class Athena(CidBase):
 
     @property
     def CatalogName(self) -> str:
-        """ Check if AWS Datacalog and Athena database exist """
+        """ Check if AWS DataCatalog and Athena database exist """
         if not self._CatalogName:
             # Get AWS Glue DataCatalogs
             glue_data_catalogs = [d for d in self.list_data_catalogs() if d['Type'] == 'GLUE']
             if not len(glue_data_catalogs):
-                logger.error('AWS DataCatog of type GLUE not found!')
-                self._status = 'AWS DataCatog of type GLUE not found'
+                logger.error('AWS DataCatalog of type GLUE not found!')
+                self._status = 'AWS DataCatalog of type GLUE not found'
             if len(glue_data_catalogs) == 1:
                 self._CatalogName = glue_data_catalogs.pop().get('CatalogName')
             elif len(glue_data_catalogs) > 1:
@@ -58,7 +54,7 @@ class Athena(CidBase):
                     message="Select AWS DataCatalog to use",
                     choices=[catalog.get('CatalogName') for catalog in glue_data_catalogs],
                 )
-            logger.info(f'Using datacatalog: {self._CatalogName}')
+            logger.info(f'Using DataCatalog: {self._CatalogName}')
         return self._CatalogName
 
     @CatalogName.setter
@@ -77,38 +73,30 @@ class Athena(CidBase):
                     raise CidCritical(f'Database {self._DatabaseName} not found in Athena catalog {self.CatalogName}')
             except Exception as exc:
                 if 'AccessDeniedException' in str(exc):
-                    logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existance of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
+                    logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existence of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
                     return self._DatabaseName
                 raise
         # Get AWS Athena databases
         athena_databases = self.list_databases()
-        if not len(athena_databases):
-            self._status = 'AWS Athena databases not found'
-            raise CidCritical(self._status)
-        if len(athena_databases) == 1:
-            # Silently choose an existing database
-            self._DatabaseName = athena_databases.pop().get('Name')
-        elif len(athena_databases) > 1:
-            # Remove empty databases from the list
-            for d in athena_databases:
-                tables = self.list_table_metadata(
-                    DatabaseName=d.get('Name'),
-                    max_items=1000, # This is an impiric limit. User can have up to 200k tables in one DB we need to draw a line somewhere
-                )
-                if not len(tables):
-                    athena_databases.remove(d)
-            # Select default database if present
-            default_databases = [d for d in athena_databases if d['Name'] == self.defaults.get('DatabaseName')]
-            if len(default_databases):
-                # Silently choose an existing default database
-                self._DatabaseName = default_databases.pop().get('Name')
-            else:
-                # Ask user
-                self._DatabaseName = get_parameter(
-                    param_name='athena-database',
-                    message="Select AWS Athena database to use",
-                    choices=[d['Name'] for d in athena_databases],
-                )
+
+        # Select default database if present
+        default_databases = [database for database in athena_databases if database['Name'] == self.defaults.get('DatabaseName')]
+        if len(default_databases):
+            # Silently choose an existing default database
+            self._DatabaseName = default_databases.pop().get('Name')
+        else:
+            # Ask user
+            choices = [d['Name'] for d in athena_databases]
+            if self.defaults.get('DatabaseName') not in choices:
+                choices.append(self.defaults.get('DatabaseName') + ' (CREATE NEW)')
+            self._DatabaseName = get_parameter(
+                param_name='athena-database',
+                message="Select AWS Athena database to use",
+                choices=choices,
+            )
+            if self._DatabaseName.endswith( ' (CREATE NEW)'):
+                Glue(self.session).create_database(name=self.defaults.get('DatabaseName'))
+                self._DatabaseName = self.defaults.get('DatabaseName')
         logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
 
@@ -147,7 +135,7 @@ class Athena(CidBase):
                 if ' (create new)' in selected_workgroup:
                     selected_workgroup = selected_workgroup.replace(' (create new)', '')
                 self.WorkGroup = self._ensure_workgroup(name=selected_workgroup)
-                
+
             logger.info(f'Selected workgroup: "{self._WorkGroup}"')
         return self._WorkGroup
 
@@ -165,14 +153,13 @@ class Athena(CidBase):
         logger.info(f'Selected Athena WorkGroup: "{self._WorkGroup}"')
 
     def _ensure_workgroup(self, name: str) -> str:
+        """Ensure a workgroup exists and configured with an S3 bucket"""
         try:
             s3 = S3(session=self.session)
             bucket_name = f'{self.partition}-athena-query-results-cid-{self.account_id}-{self.region}'
-            
+
             workgroup = self.client.get_work_group(WorkGroup=name)
-            # "${AWS::Partition}-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}"
             if not workgroup.get('WorkGroup', {}).get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation', None):
-                s3 = S3(session=self.session)
                 buckets = s3.list_buckets(region_name=self.region)
                 if bucket_name not in buckets:
                     buckets.append(f'{bucket_name} (create new)')
@@ -184,7 +171,7 @@ class Athena(CidBase):
                 if ' (create new)' in bucket_name:
                     bucket_name = bucket_name.replace(' (create new)', '')
                 s3.ensure_bucket(name=bucket_name)
-                response = self.client.update_work_group(
+                self.client.update_work_group(
                     WorkGroup=name,
                     Description='string',
                     ConfigurationUpdates={
@@ -200,11 +187,11 @@ class Athena(CidBase):
                     }
                 )
             return name
-        except self.client.exceptions.InvalidRequestException as ex:
+        except self.client.exceptions.InvalidRequestException as exc:
             # Workgroup does not exist
-            if 'WorkGroup is not found' in ex.response.get('Error', {}).get('Message'):
+            if 'WorkGroup is not found' in exc.response.get('Error', {}).get('Message'):
                 s3.ensure_bucket(name=bucket_name)
-                response = self.client.create_work_group(
+                self.client.create_work_group(
                     Name=name,
                     Configuration={
                         'ResultConfiguration': {
@@ -219,28 +206,29 @@ class Athena(CidBase):
                     }
                 )
                 return name
-        except Exception as ex:
-            raise CidCritical('Failed to create Athena work group') from ex
-                
+            else:
+                raise
+        except Exception as exc:
+            logger.exception(exc)
+            raise CidCritical(f'Failed to create Athena work group ({exc})') from exc
+
     def list_data_catalogs(self) -> list:
         return self.client.list_data_catalogs().get('DataCatalogsSummary')
-    
+
     def list_databases(self) -> list:
         return self.client.list_databases(CatalogName=self.CatalogName).get('DatabaseList')
-    
+
     def get_database(self, DatabaseName: str=None) -> bool:
-        """ Check if AWS Datacalog and Athena database exist """
-        if not DatabaseName:
-            DatabaseName = self.DatabaseName
+        """ Check if AWS DataCatalog and Athena database exist """
+        DatabaseName = DatabaseName or self.DatabaseName
         try:
-            self.client.get_database(CatalogName=self.CatalogName, DatabaseName=DatabaseName).get('Database')
-            return True
-        except Exception as exc:
+            return self.client.get_database(CatalogName=self.CatalogName, DatabaseName=DatabaseName).get('Database')
+        except self.client.exceptions.ClientError as exc:
             if 'AccessDeniedException' in str(exc):
                 raise
             else:
                 logger.debug(exc, exc_info=True)
-                return False
+                return None
 
     def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
         params = {
@@ -261,13 +249,13 @@ class Athena(CidBase):
         except Exception as e:
             logger.error(f'Failed to list tables in {DatabaseName if DatabaseName else self.DatabaseName}')
             logger.error(e)
-            
+
         return table_metadata
 
     def list_work_groups(self) -> list:
         """ List AWS Athena workgroups """
         result = self.client.list_work_groups()
-        logger.debug(f'Workgroups: {result.get("WorkGroups")}')
+        logger.debug(f'WorkGroups: {result.get("WorkGroups")}')
         return result.get('WorkGroups')
 
     def get_table_metadata(self, TableName: str) -> dict:
@@ -352,13 +340,13 @@ class Athena(CidBase):
         execution_id = self.execute_query(sql, **kwargs)
         results = self.get_query_results(execution_id)
         #logger.debug(f'results = {json.dumps(results, indent=2)}')
-        prarsed = self.parse_response_as_table(results, include_header)
-        logger.debug(f'prarsed res = {json.dumps(prarsed, indent=2)}')
-        return prarsed
+        parsed = self.parse_response_as_table(results, include_header)
+        logger.debug(f'parsed res = {json.dumps(parsed, indent=2)}')
+        return parsed
 
 
     def discover_views(self, views: dict={}) -> None:
-        """ Discover views from a given list of view names and cahe them. """
+        """ Discover views from a given list of view names and cache them. """
         for view_name in views:
             try:
                 self.get_table_metadata(TableName=view_name)
@@ -390,7 +378,7 @@ class Athena(CidBase):
             return False
 
         try:
-            res = self.execute_query(
+            self.execute_query(
                 f'DROP TABLE IF EXISTS {name};',
                 catalog=catalog,
                 database=database,
@@ -414,7 +402,7 @@ class Athena(CidBase):
             return False
 
         try:
-            res = self.execute_query(
+            self.execute_query(
                 f'DROP VIEW IF EXISTS {name};',
                 catalog=catalog,
                 database=database,
@@ -430,7 +418,7 @@ class Athena(CidBase):
         return True
 
     def get_view_diff(self, name, sql):
-        """ returns a diff between existing and new viws. """
+        """ returns a diff between existing and new views. """
         tmp_name = 'cid_tmp_deleteme'
         existing_sql = ''
         try:
@@ -490,7 +478,7 @@ class Athena(CidBase):
                 all_views[view]["dependsOn"]['views'] = []
                 deps = re.findall(r'FROM\W+?([\w."]+)', sql)
                 for dep_view in deps:
-                    #FIXME: need to add cross Database Dependancies
+                    #FIXME: need to add cross Database Dependencies
                     if dep_view.upper() in ('SELECT', 'VALUES'): # remove "FROM SELECT" and "FROM VALUES"
                         continue
                     dep_view = dep_view.replace('"', '')

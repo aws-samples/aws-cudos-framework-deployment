@@ -30,6 +30,15 @@ class Glue(CidBase):
             logger.error(definition)
             raise
 
+    def create_database(self, name, description: str='Cloud Intelligence Dashboards Database'):
+        """Create Database"""
+        return self.client.create_database(
+            DatabaseInput={
+                'Name': name,
+                'Description': description,
+            },
+        )
+
     def get_table(self, name, catalog, database):
         """Get table"""
         return self.client.get_table(

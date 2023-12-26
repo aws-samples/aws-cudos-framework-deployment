@@ -1,6 +1,7 @@
 ''' IAM helper
 '''
 import json
+import time
 import logging
 
 from cid.base import CidBase
@@ -96,12 +97,14 @@ class IAM(CidBase):
                 PolicyDocument=json.dumps(assume_role_policy_document)
             )
             logger.info(f'Role {role_name} updated')
+
         except self.client.exceptions.NoSuchEntityException:
             self.client.create_role(
                 RoleName=role_name,
                 AssumeRolePolicyDocument=json.dumps(assume_role_policy_document)
             )
             logger.info(f'Role {role_name} created')
+            time.sleep(5) # Some times the role cannot be assumed without this delay after creation
 
         try:
             policy_response = self.client.get_policy(PolicyArn=f"arn:aws:iam::{self.account_id}:policy/{policy_name}")

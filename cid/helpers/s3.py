@@ -63,10 +63,10 @@ class S3(CidBase):
         '''
         bucket_names = [bucket['Name'] for bucket in self.client.list_buckets()['Buckets']]
         if region_name:
-            bucket_names = bucket_names.filter(
+            bucket_names = list(filter(
+                lambda bucket_name: self.client.get_bucket_location(Bucket=bucket_name).get('LocationConstraint', 'us-east-1') == region_name,
                 bucket_names,
-                lambda bucket_name: self.client.get_bucket_location(Bucket=bucket_name).get('LocationConstraint', 'us-east-1') == region_name
-            )
+            ))
         return bucket_names
 
     def iterate_objects(self, bucket: str, prefix: str='/', search: str='Contents[].Key') -> List[str]:

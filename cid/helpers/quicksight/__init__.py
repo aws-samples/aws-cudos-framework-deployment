@@ -459,7 +459,12 @@ class QuickSight(CidBase):
                 if not datasource.status.endswith('IN_PROGRESS'):
                     break
             if not datasource.is_healthy:
-                logger.error(f'Data source creation failed: {datasource.error_info}')
+                logger.error(f'Data source creation failed: {datasource.error_info}.')
+                if "The QuickSight service role required to access your AWS resources has not been created yet." in str(datasource.error_info):
+                    logger.error(
+                        'Please check that QuickSight has a default role that can access S3 Buckets and Athena https://quicksight.aws.amazon.com/sn/admin?#aws '
+                        'OR provide a custom datasource role as a parameter --quicksight-datasource-role-arn'
+                    )
                 if get_parameter(
                     param_name='quicksight-delete-failed-datasource',
                     message=f'Data source creation failed: {datasource.error_info}. Delete?',
@@ -472,8 +477,20 @@ class QuickSight(CidBase):
                 return None
             return datasource
         except self.client.exceptions.ResourceExistsException:
-            logger.error('Data source already exists')
-            return self.describe_data_source(datasource_id, update=True)
+            datasource = self.describe_data_source(datasource_id, update=True)
+            logger.error(f'Data source already exists {datasource.raw}')
+            if not datasource.is_healthy:
+                if get_parameter(
+                    param_name='quicksight-delete-failed-datasource',
+                    message=f'Data source creation failed: {datasource.error_info}. Delete?',
+                    choices=['yes', 'no'],
+                ) == 'yes':
+                    try:
+                        self.delete_data_source(datasource.id)
+                        raise CidCritical('Issue on datasource creation. Please retry.')
+                    except self.client.exceptions.AccessDeniedException:
+                        raise CidCritical('Access denied deleting datasource in QS. Please cleanup manually and retry.')
+            return datasource
         except self.client.exceptions.AccessDeniedException as exc:
             logger.info('Access denied creating Athena datasource')
             logger.debug(exc, exc_info=True)
