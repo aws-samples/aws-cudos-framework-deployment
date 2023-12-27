@@ -1243,6 +1243,7 @@ class Cid():
             raise CidCritical(f"Error: definition is broken. Cannot find data for {repr(definition)}. Check resources file.")
         return data
 
+
     def create_datasource(self, datasource_id) -> str:
         """Create datasource with given id
         uses parameters: 'quicksight-datasource-role-arn', 'quicksight-datasource-role'
@@ -1254,23 +1255,43 @@ class Cid():
                 role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
 
         if not role_arn:
-            quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service == 'quicksight.amazonaws.com']].Arn"))
+            quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].Arn"))
             quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role.split('/')[-1] not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
             # TODO: filter only roles with Athena and S3 policies
-            if not quicksight_trusted_roles:
-                logger.critical('Cannot find any role that trust QuickSight service. Will try the default role of QuickSight. You please make sure it is configured to access Athena and S3 buckets here: https://quicksight.aws.amazon.com/sn/admin#aws')
-            else:
-                # TODO: add option to create role
-                role_arn = get_parameter(
-                    'quicksight-datasource-role-arn',
-                    message='Please choose a QuickSight role. It must have access to Athena',
-                    choices=quicksight_trusted_roles,
+
+            cid_role_name = 'CidCmdQuicksightDatasetRole'
+            choices = quicksight_trusted_roles
+            if cid_role_name not in choices:
+                choices.append(cid_role_name + ' <ADD NEW ROLE>' )
+            choice = get_parameter(
+                'quicksight-datasource-role-arn',
+                message='Please choose a QuickSight role. It must have access to Athena',
+                choices=['<USE DEFAULT QS ROLE>'] + choices,
+            )
+            if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
+                # TODO: allow customer add buckets
+                buckets = [
+                    f'cid-{self.base.account_id}-share',
+                    f'costoptimizationdata{self.base.account_id}',
+                    f'cid-data-{self.base.account_id}',
+                ]
+                role_name = self.iam.ensure_data_source_role_exists(
+                    role_name=cid_role_name,
+                    database=self.athena.DatabaseName,
+                    workgroup=self.athena.WorkGroup,
+                    buckets=buckets,
                 )
+                cid_print(f'Role {role_name} was updated. https://console.aws.amazon.com/iam/home?#/roles/details/{role_name}')
+                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+            elif choice == '<USE DEFAULT QS ROLE>':
+                role_arn = None
+            else:
+                role_arn = choice
 
         athena_datasource = self.qs.create_data_source(
             athena_workgroup=self.athena.WorkGroup,
             datasource_id=datasource_id,
-            role_arn=role_arn
+            role_arn=role_arn,
         )
         return athena_datasource
 
@@ -1338,36 +1359,31 @@ class Cid():
 
                 if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
                     athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
-                    logger.info(f'Silently selecting the only available DataSources: {datasources[0]}.')
+                    logger.info(f'Silently selecting the only available DataSources from other datasets: {datasources[0]}.')
                 else:
-                    #try to find a datasource with defined workgroup
-                    workgroup = self.athena.WorkGroup
-                    datasources_with_workgroup = self.qs.get_datasources(
-                        athena_workgroup_name=workgroup,
+                    # Ask user to choose the datasource
+                    # Narrow the choice to only datasources with the given workgroup
+                    datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=self.athena.WorkGroup)
+                    logger.info(f'Found {len(datasources_with_workgroup)} Athena DataSources with WorkGroup={self.athena.WorkGroup}.')
+                    datasource_choices = {
+                        f"{datasource.name} {datasource.id} (workgroup={datasource.AthenaParameters.get('WorkGroup')})": datasource.id
+                        for datasource in datasources_with_workgroup
+                    }
+                    if 'CID-CMD-Athena' not in list(datasource_choices.values()):
+                        datasource_choices['CID-CMD-Athena <CREATE NEW DATASOURCE>'] = 'Create New DataSource'
+                    #TODO: add possibility to update datasource and role
+                    datasource_id = get_parameter(
+                        param_name='quicksight-datasource-id',
+                        message=f"Please choose DataSource (Select the first one if not sure)",
+                        choices=datasource_choices,
                     )
-                    logger.info(f'Found {len(datasources_with_workgroup)} Athena DataSources with WorkGroup={workgroup}.')
-                    if len(datasources_with_workgroup) == 1:
-                        athena_datasource = datasources_with_workgroup[0]
-                        logger.info(f'Silently selecting the only available option: {athena_datasource}.')
+                    if not datasource_id or datasource_id == 'Create New DataSource':
+                        datasource_id = 'CID-CMD-Athena'
+                        logger.info(f'Creating DataSource {datasource_id}')
+                        athena_datasource = self.create_datasource(datasource_id)
                     else:
-                        #cannot find the right athena_datasource
-                        datasource_choices = {
-                            f"{datasource.name} {datasource.id} (workgroup={datasource.AthenaParameters.get('WorkGroup')})": datasource.id
-                            for datasource in datasources_with_workgroup
-                        }
-                        datasource_choices['Create New DataSource'] = 'Create New DataSource'
-                        datasource_id = get_parameter(
-                            param_name='quicksight-datasource-id',
-                            message=f"Please choose DataSource (Choose the first one if not sure).",
-                            choices=datasource_choices,
-                        )
-                        if not datasource_id or datasource_id == 'Create New DataSource':
-                            datasource_id = 'CID-CMD-Athena'
-                            logger.info(f'Creating DataSource {datasource_id}')
-                            athena_datasource = self.create_datasource(datasource_id)
-                        else:
-                            athena_datasource = self.qs.get_datasources(id=datasource_id)[0]
-                        logger.info(f'Using  DataSource = {athena_datasource.id}')
+                        athena_datasource = self.qs.get_datasources(id=datasource_id)[0]
+                    logger.info(f'Using  DataSource = {athena_datasource.id}')
         if not get_parameters().get('athena-workgroup'):
             # set default workgroup from datasource if not provided via parameters
             if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):
@@ -1387,10 +1403,10 @@ class Cid():
             print(f"Detected views: {', '.join(found_views)}")
             for view_name in found_views:
                 if cur_required and view_name == self.cur.table_name:
-                    logger.debug(f'Dependancy view {view_name} is a CUR. Skip.')
+                    logger.debug(f'Dependency view {view_name} is a CUR. Skip.')
                     continue
                 if view_name == 'account_map':
-                    logger.debug(f'Dependancy view is {view_name}. Skip.')
+                    logger.debug(f'Dependency view is {view_name}. Skip.')
                     continue
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
 

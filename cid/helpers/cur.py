@@ -186,11 +186,11 @@ class CUR():
 
             answer =  get_parameter(
                 param_name='cur-table-name',
-                message="Multiple CUR tables found, please select one",
-                choices=choices + ['Create a CUR table and Crawler'],
+                message="Please select CUR",
+                choices=choices + ['<CREATE CUR TABLE AND CRAWLER>'],
             )
-            if answer == 'Create a CUR table and Crawler':
-                raise CidCritical('Create a CUR table and Crawler')
+            if answer == '<CREATE CUR TABLE AND CRAWLER>':
+                raise CidCritical('<CREATE CUR TABLE AND CRAWLER>')
             else:
                 self._tableName = answer
             self._metadata = self.athena.get_table_metadata(self._tableName)
