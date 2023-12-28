@@ -256,7 +256,7 @@ class Cid():
 
     @command
     def export(self, **kwargs):
-        export_analysis(self.qs, self.athena)
+        export_analysis(self.qs, self.athena, glue=self.glue, s3=self.s3)
 
     def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """
@@ -523,9 +523,9 @@ class Cid():
                         src_fields = source_template.datasets.get(ds_map.get(dataset_name, dataset_name) )
                         required_fields = {col.get('Name'): col.get('DataType') for col in src_fields}
                         unmatched = {}
-                        for k, v in required_fields.items():
-                            if k not in dataset_fields or dataset_fields[k] != v:
-                                unmatched.update({k: {'expected': v, 'found': dataset_fields.get(k)}})
+                        for field_name, field_type in required_fields.items():
+                            if field_name not in dataset_fields or dataset_fields[field_name] != field_type:
+                                unmatched.update({field_name: {'expected': field_type, 'found': dataset_fields.get(field_name)}})
                         logger.debug(f'unmatched_fields={unmatched}')
                         if unmatched:
                             logger.warning(f'Found Dataset "{dataset_name}" ({ds.id}) but it is missing required fields. {(unmatched)}')
@@ -1328,62 +1328,62 @@ class Cid():
                     f'quicksight-datasource-id={datasource_id} not found or not in a valid state.'
                 ) from exc
         else:
-                # We have no explicit DataSource in parameters
-                # QuickSight DataSources are not obvious for customer so we will try to do our best guess
-                # - if there is just one? -> silently take that one
-                # - if DataSource is references in existing DataSet? -> silently take that one
-                # - if athena WorkGroup defined -> Try to find a DataSource with this WorkGroup
-                # - and if still nothing -> ask an explicit choice from the user
-                pre_compiled_dataset = json.loads(template.safe_substitute())
-                dataset_name = pre_compiled_dataset.get('Name')
+            # We have no explicit DataSource in parameters
+            # QuickSight DataSources are not obvious for customer so we will try to do our best guess
+            # - if there is just one? -> silently take that one
+            # - if DataSource is references in existing DataSet? -> silently take that one
+            # - if athena WorkGroup defined -> Try to find a DataSource with this WorkGroup
+            # - and if still nothing -> ask an explicit choice from the user
+            pre_compiled_dataset = json.loads(template.safe_substitute())
+            dataset_name = pre_compiled_dataset.get('Name')
 
-                # let's find the schema/database and workgroup name
-                schemas = []
-                datasources = []
-                if dataset_id:
-                    schemas = self.qs.get_datasets(id=dataset_id)[0].schemas
-                    datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
-                else: # try to find dataset and get athena database
-                    found_datasets = self.qs.get_datasets(name=dataset_name)
-                    logger.debug(f'Related to dataset {dataset_name}: {[ds.id for ds in found_datasets]}')
-                    if found_datasets:
-                        schemas = list(set(sum([d.schemas for d in found_datasets], [])))
-                        datasources = list(set(sum([d.datasources for d in found_datasets], [])))
-                        logger.debug(f'Found following schemas={schemas}, related to dataset with name {dataset_name}')
-                logger.info(f'Found {len(datasources)} Athena DataSources related to the DataSet {dataset_name}')
+            # let's find the schema/database and workgroup name
+            schemas = []
+            datasources = []
+            if dataset_id:
+                schemas = self.qs.get_datasets(id=dataset_id)[0].schemas
+                datasources = self.qs.get_datasets(id=dataset_id)[0].datasources
+            else: # try to find dataset and get athena database
+                found_datasets = self.qs.get_datasets(name=dataset_name)
+                logger.debug(f'Related to dataset {dataset_name}: {[ds.id for ds in found_datasets]}')
+                if found_datasets:
+                    schemas = list(set(sum([d.schemas for d in found_datasets], [])))
+                    datasources = list(set(sum([d.datasources for d in found_datasets], [])))
+                    logger.debug(f'Found following schemas={schemas}, related to dataset with name {dataset_name}')
+            logger.info(f'Found {len(datasources)} Athena DataSources related to the DataSet {dataset_name}')
 
-                if not get_parameters().get('athena-database') and len(schemas) == 1 and schemas[0]:
-                    logger.debug(f'Picking the database={schemas[0]}')
-                    self.athena.DatabaseName = schemas[0]
-                # else user will be suggested to choose database anyway
+            if not get_parameters().get('athena-database') and len(schemas) == 1 and schemas[0]:
+                logger.debug(f'Picking the database={schemas[0]}')
+                self.athena.DatabaseName = schemas[0]
+            # else user will be suggested to choose database anyway
 
-                if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
-                    athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
-                    logger.info(f'Silently selecting the only available DataSources from other datasets: {datasources[0]}.')
+            if len(datasources) == 1 and datasources[0] in self.qs.athena_datasources:
+                athena_datasource = self.qs.get_datasources(id=datasources[0])[0]
+                logger.info(f'Silently selecting the only available DataSources from other datasets: {datasources[0]}.')
+            else:
+                # Ask user to choose the datasource
+                # Narrow the choice to only datasources with the given workgroup
+                datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=self.athena.WorkGroup)
+                logger.info(f'Found {len(datasources_with_workgroup)} Athena DataSources with WorkGroup={self.athena.WorkGroup}.')
+                datasource_choices = {
+                    f"{datasource.name} {datasource.id} (workgroup={datasource.AthenaParameters.get('WorkGroup')})": datasource.id
+                    for datasource in datasources_with_workgroup
+                }
+                if 'CID-CMD-Athena' not in list(datasource_choices.values()):
+                    datasource_choices['CID-CMD-Athena <CREATE NEW DATASOURCE>'] = 'Create New DataSource'
+                #TODO: add possibility to update datasource and role
+                datasource_id = get_parameter(
+                    param_name='quicksight-datasource-id',
+                    message=f"Please choose DataSource (Select the first one if not sure)",
+                    choices=datasource_choices,
+                )
+                if not datasource_id or datasource_id == 'Create New DataSource':
+                    datasource_id = 'CID-CMD-Athena'
+                    logger.info(f'Creating DataSource {datasource_id}')
+                    athena_datasource = self.create_datasource(datasource_id)
                 else:
-                    # Ask user to choose the datasource
-                    # Narrow the choice to only datasources with the given workgroup
-                    datasources_with_workgroup = self.qs.get_datasources(athena_workgroup_name=self.athena.WorkGroup)
-                    logger.info(f'Found {len(datasources_with_workgroup)} Athena DataSources with WorkGroup={self.athena.WorkGroup}.')
-                    datasource_choices = {
-                        f"{datasource.name} {datasource.id} (workgroup={datasource.AthenaParameters.get('WorkGroup')})": datasource.id
-                        for datasource in datasources_with_workgroup
-                    }
-                    if 'CID-CMD-Athena' not in list(datasource_choices.values()):
-                        datasource_choices['CID-CMD-Athena <CREATE NEW DATASOURCE>'] = 'Create New DataSource'
-                    #TODO: add possibility to update datasource and role
-                    datasource_id = get_parameter(
-                        param_name='quicksight-datasource-id',
-                        message=f"Please choose DataSource (Select the first one if not sure)",
-                        choices=datasource_choices,
-                    )
-                    if not datasource_id or datasource_id == 'Create New DataSource':
-                        datasource_id = 'CID-CMD-Athena'
-                        logger.info(f'Creating DataSource {datasource_id}')
-                        athena_datasource = self.create_datasource(datasource_id)
-                    else:
-                        athena_datasource = self.qs.get_datasources(id=datasource_id)[0]
-                    logger.info(f'Using  DataSource = {athena_datasource.id}')
+                    athena_datasource = self.qs.get_datasources(id=datasource_id)[0]
+                logger.info(f'Using  DataSource = {athena_datasource.id}')
         if not get_parameters().get('athena-workgroup'):
             # set default workgroup from datasource if not provided via parameters
             if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):

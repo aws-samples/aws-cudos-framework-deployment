@@ -16,7 +16,7 @@ import logging
 import yaml
 import boto3
 
-from cid.helpers import Dataset, QuickSight, Athena, Glue
+from cid.helpers import Dataset, QuickSight, Athena, Glue, S3
 from cid.helpers import CUR
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.exceptions import CidCritical
@@ -70,7 +70,7 @@ def choose_analysis(qs):
     return choices[choice]['AnalysisId']
 
 
-def export_analysis(qs, athena, glue):
+def export_analysis(qs, athena, glue, s3):
     """ Export analysis to yaml resource File
     """
 
@@ -95,9 +95,11 @@ def export_analysis(qs, athena, glue):
     resources = {}
     resources['dashboards'] = {}
     resources['datasets'] = {}
+    resources['crawlers'] = {}
 
 
-    cur_helper = CUR(session=athena.session)
+    cur_helper = CUR(athena=athena, glue=glue, s3=s3)
+
     resources_datasets = []
 
     dataset_references = []
@@ -221,8 +223,8 @@ def export_analysis(qs, athena, glue):
                     logger.debug(f'{dep_view_name} skipping as not in the views list')
                 non_cur_dep_views.append(dep_view_name)
         if deps.get('views'):
-             deps['views'] = non_cur_dep_views
-             if not deps['views']:
+            deps['views'] = non_cur_dep_views
+            if not deps['views']:
                 del deps['views']
 
     logger.debug(f'cur_tables = {cur_tables}')
@@ -238,23 +240,35 @@ def export_analysis(qs, athena, glue):
                 crawler_name = crawler_names[0]
                 crawler = {'data': glue.get_crawler(crawler_name)}
 
+                # Post processing
+                for crawler_key in crawler['data'].keys():
+                    if crawler_key not in (
+                        'Name', 'Description', 'Role', 'DatabaseName', 'Targets',
+                        'SchemaChangePolicy', 'RecrawlPolicy', 'Schedule', 'Configuration'
+                        ): # remove all keys that are not needed
+                        crawler['data'].pop(crawler_key, None)
+                if 'Schedule' in crawler['data']['Schedule']:
+                    crawler['data']['Schedule'] = crawler['data']['Schedule']['ScheduleExpression']
+                crawler['data']['Role'] = '${crawler_role_arn}'
+                crawler['data']['DatabaseName'] = "${athena_database_name}"
                 for index, target in enumerate(crawler['data'].get('Targets', [])):
                     path = target.get('Path')
-                    logger.info(f'Please replace manually location bucket with a parameter: {path}')
                     default = get_parameter(
                         f'{key}-s3path',
                         'Please provide default value. (You can use {account_id} variable if needed)',
                         default=re.sub(r'(\d{12})', '{account_id}', path),
                         template_variables={'account_id': '{account_id}'},
                     )
-                    crawler['parameters'] = {
-                        f's3path': {
+                    crawler['parameters'] = { #FIXME: path should be the same as for table
+                        's3path': {
                             'default': default,
                             'description': f"S3 Path for {key} table",
                         }
                     }
                     crawler['data']['Targets'][index]['Path'] = '${s3path}'
-                crawlers.append(crawler)
+                crawler_name = key
+                resources['crawlers'][crawler_name] = crawler
+                view_data['crawler'] = crawler_name
 
 
             # replace location with variables
@@ -268,12 +282,15 @@ def export_analysis(qs, athena, glue):
                     template_variables={'account_id': '{account_id}'},
                 )
                 view_data['parameters'] = {
-                    f's3path': {
+                    's3path': {
                         'default': default,
                         'description': f"S3 Path for {key} table",
                     }
                 }
                 view_data['data'] = view_data['data'].replace(location, '${s3path}')
+
+            if re.findall(r"PARTITION", view_data.get('data')) and 'crawler' not in view_data:
+                logger.warning(f'The table {key} is partitioned but there no crawler info please make sure partitions are managed some way after install.')
 
         resources['views'][key] = view_data
 
@@ -292,7 +309,7 @@ def export_analysis(qs, athena, glue):
     dashboard_resource['dependsOn'] = {
         # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
         # We can potentially reconsider this and use IDs at some point
-        'datasets': sorted(list(set([dataset_name for dataset_name in datasets] + resources_datasets))) 
+        'datasets': sorted(list(set(datasets + resources_datasets)))
     }
     dashboard_resource['name'] = analysis['Name']
     dashboard_resource['dashboardId'] = dashboard_id
@@ -409,11 +426,17 @@ def export_analysis(qs, athena, glue):
     cid_print(f'Output: <BOLD>{output}<END>')
 
 
-if __name__ == "__main__": # for testing
+def quick_try():
+    ''' just trying the export
+    '''
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('cid').setLevel(logging.DEBUG)
     identity = boto3.client('sts').get_caller_identity()
     qs = QuickSight(boto3.session.Session(), identity)
-    athena = Athena(boto3.session.Session(), identity)
-    glue = Glue(boto3.session.Session(), identity)
-    export_analysis(qs, athena, glue)
+    athena = Athena(boto3.session.Session())
+    glue = Glue(boto3.session.Session())
+    s3 = S3(boto3.session.Session())
+    export_analysis(qs, athena, glue, s3)
+
+if __name__ == "__main__": # for testing
+    quick_try()
