@@ -16,7 +16,7 @@ import logging
 import yaml
 import boto3
 
-from cid.helpers import Dataset, QuickSight, Athena, Glue, S3
+from cid.helpers import Dataset, QuickSight, Athena, Glue
 from cid.helpers import CUR
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.exceptions import CidCritical
