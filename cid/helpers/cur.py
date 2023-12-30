@@ -53,13 +53,11 @@ class CUR():
         'savings_plan_offering_type',
         'savings_plan_payment_option'
     ]
-    _table_name = None
     _metadata = None
 
-    def __init__(self, athena, glue, s3):
+    def __init__(self, athena, glue):
         self.athena = athena
         self.glue = glue
-        self.s3 = s3
 
     @property
     def table_name(self) -> str:
@@ -161,14 +159,14 @@ class CUR():
             return self._metadata
 
         if get_parameters().get('cur-table-name'):
-            self._table_name = get_parameters().get('cur-table-name')
+            table_name = get_parameters().get('cur-table-name')
             try:
-                self._metadata = self.athena.get_table_metadata(self._table_name)
+                self._metadata = self.athena.get_table_metadata(table_name)
             except self.athena.client.exceptions.ResourceNotFoundException as exc:
-                raise CidCritical('Provided cur-table-name "{self._table_name}" is not found. Please make sure the table exists.') from exc
+                raise CidCritical(f'Provided cur-table-name "{table_name}" is not found. Please make sure the table exists.') from exc
             res, message = self.table_is_cur(table=self._metadata, return_reason=True)
             if not res:
-                raise CidCritical(f'Table {self._table_name} does not look like CUR. {message}')
+                raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
         else:
             # Look all tables and filter ones with CUR fields
             all_tables = self.athena.list_table_metadata()
@@ -182,7 +180,7 @@ class CUR():
             if not cur_tables:
                 raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.cur_minimal_required_columns}.')
 
-            choices = sorted([v.get('Name') for v in cur_tables], reverse=True)
+            choices = sorted([tab.get('Name') for tab in cur_tables], reverse=True)
 
             answer =  get_parameter(
                 param_name='cur-table-name',
@@ -190,10 +188,8 @@ class CUR():
                 choices=choices + ['<CREATE CUR TABLE AND CRAWLER>'],
             )
             if answer == '<CREATE CUR TABLE AND CRAWLER>':
-                raise CidCritical('<CREATE CUR TABLE AND CRAWLER>')
-            else:
-                self._tableName = answer
-            self._metadata = self.athena.get_table_metadata(self._tableName)
+                raise CidCritical('CUR creation was requested') # to be captured in common.py
+            self._metadata = self.athena.get_table_metadata(answer)
         return self._metadata
 
     @property
@@ -205,4 +201,3 @@ class CUR():
     def tag_and_cost_category_fields(self) -> list:
         """ Returns all tags and cost category fields. """
         return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
-

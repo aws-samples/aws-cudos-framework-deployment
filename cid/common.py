@@ -119,7 +119,7 @@ class Cid():
         if not self._clients.get('cur'):
             while True:
                 try:
-                    _cur = CUR(self.athena, self.glue, self.s3)
+                    _cur = CUR(self.athena, self.glue)
                     print('Checking if CUR is enabled and available...')
 
                     if not _cur.metadata:
@@ -256,7 +256,7 @@ class Cid():
 
     @command
     def export(self, **kwargs):
-        export_analysis(self.qs, self.athena, glue=self.glue, s3=self.s3)
+        export_analysis(self.qs, self.athena, glue=self.glue)
 
     def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """

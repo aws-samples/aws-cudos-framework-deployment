@@ -70,7 +70,7 @@ def choose_analysis(qs):
     return choices[choice]['AnalysisId']
 
 
-def export_analysis(qs, athena, glue, s3):
+def export_analysis(qs, athena, glue):
     """ Export analysis to yaml resource File
     """
 
@@ -98,7 +98,7 @@ def export_analysis(qs, athena, glue, s3):
     resources['crawlers'] = {}
 
 
-    cur_helper = CUR(athena=athena, glue=glue, s3=s3)
+    cur_helper = CUR(athena=athena, glue=glue)
 
     resources_datasets = []
 
@@ -435,8 +435,7 @@ def quick_try():
     qs = QuickSight(boto3.session.Session(), identity)
     athena = Athena(boto3.session.Session())
     glue = Glue(boto3.session.Session())
-    s3 = S3(boto3.session.Session())
-    export_analysis(qs, athena, glue, s3)
+    export_analysis(qs, athena, glue)
 
 if __name__ == "__main__": # for testing
     quick_try()
