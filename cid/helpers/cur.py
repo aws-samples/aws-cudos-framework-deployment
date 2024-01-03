@@ -159,7 +159,7 @@ class CUR(CidBase):
         try:
             self.athena.query(f'ALTER TABLE {self.table_name} ADD COLUMNS ({column} {column_type})')
         except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
-            raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
+            raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it.') from exc
         self._metadata = self.athena.get_table_metadata(self.table_name) # refresh table metadata
         logger.critical(f"Column '{column}' was added to CUR ({self.table_name}). Please make sure crawler do not override that columns. Crawler='{crawler_name}'")
 
