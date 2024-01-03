@@ -161,7 +161,7 @@ class CUR(CidBase):
         except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
             raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it.') from exc
         self._metadata = self.athena.get_table_metadata(self.table_name) # refresh table metadata
-        logger.critical(f"Column '{column}' was added to CUR ({self.table_name}). Please make sure crawler do not override that columns. Crawler='{crawler_name}'")
+        logger.critical(f"Column '{column}' was added to CUR ({self.table_name}).")
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
         """ return True if table metadata fits CUR definition. """
