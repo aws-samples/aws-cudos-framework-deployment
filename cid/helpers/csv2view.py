@@ -27,7 +27,7 @@ def read_csv(input_file_name):
     sniffer = csv.Sniffer()
     try:
         # AWS Organization returns a CSV with a BOM (byte order mark) character = U+FEFF to specify encoding
-        first_character = open(input_file_name).read(1)
+        first_character = open(input_file_name, errors='ignore').read(1)
         encoding = 'utf-8-sig' if first_character == '\ufeff' else 'utf-8'
 
         with open(input_file_name, encoding=encoding, errors='ignore') as file_:
