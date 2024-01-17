@@ -8,7 +8,7 @@ account_id=$(aws sts get-caller-identity --query "Account" --output text )
     --athena-database 'optimization_data' \
     --share-with-account \
 
-    --view-ta-organizational-view-reports-s3FolderPath "s3://costoptimizationdata$account_id/optics-data-collector/ta-data'"
+    --view-ta-organizational-view-reports-s3FolderPath "s3://cid-data-$account_id/optics-data-collector/ta-data'"
 
   [ "$status" -eq 0 ]
 }
@@ -41,7 +41,7 @@ account_id=$(aws sts get-caller-identity --query "Account" --output text )
 @test "Update works" {
   run cid-cmd -vv --yes update --force --recursive  \
     --dashboard-id ta-organizational-view \
-    --view-ta-organizational-view-reports-s3FolderPath "s3://costoptimizationdata$account_id)/optics-data-collector/ta-data"
+    --view-ta-organizational-view-reports-s3FolderPath "s3://cid-data-$account_id)/optics-data-collector/ta-data"
 
   [ "$status" -eq 0 ]
   echo "$output" | grep 'Update completed'
