@@ -1,5 +1,6 @@
 """ Glue Helper
 """
+import time
 import yaml
 import logging
 
@@ -62,15 +63,21 @@ class Glue(CidBase):
         """Create or update crawler. Also start it if not running."""
         logger.debug("updating crawler")
         logger.debug(crawler_definition)
-        try:
-            self.client.create_crawler(**crawler_definition)
-            logger.info(f'Created crawler')
-        except self.client.exceptions.AlreadyExistsException:
-            logger.info(f'Updating crawler')
-            self.client.update_crawler(**crawler_definition)
-        except self.client.exceptions.ClientError:
-            logger.error(crawler_definition)
-            raise
+        for attempt in range(3):
+            try:
+                self.client.create_crawler(**crawler_definition)
+                logger.info(f'Created crawler')
+            except self.client.exceptions.AlreadyExistsException:
+                logger.info(f'Updating crawler')
+                self.client.update_crawler(**crawler_definition)
+            except self.client.exceptions.ClientError as exc:
+                if 'Service is unable to assume provided role' in str(exc):
+                    logger.info('attempt{attempt}: Retrying ') # sometimes newly created roles cannot be assumed right away
+                    time.sleep(10)
+                    continue
+                logger.error(crawler_definition)
+                raise
+            break
 
         crawler_name = crawler_definition['Name']
         try:
