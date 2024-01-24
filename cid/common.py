@@ -380,10 +380,23 @@ class Cid():
         self._deploy(dashboard_id, recursive, update, **kwargs)
 
 
+    def ensure_subscription(self):
+        for _ in range(3):
+            try:
+                return self.qs.ensure_subscription()
+            except CidCritical as exc:
+                if 'QuickSight is not activated' in str(exc):
+                    self.init_qs()
+                    unset_parameter('enable-quicksight-enterprise') # in case if customer answered no
+                else:
+                    raise
+        else:
+            raise CidCritical('QuickSight is not activated. Please open https://quicksight.aws.amazon.com/ and activate ENTERPRISE subscription.')
+
     def _deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
 
-        self.qs.ensure_subscription()
+        self.ensure_subscription()
 
         # In case if we cannot discover datasets, we need to discover dashboards
         # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
@@ -1266,7 +1279,7 @@ class Cid():
             choice = get_parameter(
                 'quicksight-datasource-role-arn',
                 message='Please choose a QuickSight role. It must have access to Athena',
-                choices=['<USE DEFAULT QS ROLE>'] + choices,
+                choices=['<USE DEFAULT QS ROLE (You will need to login to QuickSight and configure S3 and Athena access there)>'] + choices,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
                 # TODO: allow customer add buckets
@@ -1283,7 +1296,7 @@ class Cid():
                 )
                 cid_print(f'Role {role_name} was updated. https://console.aws.amazon.com/iam/home?#/roles/details/{role_name}')
                 role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
-            elif choice == '<USE DEFAULT QS ROLE>':
+            elif 'USE DEFAULT QS ROLE' in choice:
                 role_arn = None
             else:
                 role_arn = choice

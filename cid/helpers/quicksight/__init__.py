@@ -163,7 +163,7 @@ class QuickSight(CidBase):
     def ensure_subscription(self) -> None:
         """Ensure that the QuickSight subscription is active"""
         if not self.edition(fresh=True):
-            raise CidCritical('QuickSight is not activated. Plase run `cid-cmd initqs` command, or activate QuickSight from the console.')
+            raise CidCritical('QuickSight is not activated. Please run `cid-cmd initqs` command, or activate QuickSight from the console.')
         if self.edition() == 'STANDARD':
             raise CidCritical(f'QuickSight Enterprise edition is required, you have {self.edition}.')
         logger.info(f'QuickSight subscription: {self._subscription_info}')

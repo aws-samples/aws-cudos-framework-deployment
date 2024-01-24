@@ -8,6 +8,7 @@ import logging
 from cid.base import CidBase
 
 import boto3
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +209,8 @@ class IAM(CidBase):
             logger.info(f'Role {role_name} updated')
         except self.client.exceptions.NoSuchEntityException:
             self.client.create_role(RoleName=role_name, AssumeRolePolicyDocument=json.dumps(assume_role_policy_document))
+            for _ in tqdm(range(15)):
+                time.sleep(1)
             logger.info(f'Role {role_name} created')
             time.sleep(5) # Some times the role cannot be assumed without this delay after creation
 

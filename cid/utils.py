@@ -259,7 +259,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
 
 def unset_parameter(param_name):
     param_name = param_name.replace('_', '-')
-    if params.get(param_name):
+    if param_name in params:
         value = params[param_name]
         del params[param_name]
         logger.info(f'Cleared {param_name}={value}, from parameters')
