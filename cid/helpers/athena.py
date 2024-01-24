@@ -5,7 +5,6 @@ import logging
 
 from cid.base import CidBase
 from cid.helpers import S3
-from cid.helpers import Glue
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
@@ -95,8 +94,8 @@ class Athena(CidBase):
                 choices=choices,
             )
             if self._DatabaseName.endswith( ' (CREATE NEW)'):
-                Glue(self.session).create_database(name=self.defaults.get('DatabaseName'))
                 self._DatabaseName = self.defaults.get('DatabaseName')
+                self.query(f'CREATE DATABASE {self._DatabaseName}')
         logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
 
