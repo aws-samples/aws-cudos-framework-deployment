@@ -625,7 +625,7 @@ views:
     File: shared/ta_descriptions.sql
   cur:
     type: Glue_Table
-    File: shared/CUR.yaml
+    File: shared/cur.yaml
     crawler: cur
     parameters:
       partitions:
