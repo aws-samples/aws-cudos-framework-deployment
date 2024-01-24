@@ -108,6 +108,7 @@ class IAM(CidBase):
                 }
             },
             policy_merge_mode='MERGE_RESOURCES',
+            managed_policies=[]
         )
     def ensure_data_source_role_exists(self, role_name, database, workgroup, buckets=[]):
         ''' Create or update a role specifically for a QS Datasource
@@ -193,7 +194,7 @@ class IAM(CidBase):
             policy_merge_mode='MERGE_RESOURCES',
         )
 
-    def ensure_role_with_policy(self, role_name, assume_role_policy_document, permissions_policies, managed_policies, policy_merge_mode='MERGE_RESOURCES') -> None:
+    def ensure_role_with_policy(self, role_name, assume_role_policy_document, permissions_policies, managed_policies=None, policy_merge_mode='MERGE_RESOURCES') -> None:
         """Ensure Role with Policy Exists
 
         mode: MERGE_RESOURCES|OVERRIDE
@@ -262,7 +263,7 @@ class IAM(CidBase):
                 self.client.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
                 logger.info(f"IAM Policy '{policy_name}' attached to the role.")
 
-        for managed_policy_arn in managed_policies:
+        for managed_policy_arn in managed_policies or []:
             if not any(arn == managed_policy_arn for arn in self.iterate_policies(role_name)):
                 self.client.attach_role_policy(RoleName=role_name, PolicyArn=managed_policy_arn)
                 logger.info(f"Managed Policy '{managed_policy_arn}' attached to the role.")
