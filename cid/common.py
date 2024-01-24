@@ -1530,6 +1530,7 @@ class Cid():
             return
         logger.debug(f'View definition: {view_definition}')
         dependencies = view_definition.get('dependsOn', {})
+
         # Process CUR columns
         if isinstance(dependencies.get('cur'), list):
             for column in dependencies.get('cur'):

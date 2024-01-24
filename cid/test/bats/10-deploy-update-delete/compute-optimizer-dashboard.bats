@@ -7,10 +7,10 @@ account_id=$(aws sts get-caller-identity --query "Account" --output text )
     --dashboard-id compute-optimizer-dashboard \
     --share-with-account \
     --athena-database 'optimization_data' \
-    --view-compute-optimizer-lambda-lines-s3FolderPath       's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_lambda' \
-    --view-compute-optimizer-ebs-volume-lines-s3FolderPath   's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ebs_volume' \
-    --view-compute-optimizer-auto-scale-lines-s3FolderPath   's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_auto_scale' \
-    --view-compute-optimizer-ec2-instance-lines-s3FolderPath 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
+    --view-compute-optimizer-lambda-lines-s3FolderPath       's3://cid-data-{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_lambda' \
+    --view-compute-optimizer-ebs-volume-lines-s3FolderPath   's3://cid-data-{account_id}/Compute_Optimizer/Compute_Optimizer_ebs_volume' \
+    --view-compute-optimizer-auto-scale-lines-s3FolderPath   's3://cid-data-{account_id}/Compute_Optimizer/Compute_Optimizer_auto_scale' \
+    --view-compute-optimizer-ec2-instance-lines-s3FolderPath 's3://cid-data-{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
 
   [ "$status" -eq 0 ]
 }
@@ -43,10 +43,10 @@ account_id=$(aws sts get-caller-identity --query "Account" --output text )
 @test "Update works" {
   run cid-cmd -vv --yes update --force --recursive  \
     --dashboard-id compute-optimizer-dashboard \
-    --view-compute-optimizer-lambda-lines-s3FolderPath       's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_lambda' \
-    --view-compute-optimizer-ebs-volume-lines-s3FolderPath   's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ebs_volume' \
-    --view-compute-optimizer-auto-scale-lines-s3FolderPath   's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_auto_scale' \
-    --view-compute-optimizer-ec2-instance-lines-s3FolderPath 's3://costoptimizationdata{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
+    --view-compute-optimizer-lambda-lines-s3FolderPath       's3://cid-data-{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_lambda' \
+    --view-compute-optimizer-ebs-volume-lines-s3FolderPath   's3://cid-data-{account_id}/Compute_Optimizer/Compute_Optimizer_ebs_volume' \
+    --view-compute-optimizer-auto-scale-lines-s3FolderPath   's3://cid-data-{account_id}/Compute_Optimizer/Compute_Optimizer_auto_scale' \
+    --view-compute-optimizer-ec2-instance-lines-s3FolderPath 's3://cid-data-{account_id}/Compute_Optimizer/Compute_Optimizer_ec2_instance'
 
   [ "$status" -eq 0 ]
   echo "$output" | grep 'Update completed'

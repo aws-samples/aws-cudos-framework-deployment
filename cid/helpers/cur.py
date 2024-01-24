@@ -3,13 +3,14 @@
 import json
 import logging
 
+from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
 
-class CUR():
+class CUR(CidBase):
     """ Manage AWS CUR
     """
     cur_minimal_required_columns = [
@@ -126,7 +127,7 @@ class CUR():
             config = json.loads(crawler.get('Configuration', '{}'))
             add_or_update = config.get('CrawlerOutput', {}).get('Tables', {}).get('AddOrUpdateBehavior')
             if add_or_update != 'MergeNewColumns':
-                raise CidCritical(f'Column {column} is not found in CUR ({self.table_name}). And we were unable to add it as crawler {crawler_name} is configured to override columns.')
+                raise CidCritical(f'Column {column} is not found in CUR ({self.table_name}). And we were unable to add it as crawler {crawler_name} is configured to override columns. Change crawler settings and run again.')
 
         column_type = column_type or self.get_type_of_column(column)
         try:

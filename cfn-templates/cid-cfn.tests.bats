@@ -69,7 +69,7 @@ setup_file() {
       QuickSightUser="$quicksight_user"\
       CURBucketPath="s3://$cur_bucket/$cur_prefix/$cur_name/$cur_name"\
       CURIsManagedByCloudFormation="yes"\
-      CostOptimizationDataCollectionBucketPath="s3://costoptimizationdata{account_id}"\
+      CostOptimizationDataCollectionBucketPath="s3://cid-data-{account_id}"\
       DeployCUDOSDashboard="yes"\
       DeployComputeOptimizerDashboard="no"\
       DeployCostIntelligenceDashboard="yes"\

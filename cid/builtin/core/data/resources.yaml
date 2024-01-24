@@ -528,7 +528,7 @@ views:
     File: tao/glue_table.json
     parameters:
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}/trusted-advisor/trusted-advisor-data'
+        default: 's3://cid-data-{account_id}/trusted-advisor/trusted-advisor-data'
         description: Trusted Advisor Organization View report S3 path
   ta_org_view:
     File: tao/ta_org_view.sql

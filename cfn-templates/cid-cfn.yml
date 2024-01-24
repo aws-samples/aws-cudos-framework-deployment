@@ -17,7 +17,7 @@ Metadata:
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
       - Label:
-          default: Trusted Advisor and Compute Optimizer Dashboards. To deploy these two dashboard, you must first deploy the Optimization Data Collection Lab (https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/)
+          default: Trusted Advisor and Compute Optimizer Dashboards. To deploy these two dashboard, you must first deploy the Optimization Data Collection Lab (https://catalog.workshops.aws/awscid/en-US/data-collection/)
         Parameters:
           - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
@@ -166,18 +166,18 @@ Parameters:
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: Deploy Trusted Advisor Organizational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: Deploy Trusted Advisor Organizational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://catalog.workshops.aws/awscid/en-US/data-collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/
+    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://catalog.workshops.aws/awscid/en-US/data-collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
   OptimizationDataCollectionBucketPath:
     Type: String
     Description: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /trusted-advisor and/or /compute-optimizer folders. You can leave the variable {account_id} in place, it will be replaced by current account ID automatically.
-    Default: "s3://costoptimizationdata{account_id}"
+    Default: "s3://cid-data-{account_id}"
     AllowedPattern: '^s3://[a-zA-Z0-9-_{}/]*$'
   LambdaLayerBucketPrefix:
     Type: String
@@ -468,12 +468,12 @@ Resources:
           def lambda_handler(event, context):
               url = event.get('ResponseURL')
               json_body = json.dumps({
-                'Status': 'SUCCESS'
-                'Reason': 'legacy'
-                'PhysicalResourceId': 'keep_it_constant'
-                'StackId': event.get('StackId')
-                'RequestId': event.get('RequestId')
-                'LogicalResourceId': event.get('LogicalResourceId')
+                'Status': 'SUCCESS',
+                'Reason': 'legacy',
+                'PhysicalResourceId': 'keep_it_constant',
+                'StackId': event.get('StackId'),
+                'RequestId': event.get('RequestId'),
+                'LogicalResourceId': event.get('LogicalResourceId'),
               })
               try:
                   http = urllib3.PoolManager()
