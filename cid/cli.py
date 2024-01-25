@@ -255,5 +255,20 @@ def init_cur(ctx, **kwargs):
 
     ctx.obj.init_cur(**kwargs)
 
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@cid_command
+def teardown(ctx, **kwargs):
+    """Delete all CID assets
+
+    \b
+
+    THIS IS VERY DANGEROUS. DO NOT USE IT.
+    """
+
+    ctx.obj.teardown(**kwargs)
+
 if __name__ == '__main__':
     main()
+
+

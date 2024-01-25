@@ -678,7 +678,7 @@ class Cid():
 
         try:
             # Execute query
-            click.echo('Deleting dashboard...', nl=False)
+            print('Deleting dashboard')
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             print(f'Dashboard {dashboard_id} deleted')
             self.track('deleted', dashboard_id)
@@ -1274,12 +1274,17 @@ class Cid():
 
             cid_role_name = 'CidCmdQuicksightDatasetRole'
             choices = quicksight_trusted_roles
+            default = None
             if cid_role_name not in choices:
                 choices.append(cid_role_name + ' <ADD NEW ROLE>' )
+                default = cid_role_name + ' <ADD NEW ROLE>'
+            else:
+                default = cid_role_name
             choice = get_parameter(
                 'quicksight-datasource-role-arn',
                 message='Please choose a QuickSight role. It must have access to Athena',
                 choices=['<USE DEFAULT QS ROLE (You will need to login to QuickSight and configure S3 and Athena access there)>'] + choices,
+                default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
                 # TODO: allow customer add buckets
@@ -1306,6 +1311,7 @@ class Cid():
             datasource_id=datasource_id,
             role_arn=role_arn,
         )
+        print('athena_datasource', athena_datasource)
         return athena_datasource
 
 
@@ -1318,10 +1324,9 @@ class Cid():
         athena_datasource = None
 
         # Manage datasource
-        # We must do it here. In case if dastasource is not defined by user, we can take it from dataset
+        # We must do it here. In case if datasource is not defined by user, we can take it from dataset
 
         datasource_id = get_parameters().get('quicksight-datasource-id')
-
         if datasource_id:
             # We have explicit choice of datasource
             try:
@@ -1394,6 +1399,7 @@ class Cid():
                     datasource_id = 'CID-CMD-Athena'
                     logger.info(f'Creating DataSource {datasource_id}')
                     athena_datasource = self.create_datasource(datasource_id)
+                    set_parameters(parameters={'quicksight-datasource-id': datasource_id}) # for next usage
                 else:
                     athena_datasource = self.qs.get_datasources(id=datasource_id)[0]
                 logger.info(f'Using  DataSource = {athena_datasource.id}')
@@ -1429,7 +1435,9 @@ class Cid():
             for view_name in missing_views:
                 self.create_or_update_view(view_name, recursive=recursive, update=update)
 
-        if not isinstance(athena_datasource, Datasource): return False
+        if not isinstance(athena_datasource, Datasource):
+            print('athena_datasource is not defined')
+            return False
         # Proceed only if all the parameters are set
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn,
@@ -1735,6 +1743,16 @@ class Cid():
         """Create account mapping Athena views"""
         for v in ['account_map', 'aws_accounts']:
             self.accountMap.create(v)
+
+    @command
+    def teardown(self, **kwargs):
+        """Create account mapping Athena views"""
+
+        for dashboard in list(self.qs.dashboards.values()):
+            self.delete(dashboard.id)
+        self.iam.ensure_role_does_not_exist('CidCmdQuicksightDatasetRole')
+        self.iam.ensure_role_does_not_exist('CidCmdCurCrawlerRole')
+        self.qs.delete_data_source('CID-CMD-Athena')
 
     @command
     def init_qs(self, **kwargs):

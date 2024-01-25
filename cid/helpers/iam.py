@@ -5,10 +5,10 @@ import copy
 import time
 import logging
 
-from cid.base import CidBase
-
 import boto3
 from tqdm import tqdm
+
+from cid.base import CidBase
 
 logger = logging.getLogger(__name__)
 
@@ -202,6 +202,7 @@ class IAM(CidBase):
         permissions_policies:  a dict with name of attached policy and document as a value (None for managed policies)
         """
         # Create or update role
+        need_a_sleep = False
         try:
             self.client.get_role(RoleName=role_name)
             logger.info(f'Role {role_name} exists')
@@ -209,10 +210,8 @@ class IAM(CidBase):
             logger.info(f'Role {role_name} updated')
         except self.client.exceptions.NoSuchEntityException:
             self.client.create_role(RoleName=role_name, AssumeRolePolicyDocument=json.dumps(assume_role_policy_document))
-            for _ in tqdm(range(15)):
-                time.sleep(1)
             logger.info(f'Role {role_name} created')
-            time.sleep(5) # Some times the role cannot be assumed without this delay after creation
+            need_a_sleep = True
 
         # Create or update policies and attach them to the role
         for policy_name, new_policy_document in permissions_policies.items():
@@ -265,11 +264,18 @@ class IAM(CidBase):
             if not any(arn == policy_arn for arn in self.iterate_policies(role_name)):
                 self.client.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
                 logger.info(f"IAM Policy '{policy_name}' attached to the role.")
+                need_a_sleep = True
+
 
         for managed_policy_arn in managed_policies or []:
             if not any(arn == managed_policy_arn for arn in self.iterate_policies(role_name)):
                 self.client.attach_role_policy(RoleName=role_name, PolicyArn=managed_policy_arn)
                 logger.info(f"Managed Policy '{managed_policy_arn}' attached to the role.")
+
+        if need_a_sleep:
+            # Some times the role cannot be assumed without this delay after creation
+            for _ in tqdm(range(20), desc=f'Waiting for Role {role_name}', leave=False):
+                time.sleep(1)
 
         return role_name
 

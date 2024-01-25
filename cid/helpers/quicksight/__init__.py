@@ -8,6 +8,7 @@ from typing import Dict, List, Union
 from pkg_resources import resource_string
 
 import click
+from tqdm import tqdm
 
 from cid.base import CidBase
 from cid.helpers import diff, timezone, randtime
@@ -475,6 +476,8 @@ class QuickSight(CidBase):
                     except self.client.exceptions.AccessDeniedException:
                         logger.info('Access denied deleting Athena datasource')
                 return None
+            for _ in tqdm(range(5), desc='Waiting for Data Source', leave=False):
+                time.sleep(1)
             return datasource
         except self.client.exceptions.ResourceExistsException:
             datasource = self.describe_data_source(datasource_id, update=True)
@@ -574,21 +577,14 @@ class QuickSight(CidBase):
         deployed_dashboards=self.list_dashboards()
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
         logger.debug(deployed_dashboards)
-        with click.progressbar(
-            length=len(deployed_dashboards),
-            label='Discovering deployed dashboards...',
-            item_show_func=lambda a: str(a)[:50]
-        ) as bar:
-            for dashboard in deployed_dashboards:
-                # Discover found dashboards
-                dashboard_name = dashboard.get('Name')
-                dashboard_id = dashboard.get('DashboardId')
-                # Update progress bar
-                bar.update(1, f'"{dashboard_name}" ({dashboard_id})')
-                logger.info(f'Discovering "{dashboard_name}" ({dashboard_id})')
-                self.discover_dashboard(dashboard_id)
-                # Update progress bar
-                bar.update(0, 'Complete')
+        bar = tqdm(deployed_dashboards, desc='Discovering Dashboards', leave=False)
+        for dashboard in bar:
+            # Discover found dashboards
+            dashboard_name = dashboard.get('Name')
+            dashboard_id = dashboard.get('DashboardId')
+            bar.set_description(f'Discovering Dashboards {dashboard_name:>10}', refresh=True)
+            logger.info(f'Discovering "{dashboard_name}"')
+            self.discover_dashboard(dashboard_id)
 
     def list_dashboards(self) -> list:
         parameters = {
@@ -834,8 +830,12 @@ class QuickSight(CidBase):
             'DataSourceId': datasource_id
         }
         logger.info(f'Deleting DataSource {datasource_id}')
-        result = self.client.delete_data_source(**params)
-        if datasource_id in self._datasources:
+        try:
+            result = self.client.delete_data_source(**params)
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.info(f'Deleting DataSource {datasource_id} not needed as it is does not exist')
+            result = True
+        if datasource_id in (self._datasources or []):
             del self._datasources[datasource_id]
         return result
 
