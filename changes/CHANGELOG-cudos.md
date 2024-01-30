@@ -9,9 +9,10 @@
 * **Executive: Billing Summary**: Added control to group Invoice and Amortized Spend by Payer Account, Charge Type Group and Service Category from [FOCUS](https://focus.finops.org/#specification) specification.
 * **Executive: Billing Summary**: Added top level filter control by Charge Type Group.
 * **Executive: MoM Trends**: Added top level filter control by Charge Type Group.
-* **[new tab] Analytics**: Introducing Analytics tab with visuals for Amazon QuickSight with visuals 'QuickSight Spend per Account', 'QuickSight Spend per Usage Type Group', 'QuickSight Author Users and Reader Users Sessions historical Usage and Cost', 'QuickSight SPICE historical Usage (GB) and Cost', 'QuickSight Resources Detailed View'.
-* **Amazon S3**: Added S3 Insights Explorer section which allows to focus on cost and usage of different S3 features and associated optimization opportunities.
+* **[new tab] Analytics**: Introducing Analytics tab with visuals for Amazon QuickSight: 'QuickSight Spend per Account', 'QuickSight Spend per Usage Type Group', 'QuickSight Author Users historical Usage and Cost', 'QuickSight Reader Users Sessions Usage and Cost','QuickSight SPICE historical Usage (GB) and Cost', 'QuickSight Users Detailed View' and others.
+* **Amazon S3**: Added S3 Insights Explorer section which allows to focus on cost and usage of different S3 features and associated optimization opportunities such as 'Cross Region Replication Data Transfer', 'S3 Inventory', 'S3 Replication Time Control' and others.
 * **Amazon S3**: Added 'Amazon S3 Total Cost by Region' visual. Adjusted position of 'Total Cost per Bucket by Operation (Top 20)' visual and added drill down to usage type.
+* **Monitoring and Observability**: CloudWatch Usage Cost per Usage Type visual changed to show Usage Type Sub Group allowing to drill down to Usage Type. Added recommendation 'Consider using Infrequent Access log class at 50 percent lower per GB ingestion price'
 * **Databases**: Added Usage and Usage Unit tooltips to the 'RI Coverage per region | engine | instance type or family' visual.
 * **Storage**: Changed 'Volume Explorer: TOP 50 EBS Volume Details' filter from previous month to last 30 days.
 
