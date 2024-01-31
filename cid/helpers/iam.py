@@ -8,7 +8,9 @@ import logging
 import boto3
 from tqdm import tqdm
 
+from cid.exceptions import CidCritical
 from cid.base import CidBase
+from cid.utils import get_parameter
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +244,10 @@ class IAM(CidBase):
                         logger.info(f"No need to update '{policy_name}' the doc is the same as requested.")
                     else:
                         logger.debug(f'Updating policy {policy_arn} to {result_document}')
+                        print(f'Updating policy {policy_arn} to :\n{json.dumps(result_document, indent=2)}')
+                        if get_parameter(f'confirm-policy-{policy_name}', message='Please confirm', choices=['yes', 'no']) != 'yes':
+                            raise CidCritical('User choose not to confirm challenge')
+
                         # A managed policy can have up to 5 versions.
                         # Before you create a new version, you must delete at least one existing version.
                         versions = self.client.list_policy_versions(PolicyArn=policy_arn)['Versions']

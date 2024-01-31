@@ -245,7 +245,7 @@ def init_qs(ctx, **kwargs):
 
 @click.option('-v', '--verbose', count=True)
 @cid_command
-def init_cur(ctx, **kwargs):
+def create_cur_table(ctx, **kwargs):
     """Initialize CUR table
 
     \b
@@ -253,7 +253,7 @@ def init_cur(ctx, **kwargs):
      --crawler-role       ROLE               Name or ARN of crawler role
     """
 
-    ctx.obj.init_cur(**kwargs)
+    ctx.obj.create_cur_table(**kwargs)
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)

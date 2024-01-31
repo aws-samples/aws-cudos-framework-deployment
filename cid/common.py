@@ -1663,9 +1663,9 @@ class Cid():
         crawler_role = get_parameter(
             'crawler-role',
             message='Provide a crawler role name',
-            choices=glue_trusted_roles + ['<CREATE NEW>']
+            choices=glue_trusted_roles + ['CidCmdCurCrawlerRole <CREATE NEW>']
         )
-        if crawler_role == '<CREATE NEW>':
+        if 'CREATE NEW' in crawler_role:
             crawler_role = 'CidCmdCurCrawlerRole'
             self.iam.ensure_role_for_crawler(
                 s3bucket=location.split('/')[2],
@@ -1760,7 +1760,7 @@ class Cid():
         return InitQsCommand(cid=self, **kwargs).execute()
 
     @command
-    def init_cur(self, **kwargs):
+    def create_cur_table(self, **kwargs):
         """ Initialize CUR """
         if get_parameters().get('view-cur-location'):
             s3path = get_parameters().get('view-cur-location')

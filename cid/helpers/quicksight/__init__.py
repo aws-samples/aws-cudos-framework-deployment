@@ -453,7 +453,7 @@ class QuickSight(CidBase):
             create_status = self.client.create_data_source(**params)
             logger.debug(f'Data source creation result {create_status}')
             # Wait for the datasource completion
-            while True:
+            for _ in tqdm(range(60), desc='DataSet Creation', leave=False):
                 time.sleep(1)
                 datasource = self.describe_data_source(datasource_id, update=True)
                 logger.debug(f'Waiting for datasource {datasource_id}. current status={datasource.status}')
