@@ -36,7 +36,7 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
 
         cid_print(
             '<BOLD><RED>IMPORTANT<END>: <BOLD>Amazon QuickSight Enterprise Edition is required for Cloud Intelligence Dashboards. '
-            'This will lead to costs in your AWS account (https://aws.amazon.com/quicksight/pricing/).<END>'
+            'Enabling Amazon QuickSight Enterprise Edition will incur associated service charges. Make sure you aware about them following QuickSight pricing page (https://aws.amazon.com/quicksight/pricing/) and acknowledge by confirming enabling it. Alternatively you can enable QuickSight Enterprise Edition in the AWS console (https://docs.aws.amazon.com/quicksight/latest/user/signing-up.html) and run this command again.<END>'
         )
 
         if not self.cid.all_yes and not get_yesno_parameter(
