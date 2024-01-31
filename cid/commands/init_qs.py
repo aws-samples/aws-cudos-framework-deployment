@@ -35,7 +35,7 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
             return
 
         cid_print(
-            '<BOLD><RED>IMPORTANT<END>: <BOLD>Amazon QuickSight Enterprise Edition is required for Cost Intelligence Dashboard. '
+            '<BOLD><RED>IMPORTANT<END>: <BOLD>Amazon QuickSight Enterprise Edition is required for Cloud Intelligence Dashboards. '
             'This will lead to costs in your AWS account (https://aws.amazon.com/quicksight/pricing/).<END>'
         )
 
