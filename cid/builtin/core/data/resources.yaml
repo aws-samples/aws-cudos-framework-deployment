@@ -158,16 +158,16 @@ datasets:
       views:
         - hourly_view
         - account_map
-      schedules:
-        - default
+    schedules:
+      - default
   resource_view:
     File: cudos/resource_view.json
     dependsOn:
       views:
         - resource_view
         - account_map
-      schedules:
-        - default
+    schedules:
+      - default
   # KPI DataSets
   kpi_ebs_snap:
     File: kpi/kpi_ebs_snap.json
