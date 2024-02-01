@@ -135,8 +135,8 @@ class Cid():
                     self._clients['cur'] = _cur
                     break
                 except CidCritical as exc:
-                    logger.critical(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
-                    self.init_cur()
+                    cid_print(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
+                    self.create_cur_table()
         return self._clients['cur']
 
     @property
