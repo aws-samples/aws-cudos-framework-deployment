@@ -682,7 +682,7 @@ class QuickSight(CidBase):
         group_name = get_parameter(
             param_name='quicksight-group',
             message="Please select QuickSight Group to use",
-            choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user.get('UserName') for user in groups}
+            choices={f"{group.get('GroupName')} ({group.get('Description')})":group.get('GroupName') for group in groups}
         )
         for group in groups:
             if group.get('GroupName') == group_name:
