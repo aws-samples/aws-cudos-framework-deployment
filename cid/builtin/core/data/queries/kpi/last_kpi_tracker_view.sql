@@ -74,6 +74,35 @@ spend_all.billing_period
 , instance_all.rds_no_license
 , instance_all.rds_sql_server_cost
 , instance_all.rds_oracle_cost
+-->>SAVINGS: added fields for new chart
+, coalesce(ebs_all.gp3_current_savings, 0) gp3_current_savings
+, coalesce(s3_all.s3_storage_current_savings, 0) s3_storage_current_savings
+, coalesce(instance_all.ec2_graviton_current_savings, 0) ec2_graviton_current_savings
+, coalesce(instance_all.ec2_amd_current_savings, 0) ec2_amd_current_savings
+, coalesce(instance_all.ec2_spot_current_savings, 0) ec2_spot_current_savings
+, coalesce(instance_all.ec2_latest_generation_current_savings, 0) ec2_latest_generation_current_savings
+, coalesce(instance_all.rds_graviton_current_savings, 0) rds_graviton_current_savings
+, coalesce(instance_all.elasticache_graviton_current_savings, 0) elasticache_graviton_current_savings
+, coalesce(instance_all.opensearch_graviton_current_savings, 0) opensearch_graviton_current_savings
+, coalesce(instance_all.lambda_graviton_current_savings, 0) lambda_graviton_current_savings
+, (coalesce(ebs_all.gp3_current_savings, 0)
++ coalesce(s3_all.s3_storage_current_savings, 0)
++ coalesce(instance_all.ec2_graviton_current_savings, 0)
++ coalesce(instance_all.ec2_amd_current_savings, 0)
++ coalesce(instance_all.ec2_spot_current_savings, 0)
++ coalesce(instance_all.ec2_latest_generation_current_savings, 0)
++ coalesce(instance_all.rds_graviton_current_savings, 0)
++ coalesce(instance_all.elasticache_graviton_current_savings, 0)
++ coalesce(instance_all.opensearch_graviton_current_savings, 0)
++ coalesce(instance_all.lambda_graviton_current_savings, 0)
++ coalesce(instance_all.rds_commit_savings, 0)
++ coalesce(instance_all.elasticache_commit_savings, 0)
++ coalesce(instance_all.compute_commit_savings, 0)
++ coalesce(instance_all.opensearch_commit_savings, 0)
++ coalesce(instance_all.redshift_commit_savings, 0)
++ coalesce(instance_all.dynamodb_commit_savings, 0)
++ coalesce(instance_all.sagemaker_commit_savings, 0)) total_current_savings
+--<<SAVINGS
 FROM
   (((((account_map
 LEFT JOIN (
@@ -150,6 +179,16 @@ LEFT JOIN (
    , "sum"("lambda_graviton_potential_savings") "lambda_graviton_potential_savings"
    , "sum"("rds_sql_server_cost") "rds_sql_server_cost"
    , "sum"("rds_oracle_cost") "rds_oracle_cost"
+-->>SAVINGS: instance rollup
+   , "sum"("ec2_graviton_current_savings") "ec2_graviton_current_savings"
+   , "sum"("ec2_amd_current_savings") "ec2_amd_current_savings"
+   , "sum"("ec2_spot_current_savings") "ec2_spot_current_savings"
+   , "sum"("ec2_latest_generation_current_savings") "ec2_latest_generation_current_savings"
+   , "sum"("rds_graviton_current_savings") "rds_graviton_current_savings"
+   , "sum"("elasticache_graviton_current_savings") "elasticache_graviton_current_savings"
+   , "sum"("opensearch_graviton_current_savings") "opensearch_graviton_current_savings"
+   , "sum"("lambda_graviton_current_savings") "lambda_graviton_current_savings"
+--<<SAVINGS
    FROM
      kpi_instance_all
    GROUP BY 1, 2, 3
@@ -164,6 +203,9 @@ LEFT JOIN (
    , "sum"("ebs_gp3_cost") "ebs_gp3_cost"
    , "sum"("ebs_gp2_cost") "ebs_gp2_cost"
    , "sum"("ebs_gp3_potential_savings") "ebs_gp3_potential_savings"
+-->>SAVINGS: ebs rollup
+   , "sum"("gp3_current_savings") "gp3_current_savings"
+--<<SAVINGS
    FROM
      kpi_ebs_storage_all
    GROUP BY 1, 2, 3
@@ -188,6 +230,9 @@ LEFT JOIN (
    , "sum"("s3_all_storage_cost") "s3_all_storage_cost"
    , "sum"("s3_standard_storage_cost") "s3_standard_storage_cost"
    , "sum"("s3_standard_storage_potential_savings") "s3_standard_storage_potential_savings"
+-->>SAVINGS: s3 rollup
+   , "sum"("s3_storage_current_savings") "s3_storage_current_savings"
+--<<SAVINGS
    FROM
      kpi_s3_storage_all
    GROUP BY 1, 2, 3
