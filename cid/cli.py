@@ -105,6 +105,7 @@ def csv2view(ctx, **kwargs):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.option('--share-with-account', help='Share dashboard with all users in the current account', is_flag=True, default=None)
 @click.option('--quicksight-delete-failed-datasource', help='Delete datasoruce if creation failed', is_flag=True, default=None)
+@click.option('--force_schedule', help='Tries to schedule Dataset refresh (newly created) without checking previous schedule', is_flag=True, default=None)
 @cid_command
 def deploy(ctx, **kwargs):
     """Deploy Dashboard

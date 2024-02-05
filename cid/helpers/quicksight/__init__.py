@@ -1119,18 +1119,21 @@ class QuickSight(CidBase):
             raise CidError(f'Unable to list refresh schedules for dataset {dataset_id}: {str(exc)}') from exc
 
 
-    def ensure_dataset_refresh_schedule(self, dataset_id, schedules: list):
+    def ensure_dataset_refresh_schedule(self, dataset_id, schedules: list, force_schedule=False):
         """ Ensures that dataset has scheduled refresh """
         # get all existing schedules for the given dataset
-        try:
-            existing_schedules = self.get_dataset_refresh_schedules(dataset_id)
-        except CidError as exc:
-            logger.debug(f'List refresh schedule throws: {exc}')
-            logger.warning(
-                f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
-                ' Please make sure scheduled refresh is configured manually.'
-            )
-            return
+        if not force_schedule:
+            try:
+                existing_schedules = self.get_dataset_refresh_schedules(dataset_id)
+            except CidError as exc:
+                logger.debug(f'List refresh schedule throws: {exc}')
+                logger.warning(
+                    f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
+                    ' Please make sure scheduled refresh is configured manually.'
+                )
+                return
+        else:
+            existing_schedules = []
 
         if schedules:
             if exec_env()['terminal'] in ('lambda'):

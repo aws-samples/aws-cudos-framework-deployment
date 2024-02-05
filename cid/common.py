@@ -1074,7 +1074,7 @@ class Cid():
         return dashboard_id
 
 
-    def create_datasets(self, _datasets: list, known_datasets: dict={}, recursive: bool=True, update: bool=False) -> dict:
+    def create_datasets(self, _datasets: list, known_datasets: dict={}, recursive: bool=True, update: bool=False, force_schedule: bool=False) -> dict:
         # Check dependencies
         required_datasets = sorted(_datasets)
         print('\nRequired datasets: \n - {}\n'.format('\n - '.join(list(set(required_datasets)))))
@@ -1121,7 +1121,7 @@ class Cid():
                     logger.critical(e, exc_info=True)
                     raise
                 try:
-                    if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
+                    if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update, force_schedule=force_schedule):
                         print(f'Updated dataset: "{dataset_name}"')
                     else:
                         print(f'Dataset "{dataset_name}" update failed, collect debug log for more info')
@@ -1176,7 +1176,7 @@ class Cid():
                     logger.critical(e, exc_info=True)
                     raise
                 try:
-                    if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
+                    if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update, force_schedule=force_schedule):
                         missing_datasets.remove(dataset_name)
                         print(f'Dataset "{dataset_name}" created')
                     else:
@@ -1268,7 +1268,7 @@ class Cid():
 
 
 
-    def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
+    def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False, force_schedule: bool=False) -> bool:
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
@@ -1467,7 +1467,7 @@ class Cid():
                     schedules_definitions = []
                     for schedule_name in dataset_definition.get('schedules', []):
                         schedules_definitions.append(self.get_definition("schedule", name=schedule_name))
-                        self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions)
+                        self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions, force_schedule)
             else:
                 print(f'No update requested for dataset {compiled_dataset.get("DataSetId")} {compiled_dataset.get("Name")}={found_dataset.name} ')
         else:
@@ -1476,7 +1476,7 @@ class Cid():
                 schedules_definitions = []
                 for schedule_name in dataset_definition.get('schedules', []):
                     schedules_definitions.append(self.get_definition("schedule", name=schedule_name))
-                    self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions)
+                    self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions, force_schedule)
         return True
 
 
