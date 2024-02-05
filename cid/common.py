@@ -878,7 +878,7 @@ class Cid():
             print(f'Sharing complete')
         elif share_method in ['account', 'user']:
             if share_method == 'account':
-                principal_arn = f"arn:aws:quicksight:{self.qs.identityRegion}:{self.qs.account_id}:namespace/default"
+                principal_arn = f"arn:{self.base.partition}:quicksight:{self.qs.identityRegion}:{self.qs.account_id}:namespace/default"
                 template_filename = 'data/permissions/dashboard_permissions_namespace.json'
             elif share_method == 'user':
                 template_filename = 'data/permissions/dashboard_permissions.json'
@@ -1250,7 +1250,7 @@ class Cid():
         if not role_arn:
             role_name = get_parameters().get('quicksight-datasource-role')
             if role_name:
-                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+                role_arn = f'arn:{self.base.partition}:iam::{self.base.account_id}:role/{role_name}'
         athena_datasource = self.qs.create_data_source(
             athena_workgroup=self.athena.WorkGroup,
             datasource_id=datasource_id,
