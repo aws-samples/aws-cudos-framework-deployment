@@ -327,8 +327,8 @@ class Cid():
         '''
         try:
             catalog = yaml.safe_load(self.get_page(catalog_url).text)
-        except requests.exceptions.HTTPError as exc:
-            logger.warning(f'Failed to load catalog url: {exc}')
+        except (requests.exceptions.RequestException, yaml.error.MarkedYAMLError) as exc:
+            logger.warning(f'Failed to load a catalog url: {exc}')
             logger.debug(exc, exc_info=True)
             return
         for resource_ref in catalog.get('Resources', []):
