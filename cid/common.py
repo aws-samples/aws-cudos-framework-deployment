@@ -496,7 +496,7 @@ class Cid():
             recursive = True
 
         if recursive:
-            self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
+            self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update, force_schedule=kwargs.get("force_schedule", False))
 
         # Find datasets for template or definition
         if not dashboard_definition.get('datasets'):
