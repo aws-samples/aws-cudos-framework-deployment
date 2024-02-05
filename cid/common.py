@@ -4,6 +4,7 @@ import json
 import urllib
 import logging
 import functools
+import re
 from pathlib import Path
 from string import Template
 from typing import Dict
@@ -1229,11 +1230,18 @@ class Cid():
         }.get(asset_type)
         data = None
         file_name = definition.get('File')
-        if definition.get('Data'):
+        _skip = False
+
+        # detect if it's a file or a sql statement
+        if file_name and re.search('select', file_name, re.IGNORECASE) and re.search('from', file_name, re.IGNORECASE):
+            data = file_name
+            _skip = True
+
+        if definition.get('Data') and not _skip:
             data = definition.get('Data')
-        elif definition.get('data'):
+        elif definition.get('data') and not _skip:
             data = definition.get('data')
-        elif file_name:
+        elif file_name and not _skip:
             text = resource_string(
                 definition.get('providedBy'), f'data/{subfolder}/{file_name}'
             ).decode('utf-8')
