@@ -4,7 +4,6 @@ import json
 import urllib
 import logging
 import functools
-import re
 from pathlib import Path
 from string import Template
 from typing import Dict
@@ -1230,18 +1229,14 @@ class Cid():
         }.get(asset_type)
         data = None
         file_name = definition.get('File')
-        _skip = False
-
-        # detect if it's a file or a sql statement
-        if file_name and re.search('select', file_name, re.IGNORECASE) and re.search('from', file_name, re.IGNORECASE):
-            data = file_name
-            _skip = True
-
-        if definition.get('Data') and not _skip:
+        
+        if definition.get("view_definition"):
+            data = definition.get("view_definition")
+        elif definition.get('Data'):
             data = definition.get('Data')
-        elif definition.get('data') and not _skip:
+        elif definition.get('data'):
             data = definition.get('data')
-        elif file_name and not _skip:
+        elif file_name:
             text = resource_string(
                 definition.get('providedBy'), f'data/{subfolder}/{file_name}'
             ).decode('utf-8')
@@ -1527,7 +1522,7 @@ class Cid():
                     print(f'Missing dependency view: {dep_view_name}, creating')
                     logger.info(f'Missing dependency view: {dep_view_name}, creating')
                 self.create_or_update_view(dep_view_name, recursive=recursive, update=update)
-        view_query = self.get_view_query(view_name=view_name)
+        view_query = self.get_view_query(view_name=view_name, provided_by=view_definition.get("providedBy"))
         logger.debug(f'view_query: {view_query}')
         if view_name in self.athena._metadata.keys():
             logger.debug(f'View "{view_name}" exists')
@@ -1603,7 +1598,7 @@ class Cid():
                 logger.info(f'View "{view_name}" created')
 
 
-    def get_view_query(self, view_name: str) -> str:
+    def get_view_query(self, view_name: str, provided_by: str = None) -> str:
         """ Returns a fully compiled AHQ """
         # View path
         view_definition = self.get_definition("view", name=view_name)
@@ -1619,6 +1614,10 @@ class Cid():
         else:
             logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
             raise Exception(f'\nCannot find view {view_name}')
+        
+        # if provided is not cid.builtin.core definition is copied to "file"
+        if str(provided_by or '').find("cid.builtin.core") < 0 and view_definition.get("File"):
+            view_definition['view_definition'] = view_definition.get("File")
 
         # Load TPL file
         data = self.get_data_from_definition('view', view_definition)
