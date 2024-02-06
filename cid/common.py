@@ -45,7 +45,7 @@ class Cid():
         self.plugins = self.__loadPlugins()
         self._clients = dict()
         self._visited_views = [] # Views updated in the current session
-        self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
+        self.qs_url = 'https://{region}.quicksight.{domain}/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
         self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
@@ -75,7 +75,8 @@ class Cid():
                 logger.info(f'AWS profile name: {self.base.session.profile_name}')
             self.qs_url_params = {
                 'account_id': self.base.account_id,
-                'region': self.base.session.region_name
+                'region': self.base.session.region_name,
+                'domain': self.base.domain,
             }
         except (NoCredentialsError, CredentialRetrievalError):
             raise CidCritical('Error: Not authenticated, please check AWS credentials')

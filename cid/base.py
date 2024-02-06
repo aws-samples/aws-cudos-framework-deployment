@@ -22,6 +22,12 @@ class CidBase():
         return self.awsIdentity.get('Account')
 
     @property
+    def domain(self) -> str:
+        if self.region.startswith('cn-'):
+            return 'amazonaws.cn'
+        return 'aws.amazon.com'
+
+    @property
     def awsIdentity(self) -> dict:
         if not self._awsIdentity:
             try:
