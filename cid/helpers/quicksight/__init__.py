@@ -1125,7 +1125,7 @@ class QuickSight(CidBase):
         try:
             existing_schedules = self.get_dataset_refresh_schedules(dataset_id)
         except CidError as exc:
-            # we cannot access to schedules but let's check if the are ingestions
+            # We cannot access schedules, but let's check if there are scheduled ingestions. 
             ingestions_exist = False
             try:
                 ingestions_exist = list(
