@@ -1144,7 +1144,7 @@ class QuickSight(CidBase):
             if ingestions_exist:
                 logger.debug(f'We cannot read schedules but there are ingestions. Skipping creation of schedule.')
                 return
-            logger.debug(f'We cannot read schedules but there are ingestions but there no ingestions. Continue to creation of schedule.')
+            logger.debug(f'We cannot read schedules but there no ingestions. Continue to creation of schedule.')
             existing_schedules = []
 
         if schedules:
