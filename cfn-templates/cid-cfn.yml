@@ -210,8 +210,12 @@ Parameters:
     AllowedPattern: "[a-zA-Z0-9_]*"
   PermissionsBoundary:
     Type: String
-    Default: ""
+    Default: ''
     Description: Define Permission Boundary for Roles if required by SCP
+  RolePath:
+    Type: String
+    Default: '/'
+    Description: Path for roles where PermissionBoundaries can limit location
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -279,7 +283,7 @@ Resources:
     Type: AWS::IAM::Role
     Condition: NeedRefreshDatasets
     Properties:
-      Path: /
+      Path: !Ref RolePath
       RoleName: !Sub 'CidSpiceRefreshExecutionRole${Suffix}'
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -626,7 +630,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      Path: /
+      Path: !Ref RolePath
       Policies:
         - PolicyName: root
           PolicyDocument:
@@ -722,7 +726,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      Path: /
+      Path: !Ref RolePath
       PermissionsBoundary: !Ref PermissionsBoundary
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
@@ -987,7 +991,7 @@ Resources:
                 - glue.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Path: /
+      Path: !Ref RolePath
       PermissionsBoundary: !Ref PermissionsBoundary
       ManagedPolicyArns:
         - Fn::Sub: 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
@@ -1047,7 +1051,7 @@ Resources:
                 - quicksight.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Path: /
+      Path: !Ref RolePath
       RoleName: !Sub '${QuickSightDataSourceRoleName}${Suffix}'
       PermissionsBoundary: !Ref PermissionsBoundary
       Policies:
@@ -1198,7 +1202,7 @@ Resources:
   CidExecRole:
     Type: AWS::IAM::Role
     Properties:
-      Path: /
+      Path: !Ref RolePath
       RoleName: !Sub 'CidExecRole${Suffix}'
       AssumeRolePolicyDocument:
         Version: 2012-10-17
