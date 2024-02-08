@@ -210,7 +210,7 @@ Parameters:
     AllowedPattern: "[a-zA-Z0-9_]*"
   PermissionsBoundary:
     Type: String
-    Default: "arn:aws:iam::590184029714:policy/github-actions-oidc-policies/github-actions-oidc-permissions-boundary-iam-policy"
+    Default: ""
     Description: Define Permission Boundary for Roles if required by SCP
 
 Conditions:
