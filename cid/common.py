@@ -45,7 +45,7 @@ class Cid():
         self.plugins = self.__loadPlugins()
         self._clients = dict()
         self._visited_views = [] # Views updated in the current session
-        self.qs_url = 'https://{region}.quicksight.aws.amazon.com/sn/dashboards/{dashboard_id}'
+        self.qs_url = 'https://{region}.quicksight.{domain}/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
         self.verbose = kwargs.get('verbose')
         set_parameters(kwargs, self.all_yes)
@@ -75,7 +75,8 @@ class Cid():
                 logger.info(f'AWS profile name: {self.base.session.profile_name}')
             self.qs_url_params = {
                 'account_id': self.base.account_id,
-                'region': self.base.session.region_name
+                'region': self.base.session.region_name,
+                'domain': self.base.domain,
             }
         except (NoCredentialsError, CredentialRetrievalError):
             raise CidCritical('Error: Not authenticated, please check AWS credentials')
@@ -327,8 +328,8 @@ class Cid():
         '''
         try:
             catalog = yaml.safe_load(self.get_page(catalog_url).text)
-        except requests.exceptions.HTTPError as exc:
-            logger.warning(f'Failed to load catalog url: {exc}')
+        except (requests.exceptions.RequestException, yaml.error.MarkedYAMLError) as exc:
+            logger.warning(f'Failed to load a catalog url: {exc}')
             logger.debug(exc, exc_info=True)
             return
         for resource_ref in catalog.get('Resources', []):
@@ -878,7 +879,7 @@ class Cid():
             print(f'Sharing complete')
         elif share_method in ['account', 'user']:
             if share_method == 'account':
-                principal_arn = f"arn:aws:quicksight:{self.qs.identityRegion}:{self.qs.account_id}:namespace/default"
+                principal_arn = f"arn:{self.base.partition}:quicksight:{self.qs.identityRegion}:{self.qs.account_id}:namespace/default"
                 template_filename = 'data/permissions/dashboard_permissions_namespace.json'
             elif share_method == 'user':
                 template_filename = 'data/permissions/dashboard_permissions.json'
@@ -1250,7 +1251,7 @@ class Cid():
         if not role_arn:
             role_name = get_parameters().get('quicksight-datasource-role')
             if role_name:
-                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+                role_arn = f'arn:{self.base.partition}:iam::{self.base.account_id}:role/{role_name}'
         athena_datasource = self.qs.create_data_source(
             athena_workgroup=self.athena.WorkGroup,
             datasource_id=datasource_id,
