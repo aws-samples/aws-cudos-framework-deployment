@@ -32,7 +32,7 @@ variable "stack_parameters" {
       - DeployKPIDashboard: (yes/no, default no)
       - DeployTAODashboard: (yes/no, default no)
       - DeployComputeOptimizerDashboard: (yes/no, default no)
-      - PermissionBoundary: Leave blank if you don't need to set a boundary for roles
+      - PermissionsBoundary: Leave blank if you don't need to set a boundary for roles
       - RolePath: Path for roles where PermissionBoundaries can limit location
   EOF
 }
