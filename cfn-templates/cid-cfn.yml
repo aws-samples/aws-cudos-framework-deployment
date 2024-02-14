@@ -83,7 +83,7 @@ Metadata:
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
       DataBucketsKmsKeysArns:
-        default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
+        default: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
       PrimaryTagName:
         Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
       SecondaryTagName:
@@ -189,7 +189,7 @@ Parameters:
     Default: "AwsDataCatalog"
   DataBucketsKmsKeysArns:
     Type: String
-    Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
+    Description: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
     Default: ""
   LakeFormationEnabled:
     Type: String
