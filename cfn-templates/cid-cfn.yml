@@ -38,7 +38,7 @@ Metadata:
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
           - DeployCUDOSDashboard
-          - DataBucketsKmsKeyArns
+          - DataBucketsKmsKeysArns
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -82,8 +82,8 @@ Metadata:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
-      DataBucketsKmsKeyArns:
-        default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
+      DataBucketsKmsKeysArns:
+        default: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
       PrimaryTagName:
         Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
       SecondaryTagName:
@@ -187,10 +187,10 @@ Parameters:
     Type: String
     Description: Existing Glue Data Catalog
     Default: "AwsDataCatalog"
-  DataBucketsKmsKeyArns:
+  DataBucketsKmsKeysArns:
     Type: String
-    Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
-    Default: "*"
+    Description: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
+    Default: ""
   LakeFormationEnabled:
     Type: String
     Description: Choose 'yes' if Lake Formation permission model is in place for the account
@@ -239,7 +239,7 @@ Conditions:
       - !Equals [ !Ref CURTableName, "" ]
       - !Condition NeedCUR
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  NeedDataBucketsKms: !Equals [ !Ref DataBucketsKmsKeyArns, "" ]
+  NeedDataBucketsKms: !Not [ !Equals [ !Ref DataBucketsKmsKeysArns, "" ] ]
   NeedDataBucketsKmsAndNeedCURTable:
     Fn::And:
       - !Condition NeedDataBucketsKms
@@ -269,6 +269,10 @@ Conditions:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
       - !Condition NeedCUR
+  NeedQuickSightDataSourceKMS:
+    Fn::And:
+      - !Condition NeedQuickSightDataSourceRole
+      - !Condition NeedDataBucketsKms
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -1024,7 +1028,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref CidCURCrawlerRole
 
@@ -1125,10 +1129,6 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
-            Effect: Allow
-            Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
           - Sid: CidAllowListBucket
             Effect: Allow
             Action: s3:ListBucket
@@ -1149,10 +1149,6 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
-            Effect: Allow
-            Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
           - Sid: CidAllowListBucket
             Effect: Allow
             Action: s3:ListBucket
@@ -1163,6 +1159,20 @@ Resources:
               - s3:GetObject
               - s3:GetObjectVersion
             Resource: !Sub arn:aws:s3:::${CURPath.Bucket}/*
+      Roles:
+        - !Ref QuickSightDataSourceRole
+  KmsPolicyForQuickSightDataSourceRole:
+    Type: AWS::IAM::Policy
+    Condition: NeedQuickSightDataSourceKMS
+    Properties:
+      PolicyName: QuickSightDataSourceKmsDecryption
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref QuickSightDataSourceRole
 
@@ -1387,14 +1397,14 @@ Resources:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKms
     Properties:
-      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyName: CidExecKmsDecryption
       PolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref CidExecRole
 
