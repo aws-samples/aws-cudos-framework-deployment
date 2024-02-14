@@ -38,7 +38,7 @@ Metadata:
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
           - DeployCUDOSDashboard
-          - DataBucketsKmsKeyArns
+          - DataBucketsKmsKeysArns
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -82,7 +82,7 @@ Metadata:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
-      DataBucketsKmsKeyArns:
+      DataBucketsKmsKeysArns:
         default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
       PrimaryTagName:
         Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
@@ -187,7 +187,7 @@ Parameters:
     Type: String
     Description: Existing Glue Data Catalog
     Default: "AwsDataCatalog"
-  DataBucketsKmsKeyArns:
+  DataBucketsKmsKeysArns:
     Type: String
     Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
     Default: ""
@@ -239,7 +239,7 @@ Conditions:
       - !Equals [ !Ref CURTableName, "" ]
       - !Condition NeedCUR
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  NeedDataBucketsKms: !Not [ !Equals [ !Ref DataBucketsKmsKeyArns, "" ] ]
+  NeedDataBucketsKms: !Not [ !Equals [ !Ref DataBucketsKmsKeysArns, "" ] ]
   NeedDataBucketsKmsAndNeedCURTable:
     Fn::And:
       - !Condition NeedDataBucketsKms
@@ -1028,7 +1028,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [ ',', !Ref DataBucketsKmsKeyArns ]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref CidCURCrawlerRole
 
@@ -1172,7 +1172,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [ ',', !Ref DataBucketsKmsKeyArns ]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref QuickSightDataSourceRole
 
@@ -1404,7 +1404,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [ ',', !Ref DataBucketsKmsKeyArns ]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref CidExecRole
 
