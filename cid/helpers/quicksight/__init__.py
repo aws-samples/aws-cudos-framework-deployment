@@ -2,6 +2,7 @@ import re
 import json
 import uuid
 import time
+import datetime
 import logging
 from string import Template
 from typing import Dict, List, Union
@@ -15,7 +16,7 @@ from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
-from cid.utils import get_parameter, get_parameters, exec_env, cid_print, ago
+from cid.utils import get_parameter, get_parameters, exec_env, cid_print, ago, unset_parameter
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
@@ -604,6 +605,10 @@ class QuickSight(CidBase):
             logger.debug(exc, exc_info=True)
             return list()
 
+    def clear_dashboard_selection (self):
+        """ Clears the current dashboard selection. """
+        unset_parameter('dashboard-id')
+
     def select_dashboard(self, force=False) -> str:
         """ Select from a list of discovered dashboards """
         dashboard_id = get_parameters().get('dashboard-id')
@@ -914,7 +919,7 @@ class QuickSight(CidBase):
         except self.client.exceptions.AccessDeniedException:
             return '<YELLOW>AccessDenied<END>'
         if not ingestions:
-            return None
+            return None #todo fix this using dataset import type. None could be if refresh never ran too, no ? 
         last_ingestion = ingestions[0] # Suppose it is the latest
         status = last_ingestion.get('IngestionStatus')
         time_ago = ago(last_ingestion.get('CreatedTime'))
@@ -950,6 +955,30 @@ class QuickSight(CidBase):
             logger.debug(exc, exc_info=True)
             logger.info('No datasets found')
 
+    def refresh_dataset(self, dataset_id):
+        """ Refresh the dataset """
+
+        logger.info(f'Starting refresh for dataset: {dataset_id}')
+        status = 'FAILED'
+        try:
+            response = self.client.describe_data_set(
+                AwsAccountId=self.account_id,
+                DataSetId=dataset_id)
+            mode = response.get('DataSet').get('ImportMode')
+            if mode == 'DIRECT_QUERY':
+                return mode, 'DIRECT'
+            response = self.client.create_ingestion(
+                DataSetId=dataset_id,
+                IngestionId=datetime.datetime.now().strftime("%d%m%y-%H%M%S-%f"),
+                AwsAccountId=self.account_id)
+            status = response.get('IngestionStatus')
+        except self.client.exceptions.AccessDeniedException:
+            logger.info(f'Access denied refreshing dataset: {dataset_id}')
+        except Exception as exc:
+            logger.debug(exc, exc_info=True)
+            logger.info(f'Unable to list refresh dataset {dataset_id}: {str(exc)}')
+            raise CidError(f'Unable to list refresh dataset {dataset_id}: {str(exc)}') from exc
+        return mode, status
 
     def describe_data_source(self, id: str, update: bool=False) -> Datasource:
         """ Describes an AWS QuickSight DataSource """

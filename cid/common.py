@@ -631,24 +631,50 @@ class Cid():
     @command
     def status(self, dashboard_id, **kwargs):
         """Check QuickSight dashboard status"""
-
-        if not dashboard_id:
-            if not self.qs.dashboards:
-                print('No deployed dashboards found')
-                return
-            dashboard_id = self.qs.select_dashboard(force=True)
+        next_selection = None
+        while next_selection != 'exit':
             if not dashboard_id:
-                print('No dashboard selected')
-                return
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
-        else:
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+                if not self.qs.dashboards:
+                    print('No deployed dashboards found')
+                    return
+                dashboard_id = self.qs.select_dashboard(force=True)
+                if not dashboard_id:
+                    print('No dashboard selected')
+                    return
+                dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            else:
+                dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
-        if dashboard is not None:
-            dashboard.display_status()
-            dashboard.display_url(self.qs_url, **self.qs_url_params)
-        else:
-            click.echo('not deployed.')
+            if dashboard is not None:
+                dashboard.display_status()
+                dashboard.display_url(self.qs_url, **self.qs_url_params)
+                next_selections = {
+                    'Refresh all datasets of this dashboard': 'refresh',
+                    'Update dashboard': 'update',
+                    'Re-deploy this dashboard': 'redeploy',
+                    'Go back to dashboard selection': 'goback',
+                    'Exit': 'exit'
+                }
+                next_selection = get_parameter(
+                    param_name='next-selection',
+                    message="Please make a selection",
+                    choices=next_selections,
+                )
+                if next_selection == 'refresh':
+                    dashboard.refresh_datasets()
+
+                if next_selection == 'update':
+                    print(f'Updating dashboard: {dashboard}')
+                    ## TODO dashboard update here
+
+                if next_selection == 'redeploy':
+                    print(f'Re-deploying dashboard: {dashboard_id}')
+                    ## TODO dashboard deployment here
+                self.qs.clear_dashboard_selection()
+                unset_parameter('next_selection')
+                dashboard_id = None
+            else:
+                click.echo('not deployed.')
 
     @command
     def delete(self, dashboard_id, **kwargs):
