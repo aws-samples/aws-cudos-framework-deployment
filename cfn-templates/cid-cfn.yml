@@ -779,7 +779,7 @@ Resources:
                           pass # Do not fail delete
                       else:
                           raise Exception(f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://(bucket)/(curprefix)/(curname)/(curname) ')
-                      data['Partitions'] = [{"Name": p, "Type": "string"} for p in data['Partitions']]
+                      data['Partitions'] = [{"Name": p, "Type": "string"} for p in data.get('Partitions', [])]
                   data['Path'] = '/'.join(parts[1:])
                   data['Folder'] = parts[-1] if len(parts) > 1 else ''
                   data['Folder'] = data['Folder'].replace('-', '_').lower() # this is used for a Glue table name that will be managed by crawler
