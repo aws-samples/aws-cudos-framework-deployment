@@ -1,10 +1,12 @@
 from cid.utils import IsolatedParameters, get_parameters, set_parameters
 
 def test_isolated_parameter_context():
-    """ make sure the merge works with depth
+    """ make sure the isolated_parameter works
     """
-    set_parameters({'a': 'a'})
+    set_parameters({'param': 'a'})
+
     with IsolatedParameters():
-        set_parameters({'a': 'b'})
-        assert get_parameters().get('a') == 'b', 'parameters within context must be B'
-    assert get_parameters().get('a') == 'a', 'parameters within context must be A'
+        set_parameters({'param': 'b'})
+        assert get_parameters().get('param') == 'b', 'parameters within context must be B'
+
+    assert get_parameters().get('param') == 'a', 'parameters within context must be A'

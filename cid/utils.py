@@ -282,9 +282,6 @@ def ago(time):
 
 class IsolatedParameters:
     """A context manager to run something in isolated set of parameters"""
-    def __init__(self):
-        self.backup = None
-
     def __enter__(self):
         self.backup = copy.deepcopy(params)
 
