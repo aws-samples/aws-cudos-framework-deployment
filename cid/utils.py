@@ -1,5 +1,6 @@
 import os
 import sys
+import copy
 import math
 import inspect
 import logging
@@ -278,6 +279,15 @@ def ago(time):
             return '%s %s ago' % (dur, unit)
     return 'just now'
 
+
+class IsolatedParameters:
+    """A context manager to run something in isolated set of parameters"""
+    def __enter__(self):
+        self.backup = copy.deepcopy(params)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        global params
+        params = self.backup
 
 def merge_objects(obj1, obj2, depth=2):
     """ merging objects with a depth
