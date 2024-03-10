@@ -113,7 +113,7 @@ class IAM(CidBase):
             policy_merge_mode='MERGE_RESOURCES',
             managed_policies=[]
         )
-    def ensure_data_source_role_exists(self, role_name, database, workgroup, buckets=[]):
+    def ensure_data_source_role_exists(self, role_name, database, workgroup, kms_key_arns='', buckets=[]):
         ''' Create or update a role specifically for a QS Datasource
         '''
         return self.ensure_role_with_policy(
@@ -128,9 +128,8 @@ class IAM(CidBase):
                     }
                 ]
             },
-            managed_policies=[ 'arn:aws:iam::aws:policy/service-role/AWSQuicksightAthenaAccess'],
             permissions_policies={
-                'CidQuicksightBucketAccess': {
+                'AthenaAccess': {
                     "Version": "2012-10-17",
                     "Statement": [
                         {
@@ -187,11 +186,11 @@ class IAM(CidBase):
                             "Resource": [f"arn:aws:s3:::{bucket}" for bucket in buckets]
                         },
                         {
-                            "Sid": "AllowReadFromBucket",
+                            "Sid": "NeedQuickSightDataSourceKMS",
                             "Effect": "Allow",
-                            "Action": [ "s3:GetObject"],
-                            "Resource": [f"arn:aws:s3:::{bucket}/*" for bucket in buckets]
-                        },
+                            "Action": [ "kms:Decrypt"],
+                            "Resource": kms_key_arns.split(','),
+                        } if kms_key_arns else None,
                     ]
                 }
             },
@@ -215,6 +214,10 @@ class IAM(CidBase):
             self.client.create_role(RoleName=role_name, AssumeRolePolicyDocument=json.dumps(assume_role_policy_document))
             logger.info(f'Role {role_name} created')
             need_a_sleep = True
+
+        #Filter out all empty statements in policy
+        for policy in permissions_policies.values():
+            policy['Statement'] = [statement for statement in policy['Statement'] if statement]
 
         # Create or update policies and attach them to the role
         for policy_name, new_policy_document in permissions_policies.items():

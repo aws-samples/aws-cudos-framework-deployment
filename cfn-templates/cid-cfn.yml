@@ -38,7 +38,7 @@ Metadata:
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
           - DeployCUDOSDashboard
-          - DataBucketsKmsKeyArns
+          - DataBucketsKmsKeysArns
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -82,8 +82,8 @@ Metadata:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
-      DataBucketsKmsKeyArns:
-        default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
+      DataBucketsKmsKeysArns:
+        default: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
       PrimaryTagName:
         Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
       SecondaryTagName:
@@ -187,10 +187,10 @@ Parameters:
     Type: String
     Description: Existing Glue Data Catalog
     Default: "AwsDataCatalog"
-  DataBucketsKmsKeyArns:
+  DataBucketsKmsKeysArns:
     Type: String
-    Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
-    Default: "*"
+    Description: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
+    Default: ""
   LakeFormationEnabled:
     Type: String
     Description: Choose 'yes' if Lake Formation permission model is in place for the account
@@ -239,7 +239,7 @@ Conditions:
       - !Equals [ !Ref CURTableName, "" ]
       - !Condition NeedCUR
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  NeedDataBucketsKms: !Equals [ !Ref DataBucketsKmsKeyArns, "" ]
+  NeedDataBucketsKms: !Not [ !Equals [ !Ref DataBucketsKmsKeysArns, "" ] ]
   NeedDataBucketsKmsAndNeedCURTable:
     Fn::And:
       - !Condition NeedDataBucketsKms
@@ -269,6 +269,10 @@ Conditions:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
       - !Condition NeedCUR
+  NeedQuickSightDataSourceKMS:
+    Fn::And:
+      - !Condition NeedQuickSightDataSourceRole
+      - !Condition NeedDataBucketsKms
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
@@ -315,7 +319,7 @@ Resources:
       FunctionName:  !Sub 'CidSpiceRefreshLambda${Suffix}'
       Role: !GetAtt SpiceRefreshExecutionRole.Arn
       Description: 'Refresh QuickSight DataSets for CID'
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -338,6 +342,8 @@ Resources:
 
           DATASETS = '''
             summary_view
+            hourly_view
+            resource_view
             ec2_running_cost
             compute_savings_plan_eligible_spend
             s3_view
@@ -457,7 +463,7 @@ Resources:
       FunctionName: !Sub CidInitialSetup-DoNotRun${Suffix}
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "CID legacy setup"
-      Runtime: python3.10
+      Runtime: python3.11
       Handler: 'index.lambda_handler'
       Code:
         ZipFile: |
@@ -488,7 +494,7 @@ Resources:
       FunctionName: !Sub "CidCustomResourceFunctionInit-DoNotRun${Suffix}"
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 300
@@ -725,7 +731,7 @@ Resources:
       Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
       FunctionName: !Sub "CidCustomResourceProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -773,7 +779,7 @@ Resources:
                           pass # Do not fail delete
                       else:
                           raise Exception(f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://(bucket)/(curprefix)/(curname)/(curname) ')
-                      data['Partitions'] = [{"Name": p, "Type": "string"} for p in data['Partitions']]
+                      data['Partitions'] = [{"Name": p, "Type": "string"} for p in data.get('Partitions', [])]
                   data['Path'] = '/'.join(parts[1:])
                   data['Folder'] = parts[-1] if len(parts) > 1 else ''
                   data['Folder'] = data['Folder'].replace('-', '_').lower() # this is used for a Glue table name that will be managed by crawler
@@ -1022,7 +1028,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref CidCURCrawlerRole
 
@@ -1134,6 +1140,14 @@ Resources:
                 Resource:
                   - !Sub arn:aws:s3:::${ODCPath.Bucket}/*
                   - !Sub arn:aws:s3:::${CURPath.Bucket}/*
+              - !If
+                  - NeedQuickSightDataSourceKMS
+                  - Sid: AllowKmsDecrypt
+                    Effect: Allow
+                    Action:
+                      - 'kms:Decrypt'
+                    Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
+                  - !Ref AWS:NoValue
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
@@ -1356,14 +1370,14 @@ Resources:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKms
     Properties:
-      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyName: CidExecKmsDecryption
       PolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref CidExecRole
 
@@ -1373,7 +1387,7 @@ Resources:
       FunctionName: !Sub 'CidCustomResourceDashboard${Suffix}'
       Description: 'A lambda that manage create delete update of Athena views, QuickSight Datasets and dashboards using CID-CMD tool'
       Role: !GetAtt CidExecRole.Arn
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 2688
       Timeout: 300 # Time of discovery depend on number of dashboards
@@ -1480,6 +1494,8 @@ Resources:
         S3Key: 'cid-resource-lambda-layer/cid-0.3.0.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
+        - python3.11
+        - python3.12
 
   CostIntelligenceDashboard:
     Type: Custom::CidDashboard

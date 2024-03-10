@@ -695,7 +695,7 @@ class QuickSight(CidBase):
         group_name = get_parameter(
             param_name='quicksight-group',
             message="Please select QuickSight Group to use",
-            choices={f"{user.get('UserName')} ({user.get('Email')}, {user.get('Role')})":user.get('UserName') for user in groups}
+            choices={f"{group.get('GroupName')} ({group.get('Description')})":group.get('GroupName') for group in groups}
         )
         for group in groups:
             if group.get('GroupName') == group_name:
@@ -1142,12 +1142,27 @@ class QuickSight(CidBase):
         try:
             existing_schedules = self.get_dataset_refresh_schedules(dataset_id)
         except CidError as exc:
-            logger.debug(f'List refresh schedule throws: {exc}')
-            logger.warning(
-                f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
-                ' Please make sure scheduled refresh is configured manually.'
-            )
-            return
+            # We cannot access schedules, but let's check if there are scheduled ingestions. 
+            ingestions_exist = False
+            try:
+                ingestions_exist = list(
+                    self.client.get_paginator('list_ingestions').paginate(
+                        DataSetId=dataset_id,
+                        AwsAccountId=self.account_id
+                    ).search("Ingestions[?RequestSource=='SCHEDULED']")
+                )
+            except Exception:
+                logger.debug(f'List refresh schedule throws: {exc}')
+                logger.warning(
+                    f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
+                    ' Please make sure scheduled refresh is configured manually.'
+                )
+                return
+            if ingestions_exist:
+                logger.debug(f'We cannot read schedules but there are ingestions. Skipping creation of schedule.')
+                return
+            logger.debug(f'We cannot read schedules but there no ingestions. Continue to creation of schedule.')
+            existing_schedules = []
 
         if schedules:
             if exec_env()['terminal'] in ('lambda'):
@@ -1215,6 +1230,8 @@ class QuickSight(CidBase):
                     logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]}. Dataset {dataset_id} does not exist.')
                 except self.client.exceptions.AccessDeniedException:
                     logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]}. Please add quicksight:CreateDataSet permission.')
+                except self.client.exceptions.ResourceExistsException:
+                    logger.info(f'Schedule with id {schedule["ScheduleId"]} exists. But can have other settings. You better check.')
                 except Exception as exc:
                     logger.error(f'Unable to create refresh schedule with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
             else:

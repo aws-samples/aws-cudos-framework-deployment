@@ -2,6 +2,11 @@
 
 # CUDOS v5
 
+# CUDOS - 5.1.1
+
+**Changes**:
+* **Databases:** Fix for Normalized Instance Hours not shown on RI Coverage and Daily Elasticity visuals.
+
 # CUDOS - 5.1.0
 **Important!** If you have CUDOS v5.0.0 deployed you can use [standard update process](https://catalog.workshops.aws/awscid/en-US/dashboards/update). If you have previous version deployed follow [this guide](https://catalog.workshops.aws/awscid/en-US/faqs#how-to-update-to-cudos-v5-if-i-have-previous-version-of-cudos-installed) to deploy CUDOS v5. You can check version of your currently deployed dashboard on the About tab.
 
