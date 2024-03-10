@@ -1269,11 +1269,11 @@ class Cid():
                 role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
 
         if not role_arn:
-            quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].Arn"))
-            quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role.split('/')[-1] not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
+            quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].RoleName"))
+            #quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
             # TODO: filter only roles with Athena and S3 policies
-
-            cid_role_name = 'CidCmdQuicksightDatasetRole'
+            print(quicksight_trusted_roles)
+            cid_role_name = 'CidQuickSightDataSourceRole'
             choices = quicksight_trusted_roles
             default = None
             if cid_role_name not in choices:
@@ -1282,7 +1282,7 @@ class Cid():
             else:
                 default = cid_role_name
             choice = get_parameter(
-                'quicksight-datasource-role-arn',
+                'quicksight-datasource-role',
                 message='Please choose a QuickSight role. It must have access to Athena',
                 choices=['<USE DEFAULT QS ROLE (You will need to login to QuickSight and configure S3 and Athena access there)>'] + choices,
                 default=default,
@@ -1291,14 +1291,15 @@ class Cid():
                 # TODO: allow customer add buckets
                 buckets = [
                     f'cid-{self.base.account_id}-share',
-                    f'costoptimizationdata{self.base.account_id}',
                     f'cid-data-{self.base.account_id}',
+                    f'costoptimizationdata{self.base.account_id}',
                 ]
                 role_name = self.iam.ensure_data_source_role_exists(
                     role_name=cid_role_name,
                     database=self.athena.DatabaseName,
                     workgroup=self.athena.WorkGroup,
                     buckets=buckets,
+                    output_location_bucket = self.athena.workgroup_output_location().split('/')[2],
                 )
                 cid_print(f'Role {role_name} was updated. https://console.aws.amazon.com/iam/home?#/roles/details/{role_name}')
                 role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
@@ -1403,7 +1404,7 @@ class Cid():
                     set_parameters(parameters={'quicksight-datasource-id': datasource_id}) # for next usage
                 else:
                     athena_datasource = self.qs.get_datasources(id=datasource_id)[0]
-                logger.info(f'Using  DataSource = {athena_datasource.id}')
+                logger.info(f'Using  DataSource = {athena_datasource.id if athena_datasource else "N/A"}')
         if not get_parameters().get('athena-workgroup'):
             # set default workgroup from datasource if not provided via parameters
             if isinstance(athena_datasource, Datasource) and athena_datasource.AthenaParameters.get('WorkGroup', None):
@@ -1751,8 +1752,8 @@ class Cid():
 
         for dashboard in list(self.qs.dashboards.values()):
             self.delete(dashboard.id)
-        self.iam.ensure_role_does_not_exist('CidCmdQuicksightDatasetRole')
-        self.iam.ensure_role_does_not_exist('CidCmdCurCrawlerRole')
+        self.iam.ensure_role_does_not_exist('CidQuickSightDataSourceRole')
+        self.iam.ensure_role_does_not_exist('CidCurCrawlerRole')
         self.qs.delete_data_source('CID-CMD-Athena')
 
     @command

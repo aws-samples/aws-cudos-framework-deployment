@@ -113,7 +113,7 @@ class IAM(CidBase):
             policy_merge_mode='MERGE_RESOURCES',
             managed_policies=[]
         )
-    def ensure_data_source_role_exists(self, role_name, database, workgroup, kms_key_arns='', buckets=[]):
+    def ensure_data_source_role_exists(self, role_name, database, workgroup, kms_key_arns='', buckets=[], output_location_bucket=None):
         ''' Create or update a role specifically for a QS Datasource
         '''
         return self.ensure_role_with_policy(
@@ -180,10 +180,33 @@ class IAM(CidBase):
                             ]
                         },
                         {
+                            "Sid": "AllowReadAndWriteToWorkgroupOutput",
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:GetBucketLocation",
+                                "s3:ListBucket",
+                                "s3:GetObject",
+                                "s3:PutObject",
+                                "s3:ListBucketMultipartUploads",
+                                "s3:ListMultipartUploadParts",
+                                "s3:AbortMultipartUpload",
+                            ],
+                            "Resource": [
+                                f"arn:{self.partition}:s3:::{output_location_bucket}",
+                                f"arn:{self.partition}:s3:::{output_location_bucket}/*",
+                            ]
+                        } if output_location_bucket else None,
+                        {
                             "Sid": "AllowListBucket",
                             "Effect": "Allow",
                             "Action": ["s3:ListBucket"],
-                            "Resource": [f"arn:aws:s3:::{bucket}" for bucket in buckets]
+                            "Resource": [f"arn:{self.partition}:s3:::{bucket}" for bucket in buckets]
+                        },
+                        {
+                            "Sid": "AllowReadBucket",
+                            "Effect": "Allow",
+                            "Action": ["s3:GetObject", "s3:GetObjectVersion"],
+                            "Resource": [f"arn:{self.partition}:s3:::{bucket}/*" for bucket in buckets]
                         },
                         {
                             "Sid": "NeedQuickSightDataSourceKMS",
