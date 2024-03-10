@@ -1123,15 +1123,15 @@ Resources:
                       - NeedAthenaQueryResultsBucket
                       - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
                       - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
-              - Sid: AllowDecryptDataBucketsKmsKeyArns
-                Effect: Allow
-                Action: 'kms:Decrypt'
-                Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
               - Sid: AllowListBucket
                 Effect: Allow
                 Action: s3:ListBucket
+                Resource:
                   - !Sub arn:aws:s3:::${ODCPath.Bucket}
-                  - !Sub arn:aws:s3:::${CURPath.Bucket}
+                  - !If
+                      - NeedQuickSightDataSourceRoleAndCUR
+                      - !Sub arn:aws:s3:::${CURPath.Bucket}
+                      - !Ref "AWS::NoValue"
               - Sid: AllowReadBucket
                 Effect: Allow
                 Action:
@@ -1139,7 +1139,10 @@ Resources:
                   - s3:GetObjectVersion
                 Resource:
                   - !Sub arn:aws:s3:::${ODCPath.Bucket}/*
-                  - !Sub arn:aws:s3:::${CURPath.Bucket}/*
+                  - !If
+                      - NeedQuickSightDataSourceRoleAndCUR
+                      - !Sub arn:aws:s3:::${CURPath.Bucket}/*
+                      - !Ref "AWS::NoValue"
               - !If
                   - NeedQuickSightDataSourceKMS
                   - Sid: AllowKmsDecrypt
@@ -1147,7 +1150,7 @@ Resources:
                     Action:
                       - 'kms:Decrypt'
                     Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
-                  - !Ref AWS:NoValue
+                  - !Ref "AWS::NoValue"
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
