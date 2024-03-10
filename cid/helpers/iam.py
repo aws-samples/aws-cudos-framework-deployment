@@ -134,18 +134,6 @@ class IAM(CidBase):
                     "Version": "2012-10-17",
                     "Statement": [
                         {
-                            "Sid": "AllowListBucket",
-                            "Effect": "Allow",
-                            "Action": ["s3:ListBucket"],
-                            "Resource": [f"arn:aws:s3:::{bucket}" for bucket in buckets]
-                        },
-                        {
-                            "Sid": "AllowReadFromBucket",
-                            "Effect": "Allow",
-                            "Action": [ "s3:GetObject"],
-                            "Resource": [f"arn:aws:s3:::{bucket}/*" for bucket in buckets]
-                        },
-                        {
                             "Sid": "AllowAthenaReads",
                             "Effect": "Allow",
                             "Action": [
@@ -187,10 +175,23 @@ class IAM(CidBase):
                                 "athena:GetTableMetadata",
                             ],
                             "Resource": [
+                                f"arn:{self.partition}:athena:{self.region}:{self.account_id}:datacatalog/AwsDataCatalog", # TODO: check if this can be variable?
                                 f"arn:{self.partition}:athena:{self.region}:{self.account_id}:database/{database}",
                                 f"arn:{self.partition}:athena:{self.region}:{self.account_id}:workgroup/{workgroup}",
                             ]
-                        }
+                        },
+                        {
+                            "Sid": "AllowListBucket",
+                            "Effect": "Allow",
+                            "Action": ["s3:ListBucket"],
+                            "Resource": [f"arn:aws:s3:::{bucket}" for bucket in buckets]
+                        },
+                        {
+                            "Sid": "AllowReadFromBucket",
+                            "Effect": "Allow",
+                            "Action": [ "s3:GetObject"],
+                            "Resource": [f"arn:aws:s3:::{bucket}/*" for bucket in buckets]
+                        },
                     ]
                 }
             },

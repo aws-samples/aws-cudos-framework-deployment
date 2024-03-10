@@ -1046,7 +1046,8 @@ Resources:
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              - Effect: Allow
+              - Sid: AllowAthenaReads
+                Effect: Allow
                 Action:
                   - lakeformation:GetDataAccess
                   - athena:ListDataCatalogs
@@ -1054,7 +1055,8 @@ Resources:
                   - athena:ListTableMetadata
                 Resource: "*" # required https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-underlying-data.html
                               # Cannot restrict this. See https://docs.aws.amazon.com/athena/latest/ug/datacatalogs-example-policies.html#datacatalog-policy-listing-data-catalogs
-              - Effect: Allow
+              - Sid: AllowGlue
+                Effect: Allow
                 Action:
                   - glue:GetPartition
                   - glue:GetPartitions
@@ -1075,7 +1077,8 @@ Resources:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/optimization_data
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_collection/*
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_collection
-              - Effect: Allow
+              - Sid: AllowAthena
+                Effect: Allow
                 Action:
                   - athena:ListDatabases
                   - athena:ListDataCatalogs
@@ -1087,11 +1090,11 @@ Resources:
                   - athena:ListTableMetadata
                   - athena:GetTableMetadata
                 Resource:
+                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
                   - Fn::If:
                       - NeedDatabase
                       - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
                       - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
-                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
                   - Fn::If:
                      - NeedAthenaWorkgroup
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
@@ -1114,55 +1117,23 @@ Resources:
                       - NeedAthenaQueryResultsBucket
                       - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
                       - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
-
-  QuickSightDataSourceRolePolicyForODCBucket:
-    Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceRole     # We need ODC bucket even if ODC dashboards are not activated  (ex: for account map)
-    Properties:
-      PolicyName: QuickSightDataSource-S3AccessODC
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
-            Effect: Allow
-            Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
-          - Sid: CidAllowListBucket
-            Effect: Allow
-            Action: s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${ODCPath.Bucket}
-          - Sid: CidAllowReadBucket
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-            Resource: !Sub arn:aws:s3:::${ODCPath.Bucket}/*
-      Roles:
-        - !Ref QuickSightDataSourceRole
-  QuickSightDataSourceRolePolicyForCURBucket:
-    Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceRoleAndCUR
-    Properties:
-      PolicyName: QuickSightDataSource-S3AccessCUR
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
-            Effect: Allow
-            Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
-          - Sid: CidAllowListBucket
-            Effect: Allow
-            Action: s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${CURPath.Bucket}
-          - Sid: CidAllowReadBucket
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-            Resource: !Sub arn:aws:s3:::${CURPath.Bucket}/*
-      Roles:
-        - !Ref QuickSightDataSourceRole
+              - Sid: AllowDecryptDataBucketsKmsKeyArns
+                Effect: Allow
+                Action: 'kms:Decrypt'
+                Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
+              - Sid: AllowListBucket
+                Effect: Allow
+                Action: s3:ListBucket
+                  - !Sub arn:aws:s3:::${ODCPath.Bucket}
+                  - !Sub arn:aws:s3:::${CURPath.Bucket}
+              - Sid: AllowReadBucket
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource:
+                  - !Sub arn:aws:s3:::${ODCPath.Bucket}/*
+                  - !Sub arn:aws:s3:::${CURPath.Bucket}/*
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
