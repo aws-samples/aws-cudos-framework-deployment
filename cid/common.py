@@ -23,7 +23,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects, IsolatedParameters
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
 from cid.helpers.quicksight.template import Template as CidQsTemplate
@@ -641,37 +641,46 @@ class Cid():
                 if not dashboard_id:
                     print('No dashboard selected')
                     return
-                dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
-            else:
-                dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
             if dashboard is not None:
                 dashboard.display_status()
                 dashboard.display_url(self.qs_url, **self.qs_url_params)
-                next_selections = {
-                    'Refresh all datasets of this dashboard': 'refresh',
-                    'Update dashboard': 'update',
-                    'Re-deploy this dashboard': 'redeploy',
-                    'Go back to dashboard selection': 'goback',
-                    'Exit': 'exit'
-                }
-                next_selection = get_parameter(
-                    param_name='next-selection',
-                    message="Please make a selection",
-                    choices=next_selections,
-                )
-                if next_selection == 'refresh':
-                    dashboard.refresh_datasets()
+                with IsolatedParameters():
+                    next_selections = {
+                        'Refresh all datasets of this dashboard': 'refresh',
+                        'Update dashboard': 'update',
+                        'Go back to dashboard selection': 'goback',
+                        'Exit': 'exit'
+                    }
+                    next_selection = get_parameter(
+                        param_name='next-selection',
+                        message="Please make a selection",
+                        choices=next_selections,
+                    )
+                    if next_selection == 'refresh':
+                        dashboard.refresh_datasets()
 
-                if next_selection == 'update':
-                    print(f'Updating dashboard: {dashboard}')
-                    ## TODO dashboard update here
-
-                if next_selection == 'redeploy':
-                    print(f'Re-deploying dashboard: {dashboard_id}')
-                    ## TODO dashboard deployment here
+                    if next_selection == 'update':
+                        if dashboard.latest:
+                            if not get_yesno_parameter(
+                                    param_name=f'redeploy-{dashboard.id}',
+                                    message=f'\nThe selected dashboard {dashboard.id} is already on the latest version.\nDo you want to re-deploy it?',
+                                    default='no'):
+                                logger.info(f'Not re-deploying {dashboard.id} as it is on latest version.\n')
+                                continue
+                        recursive = False
+                        if get_yesno_parameter(
+                                    param_name='recursive',
+                                    message=f'\nRecursive update the Datasets and Views in addition to the Dashboard update?\nATTENTION: This could lead to the loss of dataset customization.\nRecursive update?',
+                                    default='no'):
+                            logger.info("Recursive update selected")
+                            recursive = True
+                        logger.info(f'Updating dashboard: {dashboard.id} wiht Recursive = {recursive}')
+                        self._deploy(dashboard_id, recursive=recursive, update=True)
+                        logger.info('Rediscover dashboards after update')
+                        self.qs.discover_dashboards()
                 self.qs.clear_dashboard_selection()
-                unset_parameter('next_selection')
                 dashboard_id = None
             else:
                 click.echo('not deployed.')
