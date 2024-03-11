@@ -59,11 +59,11 @@ Parameters:
 Conditions:
   IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref AWS::AccountId]
   IsSourceAccount: !Not [!Condition IsDestinationAccount]
-  IsNorthVirginia: !Equals [!Ref AWS::Region, 'us-east-1']
+  RegionSupportsCURviaCFN: !Equals [!Ref AWS::Region, 'us-east-1']
   CUREnable: !Equals [!Ref CreateCUR, 'True']
-  DeployCURViaCFNInSource: !And [!Condition CUREnable, !Condition IsSourceAccount, !Condition IsNorthVirginia]
-  DeployCURViaCFNInDestination: !And [!Condition CUREnable, !Condition IsDestinationAccount, !Condition IsNorthVirginia]
-  DeployCURViaLambda: !And [!Condition CUREnable, !Not [!Condition IsNorthVirginia]]
+  DeployCURViaCFNInSource: !And [!Condition CUREnable, !Condition IsSourceAccount, !Condition RegionSupportsCURviaCFN]
+  DeployCURViaCFNInDestination: !And [!Condition CUREnable, !Condition IsDestinationAccount, !Condition RegionSupportsCURviaCFN]
+  DeployCURViaLambda: !And [!Condition CUREnable, !Not [!Condition RegionSupportsCURviaCFN]]
   EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
 
 Resources:
@@ -356,7 +356,7 @@ Resources:
 # Local CUR 
 ####
 
-  ## Deploy CUR nativly via CFN resource if we are in us-east-1
+  ## Deploy CUR natively via CFN resource if we are in us-east-1
   LocalCurInSource:
     Type: AWS::CUR::ReportDefinition
     Condition: DeployCURViaCFNInSource
@@ -464,13 +464,13 @@ Resources:
               - cur:ModifyReportDefinition
               - cur:DeleteReportDefinition
               Resource:
-                - Fn::Sub: arn:${AWS::Partition}:cur:us-east-1:${AWS::AccountId}:definition/*
+                - Fn::Sub: arn:${AWS::Partition}:cur:*:${AWS::AccountId}:definition/*
 
   CIDLambdaCURCreator:
     Type: AWS::Lambda::Function
     Condition: DeployCURViaLambda
     Properties:
-      Runtime: python3.10
+      Runtime: python3.12
       FunctionName:
         Fn::Sub: ${ResourcePrefix}-CID-CURCreator
       Handler: index.lambda_handler
@@ -480,13 +480,22 @@ Resources:
       Timeout: 15
       Code:
         ZipFile: |
+          import os
+          import json
+          import uuid
+
           import boto3
           import cfnresponse
-          import uuid
-          import json
 
-          # Create a cur client in us-east-1 region
-          client = boto3.client('cur', region_name='us-east-1')
+          region = os.environ['AWS_REGION']
+
+          # CUR only exists in us-east-1 and cn-northwest-1 regions
+          if region.startswith('cn-'):
+              region = 'cn-northwest-1'
+          else:
+              region = 'us-east-1'
+
+          client = boto3.client('cur', region_name=region)
 
           def lambda_handler(event, context):
 
@@ -591,7 +600,7 @@ Resources:
   CIDLambdaAnalytics:
     Type: AWS::Lambda::Function
     Properties:
-      Runtime: python3.9
+      Runtime: python3.12
       FunctionName:
         Fn::Sub: ${ResourcePrefix}-CID-Analytics
       Handler: index.lambda_handler
