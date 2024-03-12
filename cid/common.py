@@ -647,25 +647,24 @@ class Cid():
                 dashboard.display_status()
                 dashboard.display_url(self.qs_url, **self.qs_url_params)
                 with IsolatedParameters():
-                    next_selections = {
-                        '[◀] Back': 'back',
-                        '[↗] Open': 'open',
-                        '[◴] Refresh datasets': 'refresh',
-                        '[↺] Update dashboard': 'update',
-                        '[✕] Exit': 'exit',
-                    }
                     next_selection = get_parameter(
                         param_name=f'{dashboard.id}',
                         message="Please make a selection",
-                        choices=next_selections
+                        choices={
+                            '[◀] Back': 'back',
+                            '[↗] Open': 'open',
+                            '[◴] Refresh datasets': 'refresh',
+                            '[↺] Update dashboard': 'update',
+                            '[✕] Exit': 'exit',
+                        }
                     )
                     if next_selection == 'open':
                         self.open(dashboard.id, **kwargs)
 
-                    if next_selection == 'refresh':
+                    elif next_selection == 'refresh':
                         dashboard.refresh_datasets()
 
-                    if next_selection == 'update':
+                    elif next_selection == 'update':
                         if dashboard.latest:
                             if not get_yesno_parameter(
                                     param_name=f'redeploy-{dashboard.id}',
@@ -673,21 +672,23 @@ class Cid():
                                     default='no'):
                                 logger.info(f'Not re-deploying {dashboard.id} as it is on latest version.\n')
                                 continue
-                        recursive = False
-                        if get_yesno_parameter(
-                                    param_name='recursive',
-                                    message=f'\nRecursive update the Datasets and Views in addition to the Dashboard update?\nATTENTION: This could lead to the loss of dataset customization.\nRecursive update?',
-                                    default='no'):
-                            logger.info("Recursive update selected")
-                            recursive = True
-                        logger.info(f'Updating dashboard: {dashboard.id} wiht Recursive = {recursive}')
+                        recursive = get_parameter(
+                            param_name='recursive',
+                            message=f'\nRecursive update the Datasets and Views in addition to the Dashboard update?\nATTENTION: This could lead to the loss of dataset customization.\nRecursive update?',
+                            choices={
+                                '[→] Simple Update (only dashboard)': 'simple',
+                                '[⇶] Recursive Update (dashboard and all dependencies)': 'recursive',
+                            },
+                            default='simple'
+                        ) == 'recursive'
+                        logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
                         self.qs.discover_dashboards()
                 self.qs.clear_dashboard_selection()
                 dashboard_id = None
             else:
-                click.echo('not deployed.')
+                cid_print('not deployed.')
 
     @command
     def delete(self, dashboard_id, **kwargs):

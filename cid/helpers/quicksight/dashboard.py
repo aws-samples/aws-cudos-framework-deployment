@@ -81,7 +81,7 @@ class Dashboard(CidQsResource):
             if self.version.get('Status') not in ['CREATION_SUCCESSFUL']:
                 self._status = 'broken'
                 self.status_detail = f"{self.version.get('Status')}: {self.version.get('Errors')}"
-            # Not dicovered yet
+            # Not discovered yet
             elif not self.definition:
                 self._status = 'undiscovered'
             # Missing dataset

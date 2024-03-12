@@ -619,8 +619,9 @@ class QuickSight(CidBase):
             return None
         choices = {}
         for dashboard in self.dashboards.values():
-            health = 'healthy' if dashboard.health else 'unhealthy'
-            key = f'{dashboard.name} ({dashboard.arn}, {health}, {dashboard.status})'
+            health = '' if dashboard.health else ' UNHEALTHY'
+            status = '' if dashboard.status == 'up to date' else ' ' + dashboard.status.upper()
+            key = f'{dashboard.name} ({dashboard.arn.split("/")[-1]}){health}{status}'
             notice = dashboard.definition.get('deprecationNotice', '')
             if notice:
                 key = f'{key} {notice}'
