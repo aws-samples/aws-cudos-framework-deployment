@@ -919,7 +919,7 @@ class QuickSight(CidBase):
         except self.client.exceptions.AccessDeniedException:
             return '<YELLOW>AccessDenied<END>'
         if not ingestions:
-            return None #todo fix this using dataset import type. None could be if refresh never ran too, no ? 
+            return None
         last_ingestion = ingestions[0] # Suppose it is the latest
         status = last_ingestion.get('IngestionStatus')
         time_ago = ago(last_ingestion.get('CreatedTime'))
@@ -973,10 +973,9 @@ class QuickSight(CidBase):
                 AwsAccountId=self.account_id)
             status = response.get('IngestionStatus')
         except self.client.exceptions.AccessDeniedException:
-            logger.info(f'Access denied refreshing dataset: {dataset_id}')
+            logger.error(f'Access denied refreshing dataset: {dataset_id}')
         except Exception as exc:
             logger.debug(exc, exc_info=True)
-            logger.info(f'Unable to list refresh dataset {dataset_id}: {str(exc)}')
             raise CidError(f'Unable to list refresh dataset {dataset_id}: {str(exc)}') from exc
         return mode, status
 

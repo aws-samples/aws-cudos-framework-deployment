@@ -150,10 +150,6 @@ class Dashboard(CidQsResource):
                 status = self.qs.get_dataset_last_ingestion(dataset_id) or '<BLUE>DIRECT<END>' #todo fix this Blue using dataset import type.
                 cid_print(f'    {dataset_name: <36} ({dataset_id: <36}) {status}')
 
-        """print('\n')
-        if get_yesno_parameter('display-raw', 'Display dashboard raw data?', default='yes'):
-            print(json.dumps(self.raw, indent=4, sort_keys=True, default=str))"""
-
     def display_url(self, url_template: str, launch: bool = False, **kwargs) -> None:
         url = url_template.format(dashboard_id=self.id, **kwargs)
         print(f"#######\n####### {self.name} is available at: " + url + "\n#######")

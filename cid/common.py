@@ -648,16 +648,20 @@ class Cid():
                 dashboard.display_url(self.qs_url, **self.qs_url_params)
                 with IsolatedParameters():
                     next_selections = {
-                        'Refresh all datasets of this dashboard': 'refresh',
-                        'Update dashboard': 'update',
-                        'Go back to dashboard selection': 'goback',
-                        'Exit': 'exit'
+                        '[◀] Back': 'back',
+                        '[↗] Open': 'open',
+                        '[◴] Refresh datasets': 'refresh',
+                        '[↺] Update dashboard': 'update',
+                        '[✕] Exit': 'exit',
                     }
                     next_selection = get_parameter(
-                        param_name='next-selection',
+                        param_name=f'{dashboard.id}',
                         message="Please make a selection",
-                        choices=next_selections,
+                        choices=next_selections
                     )
+                    if next_selection == 'open':
+                        self.open(dashboard.id, **kwargs)
+
                     if next_selection == 'refresh':
                         dashboard.refresh_datasets()
 
