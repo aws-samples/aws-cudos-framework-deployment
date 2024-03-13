@@ -22,3 +22,4 @@ resource "aws_cloudformation_stack" "cid" {
   notification_arns = var.stack_notification_arns
   tags              = var.stack_tags
 }
+
