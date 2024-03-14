@@ -70,7 +70,7 @@ def cid_command(func):
 def main(ctx, **kwargs):
 
     # enable color for windows terminal
-    if platform.system() == "Windows":
+    if platform.system() == "Windows": #nosec B605,B607
         os.system('color')
 
     ctx.obj = Cid(**kwargs)
