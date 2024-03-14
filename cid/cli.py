@@ -71,7 +71,7 @@ def main(ctx, **kwargs):
 
     # enable color for windows terminal
     if platform.system() == "Windows":
-        os.system('color') #nosec B605,B607
+        os.system('color') #nosec B605, B607
 
     ctx.obj = Cid(**kwargs)
 
