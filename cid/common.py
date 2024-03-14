@@ -23,7 +23,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects, IsolatedParameters
 from cid.helpers.account_map import AccountMap
 from cid.helpers import Athena, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
 from cid.helpers.quicksight.template import Template as CidQsTemplate
@@ -631,24 +631,64 @@ class Cid():
     @command
     def status(self, dashboard_id, **kwargs):
         """Check QuickSight dashboard status"""
-
-        if not dashboard_id:
-            if not self.qs.dashboards:
-                print('No deployed dashboards found')
-                return
-            dashboard_id = self.qs.select_dashboard(force=True)
+        next_selection = None
+        while next_selection != 'exit':
             if not dashboard_id:
-                print('No dashboard selected')
-                return
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
-        else:
+                if not self.qs.dashboards:
+                    print('No deployed dashboards found')
+                    return
+                dashboard_id = self.qs.select_dashboard(force=True)
+                if not dashboard_id:
+                    print('No dashboard selected')
+                    return
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
 
-        if dashboard is not None:
-            dashboard.display_status()
-            dashboard.display_url(self.qs_url, **self.qs_url_params)
-        else:
-            click.echo('not deployed.')
+            if dashboard is not None:
+                dashboard.display_status()
+                dashboard.display_url(self.qs_url, **self.qs_url_params)
+                with IsolatedParameters():
+                    next_selection = get_parameter(
+                        param_name=f'{dashboard.id}',
+                        message="Please make a selection",
+                        choices={
+                            '[◀] Back': 'back',
+                            '[↗] Open': 'open',
+                            '[◴] Refresh datasets': 'refresh',
+                            '[↺] Update dashboard': 'update',
+                            '[✕] Exit': 'exit',
+                        }
+                    )
+                    if next_selection == 'open':
+                        self.open(dashboard.id, **kwargs)
+
+                    elif next_selection == 'refresh':
+                        dashboard.refresh_datasets()
+
+                    elif next_selection == 'update':
+                        if dashboard.latest:
+                            if not get_yesno_parameter(
+                                    param_name=f'redeploy-{dashboard.id}',
+                                    message=f'\nThe selected dashboard {dashboard.id} is already on the latest version.\nDo you want to re-deploy it?',
+                                    default='no'):
+                                logger.info(f'Not re-deploying {dashboard.id} as it is on latest version.\n')
+                                continue
+                        recursive = get_parameter(
+                            param_name='recursive',
+                            message=f'\nRecursive update the Datasets and Views in addition to the Dashboard update?\nATTENTION: This could lead to the loss of dataset customization.\nRecursive update?',
+                            choices={
+                                '[→] Simple Update (only dashboard)': 'simple',
+                                '[⇶] Recursive Update (dashboard and all dependencies)': 'recursive',
+                            },
+                            default='simple'
+                        ) == 'recursive'
+                        logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
+                        self._deploy(dashboard_id, recursive=recursive, update=True)
+                        logger.info('Rediscover dashboards after update')
+                        self.qs.discover_dashboards()
+                self.qs.clear_dashboard_selection()
+                dashboard_id = None
+            else:
+                cid_print('not deployed.')
 
     @command
     def delete(self, dashboard_id, **kwargs):

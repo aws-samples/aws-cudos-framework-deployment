@@ -1,4 +1,6 @@
+import os
 import logging
+import platform
 
 import click
 
@@ -14,7 +16,6 @@ prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
 print(f'{prog_name} {version}\n')
 
 if __version__ != latest_version and latest_version != 'UNDEFINED':
-    
     print('\033[93mUPDATE AVAILABLE\033[0m')
     print(f'\033[93mA new version {latest_version} is available, please consider update cid-cmd package via pip\033[0m\n\n')
     logger.info(f'A new version {latest_version} is available, please consider update cid-cmd package via pip')
@@ -67,6 +68,11 @@ def cid_command(func):
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @click.pass_context
 def main(ctx, **kwargs):
+
+    # enable color for windows terminal
+    if platform.system() == "Windows":
+        os.system('color') #nosec B605, B607
+
     ctx.obj = Cid(**kwargs)
 
 
