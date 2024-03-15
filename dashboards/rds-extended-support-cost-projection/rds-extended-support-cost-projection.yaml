@@ -1,9 +1,9 @@
 dashboards:
-  RDS EXTENDED SUPPORT COST PROJECTION:
+  RDS EXTENDED SUPPORT COST PROJECTION V1.0.0:
     dependsOn:
       datasets:
       - rds_extended_support_view
-    name: RDS Extended Support Cost Projection
+    name: RDS Extended Support Cost Projection v1.0.0
     dashboardId: rds-extended-support-cost-projection
     category: Custom
     data: |-
@@ -30,14 +30,20 @@ dashboards:
         Expression: '{EDP_Discount_Factor} * {vcpu_acu_hours} * {year_1_2_pricing}'
         Name: Estimated_Year_1_2_Cost
       - DataSetIdentifier: rds_extended_support_view
-        Expression: '{EDP_Discount_Factor} * {vcpu_acu_hours} * {year_3_pricing}'
+        Expression: '{EDP_Discount_Factor} * {vcpu_acu_hours} * {Year_3_Pricing_Fallback}'
         Name: Estimated_Year_3_Cost
       - DataSetIdentifier: rds_extended_support_view
         Expression: dateDiff(now(), {year_1_start}, 'MM')
         Name: Months_Before_Year_1_2_Ext_Support_Start
+      - DataSetIdentifier: rds_extended_support_view
+        Expression: ifelse(isNull({year_3_start}), {year_1_2_pricing}, {year_3_pricing})
+        Name: Year_3_Pricing_Fallback
+      - DataSetIdentifier: rds_extended_support_view
+        Expression: ifelse(isNull({year_3_start}), {year_1_start}, {year_3_start})
+        Name: Year_3_Start_Fallback
       ColumnConfigurations:
       - Column:
-          ColumnName: Estimated_Year_3_Cost
+          ColumnName: Actual_Year_3_Cost
           DataSetIdentifier: rds_extended_support_view
         FormatConfiguration:
           NumberFormatConfiguration:
@@ -77,7 +83,7 @@ dashboards:
                     Visibility: VISIBLE
                 Symbol: USD
       - Column:
-          ColumnName: Actual_Year_3_Cost
+          ColumnName: Estimated_Year_3_Cost
           DataSetIdentifier: rds_extended_support_view
         FormatConfiguration:
           NumberFormatConfiguration:
@@ -96,6 +102,17 @@ dashboards:
                     Symbol: COMMA
                     Visibility: VISIBLE
                 Symbol: USD
+      - Column:
+          ColumnName: Year_3_Pricing_Fallback
+          DataSetIdentifier: rds_extended_support_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              NumberDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 3
+                NullValueFormatConfiguration:
+                  NullString: 'null'
       - Column:
           ColumnName: year_1_2_cost
           DataSetIdentifier: rds_extended_support_view
@@ -197,28 +214,6 @@ dashboards:
         Identifier: rds_extended_support_view
       FilterGroups:
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 7210d28d-b32f-4b68-b358-34eeb8d76e77
-        Filters:
-        - TimeRangeFilter:
-            Column:
-              ColumnName: billing_period
-              DataSetIdentifier: rds_extended_support_view
-            FilterId: 96d7dc42-a294-4485-a883-46486ed89355
-            IncludeMaximum: true
-            IncludeMinimum: true
-            NullOption: NON_NULLS_ONLY
-            RangeMaximumValue:
-              Parameter: EndDate
-            RangeMinimumValue:
-              Parameter: StartDate
-            TimeGranularity: DAY
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2f17da6a-9382-4592-95af-15eec49e9596
         Filters:
         - NumericRangeFilter:
@@ -235,9 +230,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
               VisualIds:
-              - 6abeb0ac-fef8-446a-86ab-1e25f2bca398
+              - 9afc5e06-b00e-4345-8690-7424211c9bc5
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: cf3e70f5-978c-4302-a173-fdbe932e7c5c
@@ -256,9 +251,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
               VisualIds:
-              - e8311342-2c62-4481-b745-862ff3dbfb49
+              - c5e5be1f-820f-49a5-9694-28062f430e15
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 833b8c86-9766-4b99-a5fb-ba3e4ef8d08c
@@ -277,9 +272,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
               VisualIds:
-              - 7770c5be-5e0a-4fe4-ab94-6d6ec994b98a
+              - 67d086cc-0f88-41bc-9f93-5d464afc0bc8
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 215e6218-84f1-4f2d-a089-2724f513dac4
@@ -298,9 +293,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
               VisualIds:
-              - e8311342-2c62-4481-b745-862ff3dbfb49
+              - c5e5be1f-820f-49a5-9694-28062f430e15
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2fe3bdea-f9d9-4376-8c5a-774089117858
@@ -319,9 +314,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
               VisualIds:
-              - 7770c5be-5e0a-4fe4-ab94-6d6ec994b98a
+              - 67d086cc-0f88-41bc-9f93-5d464afc0bc8
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: bd90bee7-53ae-4185-ac0b-e63f97e3b866
@@ -340,9 +335,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
               VisualIds:
-              - 0c2846a2-eb8f-4d99-bb4b-ee6212f2a730
+              - c2f68c74-7dbe-4034-bc5c-ac709565220e
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: aa73eee4-f3c4-41d7-952a-00cd2105a67b
@@ -361,7 +356,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: f36e0a01-2cd0-43b2-9719-bea89d5b859d
@@ -380,7 +375,29 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: d7577637-e471-471f-ac74-b17c650078dd
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 33846fa0-92dd-4779-a51d-6b50879a332a
+        Filters:
+        - TimeRangeFilter:
+            Column:
+              ColumnName: usage_date
+              DataSetIdentifier: rds_extended_support_view
+            FilterId: 3d4b3776-81e4-4f93-b823-6e3c810f451e
+            IncludeMaximum: true
+            IncludeMinimum: true
+            NullOption: NON_NULLS_ONLY
+            RangeMaximumValue:
+              Parameter: EndDate
+            RangeMinimumValue:
+              Parameter: StartDate
+            TimeGranularity: DAY
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
         Status: ENABLED
       Options:
         WeekStart: SUNDAY
@@ -408,14 +425,14 @@ dashboards:
       - DateTimeParameterDeclaration:
           DefaultValues:
             RollingDate:
-              Expression: truncDate('MM', now())
+              Expression: addDateTime(-1, 'MM', truncDate('MM', now()))
             StaticValues: []
           Name: StartDate
           TimeGranularity: DAY
       - DateTimeParameterDeclaration:
           DefaultValues:
             RollingDate:
-              Expression: addDateTime(-1, 'SS', addDateTime(1, 'MM', truncDate('MM', now())))
+              Expression: addDateTime(-1, 'SS', truncDate('MM', now()))
             StaticValues: []
           Name: EndDate
           TimeGranularity: DAY
@@ -431,7 +448,7 @@ dashboards:
               Elements:
               - ColumnIndex: 1
                 ColumnSpan: 18
-                ElementId: 073063f9-04ec-4153-b450-07afbcb48bec
+                ElementId: 34d4af34-269d-42e3-86ad-e616a362fbd6
                 ElementType: VISUAL
                 RowIndex: 0
                 RowSpan: 6
@@ -443,67 +460,67 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 19
                 ColumnSpan: 4
-                ElementId: 6abeb0ac-fef8-446a-86ab-1e25f2bca398
+                ElementId: 9afc5e06-b00e-4345-8690-7424211c9bc5
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 4
               - ColumnIndex: 23
                 ColumnSpan: 4
-                ElementId: e8311342-2c62-4481-b745-862ff3dbfb49
+                ElementId: c5e5be1f-820f-49a5-9694-28062f430e15
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 4
               - ColumnIndex: 27
                 ColumnSpan: 4
-                ElementId: 7770c5be-5e0a-4fe4-ab94-6d6ec994b98a
+                ElementId: 67d086cc-0f88-41bc-9f93-5d464afc0bc8
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 4
               - ColumnIndex: 31
                 ColumnSpan: 4
-                ElementId: 0c2846a2-eb8f-4d99-bb4b-ee6212f2a730
+                ElementId: c2f68c74-7dbe-4034-bc5c-ac709565220e
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 4
               - ColumnIndex: 10
                 ColumnSpan: 9
-                ElementId: 4d44d43f-81c4-4ffc-8929-8b9253780eaa
+                ElementId: bbb4130e-d2e8-4f0f-8c6a-a294dc9bc83a
                 ElementType: VISUAL
                 RowIndex: 6
                 RowSpan: 4
               - ColumnIndex: 19
                 ColumnSpan: 9
-                ElementId: 25b3451a-2288-4e14-ad0d-2e4402517b69
+                ElementId: 2ea5b124-a8d3-4311-9da5-98518feeeb95
                 ElementType: VISUAL
                 RowIndex: 6
                 RowSpan: 4
               - ColumnIndex: 1
                 ColumnSpan: 14
-                ElementId: 551a53d4-0277-49e3-b8c7-506ef54f1b93
+                ElementId: 416cee8a-0600-4aaa-bb69-350727060b30
                 ElementType: VISUAL
                 RowIndex: 10
                 RowSpan: 9
               - ColumnIndex: 15
                 ColumnSpan: 20
-                ElementId: 59ffead0-14e1-47cf-9f7d-19731e5447d0
+                ElementId: 9233cbd6-d6dd-4e29-a059-1895ee909b0c
                 ElementType: VISUAL
                 RowIndex: 10
                 RowSpan: 9
               - ColumnIndex: 1
                 ColumnSpan: 17
-                ElementId: d9b593b4-2e4b-418d-822f-5ea156e59c94
+                ElementId: 7c913b40-495d-4f0c-bd2b-585f39e485e8
                 ElementType: VISUAL
                 RowIndex: 19
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 17
-                ElementId: 922bac3d-9fd5-423f-8d87-60eb5077e574
+                ElementId: 66220df2-7b74-4e80-9904-aedc3b14870f
                 ElementType: VISUAL
                 RowIndex: 19
                 RowSpan: 12
               - ColumnIndex: 1
                 ColumnSpan: 34
-                ElementId: f20919ce-4d8a-46a7-af94-2322a1aa6530
+                ElementId: 3594d0e0-e54e-44ce-8f1f-e50229dc458c
                 ElementType: VISUAL
                 RowIndex: 31
                 RowSpan: 10
@@ -565,26 +582,11 @@ dashboards:
             SourceParameterName: LinkedAccount
             Title: Linked Account
             Type: MULTI_SELECT
-        - TextField:
-            DisplayOptions:
-              InfoIconLabelOptions:
-                InfoIconText: EDP percentage discount
-                Visibility: HIDDEN
-              PlaceholderOptions:
-                Visibility: VISIBLE
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            ParameterControlId: fb05c886-cf31-46e3-97ba-f3af3d018048
-            SourceParameterName: EDPDiscount
-            Title: EDP %
         SheetControlLayouts:
         - Configuration:
             GridLayout:
               Elements: []
-        SheetId: d7577637-e471-471f-ac74-b17c650078dd
+        SheetId: 43a88b3c-2e23-44b9-b361-41a48a65601b
         TextBoxes:
         - Content: |-
             <text-box>
@@ -701,7 +703,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>vCPU/ACU Hours Breakdown - Account by Engine</visual-title>
               Visibility: VISIBLE
-            VisualId: 922bac3d-9fd5-423f-8d87-60eb5077e574
+            VisualId: 66220df2-7b74-4e80-9904-aedc3b14870f
         - BarChartVisual:
             Actions: []
             ChartConfiguration:
@@ -797,7 +799,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Estimated Costs by Engine Version</visual-title>
               Visibility: VISIBLE
-            VisualId: 59ffead0-14e1-47cf-9f7d-19731e5447d0
+            VisualId: 9233cbd6-d6dd-4e29-a059-1895ee909b0c
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -843,7 +845,7 @@ dashboards:
                     </block>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 0c2846a2-eb8f-4d99-bb4b-ee6212f2a730
+            VisualId: c2f68c74-7dbe-4034-bc5c-ac709565220e
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -890,7 +892,7 @@ dashboards:
                     </block>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 7770c5be-5e0a-4fe4-ab94-6d6ec994b98a
+            VisualId: 67d086cc-0f88-41bc-9f93-5d464afc0bc8
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -937,7 +939,7 @@ dashboards:
                     </block>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: e8311342-2c62-4481-b745-862ff3dbfb49
+            VisualId: c5e5be1f-820f-49a5-9694-28062f430e15
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -973,14 +975,14 @@ dashboards:
             ColumnHierarchies: []
             Subtitle:
               FormatText:
-                RichText: "<visual-subtitle>\n  Usage between\n  <parameter>${StartDate}</parameter>\n\
-                  \  \_and\n  <parameter>${EndDate}</parameter>\n</visual-subtitle>"
+                RichText: "<visual-subtitle>\n  Usage between\n      <parameter>${StartDate}</parameter>\n\
+                  \  \_and\n      <parameter>${EndDate}</parameter>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Estimated Monthly Cost (Year 3)</visual-title>
               Visibility: VISIBLE
-            VisualId: 25b3451a-2288-4e14-ad0d-2e4402517b69
+            VisualId: 2ea5b124-a8d3-4311-9da5-98518feeeb95
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -1016,14 +1018,14 @@ dashboards:
             ColumnHierarchies: []
             Subtitle:
               FormatText:
-                RichText: "<visual-subtitle>\n  Usage between\n  <parameter>${StartDate}</parameter>\n\
-                  \  \_and\n  <parameter>${EndDate}</parameter>\n</visual-subtitle>"
+                RichText: "<visual-subtitle>\n  Usage between\n      <parameter>${StartDate}</parameter>\n\
+                  \  \_and\n      <parameter>${EndDate}</parameter>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Estimated Monthly Cost (Year 1-2)</visual-title>
               Visibility: VISIBLE
-            VisualId: 4d44d43f-81c4-4ffc-8929-8b9253780eaa
+            VisualId: bbb4130e-d2e8-4f0f-8c6a-a294dc9bc83a
         - PieChartVisual:
             Actions:
             - ActionOperations:
@@ -1117,7 +1119,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>vCPU/ACU Hours of Usage By Engine Version</visual-title>
               Visibility: VISIBLE
-            VisualId: 551a53d4-0277-49e3-b8c7-506ef54f1b93
+            VisualId: 416cee8a-0600-4aaa-bb69-350727060b30
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -1150,15 +1152,11 @@ dashboards:
                 - CustomLabel: Year 1-2 Price per vPCU-Hour/ACU-Hour
                   FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_1_2_pricing.13.1707159152915
                   Width: 176px
-                - CustomLabel: Actual Year 1-2 Cost
-                  FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_1_2_cost.14.1707159160296
                 - CustomLabel: Estimated Year 1-2 Cost
                   FieldId: a74db0d2-cff0-45c1-8d13-68eb3cbae7e9.17.1707159314218
                 - CustomLabel: Year 3 Price per vPCU-Hour/ACU-Hour
-                  FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_3_pricing.15.1707159178298
-                  Width: 164px
-                - CustomLabel: Actual Year 3 Cost
-                  FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_3_cost.16.1707159184545
+                  FieldId: afbce217-7d32-409f-aca2-8ae617ae4731.16.1710524728920
+                  Width: 165px
                 - CustomLabel: Estimated Year 3 Cost
                   FieldId: 8f79307e-d233-428d-97b1-2640d410118d.18.1707159318206
               FieldWells:
@@ -1235,13 +1233,6 @@ dashboards:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: year_1_2_cost
-                        DataSetIdentifier: rds_extended_support_view
-                      FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_1_2_cost.14.1707159160296
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
                         ColumnName: Estimated_Year_1_2_Cost
                         DataSetIdentifier: rds_extended_support_view
                       FieldId: a74db0d2-cff0-45c1-8d13-68eb3cbae7e9.17.1707159314218
@@ -1249,16 +1240,24 @@ dashboards:
                       AggregationFunction:
                         SimpleNumericalAggregation: AVERAGE
                       Column:
-                        ColumnName: year_3_pricing
+                        ColumnName: Year_3_Pricing_Fallback
                         DataSetIdentifier: rds_extended_support_view
-                      FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_3_pricing.15.1707159178298
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
-                        ColumnName: year_3_cost
-                        DataSetIdentifier: rds_extended_support_view
-                      FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_3_cost.16.1707159184545
+                      FieldId: afbce217-7d32-409f-aca2-8ae617ae4731.16.1710524728920
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 3
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
@@ -1288,9 +1287,6 @@ dashboards:
                 - FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_1_2_pricing.13.1707159152915
                   TotalAggregationFunction:
                     SimpleTotalAggregationFunction: NONE
-                - FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_3_pricing.15.1707159178298
-                  TotalAggregationFunction:
-                    SimpleTotalAggregationFunction: NONE
                 TotalsVisibility: VISIBLE
             Subtitle:
               Visibility: VISIBLE
@@ -1298,7 +1294,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Extended Support Estimated Cost Breakdown</visual-title>
               Visibility: VISIBLE
-            VisualId: f20919ce-4d8a-46a7-af94-2322a1aa6530
+            VisualId: 3594d0e0-e54e-44ce-8f1f-e50229dc458c
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -1322,14 +1318,14 @@ dashboards:
                   Width: 98px
                 - CustomLabel: Engine
                   FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.engine.3.1707158884087
-                  Width: 70px
+                  Width: 126px
                 - CustomLabel: Engine Version
                   FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.engineversion.4.1707158885687
-                  Width: 122px
+                  Width: 163px
                 - CustomLabel: Year 1-2 Start
                   FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_1_start.6.1707158897015
                 - CustomLabel: Year 3 Start
-                  FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_3_start.7.1707158899349
+                  FieldId: 850234b2-def9-429d-8484-48aaa38a168e.5.1710524537120
                 - CustomLabel: End of Extended Support
                   FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.end_of_extended_support.8.1707158902436
               FieldWells:
@@ -1357,16 +1353,20 @@ dashboards:
                       FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_1_start.6.1707158897015
                   - DateDimensionField:
                       Column:
-                        ColumnName: year_3_start
+                        ColumnName: Year_3_Start_Fallback
                         DataSetIdentifier: rds_extended_support_view
-                      FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_3_start.7.1707158899349
+                      FieldId: 850234b2-def9-429d-8484-48aaa38a168e.5.1710524537120
                   - DateDimensionField:
                       Column:
                         ColumnName: end_of_extended_support
                         DataSetIdentifier: rds_extended_support_view
                       FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.end_of_extended_support.8.1707158902436
                   Values: []
-              SortConfiguration: {}
+              SortConfiguration:
+                RowSort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.year_1_start.6.1707158897015
               TableOptions:
                 HeaderStyle:
                   Height: 25
@@ -1399,7 +1399,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Extended Support Details</visual-title>
               Visibility: VISIBLE
-            VisualId: 073063f9-04ec-4153-b450-07afbcb48bec
+            VisualId: 34d4af34-269d-42e3-86ad-e616a362fbd6
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -1446,7 +1446,7 @@ dashboards:
                     </block>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 6abeb0ac-fef8-446a-86ab-1e25f2bca398
+            VisualId: 9afc5e06-b00e-4345-8690-7424211c9bc5
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -1552,7 +1552,70 @@ dashboards:
               FormatText:
                 RichText: <visual-title>vCPU/ACU Hours Breakdown - Engine by Account</visual-title>
               Visibility: VISIBLE
-            VisualId: d9b593b4-2e4b-418d-822f-5ea156e59c94
+            VisualId: 7c913b40-495d-4f0c-bd2b-585f39e485e8
+      - ContentType: INTERACTIVE
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 95120cae-df6f-4a88-a44e-37b0e5265e84
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 7
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 220552cd-5f25-460c-951f-98d1ccbda80d
+                ElementType: TEXT_BOX
+                RowIndex: 7
+                RowSpan: 11
+        Name: About
+        SheetId: 225d0971-d8cf-41e4-8054-892d7d7fad61
+        TextBoxes:
+        - Content: "<text-box>\n  <inline font-size=\"54.88px\">Notices</inline>\n  <inline\
+            \ font-size=\"12.8px\">\n    <img src=\"https://d66mvi2kszsvt.cloudfront.net/resources/dashboard-visual-analytics/About/header.png\"\
+            \ width=\"11\"/>\n  </inline>\n  <br/>\n  <inline font-size=\"12.8px\"/>\n \
+            \ <br/>\n  <inline font-size=\"22.4px\">Customers are responsible for making\
+            \ their own independent assessment of\_this dashboard and its content.\_This\
+            \ dashboard and its content: (a) is for informational purposes only, (b) represents\
+            \ current AWS product offerings and practices, which are subject to change without\
+            \ notice, and (c) does not create any commitments or assurances from AWS and\
+            \ its affiliates, suppliers or licensors. AWS\_content, products or services\
+            \ are provided \u201Cas is\u201D without warranties, representations, or conditions\
+            \ of any kind, whether express or implied. The responsibilities and liabilities\
+            \ of AWS to its customers are controlled by AWS agreements, and this document\
+            \ is not part of, nor does it modify, any agreement between AWS and its customers.</inline>\n\
+            </text-box>"
+          SheetTextBoxId: 95120cae-df6f-4a88-a44e-37b0e5265e84
+        - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\">\n    <inline color=\"#61d1d6\" font-size=\"68.8px\">\n      <a href=\"\
+            https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/rds-extended-support-cost-projection\"\
+            \ target=\"_blank\">\n        <b>\n          <u>RDS Extended Support Cost Projection</u>\n\
+            \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"\
+            center\">\n    <inline font-size=\"68.8px\">\n      <b>v1.0.0</b>\n    </inline>\n\
+            \  </block>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"\
+            center\"/>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            right\">Built by: Julio Chaves, Yuriy Prykhodko, Iakov Gan, Eric Christensen</block>\n\
+            \  <br/>\n  <block align=\"right\">\n    Learn more\n    <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+            \ target=\"_blank\">\_</a>\n    about AWS Cloud Intelligence Dashboards (CID)\
+            \ on\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+            \ target=\"_blank\">\n        <u>AWS Well-Architected Labs</u>\n      </a>\n\
+            \    </inline>\n    \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"\
+            https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\" target=\"_blank\"\
+            >\n        <u>CID YouTube Channel</u>\n      </a>\n    </inline>\n  </block>\n\
+            \  <br/>\n  <block align=\"right\">\n    If you wish to provide feedback please\
+            \ or report an error please email:\n  <inline color=\"#61d1d6\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
+            \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n  </inline>\n  </block>\n\
+            \  <br/>\n  <block align=\"right\">Powered by: Amazon QuickSight, Amazon Athena,\
+            \ Amazon S3</block>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block\
+            \ align=\"center\"/>\n  <br/>\n  <block align=\"center\"/>\n</text-box>"
+          SheetTextBoxId: 220552cd-5f25-460c-951f-98d1ccbda80d
+        Visuals: []
 datasets:
   rds_extended_support_view:
     data:
