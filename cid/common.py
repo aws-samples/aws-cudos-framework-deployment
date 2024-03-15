@@ -678,8 +678,7 @@ class Cid():
                             choices={
                                 '[→] Simple Update (only dashboard)': 'simple',
                                 '[⇶] Recursive Update (dashboard and all dependencies)': 'recursive',
-                            },
-                            default='simple'
+                            }
                         ) == 'recursive'
                         logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
