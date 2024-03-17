@@ -59,7 +59,10 @@ Parameters:
 Conditions:
   IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref AWS::AccountId]
   IsSourceAccount: !Not [!Condition IsDestinationAccount]
-  RegionSupportsCURviaCFN: !Equals [!Ref AWS::Region, 'us-east-1']
+  RegionSupportsCURviaCFN: # CFN supports CUR only in us-east-1 and cn-northwest-1. Other regions must use lambda
+    Fn::Or:
+      - !Equals [!Ref AWS::Region, 'us-east-1']
+      - !Equals [!Ref AWS::Region, 'cn-northwest-1']
   CUREnable: !Equals [!Ref CreateCUR, 'True']
   DeployCURViaCFNInSource: !And [!Condition CUREnable, !Condition IsSourceAccount, !Condition RegionSupportsCURviaCFN]
   DeployCURViaCFNInDestination: !And [!Condition CUREnable, !Condition IsDestinationAccount, !Condition RegionSupportsCURviaCFN]
