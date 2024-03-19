@@ -1125,12 +1125,27 @@ class QuickSight(CidBase):
         try:
             existing_schedules = self.get_dataset_refresh_schedules(dataset_id)
         except CidError as exc:
-            logger.debug(f'List refresh schedule throws: {exc}')
-            logger.warning(
-                f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
-                ' Please make sure scheduled refresh is configured manually.'
-            )
-            return
+            # We cannot access schedules, but let's check if there are scheduled ingestions. 
+            ingestions_exist = False
+            try:
+                ingestions_exist = list(
+                    self.client.get_paginator('list_ingestions').paginate(
+                        DataSetId=dataset_id,
+                        AwsAccountId=self.account_id
+                    ).search("Ingestions[?RequestSource=='SCHEDULED']")
+                )
+            except Exception:
+                logger.debug(f'List refresh schedule throws: {exc}')
+                logger.warning(
+                    f'Cannot read dataset schedules for dataset = {dataset_id}. {str(exc)}. Skipping schedule management.'
+                    ' Please make sure scheduled refresh is configured manually.'
+                )
+                return
+            if ingestions_exist:
+                logger.debug(f'We cannot read schedules but there are ingestions. Skipping creation of schedule.')
+                return
+            logger.debug(f'We cannot read schedules but there no ingestions. Continue to creation of schedule.')
+            existing_schedules = []
 
         if schedules:
             if exec_env()['terminal'] in ('lambda'):
