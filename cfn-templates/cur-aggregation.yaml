@@ -473,7 +473,7 @@ Resources:
     Type: AWS::Lambda::Function
     Condition: DeployCURViaLambda
     Properties:
-      Runtime: python3.12
+      Runtime: python3.11
       FunctionName:
         Fn::Sub: ${ResourcePrefix}-CID-CURCreator
       Handler: index.lambda_handler
@@ -603,7 +603,7 @@ Resources:
   CIDLambdaAnalytics:
     Type: AWS::Lambda::Function
     Properties:
-      Runtime: python3.12
+      Runtime: python3.11 # before updating 
       FunctionName:
         Fn::Sub: ${ResourcePrefix}-CID-Analytics
       Handler: index.lambda_handler
