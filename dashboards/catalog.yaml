@@ -3,3 +3,4 @@ Resources:
   - Url: sustainability-proxy-metrics/sustainability-proxy-metrics.yaml
   - Url: data-transfer/DataTransfer-Cost-Analysis-Dashboard.yaml
   - Url: aws-marketplace/aws-marketplace-spg.yaml
+  - Url: rds-extended-support-cost-projection/rds-extended-support-cost-projection.yaml
