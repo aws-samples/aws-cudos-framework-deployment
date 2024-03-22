@@ -1319,7 +1319,7 @@ class QuickSight(CidBase):
         }
         theme = definition.get('theme')
         if theme:
-            if not theme.startswith('arn:')
+            if not theme.startswith('arn:'):
                 theme_arn = 'arn:aws:quicksight::aws:theme/' + theme
             else:
                 raise NotImplementedError('Only standard themes are supported now.')
