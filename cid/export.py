@@ -344,7 +344,7 @@ def export_analysis(qs, athena):
             TemplateId=template_id,
             GrantPermissions=[
                 {
-                    "Principal": f'arn:aws:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
+                    "Principal": f'arn:{qs.partition}:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
                     'Actions': [
                         "quicksight:DescribeTemplate",
                     ]
@@ -363,7 +363,7 @@ def export_analysis(qs, athena):
 
         for dataset in definition.get('DataSetIdentifierDeclarations', []):
             # Hide region and account number of the source account
-            dataset["DataSetArn"] = 'arn:aws:quicksight:::dataset/' + dataset["DataSetArn"].split('/')[-1]
+            dataset["DataSetArn"] = f'arn:{qs.partition}:quicksight:::dataset/' + dataset["DataSetArn"].split('/')[-1]
         dashboard_resource['data'] = yaml.safe_dump(definition)
 
     resources['dashboards'][analysis['Name'].upper()] = dashboard_resource
