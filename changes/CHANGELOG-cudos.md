@@ -2,6 +2,15 @@
 
 # CUDOS v5
 
+# CUDOS - 5.2
+
+* **Databases:** New RDS Extended Support section with 'RDS Extended Support Cost', 'RDS Extended Support Cost per Account' and 'RDS Extended Support Cost per Resource' visuals
+* **MoM Trends**: New control MoM Comparison Type which allows to switch between Calendar Month (default) and Normalized Month. With Normalized Month every month is normalized to amount of days in the prevois month for more accurate MoM comparison. Normalized Month = average daily cost for the month * amount of days in previous month
+* **Data Transfer & Networking:** New Data Transfer Type NAT Gateway Data Processed which allows to see cost and usage for data processed by NAT Gateways.
+* **Amazon S3:** Added tooltip with usage amount and pricing unit to 'Total Cost per Bucket by Operation' visual
+* **Compute:** New visual 'EC2 Spot Savings per Account' 
+
+
 # CUDOS - 5.1.1
 
 **Changes**:
