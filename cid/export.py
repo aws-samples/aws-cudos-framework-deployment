@@ -75,7 +75,7 @@ def get_theme(analysis):
         return None
     if theme_arn.startswith('arn:aws:quicksight::aws:theme/'):
         return theme_arn.split('/')[-1]
-    logger.warning('theme {theme_arn} is not standard and is not supported yet')
+    logger.warning(f'Theme {theme_arn} is not standard and is not supported yet. Theme will be ignored.')
     return None
 
 
