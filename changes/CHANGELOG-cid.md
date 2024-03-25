@@ -1,6 +1,10 @@
 # What's new in the Cost Intelligence Dashboard (CID) 
 
 ## CID - 3.3
+* All sheets
+	* Added Payer Accounts control
+
+## CID - 3.3
 * RI/SP Summary
 	* Fixed Compute SP Total Savings for current Month in "Pricing Model Savings Summary" Visual
 
