@@ -4,14 +4,15 @@
 
 # CUDOS - 5.3
 
-* **Compute:** New section EC2 Compute Elasticity with visuals which show % of usage time per instance over last 30 days, namely 'Average EC2 Instance Usage time % and Cost per Account', 'EC2 Hourly Cost', 'EC2 Instances Usage time % and Cost' and 'EC2 Instances Daily Usage in Hours'
-* **Compute:**: New visual 'Lambda Spend per Processor Architecture' to track adoption of Arm/Graviton 2 based Lambda functions.
-* **Storage & Backup:** Sheet 'Storage' renamed to 'Storage & Backup'. Added section Backup with visuals to track cost and usage insights for backup storage and snapshots, namely 'Backup spend per Service', 'Backup spend per Account', 'Backup spend per Region', 'Backup spend per Usage Type', 'Daily Backup spend per Service', 'Daily Backup Spend per Resource' and 'Backup Spend Detailed Resource View'
-* **Databases:** Added Amazon MemoryDB spend and usage to the existing visuals
-* **Databases:** New Section Databases Elasticity with visuals which show % of usage time per resouce over last 30 days, namely 'Databases Average Usage time % and Cost', 'Databases Hourly Usage', 'Databases Usage time % and Cost per Resource', 'Databases Instances Daily Usage in Hours'
 * **AI/ML:** Added section 'Amazon Q' which provide insights into Amazon Q spend and usage details with visuals 'Amazon Q spend trend', 'Amazon Q Index usage trend', 'Amazon Q spend per Account', 'Amazon Q spend per Region', 'Amazon Q spend per Operation', 'Amazon Q Index Daily Unit Usage per Account'
 * **AI/ML:** Added visual 'SageMaker ML instance Spend by Purchase Option'. 'SageMaker Spend and Unit Cost by Instance Type' changed to 'SageMaker Spend and Unit Cost by Instance Family' with ability to drill down to Instance Type
-* **AI/ML:** Amazon Bedrock spend per UsageType Group now categorizes Bedrock spend by Image Generation, Input Tokes, Output Tokens. Model Units and Model Customization.
+* **AI/ML:** Amazon Bedrock spend per UsageType Group now categorizes Bedrock spend by Image Generation, Input Tokes, Output Tokens, Model Units and Model Customization
+* **Storage & Backup:** Sheet 'Storage' renamed to 'Storage & Backup'. Added section Backup with visuals to track cost and usage insights for backup storage and snapshots, namely 'Backup spend per Service', 'Backup spend per Account', 'Backup spend per Region', 'Backup spend per Usage Type', 'Daily Backup spend per Service', 'Daily Backup Spend per Resource' and 'Backup Spend Detailed Resource View'
+* **Compute:** New section EC2 Compute Elasticity with visuals which show % of usage time per instance over last 30 days to identify instances and accounts which could be scheduled to stop when they are not needed, namely 'Average EC2 Instance Usage time % and Cost per Account', 'EC2 Hourly Cost', 'EC2 Instances Usage time % and Cost' and 'EC2 Instances Daily Usage in Hours'
+* **Compute:** New visual 'Lambda Spend per Processor Architecture' to track adoption of Arm/Graviton 2 based Lambda functions.
+* **Compute:** New EKS Extended Support section with visuals 'EKS Extended Support Cost', 'EKS Extended Support Cost per Account', 'EKS Clusters with Extended Support'
+* **Databases:** New Section Databases Elasticity with visuals which show % of usage time per resouce over last 30 days to identify instances and accounts which could be scheduled to stop when they are not needed, namely 'Databases Average Usage time % and Cost', 'Databases Hourly Usage', 'Databases Usage time % and Cost per Resource', 'Databases Instances Daily Usage in Hours'
+* **Databases:** Added Amazon MemoryDB spend and usage to the existing visuals
 * **Monitoring and Observability:** 'CloudTrail Usage Cost by Usage Type' now groups by usage type without region prefix to simplify CloudTrail cost tracking  
 
 # CUDOS - 5.2
