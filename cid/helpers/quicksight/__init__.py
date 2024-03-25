@@ -1317,6 +1317,13 @@ class QuickSight(CidBase):
             'Name': definition.get('name'),
             'ValidationStrategy': {'Mode': 'LENIENT'},
         }
+        theme = definition.get('theme')
+        if theme:
+            if not theme.startswith('arn:'):
+                theme_arn = 'arn:aws:quicksight::aws:theme/' + theme
+            else:
+                raise NotImplementedError('Only standard themes are supported now.')
+            create_parameters['ThemeArn'] = theme_arn
 
         if definition.get('sourceTemplate'):
             dataset_references = [
