@@ -70,6 +70,16 @@ def choose_analysis(qs):
     return choices[choice]['AnalysisId']
 
 
+def get_theme(analysis):
+    theme_arn = analysis.get('ThemeArn')
+    if not theme_arn:
+        return None
+    if theme_arn.startswith('arn:aws:quicksight::aws:theme/'):
+        return theme_arn.split('/')[-1]
+    logger.warning(f'Theme {theme_arn} is not standard and is not supported yet. Theme will be ignored.')
+    return None
+
+
 def export_analysis(qs, athena, glue):
     """ Export analysis to yaml resource File
     """
@@ -97,6 +107,7 @@ def export_analysis(qs, athena, glue):
     resources['datasets'] = {}
     resources['crawlers'] = {}
 
+    theme_id = get_theme(analysis)
 
     cur_helper = CUR(athena=athena, glue=glue)
 
@@ -314,6 +325,8 @@ def export_analysis(qs, athena, glue):
     dashboard_resource['name'] = analysis['Name']
     dashboard_resource['dashboardId'] = dashboard_id
     dashboard_resource['category'] = get_parameters().get('category', 'Custom')
+    if theme_id:
+         dashboard_resource['theme'] = theme_id
 
     dashboard_export_method = None
     if get_parameters().get('template-id'):
