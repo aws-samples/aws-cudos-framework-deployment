@@ -1311,7 +1311,6 @@ class Cid():
             quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].RoleName"))
             #quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
             # TODO: filter only roles with Athena and S3 policies
-            print(quicksight_trusted_roles)
             cid_role_name = 'CidCmdQuickSightDataSourceRole'
             choices = quicksight_trusted_roles
             default = None
