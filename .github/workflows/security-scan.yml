@@ -45,7 +45,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install cfn-lint
         run: |
           pip install pylint
@@ -113,7 +113,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -139,10 +139,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install checkov
         run: |
-          pip install checkov
+          pip install -U schema checkov
       - name: Checkov scan
         run: |
           checkov --directory  ./terraform-modules
