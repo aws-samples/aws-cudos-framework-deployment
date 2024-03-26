@@ -1312,7 +1312,7 @@ class Cid():
             #quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
             # TODO: filter only roles with Athena and S3 policies
             print(quicksight_trusted_roles)
-            cid_role_name = 'CidQuickSightDataSourceRole'
+            cid_role_name = 'CidCmdQuickSightDataSourceRole'
             choices = quicksight_trusted_roles
             default = None
             if cid_role_name not in choices:
@@ -1791,8 +1791,8 @@ class Cid():
 
         for dashboard in list(self.qs.dashboards.values()):
             self.delete(dashboard.id)
-        self.iam.ensure_role_does_not_exist('CidQuickSightDataSourceRole')
-        self.iam.ensure_role_does_not_exist('CidCurCrawlerRole')
+        self.iam.ensure_role_does_not_exist('CidCmdQuickSightDataSourceRole')
+        self.iam.ensure_role_does_not_exist('CidCmdCurCrawlerRole')
         self.qs.delete_data_source('CID-CMD-Athena')
 
     @command
