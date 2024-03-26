@@ -1787,8 +1787,7 @@ class Cid():
 
     @command
     def teardown(self, **kwargs):
-        """Create account mapping Athena views"""
-
+        """remove all assets created by cid"""
         for dashboard in list(self.qs.dashboards.values()):
             self.delete(dashboard.id)
         self.iam.ensure_role_does_not_exist('CidCmdQuickSightDataSourceRole')
