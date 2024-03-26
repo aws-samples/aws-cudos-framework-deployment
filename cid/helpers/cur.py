@@ -4,7 +4,6 @@ import json
 import logging
 
 from cid.base import CidBase
-from cid.helpers import Athena, Glue
 from cid.utils import get_parameter, get_parameters
 from cid.exceptions import CidCritical
 
@@ -55,36 +54,11 @@ class CUR(CidBase):
         'savings_plan_offering_type',
         'savings_plan_payment_option'
     ]
-    _table_name = None
     _metadata = None
-    _clients = {}
 
-
-    @property
-    def athena(self) -> Athena:
-        """ Get Athena Client """
-        if 'athena' not in self._clients:
-            self._clients['athena'] =  Athena(self.session)
-        return self._clients['athena']
-
-    @athena.setter
-    def athena(self, client) -> Athena:
-        """ Set Athena Client """
-        self._clients['athena'] = client
-        return self._clients['athena']
-
-    @property
-    def glue(self) -> Glue:
-        """ Get Glue Client """
-        if 'glue' not in self._clients:
-            self._clients['glue'] =  Glue(self.session)
-        return self._clients['glue']
-
-    @glue.setter
-    def glue(self, client) -> Glue:
-        """ Set Glue client """
-        self._clients['glue'] = client
-        return self._clients['glue']
+    def __init__(self, athena, glue):
+        self.athena = athena
+        self.glue = glue
 
     @property
     def table_name(self) -> str:
@@ -159,9 +133,9 @@ class CUR(CidBase):
         try:
             self.athena.query(f'ALTER TABLE {self.table_name} ADD COLUMNS ({column} {column_type})')
         except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
-            raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it.') from exc
+            raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
         self._metadata = self.athena.get_table_metadata(self.table_name) # refresh table metadata
-        logger.critical(f"Column '{column}' was added to CUR ({self.table_name}).")
+        logger.critical(f"Column '{column}' was added to CUR ({self.table_name}). Please make sure crawler do not override that columns. Crawler='{crawler_name}'")
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
         """ return True if table metadata fits CUR definition. """
@@ -186,19 +160,19 @@ class CUR(CidBase):
             return self._metadata
 
         if get_parameters().get('cur-table-name'):
-            self._table_name = get_parameters().get('cur-table-name')
+            table_name = get_parameters().get('cur-table-name')
             try:
-                self._metadata = self.athena.get_table_metadata(self._table_name)
+                self._metadata = self.athena.get_table_metadata(table_name)
             except self.athena.client.exceptions.ResourceNotFoundException as exc:
-                raise CidCritical('Provided cur-table-name "{self._table_name}" is not found. Please make sure the table exists.') from exc
+                raise CidCritical(f'Provided cur-table-name "{table_name}" is not found. Please make sure the table exists.') from exc
             res, message = self.table_is_cur(table=self._metadata, return_reason=True)
             if not res:
-                raise CidCritical(f'Table {self._table_name} does not look like CUR. {message}')
+                raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
         else:
             # Look all tables and filter ones with CUR fields
             all_tables = self.athena.list_table_metadata()
             if not all_tables:
-                raise CidCritical(
+                logger.warning(
                     f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}.'
                     f' (Hint: If you see tables in this Database, please check AWS Lake Formation permissions)'
                 )
@@ -206,17 +180,17 @@ class CUR(CidBase):
 
             if not cur_tables:
                 raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.cur_minimal_required_columns}.')
-            if len(cur_tables) == 1:
-                self._metadata = cur_tables[0]
-                self._table_name = self._metadata.get('Name')
-                logger.info('1 CUR table found: %s', self._table_name)
-            elif len(cur_tables) > 1:
-                self._table_name =  get_parameter(
-                    param_name='cur-table-name',
-                    message="Multiple CUR tables found, please select one",
-                    choices=sorted([v.get('Name') for v in cur_tables], reverse=True),
-                )
-                self._metadata = self.athena.get_table_metadata(self._table_name)
+
+            choices = sorted([tab.get('Name') for tab in cur_tables], reverse=True)
+
+            answer =  get_parameter(
+                param_name='cur-table-name',
+                message="Please select CUR",
+                choices=choices + ['<CREATE CUR TABLE AND CRAWLER>'],
+            )
+            if answer == '<CREATE CUR TABLE AND CRAWLER>':
+                raise CidCritical('CUR creation was requested') # to be captured in common.py
+            self._metadata = self.athena.get_table_metadata(answer)
         return self._metadata
 
     @property

@@ -3,5 +3,6 @@ Click>=8.0
 PyYAML
 requests
 six>=1.15
+tqdm
 tzlocal>=4.0
 questionary>=1.10
