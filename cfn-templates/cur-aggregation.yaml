@@ -118,6 +118,10 @@ Resources:
         rules_to_suppress:
           - id: 'W35'
             reason: "Data buckets would generate too much logs"
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045 # Need to use AccessControl for replication
 
   DestinationS3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
@@ -261,6 +265,10 @@ Resources:
         rules_to_suppress:
           - id: 'W35'
             reason: "Data buckets would generate too much logs"
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045 # Need to use AccessControl for replication
 
   SourceS3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
