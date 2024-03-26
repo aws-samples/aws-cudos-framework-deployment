@@ -142,7 +142,7 @@ jobs:
           python-version: '3.11'
       - name: Install checkov
         run: |
-          pip install checkov schema
+          pip install -U schema checkov
       - name: Checkov scan
         run: |
           checkov --directory  ./terraform-modules
