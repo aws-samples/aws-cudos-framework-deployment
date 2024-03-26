@@ -307,7 +307,7 @@ class IAM(CidBase):
 
         if need_a_sleep:
             # Some times the role cannot be assumed without this delay after creation
-            for _ in tqdm(range(20), desc=f'Waiting for Role {role_name}', leave=False):
+            for _ in tqdm(range(10), desc=f'Waiting for Role {role_name}', leave=False):
                 time.sleep(1)
 
         return role_name

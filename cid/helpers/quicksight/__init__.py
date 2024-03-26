@@ -8,7 +8,6 @@ from string import Template
 from typing import Dict, List, Union
 from pkg_resources import resource_string
 
-import click
 from tqdm import tqdm
 
 from cid.base import CidBase
@@ -583,7 +582,7 @@ class QuickSight(CidBase):
             # Discover found dashboards
             dashboard_name = dashboard.get('Name')
             dashboard_id = dashboard.get('DashboardId')
-            bar.set_description(f'Discovering Dashboards {dashboard_name:>10}', refresh=True)
+            bar.set_description(f'Discovering {dashboard_name[:10]:<10}', refresh=True)
             logger.info(f'Discovering "{dashboard_name}"')
             self.discover_dashboard(dashboard_id)
 
