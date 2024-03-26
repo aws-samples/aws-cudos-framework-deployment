@@ -1380,7 +1380,7 @@ class Cid():
                 athena_datasource = Datasource(raw={
                     'AthenaParameters':{},
                     "Id": datasource_id,
-                    "Arn": f"arn:aws:quicksight:{self.base.session.region_name}:{self.base.account_id}:datasource/{datasource_id}",
+                    "Arn": f"arn:{self.base.partition}:quicksight:{self.base.session.region_name}:{self.base.account_id}:datasource/{datasource_id}",
                 })
             except Exception as exc:
                 raise CidCritical(
