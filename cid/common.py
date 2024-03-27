@@ -1322,7 +1322,7 @@ class Cid():
             choice = get_parameter(
                 'quicksight-datasource-role',
                 message='Please choose a QuickSight role. It must have access to Athena',
-                choices=['<USE DEFAULT QS ROLE (You will need to login to QuickSight and configure S3 and Athena access there)>'] + choices,
+                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight Security and Permissions management and configure S3 and Athena access there)>'] + choices,
                 default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
