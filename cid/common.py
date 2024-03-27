@@ -8,11 +8,7 @@ from pathlib import Path
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
-
-if sys.version_info < (3, 8):
-    from importlib_metadata import entry_points
-else:
-    from importlib.metadata import entry_points
+from importlib.metadata import entry_points
 
 import yaml
 import click
