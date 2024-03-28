@@ -208,6 +208,14 @@ Parameters:
     Default: "environment"
     MinLength: 1 # cid cmd do not accept empty parameters
     AllowedPattern: "[a-zA-Z0-9_]*"
+  PermissionsBoundary:
+    Type: String
+    Default: ''
+    Description: Define Permission Boundary for Roles if required by SCP
+  RolePath:
+    Type: String
+    Default: '/'
+    Description: Path for roles where PermissionBoundaries can limit location
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -279,7 +287,7 @@ Resources:
     Type: AWS::IAM::Role
     Condition: NeedRefreshDatasets
     Properties:
-      Path: /
+      Path: !Ref RolePath
       RoleName: !Sub 'CidSpiceRefreshExecutionRole${Suffix}'
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -290,6 +298,9 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
+      PermissionsBoundary: !Ref PermissionsBoundary
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: !Sub 'CidSpiceRefreshExecutionRole${Suffix}'
           PolicyDocument:
@@ -659,7 +670,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      Path: /
+      Path: !Ref RolePath
       Policies:
         - PolicyName: root
           PolicyDocument:
@@ -668,6 +679,7 @@ Resources:
               - Effect: Allow
                 Action: quicksight:DescribeUser
                 Resource: !Sub 'arn:${AWS::Partition}:quicksight:*:${AWS::AccountId}:user/default/${QuickSightUser}' # region=* as at this moment we do not know the Identity region where QS stores users
+      PermissionsBoundary: !Ref PermissionsBoundary
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
@@ -754,7 +766,8 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      Path: /
+      Path: !Ref RolePath
+      PermissionsBoundary: !Ref PermissionsBoundary
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   CustomResourceProcessPath:
@@ -1025,7 +1038,8 @@ Resources:
                 - glue.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Path: /
+      Path: !Ref RolePath
+      PermissionsBoundary: !Ref PermissionsBoundary
       ManagedPolicyArns:
         - Fn::Sub: 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
       Policies:
@@ -1084,8 +1098,9 @@ Resources:
                 - quicksight.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Path: /
+      Path: !Ref RolePath
       RoleName: !Sub '${QuickSightDataSourceRoleName}${Suffix}'
+      PermissionsBoundary: !Ref PermissionsBoundary
       Policies:
         - PolicyName: AthenaAccess
           PolicyDocument:
@@ -1223,7 +1238,7 @@ Resources:
   CidExecRole:
     Type: AWS::IAM::Role
     Properties:
-      Path: /
+      Path: !Ref RolePath
       RoleName: !Sub 'CidExecRole${Suffix}'
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -1234,6 +1249,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
+      PermissionsBoundary: !Ref PermissionsBoundary
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
