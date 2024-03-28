@@ -1,5 +1,5 @@
 dashboards:
-  RDS EXTENDED SUPPORT COST PROJECTION:
+  EXTENDED SUPPORT COST PROJECTION:
     dependsOn:
       datasets:
       - rds_extended_support_view
