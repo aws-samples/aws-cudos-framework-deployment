@@ -8,13 +8,8 @@ from pathlib import Path
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
-if sys.version_info < (3, 8):
-    from importlib_metadata import entry_points
-    from functools import lru_cache
-    cached_property = lambda x: property(lru_cache()(x))
-else:
-    from importlib.metadata import entry_points
-    from functools import cached_property #since python 3.8
+from importlib.metadata import entry_points
+from functools import cached_property
 
 import yaml
 import click

@@ -1,11 +1,11 @@
 dashboards:
-  RDS EXTENDED SUPPORT COST PROJECTION V1.0.0:
+  EXTENDED SUPPORT COST PROJECTION:
     dependsOn:
       datasets:
       - rds_extended_support_view
-    name: RDS Extended Support Cost Projection v1.0.0
-    dashboardId: rds-extended-support-cost-projection
-    category: Custom
+    name: Extended Support Cost Projection
+    dashboardId: extended-support-cost-projection
+    category: Advanced
     data: |-
       AnalysisDefaults:
         DefaultNewSheetConfiguration:
