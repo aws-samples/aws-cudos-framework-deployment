@@ -1,0 +1,89 @@
+DatabaseName: "${athena_database_name}"
+TableInput:
+  Name: "${athenaTableName}"
+  Owner: owner
+  Retention: 0
+  TableType: EXTERNAL_TABLE
+  Parameters:
+    compressionType: none
+    classification: parquet
+    UPDATED_BY_CRAWLER: CidCurCrawler # Hard coded Crawler Name
+  StorageDescriptor:
+    BucketColumns: []
+    Compressed: false
+    Location: "${location}"
+    NumberOfBuckets: -1
+    InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
+    OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
+    SerdeInfo:
+      Parameters:
+        serialization.format: '1'
+      SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
+    StoredAsSubDirectories: false
+    Columns: # All fields required for CID
+      - {"Name": "bill_bill_type", "Type": "string" }
+      - {"Name": "bill_billing_entity", "Type": "string" }
+      - {"Name": "bill_billing_period_end_date", "Type": "timestamp" }
+      - {"Name": "bill_billing_period_start_date", "Type": "timestamp" }
+      - {"Name": "bill_invoice_id", "Type": "string" }
+      - {"Name": "bill_payer_account_id", "Type": "string" }
+      - {"Name": "identity_line_item_id", "Type": "string" }
+      - {"Name": "identity_time_interval", "Type": "string" }
+      - {"Name": "line_item_availability_zone", "Type": "string" }
+      - {"Name": "line_item_legal_entity", "Type": "string" }
+      - {"Name": "line_item_line_item_description", "Type": "string" }
+      - {"Name": "line_item_line_item_type", "Type": "string" }
+      - {"Name": "line_item_operation", "Type": "string" }
+      - {"Name": "line_item_product_code", "Type": "string" }
+      - {"Name": "line_item_resource_id", "Type": "string" }
+      - {"Name": "line_item_unblended_cost", "Type": "double" }
+      - {"Name": "line_item_usage_account_id", "Type": "string" }
+      - {"Name": "line_item_usage_amount", "Type": "double" }
+      - {"Name": "line_item_usage_end_date", "Type": "timestamp" }
+      - {"Name": "line_item_usage_start_date", "Type": "timestamp" }
+      - {"Name": "line_item_usage_type", "Type": "string" }
+      - {"Name": "pricing_lease_contract_length", "Type": "string" }
+      - {"Name": "pricing_offering_class", "Type": "string" }
+      - {"Name": "pricing_public_on_demand_cost", "Type": "double" }
+      - {"Name": "pricing_purchase_option", "Type": "string" }
+      - {"Name": "pricing_term", "Type": "string" }
+      - {"Name": "pricing_unit", "Type": "string" }
+      - {"Name": "product_cache_engine", "Type": "string" }
+      - {"Name": "product_current_generation", "Type": "string" }
+      - {"Name": "product_database_engine", "Type": "string" }
+      - {"Name": "product_deployment_option", "Type": "string" }
+      - {"Name": "product_from_location", "Type": "string" }
+      - {"Name": "product_group", "Type": "string" }
+      - {"Name": "product_instance_type", "Type": "string" }
+      - {"Name": "product_instance_type_family", "Type": "string" }
+      - {"Name": "product_license_model", "Type": "string" }
+      - {"Name": "product_operating_system", "Type": "string" }
+      - {"Name": "product_physical_processor", "Type": "string" }
+      - {"Name": "product_processor_features", "Type": "string" }
+      - {"Name": "product_product_family", "Type": "string" }
+      - {"Name": "product_product_name", "Type": "string" }
+      - {"Name": "product_region", "Type": "string" }
+      - {"Name": "product_servicecode", "Type": "string" }
+      - {"Name": "product_storage", "Type": "string" }
+      - {"Name": "product_tenancy", "Type": "string" }
+      - {"Name": "product_to_location", "Type": "string" }
+      - {"Name": "product_volume_api_name", "Type": "string" }
+      - {"Name": "product_volume_type", "Type": "string" }
+      - {"Name": "reservation_amortized_upfront_fee_for_billing_period", "Type": "double" }
+      - {"Name": "reservation_effective_cost", "Type": "double" }
+      - {"Name": "reservation_end_time", "Type": "string" }
+      - {"Name": "reservation_reservation_a_r_n", "Type": "string" }
+      - {"Name": "reservation_start_time", "Type": "string" }
+      - {"Name": "reservation_unused_amortized_upfront_fee_for_billing_period", "Type": "double" }
+      - {"Name": "reservation_unused_recurring_fee", "Type": "double" }
+      - {"Name": "savings_plan_amortized_upfront_commitment_for_billing_period", "Type": "double" }
+      - {"Name": "savings_plan_end_time", "Type": "string" }
+      - {"Name": "savings_plan_offering_type", "Type": "string" }
+      - {"Name": "savings_plan_payment_option", "Type": "string" }
+      - {"Name": "savings_plan_purchase_term", "Type": "string" }
+      - {"Name": "savings_plan_savings_plan_a_r_n", "Type": "string" }
+      - {"Name": "savings_plan_savings_plan_effective_cost", "Type": "double" }
+      - {"Name": "savings_plan_start_time", "Type": "string" }
+      - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
+      - {"Name": "savings_plan_used_commitment", "Type": "double" }
+  PartitionKeys: ${partitions} # can be a list

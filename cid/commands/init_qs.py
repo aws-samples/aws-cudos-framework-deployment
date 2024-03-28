@@ -24,27 +24,27 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
         self.cid = cid
 
     def execute(self, *args, **kwargs):
-        """Execute the initilization"""
+        """Execute the initialization"""
         self._create_quicksight_enterprise_subscription()
 
     def _create_quicksight_enterprise_subscription(self):
         """Enable QuickSight Enterprise if not enabled already"""
-        cid_print('Analysing QuickSight Status')
+        cid_print('Analyzing QuickSight Status')
         if self.cid.qs.edition(fresh=True) in ('ENTERPRISE', 'ENTERPRISE_AND_Q'):
             cid_print(f'QuickSight Edition is {self.cid.qs.edition()}')
             return
 
         cid_print(
-            '<BOLD><RED>IMPORTANT<END>: <BOLD>Amazion QuickSight Enterprise Edition is required for Cost Intelligence Dashboard. '
-            'This will lead to costs in your AWS account (https://aws.amazon.com/quicksight/pricing/).<END>'
+            '<BOLD><RED>IMPORTANT<END>: <BOLD>Amazon QuickSight Enterprise Edition is required for Cloud Intelligence Dashboards. '
+            'Enabling Amazon QuickSight Enterprise Edition will incur associated service charges. Make sure you aware about them following QuickSight pricing page (https://aws.amazon.com/quicksight/pricing/) and acknowledge by confirming enabling it. Alternatively you can enable QuickSight Enterprise Edition in the AWS console (https://docs.aws.amazon.com/quicksight/latest/user/signing-up.html) and run this command again.<END>'
         )
 
         if not self.cid.all_yes and not get_yesno_parameter(
                 param_name='enable-quicksight-enterprise',
-                message='Please, confirm enabling of Amazion QuickSight Enterprise',
+                message='Please, confirm enabling of Amazon QuickSight Enterprise',
                 default='no'
             ):
-            cid_print('\tInitalization cancelled')
+            cid_print('\tInitialization cancelled')
             return
 
         for counter in range(MAX_ITERATIONS):
@@ -74,7 +74,7 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
         cid_print(f'\tQuickSight Edition is {self.cid.qs.edition()}.')
 
     def _get_account_name_for_quicksight(self):
-        """Get the account name for quicksight"""        
+        """Get the account name for quicksight"""
         for _ in range(MAX_ITERATIONS):
             account_name = get_parameter(
                 'account-name',

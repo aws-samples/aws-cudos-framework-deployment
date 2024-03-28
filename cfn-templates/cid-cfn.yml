@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v0.2.47
+Description: Deployment of Cloud Intelligence Dashboards v0.3.0
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -324,7 +324,7 @@ Resources:
       FunctionName:  !Sub 'CidSpiceRefreshLambda${Suffix}'
       Role: !GetAtt SpiceRefreshExecutionRole.Arn
       Description: 'Refresh QuickSight DataSets for CID'
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -481,7 +481,7 @@ Resources:
       FunctionName: !Sub CidInitialSetup-DoNotRun${Suffix}
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "CID legacy setup"
-      Runtime: python3.10
+      Runtime: python3.11
       Handler: 'index.lambda_handler'
       Code:
         ZipFile: |
@@ -519,7 +519,7 @@ Resources:
       FunctionName: !Sub "CidCustomResourceFunctionInit-DoNotRun${Suffix}"
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 300
@@ -763,7 +763,7 @@ Resources:
       Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
       FunctionName: !Sub "CidCustomResourceProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -1091,7 +1091,8 @@ Resources:
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              - Effect: Allow
+              - Sid: AllowAthenaReads
+                Effect: Allow
                 Action:
                   - lakeformation:GetDataAccess
                   - athena:ListDataCatalogs
@@ -1099,7 +1100,8 @@ Resources:
                   - athena:ListTableMetadata
                 Resource: "*" # required https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-underlying-data.html
                               # Cannot restrict this. See https://docs.aws.amazon.com/athena/latest/ug/datacatalogs-example-policies.html#datacatalog-policy-listing-data-catalogs
-              - Effect: Allow
+              - Sid: AllowGlue
+                Effect: Allow
                 Action:
                   - glue:GetPartition
                   - glue:GetPartitions
@@ -1120,7 +1122,8 @@ Resources:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/optimization_data
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_collection/*
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_collection
-              - Effect: Allow
+              - Sid: AllowAthena
+                Effect: Allow
                 Action:
                   - athena:ListDatabases
                   - athena:ListDataCatalogs
@@ -1132,11 +1135,11 @@ Resources:
                   - athena:ListTableMetadata
                   - athena:GetTableMetadata
                 Resource:
+                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
                   - Fn::If:
                       - NeedDatabase
                       - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
                       - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
-                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
                   - Fn::If:
                      - NeedAthenaWorkgroup
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
@@ -1159,6 +1162,34 @@ Resources:
                       - NeedAthenaQueryResultsBucket
                       - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
                       - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
+              - Sid: AllowListBucket
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${ODCPath.Bucket}
+                  - !If
+                      - NeedQuickSightDataSourceRoleAndCUR
+                      - !Sub arn:aws:s3:::${CURPath.Bucket}
+                      - !Ref "AWS::NoValue"
+              - Sid: AllowReadBucket
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource:
+                  - !Sub arn:aws:s3:::${ODCPath.Bucket}/*
+                  - !If
+                      - NeedQuickSightDataSourceRoleAndCUR
+                      - !Sub arn:aws:s3:::${CURPath.Bucket}/*
+                      - !Ref "AWS::NoValue"
+              - !If
+                  - NeedQuickSightDataSourceKMS
+                  - Sid: AllowKmsDecrypt
+                    Effect: Allow
+                    Action:
+                      - 'kms:Decrypt'
+                    Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
+                  - !Ref "AWS::NoValue"
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -1166,61 +1197,6 @@ Resources:
             reason: "Need to use * for Lakeformation and Athena"
           - id: 'W28'
             reason: "Need explicit name to give permissions"
-  QuickSightDataSourceRolePolicyForODCBucket:
-    Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceRole     # We need ODC bucket even if ODC dashboards are not activated  (ex: for account map)
-    Properties:
-      PolicyName: QuickSightDataSource-S3AccessODC
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: CidAllowListBucket
-            Effect: Allow
-            Action: s3:ListBucket
-            Resource: !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}
-          - Sid: CidAllowReadBucket
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-            Resource: !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}/*
-      Roles:
-        - !Ref QuickSightDataSourceRole
-  QuickSightDataSourceRolePolicyForCURBucket:
-    Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceRoleAndCUR
-    Properties:
-      PolicyName: QuickSightDataSource-S3AccessCUR
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: CidAllowListBucket
-            Effect: Allow
-            Action: s3:ListBucket
-            Resource: !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}
-          - Sid: CidAllowReadBucket
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-            Resource: !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}/*
-      Roles:
-        - !Ref QuickSightDataSourceRole
-
-  KmsPolicyForQuickSightDataSourceRole:
-    Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceKMS
-    Properties:
-      PolicyName: QuickSightDataSourceKmsDecryption
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - 'kms:Decrypt'
-            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
-      Roles:
-        - !Ref QuickSightDataSourceRole
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
@@ -1466,7 +1442,7 @@ Resources:
       FunctionName: !Sub 'CidCustomResourceDashboard${Suffix}'
       Description: 'A lambda that manage create delete update of Athena views, QuickSight Datasets and dashboards using CID-CMD tool'
       Role: !GetAtt CidExecRole.Arn
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 2688
       Timeout: 300 # Time of discovery depend on number of dashboards
@@ -1577,9 +1553,11 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: 'cid-resource-lambda-layer/cid-0.2.47.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-0.3.0.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
+        - python3.11
+        - python3.12
 
   CostIntelligenceDashboard:
     Type: Custom::CidDashboard

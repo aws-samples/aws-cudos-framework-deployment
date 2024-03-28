@@ -83,21 +83,28 @@ cid-cmd share
 ```
 
 #### Initialize Amazon QuickSight
-One time action to intialize Amazon QuickSight Enerprise Edition.
+One time action to initialize Amazon QuickSight Enterprise Edition.
 
 ```bash
-cid-cmd initqs
+cid-cmd init-qs
 ```
 
+#### Initialize CUR
+One time action to initialize Athena table and Crawler from s3 with CUR data.
+
+```bash
+cid-cmd init-cur
+```
 
 #### Delete Dashboard and all dependencies unused by other
 Delete Dashboards and all dependencies unused by other CID-managed dashboards.(including QuickSight datasets, Athena views and tables)
 ```bash
 cid-cmd delete
 ```
+
 #### Delete Command Options:
 ```
- --dashboard-id TEXT QuickSight dashboard id 
+ --dashboard-id TEXT QuickSight dashboard id
  --athena-database TEXT Athena database
  ```
 
