@@ -1341,7 +1341,7 @@ class Cid():
                 )
                 cid_print(f'Role {role_name} was updated. https://console.aws.amazon.com/iam/home?#/roles/details/{role_name}')
                 role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
-            elif 'USE DEFAULT QS ROLE' in choice:
+            elif 'USE DEFAULT QuickSight ROLE' in choice:
                 role_arn = None
             else:
                 role_arn = choice
