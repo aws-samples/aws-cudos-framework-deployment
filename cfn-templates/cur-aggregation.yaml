@@ -56,6 +56,11 @@ Parameters:
     Default: ''
     Description: "A comma separated list of all Source accounts that will replicate CUR Data. Ex:  12345678912,98745612312,...."
 
+  PermissionsBoundary:
+    Type: String
+    Default: ''
+    Description: Define Permission Boundary for Roles if required by SCP
+
 Conditions:
   IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref AWS::AccountId]
   IsSourceAccount: !Not [!Condition IsDestinationAccount]
@@ -339,6 +344,7 @@ Resources:
                 - "s3.amazonaws.com"
             Action:
               - "sts:AssumeRole"
+      PermissionsBoundary: !Ref PermissionsBoundary
       Policies:
         - PolicyName: CrossRegionPolicy
           PolicyDocument:
@@ -364,7 +370,7 @@ Resources:
                   Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared/cur/${AWS::AccountId}/*"
 
 ####
-# Local CUR 
+# Local CUR
 ####
 
   ## Deploy CUR natively via CFN resource if we are in us-east-1
@@ -451,6 +457,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
+      PermissionsBoundary: !Ref PermissionsBoundary
       Policies:
         - PolicyName: "ExecutionDefault"
           PolicyDocument:
@@ -593,6 +600,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
+      PermissionsBoundary: !Ref PermissionsBoundary
       Policies:
         - PolicyName: "ExecutionDefault"
           PolicyDocument:
