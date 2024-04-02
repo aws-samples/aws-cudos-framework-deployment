@@ -2,12 +2,13 @@ import re
 import json
 import uuid
 import time
+import datetime
 import logging
 from string import Template
 from typing import Dict, List, Union
 from pkg_resources import resource_string
 
-import click
+from tqdm import tqdm
 
 from cid.base import CidBase
 from cid.helpers import diff, timezone, randtime
@@ -15,7 +16,7 @@ from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
-from cid.utils import get_parameter, get_parameters, exec_env, cid_print, ago
+from cid.utils import get_parameter, get_parameters, exec_env, cid_print, ago, unset_parameter
 from cid.exceptions import CidCritical, CidError
 
 logger = logging.getLogger(__name__)
@@ -163,7 +164,7 @@ class QuickSight(CidBase):
     def ensure_subscription(self) -> None:
         """Ensure that the QuickSight subscription is active"""
         if not self.edition(fresh=True):
-            raise CidCritical('QuickSight is not activated. Plase run `cid-cmd initqs` command, or activate QuickSight from the console.')
+            raise CidCritical('QuickSight is not activated. Please run `cid-cmd initqs` command, or activate QuickSight Enterprise Edition from the console.')
         if self.edition() == 'STANDARD':
             raise CidCritical(f'QuickSight Enterprise edition is required, you have {self.edition}.')
         logger.info(f'QuickSight subscription: {self._subscription_info}')
@@ -452,14 +453,19 @@ class QuickSight(CidBase):
             create_status = self.client.create_data_source(**params)
             logger.debug(f'Data source creation result {create_status}')
             # Wait for the datasource completion
-            while True:
+            for _ in tqdm(range(60), desc='DataSet Creation', leave=False):
                 time.sleep(1)
                 datasource = self.describe_data_source(datasource_id, update=True)
                 logger.debug(f'Waiting for datasource {datasource_id}. current status={datasource.status}')
                 if not datasource.status.endswith('IN_PROGRESS'):
                     break
             if not datasource.is_healthy:
-                logger.error(f'Data source creation failed: {datasource.error_info}')
+                logger.error(f'Data source creation failed: {datasource.error_info}.')
+                if "The QuickSight service role required to access your AWS resources has not been created yet." in str(datasource.error_info):
+                    logger.error(
+                        'Please check that QuickSight has a default role that can access S3 Buckets and Athena https://quicksight.aws.amazon.com/sn/admin?#aws '
+                        'OR provide a custom datasource role as a parameter --quicksight-datasource-role-arn'
+                    )
                 if get_parameter(
                     param_name='quicksight-delete-failed-datasource',
                     message=f'Data source creation failed: {datasource.error_info}. Delete?',
@@ -470,10 +476,24 @@ class QuickSight(CidBase):
                     except self.client.exceptions.AccessDeniedException:
                         logger.info('Access denied deleting Athena datasource')
                 return None
+            for _ in tqdm(range(5), desc='Waiting for Data Source', leave=False):
+                time.sleep(1)
             return datasource
         except self.client.exceptions.ResourceExistsException:
-            logger.error('Data source already exists')
-            return self.describe_data_source(datasource_id, update=True)
+            datasource = self.describe_data_source(datasource_id, update=True)
+            logger.error(f'Data source already exists {datasource.raw}')
+            if not datasource.is_healthy:
+                if get_parameter(
+                    param_name='quicksight-delete-failed-datasource',
+                    message=f'Data source creation failed: {datasource.error_info}. Delete?',
+                    choices=['yes', 'no'],
+                ) == 'yes':
+                    try:
+                        self.delete_data_source(datasource.id)
+                        raise CidCritical('Issue on datasource creation. Please retry.')
+                    except self.client.exceptions.AccessDeniedException:
+                        raise CidCritical('Access denied deleting datasource in QS. Please cleanup manually and retry.')
+            return datasource
         except self.client.exceptions.AccessDeniedException as exc:
             logger.info('Access denied creating Athena datasource')
             logger.debug(exc, exc_info=True)
@@ -557,21 +577,14 @@ class QuickSight(CidBase):
         deployed_dashboards=self.list_dashboards()
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
         logger.debug(deployed_dashboards)
-        with click.progressbar(
-            length=len(deployed_dashboards),
-            label='Discovering deployed dashboards...',
-            item_show_func=lambda a: str(a)[:50]
-        ) as bar:
-            for dashboard in deployed_dashboards:
-                # Discover found dashboards
-                dashboard_name = dashboard.get('Name')
-                dashboard_id = dashboard.get('DashboardId')
-                # Update progress bar
-                bar.update(1, f'"{dashboard_name}" ({dashboard_id})')
-                logger.info(f'Discovering "{dashboard_name}" ({dashboard_id})')
-                self.discover_dashboard(dashboard_id)
-                # Update progress bar
-                bar.update(0, 'Complete')
+        bar = tqdm(deployed_dashboards, desc='Discovering Dashboards', leave=False)
+        for dashboard in bar:
+            # Discover found dashboards
+            dashboard_name = dashboard.get('Name')
+            dashboard_id = dashboard.get('DashboardId')
+            bar.set_description(f'Discovering {dashboard_name[:10]:<10}', refresh=True)
+            logger.info(f'Discovering "{dashboard_name}"')
+            self.discover_dashboard(dashboard_id)
 
     def list_dashboards(self) -> list:
         parameters = {
@@ -604,6 +617,10 @@ class QuickSight(CidBase):
             logger.debug(exc, exc_info=True)
             return list()
 
+    def clear_dashboard_selection (self):
+        """ Clears the current dashboard selection. """
+        unset_parameter('dashboard-id')
+
     def select_dashboard(self, force=False) -> str:
         """ Select from a list of discovered dashboards """
         dashboard_id = get_parameters().get('dashboard-id')
@@ -614,8 +631,9 @@ class QuickSight(CidBase):
             return None
         choices = {}
         for dashboard in self.dashboards.values():
-            health = 'healthy' if dashboard.health else 'unhealthy'
-            key = f'{dashboard.name} ({dashboard.arn}, {health}, {dashboard.status})'
+            health = '' if dashboard.health else ' UNHEALTHY'
+            status = '' if dashboard.status == 'up to date' else ' ' + dashboard.status.upper()
+            key = f'{dashboard.name} ({dashboard.arn.split("/")[-1]}){health}{status}'
             notice = dashboard.definition.get('deprecationNotice', '')
             if notice:
                 key = f'{key} {notice}'
@@ -817,8 +835,12 @@ class QuickSight(CidBase):
             'DataSourceId': datasource_id
         }
         logger.info(f'Deleting DataSource {datasource_id}')
-        result = self.client.delete_data_source(**params)
-        if datasource_id in self._datasources:
+        try:
+            result = self.client.delete_data_source(**params)
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.info(f'Deleting DataSource {datasource_id} not needed as it is does not exist')
+            result = True
+        if datasource_id in (self._datasources or []):
             del self._datasources[datasource_id]
         return result
 
@@ -950,6 +972,29 @@ class QuickSight(CidBase):
             logger.debug(exc, exc_info=True)
             logger.info('No datasets found')
 
+    def refresh_dataset(self, dataset_id):
+        """ Refresh the dataset """
+
+        logger.info(f'Starting refresh for dataset: {dataset_id}')
+        status = 'FAILED'
+        try:
+            response = self.client.describe_data_set(
+                AwsAccountId=self.account_id,
+                DataSetId=dataset_id)
+            mode = response.get('DataSet').get('ImportMode')
+            if mode == 'DIRECT_QUERY':
+                return mode, 'DIRECT'
+            response = self.client.create_ingestion(
+                DataSetId=dataset_id,
+                IngestionId=datetime.datetime.now().strftime("%d%m%y-%H%M%S-%f"),
+                AwsAccountId=self.account_id)
+            status = response.get('IngestionStatus')
+        except self.client.exceptions.AccessDeniedException:
+            logger.error(f'Access denied refreshing dataset: {dataset_id}')
+        except Exception as exc:
+            logger.debug(exc, exc_info=True)
+            raise CidError(f'Unable to list refresh dataset {dataset_id}: {str(exc)}') from exc
+        return mode, status
 
     def describe_data_source(self, id: str, update: bool=False) -> Datasource:
         """ Describes an AWS QuickSight DataSource """
@@ -1288,6 +1333,13 @@ class QuickSight(CidBase):
             'Name': definition.get('name'),
             'ValidationStrategy': {'Mode': 'LENIENT'},
         }
+        theme = definition.get('theme')
+        if theme:
+            if not theme.startswith('arn:'):
+                theme_arn = 'arn:aws:quicksight::aws:theme/' + theme
+            else:
+                raise NotImplementedError('Only standard themes are supported now.')
+            create_parameters['ThemeArn'] = theme_arn
 
         if definition.get('sourceTemplate'):
             dataset_references = [

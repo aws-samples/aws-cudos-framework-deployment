@@ -1,12 +1,13 @@
-'''
-Source Account                    Destination Account
-┌─────────────────────────┐       ┌──────────────────┐
-│  Analysis    Template   │       │  Master Template │
-│  ┌─┬──┬─┐    ┌──────┐   │       │    ┌──────┐      │
-│  │ │┼┼│ ├────►      ├───┼───────┼────►      │      │
-│  └─┴──┴─┘    └──────┘   │       │    └──────┘      │
-│                         │       │                  │
-└─────────────────────────┘       └──────────────────┘
+''' This module analyses Quicksight Analysis and pulls the definitions of dependencies. 
+
+Here are the types of objects that are processed:
+
+    * QuickSight Analysis
+    * QuickSight DataSets
+    * Athena Views
+    * Glue Tables
+    * Glue Crawlers
+
 '''
 import re
 import time
@@ -15,7 +16,7 @@ import logging
 import yaml
 import boto3
 
-from cid.helpers import Dataset, QuickSight, Athena
+from cid.helpers import Dataset, QuickSight, Athena, Glue
 from cid.helpers import CUR
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.exceptions import CidCritical
@@ -69,7 +70,17 @@ def choose_analysis(qs):
     return choices[choice]['AnalysisId']
 
 
-def export_analysis(qs, athena):
+def get_theme(analysis):
+    theme_arn = analysis.get('ThemeArn')
+    if not theme_arn:
+        return None
+    if theme_arn.startswith('arn:aws:quicksight::aws:theme/'):
+        return theme_arn.split('/')[-1]
+    logger.warning(f'Theme {theme_arn} is not standard and is not supported yet. Theme will be ignored.')
+    return None
+
+
+def export_analysis(qs, athena, glue):
     """ Export analysis to yaml resource File
     """
 
@@ -94,9 +105,12 @@ def export_analysis(qs, athena):
     resources = {}
     resources['dashboards'] = {}
     resources['datasets'] = {}
+    resources['crawlers'] = {}
 
+    theme_id = get_theme(analysis)
 
-    cur_helper = CUR(session=athena.session)
+    cur_helper = CUR(athena=athena, glue=glue)
+
     resources_datasets = []
 
     dataset_references = []
@@ -220,8 +234,8 @@ def export_analysis(qs, athena):
                     logger.debug(f'{dep_view_name} skipping as not in the views list')
                 non_cur_dep_views.append(dep_view_name)
         if deps.get('views'):
-             deps['views'] = non_cur_dep_views
-             if not deps['views']:
+            deps['views'] = non_cur_dep_views
+            if not deps['views']:
                 del deps['views']
 
     logger.debug(f'cur_tables = {cur_tables}')
@@ -231,9 +245,47 @@ def export_analysis(qs, athena):
             logger.debug(f'Skipping {key} views - it is a CUR')
             continue
         if isinstance(view_data.get('data'), str):
+            #check if there is dependency on crawler
+            crawler_names = re.findall(r"UPDATED_BY_CRAWLER\W+?'(.+?)''", view_data.get('data'))
+            if crawler_names:
+                crawler_name = crawler_names[0]
+                crawler = {'data': glue.get_crawler(crawler_name)}
+
+                # Post processing
+                for crawler_key in crawler['data'].keys():
+                    if crawler_key not in (
+                        'Name', 'Description', 'Role', 'DatabaseName', 'Targets',
+                        'SchemaChangePolicy', 'RecrawlPolicy', 'Schedule', 'Configuration'
+                        ): # remove all keys that are not needed
+                        crawler['data'].pop(crawler_key, None)
+                if 'Schedule' in crawler['data']['Schedule']:
+                    crawler['data']['Schedule'] = crawler['data']['Schedule']['ScheduleExpression']
+                crawler['data']['Role'] = '${crawler_role_arn}'
+                crawler['data']['DatabaseName'] = "${athena_database_name}"
+                for index, target in enumerate(crawler['data'].get('Targets', [])):
+                    path = target.get('Path')
+                    default = get_parameter(
+                        f'{key}-s3path',
+                        'Please provide default value. (You can use {account_id} variable if needed)',
+                        default=re.sub(r'(\d{12})', '{account_id}', path),
+                        template_variables={'account_id': '{account_id}'},
+                    )
+                    crawler['parameters'] = { #FIXME: path should be the same as for table
+                        's3path': {
+                            'default': default,
+                            'description': f"S3 Path for {key} table",
+                        }
+                    }
+                    crawler['data']['Targets'][index]['Path'] = '${s3path}'
+                crawler_name = key
+                resources['crawlers'][crawler_name] = crawler
+                view_data['crawler'] = crawler_name
+
+
+            # replace location with variables
             locations = re.findall(r"LOCATION\W+?'(s3://.+?)'", view_data.get('data'))
             for location in locations:
-                logger.info(f'Please replace manually location bucket with a parameter: s3://{location}')
+                logger.info(f'Please replace manually location bucket with a parameter: {location}')
                 default = get_parameter(
                     f'{key}-s3path',
                     'Please provide default value. (You can use {account_id} variable if needed)',
@@ -241,12 +293,15 @@ def export_analysis(qs, athena):
                     template_variables={'account_id': '{account_id}'},
                 )
                 view_data['parameters'] = {
-                    f's3path': {
+                    's3path': {
                         'default': default,
                         'description': f"S3 Path for {key} table",
                     }
                 }
                 view_data['data'] = view_data['data'].replace(location, '${s3path}')
+
+            if re.findall(r"PARTITION", view_data.get('data')) and 'crawler' not in view_data:
+                logger.warning(f'The table {key} is partitioned but there no crawler info please make sure partitions are managed some way after install.')
 
         resources['views'][key] = view_data
 
@@ -265,11 +320,13 @@ def export_analysis(qs, athena):
     dashboard_resource['dependsOn'] = {
         # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
         # We can potentially reconsider this and use IDs at some point
-        'datasets': sorted(list(set([dataset_name for dataset_name in datasets] + resources_datasets))) 
+        'datasets': sorted(list(set(datasets + resources_datasets)))
     }
     dashboard_resource['name'] = analysis['Name']
     dashboard_resource['dashboardId'] = dashboard_id
     dashboard_resource['category'] = get_parameters().get('category', 'Custom')
+    if theme_id:
+         dashboard_resource['theme'] = theme_id
 
     dashboard_export_method = None
     if get_parameters().get('template-id'):
@@ -344,7 +401,7 @@ def export_analysis(qs, athena):
             TemplateId=template_id,
             GrantPermissions=[
                 {
-                    "Principal": f'arn:aws:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
+                    "Principal": f'arn:{qs.partition}:iam::{reader_account_id}:root' if reader_account_id != '*' else '*',
                     'Actions': [
                         "quicksight:DescribeTemplate",
                     ]
@@ -363,7 +420,7 @@ def export_analysis(qs, athena):
 
         for dataset in definition.get('DataSetIdentifierDeclarations', []):
             # Hide region and account number of the source account
-            dataset["DataSetArn"] = 'arn:aws:quicksight:::dataset/' + dataset["DataSetArn"].split('/')[-1]
+            dataset["DataSetArn"] = f'arn:{qs.partition}:quicksight:::dataset/' + dataset["DataSetArn"].split('/')[-1]
         dashboard_resource['data'] = yaml.safe_dump(definition)
 
     resources['dashboards'][analysis['Name'].upper()] = dashboard_resource
@@ -382,9 +439,16 @@ def export_analysis(qs, athena):
     cid_print(f'Output: <BOLD>{output}<END>')
 
 
-if __name__ == "__main__": # for testing
+def quick_try():
+    ''' just trying the export
+    '''
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('cid').setLevel(logging.DEBUG)
-    qs = QuickSight(boto3.session.Session(), boto3.client('sts').get_caller_identity())
-    athena = Athena(boto3.session.Session(), boto3.client('sts').get_caller_identity())
-    export_analysis(qs, athena)
+    identity = boto3.client('sts').get_caller_identity()
+    qs = QuickSight(boto3.session.Session(), identity)
+    athena = Athena(boto3.session.Session())
+    glue = Glue(boto3.session.Session())
+    export_analysis(qs, athena, glue)
+
+if __name__ == "__main__": # for testing
+    quick_try()

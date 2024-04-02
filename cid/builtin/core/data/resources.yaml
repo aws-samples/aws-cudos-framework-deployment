@@ -623,6 +623,19 @@ views:
         - aws_accounts
   ta_descriptions:
     File: shared/ta_descriptions.sql
+  cur:
+    type: Glue_Table
+    File: shared/cur.yaml
+    crawler: cur
+    parameters:
+      partitions:
+        type: cur.partitions
+        description: 'comma separated list of CUR partitions ex: ["source_account_id","cur_name_1","cur_name_2","year","month"] ex2: ["year","month"]'
+        default: '[{"Name":"source_account_id","Type":"string"},{"Name":"cur_name_1","Type":"string"},{"Name":"cur_name_2","Type":"string"},{"Name":"year","Type":"string"},{"Name":"month","Type":"string"}]'
+      location:
+        type: cur.location
+        description: 's3 path'
+        default: 's3://cid-{account_id}-shared/cur/'
 
 # Refresh Schedules for QuickSight DataSets
 schedules:
@@ -632,3 +645,45 @@ schedules:
       Interval: DAILY
       TimeOfTheDay: '02:00-05:00'
     RefreshType: FULL_REFRESH
+
+crawlers:
+  cur:
+    data:
+      Name:  'CidCmdCurCrawler'
+      Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
+      Role:  ${crawler_role_arn}
+      DatabaseName: "${athena_database_name}"
+      Targets:
+        S3Targets:
+          - Path: ${location}
+            Exclusions:
+              - '**.json'
+              - '**.yml'
+              - '**.sql'
+              - '**.csv'
+              - '**.csv.metadata'
+              - '**.gz'
+              - '**.zip'
+              - '**/cost_and_usage_data_status/*'
+              - 'aws-programmatic-access-test-object'
+      SchemaChangePolicy:
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      Schedule: cron(0 2 * * ? *)
+      Configuration: |
+        {
+          "Version":1.0,
+          "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+          },
+          "CrawlerOutput":{
+            "Tables":{
+              "AddOrUpdateBehavior":"MergeNewColumns"
+            }
+          }
+        }
+    parameters:
+      s3path:
+        default: 's3://cid-{account_id}-cur/cur/'
+        description: CUR path

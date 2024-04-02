@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v0.2.46
+Description: Deployment of Cloud Intelligence Dashboards v0.3.0
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -38,7 +38,7 @@ Metadata:
           - QuickSightDataSetRefreshSchedule
           - LambdaLayerBucketPrefix
           - DeployCUDOSDashboard
-          - DataBucketsKmsKeyArns
+          - DataBucketsKmsKeysArns
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -82,8 +82,8 @@ Metadata:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
-      DataBucketsKmsKeyArns:
-        default: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
+      DataBucketsKmsKeysArns:
+        default: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
       PrimaryTagName:
         Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
       SecondaryTagName:
@@ -187,10 +187,10 @@ Parameters:
     Type: String
     Description: Existing Glue Data Catalog
     Default: "AwsDataCatalog"
-  DataBucketsKmsKeyArns:
+  DataBucketsKmsKeysArns:
     Type: String
-    Description: "ARNs of KMS Keys for data bucket. Keep empty if data Buckets are not Encrypted with KMS. Also you can set it to '*'."
-    Default: "*"
+    Description: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
+    Default: ""
   LakeFormationEnabled:
     Type: String
     Description: Choose 'yes' if Lake Formation permission model is in place for the account
@@ -247,7 +247,7 @@ Conditions:
       - !Equals [ !Ref CURTableName, "" ]
       - !Condition NeedCUR
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
-  NeedDataBucketsKms: !Equals [ !Ref DataBucketsKmsKeyArns, "" ]
+  NeedDataBucketsKms: !Not [ !Equals [ !Ref DataBucketsKmsKeysArns, "" ] ]
   NeedDataBucketsKmsAndNeedCURTable:
     Fn::And:
       - !Condition NeedDataBucketsKms
@@ -277,9 +277,13 @@ Conditions:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
       - !Condition NeedCUR
+  NeedQuickSightDataSourceKMS:
+    Fn::And:
+      - !Condition NeedQuickSightDataSourceRole
+      - !Condition NeedDataBucketsKms
 
 Resources:
-  SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets
+  SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets not used by default
     Type: AWS::IAM::Role
     Condition: NeedRefreshDatasets
     Properties:
@@ -314,6 +318,13 @@ Resources:
                 Action: quicksight:ListIngestions
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/ingestion/*'
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W28'
+            reason: "Need explicit name to give permissions"
 
   # Currently QS has no api for managing updates, so we need to set up a scheduled lambda.
   # Once QS will provide the API for scheduling this will be removed.
@@ -324,7 +335,7 @@ Resources:
       FunctionName:  !Sub 'CidSpiceRefreshLambda${Suffix}'
       Role: !GetAtt SpiceRefreshExecutionRole.Arn
       Description: 'Refresh QuickSight DataSets for CID'
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -400,6 +411,13 @@ Resources:
                           IngestionId=datetime.now().strftime("%d%m%y-%H%M%S-%f"),
                       )
                       print('DEBUG: response=', res)
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W89'
+            reason: "No need to access to VPC resources"
+          - id: 'W92'
+            reason: "No need for reserved concurrency"
 
   SpiceRefreshRule:
     Type: AWS::Events::Rule
@@ -447,6 +465,12 @@ Resources:
         config:
           ignore_checks:
             - W3045 #Consider using AWS::S3::BucketPolicy instead of AccessControl; standard Athena results setup
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W35'
+            reason: "Data buckets would generate too much logs"
+          - id: 'W51'
+            reason: "No policy needed"
 
   MyAthenaWorkGroup:
     Type: AWS::Athena::WorkGroup
@@ -468,7 +492,7 @@ Resources:
       FunctionName: !Sub CidInitialSetup-DoNotRun${Suffix}
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "CID legacy setup"
-      Runtime: python3.10
+      Runtime: python3.11
       Handler: 'index.lambda_handler'
       Code:
         ZipFile: |
@@ -492,6 +516,13 @@ Resources:
                   print(f"Status code: {response}")
               except Exception as exc:
                   print("Failed sending PUT to CFN: " + str(exc))
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W89'
+            reason: "No need to access to VPC resources"
+          - id: 'W92'
+            reason: "No need for reserved concurrency"
 
   CustomResourceFunctionInit:
     Type: AWS::Lambda::Function
@@ -499,7 +530,7 @@ Resources:
       FunctionName: !Sub "CidCustomResourceFunctionInit-DoNotRun${Suffix}"
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
       Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 300
@@ -619,6 +650,13 @@ Resources:
           WORKGROUP: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
           CRAWLER: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
           QUICKSIGHT_USER: !Ref QuickSightUser
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W89'
+            reason: "No need to access to VPC resources"
+          - id: 'W92'
+            reason: "No need for reserved concurrency"
 
   InitLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -643,7 +681,7 @@ Resources:
                 Resource: !Sub 'arn:${AWS::Partition}:quicksight:*:${AWS::AccountId}:user/default/${QuickSightUser}' # region=* as at this moment we do not know the Identity region where QS stores users
       PermissionsBoundary: !Ref PermissionsBoundary
       ManagedPolicyArns:
-        - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
   InitLambdaExecutionRoleWorkGroupPolicy:
     Type: AWS::IAM::Policy
@@ -731,14 +769,14 @@ Resources:
       Path: !Ref RolePath
       PermissionsBoundary: !Ref PermissionsBoundary
       ManagedPolicyArns:
-        - !Sub arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   CustomResourceProcessPath:
     Type: AWS::Lambda::Function
     Properties:
       Role: !GetAtt 'ProcessPathLambdaExecutionRole.Arn'
       FunctionName: !Sub "CidCustomResourceProcessPath-DoNotRun${Suffix}"
       Description: "Do what CFN cannot: process string of path"
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
       Timeout: 60
@@ -786,7 +824,7 @@ Resources:
                           pass # Do not fail delete
                       else:
                           raise Exception(f'CUR BucketPath={parts[0]} format is not recognized. It must be s3://(bucket)/cur or s3://(bucket)/(curprefix)/(curname)/(curname) ')
-                      data['Partitions'] = [{"Name": p, "Type": "string"} for p in data['Partitions']]
+                      data['Partitions'] = [{"Name": p, "Type": "string"} for p in data.get('Partitions', [])]
                   data['Path'] = '/'.join(parts[1:])
                   data['Folder'] = parts[-1] if len(parts) > 1 else ''
                   data['Folder'] = data['Folder'].replace('-', '_').lower() # this is used for a Glue table name that will be managed by crawler
@@ -820,6 +858,13 @@ Resources:
                   if e.response['Error']['Code'] == '404':
                       return False
               return True
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W89'
+            reason: "No need to access to VPC resources"
+          - id: 'W92'
+            reason: "No need for reserved concurrency"
 
   CURPath:
     Type: Custom::CustomResourceProcessPath
@@ -1036,7 +1081,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref CidCURCrawlerRole
 
@@ -1061,7 +1106,8 @@ Resources:
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              - Effect: Allow
+              - Sid: AllowAthenaReads
+                Effect: Allow
                 Action:
                   - lakeformation:GetDataAccess
                   - athena:ListDataCatalogs
@@ -1069,7 +1115,8 @@ Resources:
                   - athena:ListTableMetadata
                 Resource: "*" # required https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-underlying-data.html
                               # Cannot restrict this. See https://docs.aws.amazon.com/athena/latest/ug/datacatalogs-example-policies.html#datacatalog-policy-listing-data-catalogs
-              - Effect: Allow
+              - Sid: AllowGlue
+                Effect: Allow
                 Action:
                   - glue:GetPartition
                   - glue:GetPartitions
@@ -1090,7 +1137,8 @@ Resources:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/optimization_data
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_collection/*
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_collection
-              - Effect: Allow
+              - Sid: AllowAthena
+                Effect: Allow
                 Action:
                   - athena:ListDatabases
                   - athena:ListDataCatalogs
@@ -1102,11 +1150,11 @@ Resources:
                   - athena:ListTableMetadata
                   - athena:GetTableMetadata
                 Resource:
+                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
                   - Fn::If:
                       - NeedDatabase
                       - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
                       - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
-                  - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
                   - Fn::If:
                      - NeedAthenaWorkgroup
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
@@ -1129,55 +1177,41 @@ Resources:
                       - NeedAthenaQueryResultsBucket
                       - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
                       - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
-
-  QuickSightDataSourceRolePolicyForODCBucket:
-    Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceRole     # We need ODC bucket even if ODC dashboards are not activated  (ex: for account map)
-    Properties:
-      PolicyName: QuickSightDataSource-S3AccessODC
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
-            Effect: Allow
-            Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
-          - Sid: CidAllowListBucket
-            Effect: Allow
-            Action: s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${ODCPath.Bucket}
-          - Sid: CidAllowReadBucket
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-            Resource: !Sub arn:aws:s3:::${ODCPath.Bucket}/*
-      Roles:
-        - !Ref QuickSightDataSourceRole
-  QuickSightDataSourceRolePolicyForCURBucket:
-    Type: AWS::IAM::Policy
-    Condition: NeedQuickSightDataSourceRoleAndCUR
-    Properties:
-      PolicyName: QuickSightDataSource-S3AccessCUR
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: CidAllowDecryptDataBucketsKmsKeyArns
-            Effect: Allow
-            Action: 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
-          - Sid: CidAllowListBucket
-            Effect: Allow
-            Action: s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${CURPath.Bucket}
-          - Sid: CidAllowReadBucket
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-            Resource: !Sub arn:aws:s3:::${CURPath.Bucket}/*
-      Roles:
-        - !Ref QuickSightDataSourceRole
+              - Sid: AllowListBucket
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${ODCPath.Bucket}
+                  - !If
+                      - NeedQuickSightDataSourceRoleAndCUR
+                      - !Sub arn:aws:s3:::${CURPath.Bucket}
+                      - !Ref "AWS::NoValue"
+              - Sid: AllowReadBucket
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource:
+                  - !Sub arn:aws:s3:::${ODCPath.Bucket}/*
+                  - !If
+                      - NeedQuickSightDataSourceRoleAndCUR
+                      - !Sub arn:aws:s3:::${CURPath.Bucket}/*
+                      - !Ref "AWS::NoValue"
+              - !If
+                  - NeedQuickSightDataSourceKMS
+                  - Sid: AllowKmsDecrypt
+                    Effect: Allow
+                    Action:
+                      - 'kms:Decrypt'
+                    Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
+                  - !Ref "AWS::NoValue"
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W11'
+            reason: "Need to use * for Lakeformation and Athena"
+          - id: 'W28'
+            reason: "Need explicit name to give permissions"
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
@@ -1190,7 +1224,7 @@ Resources:
       DataSourceParameters:
         AthenaParameters:
           WorkGroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-          RoleArn: !If [ UseQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRoleName}", !Ref AWS::NoValue ]
+          RoleArn: !If [ UseQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRoleName}", !Ref AWS::NoValue ]
       Permissions:
         - Actions:
             - 'quicksight:DescribeDataSource'
@@ -1299,7 +1333,7 @@ Resources:
                 - quicksight:DescribeRefreshSchedule
                 - quicksight:ListRefreshSchedules
                 Resource:
-                - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic as well as schedule ids
+                - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic as well as schedule ids
               - Effect: Allow
                 Action:
                   - athena:StartQueryExecution
@@ -1313,7 +1347,13 @@ Resources:
                   - athena:ListWorkGroups
                   - athena:GetDatabase
                 Resource: '*'  # This is needed to allow Autodetect in CID-CMD
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W11'
+            reason: "Lambda can install various QS and Athena resources. Cannot restrict."
+          - id: 'W28'
+            reason: "Need explicit name to give permissions"
 
   DataLakeSettingsCidExecRolePerm:
     Type: AWS::LakeFormation::Permissions
@@ -1401,14 +1441,14 @@ Resources:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKms
     Properties:
-      PolicyName: AwsCurCrawlerKmsDecryption
+      PolicyName: CidExecKmsDecryption
       PolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: !Split [',', !Ref DataBucketsKmsKeyArns]
+            Resource: !Split [ ',', !Ref DataBucketsKmsKeysArns ]
       Roles:
         - !Ref CidExecRole
 
@@ -1418,7 +1458,7 @@ Resources:
       FunctionName: !Sub 'CidCustomResourceDashboard${Suffix}'
       Description: 'A lambda that manage create delete update of Athena views, QuickSight Datasets and dashboards using CID-CMD tool'
       Role: !GetAtt CidExecRole.Arn
-      Runtime: python3.10
+      Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 2688
       Timeout: 300 # Time of discovery depend on number of dashboards
@@ -1514,6 +1554,13 @@ Resources:
               return app.qs_url.format(dashboard_id=params['dashboard-id'], **app.qs_url_params)
       Layers:
         - !Ref CidResourceLambdaLayer
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W89'
+            reason: "No need to access to VPC resources"
+          - id: 'W92'
+            reason: "No need for reserved concurrency"
 
   CidResourceLambdaLayer:
     Type: AWS::Lambda::LayerVersion
@@ -1522,9 +1569,11 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: 'cid-resource-lambda-layer/cid-0.2.46.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-0.3.0.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
+        - python3.11
+        - python3.12
 
   CostIntelligenceDashboard:
     Type: Custom::CidDashboard
@@ -1538,7 +1587,7 @@ Resources:
         dashboard-id: cost_intelligence_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1558,7 +1607,7 @@ Resources:
         dashboard-id: cudos
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1580,7 +1629,7 @@ Resources:
         dashboard-id: cudos-v5
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1602,7 +1651,7 @@ Resources:
         dashboard-id: kpi_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1627,7 +1676,7 @@ Resources:
         dashboard-id: ta-organizational-view
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
@@ -1647,7 +1696,7 @@ Resources:
         dashboard-id: compute-optimizer-dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
         quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
