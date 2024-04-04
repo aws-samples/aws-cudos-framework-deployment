@@ -7,7 +7,7 @@ dashboards:
         - graviton_opensearch_view
         - graviton_rds_view
     name: Graviton Opportunities Dashboard
-    dashboardId: graviton-dashboard
+    dashboardId: graviton-opportunities
     category: Advanced
     data: |-
       AnalysisDefaults:
@@ -11516,10 +11516,6 @@ datasets:
                 Type: STRING
               - Name: account_name
                 Type: STRING
-              - Name: parent_account_id
-                Type: STRING
-              - Name: account_email_id
-                Type: STRING
       LogicalTableMap:
         6f1fc28d-3742-4f40-a60e-9f13b33b4f53:
           Alias: graviton_opensearch_view
@@ -11566,8 +11562,6 @@ datasets:
                   - existing_savings
                   - account_id
                   - account_name
-                  - parent_account_id
-                  - account_email_id
           Source:
             JoinInstruction:
               LeftOperand: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53
@@ -11672,10 +11666,6 @@ datasets:
                 Type: STRING
               - Name: account_name
                 Type: STRING
-              - Name: parent_account_id
-                Type: STRING
-              - Name: account_email_id
-                Type: STRING
       LogicalTableMap:
         07b00d3c-1514-4700-a4dc-3c466f317e67:
           Alias: graviton_elasticache_view
@@ -11723,8 +11713,6 @@ datasets:
                   - existing_savings
                   - account_id
                   - account_name
-                  - parent_account_id
-                  - account_email_id
           Source:
             JoinInstruction:
               LeftOperand: 07b00d3c-1514-4700-a4dc-3c466f317e67
@@ -11839,10 +11827,6 @@ datasets:
                 Type: STRING
               - Name: account_name
                 Type: STRING
-              - Name: parent_account_id
-                Type: STRING
-              - Name: account_email_id
-                Type: STRING
       LogicalTableMap:
         47626e9f-53d0-42ba-b193-a1a463746fca:
           Alias: account_map
@@ -11893,8 +11877,6 @@ datasets:
                   - previous_intel_price
                   - account_id
                   - account_name
-                  - parent_account_id
-                  - account_email_id
           Source:
             JoinInstruction:
               LeftOperand: d76c6ad6-0eab-4acb-b93b-9f33300a945a
@@ -12004,10 +11986,6 @@ datasets:
                 Type: STRING
               - Name: account_name
                 Type: STRING
-              - Name: parent_account_id
-                Type: STRING
-              - Name: account_email_id
-                Type: STRING
       LogicalTableMap:
         3a626a64-21c8-4be1-8cd4-45a86fcd240d:
           Alias: account_map
@@ -12049,8 +12027,6 @@ datasets:
                   - previous_intel_unblended_savings
                   - account_id
                   - account_name
-                  - parent_account_id
-                  - account_email_id
           Source:
             JoinInstruction:
               LeftOperand: bb1be3db-3e61-4cf5-b074-24e95303a13b
