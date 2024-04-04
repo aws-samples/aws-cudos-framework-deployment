@@ -7,7 +7,7 @@ dashboards:
         - graviton_opensearch_view
         - graviton_rds_view
     name: Graviton Opportunities Dashboard
-    dashboardId: graviton-dashboard
+    dashboardId: graviton-opportunities
     category: Advanced
     data: |-
       AnalysisDefaults:
