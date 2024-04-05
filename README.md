@@ -70,7 +70,7 @@ Update dashboard and all dependencies (Datasets and Athena View). WARNING: this 
 ```bash
 cid-cmd update --force --recursive
 ```
-#### Show Dashboard statusstatus
+#### Show Dashboard Status
 Show dashboards status
 
 ```bash
