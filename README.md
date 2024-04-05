@@ -70,12 +70,16 @@ Update dashboard and all dependencies (Datasets and Athena View). WARNING: this 
 ```bash
 cid-cmd update --force --recursive
 ```
-#### Show Dashboard status
+#### Show Dashboard statusstatus
 Show dashboards status
 
 ```bash
 cid-cmd status
 ```
+[<img width="558" alt="status" src="https://github.com/aws-samples/aws-cudos-framework-deployment/assets/82834333/cae2015f-0f81-4593-80b3-c67ec1200fcd">](https://www.youtube.com/watch?v=ivr1MoGaApM)
+
+
+
 
 ####  Share QuickSight resources
 ```bash
