@@ -9,6 +9,7 @@ dashboards:
     name: Graviton Opportunities Dashboard
     dashboardId: graviton-opportunities
     category: Advanced
+    theme: MIDNIGHT
     data: |-
       AnalysisDefaults:
         DefaultNewSheetConfiguration:
@@ -272,6 +273,28 @@ dashboards:
               - d89de8dd-edfc-431c-bcc1-87126cd6eeee
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 25472a4c-dcf2-4a50-8a68-4913797435ae
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: ec2_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Graviton
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: a33310b4-3fd5-4536-b513-77d75ed9804b
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - c88f3959-75f3-48a0-8164-8170449ad53d
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 843359b8-bcd6-43ab-948d-aca0ab1d9263
         Filters:
         - RelativeDatesFilter:
@@ -337,6 +360,27 @@ dashboards:
               SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
               VisualIds:
               - 6ebd34c2-2249-486d-b55b-d86d445e20c5
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: db9ae678-0062-4670-9e9a-ff655a6b8134
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: product_cache_engine
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            FilterId: d94e421e-1771-42f8-a4b9-83942e8266fe
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
+              VisualIds:
+              - 4be45a5e-1e42-4996-9a31-5e960a2ffa24
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 7cebb4d3-10a4-4695-a013-cd4d1ed8ffe0
@@ -445,27 +489,6 @@ dashboards:
               - 8a449940-73da-46a3-b203-40b97a19c9d9
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: e00ff92c-4538-4964-8493-91f8588eba16
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: bill_payer_account_id
-              DataSetIdentifier: opensearch_graviton_dashboard
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: PayerAccount
-            FilterId: 0319d3f8-feac-4d06-bfa7-68643512f47b
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
-              VisualIds:
-              - 562dce3e-b18b-4532-a15c-eaf99f8b4d0a
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: a37eb112-dc01-4144-b98b-9c28756beabe
         Filters:
         - CategoryFilter:
@@ -529,25 +552,6 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
               VisualIds:
               - b925c665-bcaf-45fc-83f1-221651479157
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 2f3649b7-746f-4971-993c-67e75b93534a
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: payer_account_id
-              DataSetIdentifier: ec2_graviton_dashboard
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: PayerAccount
-            FilterId: 492789c0-46d6-4ff9-8e29-c49fb47a19a6
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 73139b4c-28e9-4c24-bc42-bcb3242bb169
@@ -678,27 +682,6 @@ dashboards:
               - 1073537d-38b7-4ace-94ce-f13e9a991f8b
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 852b33c8-4d24-464c-8266-194604481236
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: line_item_usage_account_id
-              DataSetIdentifier: opensearch_graviton_dashboard
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: LinkedAccount
-            FilterId: 3633bbbd-0638-48fa-a487-30cd32ac9513
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
-              VisualIds:
-              - 562dce3e-b18b-4532-a15c-eaf99f8b4d0a
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 192b6ab8-4400-4c52-b784-3bfa7454547d
         Filters:
         - CategoryFilter:
@@ -805,27 +788,6 @@ dashboards:
               - 1f8ced7d-39f2-4ef7-ad34-254ddfc5d465
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: db9ae678-0062-4670-9e9a-ff655a6b8134
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: product_cache_engine
-              DataSetIdentifier: elasticache_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-                SelectAllOptions: FILTER_ALL_VALUES
-            FilterId: d94e421e-1771-42f8-a4b9-83942e8266fe
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
-              VisualIds:
-              - 4be45a5e-1e42-4996-9a31-5e960a2ffa24
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: fc93c72d-f3f6-49f0-a7f8-e52c2f28b965
         Filters:
         - CategoryFilter:
@@ -888,49 +850,24 @@ dashboards:
               VisualIds:
               - 958a2222-a0f2-46ac-a4f7-2fdcfadd8914
         Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: ea6008a7-990f-43b9-aebc-a107c67c5718
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 1903b58f-a88c-45df-9c96-5f70d89f78eb
         Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
+        - CategoryFilter:
             Column:
-              ColumnName: bill_billing_period_start_date
+              ColumnName: bill_payer_account_id
               DataSetIdentifier: rds_graviton_dashboard
-            FilterId: e67f5e22-f529-4538-b8df-d0a5e34f815e
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: PayerAccount
+            FilterId: 89670958-c7e9-400b-8a56-498c2250ebe4
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
+            - Scope: ALL_VISUALS
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
-              VisualIds:
-              - 0b479106-2328-40c2-8bae-1e3d7b474d4d
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 67ea032c-9e82-4bb7-b0e6-f2ce5d6d13e8
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: billing_period
-              DataSetIdentifier: ec2_graviton_dashboard
-            FilterId: 8365fcea-e7c2-4380-98ac-75c2e2b58521
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
-              VisualIds:
-              - 1a39ae2f-151c-4521-b641-26f23e59b78f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: e0899437-4286-4eb2-b7e6-fde782111b17
@@ -1017,6 +954,25 @@ dashboards:
               VisualIds:
               - a21ee221-237a-4bda-84f5-8218359983cb
         Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: d216c508-85eb-461f-a248-5d30721804f7
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: account_name
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: AccountName
+            FilterId: 98d2c981-a5e5-4bc8-a3bf-1bece4624f53
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
+        Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: e83e05ae-de37-4f24-8189-243f111d7659
         Filters:
@@ -1079,28 +1035,6 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
               VisualIds:
               - 5da705ed-c4a4-4339-83e7-85d5654ba97f
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: db92933e-de07-446a-8130-9f269d6974f4
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: generation
-              DataSetIdentifier: opensearch_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Graviton
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: 99565734-be63-4f82-861f-68339019261a
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
-              VisualIds:
-              - 562dce3e-b18b-4532-a15c-eaf99f8b4d0a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 0d0c1fc3-056b-4378-a6f7-f1e808ad8016
@@ -1166,26 +1100,24 @@ dashboards:
               VisualIds:
               - aede6ecf-0de7-464f-b73d-b58c9eacbda7
         Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 2640da05-92a9-4bea-8cec-3b9c077cc027
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 2f3649b7-746f-4971-993c-67e75b93534a
         Filters:
         - CategoryFilter:
             Column:
-              ColumnName: bill_payer_account_id
-              DataSetIdentifier: opensearch_graviton_dashboard
+              ColumnName: payer_account_id
+              DataSetIdentifier: ec2_graviton_dashboard
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: EQUALS
                 NullOption: NON_NULLS_ONLY
                 ParameterName: PayerAccount
-            FilterId: 41e9c7a6-4e13-48a7-9fcd-abc28172695a
+            FilterId: 492789c0-46d6-4ff9-8e29-c49fb47a19a6
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
-              VisualIds:
-              - 2853e926-5fbc-4892-8aad-d407fefe3d48
+            - Scope: ALL_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 31f82ee5-dbad-4797-a983-96ce6a5e85a0
@@ -1207,6 +1139,28 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
               VisualIds:
               - 36e74eda-1b15-4a05-8550-12121edd8835
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 1aa048f2-e82b-4aee-b0b5-b3487b5867d5
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: ec2_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Graviton
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 20639204-b225-43fc-aac6-654474445e36
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - 0048535e-47e6-4d9e-805a-bc921eaec468
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 32b6992f-91b5-44a8-9630-4d876571c55f
@@ -1272,32 +1226,6 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - a21ee221-237a-4bda-84f5-8218359983cb
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 9a4e9a5b-f8ae-401c-becd-21c0c41bcef9
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: bill_billing_period_start_date
-              DataSetIdentifier: elasticache_graviton_dashboard
-            FilterId: b297bca9-ef0f-4e9e-acf5-81a737d94086
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
-              VisualIds:
-              - 0c14f833-e523-4bb4-bab5-728c85bbf5b8
-              - c3415f55-9d50-48be-bbb4-6d7e8ee48bff
-              - 66211850-4181-4170-9008-d5b182b07172
-              - 655488af-86b0-4b58-9f52-8ac4b6b63c30
-              - af42f2d7-b8a1-409e-98a3-7880cc4c2ff8
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2301fafe-269d-4ebd-a8d5-1f96f7f2dac3
@@ -1409,6 +1337,25 @@ dashboards:
               VisualIds:
               - 084de9d3-cb44-4fa8-9c91-537dfc18603c
         Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 3e11bfef-5073-49b7-a93f-905286528c9b
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: line_item_usage_account_id
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: LinkedAccount
+            FilterId: 3f1052c6-0db4-482d-8917-caaaf6764826
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
+        Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 45d940a0-8364-4d56-848e-0592478e0ef3
         Filters:
@@ -1452,6 +1399,50 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
               VisualIds:
               - 2a4065d1-77b1-4376-9a55-1aeb438e97f7
+        Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: d4883703-158c-4398-8cf9-4c4eeebff83e
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: line_item_usage_account_id
+              DataSetIdentifier: rds_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: LinkedAccount
+            FilterId: b77deee6-fe44-41d6-b79b-cdf288415f54
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 9a4e9a5b-f8ae-401c-becd-21c0c41bcef9
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: bill_billing_period_start_date
+              DataSetIdentifier: elasticache_graviton_dashboard
+            FilterId: b297bca9-ef0f-4e9e-acf5-81a737d94086
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
+              VisualIds:
+              - 0c14f833-e523-4bb4-bab5-728c85bbf5b8
+              - c3415f55-9d50-48be-bbb4-6d7e8ee48bff
+              - 66211850-4181-4170-9008-d5b182b07172
+              - 655488af-86b0-4b58-9f52-8ac4b6b63c30
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 491e0a8f-d3a7-41e8-88e5-e7dc49bc3bb7
@@ -1627,26 +1618,46 @@ dashboards:
               VisualIds:
               - a21ee221-237a-4bda-84f5-8218359983cb
         Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: f0cbe92d-fc86-4176-9ed0-a443478f5fc9
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 2640da05-92a9-4bea-8cec-3b9c077cc027
         Filters:
         - CategoryFilter:
             Column:
-              ColumnName: line_item_usage_account_id
-              DataSetIdentifier: rds_graviton_dashboard
+              ColumnName: bill_payer_account_id
+              DataSetIdentifier: opensearch_graviton_dashboard
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: EQUALS
                 NullOption: NON_NULLS_ONLY
-                ParameterName: LinkedAccount
-            FilterId: a67d8ad4-8b38-40e5-9f3e-db8d33113dba
+                ParameterName: PayerAccount
+            FilterId: 41e9c7a6-4e13-48a7-9fcd-abc28172695a
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 5b957cd7-c1c5-4408-a6d3-e1bbf9b4c0c7
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: bill_billing_period_start_date
+              DataSetIdentifier: elasticache_graviton_dashboard
+            FilterId: a1aebe3e-10e2-4b41-9b04-df7353d1b463
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
+              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
               VisualIds:
-              - 0b479106-2328-40c2-8bae-1e3d7b474d4d
+              - 4be45a5e-1e42-4996-9a31-5e960a2ffa24
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 16fd1b9d-7f46-428a-8a56-67918b0d0c0f
@@ -1668,6 +1679,25 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
               VisualIds:
               - 1506095b-28be-4af6-a001-dd0b5a2c56d7
+        Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: cbd13ce5-ba78-4b42-9177-2ae94aa9f438
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: account_name
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: AccountName
+            FilterId: a03063e3-28f9-4783-b64e-074473880cc3
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 38088e26-9388-45f0-a800-166a9e4b5494
@@ -1775,27 +1805,6 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - 6243c7ba-c7cd-46c2-9423-4da7c4298146
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: d1849b8c-ed1f-4e77-979e-a84d9a3ec376
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: bill_payer_account_id
-              DataSetIdentifier: rds_graviton_dashboard
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: PayerAccount
-            FilterId: 07dab85b-4685-4ded-a57b-3a91ddfa1d15
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
-              VisualIds:
-              - 0b479106-2328-40c2-8bae-1e3d7b474d4d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: e2fcd21a-c3ff-4e83-88b5-d6ac056b852c
@@ -1969,28 +1978,6 @@ dashboards:
               - 66211850-4181-4170-9008-d5b182b07172
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 66e81ee2-12bd-4a77-890f-be07e7b572cb
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: processor_type
-              DataSetIdentifier: rds_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Graviton
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: ed90f003-c1f3-4b78-a2c2-0dd857a00bd3
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
-              VisualIds:
-              - 0b479106-2328-40c2-8bae-1e3d7b474d4d
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 34158fd3-f6be-4940-b898-dd9927c74cd6
         Filters:
         - CategoryFilter:
@@ -2033,28 +2020,6 @@ dashboards:
               - 43c88da8-c83b-443e-a51e-8060d934f878
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 9e08a96e-416b-40cb-9fbe-ce10af3f2ac8
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: generation
-              DataSetIdentifier: rds_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Graviton
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: 5a695f5d-2d31-4f96-a7c4-a936839d006a
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
-              VisualIds:
-              - 0b479106-2328-40c2-8bae-1e3d7b474d4d
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: bafe6855-7b0e-4d58-a7b7-49e63f8acc27
         Filters:
         - CategoryFilter:
@@ -2076,6 +2041,25 @@ dashboards:
               SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
               VisualIds:
               - aede6ecf-0de7-464f-b73d-b58c9eacbda7
+        Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 56ab0c9a-7fbf-4b90-887d-467ba1220c99
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: linked_account_id
+              DataSetIdentifier: ec2_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: LinkedAccount
+            FilterId: 82bbfb2c-1450-4f53-a12c-9501a31130fa
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 9fcf56ab-0406-4532-ae3d-75448a28b8fb
@@ -2120,6 +2104,25 @@ dashboards:
               VisualIds:
               - cee386de-908f-4409-9b62-3acc7046521c
         Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 2815d351-550f-404f-8311-0ca03d0b0523
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: bill_payer_account_id
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: PayerAccount
+            FilterId: b669703c-7048-4c4a-aa1c-107324cd3452
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
+        Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: e0f7dc50-a2f7-4053-9080-eaf80f33a2fe
         Filters:
@@ -2161,6 +2164,27 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - eb5e4112-0dd5-41ee-b4d1-639f1feedf51
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: dc54fb02-fa2a-4148-81f9-bc2f4b86906c
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: ec2_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            FilterId: 5ff61edd-00f3-4984-b425-a62a03a5f089
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - b0583757-b583-4551-9f2d-a8070b9e9115
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: be151ed7-6428-49c9-bafa-4450cbff526b
@@ -2402,27 +2426,6 @@ dashboards:
               - 2a4065d1-77b1-4376-9a55-1aeb438e97f7
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 1903b58f-a88c-45df-9c96-5f70d89f78eb
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: bill_payer_account_id
-              DataSetIdentifier: rds_graviton_dashboard
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: PayerAccount
-            FilterId: 89670958-c7e9-400b-8a56-498c2250ebe4
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
-              VisualIds:
-              - 2acb878b-b17c-4863-86f7-7297da65f527
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 6372d281-6695-4e7f-9313-5189f593515f
         Filters:
         - CategoryFilter:
@@ -2548,6 +2551,25 @@ dashboards:
               VisualIds:
               - 43c88da8-c83b-443e-a51e-8060d934f878
         Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: d05f618a-cad2-4022-9dff-74d7853f20f0
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: account_name
+              DataSetIdentifier: rds_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: AccountName
+            FilterId: 10dc9c45-2476-49fd-b8aa-d29259ad48e6
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
+        Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 76887c8f-4ce3-4cf5-a013-303af2321e1e
         Filters:
@@ -2610,6 +2632,25 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - 6812b932-30a7-4315-a0d3-6d99f05f8af4
+        Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 75b75160-21a6-42c0-91f0-bed888bdca7d
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: line_item_usage_account_id
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: LinkedAccount
+            FilterId: cd9273d2-632a-4d95-9618-00729b2805b5
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 3916c03a-268b-47a2-8a9d-b16ce509c60f
@@ -2696,28 +2737,6 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - 260bfa9d-7aed-4a96-bc8a-af982fb887b8
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 91fa11f2-730d-43fc-a7e5-9a4da2fc5015
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: processor_type
-              DataSetIdentifier: ec2_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Graviton
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: d63e80da-1160-4b95-8adb-72bf6a39288d
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
-              VisualIds:
-              - 1a39ae2f-151c-4521-b641-26f23e59b78f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 98317e8c-ef61-48b8-bfa2-6ea3af11021f
@@ -2940,6 +2959,25 @@ dashboards:
               VisualIds:
               - b925c665-bcaf-45fc-83f1-221651479157
         Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 78da2c65-580b-4488-b827-f365654727f7
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: account_name
+              DataSetIdentifier: ec2_graviton_dashboard
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: AccountName
+            FilterId: 1ac595c9-f63e-4afa-a4d3-561f019b2dab
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+        Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: f9983198-db67-4966-aa32-2716ad766fc4
         Filters:
@@ -2982,28 +3020,6 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - 62f8da3f-07d2-43b0-8ef6-19023ca7729f
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: b7d417c2-4801-4fc5-99bd-6f286af43064
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: generation
-              DataSetIdentifier: elasticache_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Graviton
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: fdbdd7fc-69f9-4df2-a679-df066ec21465
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
-              VisualIds:
-              - af42f2d7-b8a1-409e-98a3-7880cc4c2ff8
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2934ee65-5f34-443a-9bd3-ed43864d40fd
@@ -3070,27 +3086,6 @@ dashboards:
               - cee386de-908f-4409-9b62-3acc7046521c
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: fd7084e1-4457-440c-b644-f9d622de28f2
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: line_item_usage_account_id
-              DataSetIdentifier: opensearch_graviton_dashboard
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: LinkedAccount
-            FilterId: e8a5182a-293b-4191-b224-69dc3e0556e5
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
-              VisualIds:
-              - 2853e926-5fbc-4892-8aad-d407fefe3d48
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 720a3a4f-6e40-4986-aa92-b11ae1a628a2
         Filters:
         - RelativeDatesFilter:
@@ -3135,114 +3130,6 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
               VisualIds:
               - 43c88da8-c83b-443e-a51e-8060d934f878
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: b5640a48-64e4-4271-8cce-6346fe2f522d
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: line_item_usage_account_id
-              DataSetIdentifier: rds_graviton_dashboard
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: LinkedAccount
-            FilterId: e71fec1b-3d4e-4c50-99c7-cd57660607d8
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
-              VisualIds:
-              - 2acb878b-b17c-4863-86f7-7297da65f527
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 25472a4c-dcf2-4a50-8a68-4913797435ae
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: processor_type
-              DataSetIdentifier: ec2_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Graviton
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: a33310b4-3fd5-4536-b513-77d75ed9804b
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
-              VisualIds:
-              - c88f3959-75f3-48a0-8164-8170449ad53d
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: dc54fb02-fa2a-4148-81f9-bc2f4b86906c
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: processor_type
-              DataSetIdentifier: ec2_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-                SelectAllOptions: FILTER_ALL_VALUES
-            FilterId: 5ff61edd-00f3-4984-b425-a62a03a5f089
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
-              VisualIds:
-              - b0583757-b583-4551-9f2d-a8070b9e9115
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 1aa048f2-e82b-4aee-b0b5-b3487b5867d5
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: processor_type
-              DataSetIdentifier: ec2_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Graviton
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: 20639204-b225-43fc-aac6-654474445e36
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
-              VisualIds:
-              - 0048535e-47e6-4d9e-805a-bc921eaec468
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 5b957cd7-c1c5-4408-a6d3-e1bbf9b4c0c7
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: bill_billing_period_start_date
-              DataSetIdentifier: elasticache_graviton_dashboard
-            FilterId: a1aebe3e-10e2-4b41-9b04-df7353d1b463
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
-              VisualIds:
-              - 4be45a5e-1e42-4996-9a31-5e960a2ffa24
         Status: ENABLED
       ParameterDeclarations:
       - DecimalParameterDeclaration:
@@ -3346,17 +3233,7 @@ dashboards:
           ValueWhenUnset:
             ValueWhenUnsetOption: RECOMMENDED_VALUE
       - StringParameterDeclaration:
-          DefaultValues:
-            DynamicValue:
-              DefaultValueColumn:
-                ColumnName: e2b295a5-4dea-459e-bd42-02985d7ee0f6.account_name
-                DataSetIdentifier: ec2_graviton_dashboard
-              GroupNameColumn:
-                ColumnName: e2b295a5-4dea-459e-bd42-02985d7ee0f6.account_name
-                DataSetIdentifier: ec2_graviton_dashboard
-              UserNameColumn:
-                ColumnName: e2b295a5-4dea-459e-bd42-02985d7ee0f6.account_name
-                DataSetIdentifier: ec2_graviton_dashboard
+          DefaultValues: {}
           Name: AccountName
           ParameterValueType: MULTI_VALUED
           ValueWhenUnset:
@@ -3402,44 +3279,32 @@ dashboards:
                 RowIndex: 0
                 RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 10
+                ColumnSpan: 12
                 ElementId: d89de8dd-edfc-431c-bcc1-87126cd6eeee
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 7
-              - ColumnIndex: 10
-                ColumnSpan: 10
+              - ColumnIndex: 12
+                ColumnSpan: 12
                 ElementId: e1d664ff-8faf-4fc0-adb5-811e0da7fa2f
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 7
-              - ColumnIndex: 20
-                ColumnSpan: 8
+              - ColumnIndex: 24
+                ColumnSpan: 12
                 ElementId: 15375dd3-d44e-44b8-af72-64691f3d2c92
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 7
-              - ColumnIndex: 28
-                ColumnSpan: 8
-                ElementId: 1a39ae2f-151c-4521-b641-26f23e59b78f
-                ElementType: VISUAL
-                RowIndex: 2
-                RowSpan: 7
               - ColumnIndex: 0
-                ColumnSpan: 12
+                ColumnSpan: 18
                 ElementId: 76c5b545-7a88-443b-bb85-7a40dc586bc3
                 ElementType: VISUAL
                 RowIndex: 9
                 RowSpan: 4
-              - ColumnIndex: 12
-                ColumnSpan: 12
+              - ColumnIndex: 18
+                ColumnSpan: 18
                 ElementId: e70569d2-24b4-4948-be68-622e01f16519
-                ElementType: VISUAL
-                RowIndex: 9
-                RowSpan: 4
-              - ColumnIndex: 24
-                ColumnSpan: 12
-                ElementId: 21b0f501-8004-47db-ba30-1850540ffdfd
                 ElementType: VISUAL
                 RowIndex: 9
                 RowSpan: 4
@@ -3639,10 +3504,10 @@ dashboards:
                   FontSize:
                     Relative: MEDIUM
                 Visibility: VISIBLE
-            ParameterControlId: 7004d47c-7600-4b98-b331-343dcc482626
+            ParameterControlId: 2ee0882b-3ae3-4627-806e-ca8a51019da1
             SelectableValues:
               LinkToDataSetColumn:
-                ColumnName: e2b295a5-4dea-459e-bd42-02985d7ee0f6.account_id
+                ColumnName: linked_account_id
                 DataSetIdentifier: ec2_graviton_dashboard
             SourceParameterName: LinkedAccount
             Title: Linked Account ID
@@ -3656,10 +3521,10 @@ dashboards:
                   FontSize:
                     Relative: MEDIUM
                 Visibility: VISIBLE
-            ParameterControlId: de8071df-1896-423f-8b8d-eba2e733250b
+            ParameterControlId: 4328410a-2885-40e5-8a26-c0473e5e8315
             SelectableValues:
               LinkToDataSetColumn:
-                ColumnName: e2b295a5-4dea-459e-bd42-02985d7ee0f6.account_name
+                ColumnName: account_name
                 DataSetIdentifier: ec2_graviton_dashboard
             SourceParameterName: AccountName
             Title: Linked Account Name
@@ -3703,11 +3568,11 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
               - ColumnSpan: 2
-                ElementId: 7004d47c-7600-4b98-b331-343dcc482626
+                ElementId: 2ee0882b-3ae3-4627-806e-ca8a51019da1
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
               - ColumnSpan: 2
-                ElementId: de8071df-1896-423f-8b8d-eba2e733250b
+                ElementId: 4328410a-2885-40e5-8a26-c0473e5e8315
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
         SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
@@ -4091,50 +3956,6 @@ dashboards:
                   Category:
                     CategoricalDimensionField:
                       Column:
-                        ColumnName: existing_instance
-                        DataSetIdentifier: ec2_graviton_dashboard
-                      FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.existing_instance.1.1709747786293
-                  ComputationId: 45e81f8f-0f5b-4c4b-a8dd-80eaced60a8c
-                  Name: Top
-                  ResultSize: 5
-                  Type: TOP
-                  Value:
-                    NumericalMeasureField:
-                      Column:
-                        ColumnName: Existing Graviton Savings %
-                        DataSetIdentifier: ec2_graviton_dashboard
-                      FieldId: 18e7e6ef-e0ec-4117-84fc-342c40962336.1.1709747783373
-                      FormatConfiguration:
-                        FormatConfiguration:
-                          PercentageDisplayFormatConfiguration:
-                            DecimalPlacesConfiguration:
-                              DecimalPlaces: 1
-                            NullValueFormatConfiguration:
-                              NullString: 'null'
-              CustomNarrative:
-                Narrative: "<narrative>\n  Top\n  <if condition=\"Top.itemsCount &gt; 1\"\
-                  \ level=\"inline\">\n    <expression>Top.itemsCount</expression>\n   \
-                  \ \_instance families with highest Graviton Savings % compared to previous\
-                  \ generation Intel\n    <if condition=\"Top.itemsCount &gt; 1\" level=\"\
-                  inline\">\_are:</if>\n  </if>\n  <br/>\n  <for level=\"block\" listExpression=\"\
-                  Top.items\">\n    <ul>\n      <li>\n        <inline color=\"#21a0d7\"\
-                  >\n          <b>\n            <expression>Top.items[index].categoryValue.formattedValue</expression>\n\
-                  \          </b>\n        </inline>\n        \_with\n        <expression>Top.items[index].metricValue.formattedValue</expression>\n\
-                  \      </li>\n    </ul>\n  </for>\n  <br/>\n</narrative>"
-            Subtitle:
-              Visibility: VISIBLE
-            Title:
-              Visibility: HIDDEN
-            VisualId: 21b0f501-8004-47db-ba30-1850540ffdfd
-        - InsightVisual:
-            Actions: []
-            DataSetIdentifier: ec2_graviton_dashboard
-            InsightConfiguration:
-              Computations:
-              - TopBottomRanked:
-                  Category:
-                    CategoricalDimensionField:
-                      Column:
                         ColumnName: account_name
                         DataSetIdentifier: ec2_graviton_dashboard
                       FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_name.1.1710947685989
@@ -4184,57 +4005,6 @@ dashboards:
                 TrendGroups: []
                 Values:
                 - NumericalMeasureField:
-                    Column:
-                      ColumnName: Existing Graviton Savings %
-                      DataSetIdentifier: ec2_graviton_dashboard
-                    FieldId: 18e7e6ef-e0ec-4117-84fc-342c40962336.1.1709747440232
-                    FormatConfiguration:
-                      FormatConfiguration:
-                        PercentageDisplayFormatConfiguration:
-                          DecimalPlacesConfiguration:
-                            DecimalPlaces: 0
-                          NullValueFormatConfiguration:
-                            NullString: 'null'
-              KPIOptions:
-                Comparison:
-                  ComparisonMethod: PERCENT_DIFFERENCE
-                PrimaryValueDisplayType: ACTUAL
-                SecondaryValueFontConfiguration:
-                  FontSize:
-                    Relative: EXTRA_LARGE
-                Sparkline:
-                  Type: AREA
-                  Visibility: VISIBLE
-                VisualLayoutOptions:
-                  StandardLayout:
-                    Type: VERTICAL
-              SortConfiguration: {}
-            ColumnHierarchies: []
-            Subtitle:
-              FormatText:
-                RichText: |-
-                  <visual-subtitle>
-                    <inline font-size="14px">Compared to Intel equivalent instance type</inline>
-                  </visual-subtitle>
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: |-
-                  <visual-title>
-                    <inline font-size="20px">
-                      <b>Previous Month Average Graviton Savings %</b>
-                    </inline>
-                  </visual-title>
-              Visibility: VISIBLE
-            VisualId: 1a39ae2f-151c-4521-b641-26f23e59b78f
-        - KPIVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                TargetValues: []
-                TrendGroups: []
-                Values:
-                - NumericalMeasureField:
                     AggregationFunction:
                       SimpleNumericalAggregation: SUM
                     Column:
@@ -4260,6 +4030,9 @@ dashboards:
                 Comparison:
                   ComparisonMethod: PERCENT_DIFFERENCE
                 PrimaryValueDisplayType: ACTUAL
+                PrimaryValueFontConfiguration:
+                  FontSize:
+                    Relative: EXTRA_LARGE
                 SecondaryValueFontConfiguration:
                   FontSize:
                     Relative: EXTRA_LARGE
@@ -6027,180 +5800,157 @@ dashboards:
                 RowIndex: 0
                 RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 10
+                ColumnSpan: 13
                 ElementId: 2acb878b-b17c-4863-86f7-7297da65f527
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 5
-              - ColumnIndex: 10
-                ColumnSpan: 9
+                RowSpan: 7
+              - ColumnIndex: 13
+                ColumnSpan: 12
                 ElementId: 1506095b-28be-4af6-a001-dd0b5a2c56d7
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 5
-              - ColumnIndex: 19
-                ColumnSpan: 9
+                RowSpan: 7
+              - ColumnIndex: 25
+                ColumnSpan: 11
                 ElementId: 2a4065d1-77b1-4376-9a55-1aeb438e97f7
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 5
-              - ColumnIndex: 28
-                ColumnSpan: 8
-                ElementId: 0b479106-2328-40c2-8bae-1e3d7b474d4d
-                ElementType: VISUAL
-                RowIndex: 2
-                RowSpan: 5
+                RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 19
                 ElementId: 127a4dd4-a000-4d05-96a9-8111422d0ba0
                 ElementType: VISUAL
-                RowIndex: 7
+                RowIndex: 9
                 RowSpan: 11
               - ColumnIndex: 19
                 ColumnSpan: 17
                 ElementId: 1073537d-38b7-4ace-94ce-f13e9a991f8b
                 ElementType: VISUAL
-                RowIndex: 7
+                RowIndex: 9
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 19
                 ElementId: 0727fd4e-b0d2-4a0b-8183-90d41dd70994
                 ElementType: VISUAL
-                RowIndex: 18
+                RowIndex: 20
                 RowSpan: 10
               - ColumnIndex: 19
                 ColumnSpan: 17
                 ElementId: 8a449940-73da-46a3-b203-40b97a19c9d9
                 ElementType: VISUAL
-                RowIndex: 18
+                RowIndex: 20
                 RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 121965bf-f0e6-4670-acd8-379068dd8477
                 ElementType: TEXT_BOX
-                RowIndex: 28
+                RowIndex: 30
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 9
                 ElementId: 084de9d3-cb44-4fa8-9c91-537dfc18603c
                 ElementType: VISUAL
-                RowIndex: 30
+                RowIndex: 32
                 RowSpan: 4
               - ColumnIndex: 9
                 ColumnSpan: 9
                 ElementId: 958a2222-a0f2-46ac-a4f7-2fdcfadd8914
                 ElementType: VISUAL
-                RowIndex: 30
+                RowIndex: 32
                 RowSpan: 4
               - ColumnIndex: 18
                 ColumnSpan: 9
                 ElementId: 9e56e134-2782-4059-b591-47505df49ad3
                 ElementType: VISUAL
-                RowIndex: 30
+                RowIndex: 32
                 RowSpan: 4
               - ColumnIndex: 27
                 ColumnSpan: 9
                 ElementId: 975ca2b9-6bb8-4c4c-a1b9-ccfcb543c5bd
                 ElementType: VISUAL
-                RowIndex: 30
+                RowIndex: 32
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 7
                 ElementId: 55655220-b240-45e3-914b-4c21415e5f6b
                 ElementType: TEXT_BOX
-                RowIndex: 34
+                RowIndex: 36
                 RowSpan: 13
               - ColumnIndex: 7
                 ColumnSpan: 15
                 ElementId: e3373aa7-a335-4218-b56a-3d46a1a5c307
                 ElementType: VISUAL
-                RowIndex: 34
+                RowIndex: 36
                 RowSpan: 13
               - ColumnIndex: 22
                 ColumnSpan: 14
                 ElementId: 5da705ed-c4a4-4339-83e7-85d5654ba97f
                 ElementType: VISUAL
-                RowIndex: 34
+                RowIndex: 36
                 RowSpan: 13
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 32acb65c-397b-4f1c-853d-03e0ab7d8730
                 ElementType: VISUAL
-                RowIndex: 47
+                RowIndex: 49
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 43c88da8-c83b-443e-a51e-8060d934f878
                 ElementType: VISUAL
-                RowIndex: 47
+                RowIndex: 49
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 1b95fb54-97a0-4491-8769-52141d27b1ba
                 ElementType: TEXT_BOX
-                RowIndex: 56
+                RowIndex: 58
                 RowSpan: 3
               - ColumnIndex: 4
                 ColumnSpan: 32
                 ElementId: 851b7242-5c40-490b-b8a8-d6b154a1b3a4
                 ElementType: VISUAL
-                RowIndex: 56
+                RowIndex: 58
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: b925c665-bcaf-45fc-83f1-221651479157
                 ElementType: VISUAL
-                RowIndex: 59
+                RowIndex: 61
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: c3bb1b1a-9ec9-4533-a7b4-31ff626b2a7b
                 ElementType: VISUAL
-                RowIndex: 62
+                RowIndex: 64
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 6097236f-69e2-48d7-9b02-127ead40bc15
                 ElementType: VISUAL
-                RowIndex: 66
+                RowIndex: 68
                 RowSpan: 6
               - ColumnIndex: 4
                 ColumnSpan: 32
                 ElementId: 94271220-2806-4217-8cbf-025f01cbe232
                 ElementType: VISUAL
-                RowIndex: 68
+                RowIndex: 70
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 306a2f4c-a54f-4d02-8438-d8b0223b1df2
                 ElementType: VISUAL
-                RowIndex: 72
+                RowIndex: 74
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 36e74eda-1b15-4a05-8550-12121edd8835
                 ElementType: VISUAL
-                RowIndex: 76
+                RowIndex: 78
                 RowSpan: 4
         Name: RDS
         ParameterControls:
-        - Dropdown:
-            DisplayOptions:
-              SelectAllOptions:
-                Visibility: VISIBLE
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            ParameterControlId: ed6dfe0b-6aad-414c-9b3b-2cada2e388e4
-            SelectableValues:
-              LinkToDataSetColumn:
-                ColumnName: 47672f16-2ac2-4262-92d7-d75307fe5865.account_name
-                DataSetIdentifier: rds_graviton_dashboard
-            SourceParameterName: AccountName
-            Title: Linked Account Name
-            Type: MULTI_SELECT
         - Dropdown:
             DisplayOptions:
               SelectAllOptions:
@@ -6227,13 +5977,30 @@ dashboards:
                   FontSize:
                     Relative: MEDIUM
                 Visibility: VISIBLE
-            ParameterControlId: 872ad5c9-ecae-4177-a26b-46d4a5ccc1f7
+            ParameterControlId: ac6ea441-b21b-47ff-aae3-b82d2f174b8a
             SelectableValues:
               LinkToDataSetColumn:
-                ColumnName: 47672f16-2ac2-4262-92d7-d75307fe5865.account_id
+                ColumnName: line_item_usage_account_id
                 DataSetIdentifier: rds_graviton_dashboard
             SourceParameterName: LinkedAccount
             Title: Linked Account ID
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: ce1fb488-bc3e-45a9-a912-e7ca8f92c0b8
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: account_name
+                DataSetIdentifier: rds_graviton_dashboard
+            SourceParameterName: AccountName
+            Title: Linked Account Name
             Type: MULTI_SELECT
         SheetControlLayouts:
         - Configuration:
@@ -6245,17 +6012,13 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 2
-                ColumnSpan: 2
-                ElementId: 872ad5c9-ecae-4177-a26b-46d4a5ccc1f7
+              - ColumnSpan: 2
+                ElementId: ac6ea441-b21b-47ff-aae3-b82d2f174b8a
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 4
-                ColumnSpan: 2
-                ElementId: ed6dfe0b-6aad-414c-9b3b-2cada2e388e4
+              - ColumnSpan: 2
+                ElementId: ce1fb488-bc3e-45a9-a912-e7ca8f92c0b8
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 0
                 RowSpan: 1
         SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
         TextBoxes:
@@ -7330,7 +7093,7 @@ dashboards:
                       ColumnName: line_item_availability_zone
                       DataSetIdentifier: rds_graviton_dashboard
                     FieldId: b9c97807-e8d5-4097-8169-028d835fe38f.line_item_availability_zone.1.1699478295597
-                  CustomLabel: Availability Zone
+                  CustomLabel: Region
               SortConfiguration:
                 HeatMapColumnSort:
                 - FieldSort:
@@ -7362,7 +7125,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="20px">
-                      <b>Instance Type by Availability Zone</b>
+                      <b>Instance Type by Region</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -7508,62 +7271,6 @@ dashboards:
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 1073537d-38b7-4ace-94ce-f13e9a991f8b
-        - KPIVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                TargetValues: []
-                TrendGroups: []
-                Values:
-                - NumericalMeasureField:
-                    Column:
-                      ColumnName: Existing Savings %
-                      DataSetIdentifier: rds_graviton_dashboard
-                    FieldId: c435e794-93f4-4a3c-b090-d7c1a757e588.0.1700103129820
-                    FormatConfiguration:
-                      FormatConfiguration:
-                        PercentageDisplayFormatConfiguration:
-                          DecimalPlacesConfiguration:
-                            DecimalPlaces: 0
-                          NegativeValueConfiguration:
-                            DisplayMode: NEGATIVE
-                          NullValueFormatConfiguration:
-                            NullString: 'null'
-                          SeparatorConfiguration:
-                            DecimalSeparator: DOT
-                            ThousandsSeparator:
-                              Symbol: COMMA
-                              Visibility: VISIBLE
-                          Suffix: '%'
-              KPIOptions:
-                Comparison:
-                  ComparisonMethod: PERCENT_DIFFERENCE
-                PrimaryValueDisplayType: ACTUAL
-                SecondaryValueFontConfiguration:
-                  FontSize:
-                    Relative: EXTRA_LARGE
-                Sparkline:
-                  Type: AREA
-                  Visibility: VISIBLE
-                VisualLayoutOptions:
-                  StandardLayout:
-                    Type: VERTICAL
-              SortConfiguration: {}
-            ColumnHierarchies: []
-            Subtitle:
-              FormatText:
-                RichText: <visual-subtitle>Compared to latest generation Intel</visual-subtitle>
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: |-
-                  <visual-title>
-                    <inline font-size="20px">
-                      <b>Existing Savings Percentage</b>
-                    </inline>
-                  </visual-title>
-              Visibility: VISIBLE
-            VisualId: 0b479106-2328-40c2-8bae-1e3d7b474d4d
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -7830,6 +7537,7 @@ dashboards:
                         ColumnName: account_name
                         DataSetIdentifier: rds_graviton_dashboard
                       FieldId: 3a626a64-21c8-4be1-8cd4-45a86fcd240d.account_name.3.1710858833563
+                      HierarchyId: 4bea5fb0-231c-4ae2-bc02-5c45c03e6c4c
                   LineValues:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -7905,6 +7613,14 @@ dashboards:
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
             ColumnHierarchies:
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: account_name
+                  DataSetIdentifier: rds_graviton_dashboard
+                - ColumnName: line_item_usage_account_id
+                  DataSetIdentifier: rds_graviton_dashboard
+                DrillDownFilters: []
+                HierarchyId: 4bea5fb0-231c-4ae2-bc02-5c45c03e6c4c
             - DateTimeHierarchy:
                 HierarchyId: bb1be3db-3e61-4cf5-b074-24e95303a13b.bill_billing_period_start_date.0.1709750446373
             Subtitle:
@@ -8218,106 +7934,100 @@ dashboards:
                 RowIndex: 0
                 RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 9
+                ColumnSpan: 12
                 ElementId: 0c14f833-e523-4bb4-bab5-728c85bbf5b8
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 4
-              - ColumnIndex: 9
-                ColumnSpan: 9
+                RowSpan: 7
+              - ColumnIndex: 12
+                ColumnSpan: 13
                 ElementId: c3415f55-9d50-48be-bbb4-6d7e8ee48bff
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 4
-              - ColumnIndex: 18
-                ColumnSpan: 9
+                RowSpan: 7
+              - ColumnIndex: 25
+                ColumnSpan: 11
                 ElementId: 66211850-4181-4170-9008-d5b182b07172
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 4
-              - ColumnIndex: 27
-                ColumnSpan: 9
-                ElementId: af42f2d7-b8a1-409e-98a3-7880cc4c2ff8
-                ElementType: VISUAL
-                RowIndex: 2
-                RowSpan: 4
+                RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: d8dc2774-d323-4ce7-a8ac-72869f01f626
                 ElementType: VISUAL
-                RowIndex: 6
+                RowIndex: 9
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 754c1c83-a4da-4940-b0b5-a459f633a3d0
                 ElementType: VISUAL
-                RowIndex: 6
+                RowIndex: 9
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 1b3dc299-171c-465a-93e2-94cb373bf8ac
                 ElementType: TEXT_BOX
-                RowIndex: 18
+                RowIndex: 21
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 3f917529-013d-4f91-9cb8-b062de2707e5
                 ElementType: TEXT_BOX
-                RowIndex: 20
+                RowIndex: 23
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 9
                 ElementId: 0962ba96-8e00-45bc-8999-368546f263ab
                 ElementType: VISUAL
-                RowIndex: 20
+                RowIndex: 23
                 RowSpan: 4
               - ColumnIndex: 17
                 ColumnSpan: 9
                 ElementId: ea18fd59-a78b-451f-8652-a3a7b2079165
                 ElementType: VISUAL
-                RowIndex: 20
+                RowIndex: 23
                 RowSpan: 4
               - ColumnIndex: 26
                 ColumnSpan: 10
                 ElementId: 655488af-86b0-4b58-9f52-8ac4b6b63c30
                 ElementType: VISUAL
-                RowIndex: 20
+                RowIndex: 23
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 17
                 ElementId: 941f0b50-a3bf-4d66-bb80-c95b967f0363
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 27
                 RowSpan: 12
               - ColumnIndex: 17
                 ColumnSpan: 19
                 ElementId: e01ecc3e-28be-4979-9ae1-943bd6652d3f
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 27
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 7
                 ElementId: 2aa0e4c2-ed6e-404e-b07e-fcde23a01053
                 ElementType: FILTER_CONTROL
-                RowIndex: 36
+                RowIndex: 39
                 RowSpan: 2
               - ColumnIndex: 7
                 ColumnSpan: 29
                 ElementId: 4be45a5e-1e42-4996-9a31-5e960a2ffa24
                 ElementType: VISUAL
-                RowIndex: 36
+                RowIndex: 39
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 7
                 ElementId: af476545-95a9-4861-b36c-736f4f3e71e5
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 38
+                RowIndex: 41
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 7
                 ElementId: 83e1ad00-4a12-4721-af90-e833213819d8
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 40
+                RowIndex: 43
                 RowSpan: 2
         Name: ElastiCache
         ParameterControls:
@@ -8398,14 +8108,34 @@ dashboards:
                   FontSize:
                     Relative: MEDIUM
                 Visibility: VISIBLE
-            ParameterControlId: 52cc5860-79cb-4689-a23b-7fc57f4244a3
+            ParameterControlId: 1606f916-1f55-4de8-8eb0-c7ed5dd16b2d
             SelectableValues:
               LinkToDataSetColumn:
-                ColumnName: 1ab01db8-9a29-4f43-80c5-eaa57b2e036b.account_name
+                ColumnName: account_name
                 DataSetIdentifier: elasticache_graviton_dashboard
-            SourceParameterName: LinkedAccountName
+            SourceParameterName: AccountName
             Title: Linked Account Name
             Type: MULTI_SELECT
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 3
+                ElementId: 6c4928cd-0cf0-4b36-994b-7b380209de7a
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 3
+                ColumnSpan: 3
+                ElementId: 51936049-30b3-426c-a3fd-b3c661658ecc
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 1606f916-1f55-4de8-8eb0-c7ed5dd16b2d
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
         SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"24px\">\n    <b>Graviton Eligibility</b>\n\
@@ -8476,6 +8206,8 @@ dashboards:
                                 Symbol: COMMA
                                 Visibility: VISIBLE
                             Symbol: USD
+              Legend:
+                Width: 100px
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
@@ -8975,68 +8707,6 @@ dashboards:
                   </visual-title>
               Visibility: VISIBLE
             VisualId: ea18fd59-a78b-451f-8652-a3a7b2079165
-        - KPIVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                TargetValues: []
-                TrendGroups: []
-                Values:
-                - NumericalMeasureField:
-                    Column:
-                      ColumnName: Existing Savings %
-                      DataSetIdentifier: elasticache_graviton_dashboard
-                    FieldId: 43face37-0af3-422a-807c-e6a6f4644a61.0.1695326556132
-                    FormatConfiguration:
-                      FormatConfiguration:
-                        PercentageDisplayFormatConfiguration:
-                          DecimalPlacesConfiguration:
-                            DecimalPlaces: 0
-                          NegativeValueConfiguration:
-                            DisplayMode: NEGATIVE
-                          NullValueFormatConfiguration:
-                            NullString: 'null'
-                          SeparatorConfiguration:
-                            DecimalSeparator: DOT
-                            ThousandsSeparator:
-                              Symbol: COMMA
-                              Visibility: VISIBLE
-                          Suffix: '%'
-              KPIOptions:
-                Comparison:
-                  ComparisonMethod: PERCENT_DIFFERENCE
-                PrimaryValueDisplayType: ACTUAL
-                PrimaryValueFontConfiguration:
-                  FontSize:
-                    Relative: LARGE
-                SecondaryValueFontConfiguration:
-                  FontSize:
-                    Relative: EXTRA_LARGE
-                Sparkline:
-                  Type: AREA
-                  Visibility: VISIBLE
-                VisualLayoutOptions:
-                  StandardLayout:
-                    Type: VERTICAL
-              SortConfiguration: {}
-            ColumnHierarchies: []
-            Subtitle:
-              FormatText:
-                RichText: |-
-                  <visual-subtitle>
-                    <inline font-size="14px">Compared to Intel equivalent instance type</inline>
-                  </visual-subtitle>
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: |-
-                  <visual-title>
-                    <inline font-size="20px">
-                      <b>Average Savings %</b>
-                    </inline>
-                  </visual-title>
-              Visibility: VISIBLE
-            VisualId: af42f2d7-b8a1-409e-98a3-7880cc4c2ff8
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -9369,118 +9039,112 @@ dashboards:
                 RowIndex: 0
                 RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 9
+                ColumnSpan: 12
                 ElementId: 2853e926-5fbc-4892-8aad-d407fefe3d48
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 6
-              - ColumnIndex: 9
-                ColumnSpan: 9
+                RowSpan: 7
+              - ColumnIndex: 12
+                ColumnSpan: 13
                 ElementId: 6b8a5b81-b05f-4b94-bb95-83a2fea62cf3
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 6
-              - ColumnIndex: 18
-                ColumnSpan: 9
+                RowSpan: 7
+              - ColumnIndex: 25
+                ColumnSpan: 11
                 ElementId: fd8b000e-9e13-4f9e-b370-c5a1210b97ca
                 ElementType: VISUAL
                 RowIndex: 2
-                RowSpan: 6
-              - ColumnIndex: 27
-                ColumnSpan: 9
-                ElementId: 562dce3e-b18b-4532-a15c-eaf99f8b4d0a
-                ElementType: VISUAL
-                RowIndex: 2
-                RowSpan: 6
+                RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 17fc153c-b476-4cfc-a1e3-2aa950878635
                 ElementType: VISUAL
-                RowIndex: 8
+                RowIndex: 9
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 6243c7ba-c7cd-46c2-9423-4da7c4298146
                 ElementType: VISUAL
-                RowIndex: 8
+                RowIndex: 9
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: a21ee221-237a-4bda-84f5-8218359983cb
                 ElementType: VISUAL
-                RowIndex: 20
+                RowIndex: 21
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: c345d7ff-da87-4ac3-b86e-6416c03ee58e
                 ElementType: VISUAL
-                RowIndex: 20
+                RowIndex: 21
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 14
                 ElementId: 62f8da3f-07d2-43b0-8ef6-19023ca7729f
                 ElementType: VISUAL
-                RowIndex: 32
+                RowIndex: 33
                 RowSpan: 12
               - ColumnIndex: 14
                 ColumnSpan: 18
                 ElementId: 1f8ced7d-39f2-4ef7-ad34-254ddfc5d465
                 ElementType: VISUAL
-                RowIndex: 32
+                RowIndex: 33
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: ab30a6f1-f77c-4d9e-bcd0-a811fffc0f1d
                 ElementType: TEXT_BOX
-                RowIndex: 44
+                RowIndex: 45
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 12
                 ElementId: 6812b932-30a7-4315-a0d3-6d99f05f8af4
                 ElementType: VISUAL
-                RowIndex: 46
+                RowIndex: 47
                 RowSpan: 4
               - ColumnIndex: 12
                 ColumnSpan: 12
                 ElementId: de5168a0-0f68-4ef9-a861-1cd1178e4b7c
                 ElementType: VISUAL
-                RowIndex: 46
+                RowIndex: 47
                 RowSpan: 4
               - ColumnIndex: 24
                 ColumnSpan: 12
                 ElementId: 5d10a3cc-9b46-456b-a7c5-39e056288e5e
                 ElementType: VISUAL
-                RowIndex: 46
+                RowIndex: 47
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 3b0c4fd2-05e4-40bc-9acb-38c6ad774203
                 ElementType: TEXT_BOX
-                RowIndex: 50
+                RowIndex: 51
                 RowSpan: 12
               - ColumnIndex: 8
                 ColumnSpan: 14
                 ElementId: eb5e4112-0dd5-41ee-b4d1-639f1feedf51
                 ElementType: VISUAL
-                RowIndex: 50
+                RowIndex: 51
                 RowSpan: 12
               - ColumnIndex: 22
                 ColumnSpan: 14
                 ElementId: a61856ba-bda1-4a7c-a5a9-334be6dfed5a
                 ElementType: VISUAL
-                RowIndex: 50
+                RowIndex: 51
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 1f9a3cd0-6690-4b52-8f1f-6a12d9848f00
                 ElementType: VISUAL
-                RowIndex: 62
+                RowIndex: 63
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 260bfa9d-7aed-4a96-bc8a-af982fb887b8
                 ElementType: VISUAL
-                RowIndex: 70
+                RowIndex: 71
                 RowSpan: 5
         Name: OpenSearch
         ParameterControls:
@@ -9510,10 +9174,10 @@ dashboards:
                   FontSize:
                     Relative: MEDIUM
                 Visibility: VISIBLE
-            ParameterControlId: 4cce9669-f923-4054-a0cb-5a7b6c7aae86
+            ParameterControlId: b4d89d79-b5bc-4b8e-a0cc-9da7e844ca45
             SelectableValues:
               LinkToDataSetColumn:
-                ColumnName: 728ae15f-c208-4526-86ca-c01f651b424b.account_id
+                ColumnName: line_item_usage_account_id
                 DataSetIdentifier: opensearch_graviton_dashboard
             SourceParameterName: LinkedAccount
             Title: Linked Account ID
@@ -9527,12 +9191,12 @@ dashboards:
                   FontSize:
                     Relative: MEDIUM
                 Visibility: VISIBLE
-            ParameterControlId: 7bd187e1-39c4-4f9f-8aae-32b43819e302
+            ParameterControlId: 33e5b233-fb2c-44c5-a2b3-f43bbe7ff630
             SelectableValues:
               LinkToDataSetColumn:
-                ColumnName: 728ae15f-c208-4526-86ca-c01f651b424b.account_name
+                ColumnName: account_name
                 DataSetIdentifier: opensearch_graviton_dashboard
-            SourceParameterName: LinkedAccountName
+            SourceParameterName: AccountName
             Title: Linked Account Name
             Type: MULTI_SELECT
         SheetControlLayouts:
@@ -9545,17 +9209,13 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 2
-                ColumnSpan: 2
-                ElementId: 4cce9669-f923-4054-a0cb-5a7b6c7aae86
+              - ColumnSpan: 2
+                ElementId: b4d89d79-b5bc-4b8e-a0cc-9da7e844ca45
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 4
-                ColumnSpan: 3
-                ElementId: 7bd187e1-39c4-4f9f-8aae-32b43819e302
+              - ColumnSpan: 2
+                ElementId: 33e5b233-fb2c-44c5-a2b3-f43bbe7ff630
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 0
                 RowSpan: 1
         SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
         TextBoxes:
@@ -10915,65 +10575,6 @@ dashboards:
                 TrendGroups: []
                 Values:
                 - NumericalMeasureField:
-                    Column:
-                      ColumnName: Existing Savings %
-                      DataSetIdentifier: opensearch_graviton_dashboard
-                    FieldId: 65707172-e9e2-4afd-8af2-32a9e9e1c239.0.1709602887118
-                    FormatConfiguration:
-                      FormatConfiguration:
-                        PercentageDisplayFormatConfiguration:
-                          DecimalPlacesConfiguration:
-                            DecimalPlaces: 0
-                          NegativeValueConfiguration:
-                            DisplayMode: NEGATIVE
-                          NullValueFormatConfiguration:
-                            NullString: 'null'
-                          SeparatorConfiguration:
-                            DecimalSeparator: DOT
-                            ThousandsSeparator:
-                              Symbol: COMMA
-                              Visibility: VISIBLE
-                          Suffix: '%'
-              KPIOptions:
-                Comparison:
-                  ComparisonMethod: PERCENT_DIFFERENCE
-                PrimaryValueDisplayType: ACTUAL
-                SecondaryValueFontConfiguration:
-                  FontSize:
-                    Relative: EXTRA_LARGE
-                Sparkline:
-                  Type: AREA
-                  Visibility: VISIBLE
-                VisualLayoutOptions:
-                  StandardLayout:
-                    Type: VERTICAL
-              SortConfiguration: {}
-            ColumnHierarchies: []
-            Subtitle:
-              FormatText:
-                RichText: |-
-                  <visual-subtitle>
-                    <inline font-size="14px">Compared to Intel equivalent instance type</inline>
-                  </visual-subtitle>
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: |-
-                  <visual-title>
-                    <inline font-size="20px">
-                      <b>Graviton Savings %</b>
-                    </inline>
-                  </visual-title>
-              Visibility: VISIBLE
-            VisualId: 562dce3e-b18b-4532-a15c-eaf99f8b4d0a
-        - KPIVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                TargetValues: []
-                TrendGroups: []
-                Values:
-                - NumericalMeasureField:
                     AggregationFunction:
                       SimpleNumericalAggregation: SUM
                     Column:
@@ -11414,7 +11015,7 @@ dashboards:
         - Content: "<text-box>\n  <block align=\"center\">\n    <inline color=\"#61d1d6\"\
             \ font-size=\"68.8px\">\n      <b>\n        <u>Graviton Opportunities Dashboard</u>\n\
             \      </b>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n\
-            \    <inline font-size=\"68.8px\">\n      <b>v1.0.0</b>\n    </inline>\n  </block>\n\
+            \    <inline font-size=\"68.8px\">\n      <b>v1.0.1</b>\n    </inline>\n  </block>\n\
             \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n\
             \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"center\"/>\n\
             \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built\

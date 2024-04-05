@@ -44,7 +44,7 @@ See more dashboards on the [workshop page](https://catalog.workshops.aws/awscid/
 
     Automation requires Python 3
 
-2. Make sure you have latest pip package installed
+2. Make sure you have the latest pip package installed
     ```bash
     python3 -m ensurepip --upgrade
     ```
@@ -66,16 +66,20 @@ Update only Dashboard
 ```bash
 cid-cmd update
 ```
-Update dashboard and all dependenies (Datasets and Athena View). WARNING: this will overide any customization of SQL files and Datasets.
+Update dashboard and all dependencies (Datasets and Athena View). WARNING: this will override any customization of SQL files and Datasets.
 ```bash
 cid-cmd update --force --recursive
 ```
-#### Show Dashboard status
+#### Show Dashboard Status
 Show dashboards status
 
 ```bash
 cid-cmd status
 ```
+[<img width="558" alt="status" src="https://github.com/aws-samples/aws-cudos-framework-deployment/assets/82834333/cae2015f-0f81-4593-80b3-c67ec1200fcd">](https://www.youtube.com/watch?v=ivr1MoGaApM)
+
+
+
 
 ####  Share QuickSight resources
 ```bash
@@ -136,10 +140,10 @@ This command generates a SQL file that you can execute. Please mind [Athena Serv
 
 
 ## Cloud Formation
-CID is also provided in a form of CloudFormation telmplates. See detailed instuctions in the [Well Architected Labs](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/deploy_dashboards/) site.
+CID is also provided in a form of CloudFormation templates. See detailed instructions in the [Well Architected Labs](https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/cost-usage-report-dashboards/dashboards/deploy_dashboards/) site.
 
 ## Terraform
-CID offers a set of Terraform modules to deploy CUR replicaion and CID dashboards. These modules act as a wrapper around CloudFormation.
+CID offers a set of Terraform modules to deploy CUR replication and CID dashboards. These modules act as a wrapper around CloudFormation.
 
   1. Create a bucket for consolidating CUR [terraform-modules/cur-setup-destination/](terraform-modules/cur-setup-destination/)
   2. Create a CUR in Payer Account(s) [terraform-modules/cur-setup-source/](terraform-modules/cur-setup-source/)
