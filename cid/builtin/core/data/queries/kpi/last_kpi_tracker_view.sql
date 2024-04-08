@@ -190,5 +190,5 @@ LEFT JOIN (
    FROM
      kpi_s3_storage_all
    GROUP BY 1, 2, 3
-)  s3_all ON ((s3_all.linked_account_id = account_id) AND (s3_all.billing_period = spend_all.billing_period) AND (s3_all.payer_account_id=spend_all.payer_account_id)))
+)  s3_all ON ((s3_all.linked_account_id = account_id) AND (s3_all.billing_period = spend_all.billing_period) AND (s3_all.payer_account_id = spend_all.payer_account_id)))
 WHERE (spend_all.billing_period >= ("date_trunc"('month', current_timestamp) - INTERVAL  '3' MONTH))
