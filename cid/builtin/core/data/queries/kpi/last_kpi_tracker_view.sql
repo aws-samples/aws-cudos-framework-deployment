@@ -166,7 +166,7 @@ LEFT JOIN (
    FROM
      kpi_ebs_storage_all
    GROUP BY 1, 2, 3
-)  ebs_all ON ((ebs_all.linked_account_id = account_id) AND (ebs_all.billing_period = spend_all.billing_period) AND (ebs_all.payer_account_id= spend_all.payer_account_id)))
+)  ebs_all ON ((ebs_all.linked_account_id = account_id) AND (ebs_all.billing_period = spend_all.billing_period) AND (ebs_all.payer_account_id = spend_all.payer_account_id)))
 LEFT JOIN (
    SELECT DISTINCT
      billing_period
