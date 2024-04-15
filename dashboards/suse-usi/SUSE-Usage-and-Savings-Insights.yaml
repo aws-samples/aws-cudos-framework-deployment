@@ -1,0 +1,248 @@
+dashboards:
+  SUSE USAGE AND SAVINGS INSIGHTS:
+    dependsOn:
+      datasets:
+      - suse_consolidated_view
+    name: SUSE Usage and Savings Insights
+    dashboardId: suse-usage-and-savings-insights
+    category: Custom
+    templateId: suse-usage-and-savings-insights
+    sourceAccountId: '759324893113'
+    region: us-east-1
+datasets:
+  suse_consolidated_view:
+    data:
+      DataSetId: 00965fdf-1d4b-43f3-91e5-9f1b99f1cc37
+      Name: suse_consolidated_view
+      PhysicalTableMap:
+        05503979-5a1a-4f56-90e5-465e9535168e:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+        89cdfcd8-d5e6-4c10-b312-3cee025a011e:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+        cfaebe5c-afb4-4b96-9245-a2faf782d20c:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: suse_consolidated_view
+            InputColumns:
+            - Name: reservation_subscription_id
+              Type: STRING
+            - Name: payer_account_id
+              Type: STRING
+            - Name: linked_account_id
+              Type: STRING
+            - Name: billing_period
+              Type: DATETIME
+            - Name: usage_date
+              Type: DATETIME
+            - Name: term
+              Type: STRING
+            - Name: version
+              Type: STRING
+            - Name: instance_type
+              Type: STRING
+            - Name: region
+              Type: STRING
+            - Name: service
+              Type: STRING
+            - Name: resource_id
+              Type: STRING
+            - Name: subscription_puchaise_account_id
+              Type: STRING
+            - Name: subscription_start_date
+              Type: DATETIME
+            - Name: subscription_end_date
+              Type: DATETIME
+            - Name: subscription_item_description
+              Type: STRING
+            - Name: usage_quantity
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: unblended_cost
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: item_description
+              Type: STRING
+            - Name: subscriptions_usage_quantity
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: subscription_unblended_cost
+              Type: DECIMAL
+              SubType: FLOAT
+      LogicalTableMap:
+        64243ab7-c92b-416f-b78c-7aaa37be73c4:
+          Alias: Intermediate Table
+          Source:
+            JoinInstruction:
+              LeftOperand: f566d679-1a3a-4908-8837-1119b1289b35
+              RightOperand: 825abe59-b5fe-4fd3-a2a9-fd20b392c05b
+              Type: LEFT
+              OnClause: '{linked_account_id} = {account_id}'
+        825abe59-b5fe-4fd3-a2a9-fd20b392c05b:
+          Alias: user_account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_name
+              NewColumnName: usage_account_name
+          Source:
+            PhysicalTableId: 89cdfcd8-d5e6-4c10-b312-3cee025a011e
+        c46b2ef8-9817-4701-9dbf-82f21579a98c:
+          Alias: buyer_account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[buyer_account_map]
+          - RenameColumnOperation:
+              ColumnName: account_name
+              NewColumnName: buyer_account_name
+          Source:
+            PhysicalTableId: 05503979-5a1a-4f56-90e5-465e9535168e
+        cfa619dc-83cd-4252-b26b-c9a7e0d38761:
+          Alias: Intermediate Table (2)
+          DataTransforms:
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - reservation_subscription_id
+              - payer_account_id
+              - linked_account_id
+              - billing_period
+              - usage_date
+              - term
+              - version
+              - instance_type
+              - region
+              - service
+              - resource_id
+              - subscription_puchaise_account_id
+              - subscription_start_date
+              - subscription_end_date
+              - subscription_item_description
+              - usage_quantity
+              - unblended_cost
+              - item_description
+              - subscriptions_usage_quantity
+              - subscription_unblended_cost
+              - account_id
+              - usage_account_name
+              - account_id[buyer_account_map]
+              - buyer_account_name
+          Source:
+            JoinInstruction:
+              LeftOperand: 64243ab7-c92b-416f-b78c-7aaa37be73c4
+              RightOperand: c46b2ef8-9817-4701-9dbf-82f21579a98c
+              Type: LEFT
+              OnClause: '{subscription_puchaise_account_id} = {account_id[buyer_account_map]}'
+        f566d679-1a3a-4908-8837-1119b1289b35:
+          Alias: suse_consolidated_view
+          Source:
+            PhysicalTableId: cfaebe5c-afb4-4b96-9245-a2faf782d20c
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - account_map
+      - suse_consolidated_view
+    schedules:
+    - default
+crawlers: {}
+views:
+  suse_consolidated_view:
+    dependsOn:
+      cur: true
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.suse_consolidated_view AS
+      WITH
+        "all_suse" AS (
+         SELECT
+           "year" "year"
+         , "month" "month"
+         , "bill_billing_period_start_date" "billing_period"
+         , "bill_payer_account_id" "payer_account_id"
+         , "line_item_usage_account_id" "linked_account_id"
+         , (CASE WHEN ("date_trunc"('month', "line_item_usage_start_date") >= ("date_trunc"('month', current_timestamp) - INTERVAL  '1' MONTH)) THEN "date_trunc"('hour', "line_item_usage_start_date") ELSE "date_trunc"('day', "line_item_usage_start_date") END) "usage_date"
+         , "line_item_resource_id" "resource_id"
+         , "reservation_subscription_id" "reservation_subscription_id"
+         , TRY(replace(concat(split_part(product_product_name, ' ', 8), ' ', split_part(product_product_name, ' ', 9)), ' (EOL)', '')) version
+         , TRY(split_part(line_item_usage_type, ':', 2)) instance_type
+         , TRY(split_part(line_item_line_item_description, ' ', 3)) term
+         , "reservation_total_reserved_units" "reservation_total_reserved_units"
+         , "reservation_units_per_reservation" "reservation_units_per_reservation"
+         , "reservation_number_of_reservations" "reservation_number_of_reservations"
+         , "product_size_flex" "product_size_flex"
+         , "line_item_line_item_type" "charge_type"
+         , "line_item_product_code" "service"
+         , "line_item_usage_type" "usage_type"
+         , TRY(CAST(from_iso8601_timestamp(split_part(identity_time_interval, '/', 1)) AS timestamp)) "subscription_start_date"
+         , TRY(CAST(from_iso8601_timestamp(split_part(identity_time_interval, '/', 2)) AS timestamp)) "subscription_end_date"
+         , "line_item_line_item_description" "item_description"
+         , "line_item_availability_zone" "availability_zone"
+         , "product_region" "region"
+         , "pricing_unit" "pricing_unit"
+         , "sum"("line_item_usage_amount") "usage_quantity"
+         , "sum"("line_item_unblended_cost") "unblended_cost"
+         FROM
+           ${cur_table_name}
+         WHERE ((("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '36' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '36' MONTH))) AND ("bill_billing_entity" = 'AWS Marketplace') AND ("Product_Product_Name" LIKE '%SUSE%') AND (line_item_line_item_type <> 'Tax'))
+         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+      )
+      , "subscriptions" AS (
+         SELECT
+           reservation_subscription_id
+         , payer_account_id subscription_payer_account_id
+         , linked_account_id subscription_puchaise_account_id
+         , subscription_start_date
+         , subscription_end_date
+         , item_description
+         , usage_quantity
+         , unblended_cost
+         FROM
+           all_suse
+         WHERE (charge_type = 'Fee')
+      )
+      SELECT
+        usage.reservation_subscription_id
+      , usage.payer_account_id
+      , usage.linked_account_id
+      , usage.billing_period
+      , usage.usage_date
+      , usage.term term
+      , usage.version version
+      , usage.instance_type instance_type
+      , usage.region region
+      , usage.service service
+      , usage.resource_id resource_id
+      , subscriptions.subscription_puchaise_account_id subscription_puchaise_account_id
+      , subscriptions.subscription_start_date
+      , subscriptions.subscription_end_date
+      , subscriptions.item_description subscription_item_description
+      , usage.usage_quantity
+      , usage.unblended_cost
+      , usage.item_description
+      , subscriptions.usage_quantity subscriptions_usage_quantity
+      , subscriptions.unblended_cost subscription_unblended_cost
+      FROM
+        (all_suse usage
+      FULL JOIN subscriptions ON (subscriptions.reservation_subscription_id = usage.reservation_subscription_id))
