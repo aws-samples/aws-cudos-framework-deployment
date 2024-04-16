@@ -6,7 +6,7 @@ dashboards:
       - rds_extended_support_view
     name: Extended Support Cost Projection
     dashboardId: extended-support-cost-projection
-    category: Custom
+    category: Advanced
     data: |-
       AnalysisDefaults:
         DefaultNewSheetConfiguration:
@@ -2857,7 +2857,18 @@ dashboards:
               Visibility: VISIBLE
             VisualId: fc3ac4a1-b895-4e78-9b39-938b7ffd415e
         - TableVisual:
-            Actions: []
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: e163ff8d-f884-4a23-920f-703c2d4e26af
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               FieldOptions:
                 Order: []
@@ -2890,6 +2901,8 @@ dashboards:
                   Values: []
               SortConfiguration: {}
               TableOptions:
+                CellStyle:
+                  Height: 25
                 HeaderStyle:
                   Height: 25
                   TextWrap: WRAP
