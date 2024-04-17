@@ -6,7 +6,7 @@ dashboards:
       - scad_cca_summary_view
     name: SCAD Containers Cost Allocation
     dashboardId: scad-containers-cost-allocation
-    category: Custom
+    category: Additional
     templateId: scad-containers-cost-allocation
 datasets:
   scad_cca_summary_view:
