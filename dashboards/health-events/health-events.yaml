@@ -3988,3 +3988,7 @@ views:
         default: optimization_data
         description: "Enter the name of the data collection database"
         global: True
+      table_name:
+        default: health_events_detail_data
+        description: "Enter the name of the health events table (do not alter)"
+        global: True
