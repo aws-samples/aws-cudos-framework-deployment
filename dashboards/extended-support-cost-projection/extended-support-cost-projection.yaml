@@ -19,28 +19,28 @@ dashboards:
           SheetContentType: INTERACTIVE
       CalculatedFields:
       - DataSetIdentifier: eks_extended_support_view
-        Expression: (100 - ${EDPDiscount})/100
-        Name: EDP_Discount_Factor
+        Expression: (100 - ${Discount})/100
+        Name: Discount_Factor
       - DataSetIdentifier: eks_extended_support_view
-        Expression: '{EDP_Discount_Factor} * {usage_amount} * 0.6'
+        Expression: '{Discount_Factor} * {usage_amount} * 0.6'
         Name: Estimated_Extended_Support_Monthly_Cost
       - DataSetIdentifier: eks_extended_support_view
         Expression: dateDiff(now(), {start_of_extended_support}, 'MM')
         Name: Months_Before_Start_Ext_Supp
       - DataSetIdentifier: rds_extended_support_view
-        Expression: '{EDP_Discount_Factor} * {year_1_2_cost}'
+        Expression: '{Discount_Factor} * {year_1_2_cost}'
         Name: Actual_Year_1_2_Cost
       - DataSetIdentifier: rds_extended_support_view
-        Expression: '{EDP_Discount_Factor} * {year_3_cost}'
+        Expression: '{Discount_Factor} * {year_3_cost}'
         Name: Actual_Year_3_Cost
       - DataSetIdentifier: rds_extended_support_view
-        Expression: (100 - ${EDPDiscount})/100
-        Name: EDP_Discount_Factor
+        Expression: (100 - ${Discount})/100
+        Name: Discount_Factor
       - DataSetIdentifier: rds_extended_support_view
-        Expression: '{EDP_Discount_Factor} * {vcpu_acu_hours} * {year_1_2_pricing}'
+        Expression: '{Discount_Factor} * {vcpu_acu_hours} * {year_1_2_pricing}'
         Name: Estimated_Year_1_2_Cost
       - DataSetIdentifier: rds_extended_support_view
-        Expression: '{EDP_Discount_Factor} * {vcpu_acu_hours} * {Year_3_Pricing_Fallback}'
+        Expression: '{Discount_Factor} * {vcpu_acu_hours} * {Year_3_Pricing_Fallback}'
         Name: Estimated_Year_3_Cost
       - DataSetIdentifier: rds_extended_support_view
         Expression: dateDiff(now(), {year_1_start}, 'MM')
@@ -733,7 +733,7 @@ dashboards:
           DefaultValues:
             StaticValues:
             - 0.0
-          Name: EDPDiscount
+          Name: Discount
           ParameterValueType: SINGLE_VALUED
           ValueWhenUnset:
             ValueWhenUnsetOption: RECOMMENDED_VALUE
