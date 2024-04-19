@@ -281,6 +281,7 @@ Conditions:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
       - !Condition NeedDataBucketsKms
+  NeedPermissionsBoundary: !Not [!Equals [ !Ref PermissionsBoundary, "" ]]
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets not used by default
@@ -298,7 +299,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       Policies:
         - PolicyName: !Sub 'CidSpiceRefreshExecutionRole${Suffix}'
           PolicyDocument:
@@ -677,7 +678,7 @@ Resources:
               - Effect: Allow
                 Action: quicksight:DescribeUser
                 Resource: !Sub 'arn:${AWS::Partition}:quicksight:*:${AWS::AccountId}:user/default/${QuickSightUser}' # region=* as at this moment we do not know the Identity region where QS stores users
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
@@ -765,7 +766,7 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: !Ref RolePath
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   CustomResourceProcessPath:
@@ -1037,7 +1038,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Path: !Ref RolePath
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       ManagedPolicyArns:
         - Fn::Sub: 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
       Policies:
@@ -1098,7 +1099,7 @@ Resources:
               - 'sts:AssumeRole'
       Path: !Ref RolePath
       RoleName: !Sub '${QuickSightDataSourceRoleName}${Suffix}'
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       Policies:
         - PolicyName: AthenaAccess
           PolicyDocument:
@@ -1247,7 +1248,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
