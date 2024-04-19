@@ -73,6 +73,7 @@ Conditions:
   DeployCURViaCFNInDestination: !And [!Condition CUREnable, !Condition IsDestinationAccount, !Condition RegionSupportsCURviaCFN]
   DeployCURViaLambda: !And [!Condition CUREnable, !Not [!Condition RegionSupportsCURviaCFN]]
   EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
+  NeedPermissionsBoundary: !Not [!Equals [ !Ref PermissionsBoundary, "" ]]
 
 Resources:
 
@@ -344,7 +345,7 @@ Resources:
                 - "s3.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       Policies:
         - PolicyName: CrossRegionPolicy
           PolicyDocument:
@@ -457,7 +458,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       Policies:
         - PolicyName: "ExecutionDefault"
           PolicyDocument:
@@ -600,7 +601,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
       Policies:
         - PolicyName: "ExecutionDefault"
           PolicyDocument:
