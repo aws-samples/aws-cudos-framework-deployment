@@ -1,5 +1,6 @@
 """ Command Init QuickSight
 """
+import re
 import time
 import logging
 
@@ -57,6 +58,7 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
                 'AccountName': account_name,
                 'NotificationEmail': email,
             }
+            cid_print('Initializing Amazon QuickSight in your AWS Account')
             try:
                 response = self.cid.qs.client.create_account_subscription(**params)
                 logger.debug(f'create_account_subscription resp: {response}')
@@ -76,14 +78,17 @@ class InitQsCommand(Command):  # pylint: disable=too-few-public-methods
     def _get_account_name_for_quicksight(self):
         """Get the account name for quicksight"""
         for _ in range(MAX_ITERATIONS):
+            cid_print('Please, choose a descriptive name for your QuickSight account.')
+            cid_print('This will be used later to share it with your users. For test you can use AWS Account Id. This can NOT be changed later. If you are planning to use IdC stop now and create QuickSight Account in UI.')
             account_name = get_parameter(
                 'account-name',
-                message=(
-                    '\n\tPlease, choose a descriptive name for your QuickSight account. '
-                    'This will be used later to share it with your users. This can NOT be changed later.'
-                ),
+                message='Please enter a unique name [A-Za-z0-9-]',
                 default=self.cid.organizations.get_account_name()
             )
+            if not re.match('[A-Za-z0-9-]', account_name):
+                logger.error('account_name must match [A-Za-z0-9-]')
+                unset_parameter('account-name')
+                continue
             if account_name:
                 return account_name
             print('\t The account name must not be empty. Please, try again.')

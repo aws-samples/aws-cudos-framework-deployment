@@ -460,7 +460,8 @@ class QuickSight(CidBase):
                 if not datasource.status.endswith('IN_PROGRESS'):
                     break
             if not datasource.is_healthy:
-                logger.error(f'Data source creation failed: {datasource.error_info}.')
+                logger.error(f'DataSource parameters: {json.dumps(params, indent=2)}')
+                logger.error(f'DataSource creation failed: {datasource.error_info}.')
                 if "The QuickSight service role required to access your AWS resources has not been created yet." in str(datasource.error_info):
                     logger.error(
                         'Please check that QuickSight has a default role that can access S3 Buckets and Athena https://quicksight.aws.amazon.com/sn/admin?#aws '
@@ -468,8 +469,9 @@ class QuickSight(CidBase):
                     )
                 if get_parameter(
                     param_name='quicksight-delete-failed-datasource',
-                    message=f'Data source creation failed: {datasource.error_info}. Delete?',
+                    message=f'Data source creation failed: {datasource.error_info}. Delete(recommended)?',
                     choices=['yes', 'no'],
+                    default='yes'
                 ) == 'yes':
                     try:
                         self.delete_data_source(datasource.id)
@@ -1116,7 +1118,7 @@ class QuickSight(CidBase):
             dataset_id = definition.get("DataSetId")
             logger.info(f'Dataset {definition.get("Name")} already exists with DataSetId={dataset_id}')
         except self.client.exceptions.LimitExceededException as exc:
-            raise CidCritical('AWS QuickSight SPICE limit exceeded. Add SPICE here https://quicksight.aws.amazon.com/sn/admin#capacity .') from exc
+            raise CidCritical('Not enough AWS QuickSight SPICE capacity. Add SPICE here https://quicksight.aws.amazon.com/sn/admin#capacity .') from exc
 
         logger.info(f'Waiting for {definition.get("Name")} to be created')
         deadline = time.time() + max_timeout
