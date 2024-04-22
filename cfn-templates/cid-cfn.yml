@@ -1119,6 +1119,7 @@ Resources:
                 Action:
                   - glue:GetPartition
                   - glue:GetPartitions
+                  - glue:GetDatabase
                   - glue:GetDatabases
                   - glue:GetTable
                   - glue:GetTables
