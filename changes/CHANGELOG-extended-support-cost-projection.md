@@ -2,7 +2,7 @@
 
 ## Extended Support Dashboard - v1.1.0
 * Includes EKS Extended Support Cost Projection sheet.
-* Adjusted titles for visuals showing estimated costs. Estimates are based 
+* Adjusted titles for visuals showing estimated costs. Estimates are based on resource usage over a given period of time.
 * Adjusted names for calculated fields and parameters.
 
 
