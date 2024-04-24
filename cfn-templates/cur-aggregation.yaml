@@ -393,7 +393,7 @@ Resources:
         - ATHENA
       AdditionalSchemaElements:
         - RESOURCES
-        #- !If [ NeedSCAD, SPLIT_COST_ALLOCATION_DATA, !Ref "AWS::NoValue"] # not supported via CFN
+        - !If [ NeedSCAD, SPLIT_COST_ALLOCATION_DATA, !Ref "AWS::NoValue"]
       Compression: Parquet
       Format: Parquet
       RefreshClosedReports: True
@@ -414,7 +414,7 @@ Resources:
         - ATHENA
       AdditionalSchemaElements:
         - RESOURCES
-        #- !If [ NeedSCAD, SPLIT_COST_ALLOCATION_DATA, !Ref "AWS::NoValue"] # not supported via CFN
+        - !If [ NeedSCAD, SPLIT_COST_ALLOCATION_DATA, !Ref "AWS::NoValue"]
       Compression: Parquet
       Format: Parquet
       RefreshClosedReports: True
