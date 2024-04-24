@@ -4,7 +4,7 @@ import json
 import logging
 
 from cid.base import CidBase
-from cid.utils import get_parameter, get_parameters
+from cid.utils import get_parameter, get_parameters, cid_print
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
@@ -135,8 +135,9 @@ class CUR(CidBase):
                 self.athena.query(f'ALTER TABLE {self.table_name} ADD COLUMNS ({column} {column_type})')
             except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
                 raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
-            self._metadata = self.athena.get_table_metadata(self.table_name) # refresh table metadata
-            logger.critical(f"Column '{column}' was added to CUR ({self.table_name}). Please make sure crawler do not override that columns. Crawler='{crawler_name}'")
+            # table takes time to update so just adding column to cached data
+            self._metadata.get('Columns', []).append({'Name': column, 'Type': column_type})
+            cid_print(f"Column '{column}' was added to CUR ({self.table_name}).")
             return
 
         # if table cannot be updated, check if it is ri/sp case - let's hope dashboard views can handle it:
@@ -145,7 +146,7 @@ class CUR(CidBase):
             return
 
         # if a required column is not there and not ri/sp -> stop
-        logger.critical(f"Column '{column}' is not in ({self.table_name}). Cannot continue")
+        logger.critical(f"Column '{column}' is not in ({self.table_name}). Cannot continue.")
 
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
