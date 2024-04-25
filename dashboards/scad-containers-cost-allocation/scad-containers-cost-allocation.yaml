@@ -494,7 +494,6 @@ views:
         split_line_item_net_unused_cost: double
         split_line_item_public_on_demand_split_cost: double
         split_line_item_public_on_demand_unused_cost: double
-        resource_tags_user_eks_cluster_name: string
         resource_tags_aws_eks_cluster_name: string
         resource_tags_aws_eks_deployment: string
         resource_tags_aws_eks_namespace: string
@@ -597,7 +596,6 @@ views:
         split_line_item_net_unused_cost: double
         split_line_item_public_on_demand_split_cost: double
         split_line_item_public_on_demand_unused_cost: double
-        resource_tags_user_eks_cluster_name: string
         resource_tags_aws_eks_cluster_name: string
         resource_tags_aws_eks_deployment: string
         resource_tags_aws_eks_namespace: string
