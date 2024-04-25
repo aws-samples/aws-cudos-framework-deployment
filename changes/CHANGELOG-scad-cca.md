@@ -1,4 +1,4 @@
-# What's new in Trends Dashboard
+# What's new in SCAD Containers Cost Allocation Dashboard
 ## SCAD Containers Cost Allocation Dashboard - v1.0.0
 * Added support to view Net Amortized Cost in "View Cost As" control in all sheets
 * Removed "Exlucde last 1 month" from all date range controls to prevent "No Data" (beacuse Split Cost Allocation Data for EKS starts filling data only in current month)
