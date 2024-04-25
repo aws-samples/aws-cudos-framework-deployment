@@ -483,6 +483,7 @@ views:
   scad_cca_summary_view:
     dependsOn:
       cur:
+        reservation_reservation_a_r_n: string
         split_line_item_parent_resource_id: string
         split_line_item_reserved_usage: double
         split_line_item_actual_usage: double
@@ -585,6 +586,7 @@ views:
   scad_cca_hourly_resource_view:
     dependsOn:
       cur:
+        reservation_reservation_a_r_n: string
         split_line_item_parent_resource_id: string
         split_line_item_reserved_usage: double
         split_line_item_actual_usage: double
