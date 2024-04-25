@@ -44,15 +44,13 @@ Parameters:
   CreateCUR:
     Type: String
     Description: Whether to create a local CUR in the destination account or not. Set this to False only if the current account is covered in the CUR of its Management (Payer) Account.
-    AllowedValues:
-      - "True"
-      - "False"
+    AllowedValues: ["True", "False"]
     Default: "True"
   AddSCAD:
     Type: String
-    Description: Add Split Cost Allocation Data (SCAD) to CUR. Currently this template supports regions other than us-east-1. 
-    AllowedValues: ['True', 'False']
-    Default: "False"
+    Description: Add Split Cost Allocation Data (SCAD) to CUR
+    AllowedValues: ['yes', 'no']
+    Default: "no"
 
   ##
   # Destination specific params
@@ -69,7 +67,7 @@ Parameters:
     Description: Define Permission Boundary for Roles if required by SCP
 
 Conditions:
-  NeedSCAD: !Equals [!Ref AddSCAD, 'True']
+  NeedSCAD: !Equals [!Ref AddSCAD, 'yes']
   IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref 'AWS::AccountId']
   IsSourceAccount: !Not [!Condition IsDestinationAccount]
   RegionSupportsCURviaCFN: # CFN supports CUR only in us-east-1 and cn-northwest-1. Other regions must use lambda
