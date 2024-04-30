@@ -332,7 +332,7 @@ views:
   compute_savings_plan_eligible_spend:
     File: cid/compute_savings_plan_eligible_spend.sql
     dependsOn:
-      cur: true
+      cur:
         - bill_billing_period_start_date
         - bill_payer_account_id
         - line_item_line_item_type

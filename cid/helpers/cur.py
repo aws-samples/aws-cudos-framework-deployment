@@ -1,6 +1,7 @@
 """ Manage AWS CUR
 """
 import json
+import time
 import logging
 from abc import abstractmethod
 
@@ -122,9 +123,11 @@ class AbstractCUR(CidBase):
         return special_cases.get(column, 'STRING')
 
     def column_exists(self, column:  str):
-        return column.lower() in [col.get('Name', '').lower() for col in self.metadata.get('Columns', [])]
+        return column.lower() in [col.get('Name', '').lower() for col in (self.metadata.get('Columns', []) + self.metadata.get('PartitionKeys', []))]
 
     def ensure_columns(self, columns):
+        assert isinstance(columns, list), f'{columns} must be list'
+
         for column in columns:
             self.ensure_column(column)
 
@@ -157,7 +160,7 @@ class AbstractCUR(CidBase):
     @property
     def fields(self) -> list:
         """get CUR fields """
-        return [col.get('Name') for col in self.metadata.get('Columns', [])]
+        return [col.get('Name') for col in (self.metadata.get('Columns', []) + self.metadata.get('PartitionKeys', []))]
 
     @property
     def tag_and_cost_category_fields(self) -> list:
@@ -269,13 +272,21 @@ class ProxyCUR(AbstractCUR):
         if self.cur.version != self.target_cur_version:
             cid_print('CUR Proxy will be used')
         self.proxy = ProxyView(cur=self.cur, target_cur_version=self.target_cur_version)
-        self._metadata = self.athena.get_table_metadata(self.proxy.name)
+        try:
+            self._metadata = self.athena.get_table_metadata(self.proxy.name)
+        except self.athena.client.exceptions.MetadataException: # if no table - create it
+            self.proxy.create_or_update_view()
+            self._metadata = self.athena.get_table_metadata(self.proxy.name)
         return self._metadata
 
     def ensure_columns(self, columns):
         self.metadata
+        if self.cur.metadata.get('TableType') == 'EXTERNAL_TABLE':
+            try:
+                self.cur.ensure_columns(columns)
+            except Exception as exc:
+                logger.exception(exc)
         for column in columns:
-            column_type = self.cur.get_type_of_column(column)
-            self.proxy.fields_to_expose[column] = column_type
+            self.proxy.fields_to_expose.append(column)
         print(columns)
         self.proxy.create_or_update_view()

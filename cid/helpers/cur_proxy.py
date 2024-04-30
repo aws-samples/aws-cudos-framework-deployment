@@ -179,13 +179,152 @@ cur2to1mapping = {
     "concat('name', line_item_usage_account_id)": 'line_item_usage_account_name',
 }
 
+default_columns = {
+    '1': [
+        "year",
+        "month",
+        "bill_bill_type",
+        "bill_billing_entity",
+        "bill_billing_period_end_date",
+        "bill_billing_period_start_date",
+        "bill_invoice_id",
+        "bill_payer_account_id",
+        "identity_line_item_id",
+        "identity_time_interval",
+        "line_item_availability_zone",
+        "line_item_legal_entity",
+        "line_item_line_item_description",
+        "line_item_line_item_type",
+        "line_item_operation",
+        "line_item_product_code",
+        "line_item_resource_id",
+        "line_item_unblended_cost",
+        "line_item_usage_account_id",
+        "line_item_usage_amount",
+        "line_item_usage_end_date",
+        "line_item_usage_start_date",
+        "line_item_usage_type",
+        "pricing_lease_contract_length",
+        "pricing_offering_class",
+        "pricing_public_on_demand_cost",
+        "pricing_purchase_option",
+        "pricing_term",
+        "pricing_unit",
+        "product_cache_engine",
+        "product_current_generation",
+        "product_database_engine",
+        "product_deployment_option",
+        "product_from_location",
+        "product_group",
+        "product_instance_type",
+        "product_instance_type_family",
+        "product_license_model",
+        "product_operating_system",
+        "product_physical_processor",
+        "product_processor_features",
+        "product_product_family",
+        "product_product_name",
+        "product_region",
+        "product_servicecode",
+        "product_storage",
+        "product_tenancy",
+        "product_to_location",
+        "product_volume_api_name",
+        "product_volume_type",
+        "reservation_amortized_upfront_fee_for_billing_period",
+        "reservation_effective_cost",
+        "reservation_end_time",
+        "reservation_reservation_a_r_n",
+        "reservation_start_time",
+        "reservation_unused_amortized_upfront_fee_for_billing_period",
+        "reservation_unused_recurring_fee",
+        "savings_plan_amortized_upfront_commitment_for_billing_period",
+        "savings_plan_end_time",
+        "savings_plan_offering_type",
+        "savings_plan_payment_option",
+        "savings_plan_purchase_term",
+        "savings_plan_savings_plan_a_r_n",
+        "savings_plan_savings_plan_effective_cost",
+        "savings_plan_start_time",
+        "savings_plan_total_commitment_to_date",
+        "savings_plan_used_commitment",
+    ],
+    '2': [
+        "billing_period",
+        "bill_bill_type",
+        "bill_billing_entity",
+        "bill_billing_period_end_date",
+        "bill_billing_period_start_date",
+        "bill_invoice_id",
+        "bill_payer_account_id",
+        "identity_line_item_id",
+        "identity_time_interval",
+        "line_item_availability_zone",
+        "line_item_legal_entity",
+        "line_item_line_item_description",
+        "line_item_line_item_type",
+        "line_item_operation",
+        "line_item_product_code",
+        "line_item_resource_id",
+        "line_item_unblended_cost",
+        "line_item_usage_account_id",
+        "line_item_usage_amount",
+        "line_item_usage_end_date",
+        "line_item_usage_start_date",
+        "line_item_usage_type",
+        "pricing_lease_contract_length",
+        "pricing_offering_class",
+        "pricing_public_on_demand_cost",
+        "pricing_purchase_option",
+        "pricing_term",
+        "pricing_unit",
+        'product["cache_engine"]',
+        'product["current_generation"]',
+        'product["database_engine"]',
+        'product["deployment_option"]',
+        'product["from_location"]',
+        'product["group"]',
+        'product["instance_type"]',
+        'product["instance_type_family"]',
+        'product["license_model"]',
+        'product["operating_system"]',
+        'product["physical_processor"]',
+        'product["processor_features"]',
+        'product["product_family"]',
+        'product["product_name"]',
+        'product["region"]',
+        'product["servicecode"]',
+        'product["storage"]',
+        'product["tenancy"]',
+        'product["to_location"]',
+        'product["volume_api_name"]',
+        'product["volume_type"]',
+        "reservation_amortized_upfront_fee_for_billing_period",
+        "reservation_effective_cost",
+        "reservation_end_time",
+        "reservation_reservation_a_r_n",
+        "reservation_start_time",
+        "reservation_unused_amortized_upfront_fee_for_billing_period",
+        "reservation_unused_recurring_fee",
+        "savings_plan_amortized_upfront_commitment_for_billing_period",
+        "savings_plan_end_time",
+        "savings_plan_offering_type",
+        "savings_plan_payment_option",
+        "savings_plan_purchase_term",
+        "savings_plan_savings_plan_a_r_n",
+        "savings_plan_savings_plan_effective_cost",
+        "savings_plan_start_time",
+        "savings_plan_total_commitment_to_date",
+        "savings_plan_used_commitment",
+    ],
+}
 
 # various types require various empty
 empty = {
-    'string': 'cast (null as varchar)',
+    'STRING': 'cast (null as varchar)',
     'varchar': 'cast (null as varchar)',
-    'double': 'cast (null as double)',
-    'timestamp(3)': 'cast (null as timestamp)',
+    'DOUBLE': 'cast (null as double)',
+    'TIMESTAMP': 'cast (null as timestamp)',
 }
 
 
@@ -199,7 +338,7 @@ class ProxyView():
         self.target_cur_version = target_cur_version
         self.current_cur_version = self.cur.version
         logger.debug(f'CUR proxy from {self.current_cur_version } to {self.target_cur_version }')
-        self.fields_to_expose = fields_to_expose or {}
+        self.fields_to_expose = list(set(default_columns[self.target_cur_version] + (fields_to_expose or []) ))
         self.athena = self.cur.athena
         self.name = 'cur1_proxy'
         self.exposed_fields = []
@@ -210,12 +349,13 @@ class ProxyView():
             'timestamp(3)': 'datetime',
             'varchar': 'string',
         }
-        self.exposed_fields = dict(self.athena.query(f'''
+        exposed_fields_and_types = dict(self.athena.query(f'''
             SELECT column_name, data_type
             FROM information_schema.columns
             WHERE table_schema = '{self.athena.DatabaseName}'
             AND table_name = '{view_name}';
         '''))
+        self.exposed_fields = list(exposed_fields_and_types.keys())
         logger.debug(self.exposed_fields)
 
     def get_sql_expression(self, field, field_type):
@@ -252,17 +392,18 @@ class ProxyView():
 
     def create_or_update_view(self):
         self.read_from_athena()
-        all_fields  = dict(self.exposed_fields)
-        for field in self.fields_to_expose:
-            if field not in all_fields:
-                all_fields[field] = self.fields_to_expose[field]
+        all_fields  = list(set(self.exposed_fields + self.fields_to_expose))
         lines = []
-        for field, field_type in all_fields.items():
+        print('all_fields',  all_fields)
+        for field in all_fields:
+            field_type = self.cur.get_type_of_column(field)
             mapped_expression = self.get_sql_expression(field, field_type)
             requirement = mapped_expression.split('[')[0]
             if not re.match(r'^[a-zA-Z0-9_]+$', requirement) or self.cur.column_exists(requirement):
                 expression = mapped_expression
             else:
+                if field_type not in empty:
+                    raise RuntimeError(f'{field_type} not in empty list')
                 expression = empty.get(field_type, 'null')
             lines.append(f'{expression} {field}')
         select_block = '\n                ,'.join(lines)
@@ -298,14 +439,14 @@ if __name__ == '__main__':
         cur=cur,
         target_cur_version='2',
         fields_to_expose = {
-            'billing_period': 'string',
-            'line_item_usage_account_name': 'string',
-            'identity_time_interval': 'string',
-            'product': 'map',
-            'resource_tags': 'map',
-            'cost_category': 'map',
-            'discount': 'map',
-            'line_item_unblended_cost': 'double',
+            'billing_period',
+            'line_item_usage_account_name',
+            'identity_time_interval',
+            'product',
+            'resource_tags',
+            'cost_category',
+            'discount',
+            'line_item_unblended_cost',
         },
     )
     proxy.create_or_update_view()
