@@ -107,7 +107,7 @@ class AccountMap(CidBase):
     @lru_cache(1000)
     def detect_metadata_table(self, name):
         """ detect meta table with the list of accounts """
-        cid_print('Autodiscovering metadata table')
+        cid_print('Autodiscover metadata table')
 
         # FIXME: This will only work for current Athena Database. We might want to check optimization_data base as well
         tables = self.athena.list_table_metadata()
@@ -142,19 +142,35 @@ class AccountMap(CidBase):
             if get_parameters().get('account-map-source'):
                 raise CidError('Skipping autodiscovery')
 
+            # try to find a table with data about accounts
             self._athena_table_name = self.detect_metadata_table(name)
             if not self._athena_table_name:
-                raise CidError('Metadata table not found')
+                raise CidError('Metadata table not found') # catch you later
 
-            # Query path
-            view_definition = self.athena._resources.get('views').get(name, {})
-            if view_definition.get('File'):
-                view_file = view_definition.get('File')
-                template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
-            elif view_definition.get('data'):
-                template = Template(str(view_definition.get('data')))
+            if self.cur.version.startswith('2'):
+                template_str = '''
+                    CREATE OR REPLACE VIEW  ${athena_view_name} AS
+                    SELECT DISTINCT
+                        line_item_usage_account_id                                        account_id,
+                        MAX_BY(bill_payer_account_id,      line_item_usage_start_date)    parent_account_id,
+                        MAX_BY(line_item_usage_account_name, line_item_usage_start_date)  account_name,
+                        MAX_BY(bill_payer_account_name, line_item_usage_start_date)       parent_account_name
+                    FROM
+                        "${cur_table_name}"
+                    GROUP BY
+                        line_item_usage_account_id
+                '''
+                template = Template(template_str)
             else:
-                raise CidError(f'{name} definition does not contain File or data: {view_definition}')
+                # Query path
+                view_definition = self.athena._resources.get('views').get(name, {})
+                if view_definition.get('File'):
+                    view_file = view_definition.get('File')
+                    template = Template(resource_string(view_definition.get('providedBy'), f'data/queries/{view_file}').decode('utf-8'))
+                elif view_definition.get('data'):
+                    template = Template(str(view_definition.get('data')))
+                else:
+                    raise CidError(f'{name} definition does not contain File or data: {view_definition}')
 
             # Fill in TPLs
             columns_tpl = {

@@ -2,17 +2,21 @@
 """
 import json
 import logging
+from abc import abstractmethod
 
 from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.exceptions import CidCritical
 
+from cid.helpers.cur_proxy import ProxyView
+
 logger = logging.getLogger(__name__)
 
 
-class CUR(CidBase):
+class AbstractCUR(CidBase):
     """ Manage AWS CUR
     """
+    # Must be both CUR1 and 2 compatible
     cur_minimal_required_columns = [
         'bill_bill_type',
         'bill_billing_entity',
@@ -59,6 +63,7 @@ class CUR(CidBase):
     def __init__(self, athena, glue):
         self.athena = athena
         self.glue = glue
+        self.proxy = None
 
     @property
     def table_name(self) -> str:
@@ -81,6 +86,11 @@ class CUR(CidBase):
     def has_savings_plans(self) -> bool:
         """ Return True if CUR has savings plan """
         return all(col in self.fields for col in self.sp_required_columns)
+
+    @property
+    def version(self) -> str:
+        """ Return version of CUR """
+        return '2' if 'bill_payer_account_name' in self.fields else '1'
 
     def get_type_of_column(self, column: str):
         """ Return an Athena type of a given non existent CUR column """
@@ -111,10 +121,101 @@ class CUR(CidBase):
         }
         return special_cases.get(column, 'STRING')
 
+    def column_exists(self, column:  str):
+        return column.lower() in [col.get('Name', '').lower() for col in self.metadata.get('Columns', [])]
+
+    def ensure_columns(self, columns):
+        for column in columns:
+            self.ensure_column(column)
+
+    @abstractmethod
+    def ensure_column(self, column: str, column_type: str=None):
+        """ Ensure column is in the cur. If it is not there - add column """
+        pass
+
+    def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
+        """ return True if table metadata fits CUR definition. """
+        try:
+            table = table or self.athena.get_table_metadata(name)
+        except Exception as exc: #pylint: disable=broad-exception-caught
+            logger.debug(exc)
+            return False if not return_reason else (False, f'cannot get table {name}. {exc}.')
+
+        table_name = table.get('Name')
+        if '_proxy' in table_name:
+            return False if not return_reason else (False, f"Table {table_name} most likely is a proxy.")
+        columns = [col.get('Name') for col in table.get('Columns')]
+        missing_columns = [col for col in self.cur_minimal_required_columns if col not in columns]
+        if missing_columns:
+            return False if not return_reason else (False, f"Table {table_name} does not contain columns: {','.join(missing_columns)}. You can try ALTER TABLE {table_name} ADD COLUMNS (missing_column string).")
+
+        return True if not return_reason else (True, 'all good')
+
+    @property
+    def fields(self) -> list:
+        """get CUR fields """
+        return [col.get('Name') for col in self.metadata.get('Columns', [])]
+
+    @property
+    def tag_and_cost_category_fields(self) -> list:
+        """ Returns all tags and cost category fields. """
+        return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
+
+
+class CUR(AbstractCUR):
+
+    def __init__(self, athena, glue):
+        super().__init__(athena, glue)
+
+    @property
+    def metadata(self) -> dict:
+        """get Athena metadata for the table of CUR """
+        if self._metadata:
+            return self._metadata
+        self._metadata = self.find_cur()
+        return self._metadata
+
+    def find_cur(self):
+        """Choose CUR"""
+        metadata = None
+        if get_parameters().get('cur-table-name'):
+            table_name = get_parameters().get('cur-table-name')
+            try:
+                metadata = self.athena.get_table_metadata(table_name)
+            except self.athena.client.exceptions.ResourceNotFoundException as exc:
+                raise CidCritical(f'Provided cur-table-name "{table_name}" is not found. Please make sure the table exists.') from exc
+            res, message = self.table_is_cur(table=self._metadata, return_reason=True)
+            if not res:
+                raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
+        else:
+            # Look all tables and filter ones with CUR fields
+            all_tables = self.athena.list_table_metadata()
+            if not all_tables:
+                logger.warning(
+                    f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}.'
+                    f' (Hint: If you see tables in this Database, please check AWS Lake Formation permissions)'
+                )
+            cur_tables = [tab for tab in all_tables if self.table_is_cur(table=tab)]
+
+            if not cur_tables:
+                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.cur_minimal_required_columns}.')
+
+            choices = sorted([tab.get('Name') for tab in cur_tables], reverse=True)
+
+            answer =  get_parameter(
+                param_name='cur-table-name',
+                message="Please select CUR",
+                choices=choices + ['<CREATE CUR TABLE AND CRAWLER>'],
+            )
+            if answer == '<CREATE CUR TABLE AND CRAWLER>':
+                raise CidCritical('CUR creation was requested') # to be captured in common.py
+            metadata = self.athena.get_table_metadata(answer)
+        return metadata
+
     def ensure_column(self, column: str, column_type: str=None):
         """ Ensure column is in the cur. If it is not there - add column """
         column = column.lower()
-        if column in [col.get('Name', '').lower() for col in self.metadata.get('Columns', [])]:
+        if self.column_exists(column):
             return
 
         table_can_be_updated = False
@@ -149,68 +250,27 @@ class CUR(CidBase):
         logger.critical(f"Column '{column}' is not in ({self.table_name}). Cannot continue.")
 
 
-    def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
-        """ return True if table metadata fits CUR definition. """
-        try:
-            table = table or self.athena.get_table_metadata(name)
-        except Exception as exc: #pylint: disable=broad-exception-caught
-            logger.debug(exc)
-            return False if not return_reason else (False, f'cannot get table {name}. {exc}.')
-
-        table_name = table.get('Name')
-        columns = [col.get('Name') for col in table.get('Columns')]
-        missing_columns = [col for col in self.cur_minimal_required_columns if col not in columns]
-        if missing_columns:
-            return False if not return_reason else (False, f"Table {table_name} does not contain columns: {','.join(missing_columns)}. You can try ALTER TABLE {table_name} ADD COLUMNS (missing_column string).")
-
-        return True if not return_reason else (True, 'all good')
+class ProxyCUR(AbstractCUR):
+    def __init__(self, cur, target_cur_version):
+        self.proxy = []
+        self.cur = cur
+        self.target_cur_version = target_cur_version
+        super().__init__(cur.athena, cur.glue)
 
     @property
     def metadata(self) -> dict:
         """get Athena metadata for the table of CUR """
         if self._metadata:
             return self._metadata
-
-        if get_parameters().get('cur-table-name'):
-            table_name = get_parameters().get('cur-table-name')
-            try:
-                self._metadata = self.athena.get_table_metadata(table_name)
-            except self.athena.client.exceptions.ResourceNotFoundException as exc:
-                raise CidCritical(f'Provided cur-table-name "{table_name}" is not found. Please make sure the table exists.') from exc
-            res, message = self.table_is_cur(table=self._metadata, return_reason=True)
-            if not res:
-                raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
-        else:
-            # Look all tables and filter ones with CUR fields
-            all_tables = self.athena.list_table_metadata()
-            if not all_tables:
-                logger.warning(
-                    f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}.'
-                    f' (Hint: If you see tables in this Database, please check AWS Lake Formation permissions)'
-                )
-            cur_tables = [tab for tab in all_tables if self.table_is_cur(table=tab)]
-
-            if not cur_tables:
-                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.cur_minimal_required_columns}.')
-
-            choices = sorted([tab.get('Name') for tab in cur_tables], reverse=True)
-
-            answer =  get_parameter(
-                param_name='cur-table-name',
-                message="Please select CUR",
-                choices=choices + ['<CREATE CUR TABLE AND CRAWLER>'],
-            )
-            if answer == '<CREATE CUR TABLE AND CRAWLER>':
-                raise CidCritical('CUR creation was requested') # to be captured in common.py
-            self._metadata = self.athena.get_table_metadata(answer)
+        self.cur = CUR(self.athena, self.glue)
+        if self.cur.version != self.target_cur_version:
+            cid_print('CUR Proxy will be used')
+        self.proxy = ProxyView(cur=self.cur, target_cur_version=self.target_cur_version)
+        self._metadata = self.athena.get_table_metadata(self.proxy.name)
         return self._metadata
 
-    @property
-    def fields(self) -> list:
-        """get CUR fields """
-        return [col.get('Name') for col in self.metadata.get('Columns', [])]
-
-    @property
-    def tag_and_cost_category_fields(self) -> list:
-        """ Returns all tags and cost category fields. """
-        return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
+    def ensure_columns(self, columns):
+        for column in columns:
+            column_type = self.cur.get_type_of_column(column)
+            self.proxy.fields_to_expose[column] = column_type
+        self.proxy.create_or_update_view()

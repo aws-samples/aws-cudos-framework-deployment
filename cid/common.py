@@ -22,7 +22,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects, IsolatedParameters
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, S3, IAM, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
+from cid.helpers import Athena, S3, IAM, CUR, ProxyCUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
@@ -109,6 +109,14 @@ class Cid():
     @cached_property
     def s3(self) -> S3:
         return S3(self.base.session)
+
+    @cached_property
+    def cur1(self):
+        return ProxyCur(self.cur, target_cur_version='1')
+
+    @cached_property
+    def cur2(self):
+        return ProxyCur(self.cur, target_cur_version='2')
 
     @property
     def cur(self) -> CUR:
@@ -1356,6 +1364,7 @@ class Cid():
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
         cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
+        cur2_required = dataset_definition.get('dependsOn', dict()).get('cur2')
         athena_datasource = None
 
         # Manage datasource
@@ -1447,7 +1456,8 @@ class Cid():
 
         # Check for required views
         _views = dataset_definition.get('dependsOn', {}).get('views', [])
-        required_views = [(self.cur.table_name if cur_required and name =='${cur_table_name}' else name) for name in _views]
+        #FIXME: delete this : required_views = [(self.cur.table_name if cur_required and name =='${cur_table_name}' else name) for name in _views]
+        required_views = _views
 
         self.athena.discover_views(required_views)
         found_views = utils.intersection(required_views, self.athena._metadata.keys())
@@ -1456,9 +1466,9 @@ class Cid():
         if recursive:
             print(f"Detected views: {', '.join(found_views)}")
             for view_name in found_views:
-                if cur_required and view_name == self.cur.table_name:
-                    logger.debug(f'Dependency view {view_name} is a CUR. Skip.')
-                    continue
+                #if cur_required and view_name == self.cur.table_name:
+                #    logger.debug(f'Dependency view {view_name} is a CUR. Skip.')
+                #    continue
                 if view_name == 'account_map':
                     logger.debug(f'Dependency view is {view_name}. Skip.')
                     continue
@@ -1477,7 +1487,8 @@ class Cid():
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
-            'cur_table_name': self.cur.table_name if cur_required else None
+            'cur_table_name': self.cur1.get_table_name(version='1') if cur_required else None,
+            'cur2_table_name': self.cur2.get_table_name(version='2') if cur2_required else None,
         }
 
         logger.debug(f'dataset_id={dataset_id}')
@@ -1507,7 +1518,7 @@ class Cid():
             elif found_dataset.name != compiled_dataset.get('Name'):
                 print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
                 update_dataset = True
-            if update_dataset and get_parameters().get('on-drift', 'show').lower() != 'override' and isatty() and not cur_required:
+            if update_dataset and get_parameters().get('on-drift', 'show').lower() != 'override' and isatty() and not cur_required and not cur2_required:
                 while True:
                     diff = self.qs.dataset_diff(found_dataset.raw, compiled_dataset)
                     if diff and diff['diff']:
@@ -1588,12 +1599,10 @@ class Cid():
         dependencies = view_definition.get('dependsOn', {})
 
         # Process CUR columns
-        if isinstance(dependencies.get('cur'), list):
-            for column in dependencies.get('cur'):
-                self.cur.ensure_column(column)
-        elif isinstance(dependencies.get('cur'), dict):
-            for column, column_type in dependencies.get('cur').items():
-                self.cur.ensure_column(column, column_type)
+        if dependencies.get('cur1'):
+            self.cur1.ensure_columns(dependencies.get('cur1'))
+        if dependencies.get('cur2'):
+            self.cur2.ensure_columns(dependencies.get('cur2'))
 
         if recursive:
             dependency_views = dependencies.get('views', [])
@@ -1727,17 +1736,18 @@ class Cid():
         # View path
         view_definition = self.get_definition("view", name=view_name)
         cur_required = view_definition.get('dependsOn', dict()).get('cur')
-        if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
-            view_definition['File'] = view_definition.get('spriFile')
-        elif cur_required and self.cur.has_savings_plans and view_definition.get('spFile'):
-            view_definition['File'] = view_definition.get('spFile')
-        elif cur_required and self.cur.has_reservations and view_definition.get('riFile'):
-            view_definition['File'] = view_definition.get('riFile')
-        elif view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
-            pass
-        else:
-            logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
-            raise Exception(f'\nCannot find view {view_name}')
+        cur2_required = view_definition.get('dependsOn', dict()).get('cur2')
+        #if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
+        #    view_definition['File'] = view_definition.get('spriFile')
+        #elif cur_required and self.cur.has_savings_plans and view_definition.get('spFile'):
+        #    view_definition['File'] = view_definition.get('spFile')
+        #elif cur_required and self.cur.has_reservations and view_definition.get('riFile'):
+        #    view_definition['File'] = view_definition.get('riFile')
+        #if view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
+        #    pass
+        #else:
+        #    logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
+        #    raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
         data = self.get_data_from_definition('view', view_definition)
@@ -1748,7 +1758,8 @@ class Cid():
 
         # Prepare template parameters
         columns_tpl = {
-            'cur_table_name': self.cur.table_name if cur_required else None,
+            'cur_table_name': self.cur.get_table_name(version='1') if cur_required else None,
+            'cur2_table_name': self.cur.get_table_name(version='2') if cur2_required else None,
             'athenaTableName': view_name,
             'athena_database_name': self.athena.DatabaseName,
         }
