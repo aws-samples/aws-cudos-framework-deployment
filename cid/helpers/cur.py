@@ -135,10 +135,12 @@ class AbstractCUR(CidBase):
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
         """ return True if table metadata fits CUR definition. """
+
+        print(name)
         try:
             table = table or self.athena.get_table_metadata(name)
         except Exception as exc: #pylint: disable=broad-exception-caught
-            logger.debug(exc)
+            logger.critical(exc)
             return False if not return_reason else (False, f'cannot get table {name}. {exc}.')
 
         table_name = table.get('Name')
@@ -146,6 +148,7 @@ class AbstractCUR(CidBase):
             return False if not return_reason else (False, f"Table {table_name} most likely is a proxy.")
         columns = [col.get('Name') for col in table.get('Columns')]
         missing_columns = [col for col in self.cur_minimal_required_columns if col not in columns]
+        logger.critical(missing_columns)
         if missing_columns:
             return False if not return_reason else (False, f"Table {table_name} does not contain columns: {','.join(missing_columns)}. You can try ALTER TABLE {table_name} ADD COLUMNS (missing_column string).")
 
@@ -184,7 +187,7 @@ class CUR(AbstractCUR):
                 metadata = self.athena.get_table_metadata(table_name)
             except self.athena.client.exceptions.ResourceNotFoundException as exc:
                 raise CidCritical(f'Provided cur-table-name "{table_name}" is not found. Please make sure the table exists.') from exc
-            res, message = self.table_is_cur(table=self._metadata, return_reason=True)
+            res, message = self.table_is_cur(table=metadata, return_reason=True)
             if not res:
                 raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
         else:
@@ -270,7 +273,9 @@ class ProxyCUR(AbstractCUR):
         return self._metadata
 
     def ensure_columns(self, columns):
+        self.metadata
         for column in columns:
             column_type = self.cur.get_type_of_column(column)
             self.proxy.fields_to_expose[column] = column_type
+        print(columns)
         self.proxy.create_or_update_view()

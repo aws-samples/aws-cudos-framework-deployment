@@ -312,7 +312,7 @@ class Athena(CidBase):
             raise CidCritical(f'InvalidRequestException: {exc}') from exc
         except Exception as exc:
             logger.debug(f'Full query: {sql_query}')
-            raise CidCritical(f'Athena query failed: {exc}') from exc
+            raise CidCritical(f'Query:\n{sql_query}\n\nAthena query failed: {exc}') from exc
 
         current_status = query_status['QueryExecution']['Status']['State']
 
@@ -330,7 +330,7 @@ class Athena(CidBase):
         logger.info(f'Athena query failed: {failure_reason}')
         logger.debug(f'Full query: {sql_query}')
         if fail:
-            raise CidCritical(f'Athena query failed: {failure_reason}')
+            raise CidCritical(f'Query:\n{sql_query}\n\nAthena query status failed : {failure_reason}')
         return False
 
     def get_query_results(self, query_id):

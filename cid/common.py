@@ -112,11 +112,11 @@ class Cid():
 
     @cached_property
     def cur1(self):
-        return ProxyCur(self.cur, target_cur_version='1')
+        return ProxyCUR(self.cur, target_cur_version='1')
 
     @cached_property
     def cur2(self):
-        return ProxyCur(self.cur, target_cur_version='2')
+        return ProxyCUR(self.cur, target_cur_version='2')
 
     @property
     def cur(self) -> CUR:
@@ -139,6 +139,7 @@ class Cid():
                     self._clients['cur'] = _cur
                     break
                 except CidCritical as exc:
+                    logger.exception(exc)
                     cid_print(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
                     self.create_cur_table()
         return self._clients['cur']
@@ -149,7 +150,6 @@ class Cid():
             _account_map = AccountMap(self.base.session)
             _account_map.athena = self.athena
             _account_map.cur = self.cur
-
             self._clients.update({
                 'accountMap': _account_map
             })
@@ -1487,8 +1487,8 @@ class Cid():
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
-            'cur_table_name': self.cur1.get_table_name(version='1') if cur_required else None,
-            'cur2_table_name': self.cur2.get_table_name(version='2') if cur2_required else None,
+            'cur_table_name': self.cur1.table_name if cur_required else None,
+            'cur2_table_name': self.cur2.table_name if cur2_required else None,
         }
 
         logger.debug(f'dataset_id={dataset_id}')
@@ -1599,8 +1599,8 @@ class Cid():
         dependencies = view_definition.get('dependsOn', {})
 
         # Process CUR columns
-        if dependencies.get('cur1'):
-            self.cur1.ensure_columns(dependencies.get('cur1'))
+        if dependencies.get('cur'):
+            self.cur1.ensure_columns(dependencies.get('cur'))
         if dependencies.get('cur2'):
             self.cur2.ensure_columns(dependencies.get('cur2'))
 
@@ -1608,6 +1608,8 @@ class Cid():
             dependency_views = dependencies.get('views', [])
             if 'cur' in dependency_views:
                 dependency_views.remove('cur')
+            if 'cur2' in dependency_views:
+                dependency_views.remove('cur2')
             # Discover dependency views (may not be discovered earlier)
             self.athena.discover_views(dependency_views)
             logger.info(f"Dependency views: {', '.join(dependency_views)}" if dependency_views else 'No dependency views')
@@ -1758,8 +1760,8 @@ class Cid():
 
         # Prepare template parameters
         columns_tpl = {
-            'cur_table_name': self.cur.get_table_name(version='1') if cur_required else None,
-            'cur2_table_name': self.cur.get_table_name(version='2') if cur2_required else None,
+            'cur_table_name': self.cur1.table_name if cur_required else None,
+            'cur2_table_name': self.cur2.table_name if cur2_required else None,
             'athenaTableName': view_name,
             'athena_database_name': self.athena.DatabaseName,
         }

@@ -179,6 +179,7 @@ cur2to1mapping = {
     "concat('name', line_item_usage_account_id)": 'line_item_usage_account_name',
 }
 
+
 # various types require various empty
 empty = {
     'string': 'cast (null as varchar)',
@@ -198,7 +199,7 @@ class ProxyView():
         self.target_cur_version = target_cur_version
         self.current_cur_version = self.cur.version
         logger.debug(f'CUR proxy from {self.current_cur_version } to {self.target_cur_version }')
-        self.fields_to_expose = fields_to_expose or []
+        self.fields_to_expose = fields_to_expose or {}
         self.athena = self.cur.athena
         self.name = 'cur1_proxy'
         self.exposed_fields = []
@@ -238,7 +239,7 @@ class ProxyView():
                 '''
             cur1to2mapping = {value: key for key, value in cur2to1mapping.items()}
             if field in cur1to2mapping:
-                return f'{cur1to2mapping[field]}'
+                return f'{cur1to2mapping.ge(field, field)}'
             else:
                 raise NotImplementedError(f'WARNING: {field} has not known equivalent')
 
@@ -247,7 +248,7 @@ class ProxyView():
                 return f"resource_tags['{field[len('resource_tags_'):]}']"
             if field.startswith('cost_category_'):
                 return f"cost_category['{field[len('cost_category_'):]}']"
-            return cur2to1mapping[field]
+            return cur2to1mapping.get(field, field)
 
     def create_or_update_view(self):
         self.read_from_athena()
@@ -257,7 +258,6 @@ class ProxyView():
                 all_fields[field] = self.fields_to_expose[field]
         lines = []
         for field, field_type in all_fields.items():
-
             mapped_expression = self.get_sql_expression(field, field_type)
             requirement = mapped_expression.split('[')[0]
             if not re.match(r'^[a-zA-Z0-9_]+$', requirement) or self.cur.column_exists(requirement):
@@ -274,7 +274,7 @@ class ProxyView():
                 "{self.cur.table_name}"
         ''')
 
-        logging.debug(query)
+        logging.critical(query)
         res = self.athena.query(query)
         logging.debug(res)
 

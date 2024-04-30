@@ -380,9 +380,9 @@ views:
         - savings_plan_savings_plan_a_r_n
 
   hourly_view:
-    spriFile: cudos/hourly_view_sp_ri.sql
-    spFile: cudos/hourly_view_sp.sql
-    riFile: cudos/hourly_view_ri.sql
+    #spriFile: cudos/hourly_view_sp_ri.sql
+    #spFile: cudos/hourly_view_sp.sql
+    #riFile: cudos/hourly_view_ri.sql
     File: cudos/hourly_view.sql
     dependsOn:
       cur:
