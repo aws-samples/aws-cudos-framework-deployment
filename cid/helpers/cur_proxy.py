@@ -3,8 +3,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-cur2to1mapping = {
-    "concat(year, '-' ,month)": "billing_period",
+cur1to2_mapping = {
+    '''concat("year", '-' , "month")''': "billing_period",
     'year': "split_part(billing_period, '-', 1)",
     'month': "split_part(billing_period, '-', 2)",
     'identity_line_item_id': 'identity_line_item_id',
@@ -175,9 +175,10 @@ cur2to1mapping = {
     'product_size_flex': 'n/a',
     'product_engine_major_version': 'n/a',
     'product_extended_support_pricing_year': 'n/a',
-    "concat('name', bill_payer_account_id)": 'bill_payer_account_name',
-    "concat('name', line_item_usage_account_id)": 'line_item_usage_account_name',
+    '''concat('name', "bill_payer_account_id")''': 'bill_payer_account_name',
+    '''concat('name', "line_item_usage_account_id")''': 'line_item_usage_account_name',
 }
+
 
 default_columns = {
     '1': [
@@ -328,6 +329,13 @@ empty = {
 }
 
 
+cur2_maps = {
+    'product',
+    'resource_tags',
+    'cost_category',
+    'discount',
+}
+
 class ProxyView():
     """ Proxy for CUR
 
@@ -342,33 +350,85 @@ class ProxyView():
         self.athena = self.cur.athena
         self.name = 'cur1_proxy'
         self.exposed_fields = []
+        self.exposed_maps = {}
+        self.fields_to_expose_in_maps = {}
 
     def read_from_athena(self):
-        view_name = self.name
-        _mapping = {
-            'timestamp(3)': 'datetime',
-            'varchar': 'string',
-        }
+        """ read the current state from athena
+        """
         exposed_fields_and_types = dict(self.athena.query(f'''
             SELECT column_name, data_type
             FROM information_schema.columns
             WHERE table_schema = '{self.athena.DatabaseName}'
-            AND table_name = '{view_name}';
+            AND table_name = '{self.name}';
         '''))
         self.exposed_fields = list(exposed_fields_and_types.keys())
         logger.debug(self.exposed_fields)
 
+        for field, field_type in exposed_fields_and_types.items():
+            if field_type.startswith('map('):
+                if field not in self.exposed_maps:
+                    self.exposed_maps[field] = set()
+                current_keys = self.athena.query(f'''
+                    SELECT DISTINCT key
+                    FROM "{self.athena.DatabaseName}", UNNEST("{field}") AS t(key, value);
+                ''')
+                self.exposed_maps[field].update([key[0] for key in current_keys])
+        logger.critical(self.exposed_maps)
+
+    def source_column_equivalent(self, field):
+        """ Given a field of cur return an equivalent field in the target cur system. This one does not care if field actually exists
+        field: target CUR field
+        returns: source CUR SQL
+        """
+        if field in self.cur.fields: # Same field name is more then common case so try it first
+            return field
+
+        if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR2
+            return field # all the same
+        if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('1'): # field from CUR1 to CUR1
+            return field # all the same
+        if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('1'): # field from CUR1 to CUR2
+            if field not in cur1to2_mapping: #check if this field is in mapping
+                for cur2map in cur2_maps:
+                    if field.startswith(cur2map + '_'):
+                        return cur2map
+                logger.warning(f"{field} not known field of CUR1. needs to be added in code. Please create a github issue")
+            return cur1to2_mapping.get(field, field)
+        if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR1
+            matches = re.findall(r"(\w+)\['(\w+)'\]", field)
+            if matches:
+                field, key = matches[0]
+                if field not in self.fields_to_expose_in_maps:
+                    self.fields_to_expose_in_maps = set()
+                self.fields_to_expose_in_maps[key].add(key)
+                return f'{field}_{key}'
+            cur2to1_mapping = {value: key for key, value in cur1to2_mapping.items()}
+            if field not in cur2to1_mapping:
+                logger.warning(f"{field} not known field of CUR1. needs to be added in code. Please create a github issue")
+            return cur2to1_mapping.get(field, field)
+
+
     def get_sql_expression(self, field, field_type):
-        if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('2'):
+        """ Given a field of cur return an SQL representation of the field in the target cur system. Takes into account existence of fields in the current cur.
+        field: target CUR field
+        returns: CUR field SQL representation. Can be NULL
+        """
+        if field in self.cur.fields: # Same field name is more then common case so try it first
             return field
-        if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('1'):
+        if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR2
             return field
-        if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'):
+        if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('1'): # field from CUR1 to CUR2
+            return field
+        if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR1 to CUR2
             if field_type.startswith('map'):
                 map_mapping = {}
-                for cur1_field in self.cur.fields:
-                    if cur1_field.startswith(field + '_'):
-                        map_mapping[cur1_field[len(field + '_'):]] = cur1_field
+                keys = set(self.exposed_maps.get(field, set())).update(self.fields_to_expose_in_maps.get(field, set()))
+                for key in keys:
+                    if f'{field}_{key}' in self.cur.fields:
+                        map_mapping[key] = f'{field}_{key}'
+                    else:
+                        map_mapping[key] = 'CAST(NULL as VARCHAR)'
                 if not map_mapping:
                     return 'cast(NULL AS MAP<VARCHAR, VARCHAR>)'
                 return f'''
@@ -377,25 +437,27 @@ class ProxyView():
                         ARRAY[{', '.join([cur1_field for cur1_field in map_mapping.values()])}]
                     )
                 '''
-            cur1to2mapping = {value: key for key, value in cur2to1mapping.items()}
-            if field in cur1to2mapping:
-                return f'{cur1to2mapping.ge(field, field)}'
+            cur2to1_mapping = {value: key for key, value in cur1to2_mapping.items()}
+            if field in cur2to1_mapping:
+                return f'{cur2to1_mapping.get(field, field)}'
             else:
                 raise NotImplementedError(f'WARNING: {field} has not known equivalent')
-
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('1'):
             if field.startswith('resource_tags_'):
                 return f"resource_tags['{field[len('resource_tags_'):]}']"
             if field.startswith('cost_category_'):
                 return f"cost_category['{field[len('cost_category_'):]}']"
-            return cur2to1mapping.get(field, field)
+            return cur1to2_mapping.get(field, field)
 
     def create_or_update_view(self):
+        """ Create or update view
+        """
         self.read_from_athena()
-        all_fields  = list(set(self.exposed_fields + self.fields_to_expose))
-        lines = []
+        all_fields  = sorted(list(set(self.exposed_fields + self.fields_to_expose)))
+        lines = {}
         print('all_fields',  all_fields)
         for field in all_fields:
+            target_field = field.split('[')[0] # take a first part only
             field_type = self.cur.get_type_of_column(field)
             mapped_expression = self.get_sql_expression(field, field_type)
             requirement = mapped_expression.split('[')[0]
@@ -405,8 +467,8 @@ class ProxyView():
                 if field_type not in empty:
                     raise RuntimeError(f'{field_type} not in empty list')
                 expression = empty.get(field_type, 'null')
-            lines.append(f'{expression} {field}')
-        select_block = '\n                ,'.join(lines)
+            lines[target_field] = expression # for map we will take the latest
+        select_block = '\n                ,'.join([f'{expression} {field}' for field, expression in sorted(lines.items())])
         query = (f'''
             CREATE OR REPLACE VIEW "{self.name}" AS
             SELECT

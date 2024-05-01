@@ -257,6 +257,8 @@ class CUR(AbstractCUR):
 
 
 class ProxyCUR(AbstractCUR):
+    """ Cur Proxy behaves as CUR but actually a proxy
+    """
     def __init__(self, cur, target_cur_version):
         self.proxy = []
         self.cur = cur
@@ -280,9 +282,11 @@ class ProxyCUR(AbstractCUR):
         return self._metadata
 
     def ensure_columns(self, columns):
-        self.metadata
+        if not self.metadata:# To make sure metadata exists
+            raise RuntimeError('No metadata')
         if self.cur.metadata.get('TableType') == 'EXTERNAL_TABLE':
             try:
+                equivalent_column = [self.proxy.source_column_equivalent(col) for col in columns]
                 self.cur.ensure_columns(columns)
             except Exception as exc:
                 logger.exception(exc)

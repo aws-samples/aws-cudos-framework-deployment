@@ -22,6 +22,14 @@ if __version__ != latest_version and latest_version != 'UNDEFINED':
 
 def cid_command(func):
     def wrapper(ctx, **kwargs):
+
+        def get_command_line():
+            return ('cid-cmd ' + ctx.info_name
+                + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
+                + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
+                + ''.join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
+            )
+
         # Complete kwargs with other parameters
         if len(ctx.args) % 2 != 0:
             print(f"Unknown extra argument, or an option without value {ctx.args}")
@@ -33,19 +41,13 @@ def cid_command(func):
         res = None
         try:
             res = func(ctx, **kwargs)
-        except CidCritical as exc:
+        except (CidCritical, CidError) as exc:
             logger.debug(exc, exc_info=True)
-            logger.critical(exc)
-        except CidError as exc:
-            logger.debug(exc, exc_info=True)
+            logger(f'When running {get_command_line()}')
             logger.error(exc)
         params = get_parameters()
         logger.info('Next time you can use following command:')
-        logger.info('   cid-cmd ' + ctx.info_name
-            + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
-            + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
-            + ''.join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
-        )
+        logger.info(get_command_line())
         return res
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
