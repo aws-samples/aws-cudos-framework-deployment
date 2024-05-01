@@ -317,10 +317,11 @@ def export_analysis(qs, athena, glue):
         dashboard_id = new_dashboard_id
 
     dashboard_resource = {}
+    print(datasets)
     dashboard_resource['dependsOn'] = {
         # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
         # We can potentially reconsider this and use IDs at some point
-        'datasets': sorted(list(set(datasets + resources_datasets)))
+        'datasets': sorted(list(set(list(datasets.keys()) + resources_datasets)))
     }
     dashboard_resource['name'] = analysis['Name']
     dashboard_resource['dashboardId'] = dashboard_id
