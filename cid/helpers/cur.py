@@ -137,9 +137,7 @@ class AbstractCUR(CidBase):
         pass
 
     def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
-        """ return True if table metadata fits CUR definition. """
-
-        print(name)
+        """ return cur version if table metadata fits CUR definition. """
         try:
             table = table or self.athena.get_table_metadata(name)
         except Exception as exc: #pylint: disable=broad-exception-caught
@@ -155,7 +153,10 @@ class AbstractCUR(CidBase):
         if missing_columns:
             return False if not return_reason else (False, f"Table {table_name} does not contain columns: {','.join(missing_columns)}. You can try ALTER TABLE {table_name} ADD COLUMNS (missing_column string).")
 
-        return True if not return_reason else (True, 'all good')
+        version = '1'
+        if 'bill_payer_account_name' in columns:
+            version = '2'
+        return version if not return_reason else (True, 'all good')
 
     @property
     def fields(self) -> list:
@@ -284,13 +285,13 @@ class ProxyCUR(AbstractCUR):
     def ensure_columns(self, columns):
         if not self.metadata:# To make sure metadata exists
             raise RuntimeError('No metadata')
-        if self.cur.metadata.get('TableType') == 'EXTERNAL_TABLE':
-            try:
-                equivalent_column = [self.proxy.source_column_equivalent(col) for col in columns]
-                self.cur.ensure_columns(columns)
-            except Exception as exc:
-                logger.exception(exc)
-        for column in columns:
-            self.proxy.fields_to_expose.append(column)
-        print(columns)
+        if isinstance(columns, list):
+            if self.cur.metadata.get('TableType') == 'EXTERNAL_TABLE':
+                try:
+                    equivalent_columns = [self.proxy.source_column_equivalent(col) for col in columns]
+                    self.cur.ensure_columns(list(set(equivalent_columns)))
+                except Exception as exc:
+                    logger.exception(exc)
+            for column in columns:
+                self.proxy.fields_to_expose.append(column)
         self.proxy.create_or_update_view()

@@ -1737,7 +1737,7 @@ class Cid():
         """ Returns a fully compiled AHQ """
         # View path
         view_definition = self.get_definition("view", name=view_name)
-        cur_required = view_definition.get('dependsOn', dict()).get('cur')
+        cur_required = view_definition.get('dependsOn', dict()).get('cur') or view_definition.get('dependsOn', dict()).get('cur1') 
         cur2_required = view_definition.get('dependsOn', dict()).get('cur2')
         #if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
         #    view_definition['File'] = view_definition.get('spriFile')

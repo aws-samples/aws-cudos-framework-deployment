@@ -180,18 +180,22 @@ def export_analysis(qs, athena, glue):
                 #FIXME add value['Source']['DataSetArn'] to the list of dataset_arn
                 raise CidCritical(f"DataSet {dataset.raw['Name']} contains unsupported join. Please replace join of {value.get('Alias')} from DataSet to DataSource")
 
-        dep_cur = False
+        cur_version = False
         for dep_view in dependency_views[:]:
-            if cur_helper.table_is_cur(name=dep_view):
+            version = cur_helper.table_is_cur(name=dep_view)
+            if version:
                 dependency_views.remove(dep_view)
-                dep_cur = True
+                cur_version = True
         datasets[dataset_name] = {
             'data': dataset_data,
             'dependsOn': {'views': dependency_views},
             'schedules': ['default'], #FIXME: need to read a real schedule
         }
-        if dep_cur:
+        # FIXME: add a list of all columns used in the view
+        if cur_version == '1':
             datasets[dataset_name]['dependsOn']['cur'] = True
+        elif cur_version == '2':
+            datasets[dataset_name]['dependsOn']['cur2'] = True
 
     all_databases = list(set(all_databases))
     if len(all_databases) > 1:
