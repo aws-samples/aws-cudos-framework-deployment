@@ -50,7 +50,7 @@ cur1to2_mapping = {
     'product_operation': 'product_operation',
     'product_product_family': 'product_product_family',
     'product_region_code': 'product_region_code',
-    'product_servicecode': 'product_service_code',        #<- same same but different! 
+    'product_servicecode': 'product_servicecode', 
     'product_sku': 'product_sku',
     'product_to_location': 'product_to_location',
     'product_to_location_type': 'product_to_location_type',
@@ -176,14 +176,14 @@ cur1to2_mapping = {
     'product_provider': "product['provider']",
     'product_subservice': "product['subservice']",
     'product_type': "product['type']",
-    'product_tickettype': 'n/a',
-    'product_memorytype': 'n/a',
-    'product_platousagetype': 'n/a',
-    'product_with_active_users': 'n/a',
-    'product_abd_instance_class': 'n/a',
-    'product_size_flex': 'n/a',
-    'product_engine_major_version': 'n/a',
-    'product_extended_support_pricing_year': 'n/a',
+    'product_tickettype': "product['tickettype']",
+    'product_memorytype': "product['memorytype']",
+    'product_platousagetype': "product['platousagetype']",
+    'product_with_active_users': "product['with_active_users']",
+    'product_abd_instance_class': "product['abd_instance_class']",
+    'product_size_flex': "product['size_flex']",
+    'product_engine_major_version': "product['engine_major_version']",
+    'product_extended_support_pricing_year': "product['extended_support_pricing_year']",
     '''concat('name', "bill_payer_account_id")''': 'bill_payer_account_name',
     '''concat('name', "line_item_usage_account_id")''': 'line_item_usage_account_name',
 }
@@ -297,7 +297,7 @@ default_columns = {
         "product_from_location",
         "product['group']",
         "product_instance_type",
-        "product_instance_type_family",
+        "product['instance_type_family']",
         "product['license_model']",
         "product['operating_system']",
         "product['physical_processor']",
@@ -305,7 +305,7 @@ default_columns = {
         "product_product_family",
         "product['product_name']",
         "product['region']",
-        "product_service_code",
+        "product_servicecode",
         "product['storage']",
         "product['tenancy']",
         "product_to_location",
@@ -339,7 +339,6 @@ empty = {
     'TIMESTAMP': 'cast (null as timestamp)',
 }
 
-
 cur2_maps = {
     'product',
     'resource_tags',
@@ -359,7 +358,7 @@ class ProxyView():
         logger.debug(f'CUR proxy from {self.current_cur_version } to {self.target_cur_version }')
         self.fields_to_expose = list(set(default_columns[self.target_cur_version] + (fields_to_expose or []) ))
         self.athena = self.cur.athena
-        self.name = 'cur1_proxy'
+        self.name = f'cur{self.target_cur_version}_proxy'
         self.exposed_fields = []
         self.exposed_maps = {}
         self.fields_to_expose_in_maps = {}
@@ -382,7 +381,7 @@ class ProxyView():
                     self.exposed_maps[field] = set()
                 current_keys = self.athena.query(f'''
                     SELECT DISTINCT key
-                    FROM "{self.athena.DatabaseName}", UNNEST("{field}") AS t(key, value);
+                    FROM "{self.name}", UNNEST("{field}") AS t(key, value);
                 ''')
                 self.exposed_maps[field].update([key[0] for key in current_keys])
         logger.critical(self.exposed_maps)
@@ -405,7 +404,8 @@ class ProxyView():
                     if field.startswith(cur2map + '_'):
                         return cur2map
                 logger.warning(f"{field} not known field of CUR1. needs to be added in code. Please create a github issue")
-            return cur1to2_mapping.get(field, field)
+            res = cur1to2_mapping.get(field, field)
+            return res.split('[')[0]
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR1
             matches = re.findall(r"(\w+)\['(\w+)'\]", field)
             if matches:
@@ -428,7 +428,7 @@ class ProxyView():
         if field in self.cur.fields: # Same field name is more then common case so try it first
             return field
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR2
-            return field
+            return field.split('[')[0]
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('1'): # field from CUR1 to CUR2
             return field
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR1 to CUR2
@@ -511,15 +511,5 @@ if __name__ == '__main__':
     proxy = ProxyView(
         cur=cur,
         target_cur_version='2',
-        fields_to_expose = {
-            'billing_period',
-            'line_item_usage_account_name',
-            'identity_time_interval',
-            'product',
-            'resource_tags',
-            'cost_category',
-            'discount',
-            'line_item_unblended_cost',
-        },
     )
     proxy.create_or_update_view()

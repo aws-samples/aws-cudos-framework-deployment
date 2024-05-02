@@ -123,11 +123,12 @@ class AbstractCUR(CidBase):
         return special_cases.get(column, 'STRING')
 
     def column_exists(self, column:  str):
-        return column.lower() in [col.get('Name', '').lower() for col in (self.metadata.get('Columns', []) + self.metadata.get('PartitionKeys', []))]
+        return column.lower() in [col.lower() for col in self.fields]
 
     def ensure_columns(self, columns):
-        assert isinstance(columns, list), f'{columns} must be list'
-
+        if not isinstance(columns, list):
+            logger.debug(f'{columns} must be list')
+            return
         for column in columns:
             self.ensure_column(column)
 
@@ -273,7 +274,7 @@ class ProxyCUR(AbstractCUR):
             return self._metadata
         self.cur = CUR(self.athena, self.glue)
         if self.cur.version != self.target_cur_version:
-            cid_print('CUR Proxy will be used')
+            cid_print(f'CUR{self.cur.version} ({self.athena.DatabaseName}/{self.cur.table_name}) provided but {self.target_cur_version} is needed. CUR Proxy view will be used.')
         self.proxy = ProxyView(cur=self.cur, target_cur_version=self.target_cur_version)
         try:
             self._metadata = self.athena.get_table_metadata(self.proxy.name)
