@@ -295,6 +295,13 @@ class ProxyCUR(AbstractCUR):
                 try:
                     equivalent_columns = [self.proxy.source_column_equivalent(col) for col in columns]
                     self.cur.ensure_columns(list(set(equivalent_columns)))
+                    # add field from underlying cur to the proxy
+                    for item in self.cur._metadata.get('Columns', []):
+                        for existing_item in self._metadata.get('Columns', []):
+                            if item['Name'] == existing_item['Name']:
+                                break
+                        else: # if not found
+                            self._metadata.get('Columns', []).append(item)
                 except Exception as exc:
                     logger.exception(exc)
             for column in columns:
