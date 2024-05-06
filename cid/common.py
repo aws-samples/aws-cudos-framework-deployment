@@ -1363,7 +1363,7 @@ class Cid():
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
-        cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
+        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur')
         cur2_required = dataset_definition.get('dependsOn', dict()).get('cur2')
         athena_datasource = None
 
@@ -1487,7 +1487,8 @@ class Cid():
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
-            'cur_table_name': self.cur1.table_name if cur_required else None,
+            'cur_table_name': self.cur1.table_name if cur1_required else None,
+            'cur1_table_name': self.cur1.table_name if cur1_required else None,
             'cur2_table_name': self.cur2.table_name if cur2_required else None,
         }
 
@@ -1518,7 +1519,7 @@ class Cid():
             elif found_dataset.name != compiled_dataset.get('Name'):
                 print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
                 update_dataset = True
-            if update_dataset and get_parameters().get('on-drift', 'show').lower() != 'override' and isatty() and not cur_required and not cur2_required:
+            if update_dataset and get_parameters().get('on-drift', 'show').lower() != 'override' and isatty() and not cur1_required and not cur2_required:
                 while True:
                     diff = self.qs.dataset_diff(found_dataset.raw, compiled_dataset)
                     if diff and diff['diff']:
@@ -1737,7 +1738,7 @@ class Cid():
         """ Returns a fully compiled AHQ """
         # View path
         view_definition = self.get_definition("view", name=view_name)
-        cur_required = view_definition.get('dependsOn', dict()).get('cur') or view_definition.get('dependsOn', dict()).get('cur1') 
+        cur1_required = view_definition.get('dependsOn', dict()).get('cur') or view_definition.get('dependsOn', dict()).get('cur1')
         cur2_required = view_definition.get('dependsOn', dict()).get('cur2')
         #if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
         #    view_definition['File'] = view_definition.get('spriFile')
@@ -1760,7 +1761,8 @@ class Cid():
 
         # Prepare template parameters
         columns_tpl = {
-            'cur_table_name': self.cur1.table_name if cur_required else None,
+            'cur_table_name': self.cur1.table_name if cur1_required else None,
+            'cur1_table_name': self.cur1.table_name if cur1_required else None,
             'cur2_table_name': self.cur2.table_name if cur2_required else None,
             'athenaTableName': view_name,
             'athena_database_name': self.athena.DatabaseName,
@@ -1805,6 +1807,23 @@ class Cid():
     def init_qs(self, **kwargs):
         """ Initialize QuickSight resources for deployment """
         return InitQsCommand(cid=self, **kwargs).execute()
+
+    @command
+    def create_cur_proxy(self, cur_version=None, fields=None, **kwargs):
+        cid_print(f'Using {self.cur.table_name}') # need to call self.cur
+        cur_version = cur_version or get_parameter(
+            'cur-version',
+            message='Enter a version of CUR you want to create or update',
+            choices=['1', '2'],
+        )
+        if cur_version.startswith('1'):
+            cur_proxy = self.cur1
+        if cur_version.startswith('2'):
+            cur_proxy = self.cur2
+        fields = get_parameters().get('fields', [])
+        cur_proxy.metadata
+        cur_proxy.proxy.fields_to_expose += (fields.split(',') if fields else [])
+        cur_proxy.proxy.create_or_update_view()
 
     @command
     def create_cur_table(self, **kwargs):

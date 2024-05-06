@@ -24,6 +24,7 @@ def cid_command(func):
     def wrapper(ctx, **kwargs):
 
         def get_command_line():
+            params = get_parameters()
             return ('cid-cmd ' + ctx.info_name
                 + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
                 + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
@@ -43,7 +44,7 @@ def cid_command(func):
             res = func(ctx, **kwargs)
         except (CidCritical, CidError) as exc:
             logger.debug(exc, exc_info=True)
-            logger(f'When running {get_command_line()}')
+            logger.debug(f'When running {get_command_line()}')
             logger.error(exc)
         params = get_parameters()
         logger.info('Next time you can use following command:')
@@ -262,6 +263,21 @@ def create_cur_table(ctx, **kwargs):
     """
 
     ctx.obj.create_cur_table(**kwargs)
+
+@click.option('-v', '--verbose', count=True)
+@click.option('--cur-version', help='Cur Version (1 or 2)')
+@click.option('--fields', help='CUR fields', default='')
+@cid_command
+def create_cur_proxy(ctx, cur_version, fields, **kwargs):
+    """Create CUR proxy
+
+    \b
+     --cur-version  (1|2)   Version of CUR
+     --fields               Comma Separated list of additional CUR fields
+    """
+
+    ctx.obj.create_cur_proxy(**kwargs)
+
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)

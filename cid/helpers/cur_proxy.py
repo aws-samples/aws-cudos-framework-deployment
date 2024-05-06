@@ -351,12 +351,12 @@ class ProxyView():
 
     creates a proxy view for CUR
     """
-    def __init__(self, cur, target_cur_version, fields_to_expose=None):
+    def __init__(self, cur, target_cur_version):
         self.cur = cur
         self.target_cur_version = target_cur_version
         self.current_cur_version = self.cur.version
         logger.debug(f'CUR proxy from {self.current_cur_version } to {self.target_cur_version }')
-        self.fields_to_expose = list(set(default_columns[self.target_cur_version] + (fields_to_expose or []) ))
+        self.fields_to_expose = list(set(default_columns[self.target_cur_version]))
         self.athena = self.cur.athena
         self.name = f'cur{self.target_cur_version}_proxy'
         self.exposed_fields = []
@@ -403,17 +403,17 @@ class ProxyView():
                 for cur2map in cur2_maps:
                     if field.startswith(cur2map + '_'):
                         return cur2map
-                logger.warning(f"{field} not known field of CUR1. needs to be added in code. Please create a github issue")
+                logger.warning(f"{field} not known field of CUR2. needs to be added in code. Please create a github issue")
             res = cur1to2_mapping.get(field, field)
             return res.split('[')[0]
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR1
             matches = re.findall(r"(\w+)\['(\w+)'\]", field)
             if matches:
-                field, key = matches[0]
-                if field not in self.fields_to_expose_in_maps:
-                    self.fields_to_expose_in_maps = set()
-                self.fields_to_expose_in_maps[key].add(key)
-                return f'{field}_{key}'
+                map_field, key = matches[0]
+                if map_field not in self.fields_to_expose_in_maps:
+                    self.fields_to_expose_in_maps[map_field] = set()
+                self.fields_to_expose_in_maps[map_field].add(key)
+                return f'{map_field}_{key}'
             cur2to1_mapping = {value: key for key, value in cur1to2_mapping.items()}
             if field not in cur2to1_mapping:
                 logger.warning(f"{field} not known field of CUR1. needs to be added in code. Please create a github issue")
@@ -432,12 +432,19 @@ class ProxyView():
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('1'): # field from CUR1 to CUR2
             return field
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR1 to CUR2
-            if field_type.startswith('map'):
+            if field_type.lower().startswith('map'):
+                self.source_column_equivalent(field) # Do not remove this
+                map_field = field.split('[')[0]
                 map_mapping = {}
-                keys = set(self.exposed_maps.get(field, set())).update(self.fields_to_expose_in_maps.get(field, set()))
-                for key in keys:
-                    if f'{field}_{key}' in self.cur.fields:
-                        map_mapping[key] = f'{field}_{key}'
+                keys_set = set(self.exposed_maps.get(field, set()))
+                print('field', field)
+                print('map_field', map_field)
+                print('fields_to_expose_in_maps', self.fields_to_expose_in_maps)
+                keys_set.update(self.fields_to_expose_in_maps.get(map_field, set()))
+                print('keys_set =',keys_set)
+                for key in keys_set:
+                    if f'{map_field}_{key}' in self.cur.fields:
+                        map_mapping[key] = f'{map_field}_{key}'
                     else:
                         map_mapping[key] = 'CAST(NULL as VARCHAR)'
                 if not map_mapping:
@@ -464,15 +471,16 @@ class ProxyView():
         """ Create or update view
         """
         self.read_from_athena()
-        all_fields  = sorted(list(set(self.exposed_fields + self.fields_to_expose)))
+        all_target_fields  = sorted(list(set(self.exposed_fields + self.fields_to_expose)))
+        print('all_target_fields', all_target_fields)
         lines = {}
-        print('all_fields',  all_fields)
-        for field in all_fields:
+        for field in all_target_fields:
             target_field = field.split('[')[0] # take a first part only
-            field_type = self.cur.get_type_of_column(field)
+            field_type = self.cur.get_type_of_column(target_field)
             mapped_expression = self.get_sql_expression(field, field_type)
+            print(field, target_field, field_type, mapped_expression)
             requirement = mapped_expression.split('[')[0]
-            if not re.match(r'^[a-zA-Z0-9_]+$', requirement) or self.cur.column_exists(requirement):
+            if field_type.lower().startswith('map') or (not re.match(r'^[a-zA-Z0-9_]+$', requirement) or self.cur.column_exists(requirement)):
                 expression = mapped_expression
             else:
                 if field_type not in empty:
@@ -494,22 +502,3 @@ class ProxyView():
 
     def get_table_metadata(self):
         return self.athena.get_table_metadata(self.name)
-
-
-if __name__ == '__main__':
-
-    import boto3
-    from cid.helpers.athena import Athena
-    from cid.helpers.glue import Glue
-    from cid.helpers.cur import CUR
-
-    logging.basicConfig(level=logging.INFO)
-    logger.setLevel(logging.DEBUG)
-    athena = Athena(session=boto3.Session())
-    glue = Glue(session=boto3.Session())
-    cur = CUR(athena=athena, glue=glue)
-    proxy = ProxyView(
-        cur=cur,
-        target_cur_version='2',
-    )
-    proxy.create_or_update_view()

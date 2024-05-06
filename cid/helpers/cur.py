@@ -150,8 +150,6 @@ class AbstractCUR(CidBase):
             return False if not return_reason else (False, f'cannot get table {name}. {exc}.')
 
         table_name = table.get('Name')
-        if '_proxy' in table_name:
-            return False if not return_reason else (False, f"Table {table_name} most likely is a proxy.")
         columns = [col.get('Name') for col in table.get('Columns')]
         missing_columns = [col for col in self.cur_minimal_required_columns if col not in columns]
         logger.critical(missing_columns)
