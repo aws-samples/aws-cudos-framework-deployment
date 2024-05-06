@@ -103,6 +103,10 @@ class AbstractCUR(CidBase):
         if column.endswith('_date') and not column.endswith('_to_date'):
             return 'TIMESTAMP'
         special_cases = {
+            "cost_category": "MAP",
+            "discount": "MAP",
+            "product": "MAP",
+            "resource_tags": "MAP",
             "reservation_amortized_upfront_cost_for_usage": "DOUBLE",
             "reservation_amortized_upfront_fee_for_billing_period": "DOUBLE",
             "reservation_recurring_fee_for_usage": "DOUBLE",
