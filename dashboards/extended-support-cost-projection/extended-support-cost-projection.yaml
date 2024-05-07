@@ -3478,6 +3478,7 @@ views:
             , ROW ('aurora-mysql5.7.mysql_aurora.2.11.2', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
             , ROW ('aurora-mysql5.7.mysql_aurora.2.11.3', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
             , ROW ('aurora-mysql5.7.mysql_aurora.2.11.4', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
+            , ROW ('aurora-mysql5.7.mysql_aurora.2.11.5', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
             , ROW ('aurora-mysql5.7.mysql_aurora.2.12.0', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
             , ROW ('aurora-mysql5.7.mysql_aurora.2.12.1', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
             , ROW ('aurora-postgresql11.0', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
@@ -3586,7 +3587,7 @@ views:
          , engine
          , engineversion
          FROM
-           ${data_collection_database_name}.inventory_rds_db_instances_data
+           inventory_rds_db_instances_data
          WHERE (CAST("concat"("year", '-', "month", '-', "day") AS date) >= ("date_trunc"('day', current_date) - INTERVAL  '15' DAY))
       )
       , rds_instances (billing_period, usage_date, payer_account_id, linked_account_id, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbinstanceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
