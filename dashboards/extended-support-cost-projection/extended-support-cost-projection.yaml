@@ -3587,7 +3587,7 @@ views:
          , engine
          , engineversion
          FROM
-           inventory_rds_db_instances_data
+           ${data_collection_database_name}.inventory_rds_db_instances_data
          WHERE (CAST("concat"("year", '-', "month", '-', "day") AS date) >= ("date_trunc"('day', current_date) - INTERVAL  '15' DAY))
       )
       , rds_instances (billing_period, usage_date, payer_account_id, linked_account_id, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbinstanceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
