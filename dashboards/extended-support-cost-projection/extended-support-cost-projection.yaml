@@ -3573,9 +3573,9 @@ views:
          , CASE 
               WHEN engine = 'aurora-mysql' and starts_with(engineversion, '2') THEN substr(engineversion, 1, strpos(engineversion, '.', 2) - 1)
               WHEN engine = 'aurora-mysql' and starts_with(engineversion, '3') THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
-              WHEN engine = 'aurora-postgresql' THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
+              WHEN engine = 'aurora-postgresql' and not starts_with(engineversion, '11') THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
               WHEN engine = 'mysql' THEN substr(engineversion, 1, strpos(engineversion, '.', 2) - 1)
-              WHEN engine = 'postgres' THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
+              WHEN engine = 'postgres' and not starts_with(engineversion, '11') THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
               ELSE engineversion
           END
          FROM preprocessed_rds_instances
