@@ -3535,7 +3535,7 @@ views:
             , ROW ('Aurora', 'cn-northwest-1', 5.68E-1, 1.136E0)
          )
       )
-      , preprocessed_rds_instances (payer_id, accountid, region, dbinstanceidentifier, engine, engineversion) AS (
+      , preprocessed_rds_instances (payer_id, accountid, region, dbinstanceidentifier, engine, engineversion, collection_date, max_collection_date) AS (
           SELECT DISTINCT
                payer_id
              , accountid
@@ -3546,10 +3546,11 @@ views:
                   WHEN engine = 'aurora-mysql' THEN split(engineversion, 'mysql_aurora.')[2]
                   ELSE engineversion
              END
-             FROM
-               ${data_collection_database_name}.inventory_rds_db_instances_data
+             , CAST("concat"("year", '-', "month", '-', "day") AS date)
+             , max(CAST("concat"("year", '-', "month", '-', "day") AS date)) over (order by dbinstanceidentifier)
+             FROM ${data_collection_database_name}.inventory_rds_db_instances_data
             WHERE (CAST("concat"("year", '-', "month", '-', "day") AS date) >= ("date_trunc"('day', current_date) - INTERVAL  '15' DAY))
-      )
+          )
       , sanitised_rds_instances (payer_id, accountid, region, dbinstanceidentifier, engine, engineversion) AS (
          SELECT DISTINCT
            payer_id
@@ -3565,8 +3566,8 @@ views:
               WHEN engine = 'postgres' THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
               ELSE engineversion
           END
-         FROM
-           preprocessed_rds_instances
+         FROM preprocessed_rds_instances
+         WHERE collection_date = max_collection_date
       )
       , rds_instances (billing_period, usage_date, payer_account_id, linked_account_id, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbinstanceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
          SELECT
