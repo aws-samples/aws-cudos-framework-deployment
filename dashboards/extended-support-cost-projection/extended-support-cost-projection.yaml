@@ -3467,7 +3467,7 @@ views:
        VALUES
               ROW ('mysql5.7', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
             , ROW ('mysql8.0', CAST('2026-08-01' AS timestamp), CAST('2028-08-01' AS timestamp), CAST('2029-07-31' AS timestamp))
-            , ROW ('postgres11', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
+            , ROW ('postgres11.22', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
             , ROW ('aurora-mysql2.11', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
             , ROW ('aurora-mysql2.12', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
             , ROW ('aurora-postgresql11.9', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
