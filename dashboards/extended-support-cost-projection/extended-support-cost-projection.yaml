@@ -3176,6 +3176,8 @@ datasets:
               Type: STRING
             - Name: linked_account_id
               Type: STRING
+            - Name: account_name
+              Type: STRING
             - Name: region_code
               Type: STRING
             - Name: original_usage_type
@@ -3212,6 +3214,7 @@ datasets:
               - usage_date
               - payer_account_id
               - linked_account_id
+              - account_name
               - region_code
               - original_usage_type
               - k8s_version
@@ -3251,6 +3254,8 @@ datasets:
             - Name: payer_account_id
               Type: STRING
             - Name: linked_account_id
+              Type: STRING
+            - Name: account_name
               Type: STRING
             - Name: region_code
               Type: STRING
@@ -3320,6 +3325,7 @@ datasets:
               - usage_date
               - payer_account_id
               - linked_account_id
+              - account_name
               - region_code
               - rds_type
               - deployment_option
@@ -3401,12 +3407,13 @@ views:
              FROM preprocessed_eks_clusters_inventory
              WHERE collection_date = max_collection_date
       )
-      , eks_clusters_usage (billing_period, usage_date, payer_account_id, linked_account_id, region_code, cluster_name, k8s_version, item_description, usage_unit, resource_id, original_usage_type, usage_amount) AS (
+      , eks_clusters_usage (billing_period, usage_date, payer_account_id, linked_account_id, account_name, region_code, cluster_name, k8s_version, item_description, usage_unit, resource_id, original_usage_type, usage_amount) AS (
          SELECT
            c.bill_billing_period_start_date
          , date_trunc('day', c.line_item_usage_start_date)
          , c.bill_payer_account_id payer_account_id
          , c.line_item_usage_account_id linked_account_id
+         , accmap.account_name
          , c.product_region
          , eksinv.cluster_name
          , eksinv.k8s_version
@@ -3418,14 +3425,16 @@ views:
          FROM
            (${athena_database_name}.${cur_table_name} c
          INNER JOIN eks_clusters_inventory eksinv ON ((c.bill_payer_account_id = eksinv.payer_id) AND (c.line_item_usage_account_id = eksinv.accountid) AND (c.product_region = eksinv.region) AND (c.line_item_resource_id = eksinv.cluster_arn)))
+         INNER JOIN account_map accmap on c.line_item_usage_account_id = accmap.account_id
          WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.year, '-', c.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonEKS') AND (c.line_item_line_item_type IN ('Usage')) AND ((c.product_product_family = 'Compute') AND (c.line_item_usage_type LIKE '%AmazonEKS-Hours:perCluster')))
-         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
       )
       SELECT
         ekscus.billing_period
       , ekscus.usage_date
       , ekscus.payer_account_id
       , ekscus.linked_account_id
+      , ekscus.account_name
       , ekscus.region_code
       , ekscus.original_usage_type
       , ekscus.k8s_version
@@ -3591,12 +3600,13 @@ views:
          FROM preprocessed_rds_instances
          WHERE collection_date = max_collection_date
       )
-      , rds_instances (billing_period, usage_date, payer_account_id, linked_account_id, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbinstanceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
+      , rds_instances (billing_period, usage_date, payer_account_id, linked_account_id, account_name, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbinstanceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
          SELECT
            c.bill_billing_period_start_date
          , date_trunc('day', c.line_item_usage_start_date)
          , c.bill_payer_account_id payer_account_id
          , c.line_item_usage_account_id linked_account_id
+         , accmap.account_name
          , c.product_region
          , (CASE WHEN (c.product_database_engine LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
          , (CASE WHEN (c.line_item_usage_type LIKE '%InstanceUsage%') THEN 'SINGLE-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN 'MULTI-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZClusterUsage%') THEN 'MULTI-AZ-CLUSTER' WHEN ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type = 'Aurora:ServerlessUsage')) THEN 'SERVERLESS' ELSE 'UNDEFINED (Check the usage type)' END)
@@ -3616,14 +3626,16 @@ views:
          FROM
            (${cur_database_name}.${cur_table_name} c
          INNER JOIN sanitised_rds_instances rdsu ON ((c.bill_payer_account_id = rdsu.payer_id) AND (c.line_item_usage_account_id = rdsu.accountid) AND (c.product_region = rdsu.region) AND (split_part(c.line_item_resource_id, ':', 7) = rdsu.dbinstanceidentifier)))
+         INNER JOIN account_map accmap on c.line_item_usage_account_id = accmap.account_id
          WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.year, '-', c.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonRDS') AND (c.line_item_line_item_type IN ('DiscountedUsage', 'Usage')) AND ((c.product_product_family = 'Database Instance') OR ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type = 'Aurora:ServerlessUsage'))))
-         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
       )
       SELECT
         rdsi.billing_period
       , rdsi.usage_date
       , rdsi.payer_account_id
       , rdsi.linked_account_id
+      , rdsi.account_name
       , rdsi.region_code
       , rdsi.rds_type
       , rdsi.deployment_option
