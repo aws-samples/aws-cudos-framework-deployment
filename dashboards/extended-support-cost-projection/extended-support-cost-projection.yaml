@@ -3377,17 +3377,29 @@ views:
             , ROW ('1.29', CAST('2025-03-24' AS timestamp), CAST('2026-03-23' AS timestamp))
          )
       )
+      , preprocessed_eks_clusters_inventory (payer_id, accountid, region, cluster_arn, cluster_name, k8s_version, collection_date, max_collection_date) AS (
+          SELECT DISTINCT
+               payer_id
+             , accountid
+             , region
+             , arn
+             , name
+             , version
+             , CAST("concat"("year", '-', "month", '-', "day") AS date)
+             , max(CAST("concat"("year", '-', "month", '-', "day") AS date)) over (order by name)
+             FROM ${data_collection_database_name}.inventory_eks_data
+             WHERE (CAST("concat"("year", '-', "month", '-', "day") AS date) >= ("date_trunc"('day', current_date) - INTERVAL  '15' DAY))
+      )
       , eks_clusters_inventory (payer_id, accountid, region, cluster_arn, cluster_name, k8s_version) AS (
-         SELECT DISTINCT
-           payer_id
-         , accountid
-         , region
-         , arn
-         , name
-         , version
-         FROM
-           ${data_collection_database_name}.inventory_eks_data
-         WHERE (CAST("concat"("year", '-', "month", '-', "day") AS date) >= ("date_trunc"('day', current_date) - INTERVAL  '15' DAY))
+          SELECT DISTINCT
+               payer_id
+             , accountid
+             , region
+             , cluster_arn
+             , cluster_name
+             , k8s_version
+             FROM preprocessed_eks_clusters_inventory
+             WHERE collection_date = max_collection_date
       )
       , eks_clusters_usage (billing_period, usage_date, payer_account_id, linked_account_id, region_code, cluster_name, k8s_version, item_description, usage_unit, resource_id, original_usage_type, usage_amount) AS (
          SELECT
