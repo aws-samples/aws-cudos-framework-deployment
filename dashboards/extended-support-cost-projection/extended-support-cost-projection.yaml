@@ -3453,55 +3453,12 @@ views:
          FROM
            (
        VALUES
-              ROW ('mysql5.7.37', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
-            , ROW ('mysql5.7.38', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
-            , ROW ('mysql5.7.39', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
-            , ROW ('mysql5.7.40', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
-            , ROW ('mysql5.7.41', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
-            , ROW ('mysql5.7.42', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
-            , ROW ('mysql5.7.43', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
-            , ROW ('mysql5.7.44', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
-            , ROW ('mysql8.0.28', CAST('2026-08-01' AS timestamp), CAST('2028-08-01' AS timestamp), CAST('2029-07-31' AS timestamp))
-            , ROW ('mysql8.0.31', CAST('2026-08-01' AS timestamp), CAST('2028-08-01' AS timestamp), CAST('2029-07-31' AS timestamp))
-            , ROW ('mysql8.0.32', CAST('2026-08-01' AS timestamp), CAST('2028-08-01' AS timestamp), CAST('2029-07-31' AS timestamp))
-            , ROW ('mysql8.0.33', CAST('2026-08-01' AS timestamp), CAST('2028-08-01' AS timestamp), CAST('2029-07-31' AS timestamp))
-            , ROW ('mysql8.0.34', CAST('2026-08-01' AS timestamp), CAST('2028-08-01' AS timestamp), CAST('2029-07-31' AS timestamp))
-            , ROW ('mysql8.0.35', CAST('2026-08-01' AS timestamp), CAST('2028-08-01' AS timestamp), CAST('2029-07-31' AS timestamp))
-            , ROW ('postgres11.16', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('postgres11.17', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('postgres11.18', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('postgres11.19', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('postgres11.20', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('postgres11.21', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('postgres11.22', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-mysql5.7.mysql_aurora.2.11.1', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
-            , ROW ('aurora-mysql5.7.mysql_aurora.2.11.2', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
-            , ROW ('aurora-mysql5.7.mysql_aurora.2.11.3', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
-            , ROW ('aurora-mysql5.7.mysql_aurora.2.11.4', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
-            , ROW ('aurora-mysql5.7.mysql_aurora.2.11.5', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
-            , ROW ('aurora-mysql5.7.mysql_aurora.2.12.0', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
-            , ROW ('aurora-mysql5.7.mysql_aurora.2.12.1', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
-            , ROW ('aurora-postgresql11.0', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.1', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.2', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.3', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.4', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.5', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.6', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.7', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.8', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
+              ROW ('mysql5.7', CAST('2024-03-01' AS timestamp), CAST('2026-03-01' AS timestamp), CAST('2027-02-28' AS timestamp))
+            , ROW ('mysql8.0', CAST('2026-08-01' AS timestamp), CAST('2028-08-01' AS timestamp), CAST('2029-07-31' AS timestamp))
+            , ROW ('postgres11', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
+            , ROW ('aurora-mysql2.11', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
+            , ROW ('aurora-mysql2.12', CAST('2024-12-01' AS timestamp), null, CAST('2027-02-28' AS timestamp))
             , ROW ('aurora-postgresql11.9', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.10', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.11', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.12', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.13', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.14', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.15', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.16', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.17', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.18', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.19', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
-            , ROW ('aurora-postgresql11.20', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
             , ROW ('aurora-postgresql11.21', CAST('2024-04-01' AS timestamp), CAST('2026-04-01' AS timestamp), CAST('2027-03-31' AS timestamp))
          )
       )
@@ -3578,6 +3535,21 @@ views:
             , ROW ('Aurora', 'cn-northwest-1', 5.68E-1, 1.136E0)
          )
       )
+      , preprocessed_rds_instances (payer_id, accountid, region, dbinstanceidentifier, engine, engineversion) AS (
+          SELECT DISTINCT
+               payer_id
+             , accountid
+             , region
+             , dbinstanceidentifier
+             , engine
+             , CASE
+                  WHEN engine = 'aurora-mysql' THEN split(engineversion, 'mysql_aurora.')[2]
+                  ELSE engineversion
+             END
+             FROM
+               ${data_collection_database_name}.inventory_rds_db_instances_data
+            WHERE (CAST("concat"("year", '-', "month", '-', "day") AS date) >= ("date_trunc"('day', current_date) - INTERVAL  '15' DAY))
+      )
       , sanitised_rds_instances (payer_id, accountid, region, dbinstanceidentifier, engine, engineversion) AS (
          SELECT DISTINCT
            payer_id
@@ -3585,10 +3557,16 @@ views:
          , region
          , dbinstanceidentifier
          , engine
-         , engineversion
+         , CASE 
+              WHEN engine = 'aurora-mysql' and starts_with(engineversion, '2') THEN substr(engineversion, 1, strpos(engineversion, '.', 2) - 1)
+              WHEN engine = 'aurora-mysql' and starts_with(engineversion, '3') THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
+              WHEN engine = 'aurora-postgresql' THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
+              WHEN engine = 'mysql' THEN substr(engineversion, 1, strpos(engineversion, '.', 2) - 1)
+              WHEN engine = 'postgres' THEN substr(engineversion, 1, strpos(engineversion, '.', 1) - 1)
+              ELSE engineversion
+          END
          FROM
-           ${data_collection_database_name}.inventory_rds_db_instances_data
-         WHERE (CAST("concat"("year", '-', "month", '-', "day") AS date) >= ("date_trunc"('day', current_date) - INTERVAL  '15' DAY))
+           preprocessed_rds_instances
       )
       , rds_instances (billing_period, usage_date, payer_account_id, linked_account_id, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbinstanceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
          SELECT
