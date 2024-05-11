@@ -50,7 +50,7 @@ cur1to2_mapping = {
     'product_operation': 'product_operation',
     'product_product_family': 'product_product_family',
     'product_region_code': 'product_region_code',
-    'product_servicecode': 'product_servicecode', 
+    'product_servicecode': 'product_servicecode',
     'product_sku': 'product_sku',
     'product_to_location': 'product_to_location',
     'product_to_location_type': 'product_to_location_type',
@@ -372,19 +372,30 @@ class ProxyView():
             WHERE table_schema = '{self.athena.DatabaseName}'
             AND table_name = '{self.name}';
         '''))
-        self.exposed_fields = list(exposed_fields_and_types.keys())
-        logger.debug(self.exposed_fields)
 
+        self.exposed_fields = list(exposed_fields_and_types.keys())
+        logger.debug(f'exposed fields: {self.exposed_fields}')
+
+        if not self.exposed_fields:
+            return
+
+        def _parse_mapping_string(mapping_string):
+            arrays = re.findall(r'ARRAY\[(.*?)\]', mapping_string) # Extract arrays from the string
+            keys = arrays[0].strip('\'').split(',') # Split arrays into elements
+            values = arrays[1].strip('\'').split(',')
+            return {key.strip(): value.strip() for key, value in zip(keys, values)}
+        _current_sql = '\n'.join([line[0] for line in self.athena.query(f'SHOW CREATE VIEW {self.name}')])
         for field, field_type in exposed_fields_and_types.items():
             if field_type.startswith('map('):
                 if field not in self.exposed_maps:
                     self.exposed_maps[field] = set()
-                current_keys = self.athena.query(f'''
-                    SELECT DISTINCT key
-                    FROM "{self.name}", UNNEST("{field}") AS t(key, value);
-                ''')
-                self.exposed_maps[field].update([key[0] for key in current_keys])
-        logger.critical(self.exposed_maps)
+                maps = re.findall(f'MAP\(ARRAY\[.+?\], ARRAY\[.+?\]\) {field}', _current_sql)
+                if not maps:
+                    logger.warning(f'cannot find map {field} definition in {self.name}')
+                current_map = _parse_mapping_string(maps[0])
+                logger.debug(f'current definition of {field} of {current_map}')
+                self.exposed_maps[field].update([key[0] for key in current_map])
+        logger.debug(f'{self.exposed_maps}')
 
     def source_column_equivalent(self, field):
         """ Given a field of cur return an equivalent field in the target cur system. This one does not care if field actually exists
@@ -437,11 +448,7 @@ class ProxyView():
                 map_field = field.split('[')[0]
                 map_mapping = {}
                 keys_set = set(self.exposed_maps.get(field, set()))
-                print('field', field)
-                print('map_field', map_field)
-                print('fields_to_expose_in_maps', self.fields_to_expose_in_maps)
                 keys_set.update(self.fields_to_expose_in_maps.get(map_field, set()))
-                print('keys_set =',keys_set)
                 for key in keys_set:
                     if f'{map_field}_{key}' in self.cur.fields:
                         map_mapping[key] = f'{map_field}_{key}'
@@ -449,6 +456,7 @@ class ProxyView():
                         map_mapping[key] = 'CAST(NULL as VARCHAR)'
                 if not map_mapping:
                     return 'cast(NULL AS MAP<VARCHAR, VARCHAR>)'
+                map_mapping = dict(sorted(map_mapping.items())) # ordered dict
                 return f'''
                     MAP(
                         ARRAY[{', '.join(["'" + key + "'" for key in map_mapping.keys()])}],
@@ -472,13 +480,12 @@ class ProxyView():
         """
         self.read_from_athena()
         all_target_fields  = sorted(list(set(self.exposed_fields + self.fields_to_expose)))
-        print('all_target_fields', all_target_fields)
+        logger.trace(f'all_target_fields = {all_target_fields}')
         lines = {}
         for field in all_target_fields:
             target_field = field.split('[')[0] # take a first part only
             field_type = self.cur.get_type_of_column(target_field)
             mapped_expression = self.get_sql_expression(field, field_type)
-            print(field, target_field, field_type, mapped_expression)
             requirement = mapped_expression.split('[')[0]
             if field_type.lower().startswith('map') or (not re.match(r'^[a-zA-Z0-9_]+$', requirement) or self.cur.column_exists(requirement)):
                 expression = mapped_expression
@@ -495,9 +502,7 @@ class ProxyView():
             FROM
                 "{self.cur.table_name}"
         ''')
-
-        logging.critical(query)
-        res = self.athena.query(query)
+        res = self.athena.create_or_update_view(self.name, query)
         logging.debug(res)
 
     def get_table_metadata(self):

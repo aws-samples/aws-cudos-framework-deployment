@@ -5,7 +5,7 @@ import logging
 
 from cid.base import CidBase
 from cid.helpers import S3
-from cid.utils import get_parameter, get_parameters, cid_print
+from cid.utils import get_parameter, get_parameters, cid_print, isatty, unset_parameter, get_yesno_parameter
 from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
 
@@ -517,3 +517,50 @@ class Athena(CidBase):
             _recursively_process_view(view)
 
         return all_views
+
+    def create_or_update_view(self, view_name, view_query):
+        """ update view while asking user
+        """
+        update_view = None
+        # first understand if view exists
+        self.discover_views([view_name])
+        if view_name not in self._metadata:
+            update_view = True
+        else: # view exists
+            while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
+                cid_print(f'Analyzing view {view_name}')
+                diff = self.get_view_diff(view_name, view_query)
+                if diff and diff['diff']:
+                    cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
+                    cid_print(diff['printable'])
+                    choice = get_parameter(
+                        param_name='view-' + view_name + '-override',
+                        message=f'The existing view is different. Override?',
+                        choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
+                        default='retry diff'
+                    )
+                    if choice == 'retry diff':
+                        unset_parameter('view-' + view_name + '-override')
+                        continue
+                    elif choice == 'proceed and override':
+                        update_view = True
+                        break
+                    elif choice == 'keep existing':
+                        update_view = False
+                        break
+                    else:
+                        raise CidCritical(f'User choice is not to update {view_name}.')
+                elif not diff:
+                    if not get_yesno_parameter(
+                        param_name='view-' + view_name + '-override',
+                        message=f'Cannot get sql diff for {view_name}. Continue?',
+                        default='yes'
+                        ):
+                        raise CidCritical(f'User choice is not to update {view_name}.')
+                    update_view = True
+                elif diff and not diff['diff']:
+                    cid_print(f'No need to update {view_name}. Skipping.')
+                break
+        if update_view:
+            cid_print(f'Updating view: "{view_name}"')
+            self.execute_query(view_query)

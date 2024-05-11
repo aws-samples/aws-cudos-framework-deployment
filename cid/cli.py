@@ -9,7 +9,7 @@ from cid.utils import get_parameters, set_parameters, get_latest_tool_version
 from cid._version import __version__
 from cid.exceptions import CidCritical, CidError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('cid')
 version = f'{__version__} Beta'
 latest_version = get_latest_tool_version()
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"

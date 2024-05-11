@@ -146,13 +146,13 @@ class AbstractCUR(CidBase):
         try:
             table = table or self.athena.get_table_metadata(name)
         except Exception as exc: #pylint: disable=broad-exception-caught
-            logger.critical(exc)
+            logger.warning(exc)
             return False if not return_reason else (False, f'cannot get table {name}. {exc}.')
 
         table_name = table.get('Name')
         columns = [col.get('Name') for col in table.get('Columns')]
         missing_columns = [col for col in self.cur_minimal_required_columns if col not in columns]
-        logger.critical(missing_columns)
+        logger.debug(f'missing_columns={missing_columns}')
         if missing_columns:
             return False if not return_reason else (False, f"Table {table_name} does not contain columns: {','.join(missing_columns)}. You can try ALTER TABLE {table_name} ADD COLUMNS (missing_column string).")
 
@@ -192,7 +192,7 @@ class CUR(AbstractCUR):
             table_name = get_parameters().get('cur-table-name')
             try:
                 metadata = self.athena.get_table_metadata(table_name)
-            except self.athena.client.exceptions.ResourceNotFoundException as exc:
+            except self.athena.client.exceptions.MetadataException as exc:
                 raise CidCritical(f'Provided cur-table-name "{table_name}" is not found. Please make sure the table exists.') from exc
             res, message = self.table_is_cur(table=metadata, return_reason=True)
             if not res:
@@ -257,7 +257,7 @@ class CUR(AbstractCUR):
             return
 
         # if a required column is not there and not ri/sp -> stop
-        logger.critical(f"Column '{column}' is not in ({self.table_name}). Cannot continue.")
+        logger.warning(f"Column '{column}' is not in CUR ({self.table_name}).")
 
 
 class ProxyCUR(AbstractCUR):

@@ -140,7 +140,9 @@ class Cid():
                     break
                 except CidCritical as exc:
                     logger.exception(exc)
-                    cid_print(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
+                    cid_print('')
+                    cid_print(f'CUR not found in database {self.athena.DatabaseName}.')
+                    cid_print(f'If you have an S3 bucket with CUR data in this account, we can help creating a CUR table and a Crawler.')
                     self.create_cur_table()
         return self._clients['cur']
 
@@ -1631,44 +1633,8 @@ class Cid():
                 else:
                     if 'CREATE EXTERNAL TABLE' in view_query.upper():
                         logger.warning('Cannot recreate table {view_name}')
-
                     elif 'CREATE OR REPLACE' in view_query.upper():
-                        update_view = False
-                        while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
-                            cid_print(f'Analyzing view {view_name}')
-                            diff = self.athena.get_view_diff(view_name, view_query)
-                            if diff and diff['diff']:
-                                cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
-                                cid_print(diff['printable'])
-                                choice = get_parameter(
-                                    param_name='view-' + view_name + '-override',
-                                    message=f'The existing view is different. Override?',
-                                    choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
-                                    default='retry diff'
-                                )
-                                if choice == 'retry diff':
-                                    unset_parameter('view-' + view_name + '-override')
-                                    continue
-                                elif choice == 'proceed and override':
-                                    update_view = True
-                                    break
-                                elif choice == 'keep existing':
-                                    update_view = False
-                                    break
-                                else:
-                                    raise CidCritical(f'User choice is not to update {view_name}.')
-                            elif not diff:
-                                if not get_yesno_parameter(
-                                    param_name='view-' + view_name + '-override',
-                                    message=f'Cannot get sql diff for {view_name}. Continue?',
-                                    default='yes'
-                                    ):
-                                    raise CidCritical(f'User choice is not to update {view_name}.')
-                                update_view = True
-                            break
-                        if update_view:
-                            print(f'Updating view: "{view_name}"')
-                            self.athena.execute_query(view_query)
+                        self.athena.create_or_update_view(view_name=view_name, view_query=view_query)
                     else:
                         print(f'View "{view_name}" is not compatible with update. Skipping.')
                 if 'CREATE OR REPLACE VIEW' in view_query.upper() or 'CREATE VIEW' in view_query.upper():
@@ -1810,7 +1776,7 @@ class Cid():
 
     @command
     def create_cur_proxy(self, cur_version=None, fields=None, **kwargs):
-        cid_print(f'Using {self.cur.table_name}') # need to call self.cur
+        cid_print(f'Using CUR {self.cur.table_name}') # need to call self.cur
         cur_version = cur_version or get_parameter(
             'cur-version',
             message='Enter a version of CUR you want to create or update',
