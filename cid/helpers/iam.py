@@ -151,6 +151,7 @@ class IAM(CidBase):
                                 "glue:GetPartition",
                                 "glue:GetPartitions",
                                 "glue:GetDatabases",
+                                "glue:GetDatabase",
                                 "glue:GetTable",
                                 "glue:GetTables",
                             ],
