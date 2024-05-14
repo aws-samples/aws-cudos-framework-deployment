@@ -115,6 +115,18 @@ datasets:
             - Name: amortized_split_unused_memory_cost
               Type: DECIMAL
               SubType: FLOAT
+            - Name: net_amortized_split_cpu_cost
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: net_amortized_split_memory_cost
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: net_amortized_split_unused_cpu_cost
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: net_amortized_split_unused_memory_cost
+              Type: DECIMAL
+              SubType: FLOAT
             - Name: public_on_demand_split_cpu_cost
               Type: DECIMAL
               SubType: FLOAT
@@ -139,7 +151,15 @@ datasets:
             - Name: account_name
               Type: STRING
       LogicalTableMap:
-        0132f464-a9b7-4f3a-a52b-1ea2f50b626b:
+        1fee5e33-e5e7-4232-b9d8-25b7d48c3a16:
+          Alias: scad_cca_summary_view
+          Source:
+            PhysicalTableId: 23c0a01c-4650-4bc6-b292-0e44166c6bf7
+        556bdfbf-a4df-4005-8343-116e3053d4e5:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 61836741-9d4c-4b01-9d8c-18c90bcadc42
+        fc9cf544-48cb-4845-9bf7-7fa6b813d944:
           Alias: Intermediate Table
           DataTransforms:
           - TagColumnOperation:
@@ -188,6 +208,10 @@ datasets:
               - amortized_split_memory_cost
               - amortized_split_unused_cpu_cost
               - amortized_split_unused_memory_cost
+              - net_amortized_split_cpu_cost
+              - net_amortized_split_memory_cost
+              - net_amortized_split_unused_cpu_cost
+              - net_amortized_split_unused_memory_cost
               - public_on_demand_split_cpu_cost
               - public_on_demand_split_memory_cost
               - public_on_demand_split_unused_cpu_cost
@@ -200,14 +224,6 @@ datasets:
               RightOperand: 556bdfbf-a4df-4005-8343-116e3053d4e5
               Type: LEFT
               OnClause: '{linked_account_id} = {account_id}'
-        1fee5e33-e5e7-4232-b9d8-25b7d48c3a16:
-          Alias: scad_cca_summary_view
-          Source:
-            PhysicalTableId: 23c0a01c-4650-4bc6-b292-0e44166c6bf7
-        556bdfbf-a4df-4005-8343-116e3053d4e5:
-          Alias: account_map
-          Source:
-            PhysicalTableId: 61836741-9d4c-4b01-9d8c-18c90bcadc42
       ImportMode: SPICE
     dependsOn:
       views:
@@ -339,6 +355,18 @@ datasets:
             - Name: amortized_split_unused_memory_cost
               Type: DECIMAL
               SubType: FLOAT
+            - Name: net_amortized_split_cpu_cost
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: net_amortized_split_memory_cost
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: net_amortized_split_unused_cpu_cost
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: net_amortized_split_unused_memory_cost
+              Type: DECIMAL
+              SubType: FLOAT
             - Name: public_on_demand_split_cpu_cost
               Type: DECIMAL
               SubType: FLOAT
@@ -367,11 +395,7 @@ datasets:
           Alias: scad_cca_hourly_resource_view
           Source:
             PhysicalTableId: b62a12a4-c932-4911-95c1-86c528bd8d66
-        6fcd7fb8-6051-42b5-8825-345522216c1d:
-          Alias: account_map
-          Source:
-            PhysicalTableId: c905b6e7-df51-4de6-9fe0-e9641d724d8b
-        d7f7717d-82fa-4084-882d-76bd32ae6ecc:
+        618ebaad-fa66-4b18-8bc8-9e35d7ab1550:
           Alias: Intermediate Table
           DataTransforms:
           - TagColumnOperation:
@@ -427,6 +451,10 @@ datasets:
               - amortized_split_memory_cost
               - amortized_split_unused_cpu_cost
               - amortized_split_unused_memory_cost
+              - net_amortized_split_cpu_cost
+              - net_amortized_split_memory_cost
+              - net_amortized_split_unused_cpu_cost
+              - net_amortized_split_unused_memory_cost
               - public_on_demand_split_cpu_cost
               - public_on_demand_split_memory_cost
               - public_on_demand_split_unused_cpu_cost
@@ -439,6 +467,10 @@ datasets:
               RightOperand: 6fcd7fb8-6051-42b5-8825-345522216c1d
               Type: LEFT
               OnClause: '{linked_account_id} = {account_id}'
+        6fcd7fb8-6051-42b5-8825-345522216c1d:
+          Alias: account_map
+          Source:
+            PhysicalTableId: c905b6e7-df51-4de6-9fe0-e9641d724d8b
       ImportMode: SPICE
     dependsOn:
       views:
@@ -446,10 +478,29 @@ datasets:
       - account_map
     schedules:
     - default
+crawlers: {}
 views:
   scad_cca_summary_view:
     dependsOn:
-      cur: true
+      cur:
+        reservation_reservation_a_r_n: string
+        split_line_item_parent_resource_id: string
+        split_line_item_reserved_usage: double
+        split_line_item_actual_usage: double
+        split_line_item_split_usage: double
+        split_line_item_split_usage_ratio: double
+        split_line_item_split_cost: double
+        split_line_item_unused_cost: double
+        split_line_item_net_split_cost: double
+        split_line_item_net_unused_cost: double
+        split_line_item_public_on_demand_split_cost: double
+        split_line_item_public_on_demand_unused_cost: double
+        resource_tags_aws_eks_cluster_name: string
+        resource_tags_aws_eks_deployment: string
+        resource_tags_aws_eks_namespace: string
+        resource_tags_aws_eks_node: string
+        resource_tags_aws_eks_workload_name: string
+        resource_tags_aws_eks_workload_type: string
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.scad_cca_summary_view AS
       SELECT
@@ -481,24 +532,38 @@ views:
       , ARBITRARY((CASE WHEN ("t_scad_eks"."resource_tags_aws_eks_workload_type" = '') THEN 'Uncontrolled Workload' WHEN ("t_scad_eks"."resource_tags_aws_eks_workload_type" = 'StatefulSet') THEN "t_scad_eks"."resource_tags_aws_eks_workload_name" ELSE 'Non-StatefulSet-Workload' END)) "statefulset"
       , ARBITRARY((CASE WHEN ("t_scad_eks"."resource_tags_aws_eks_workload_type" = '') THEN 'Uncontrolled Workload' WHEN ("t_scad_eks"."resource_tags_aws_eks_workload_type" = 'ReplicaSet') THEN "t_scad_eks"."resource_tags_aws_eks_workload_name" ELSE 'Non-ReplicaSet-Workload' END)) "replicaset"
       , ARBITRARY((CASE WHEN ("t_scad_eks"."resource_tags_aws_eks_workload_type" = '') THEN 'Uncontrolled Workload' WHEN ("t_scad_eks"."resource_tags_aws_eks_workload_type" = 'Job') THEN "t_scad_eks"."resource_tags_aws_eks_workload_name" ELSE 'Non-Job-Workload' END)) "job"
-      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_reserved_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "cpu_requests"
-      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_reserved_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "memory_requests"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_actual_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "cpu_usage"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_actual_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "memory_usage"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_split_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "max_cpu_requests_vs_cpu_usage"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_split_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "max_memory_requests_vs_memory_usage"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_split_usage_ratio" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "cpu_split_ratio"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_split_usage_ratio" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "memory_split_ratio"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_split_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "amortized_split_cpu_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_split_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "amortized_split_memory_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_unused_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "amortized_split_unused_cpu_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_unused_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "amortized_split_unused_memory_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_split_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "public_on_demand_split_cpu_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_split_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "public_on_demand_split_memory_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_unused_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "public_on_demand_split_unused_cpu_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_unused_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "public_on_demand_split_unused_memory_cost"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN "t_scad_eks"."split_line_item_reserved_usage" ELSE 0E0 END)) "cpu_requests"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN "t_scad_eks"."split_line_item_reserved_usage" ELSE 0E0 END)) "memory_requests"
+      , (AVG((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN "t_scad_eks"."split_line_item_actual_usage" ELSE 0E0 END)) * 2) "cpu_usage"
+      , (AVG((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN "t_scad_eks"."split_line_item_actual_usage" ELSE 0E0 END)) * 2) "memory_usage"
+      , (AVG((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN "t_scad_eks"."split_line_item_split_usage" ELSE 0E0 END)) * 2) "max_cpu_requests_vs_cpu_usage"
+      , (AVG((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN "t_scad_eks"."split_line_item_split_usage" ELSE 0E0 END)) * 2) "max_memory_requests_vs_memory_usage"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN "t_scad_eks"."split_line_item_split_usage_ratio" ELSE 0E0 END)) "cpu_split_ratio"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN "t_scad_eks"."split_line_item_split_usage_ratio" ELSE 0E0 END)) "memory_split_ratio"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "amortized_split_cpu_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "amortized_split_memory_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "amortized_split_unused_cpu_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "amortized_split_unused_memory_cost"
+      , SUM((CASE WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_split_cost", 0E0) > 0E0)) THEN ("t_scad_eks"."split_line_item_net_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_split_cost", 0E0) = 0E0)) THEN ("t_scad_eks"."split_line_item_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "net_amortized_split_cpu_cost"
+      , SUM((CASE WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_split_cost", 0E0) > 0E0)) THEN ("t_scad_eks"."split_line_item_net_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_split_cost", 0E0) = 0E0)) THEN ("t_scad_eks"."split_line_item_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "net_amortized_split_memory_cost"
+      , SUM((CASE WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_unused_cost", 0E0) > 0E0)) THEN ("t_scad_eks"."split_line_item_net_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_unused_cost", 0E0) = 0E0)) THEN ("t_scad_eks"."split_line_item_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "net_amortized_split_unused_cpu_cost"
+      , SUM((CASE WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_unused_cost", 0E0) > 0E0)) THEN ("t_scad_eks"."split_line_item_net_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_unused_cost", 0E0) = 0E0)) THEN ("t_scad_eks"."split_line_item_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "net_amortized_split_unused_memory_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "public_on_demand_split_cpu_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "public_on_demand_split_memory_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "public_on_demand_split_unused_cpu_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "public_on_demand_split_unused_memory_cost"
       FROM
-        ("${cur_table_name}" "t_scad_eks"
+        (("${cur_table_name}" "t_scad_eks"
+      INNER JOIN (
+         SELECT
+           "line_item_usage_start_date"
+         , "line_item_resource_id"
+         , SUM("line_item_usage_amount") "line_item_usage_amount"
+         FROM
+           "${cur_table_name}"
+         WHERE (("line_item_operation" LIKE '%RunInstances%') AND ("product_product_family" = 'Compute Instance') AND ("line_item_line_item_type" IN ('DiscountedUsage', 'SavingsPlanCoveredUsage', 'Usage')) AND ((current_date - INTERVAL  '6' MONTH) <= "line_item_usage_start_date"))
+         GROUP BY 1, 2
+      )  "t_ec2_compute_instances_sum_quantity" ON (("t_scad_eks"."split_line_item_parent_resource_id" = "t_ec2_compute_instances_sum_quantity"."line_item_resource_id") AND ("t_scad_eks"."line_item_usage_start_date" = "t_ec2_compute_instances_sum_quantity"."line_item_usage_start_date")))
       INNER JOIN (
          SELECT
            "line_item_usage_start_date"
@@ -520,7 +585,25 @@ views:
       GROUP BY 1, 2, 3, 4, 5
   scad_cca_hourly_resource_view:
     dependsOn:
-      cur: true
+      cur:
+        reservation_reservation_a_r_n: string
+        split_line_item_parent_resource_id: string
+        split_line_item_reserved_usage: double
+        split_line_item_actual_usage: double
+        split_line_item_split_usage: double
+        split_line_item_split_usage_ratio: double
+        split_line_item_split_cost: double
+        split_line_item_unused_cost: double
+        split_line_item_net_split_cost: double
+        split_line_item_net_unused_cost: double
+        split_line_item_public_on_demand_split_cost: double
+        split_line_item_public_on_demand_unused_cost: double
+        resource_tags_aws_eks_cluster_name: string
+        resource_tags_aws_eks_deployment: string
+        resource_tags_aws_eks_namespace: string
+        resource_tags_aws_eks_node: string
+        resource_tags_aws_eks_workload_name: string
+        resource_tags_aws_eks_workload_type: string
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.scad_cca_hourly_resource_view AS
       SELECT
@@ -559,24 +642,38 @@ views:
       , ARBITRARY((("t_ec2_compute_instances"."amortized_cost" / "t_ec2_compute_instances"."line_item_usage_amount") / ((1 * "t_ec2_compute_instances"."product_memory_gib") + (9 * "t_ec2_compute_instances"."product_vcpu")))) "node_unit_cost_per_resource"
       , ARBITRARY((9 * (("t_ec2_compute_instances"."amortized_cost" / "t_ec2_compute_instances"."line_item_usage_amount") / ((1 * "t_ec2_compute_instances"."product_memory_gib") + (9 * "t_ec2_compute_instances"."product_vcpu"))))) "node_vcpu_hourly_rate"
       , ARBITRARY((1 * (("t_ec2_compute_instances"."amortized_cost" / "t_ec2_compute_instances"."line_item_usage_amount") / ((1 * "t_ec2_compute_instances"."product_memory_gib") + (9 * "t_ec2_compute_instances"."product_vcpu"))))) "node_memory_hourly_rate"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_reserved_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "cpu_requests"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_reserved_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "memory_requests"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_actual_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "cpu_usage"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_actual_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "memory_usage"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_split_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "max_cpu_requests_vs_cpu_usage"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_split_usage" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "max_memory_requests_vs_memory_usage"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_split_usage_ratio" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "cpu_split_ratio"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_split_usage_ratio" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "memory_split_ratio"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_split_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "amortized_split_cpu_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_split_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "amortized_split_memory_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_unused_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "amortized_split_unused_cpu_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_unused_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "amortized_split_unused_memory_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_split_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "public_on_demand_split_cpu_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_split_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "public_on_demand_split_memory_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_unused_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "public_on_demand_split_unused_cpu_cost"
-      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_unused_cost" * "t_ec2_compute_instances"."line_item_usage_amount") ELSE 0E0 END)) "public_on_demand_split_unused_memory_cost"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN "t_scad_eks"."split_line_item_reserved_usage" ELSE 0E0 END)) "cpu_requests"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN "t_scad_eks"."split_line_item_reserved_usage" ELSE 0E0 END)) "memory_requests"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN "t_scad_eks"."split_line_item_actual_usage" ELSE 0E0 END)) "cpu_usage"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN "t_scad_eks"."split_line_item_actual_usage" ELSE 0E0 END)) "memory_usage"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN "t_scad_eks"."split_line_item_split_usage" ELSE 0E0 END)) "max_cpu_requests_vs_cpu_usage"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN "t_scad_eks"."split_line_item_split_usage" ELSE 0E0 END)) "max_memory_requests_vs_memory_usage"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN "t_scad_eks"."split_line_item_split_usage_ratio" ELSE 0E0 END)) "cpu_split_ratio"
+      , MAX((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN "t_scad_eks"."split_line_item_split_usage_ratio" ELSE 0E0 END)) "memory_split_ratio"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "amortized_split_cpu_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "amortized_split_memory_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "amortized_split_unused_cpu_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "amortized_split_unused_memory_cost"
+      , SUM((CASE WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_split_cost", 0E0) > 0E0)) THEN ("t_scad_eks"."split_line_item_net_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_split_cost", 0E0) = 0E0)) THEN ("t_scad_eks"."split_line_item_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "net_amortized_split_cpu_cost"
+      , SUM((CASE WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_split_cost", 0E0) > 0E0)) THEN ("t_scad_eks"."split_line_item_net_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_split_cost", 0E0) = 0E0)) THEN ("t_scad_eks"."split_line_item_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "net_amortized_split_memory_cost"
+      , SUM((CASE WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_unused_cost", 0E0) > 0E0)) THEN ("t_scad_eks"."split_line_item_net_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_unused_cost", 0E0) = 0E0)) THEN ("t_scad_eks"."split_line_item_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "net_amortized_split_unused_cpu_cost"
+      , SUM((CASE WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_unused_cost", 0E0) > 0E0)) THEN ("t_scad_eks"."split_line_item_net_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) WHEN (("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') AND (COALESCE("t_scad_eks"."split_line_item_net_unused_cost", 0E0) = 0E0)) THEN ("t_scad_eks"."split_line_item_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "net_amortized_split_unused_memory_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "public_on_demand_split_cpu_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_split_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "public_on_demand_split_memory_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-vCPU-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "public_on_demand_split_unused_cpu_cost"
+      , SUM((CASE WHEN ("t_scad_eks"."line_item_usage_type" LIKE '%EKS-EC2-GB-Hours') THEN ("t_scad_eks"."split_line_item_public_on_demand_unused_cost" * ("t_ec2_compute_instances"."line_item_usage_amount" / "t_ec2_compute_instances_sum_quantity"."line_item_usage_amount")) ELSE 0E0 END)) "public_on_demand_split_unused_memory_cost"
       FROM
-        ("${cur_table_name}" "t_scad_eks"
+        (("${cur_table_name}" "t_scad_eks"
+      INNER JOIN (
+         SELECT
+           "line_item_usage_start_date"
+         , "line_item_resource_id"
+         , SUM("line_item_usage_amount") "line_item_usage_amount"
+         FROM
+           "${cur_table_name}"
+         WHERE (("line_item_operation" LIKE '%RunInstances%') AND ("product_product_family" = 'Compute Instance') AND ("line_item_line_item_type" IN ('DiscountedUsage', 'SavingsPlanCoveredUsage', 'Usage')) AND ((current_date - INTERVAL  '7' DAY) <= "line_item_usage_start_date"))
+         GROUP BY 1, 2
+      )  "t_ec2_compute_instances_sum_quantity" ON (("t_scad_eks"."split_line_item_parent_resource_id" = "t_ec2_compute_instances_sum_quantity"."line_item_resource_id") AND ("t_scad_eks"."line_item_usage_start_date" = "t_ec2_compute_instances_sum_quantity"."line_item_usage_start_date")))
       INNER JOIN (
          SELECT
            "line_item_usage_start_date"

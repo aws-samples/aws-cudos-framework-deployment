@@ -11,6 +11,7 @@ resource "aws_s3_bucket" "this" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
+  # checkov:skip=CKV2_AWS_67:KMS Key rotation is not in scope for this module as we do not create the key
   bucket = aws_s3_bucket.this.bucket
   rule {
     apply_server_side_encryption_by_default {
