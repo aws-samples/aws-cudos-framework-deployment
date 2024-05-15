@@ -79,6 +79,9 @@ dashboards:
         Expression: '{graviton_cost}/{sum_line_item_usage_amount}'
         Name: Graviton Unit Price
       - DataSetIdentifier: elasticache_graviton_dashboard
+        Expression: split({split_line_item_usage_type}, ".", 2)
+        Name: Instance Family
+      - DataSetIdentifier: elasticache_graviton_dashboard
         Expression: 'sum({sum_line_item_unblended_cost}) / sum({sum_line_item_usage_amount}) '
         Name: Unit Cost
       - DataSetIdentifier: elasticache_graviton_dashboard
@@ -251,28 +254,6 @@ dashboards:
               - de5168a0-0f68-4ef9-a861-1cd1178e4b7c
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: d1837a15-a6d0-41ab-8c7d-5e9a38543c5d
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: billing_period
-              DataSetIdentifier: ec2_graviton_dashboard
-            FilterId: f590b225-a73f-4788-86e4-8bc774000c00
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
-              VisualIds:
-              - d89de8dd-edfc-431c-bcc1-87126cd6eeee
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 25472a4c-dcf2-4a50-8a68-4913797435ae
         Filters:
         - CategoryFilter:
@@ -293,28 +274,6 @@ dashboards:
               SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
               VisualIds:
               - c88f3959-75f3-48a0-8164-8170449ad53d
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 843359b8-bcd6-43ab-948d-aca0ab1d9263
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: bill_billing_period_start_date
-              DataSetIdentifier: elasticache_graviton_dashboard
-            FilterId: 341a4bed-723c-47f8-a0ac-fdba7c75e5ed
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
-              VisualIds:
-              - 941f0b50-a3bf-4d66-bb80-c95b967f0363
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 557ff08f-90ba-490b-90ce-afca72c5a6dd
@@ -468,6 +427,29 @@ dashboards:
               - 94271220-2806-4217-8cbf-025f01cbe232
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 27698280-a490-4857-8983-e79c0cc63c2e
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: billing_period
+              DataSetIdentifier: ec2_graviton_dashboard
+            FilterId: 2b5b32b8-7a06-4402-ae63-0313cacf8d79
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: LAST
+            RelativeDateValue: 6
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - 69fd3879-ee66-421b-8e86-4cb35617b651
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 608cea65-ae66-41bb-8f44-3343ecf4ff0a
         Filters:
         - CategoryFilter:
@@ -510,6 +492,28 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - 62f8da3f-07d2-43b0-8ef6-19023ca7729f
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: e1932c32-db73-42b9-848e-511856657b6f
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: billing_period
+              DataSetIdentifier: ec2_graviton_dashboard
+            FilterId: efbcf297-3911-4b96-8aff-7ccc19d229be
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - 531ac39b-fdcb-42d3-91aa-2db8d70d3380
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c218556b-059c-4434-b82a-a19fac473e27
@@ -682,6 +686,28 @@ dashboards:
               - 1073537d-38b7-4ace-94ce-f13e9a991f8b
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 493b3fb3-d7d4-40cc-a1be-ff52449e2272
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: billing_period
+              DataSetIdentifier: ec2_graviton_dashboard
+            FilterId: 135c4f9c-b165-479a-97db-5117e24af01c
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - 6c0009d1-51dc-4e7a-8e02-cc38a88221ee
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 192b6ab8-4400-4c52-b784-3bfa7454547d
         Filters:
         - CategoryFilter:
@@ -743,6 +769,28 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
               VisualIds:
               - 1506095b-28be-4af6-a001-dd0b5a2c56d7
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: b25eadc7-8297-42ea-9998-6a6e7e6bcc12
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: rds_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Graviton
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 55ae6ef6-ef4e-4bc9-916f-e5e6766ca215
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
+              VisualIds:
+              - 127a4dd4-a000-4d05-96a9-8111422d0ba0
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 022e21e2-c55e-42ce-a337-0161752fc867
@@ -870,6 +918,28 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
+        FilterGroupId: a45ed199-28ed-4528-8107-3ba810935d9a
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: billing_period
+              DataSetIdentifier: ec2_graviton_dashboard
+            FilterId: b792a4d1-2a56-4f84-9daf-d77dc3361e76
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - e70569d2-24b4-4948-be68-622e01f16519
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
         FilterGroupId: e0899437-4286-4eb2-b7e6-fde782111b17
         Filters:
         - RelativeDatesFilter:
@@ -932,6 +1002,28 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - de5168a0-0f68-4ef9-a861-1cd1178e4b7c
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 57f4fe2f-6207-413d-9ca7-0bfd2d6b9c7b
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: ec2_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Graviton
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 2428a817-ec0b-4b66-a1cc-c3699e8b05d7
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - 15375dd3-d44e-44b8-af72-64691f3d2c92
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 17c29cd5-a279-41c0-b5bc-614e4efe2c99
@@ -1271,6 +1363,37 @@ dashboards:
               - 87503405-89a6-41ea-9537-bc4caf796b1d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 11ada02f-716b-4de5-a8a9-4d6cfe4d9336
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: month_line_item_usage_start_date
+              DataSetIdentifier: elasticache_graviton_dashboard
+            FilterId: ccfb9253-2e44-46d3-960f-25813ac1bebf
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
+              VisualIds:
+              - 0c14f833-e523-4bb4-bab5-728c85bbf5b8
+              - 754c1c83-a4da-4940-b0b5-a459f633a3d0
+              - c3415f55-9d50-48be-bbb4-6d7e8ee48bff
+              - 66211850-4181-4170-9008-d5b182b07172
+              - 0962ba96-8e00-45bc-8999-368546f263ab
+              - 655488af-86b0-4b58-9f52-8ac4b6b63c30
+              - ea18fd59-a78b-451f-8652-a3a7b2079165
+              - 4be45a5e-1e42-4996-9a31-5e960a2ffa24
+              - 941f0b50-a3bf-4d66-bb80-c95b967f0363
+              - e01ecc3e-28be-4979-9ae1-943bd6652d3f
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
         FilterGroupId: cbe57157-cb27-4062-9942-97263754e0d1
         Filters:
         - CategoryFilter:
@@ -1292,28 +1415,6 @@ dashboards:
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
               VisualIds:
               - 1f9a3cd0-6690-4b52-8f1f-6a12d9848f00
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: bad8a4c3-442e-41dd-8d8c-0aa798236e87
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: billing_period
-              DataSetIdentifier: ec2_graviton_dashboard
-            FilterId: 17e0da2b-40ca-47ec-90eb-c6d7a7948930
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
-              VisualIds:
-              - 0e6e9b9f-133c-475e-9306-b4f49a01e2f5
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 0c0e3cc5-9b92-45cd-8ebb-68b77720e6e5
@@ -1418,53 +1519,6 @@ dashboards:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 9a4e9a5b-f8ae-401c-becd-21c0c41bcef9
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: bill_billing_period_start_date
-              DataSetIdentifier: elasticache_graviton_dashboard
-            FilterId: b297bca9-ef0f-4e9e-acf5-81a737d94086
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
-              VisualIds:
-              - 0c14f833-e523-4bb4-bab5-728c85bbf5b8
-              - c3415f55-9d50-48be-bbb4-6d7e8ee48bff
-              - 66211850-4181-4170-9008-d5b182b07172
-              - 655488af-86b0-4b58-9f52-8ac4b6b63c30
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 491e0a8f-d3a7-41e8-88e5-e7dc49bc3bb7
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: billing_period
-              DataSetIdentifier: ec2_graviton_dashboard
-            FilterId: 824c83f7-1e5d-440b-9f06-846a0757eb9f
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
-              VisualIds:
-              - e6dab2c0-e5e0-4706-95d8-f66969fe4e94
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 15e74bb1-f2e6-44b3-8809-7b9cdaf45d8b
@@ -1636,28 +1690,6 @@ dashboards:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
               SheetId: 65875ab6-9445-442f-a49c-2c6f65197eaf
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 5b957cd7-c1c5-4408-a6d3-e1bbf9b4c0c7
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: bill_billing_period_start_date
-              DataSetIdentifier: elasticache_graviton_dashboard
-            FilterId: a1aebe3e-10e2-4b41-9b04-df7353d1b463
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
-              VisualIds:
-              - 4be45a5e-1e42-4996-9a31-5e960a2ffa24
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 16fd1b9d-7f46-428a-8a56-67918b0d0c0f
@@ -1933,6 +1965,33 @@ dashboards:
               SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
               VisualIds:
               - 655488af-86b0-4b58-9f52-8ac4b6b63c30
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 987b44ea-5908-44ab-a740-126321b9ffb5
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: billing_period
+              DataSetIdentifier: ec2_graviton_dashboard
+            ExcludePeriodConfiguration:
+              Amount: 1
+              Granularity: MONTH
+              Status: ENABLED
+            FilterId: 7d6ae091-eeea-47a4-9471-cb5a2db75632
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: LAST
+            RelativeDateValue: 6
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - a5d69342-17c5-4d46-b79f-375776262718
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 1cd45e28-1c08-4108-8037-591a2a4dae86
@@ -2231,6 +2290,28 @@ dashboards:
               - 941f0b50-a3bf-4d66-bb80-c95b967f0363
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
+        FilterGroupId: d1837a15-a6d0-41ab-8c7d-5e9a38543c5d
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: billing_period
+              DataSetIdentifier: ec2_graviton_dashboard
+            FilterId: f590b225-a73f-4788-86e4-8bc774000c00
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - d89de8dd-edfc-431c-bcc1-87126cd6eeee
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 3b10d0b7-bd75-49ea-a406-08e694c84a76
         Filters:
         - RelativeDatesFilter:
@@ -2339,28 +2420,6 @@ dashboards:
               SheetId: 51304535-70b0-4b60-8e66-96d85e022dff
               VisualIds:
               - 958a2222-a0f2-46ac-a4f7-2fdcfadd8914
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 08b2b041-d4e4-408e-911e-ca2a5b84086f
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: bill_billing_period_start_date
-              DataSetIdentifier: elasticache_graviton_dashboard
-            FilterId: 14b9c570-7a50-43d6-abca-51b3ea4a7c37
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: f29efe64-6321-4ae5-a5cb-a5608a41ef7a
-              VisualIds:
-              - e01ecc3e-28be-4979-9ae1-943bd6652d3f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c29eeb0b-ba28-43df-9cad-29d54b07fab7
@@ -2851,6 +2910,32 @@ dashboards:
               - 2853e926-5fbc-4892-8aad-d407fefe3d48
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 65d3f0d8-7fde-4bf6-9724-c53a965da496
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: billing_period
+              DataSetIdentifier: ec2_graviton_dashboard
+            ExcludePeriodConfiguration:
+              Amount: 1
+              Granularity: MONTH
+              Status: DISABLED
+            FilterId: e334a47a-7014-4dc6-98ac-dc07767fd463
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - 236d12a0-d79d-4dc3-8a46-ebcbdb1d22fc
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 01e55f2a-d1bc-4444-9c7b-92162cf9f9e8
         Filters:
         - CategoryFilter:
@@ -3001,6 +3086,28 @@ dashboards:
               - 32acb65c-397b-4f1c-853d-03e0ab7d8730
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 5f533b15-4c41-4035-be8f-e4c96732c449
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: billing_period
+              DataSetIdentifier: ec2_graviton_dashboard
+            FilterId: 9240ed2a-7f61-4397-b3b6-2a2b4bd4d504
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
+              VisualIds:
+              - 6ebd34c2-2249-486d-b55b-d86d445e20c5
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
         FilterGroupId: aedd9e62-12c6-464b-87b5-4b65200bd49b
         Filters:
         - CategoryFilter:
@@ -3084,6 +3191,29 @@ dashboards:
               SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
               VisualIds:
               - cee386de-908f-4409-9b62-3acc7046521c
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 87e48488-6b20-4a9a-a56b-8263518a0abf
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: charge_type
+              DataSetIdentifier: ec2_graviton_dashboard
+            Configuration:
+              CustomFilterListConfiguration:
+                CategoryValues:
+                - DiscountedUsage
+                - Usage
+                - Fee
+                - RIFee
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 798be3b3-8473-4a25-85eb-20a8a61612b6
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 49028812-f81d-4c4e-b5db-16fe53dcf0fd
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 720a3a4f-6e40-4986-aa92-b11ae1a628a2
@@ -3376,10 +3506,10 @@ dashboards:
                 RowSpan: 7
               - ColumnIndex: 8
                 ColumnSpan: 8
-                ElementId: 0e6e9b9f-133c-475e-9306-b4f49a01e2f5
+                ElementId: 236d12a0-d79d-4dc3-8a46-ebcbdb1d22fc
                 ElementType: VISUAL
                 RowIndex: 54
-                RowSpan: 3
+                RowSpan: 7
               - ColumnIndex: 16
                 ColumnSpan: 10
                 ElementId: 2925c3b1-1256-4ff7-96be-0e2256d7f0ee
@@ -3392,12 +3522,6 @@ dashboards:
                 ElementType: VISUAL
                 RowIndex: 54
                 RowSpan: 3
-              - ColumnIndex: 8
-                ColumnSpan: 8
-                ElementId: e6dab2c0-e5e0-4706-95d8-f66969fe4e94
-                ElementType: VISUAL
-                RowIndex: 57
-                RowSpan: 4
               - ColumnIndex: 16
                 ColumnSpan: 10
                 ElementId: 1278de65-ce5d-4665-b514-8dc2104ba298
@@ -3410,18 +3534,6 @@ dashboards:
                 ElementType: TEXT_BOX
                 RowIndex: 57
                 RowSpan: 4
-              - ColumnIndex: 0
-                ColumnSpan: 12
-                ElementId: 10a76dc5-1abb-4586-bd6f-64c5379fb04e
-                ElementType: TEXT_BOX
-                RowIndex: 61
-                RowSpan: 11
-              - ColumnIndex: 12
-                ColumnSpan: 12
-                ElementId: 855cc9d0-2787-415e-ba05-3f94f41e4cd5
-                ElementType: VISUAL
-                RowIndex: 61
-                RowSpan: 11
               - ColumnIndex: 24
                 ColumnSpan: 12
                 ElementId: 07023942-1d56-4231-bf46-51689979f469
@@ -3429,52 +3541,64 @@ dashboards:
                 RowIndex: 61
                 RowSpan: 11
               - ColumnIndex: 0
-                ColumnSpan: 14
-                ElementId: 3406f112-f441-4583-990a-a587261ce5b3
+                ColumnSpan: 12
+                ElementId: 10a76dc5-1abb-4586-bd6f-64c5379fb04e
+                ElementType: TEXT_BOX
+                RowIndex: 68
+                RowSpan: 11
+              - ColumnIndex: 12
+                ColumnSpan: 12
+                ElementId: 855cc9d0-2787-415e-ba05-3f94f41e4cd5
                 ElementType: VISUAL
-                RowIndex: 72
-                RowSpan: 12
-              - ColumnIndex: 14
-                ColumnSpan: 10
-                ElementId: 69fd3879-ee66-421b-8e86-4cb35617b651
-                ElementType: VISUAL
-                RowIndex: 72
-                RowSpan: 5
+                RowIndex: 68
+                RowSpan: 11
               - ColumnIndex: 24
                 ColumnSpan: 12
                 ElementId: f32cd3d5-e188-4704-b6cd-40e1db92b4d3
                 ElementType: VISUAL
                 RowIndex: 72
                 RowSpan: 12
+              - ColumnIndex: 0
+                ColumnSpan: 14
+                ElementId: 3406f112-f441-4583-990a-a587261ce5b3
+                ElementType: VISUAL
+                RowIndex: 79
+                RowSpan: 12
+              - ColumnIndex: 14
+                ColumnSpan: 10
+                ElementId: 69fd3879-ee66-421b-8e86-4cb35617b651
+                ElementType: VISUAL
+                RowIndex: 79
+                RowSpan: 5
               - ColumnIndex: 14
                 ColumnSpan: 10
                 ElementId: a5d69342-17c5-4d46-b79f-375776262718
                 ElementType: VISUAL
-                RowIndex: 77
+                RowIndex: 84
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 56495a66-d5a1-435e-98ef-afa9dc679d3c
                 ElementType: TEXT_BOX
-                RowIndex: 84
+                RowIndex: 91
                 RowSpan: 3
               - ColumnIndex: 4
                 ColumnSpan: 32
                 ElementId: 6ebd34c2-2249-486d-b55b-d86d445e20c5
                 ElementType: VISUAL
-                RowIndex: 84
+                RowIndex: 91
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 1a2f310d-e930-497f-b799-f0ea22c73c2f
                 ElementType: VISUAL
-                RowIndex: 87
+                RowIndex: 94
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: aede6ecf-0de7-464f-b73d-b58c9eacbda7
                 ElementType: VISUAL
-                RowIndex: 91
+                RowIndex: 98
                 RowSpan: 5
         Name: EC2
         ParameterControls:
@@ -3672,6 +3796,56 @@ dashboards:
             </text-box>
           SheetTextBoxId: 56495a66-d5a1-435e-98ef-afa9dc679d3c
         Visuals:
+        - KPIVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldWells:
+                TargetValues: []
+                TrendGroups: []
+                Values:
+                - NumericalMeasureField:
+                    Column:
+                      ColumnName: NIH Saved moving to Graviton
+                      DataSetIdentifier: ec2_graviton_dashboard
+                    FieldId: 32ba94a9-80d6-496a-a147-b34e04e01f6b.0.1709749842716
+                    FormatConfiguration:
+                      FormatConfiguration:
+                        NumberDisplayFormatConfiguration:
+                          DecimalPlacesConfiguration:
+                            DecimalPlaces: 0
+                          NullValueFormatConfiguration:
+                            NullString: 'null'
+                          NumberScale: AUTO
+                          SeparatorConfiguration:
+                            ThousandsSeparator:
+                              Visibility: VISIBLE
+              KPIOptions:
+                Comparison:
+                  ComparisonMethod: PERCENT_DIFFERENCE
+                PrimaryValueDisplayType: ACTUAL
+                SecondaryValueFontConfiguration:
+                  FontSize:
+                    Relative: EXTRA_LARGE
+                Sparkline:
+                  Type: AREA
+                  Visibility: VISIBLE
+                VisualLayoutOptions:
+                  StandardLayout:
+                    Type: VERTICAL
+              SortConfiguration: {}
+            ColumnHierarchies: []
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="20px">
+                      <b>NIH Saved from Graviton</b>
+                    </inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: 236d12a0-d79d-4dc3-8a46-ebcbdb1d22fc
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -3898,55 +4072,6 @@ dashboards:
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 22da3b13-0626-4eb4-8b35-0bf7d0956d63
-        - KPIVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                TargetValues: []
-                TrendGroups: []
-                Values:
-                - NumericalMeasureField:
-                    Column:
-                      ColumnName: Graviton NIH at Target Coverage and Efficiency Gain
-                      DataSetIdentifier: ec2_graviton_dashboard
-                    FieldId: ddcd3686-4839-43dd-a2d7-95021f6680e6.0.1709748993125
-                    FormatConfiguration:
-                      FormatConfiguration:
-                        NumberDisplayFormatConfiguration:
-                          DecimalPlacesConfiguration:
-                            DecimalPlaces: 0
-                          NullValueFormatConfiguration:
-                            NullString: 'null'
-                          SeparatorConfiguration:
-                            ThousandsSeparator:
-                              Visibility: VISIBLE
-              KPIOptions:
-                Comparison:
-                  ComparisonMethod: PERCENT_DIFFERENCE
-                PrimaryValueDisplayType: ACTUAL
-                SecondaryValueFontConfiguration:
-                  FontSize:
-                    Relative: EXTRA_LARGE
-                Sparkline:
-                  Type: AREA
-                  Visibility: VISIBLE
-                VisualLayoutOptions:
-                  StandardLayout:
-                    Type: VERTICAL
-              SortConfiguration: {}
-            ColumnHierarchies: []
-            Subtitle:
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: |-
-                  <visual-title>
-                    <inline font-size="20px">
-                      <b>Graviton NIH At Target Coverage % And Efficiency Gain %</b>
-                    </inline>
-                  </visual-title>
-              Visibility: VISIBLE
-            VisualId: e6dab2c0-e5e0-4706-95d8-f66969fe4e94
         - InsightVisual:
             Actions: []
             DataSetIdentifier: ec2_graviton_dashboard
@@ -3990,7 +4115,7 @@ dashboards:
                   \ 2\" level=\"inline\">\_is:</if>\n  <br/>\n  <for level=\"block\" listExpression=\"\
                   Top.items\">\n    <ul>\n      <li>\n        <inline color=\"#21a0d7\"\
                   >\n          <b>\n            <expression>Top.items[index].categoryValue.formattedValue</expression>\n\
-                  \          </b>\n        </inline>\n        \_with\n        <expression>Top.items[index].metricValue.formattedValue</expression>\n\
+                  \          </b>\n        </inline>\n        \_with\_\n        <expression>Top.items[index].metricValue.formattedValue</expression>\n\
                   \        \_hrs\n      </li>\n    </ul>\n  </for>\n  <br/>\n  <br/>\n</narrative>"
             Subtitle:
               Visibility: VISIBLE
@@ -4332,7 +4457,7 @@ dashboards:
                   \ 2\" level=\"inline\">\_is:</if>\n  <br/>\n  <for level=\"block\" listExpression=\"\
                   Top.items\">\n    <ul>\n      <li>\n        \uFEFF\uFEFF\n        <b>\n\
                   \          <expression>Top.items[index].categoryValue.formattedValue</expression>\n\
-                  \        </b>\n        <b>\_</b>\n        with\n        <expression>Top.items[index].metricValue.formattedValue</expression>\n\
+                  \        </b>\n        <b>\_</b>\n        with\_\n        <expression>Top.items[index].metricValue.formattedValue</expression>\n\
                   \        \_hrs\n      </li>\n    </ul>\n  </for>\n  <br/>\n</narrative>"
             Subtitle:
               Visibility: VISIBLE
@@ -4376,6 +4501,10 @@ dashboards:
                         ColumnName: billing_period
                         DataSetIdentifier: ec2_graviton_dashboard
                       FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709747900058
+                      FormatConfiguration:
+                        DateTimeFormat: MMM YYYY
+                        NullValueFormatConfiguration:
+                          NullString: 'null'
                       HierarchyId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709747900058
                   Colors:
                   - CategoricalDimensionField:
@@ -4433,7 +4562,6 @@ dashboards:
                     Direction: ASC
                     FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709747900058
                 ColorItemsLimit:
-                  ItemsLimit: 5
                   OtherCategories: INCLUDE
               Tooltip:
                 FieldBasedTooltip:
@@ -4490,6 +4618,10 @@ dashboards:
                         ColumnName: billing_period
                         DataSetIdentifier: ec2_graviton_dashboard
                       FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709748053059
+                      FormatConfiguration:
+                        DateTimeFormat: MMM YYYY
+                        NullValueFormatConfiguration:
+                          NullString: 'null'
                       HierarchyId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709748053059
                   Colors:
                   - CategoricalDimensionField:
@@ -4658,6 +4790,10 @@ dashboards:
                         ColumnName: billing_period
                         DataSetIdentifier: ec2_graviton_dashboard
                       FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709748278244
+                      FormatConfiguration:
+                        DateTimeFormat: MMM YYYY
+                        NullValueFormatConfiguration:
+                          NullString: 'null'
                       HierarchyId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709748278244
                   Colors:
                   - CategoricalDimensionField:
@@ -4792,9 +4928,11 @@ dashboards:
                     FieldValue: region
                   Width: 94px
                 SelectedFieldOptions:
-                - FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_name.10.1710859739507
+                - CustomLabel: Account Name
+                  FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_name.10.1710859739507
                   Visibility: VISIBLE
-                - FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_id.11.1710859741556
+                - CustomLabel: Account ID
+                  FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_id.11.1710859741556
                   Visibility: VISIBLE
                 - CustomLabel: Instance Type Family
                   FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.product_instance_type_family.2.1709748392754
@@ -5006,10 +5144,12 @@ dashboards:
               TotalOptions:
                 ColumnTotalOptions:
                   Placement: END
+                  TotalsVisibility: VISIBLE
                 RowSubtotalOptions:
                   CustomLabel: <<$aws:subtotalDimension>> Subtotal
                   FieldLevel: CUSTOM
-                  FieldLevelOptions: []
+                  FieldLevelOptions:
+                  - FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_id.11.1710859741556
                   MetricHeaderCellStyle: {}
                   StyleTargets:
                   - CellType: VALUE
@@ -5093,57 +5233,6 @@ dashboards:
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 6c0009d1-51dc-4e7a-8e02-cc38a88221ee
-        - KPIVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                TargetValues: []
-                TrendGroups: []
-                Values:
-                - NumericalMeasureField:
-                    AggregationFunction:
-                      SimpleNumericalAggregation: SUM
-                    Column:
-                      ColumnName: normalized_usage_quantity
-                      DataSetIdentifier: ec2_graviton_dashboard
-                    FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.normalized_usage_quantity.0.1709748821769
-                    FormatConfiguration:
-                      FormatConfiguration:
-                        NumberDisplayFormatConfiguration:
-                          DecimalPlacesConfiguration:
-                            DecimalPlaces: 0
-                          NullValueFormatConfiguration:
-                            NullString: 'null'
-                          SeparatorConfiguration:
-                            ThousandsSeparator:
-                              Visibility: VISIBLE
-              KPIOptions:
-                Comparison:
-                  ComparisonMethod: PERCENT_DIFFERENCE
-                PrimaryValueDisplayType: ACTUAL
-                SecondaryValueFontConfiguration:
-                  FontSize:
-                    Relative: EXTRA_LARGE
-                Sparkline:
-                  Type: AREA
-                  Visibility: VISIBLE
-                VisualLayoutOptions:
-                  StandardLayout:
-                    Type: VERTICAL
-              SortConfiguration: {}
-            ColumnHierarchies: []
-            Subtitle:
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: |-
-                  <visual-title>
-                    <inline font-size="20px">
-                      <b>Previous Month NIH Eligible For Graviton</b>
-                    </inline>
-                  </visual-title>
-              Visibility: VISIBLE
-            VisualId: 0e6e9b9f-133c-475e-9306-b4f49a01e2f5
         - PieChartVisual:
             Actions: []
             ChartConfiguration:
@@ -5298,7 +5387,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="20px">
-                      <b>Cost by Ineligibility Reasoning</b>
+                      <b>Previous Month Cost by Ineligibility Reasoning</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -5420,6 +5509,7 @@ dashboards:
                             DisplayMode: POSITIVE
                           NullValueFormatConfiguration:
                             NullString: 'null'
+                          NumberScale: AUTO
                           SeparatorConfiguration:
                             DecimalSeparator: DOT
                             ThousandsSeparator:
@@ -5482,6 +5572,7 @@ dashboards:
                             DecimalPlaces: 0
                           NullValueFormatConfiguration:
                             NullString: 'null'
+                          NumberScale: AUTO
                           SeparatorConfiguration:
                             ThousandsSeparator:
                               Visibility: VISIBLE
@@ -5607,10 +5698,25 @@ dashboards:
             Actions: []
             ChartConfiguration:
               FieldOptions:
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: 49b51c92-2217-4fea-893c-63b9322a4f1c.11.1709750072498
+                    FieldValue: Graviton Savings Potential
+                  Width: 121px
+                - DataPathList:
+                  - FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.normalized_usage_quantity.7.1709750035355
+                    FieldValue: normalized_usage_quantity
+                  Width: 116px
+                - DataPathList:
+                  - FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.region.6.1709750028429
+                    FieldValue: region
+                  Width: 102px
                 SelectedFieldOptions:
-                - FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_name.10.1710859804154
+                - CustomLabel: Account Name
+                  FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_name.10.1710859804154
                   Visibility: VISIBLE
-                - FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_id.11.1710859806217
+                - CustomLabel: Account Id
+                  FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_id.11.1710859806217
                   Visibility: VISIBLE
                 - CustomLabel: Instance Type Family
                   FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.product_instance_type_family.2.1709750001887
@@ -5636,7 +5742,8 @@ dashboards:
                 - CustomLabel: Unit Cost (Amortized/NIH)
                   FieldId: af510daa-0927-4d21-8cc5-a9c95ca91414.9.1709750057428
                   Visibility: VISIBLE
-                - FieldId: ea4b83ae-1549-4a6b-8c9c-3aa7dd00b748.10.1709750065605
+                - CustomLabel: Equivalent Graviton Unit Cost
+                  FieldId: ea4b83ae-1549-4a6b-8c9c-3aa7dd00b748.10.1709750065605
                   Visibility: VISIBLE
                 - FieldId: 49b51c92-2217-4fea-893c-63b9322a4f1c.11.1709750072498
                   Visibility: VISIBLE
@@ -5703,6 +5810,7 @@ dashboards:
                               DisplayMode: POSITIVE
                             NullValueFormatConfiguration:
                               NullString: 'null'
+                            NumberScale: AUTO
                             SeparatorConfiguration:
                               DecimalSeparator: DOT
                               ThousandsSeparator:
@@ -5718,7 +5826,28 @@ dashboards:
                         FormatConfiguration:
                           CurrencyDisplayFormatConfiguration:
                             DecimalPlacesConfiguration:
-                              DecimalPlaces: 2
+                              DecimalPlaces: 3
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            NumberScale: AUTO
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
+                  - NumericalMeasureField:
+                      Column:
+                        ColumnName: Equivilant Graviton Unit Cost
+                        DataSetIdentifier: ec2_graviton_dashboard
+                      FieldId: ea4b83ae-1549-4a6b-8c9c-3aa7dd00b748.10.1709750065605
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 3
                             NegativeValueConfiguration:
                               DisplayMode: POSITIVE
                             NullValueFormatConfiguration:
@@ -5731,14 +5860,25 @@ dashboards:
                             Symbol: USD
                   - NumericalMeasureField:
                       Column:
-                        ColumnName: Equivilant Graviton Unit Cost
-                        DataSetIdentifier: ec2_graviton_dashboard
-                      FieldId: ea4b83ae-1549-4a6b-8c9c-3aa7dd00b748.10.1709750065605
-                  - NumericalMeasureField:
-                      Column:
                         ColumnName: Graviton Savings Potential
                         DataSetIdentifier: ec2_graviton_dashboard
                       FieldId: 49b51c92-2217-4fea-893c-63b9322a4f1c.11.1709750072498
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 2
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            NumberScale: AUTO
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
               SortConfiguration:
                 FieldSortOptions:
                 - FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.product_instance_type_family.2.1709750001887
@@ -5747,15 +5887,24 @@ dashboards:
                       Direction: DESC
                       FieldId: 49b51c92-2217-4fea-893c-63b9322a4f1c.11.1709750072498
               TableOptions:
-                CellStyle: {}
+                CellStyle:
+                  HorizontalTextAlignment: LEFT
+                  VerticalTextAlignment: MIDDLE
                 CollapsedRowDimensionsVisibility: HIDDEN
                 ColumnHeaderStyle:
                   BackgroundColor: '#01BAF9'
+                  Height: 47
+                  HorizontalTextAlignment: LEFT
                 RowAlternateColorOptions:
                   Status: DISABLED
                   UsePrimaryBackgroundColor: ENABLED
                 RowFieldNamesStyle:
                   BackgroundColor: '#01BAF9'
+                  Height: 47
+                  HorizontalTextAlignment: LEFT
+                RowHeaderStyle:
+                  HorizontalTextAlignment: LEFT
+                  VerticalTextAlignment: MIDDLE
                 RowsLayout: TABULAR
               TotalOptions:
                 ColumnTotalOptions:
@@ -5773,14 +5922,24 @@ dashboards:
                   TotalsVisibility: VISIBLE
                   ValueCellStyle: {}
                 RowTotalOptions:
+                  MetricHeaderCellStyle:
+                    FontConfiguration:
+                      FontColor: '#2CAD00'
                   Placement: AUTO
+                  TotalCellStyle:
+                    FontConfiguration:
+                      FontColor: '#2CAD00'
+                  TotalsVisibility: VISIBLE
+                  ValueCellStyle:
+                    FontConfiguration:
+                      FontColor: '#2CAD00'
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="20px">Previous Month Potential Savings by Existing Istnace Family and Equivelent Newer Generation Graviton Type</inline>
+                    <inline font-size="20px">Previous Month Potential Savings by Existing Instance Family and Equivalent Newer Generation Graviton Type</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 6ebd34c2-2249-486d-b55b-d86d445e20c5
@@ -6036,31 +6195,90 @@ dashboards:
               </inline>
             </text-box>
           SheetTextBoxId: 121965bf-f0e6-4670-acd8-379068dd8477
-        - Content: "<text-box>\n  <inline font-size=\"20px\">\n    <b>RDS Graviton Eligibility</b>\n\
-            \  </inline>\n  <br/>\n  <br/>\n  <inline color=\"#fcfcfc\">The following list\
-            \ shows the sup</inline>\n  <br/>\n  <inline color=\"#fcfcfc\">ported versions\
-            \ for Graviton2, these are the versions of the database that were compiled or\
-            \ developed and tested to be compatible with Graviton2.</inline>\n  <br/>\n\
-            \  <br/>\n  <inline font-size=\"14px\">\n    <b>MySQL</b>\n  </inline>\n  <br/>\n\
-            \  <ul>\n    <li>\n      <inline font-size=\"14px\">Amazon RDS - 8.0.17 and\
-            \ higher</inline>\n    </li>\n    <li>\n      <inline font-size=\"14px\">Amazon\
-            \ Aurora - 2.09.2 and higher</inline>\n    </li>\n  </ul>\n  <br/>\n  <br/>\n\
-            \  <inline font-size=\"14px\">\n    <b>PostgreSQL</b>\n  </inline>\n  <br/>\n\
-            \  <ul>\n    <li>\n      <inline font-size=\"14px\">Amazon RDS - 13, 12.3 and\
-            \ higher</inline>\n    </li>\n    <li>\n      <inline font-size=\"14px\">Amazon\
-            \ Aurora -\_</inline>\n      <inline font-size=\"14px\">12.4 and higher,  11.9\
-            \ and higher</inline>\n    </li>\n  </ul>\n  <br/>\n  <br/>\n  <inline font-size=\"\
-            14px\">\n    <b>MariaDB</b>\n  </inline>\n  <br/>\n  <ul>\n    <li>\n      <inline\
-            \ font-size=\"14px\">Amazon RDS - 10.5, 10.4.13 and higher</inline>\n    </li>\n\
-            \    <li>\n      <inline font-size=\"14px\">Amazon Aurora - n/a</inline>\n \
-            \   </li>\n  </ul>\n  <br/>\n  <br/>\n  <inline font-size=\"14px\">Additional\
-            \ resources:</inline>\n  <br/>\n  <ul>\n    <li>\n      <a href=\"https://aws.amazon.com/blogs/database/key-considerations-in-moving-to-graviton2-for-amazon-rds-and-amazon-aurora-databases/\"\
-            \ target=\"_blank\">Key considerations in moving to Graviton2 for Amazon RDS\
-            \ and Amazon Aurora databases</a>\n      .\n    </li>\n    <li>\n      <a href=\"\
-            https://aws.amazon.com/ec2/graviton/fast-start/\" target=\"_blank\">AWS Graviton\
-            \ Fast Start</a>\n    </li>\n    <li>\n      <a href=\"https://github.com/aws/aws-graviton-getting-started/tree/main\"\
-            \ target=\"_blank\">AWS Graviton Getting Started - GitHub</a>\n    </li>\n \
-            \ </ul>\n  <br/>\n  <br/>\n</text-box>"
+        - Content: |-
+            <text-box>
+              <inline font-size="20px">
+                <b>RDS Graviton Eligibility</b>
+              </inline>
+              <br/>
+              <br/>
+              <inline color="#fcfcfc" font-size="12px">The following list shows the sup</inline>
+              <br/>
+              <inline color="#fcfcfc" font-size="12px">ported versions for Graviton2, these are the versions of the database that were compiled or developed and tested to be compatible with Graviton2.</inline>
+              <br/>
+              <br/>
+              <inline font-size="13px">
+                <b>MySQL</b>
+              </inline>
+              <br/>
+              <ul>
+                <li>
+                  <inline font-size="12px">Amazon RDS - 8.0.17 and higher</inline>
+                </li>
+                <li>
+                  <inline font-size="12px">Amazon Aurora - 2.09.2 and higher</inline>
+                </li>
+              </ul>
+              <br/>
+              <br/>
+              <inline font-size="12px">
+                <b>PostgreSQL</b>
+              </inline>
+              <br/>
+              <ul>
+                <li>
+                  <inline font-size="12px">Amazon RDS - 13, 12.3 and higher</inline>
+                </li>
+                <li>
+                  <inline font-size="12px">Amazon Aurora -  12.4 and higher,  11.9 and higher</inline>
+                </li>
+              </ul>
+              <br/>
+              <br/>
+              <inline font-size="12px">
+                <b>MariaDB</b>
+              </inline>
+              <br/>
+              <ul>
+                <li>
+                  <inline font-size="12px">Amazon RDS - 10.5, 10.4.13 and higher</inline>
+                </li>
+                <li>
+                  <inline font-size="12px">Amazon Aurora - n/a</inline>
+                </li>
+              </ul>
+              <br/>
+              <br/>
+              <inline font-size="12px">
+                <b>
+                  <u>Additional resources:</u>
+                </b>
+              </inline>
+              <br/>
+              <ul>
+                <li>
+                  <inline font-size="12px">
+                    <a href="https://aws.amazon.com/blogs/database/key-considerations-in-moving-to-graviton2-for-amazon-rds-and-amazon-aurora-databases/" target="_blank">Key considerations in moving to Graviton2 for Amazon RDS and Amazon Aurora databases</a>
+                  </inline>
+                  <inline font-size="12px">.</inline>
+                </li>
+                <li>
+                  <inline font-size="12px">
+                    <a href="https://aws.amazon.com/ec2/graviton/fast-start/" target="_blank">AWS Graviton Fast Start</a>
+                  </inline>
+                </li>
+                <li>
+                  <inline font-size="12px">
+                    <a href="https://github.com/aws/aws-graviton-getting-started/tree/main" target="_blank">AWS Graviton Getting Started - GitHub</a>
+                  </inline>
+                </li>
+                <li>
+                  <inline font-size="12px">
+                    <a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Upgrading.html" target="_blank">Upgrading a DB instance engine version</a>
+                  </inline>
+                </li>
+              </ul>
+            </text-box>
           SheetTextBoxId: 55655220-b240-45e3-914b-4c21415e5f6b
         - Content: |-
             <text-box>
@@ -6790,7 +7008,7 @@ dashboards:
                 TrendGroups: []
                 Values:
                 - CategoricalMeasureField:
-                    AggregationFunction: COUNT
+                    AggregationFunction: DISTINCT_COUNT
                     Column:
                       ColumnName: line_item_resource_id
                       DataSetIdentifier: rds_graviton_dashboard
@@ -6808,7 +7026,7 @@ dashboards:
                   TextColor:
                     Solid:
                       Color: '#FFB500'
-                      Expression: COUNT({line_item_resource_id}) > 1
+                      Expression: DISTINCT_COUNT({line_item_resource_id}) > 1
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>DB Engine version upgrade required</visual-subtitle>
@@ -6831,7 +7049,7 @@ dashboards:
                 TrendGroups: []
                 Values:
                 - CategoricalMeasureField:
-                    AggregationFunction: COUNT
+                    AggregationFunction: DISTINCT_COUNT
                     Column:
                       ColumnName: line_item_resource_id
                       DataSetIdentifier: rds_graviton_dashboard
@@ -6849,7 +7067,7 @@ dashboards:
                   TextColor:
                     Solid:
                       Color: '#2CAD00'
-                      Expression: COUNT({line_item_resource_id}) > 1
+                      Expression: DISTINCT_COUNT({line_item_resource_id}) > 1
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>No version upgrade required</visual-subtitle>
@@ -6872,7 +7090,7 @@ dashboards:
                 TrendGroups: []
                 Values:
                 - CategoricalMeasureField:
-                    AggregationFunction: COUNT
+                    AggregationFunction: DISTINCT_COUNT
                     Column:
                       ColumnName: line_item_resource_id
                       DataSetIdentifier: rds_graviton_dashboard
@@ -7130,13 +7348,10 @@ dashboards:
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 0727fd4e-b0d2-4a0b-8183-90d41dd70994
-        - ComboChartVisual:
+        - BarChartVisual:
             Actions: []
             ChartConfiguration:
-              BarDataLabels:
-                Overlap: DISABLE_OVERLAP
-                Visibility: VISIBLE
-              BarsArrangement: STACKED
+              BarsArrangement: STACKED_PERCENT
               CategoryAxis:
                 ScrollbarOptions:
                   Visibility: HIDDEN
@@ -7156,16 +7371,11 @@ dashboards:
                   CustomLabel: Billing Period (month)
                 SortIconVisibility: HIDDEN
                 Visibility: VISIBLE
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
               FieldWells:
-                ComboChartAggregatedFieldWells:
-                  BarValues:
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
-                        ColumnName: line_item_usage_amount
-                        DataSetIdentifier: rds_graviton_dashboard
-                      FieldId: b9c97807-e8d5-4097-8169-028d835fe38f.line_item_usage_amount.1.1695392164824
+                BarChartAggregatedFieldWells:
                   Category:
                   - DateDimensionField:
                       Column:
@@ -7183,51 +7393,29 @@ dashboards:
                         ColumnName: processor_type
                         DataSetIdentifier: rds_graviton_dashboard
                       FieldId: b9c97807-e8d5-4097-8169-028d835fe38f.processor_type.2.1700103530575
-                  LineValues:
+                  Values:
                   - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: UnitCost
+                        ColumnName: line_item_usage_amount
                         DataSetIdentifier: rds_graviton_dashboard
-                      FieldId: fe484d94-17e9-4d1c-bbb7-2641cf000f7d.3.1700103556068
+                      FieldId: b9c97807-e8d5-4097-8169-028d835fe38f.line_item_usage_amount.1.1695392164824
                       FormatConfiguration:
                         FormatConfiguration:
-                          CurrencyDisplayFormatConfiguration:
+                          NumberDisplayFormatConfiguration:
                             DecimalPlacesConfiguration:
-                              DecimalPlaces: 3
-                            NegativeValueConfiguration:
-                              DisplayMode: POSITIVE
+                              DecimalPlaces: 0
                             NullValueFormatConfiguration:
                               NullString: 'null'
                             SeparatorConfiguration:
-                              DecimalSeparator: DOT
                               ThousandsSeparator:
-                                Symbol: COMMA
                                 Visibility: VISIBLE
-                            Symbol: USD
               Legend:
                 Title:
                   Visibility: HIDDEN
                 Width: 101px
-              LineDataLabels:
-                Overlap: DISABLE_OVERLAP
-                Visibility: VISIBLE
-              PrimaryYAxisLabelOptions:
-                AxisLabelOptions:
-                - ApplyTo:
-                    Column:
-                      ColumnName: line_item_usage_amount
-                      DataSetIdentifier: rds_graviton_dashboard
-                    FieldId: b9c97807-e8d5-4097-8169-028d835fe38f.line_item_usage_amount.1.1695392164824
-                  CustomLabel: Instance Hours
-                Visibility: VISIBLE
-              SecondaryYAxisLabelOptions:
-                AxisLabelOptions:
-                - ApplyTo:
-                    Column:
-                      ColumnName: UnitCost
-                      DataSetIdentifier: rds_graviton_dashboard
-                    FieldId: fe484d94-17e9-4d1c-bbb7-2641cf000f7d.3.1700103556068
-                  CustomLabel: Unit Cost
+              Orientation: VERTICAL
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
@@ -7236,6 +7424,8 @@ dashboards:
                     Direction: ASC
                     FieldId: b9c97807-e8d5-4097-8169-028d835fe38f.bill_billing_period_start_date.0.1695392140375
                 ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
                   OtherCategories: INCLUDE
               Tooltip:
                 FieldBasedTooltip:
@@ -7250,12 +7440,18 @@ dashboards:
                   - FieldTooltipItem:
                       FieldId: b9c97807-e8d5-4097-8169-028d835fe38f.processor_type.2.1700103530575
                       Visibility: VISIBLE
-                  - FieldTooltipItem:
-                      FieldId: fe484d94-17e9-4d1c-bbb7-2641cf000f7d.3.1700103556068
-                      Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
+              ValueLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: line_item_usage_amount
+                      DataSetIdentifier: rds_graviton_dashboard
+                    FieldId: b9c97807-e8d5-4097-8169-028d835fe38f.line_item_usage_amount.1.1695392164824
+                  CustomLabel: Instance Hours
+                Visibility: VISIBLE
             ColumnHierarchies:
             - DateTimeHierarchy:
                 HierarchyId: b9c97807-e8d5-4097-8169-028d835fe38f.bill_billing_period_start_date.0.1695392140375
@@ -7266,7 +7462,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="20px">
-                      <b>Generation Usage by Month</b>
+                      <b>Usage by Processor</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -7468,7 +7664,7 @@ dashboards:
             ColumnHierarchies: []
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Amortized Cost</visual-subtitle>
+                RichText: <visual-subtitle>Amortized Spend of Instance Running Hours</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -7540,12 +7736,10 @@ dashboards:
                       HierarchyId: 4bea5fb0-231c-4ae2-bc02-5c45c03e6c4c
                   LineValues:
                   - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: Total Amortized Cost
+                        ColumnName: UnitCost
                         DataSetIdentifier: rds_graviton_dashboard
-                      FieldId: 6cf17648-c1b6-4903-b6f5-e5c8c50dcd9b.3.1709750510948
+                      FieldId: fe484d94-17e9-4d1c-bbb7-2641cf000f7d.3.1715196584485
                       FormatConfiguration:
                         FormatConfiguration:
                           CurrencyDisplayFormatConfiguration:
@@ -7576,14 +7770,6 @@ dashboards:
                       DataSetIdentifier: rds_graviton_dashboard
                     FieldId: bb1be3db-3e61-4cf5-b074-24e95303a13b.sum_amortized_cost.1.1709750452283
                   CustomLabel: Amortized Cost
-              SecondaryYAxisLabelOptions:
-                AxisLabelOptions:
-                - ApplyTo:
-                    Column:
-                      ColumnName: Total Amortized Cost
-                      DataSetIdentifier: rds_graviton_dashboard
-                    FieldId: 6cf17648-c1b6-4903-b6f5-e5c8c50dcd9b.3.1709750510948
-                  CustomLabel: Total Amortized Cost
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
@@ -7604,10 +7790,10 @@ dashboards:
                       FieldId: bb1be3db-3e61-4cf5-b074-24e95303a13b.sum_amortized_cost.1.1709750452283
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 6cf17648-c1b6-4903-b6f5-e5c8c50dcd9b.3.1709750510948
+                      FieldId: 3a626a64-21c8-4be1-8cd4-45a86fcd240d.account_name.3.1710858833563
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 3a626a64-21c8-4be1-8cd4-45a86fcd240d.account_name.3.1710858833563
+                      FieldId: fe484d94-17e9-4d1c-bbb7-2641cf000f7d.3.1715196584485
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
@@ -7630,7 +7816,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="20px">
-                      <b>Total Amortized Cost by Account</b>
+                      <b>Total Amortized Graviton Spend by Account</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -8006,29 +8192,29 @@ dashboards:
                 RowIndex: 27
                 RowSpan: 12
               - ColumnIndex: 0
-                ColumnSpan: 7
+                ColumnSpan: 6
                 ElementId: 2aa0e4c2-ed6e-404e-b07e-fcde23a01053
                 ElementType: FILTER_CONTROL
                 RowIndex: 39
                 RowSpan: 2
               - ColumnIndex: 7
-                ColumnSpan: 29
-                ElementId: 4be45a5e-1e42-4996-9a31-5e960a2ffa24
-                ElementType: VISUAL
-                RowIndex: 39
-                RowSpan: 12
-              - ColumnIndex: 0
-                ColumnSpan: 7
+                ColumnSpan: 6
                 ElementId: af476545-95a9-4861-b36c-736f4f3e71e5
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 41
+                RowIndex: 39
                 RowSpan: 2
-              - ColumnIndex: 0
-                ColumnSpan: 7
+              - ColumnIndex: 13
+                ColumnSpan: 6
                 ElementId: 83e1ad00-4a12-4721-af90-e833213819d8
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 43
+                RowIndex: 39
                 RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 4be45a5e-1e42-4996-9a31-5e960a2ffa24
+                ElementType: VISUAL
+                RowIndex: 41
+                RowSpan: 12
         Name: ElastiCache
         ParameterControls:
         - Dropdown:
@@ -8232,6 +8418,12 @@ dashboards:
                 TooltipVisibility: VISIBLE
             ColumnHierarchies: []
             Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    Ammortized Spend
+                    <inline font-size="14px">of Instance Running Hours</inline>
+                  </visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -8248,7 +8440,7 @@ dashboards:
             ChartConfiguration:
               BarDataLabels:
                 Overlap: DISABLE_OVERLAP
-                Visibility: HIDDEN
+                Visibility: VISIBLE
               BarsArrangement: STACKED
               CategoryAxis:
                 AxisLineVisibility: VISIBLE
@@ -8270,10 +8462,10 @@ dashboards:
                   Category:
                   - DateDimensionField:
                       Column:
-                        ColumnName: bill_billing_period_start_date
+                        ColumnName: month_line_item_usage_start_date
                         DataSetIdentifier: elasticache_graviton_dashboard
-                      FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.bill_billing_period_start_date.2.1695318633775
-                      HierarchyId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.bill_billing_period_start_date.2.1695318633775
+                      FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.month_line_item_usage_start_date.3.1715204897657
+                      HierarchyId: 07b00d3c-1514-4700-a4dc-3c466f317e67.month_line_item_usage_start_date.3.1715204897657
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -8301,6 +8493,9 @@ dashboards:
                                 Symbol: COMMA
                                 Visibility: VISIBLE
                             Symbol: USD
+              LineDataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
               PrimaryYAxisLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -8323,9 +8518,13 @@ dashboards:
                 CategorySort:
                 - FieldSort:
                     Direction: ASC
-                    FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.bill_billing_period_start_date.2.1695318633775
+                    FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.month_line_item_usage_start_date.3.1715204897657
                 ColorItemsLimit:
                   OtherCategories: INCLUDE
+                ColorSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: fc30b526-84d6-4a02-9655-d8bc3e96bcd7.2.1700232304739
               Tooltip:
                 FieldBasedTooltip:
                   AggregationVisibility: HIDDEN
@@ -8334,20 +8533,20 @@ dashboards:
                       FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.sum_line_item_usage_amount.0.1695313701412
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.bill_billing_period_start_date.2.1695318633775
-                      Visibility: VISIBLE
-                  - FieldTooltipItem:
                       FieldId: fc30b526-84d6-4a02-9655-d8bc3e96bcd7.2.1700232304739
                       Visibility: VISIBLE
                   - FieldTooltipItem:
                       FieldId: ac14b524-a694-4a1e-bce7-c8e6dcccc896.3.1700253350915
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.month_line_item_usage_start_date.3.1715204897657
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
             ColumnHierarchies:
             - DateTimeHierarchy:
-                HierarchyId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.bill_billing_period_start_date.2.1695318633775
+                HierarchyId: 07b00d3c-1514-4700-a4dc-3c466f317e67.month_line_item_usage_start_date.3.1715204897657
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -8717,8 +8916,8 @@ dashboards:
                   FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.split_line_item_resource_id.0.1695327043224
                 - CustomLabel: Account ID
                   FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.line_item_usage_account_id.4.1695327092350
-                - CustomLabel: Instance Type
-                  FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.instance_type.1.1695327061681
+                - CustomLabel: Account Name
+                  FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.11.1710858469308
                 - CustomLabel: Cache Engine
                   FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.product_cache_engine.2.1695327071752
                 - CustomLabel: Engine Version
@@ -8729,13 +8928,13 @@ dashboards:
                   FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.product_location.5.1695327098836
                 - CustomLabel: Purchase Option
                   FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.case_purchase_option.9.1695327207154
-                - CustomLabel: Spend
+                - CustomLabel: Existing Spend
                   FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.sum_line_item_unblended_cost.6.1695327152914
                 - CustomLabel: Graviton Cost
                   FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.graviton_cost.7.1695327161659
-                  Width: 154px
                 - CustomLabel: Graviton Savings
                   FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.graviton_savings.8.1695327175385
+                  Width: 154px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -8746,6 +8945,11 @@ dashboards:
                       FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.split_line_item_resource_id.0.1695327043224
                   - CategoricalDimensionField:
                       Column:
+                        ColumnName: split_line_item_usage_type
+                        DataSetIdentifier: elasticache_graviton_dashboard
+                      FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.split_line_item_usage_type.11.1715262091448
+                  - CategoricalDimensionField:
+                      Column:
                         ColumnName: line_item_usage_account_id
                         DataSetIdentifier: elasticache_graviton_dashboard
                       FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.line_item_usage_account_id.4.1695327092350
@@ -8754,11 +8958,6 @@ dashboards:
                         ColumnName: account_name
                         DataSetIdentifier: elasticache_graviton_dashboard
                       FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.11.1710858469308
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: instance_type
-                        DataSetIdentifier: elasticache_graviton_dashboard
-                      FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.instance_type.1.1695327061681
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: product_cache_engine
@@ -8868,7 +9067,7 @@ dashboards:
                     UniformBorder:
                       Style: SOLID
                       Thickness: 1
-                  Height: 25
+                  Height: 47
                   TextWrap: WRAP
             Subtitle:
               Visibility: VISIBLE
@@ -8967,15 +9166,15 @@ dashboards:
                   Category:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: instance_family
+                        ColumnName: Instance Family
                         DataSetIdentifier: elasticache_graviton_dashboard
-                      FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.instance_family.0.1709587447585
+                      FieldId: 1a51dc06-0fd1-404e-af72-83936319a667.2.1715267471195
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: account_name
                         DataSetIdentifier: elasticache_graviton_dashboard
-                      FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.2.1710858439599
+                      FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.2.1715261943590
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -8994,6 +9193,10 @@ dashboards:
                     FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.graviton_savings.1.1709587459885
                 ColorItemsLimit:
                   OtherCategories: INCLUDE
+                ColorSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.2.1715261943590
                 SmallMultiplesLimitConfiguration:
                   OtherCategories: INCLUDE
               Tooltip:
@@ -9001,19 +9204,24 @@ dashboards:
                   AggregationVisibility: HIDDEN
                   TooltipFields:
                   - FieldTooltipItem:
-                      FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.instance_family.0.1709587447585
-                      Visibility: VISIBLE
-                  - FieldTooltipItem:
                       FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.graviton_savings.1.1709587459885
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.2.1710858439599
+                      FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.2.1715261943590
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 1a51dc06-0fd1-404e-af72-83936319a667.2.1715267471195
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
             ColumnHierarchies: []
             Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <i>Based on current equivocal non Graviton instance usage</i>
+                  </visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -9223,6 +9431,12 @@ dashboards:
             <text-box>
               <inline font-size="40px">
                 <b>Existing Amazon OpenSearch Graviton Usage</b>
+              </inline>
+              <br/>
+              <inline font-size="14px">
+                <b>
+                  <i>All visuals filter for compute resource usage/spend only</i>
+                </b>
               </inline>
             </text-box>
           SheetTextBoxId: e29e21ae-7911-4e42-b844-ea139a409fce
@@ -9830,8 +10044,6 @@ dashboards:
                       Color: '#2CAD00'
                       Expression: SUM({graviton_savings}) > 0
             Subtitle:
-              FormatText:
-                RichText: <visual-subtitle>Compared to non-graviton instance</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -9947,10 +10159,11 @@ dashboards:
                   Category:
                   - DateDimensionField:
                       Column:
-                        ColumnName: line_item_usage_start_date
+                        ColumnName: bill_billing_period_start_date
                         DataSetIdentifier: opensearch_graviton_dashboard
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_usage_start_date.3.1709602565932
-                      HierarchyId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_usage_start_date.3.1709602565932
+                      DateGranularity: MONTH
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.bill_billing_period_start_date.3.1715285587977
+                      HierarchyId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.bill_billing_period_start_date.3.1715285587977
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -10006,7 +10219,7 @@ dashboards:
                 CategorySort:
                 - FieldSort:
                     Direction: ASC
-                    FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_usage_start_date.3.1709602565932
+                    FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.bill_billing_period_start_date.3.1715285587977
                 ColorItemsLimit:
                   OtherCategories: EXCLUDE
                 ColorSort:
@@ -10027,14 +10240,14 @@ dashboards:
                       FieldId: edda05a4-b571-4e40-af36-270f30228b42.3.1709602082967
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_usage_start_date.3.1709602565932
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.bill_billing_period_start_date.3.1715285587977
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
             ColumnHierarchies:
             - DateTimeHierarchy:
-                HierarchyId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_usage_start_date.3.1709602565932
+                HierarchyId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.bill_billing_period_start_date.3.1715285587977
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -10649,9 +10862,9 @@ dashboards:
                   Category:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: engine
+                        ColumnName: processor_type
                         DataSetIdentifier: opensearch_graviton_dashboard
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.engine.0.1709601496290
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.processor_type.1.1715285450962
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -10670,6 +10883,8 @@ dashboards:
                             SeparatorConfiguration:
                               ThousandsSeparator:
                                 Visibility: VISIBLE
+              Legend:
+                Width: 111px
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
@@ -10684,10 +10899,10 @@ dashboards:
                   AggregationVisibility: HIDDEN
                   TooltipFields:
                   - FieldTooltipItem:
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.engine.0.1709601496290
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_vcpu_normalized_usage_amount.1.1709602376333
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_vcpu_normalized_usage_amount.1.1709602376333
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.processor_type.1.1715285450962
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
@@ -10702,7 +10917,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="20px">
-                      <b>Previous Month Usage by Engine</b>
+                      <b>Previous Month Usage by Processor Type</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -10721,9 +10936,9 @@ dashboards:
                   Category:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: engine
+                        ColumnName: processor_type
                         DataSetIdentifier: opensearch_graviton_dashboard
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.engine.0.1709601496290
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.processor_type.1.1715285442843
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -10747,6 +10962,8 @@ dashboards:
                                 Symbol: COMMA
                                 Visibility: VISIBLE
                             Symbol: USD
+              Legend:
+                Width: 110px
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
@@ -10761,10 +10978,10 @@ dashboards:
                   AggregationVisibility: HIDDEN
                   TooltipFields:
                   - FieldTooltipItem:
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.engine.0.1709601496290
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.amortized_cost.1.1709601583363
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.amortized_cost.1.1709601583363
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.processor_type.1.1715285442843
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
@@ -10772,14 +10989,18 @@ dashboards:
             ColumnHierarchies: []
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>By Amortized Spend</visual-subtitle>
+                RichText: |-
+                  <visual-subtitle>
+                    Amortized Spend
+                    <inline font-size="14px">of Instance Running Hours</inline>
+                  </visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: |-
                   <visual-title>
                     <inline font-size="20px">
-                      <b>Previous Month Spend by Engine</b>
+                      <b>Previous Month Spend by Processor Type</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -11015,7 +11236,7 @@ dashboards:
         - Content: "<text-box>\n  <block align=\"center\">\n    <inline color=\"#61d1d6\"\
             \ font-size=\"68.8px\">\n      <b>\n        <u>Graviton Opportunities Dashboard</u>\n\
             \      </b>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n\
-            \    <inline font-size=\"68.8px\">\n      <b>v1.0.1</b>\n    </inline>\n  </block>\n\
+            \    <inline font-size=\"68.8px\">\n      <b>v1.0.2</b>\n    </inline>\n  </block>\n\
             \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n\
             \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"center\"/>\n\
             \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built\
@@ -11054,11 +11275,13 @@ datasets:
                 Type: STRING
               - Name: bill_billing_period_start_date
                 Type: STRING
-              - Name: line_item_usage_start_date
-                Type: STRING
               - Name: line_item_resource_id
                 Type: STRING
               - Name: product_instance_type
+                Type: STRING
+              - Name: instance_family
+                Type: STRING
+              - Name: processor_type
                 Type: STRING
               - Name: product_location
                 Type: STRING
@@ -11118,20 +11341,7 @@ datasets:
               - Name: account_name
                 Type: STRING
       LogicalTableMap:
-        6f1fc28d-3742-4f40-a60e-9f13b33b4f53:
-          Alias: graviton_opensearch_view
-          DataTransforms:
-            - CastColumnTypeOperation:
-                ColumnName: bill_billing_period_start_date
-                NewColumnType: DATETIME
-                Format: yyyy-MM-dd
-            - CastColumnTypeOperation:
-                ColumnName: line_item_usage_start_date
-                NewColumnType: DATETIME
-                Format: yyyy-MM-dd
-          Source:
-            PhysicalTableId: 3fdec7f0-bc13-469d-b0e2-57f41f024998
-        d1a5e108-bdf2-4816-aaf5-25409f5ba063:
+        5aee0034-77f7-45d6-a484-30095c75a3db:
           Alias: Intermediate Table
           DataTransforms:
             - ProjectOperation:
@@ -11139,9 +11349,10 @@ datasets:
                   - bill_payer_account_id
                   - line_item_usage_account_id
                   - bill_billing_period_start_date
-                  - line_item_usage_start_date
                   - line_item_resource_id
                   - product_instance_type
+                  - instance_family
+                  - processor_type
                   - product_location
                   - pricing_term
                   - pricing_lease_contract_length
@@ -11169,6 +11380,15 @@ datasets:
               RightOperand: d4aae438-6594-49c7-a9a3-457cb9abd75f
               Type: LEFT
               OnClause: "{line_item_usage_account_id} = {account_id}"
+        6f1fc28d-3742-4f40-a60e-9f13b33b4f53:
+          Alias: graviton_opensearch_view
+          DataTransforms:
+            - CastColumnTypeOperation:
+                ColumnName: bill_billing_period_start_date
+                NewColumnType: DATETIME
+                Format: yyyy-MM-dd
+          Source:
+            PhysicalTableId: 3fdec7f0-bc13-469d-b0e2-57f41f024998
         d4aae438-6594-49c7-a9a3-457cb9abd75f:
           Alias: account_map
           Source:
@@ -11202,19 +11422,15 @@ datasets:
                 Type: STRING
               - Name: line_item_usage_account_id
                 Type: STRING
-              - Name: bill_billing_period_start_date
-                Type: STRING
-              - Name: line_item_usage_start_date
+              - Name: month_line_item_usage_start_date
                 Type: STRING
               - Name: split_line_item_resource_id
                 Type: STRING
-              - Name: instance_type
-                Type: STRING
-              - Name: instance_family
-                Type: STRING
-              - Name: product_cache_engine
+              - Name: split_line_item_usage_type
                 Type: STRING
               - Name: product_location
+                Type: STRING
+              - Name: product_cache_engine
                 Type: STRING
               - Name: case_purchase_option
                 Type: STRING
@@ -11231,6 +11447,12 @@ datasets:
                 Type: DECIMAL
                 SubType: FLOAT
               - Name: sum_amortized_cost
+                Type: DECIMAL
+                SubType: FLOAT
+              - Name: sum_ri_trueup
+                Type: DECIMAL
+                SubType: FLOAT
+              - Name: ri_upfront_fees
                 Type: DECIMAL
                 SubType: FLOAT
               - Name: generation
@@ -11272,29 +11494,23 @@ datasets:
           Alias: graviton_elasticache_view
           DataTransforms:
             - CastColumnTypeOperation:
-                ColumnName: bill_billing_period_start_date
+                ColumnName: month_line_item_usage_start_date
                 NewColumnType: DATETIME
-                Format: yyyy-MM-dd
-            - CastColumnTypeOperation:
-                ColumnName: line_item_usage_start_date
-                NewColumnType: DATETIME
-                Format: yyyy-MM-dd
+                Format: yyyy-MM
           Source:
             PhysicalTableId: 8220f5c9-e48c-45fb-8903-68b47d46939f
-        2468282a-7a72-4606-a727-977ff23ad2c2:
+        125fb934-f549-4bdf-8603-19b14d2d3b29:
           Alias: Intermediate Table
           DataTransforms:
             - ProjectOperation:
                 ProjectedColumns:
                   - bill_payer_account_id
                   - line_item_usage_account_id
-                  - bill_billing_period_start_date
-                  - line_item_usage_start_date
+                  - month_line_item_usage_start_date
                   - split_line_item_resource_id
-                  - instance_type
-                  - instance_family
-                  - product_cache_engine
+                  - split_line_item_usage_type
                   - product_location
+                  - product_cache_engine
                   - case_purchase_option
                   - pricing_lease_contract_length
                   - pricing_offering_class
@@ -11302,6 +11518,8 @@ datasets:
                   - sum_line_item_usage_amount
                   - sum_line_item_unblended_cost
                   - sum_amortized_cost
+                  - sum_ri_trueup
+                  - ri_upfront_fees
                   - generation
                   - graviton_family
                   - previous_intel_family
@@ -11592,7 +11810,7 @@ datasets:
           Alias: account_map
           Source:
             PhysicalTableId: 951b7df7-f5d4-4018-997b-ff3a8c86eb71
-        8c58ea90-2bd1-4963-84a3-5b88ca69d0fa:
+        4910f207-92d3-47b1-b292-f278da1f1a5b:
           Alias: Intermediate Table
           DataTransforms:
             - ProjectOperation:
@@ -11670,9 +11888,10 @@ views:
            cur.bill_payer_account_id
          , cur.line_item_usage_account_id
          , DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d') bill_billing_period_start_date
-         , DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d') line_item_usage_start_date
          , SPLIT_PART(cur.line_item_resource_id, '/', 2) line_item_resource_id
          , cur.product_instance_type
+         , SPLIT_PART(product_instance_type, '.', 1) instance_family
+         , (CASE WHEN (SPLIT_PART(product_instance_type, '.', 1) LIKE '%g%') THEN 'Graviton' ELSE 'Intel' END) processor_type
          , cur.product_location
          , cur.pricing_term
          , cur.pricing_lease_contract_length
@@ -11689,11 +11908,10 @@ views:
            (${cur_table_name} cur
          LEFT JOIN modernization_mapping ON (CONCAT(SPLIT_PART(cur.product_instance_type, '.', 1), '.search') = modernization_mapping.family))
          WHERE ((cur.product_product_name IN ('Amazon Elasticsearch Service', 'Amazon OpenSearch Service')) AND (cur.line_item_product_code = 'AmazonES') AND (cur.line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'SavingsPlanCoveredUsage')) AND (cur.product_product_family = 'Amazon OpenSearch Service Instance') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY cur.bill_payer_account_id, cur.line_item_usage_account_id, DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d'), DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d'), SPLIT_PART(cur.line_item_resource_id, '/', 2), cur.product_instance_type, cur.product_location, cur.pricing_term, cur.pricing_lease_contract_length, cur.pricing_offering_class, cur.pricing_purchase_option, modernization_mapping.generation, cur.product_vcpu, 17, 18
-         ORDER BY line_item_usage_start_date DESC, line_item_unblended_cost DESC
+         GROUP BY cur.bill_payer_account_id, cur.line_item_usage_account_id, DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d'), DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d'), SPLIT_PART(cur.line_item_resource_id, '/', 2), cur.product_instance_type, cur.product_location, cur.pricing_term, cur.pricing_lease_contract_length, cur.pricing_offering_class, cur.pricing_purchase_option, modernization_mapping.generation, cur.product_vcpu, 18, 19
       )
       , describe_domains AS (
-         SELECT
+         SELECT DISTINCT
            domainname
          , engineversion
          , SPLIT_PART(engineversion, '_', 1) engine
@@ -11738,36 +11956,35 @@ views:
       WITH
         elasticache_spend AS (
          SELECT
-           cur.bill_payer_account_id
-         , cur.line_item_usage_account_id
-         , DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d') bill_billing_period_start_date
-         , DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d') line_item_usage_start_date
-         , SPLIT_PART(cur.line_item_resource_id, ':', 7) split_line_item_resource_id
-         , SPLIT_PART(cur.line_item_usage_type, ':', 2) instance_type
-         , CONCAT('cache.', SPLIT_PART(cur.line_item_usage_type, '.', 2)) instance_family
-         , cur.product_cache_engine
-         , cur.product_location
-         , (CASE WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN 'Reserved Instance' WHEN (cur.line_item_line_item_type = 'Usage') THEN 'OnDemand' ELSE 'Others' END) case_purchase_option
-         , cur.pricing_lease_contract_length
-         , cur.pricing_offering_class
-         , cur.pricing_purchase_option
-         , SUM((CASE WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) sum_line_item_usage_amount
-         , ROUND(SUM(cur.line_item_unblended_cost), 2) sum_line_item_unblended_cost
-         , ROUND(SUM((CASE WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.reservation_effective_cost WHEN (cur.line_item_line_item_type = 'RIFee') THEN (cur.reservation_unused_amortized_upfront_fee_for_billing_period + cur.reservation_unused_recurring_fee) WHEN ((cur.line_item_line_item_type = 'Fee') AND (cur.reservation_reservation_a_r_n <> '')) THEN 0 ELSE cur.line_item_unblended_cost END)), 2) sum_amortized_cost
+           bill_payer_account_id
+         , line_item_usage_account_id
+         , DATE_FORMAT(line_item_usage_start_date, '%Y-%m') month_line_item_usage_start_date
+         , SPLIT_PART(line_item_resource_id, ':', 7) split_line_item_resource_id
+         , SPLIT_PART(line_item_usage_type, ':', 2) split_line_item_usage_type
+         , product_location
+         , product_cache_engine
+         , (CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN 'Reserved Instance' WHEN (line_item_line_item_type = 'Usage') THEN 'OnDemand' ELSE 'Others' END) case_purchase_option
+         , pricing_lease_contract_length
+         , pricing_offering_class
+         , pricing_purchase_option
+         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) sum_line_item_usage_amount
+         , SUM(line_item_unblended_cost) sum_line_item_unblended_cost
+         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
+         , SUM((CASE WHEN (line_item_line_item_type = 'RIFee') THEN -(reservation_amortized_upfront_fee_for_billing_period) ELSE 0 END)) sum_ri_trueup
+         , SUM((CASE WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN line_item_unblended_cost ELSE 0 END)) ri_upfront_fees
          , modernization_mapping.generation
          , modernization_mapping.latest_arm graviton_family
          , modernization_mapping.previous_intel previous_intel_family
-         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(cur.line_item_usage_type, '.', 3)) ELSE '' END) graviton_instance
-         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(cur.line_item_usage_type, '.', 3)) ELSE '' END) previous_intel
+         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) graviton_instance
+         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) previous_intel
          FROM
-           (${cur_table_name} cur
-         LEFT JOIN modernization_mapping ON (CONCAT('cache.', SPLIT_PART(cur.line_item_usage_type, '.', 2)) = modernization_mapping.family))
-         WHERE (((cur.product_product_name = 'Amazon ElastiCache') AND (cur.product_product_family = 'Cache Instance') AND (cur.line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'RIFee', 'Fee'))) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY "bill_billing_period_start_date", bill_payer_account_id, line_item_usage_account_id, line_item_line_item_type, line_item_resource_id, line_item_usage_type, pricing_lease_contract_length, pricing_offering_class, pricing_purchase_option, product_location, product_cache_engine, modernization_mapping.generation, modernization_mapping.latest_arm, modernization_mapping.previous_intel, DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d')
-         ORDER BY "bill_billing_period_start_date" ASC, sum_line_item_usage_amount DESC, sum_line_item_unblended_cost ASC
+           (${cur_table_name}
+         LEFT JOIN modernization_mapping ON (CONCAT('cache.', SPLIT_PART(line_item_usage_type, '.', 2)) = modernization_mapping.family))
+         WHERE ((product_product_name = 'Amazon ElastiCache') AND (product_product_family = 'Cache Instance') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'RIFee', 'Fee')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
+         GROUP BY DATE_FORMAT(line_item_usage_start_date, '%Y-%m'), bill_payer_account_id, line_item_usage_account_id, line_item_line_item_type, line_item_resource_id, line_item_usage_type, product_location, product_cache_engine, pricing_lease_contract_length, pricing_offering_class, pricing_purchase_option, modernization_mapping.generation, modernization_mapping.latest_arm, modernization_mapping.previous_intel
       )
       , elasticache_engineversion AS (
-         SELECT
+         SELECT DISTINCT
            cacheclusterid
          , engineversion
          , engine
@@ -11781,20 +11998,20 @@ views:
          SELECT *
          FROM
            ${data_collection_database_name}.pricing_elasticache_data
+         WHERE (("product family" = 'Cache Instance') AND ("location type" = 'AWS Region'))
       )
       SELECT
         elasticache_spend.*
       , ev.engineversion
-      , (CASE WHEN (elasticache_spend.product_cache_engine = 'Redis') THEN (CASE WHEN (ev.major > '6') THEN 'Eligible' WHEN (ev.major = '5') THEN (CASE WHEN (ev.minor > '0') THEN 'Eligible' WHEN (ev.minor = '0') THEN (CASE WHEN (ev.fix >= '6') THEN 'Eligible' WHEN (ev.fix < '6') THEN 'Requires Upgrade' END) END) WHEN (ev.major < '5') THEN 'Requires Upgrade' END) WHEN (elasticache_spend.product_cache_engine = 'Memcached') THEN (CASE WHEN (ev.major > '1') THEN 'Eligible' WHEN (ev.major = '1') THEN (CASE WHEN (ev.minor > '5') THEN 'Eligible' WHEN (ev.minor = '5') THEN (CASE WHEN (ev.fix >= '16') THEN 'Eligible' WHEN (ev.fix < '15') THEN 'Requires Update' END) WHEN (ev.minor < '5') THEN 'Requires Update' END) END) ELSE 'Requires Upgrade' END) graviton_eligibility
+      , (CASE WHEN (elasticache_spend.product_cache_engine = 'Redis') THEN (CASE WHEN (ev.major >= '5') THEN 'Eligible' WHEN (ev.major = '5') THEN (CASE WHEN (ev.minor > '0') THEN 'Eligible' WHEN (ev.minor = '0') THEN (CASE WHEN (ev.fix >= '6') THEN 'Eligible' WHEN (ev.fix < '6') THEN 'Requires Upgrade' END) END) WHEN (ev.major < '5') THEN 'Requires Upgrade' END) WHEN (elasticache_spend.product_cache_engine = 'Memcached') THEN (CASE WHEN (ev.major > '1') THEN 'Eligible' WHEN (ev.major = '1') THEN (CASE WHEN (ev.minor > '5') THEN 'Eligible' WHEN (ev.minor = '5') THEN (CASE WHEN (ev.fix >= '16') THEN 'Eligible' WHEN (ev.fix < '15') THEN 'Requires Update' END) WHEN (ev.minor < '5') THEN 'Requires Update' END) END) ELSE 'Requires Upgrade' END) graviton_eligibility
       , (CAST(PL1.priceperunit AS double) * elasticache_spend.sum_line_item_usage_amount) graviton_cost
       , (elasticache_spend.sum_line_item_unblended_cost - (CAST(PL1.priceperunit AS double) * elasticache_spend.sum_line_item_usage_amount)) graviton_savings
-      , (elasticache_spend.sum_line_item_unblended_cost - (CAST(PL2.priceperunit AS double) * elasticache_spend.sum_line_item_usage_amount)) existing_savings
+      , ((CAST(PL2.priceperunit AS double) * elasticache_spend.sum_line_item_usage_amount) - elasticache_spend.sum_line_item_unblended_cost) existing_savings
       FROM
         (((elasticache_spend
       LEFT JOIN elasticache_engineversion ev ON (elasticache_spend.split_line_item_resource_id = ev.cacheclusterid))
       LEFT JOIN pricing PL1 ON ((elasticache_spend.graviton_instance = PL1."instance type") AND (elasticache_spend.product_location = PL1.location) AND (elasticache_spend.product_cache_engine = PL1."cache engine") AND (elasticache_spend.case_purchase_option = PL1.termtype) AND (elasticache_spend.pricing_lease_contract_length = PL1.leasecontractlength) AND (elasticache_spend.pricing_purchase_option = PL1.purchaseoption)))
       LEFT JOIN pricing PL2 ON ((elasticache_spend.previous_intel = PL2."instance type") AND (elasticache_spend.product_location = PL2.location) AND (elasticache_spend.product_cache_engine = PL2."cache engine") AND (elasticache_spend.case_purchase_option = PL2.termtype) AND (elasticache_spend.pricing_lease_contract_length = PL2.leasecontractlength) AND (elasticache_spend.pricing_purchase_option = PL2.purchaseoption)))
-      ORDER BY elasticache_spend.line_item_usage_start_date DESC
   graviton_ec2_view:
     dependsOn:
       cur: true
@@ -11897,37 +12114,37 @@ views:
       WITH
         cur_data AS (
          SELECT
-           cur.bill_payer_account_id
-         , cur.line_item_usage_account_id
-         , cur.bill_billing_period_start_date
-         , cur.product_instance_type
-         , cur.pricing_term
-         , SPLIT_PART(cur.line_item_resource_id, ':', 7) line_item_resource_id
-         , (CASE WHEN (cur.product_database_engine LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
-         , (CASE WHEN (cur.product_database_engine LIKE 'Aurora%') THEN SPLIT_PART(cur.product_database_engine, ' ', 2) ELSE product_database_engine END) db_engine
-         , cur.line_item_availability_zone
-         , cur.product_location
-         , lower(cur.product_instance_type_family) "product_instance_type_family"
+           bill_payer_account_id
+         , line_item_usage_account_id
+         , bill_billing_period_start_date
+         , product_instance_type
+         , pricing_term
+         , SPLIT_PART(line_item_resource_id, ':', 7) line_item_resource_id
+         , (CASE WHEN (product_database_engine LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
+         , (CASE WHEN (product_database_engine LIKE 'Aurora%') THEN SPLIT_PART(product_database_engine, ' ', 2) ELSE product_database_engine END) db_engine
+         , line_item_availability_zone
+         , product_location
+         , lower(product_instance_type_family) "product_instance_type_family"
          , (CASE WHEN (product_physical_processor LIKE '%Intel%') THEN 'Intel' WHEN (product_physical_processor LIKE '%AMD%') THEN 'AMD' WHEN (product_physical_processor LIKE '%Graviton%') THEN 'Graviton' ELSE product_physical_processor END) processor_type
-         , cur.product_deployment_option
-         , cur.line_item_unblended_rate
-         , SUM((CASE WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) line_item_usage_amount
-         , SUM(cur.line_item_unblended_cost) line_item_unblended_cost
-         , SUM((CASE WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.reservation_effective_cost WHEN (cur.line_item_line_item_type = 'RIFee') THEN (cur.reservation_unused_amortized_upfront_fee_for_billing_period + cur.reservation_unused_recurring_fee) WHEN ((cur.line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE cur.line_item_unblended_cost END)) sum_amortized_cost
+         , product_deployment_option
+         , line_item_unblended_rate
+         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) line_item_usage_amount
+         , SUM(line_item_unblended_cost) line_item_unblended_cost
+         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
          , modernization_mapping.generation
          , modernization_mapping.latest_arm
-         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT('db.', modernization_mapping.latest_arm, '.', SPLIT_PART(cur.product_instance_type, '.', 3)) ELSE '' END) graviton_instance_type
-         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT('db.', modernization_mapping.previous_intel, '.', SPLIT_PART(cur.product_instance_type, '.', 3)) ELSE '' END) latest_intel_instance_type
+         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT('db.', modernization_mapping.latest_arm, '.', SPLIT_PART(product_instance_type, '.', 3)) ELSE '' END) graviton_instance_type
+         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT('db.', modernization_mapping.previous_intel, '.', SPLIT_PART(product_instance_type, '.', 3)) ELSE '' END) latest_intel_instance_type
          FROM
-           (${cur_table_name} cur
-         LEFT JOIN modernization_mapping ON (lower(cur.product_instance_type_family) = modernization_mapping.family))
+           (${cur_table_name}
+         LEFT JOIN modernization_mapping ON (lower(product_instance_type_family) = modernization_mapping.family))
          WHERE (((product_product_name = 'Amazon Relational Database Service') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee')) AND (product_product_family = 'Database Instance')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY cur.bill_payer_account_id, cur.line_item_usage_account_id, cur.bill_billing_period_start_date, cur.product_instance_type, cur.line_item_usage_amount, cur.pricing_term, cur.line_item_availability_zone, cur.product_instance_type_family, cur.product_location, cur.line_item_resource_id, cur.product_database_engine, cur.product_deployment_option, cur.line_item_unblended_rate, cur.product_physical_processor, modernization_mapping.generation, modernization_mapping.latest_arm, 20, 21
-         ORDER BY bill_billing_period_start_date DESC
+         GROUP BY bill_payer_account_id, line_item_usage_account_id, bill_billing_period_start_date, product_instance_type, line_item_usage_amount, pricing_term, line_item_availability_zone, product_instance_type_family, product_location, line_item_resource_id, product_database_engine, product_deployment_option, line_item_unblended_rate, product_physical_processor, modernization_mapping.generation, modernization_mapping.latest_arm, 20, 21
       )
       , describe_db_data AS (
-         SELECT
+         SELECT DISTINCT
            dbinstanceidentifier
+         , accountid
          , dbinstanceclass
          , "concat"("split_part"(dbinstanceclass, '.', 1), '.', "split_part"(dbinstanceclass, '.', 2)) instance_family
          , availabilityzone
@@ -11936,14 +12153,19 @@ views:
          , (CASE WHEN (engine LIKE 'aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
          , engine
          , (CASE WHEN (engine LIKE '%postgres%') THEN 'PostgreSQL' WHEN (engine LIKE '%mysql%') THEN 'MySQL' WHEN (engine LIKE '%mariadb%') THEN 'MariaDB' WHEN (engine LIKE '%oracle%') THEN 'Oracle' WHEN (engine LIKE '%docdb%') THEN 'DocDB' WHEN (engine LIKE '%sqlserver%') THEN 'SQL Server' WHEN (engine LIKE 'aurora 5.6.10a') THEN 'aurora 5.6.10a' WHEN (engine LIKE '%neptune%') THEN 'Neptune' ELSE 'Check DB Engine' END) db_engine
-         , (CASE WHEN (engineversion LIKE '%aurora%') THEN "concat"("split_part"("substr"(engineversion, 18, 6), '.', 1), '.', "split_part"("substr"(engineversion, 18, 6), '.', 2), '.', "split_part"("substr"(engineversion, 18, 6), '.', 3)) ELSE engineversion END) engineversion
+         , MAX((CASE WHEN (engineversion LIKE '%aurora%') THEN "concat"("split_part"("substr"(engineversion, 18, 6), '.', 1), '.', "split_part"("substr"(engineversion, 18, 6), '.', 2), '.', "split_part"("substr"(engineversion, 18, 6), '.', 3)) ELSE engineversion END)) engineversion
+         FROM
+           ${data_collection_database_name}.inventory_rds_db_instances_data
+         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+      )
+      , engine_logic AS (
+         SELECT
+           *
          , (CASE WHEN (engineversion LIKE '%aurora%') THEN "split_part"("substr"(engineversion, 18, 6), '.', 1) ELSE "split_part"(engineversion, '.', 1) END) major
          , (CASE WHEN (engineversion LIKE '%aurora%') THEN "split_part"("substr"(engineversion, 18, 6), '.', 2) ELSE "split_part"(engineversion, '.', 2) END) minor
          , (CASE WHEN (engineversion LIKE '%aurora%') THEN "split_part"("substr"(engineversion, 18, 6), '.', 3) ELSE "split_part"(engineversion, '.', 3) END) fix
-         , year
-         , month
          FROM
-           ${data_collection_database_name}.inventory_rds_db_instances_data
+           describe_db_data
       )
       , rds_pricedata AS (
          SELECT
@@ -11962,7 +12184,7 @@ views:
       SELECT
         cur_data.*
       , describe_db_data.engineversion
-      , (CASE WHEN (cur_data.product_instance_type LIKE '%g.%') THEN 'Already Graviton' WHEN (cur_data.product_instance_type LIKE '%gd.%') THEN 'Already Graviton' WHEN (cur_data.product_instance_type LIKE '%serverless%') THEN 'Ineligible' ELSE (CASE WHEN (cur_data.rds_type = 'AmazonRDS') THEN (CASE WHEN (cur_data.db_engine = 'MySQL') THEN (CASE WHEN (CAST(describe_db_data.major AS integer) > 8) THEN 'Eligible' WHEN ((CAST(describe_db_data.major AS integer) = 8) AND (CAST(describe_db_data.minor AS integer) > 0)) THEN 'Eligible' WHEN (((CAST(describe_db_data.major AS integer) = 8) AND (CAST(describe_db_data.minor AS integer) = 0)) AND (CAST(describe_db_data.fix AS integer) >= 17)) THEN 'Eligible' ELSE 'Requires Update' END) WHEN (cur_data.db_engine = 'PostgreSQL') THEN (CASE WHEN (CAST(describe_db_data.major AS integer) > 12) THEN 'Eligible' WHEN ((CAST(describe_db_data.major AS integer) = 12) AND (CAST(describe_db_data.minor AS integer) >= 3)) THEN 'Eligible' ELSE 'Requires Update' END) WHEN (cur_data.db_engine = 'MariaDB') THEN (CASE WHEN (CAST(describe_db_data.major AS integer) > 10) THEN 'Eligible' WHEN ((CAST(describe_db_data.major AS integer) = 10) AND (CAST(describe_db_data.minor AS integer) > 4)) THEN 'Eligible' WHEN (((CAST(describe_db_data.major AS integer) = 10) AND (CAST(describe_db_data.minor AS integer) = 4)) AND (CAST(describe_db_data.fix AS integer) >= 13)) THEN 'Eligible' ELSE 'Requires Update' END) ELSE 'Ineligible' END) WHEN (cur_data.rds_type = 'Aurora') THEN (CASE WHEN (cur_data.db_engine = 'MySQL') THEN (CASE WHEN (CAST(describe_db_data.major AS integer) > 2) THEN 'Eligible' WHEN ((CAST(describe_db_data.major AS integer) = 2) AND (CAST(describe_db_data.minor AS integer) > 9)) THEN 'Eligible' WHEN (((CAST(describe_db_data.major AS integer) = 2) AND (CAST(describe_db_data.minor AS integer) = 9)) AND (CAST(describe_db_data.fix AS integer) >= 2)) THEN 'Eligible' ELSE 'Ineligible' END) WHEN (cur_data.db_engine = 'PostgreSQL') THEN (CASE WHEN (CAST(describe_db_data.major AS integer) > 12) THEN 'Eligible' WHEN ((CAST(describe_db_data.major AS integer) = 12) AND (CAST(describe_db_data.minor AS integer) >= 3)) THEN 'Eligible' WHEN ((CAST(describe_db_data.major AS integer) = 11) AND (CAST(describe_db_data.minor AS integer) >= 9)) THEN 'Eligible' ELSE 'Ineligible' END) ELSE 'Ineligible' END) END) END) graviton_eligible
+      , (CASE WHEN (cur_data.product_instance_type LIKE '%g.%') THEN 'Already Graviton' WHEN (cur_data.product_instance_type LIKE '%gd.%') THEN 'Already Graviton' WHEN (cur_data.product_instance_type LIKE '%serverless%') THEN 'Ineligible' ELSE (CASE WHEN (cur_data.rds_type = 'AmazonRDS') THEN (CASE WHEN (cur_data.db_engine = 'MySQL') THEN (CASE WHEN (CAST(engine_logic.major AS integer) > 8) THEN 'Eligible' WHEN ((CAST(engine_logic.major AS integer) = 8) AND (CAST(engine_logic.minor AS integer) > 0)) THEN 'Eligible' WHEN (((CAST(engine_logic.major AS integer) = 8) AND (CAST(engine_logic.minor AS integer) = 0)) AND (CAST(engine_logic.fix AS integer) >= 17)) THEN 'Eligible' ELSE 'Requires Update' END) WHEN (cur_data.db_engine = 'PostgreSQL') THEN (CASE WHEN (CAST(engine_logic.major AS integer) > 12) THEN 'Eligible' WHEN ((CAST(engine_logic.major AS integer) = 12) AND (CAST(engine_logic.minor AS integer) >= 3)) THEN 'Eligible' ELSE 'Requires Update' END) WHEN (cur_data.db_engine = 'MariaDB') THEN (CASE WHEN (CAST(engine_logic.major AS integer) > 10) THEN 'Eligible' WHEN ((CAST(engine_logic.major AS integer) = 10) AND (CAST(engine_logic.minor AS integer) > 4)) THEN 'Eligible' WHEN (((CAST(engine_logic.major AS integer) = 10) AND (CAST(engine_logic.minor AS integer) = 4)) AND (CAST(engine_logic.fix AS integer) >= 13)) THEN 'Eligible' ELSE 'Requires Update' END) ELSE 'Ineligible' END) WHEN (cur_data.rds_type = 'Aurora') THEN (CASE WHEN (cur_data.db_engine = 'MySQL') THEN (CASE WHEN (CAST(engine_logic.major AS integer) > 2) THEN 'Eligible' WHEN ((CAST(engine_logic.major AS integer) = 2) AND (CAST(engine_logic.minor AS integer) > 9)) THEN 'Eligible' WHEN (((CAST(engine_logic.major AS integer) = 2) AND (CAST(engine_logic.minor AS integer) = 9)) AND (CAST(engine_logic.fix AS integer) >= 2)) THEN 'Eligible' ELSE 'Ineligible' END) WHEN (cur_data.db_engine = 'PostgreSQL') THEN (CASE WHEN (CAST(engine_logic.major AS integer) > 12) THEN 'Eligible' WHEN ((CAST(engine_logic.major AS integer) = 12) AND (CAST(engine_logic.minor AS integer) >= 3)) THEN 'Eligible' WHEN ((CAST(engine_logic.major AS integer) = 11) AND (CAST(engine_logic.minor AS integer) >= 9)) THEN 'Eligible' ELSE 'Ineligible' END) ELSE 'Ineligible' END) END) END) graviton_eligible
       , CAST(PL1.priceperunit AS double) graviton_unit_cost
       , (CAST(PL1.priceperunit AS double) * cur_data.line_item_usage_amount) graviton_cost
       , (cur_data.line_item_unblended_cost - (CAST(PL1.priceperunit AS double) * cur_data.line_item_usage_amount)) graviton_unblended_savings
@@ -11970,8 +12192,9 @@ views:
       , (CAST(PL2.priceperunit AS double) * cur_data.line_item_usage_amount) previous_intel_cost
       , ((CAST(PL2.priceperunit AS double) * cur_data.line_item_usage_amount) - cur_data.line_item_unblended_cost) previous_intel_unblended_savings
       FROM
-        (((cur_data
-      LEFT JOIN describe_db_data ON (cur_data.line_item_resource_id = describe_db_data.dbinstanceidentifier))
+        ((((cur_data
+      LEFT JOIN describe_db_data ON ((cur_data.line_item_resource_id = describe_db_data.dbinstanceidentifier) AND (cur_data.line_item_usage_account_id = describe_db_data.accountid)))
+      LEFT JOIN engine_logic ON (cur_data.line_item_resource_id = engine_logic.dbinstanceidentifier))
       LEFT JOIN rds_pricedata PL1 ON ((cur_data.rds_type = PL1.rds_type) AND (cur_data.db_engine = PL1.db_engine) AND (cur_data.product_deployment_option = PL1."deployment option") AND (cur_data.product_location = PL1.location) AND (cur_data.graviton_instance_type = PL1."instance type") AND (PL1.termtype = cur_data.pricing_term)))
       LEFT JOIN rds_pricedata PL2 ON ((cur_data.rds_type = PL2.rds_type) AND (cur_data.db_engine = PL2.db_engine) AND (cur_data.product_deployment_option = PL2."deployment option") AND (cur_data.product_location = PL2.location) AND (cur_data.latest_intel_instance_type = PL2."instance type") AND (PL2.termtype = cur_data.pricing_term)))
   modernization_mapping:
