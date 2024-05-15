@@ -61,13 +61,13 @@ class IAM(CidBase):
                             "Sid": "AllowListBucket",
                             "Effect": "Allow",
                             "Action": ["s3:ListBucket"],
-                            "Resource": [f"arn:aws:s3:::{s3bucket}"]
+                            "Resource": [f"arn:{self.partition}:s3:::{s3bucket}"]
                         },
                         {
                             "Sid": "AllowReadFromBucket",
                             "Effect": "Allow",
                             "Action": [ "s3:GetObject"],
-                            "Resource": [f"arn:aws:s3:::{s3bucket}/*"]
+                            "Resource": [f"arn:{self.partition}:s3:::{s3bucket}/*"]
                         },
                         {
                             "Sid": "AllowGlueActions",
