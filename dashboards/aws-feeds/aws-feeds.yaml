@@ -1,0 +1,2986 @@
+dashboards:
+  AWS FEEDS V0.0.5:
+    dependsOn:
+      datasets:
+      - aws_feeds
+      - blog_post
+      - security_bulletin
+      - whats_new
+      - youtube
+    name: AWS Feeds v0.0.5
+    dashboardId: aws-feeds-v0-0-5
+    category: Custom
+    theme: MIDNIGHT
+    data: |-
+      AnalysisDefaults:
+        DefaultNewSheetConfiguration:
+          InteractiveLayoutConfiguration:
+            Grid:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+          SheetContentType: INTERACTIVE
+      CalculatedFields: []
+      DataSetIdentifierDeclarations:
+      - DataSetArn: arn:aws:quicksight:::dataset/5258b9ee-48d0-48f3-9ec4-baa4acd1d006
+        Identifier: youtube
+      - DataSetArn: arn:aws:quicksight:::dataset/cd5b5e17-fdde-4563-a944-1c5fc3b27684
+        Identifier: security_bulletin
+      - DataSetArn: arn:aws:quicksight:::dataset/00e4f86c-96b8-49b7-b68f-8b540e4fa6b7
+        Identifier: whats_new
+      - DataSetArn: arn:aws:quicksight:::dataset/173bf994-4763-4044-a96d-1cb6cce591f4
+        Identifier: blog_post
+      - DataSetArn: arn:aws:quicksight:::dataset/d50473c6-53c1-45f5-9185-361136fb02ef
+        Identifier: aws_feeds
+      FilterGroups:
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 972a004b-2f07-4cab-9ab9-70731ed2af83
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: description
+              DataSetIdentifier: youtube
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: SearchContent3
+            FilterId: 3e5e9cfd-f4f1-46f5-bd01-d083a4dd6448
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: f8bc4a7a-7c27-4964-92ad-8fa25fe9f951
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 482cc914-bafc-44de-9507-c7abfd14d37f
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: description
+              DataSetIdentifier: whats_new
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: SearchContent
+            FilterId: 33eb2830-9349-44f1-96cd-5d672c2ef34d
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: e39fa020-ea0b-469b-8218-75a0fb46e187
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: ab52283c-aa44-4800-87a2-a69ffdb95285
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: service
+              DataSetIdentifier: whats_new
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: Service
+            FilterId: beae979f-b047-4f7a-ac71-5b4832a37a4e
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: e39fa020-ea0b-469b-8218-75a0fb46e187
+        Status: ENABLED
+      - CrossDataset: ALL_DATASETS
+        FilterGroupId: 0ff1bd66-5d49-4e1e-bb4f-d93ba330030e
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: service
+              DataSetIdentifier: whats_new
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            FilterId: d0d26346-d561-4eb7-aaf1-6b87d83f4285
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 3c14296d-4894-48a5-9c82-b2b0581c66f4
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: category
+              DataSetIdentifier: whats_new
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: Theme
+            FilterId: 9ac43068-c0da-49c7-baa1-7a3ef08899b9
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: e39fa020-ea0b-469b-8218-75a0fb46e187
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 4b0d4efc-8dfa-41d6-84c6-f108a69c2a55
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: description
+              DataSetIdentifier: blog_post
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: SearchContent2
+            FilterId: d4315d32-f456-4ec1-8c2e-b6c90b2c4735
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 79413653-5bec-4012-8358-29fac9d1d11f
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 874a1bef-e049-4e22-b953-8896150dbc8d
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: category
+              DataSetIdentifier: blog_post
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: Category
+            FilterId: 91f0a60c-805e-40c5-be44-6ac32bad05c3
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 79413653-5bec-4012-8358-29fac9d1d11f
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 349c1657-e0d7-4860-a50c-51d0793b6c65
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: creator
+              DataSetIdentifier: blog_post
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: Author
+            FilterId: 1190d1e8-6921-4533-ad1f-804d7c8484bb
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 79413653-5bec-4012-8358-29fac9d1d11f
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: d407b4f2-a6da-4379-b03f-481fb97ff38b
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: category
+              DataSetIdentifier: aws_feeds
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: AWSFeedCategory
+            FilterId: 3c7d462a-ae24-442e-82de-39ea991c263e
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: a65824c9-7f7c-4d02-ad6b-7fff9a7d4501
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: f0fa8741-984a-4e0e-a2db-883c5a36d7be
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: feed_type
+              DataSetIdentifier: aws_feeds
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: AWSFeedType
+            FilterId: 9a8b20c3-ed53-4b6c-98e0-f6fd6ed10c9f
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: a65824c9-7f7c-4d02-ad6b-7fff9a7d4501
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: a7018e41-1115-4062-a219-29d911d4bbe1
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: title
+              DataSetIdentifier: aws_feeds
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: AWSFeedSearchContent
+            FilterId: ae28a0c9-7029-495d-874e-04a03630ffbf
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 39d29382-181d-46e2-ad30-85e2867d7454
+        Filters:
+        - TimeRangeFilter:
+            Column:
+              ColumnName: published
+              DataSetIdentifier: aws_feeds
+            FilterId: f5d46c40-9e7c-4dea-8865-ee9eb49fe184
+            IncludeMinimum: true
+            NullOption: NON_NULLS_ONLY
+            RangeMinimumValue:
+              Parameter: AWSFeedDateRange
+            TimeGranularity: DAY
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: a5088938-e049-4bd4-a7e6-4fb72653b971
+        Filters:
+        - TimeRangeFilter:
+            Column:
+              ColumnName: date
+              DataSetIdentifier: whats_new
+            FilterId: fb90fe32-103e-4a6d-9edf-3ea21be9fcbc
+            IncludeMinimum: true
+            NullOption: NON_NULLS_ONLY
+            RangeMinimumValue:
+              Parameter: AWSFeedDateRange
+            TimeGranularity: DAY
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: b3593b9c-1427-4ae0-9393-b76a15500627
+        Filters:
+        - TimeRangeFilter:
+            Column:
+              ColumnName: date
+              DataSetIdentifier: blog_post
+            FilterId: d5904df6-1c58-4bda-b7f6-1d20a640c608
+            IncludeMinimum: true
+            NullOption: NON_NULLS_ONLY
+            RangeMinimumValue:
+              Parameter: AWSFeedDateRange
+            TimeGranularity: DAY
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: a4a602bb-2573-4464-960d-43cdb1d2d353
+        Filters:
+        - TimeRangeFilter:
+            Column:
+              ColumnName: published
+              DataSetIdentifier: youtube
+            FilterId: 2df2d5e1-8fe1-459e-812b-6133fd1ec0b4
+            IncludeMinimum: true
+            NullOption: NON_NULLS_ONLY
+            RangeMinimumValue:
+              Parameter: AWSFeedDateRange
+            TimeGranularity: DAY
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 54cbbbdb-aa67-4201-aea7-d68f2c1a4d7d
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: description
+              DataSetIdentifier: security_bulletin
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: SecBulletinSearchContent
+            FilterId: db311123-ea1a-4aa4-9ac7-965e62ef15ab
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: dae967fc-5fb0-4a5b-80c4-bd9c9f5fbcb5
+        Filters:
+        - TimeRangeFilter:
+            Column:
+              ColumnName: published
+              DataSetIdentifier: security_bulletin
+            FilterId: 9ccdd0a1-3718-4662-9db6-63b8ab63e2f1
+            IncludeMinimum: true
+            NullOption: NON_NULLS_ONLY
+            RangeMinimumValue:
+              Parameter: AWSFeedDateRange
+            TimeGranularity: DAY
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      Options:
+        WeekStart: SUNDAY
+      ParameterDeclarations:
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: SearchContent
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues: {}
+          Name: Theme
+          ParameterValueType: MULTI_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues: {}
+          Name: Service
+          ParameterValueType: MULTI_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: SearchContent2
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: Author
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: Category
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: SearchContent3
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: URL
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: URL2
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: CVE
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: TitleAlas
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            DynamicValue:
+              DefaultValueColumn:
+                ColumnName: youtube_embedded_url
+                DataSetIdentifier: youtube
+              GroupNameColumn:
+                ColumnName: title
+                DataSetIdentifier: youtube
+              UserNameColumn:
+                ColumnName: title
+                DataSetIdentifier: youtube
+            StaticValues: []
+          Name: YouTubeURL
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            DynamicValue:
+              DefaultValueColumn:
+                ColumnName: youtube_embedded_url
+                DataSetIdentifier: youtube
+              UserNameColumn:
+                ColumnName: title
+                DataSetIdentifier: youtube
+            StaticValues: []
+          Name: pTitle
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: pVideoTitle
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues: {}
+          Name: AWSFeedCategory
+          ParameterValueType: MULTI_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues: {}
+          Name: AWSFeedType
+          ParameterValueType: MULTI_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: AWSFeedSearchContent
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: SecBulletinSearchContent
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - DateTimeParameterDeclaration:
+          DefaultValues:
+            RollingDate:
+              Expression: addDateTime(-1, 'YYYY', truncDate('YYYY', now()))
+            StaticValues: []
+          Name: AWSFeedDateRange
+          TimeGranularity: DAY
+      Sheets:
+      - ContentType: INTERACTIVE
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 9ce13dcc-f4c6-4b14-aac6-9201d4ad7930
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 29
+                ElementId: 85cd03f4-20ca-4148-8e07-d638487ee8bd
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 9
+              - ColumnIndex: 29
+                ColumnSpan: 7
+                ElementId: 02dc08b4-578a-4761-9d28-fc020ec2b765
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 9
+              - ColumnIndex: 0
+                ColumnSpan: 16
+                ElementId: 9801ac4f-8e5f-4160-a9dc-6896eeca39c5
+                ElementType: VISUAL
+                RowIndex: 11
+                RowSpan: 12
+              - ColumnIndex: 16
+                ColumnSpan: 20
+                ElementId: 3b62f1f0-c3ef-4b16-ae77-46f96ee3d070
+                ElementType: VISUAL
+                RowIndex: 11
+                RowSpan: 12
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 685ca3df-58f1-420d-9823-253ad28aff48
+                ElementType: VISUAL
+                RowIndex: 23
+                RowSpan: 12
+        Name: AWS Feeds Summary
+        ParameterControls:
+        - DateTimePicker:
+            DisplayOptions:
+              DateTimeFormat: YYYY/MM/DD
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: cf45671d-d16e-4724-ade8-64e3fcb62604
+            SourceParameterName: AWSFeedDateRange
+            Title: Start Date
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 9cc495ee-6805-45af-b90b-7277746e4a0e
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: category
+                DataSetIdentifier: aws_feeds
+            SourceParameterName: AWSFeedCategory
+            Title: Category
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: f1975aad-1db5-417e-b33d-fc8cea2cc9df
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: feed_type
+                DataSetIdentifier: aws_feeds
+            SourceParameterName: AWSFeedType
+            Title: Feed Type
+            Type: MULTI_SELECT
+        - TextField:
+            DisplayOptions:
+              PlaceholderOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 21276919-3bb4-466c-bcde-06b6f222e1db
+            SourceParameterName: AWSFeedSearchContent
+            Title: Search Content
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 2
+                ElementId: cf45671d-d16e-4724-ade8-64e3fcb62604
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 2
+                ColumnSpan: 2
+                ElementId: f1975aad-1db5-417e-b33d-fc8cea2cc9df
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 4
+                ColumnSpan: 2
+                ElementId: 9cc495ee-6805-45af-b90b-7277746e4a0e
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 6
+                ColumnSpan: 2
+                ElementId: 21276919-3bb4-466c-bcde-06b6f222e1db
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+        SheetId: a65824c9-7f7c-4d02-ad6b-7fff9a7d4501
+        TextBoxes:
+        - Content: |-
+            <text-box>
+              <inline font-size="32px">AWS Feeds Summary</inline>
+            </text-box>
+          SheetTextBoxId: 9ce13dcc-f4c6-4b14-aac6-9201d4ad7930
+        Visuals:
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: b4e09ddc-561c-4aa3-bbea-2282880c8d2b
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
+                    FieldValue: title
+                  Width: 1008px
+                SelectedFieldOptions:
+                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
+                  Visibility: VISIBLE
+                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.feed_type.1.1714570083180
+                  Visibility: VISIBLE
+                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
+                  Visibility: VISIBLE
+                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.4.1715190763285
+                  Visibility: HIDDEN
+                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.4.1715189863936
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns: []
+                  Rows:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: published
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: feed_type
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.feed_type.1.1714570083180
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: title
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: url
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.4.1715190763285
+                  Values:
+                  - CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: category
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.4.1715189863936
+              SortConfiguration:
+                FieldSortOptions:
+                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
+              TableOptions:
+                CellStyle:
+                  Height: 25
+                CollapsedRowDimensionsVisibility: VISIBLE
+                ColumnHeaderStyle:
+                  BackgroundColor: '#0A87AF'
+                  Height: 25
+                  TextWrap: WRAP
+                MetricPlacement: COLUMN
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle:
+                  BackgroundColor: '#0A87AF'
+                  Height: 25
+                  TextWrap: WRAP
+                RowsLayout: TABULAR
+                SingleMetricVisibility: VISIBLE
+                ToggleButtonsVisibility: HIDDEN
+              TotalOptions:
+                ColumnTotalOptions:
+                  TotalsVisibility: HIDDEN
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: HIDDEN
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  ScrollStatus: SCROLLED
+                  TotalsVisibility: HIDDEN
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              Visibility: HIDDEN
+            VisualId: 85cd03f4-20ca-4148-8e07-d638487ee8bd
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 69e96049-ebeb-41fc-9bf6-409f87eae518
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: published
+                        DataSetIdentifier: aws_feeds
+                      DateGranularity: WEEK
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.0.1714574319150
+                      HierarchyId: 1e765b5f-c9a9-4e87-8007-b1c99bf9611c
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: feed_type
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.feed_type.1.1714574326484
+                  Values: []
+              Legend:
+                Width: 169px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.0.1714574319150
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.0.1714574319150
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.feed_type.1.1714574326484
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                DrillDownFilters: []
+                HierarchyId: 1e765b5f-c9a9-4e87-8007-b1c99bf9611c
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              Visibility: HIDDEN
+            VisualId: 9801ac4f-8e5f-4160-a9dc-6896eeca39c5
+        - WordCloudVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.0.1715189833607
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 21bb38d3-aedf-4ab6-bb12-edd53fc04ab0
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldWells:
+                WordCloudAggregatedFieldWells:
+                  GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: category
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.0.1715189833607
+                  Size: []
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+              WordCloudOptions: {}
+            ColumnHierarchies: []
+            Subtitle:
+              Visibility: HIDDEN
+            Title:
+              Visibility: HIDDEN
+            VisualId: 3b62f1f0-c3ef-4b16-ae77-46f96ee3d070
+        - TableVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldOptions:
+                Order: []
+                SelectedFieldOptions:
+                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.3.1715191049889
+                  URLStyling:
+                    LinkConfiguration:
+                      Content:
+                        CustomIconContent:
+                          Icon: LINK
+                      Target: NEW_TAB
+                  Width: 279px
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: url
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.3.1715191049889
+                  Values: []
+              SortConfiguration: {}
+              TableOptions:
+                HeaderStyle:
+                  Height: 25
+                  HorizontalTextAlignment: CENTER
+                  TextWrap: WRAP
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <block align="center">
+                      <inline font-size="14px">Click in the link icon to open.</inline>
+                    </block>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: 02dc08b4-578a-4761-9d28-fc020ec2b765
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 52701aa6-b4fe-4fdc-98f0-d0cf28d47a9b
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: HIDDEN
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: published
+                        DataSetIdentifier: aws_feeds
+                      DateGranularity: WEEK
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.1.1715238454967
+                      HierarchyId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.1.1715238454967
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: category
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.0.1715238450840
+                  Values: []
+              Legend:
+                Width: 230px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.1.1715238454967
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.0.1715238450840
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.1.1715238454967
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                HierarchyId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.1.1715238454967
+            Subtitle:
+              Visibility: HIDDEN
+            Title:
+              Visibility: HIDDEN
+            VisualId: 685ca3df-58f1-420d-9823-253ad28aff48
+      - ContentType: INTERACTIVE
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 1c1f4866-cf8d-4cc2-9151-ef24f3ec30c6
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 25
+                ElementId: 3e542321-7272-4316-b99d-911c199bb08d
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 9
+              - ColumnIndex: 25
+                ColumnSpan: 11
+                ElementId: e1053161-0809-462d-bbf4-b8b76f918fd3
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 9
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: d8d0a19c-bd57-4c6f-8c49-51bae7b28662
+                ElementType: VISUAL
+                RowIndex: 11
+                RowSpan: 12
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: c98ba133-78d7-42e7-b5da-16516ea2da3a
+                ElementType: VISUAL
+                RowIndex: 11
+                RowSpan: 12
+        Name: AWS What's New
+        ParameterControls:
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 03293627-7cf9-40f9-b84b-d18c57fd07de
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: category
+                DataSetIdentifier: whats_new
+            SourceParameterName: Theme
+            Title: Category
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 52d171b9-e0d4-4498-ae77-e719d1a4b29e
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: service
+                DataSetIdentifier: whats_new
+            SourceParameterName: Service
+            Title: Service
+            Type: MULTI_SELECT
+        - TextField:
+            DisplayOptions:
+              PlaceholderOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 439bb6bc-9690-4507-8abd-dfb28cd2b7cb
+            SourceParameterName: SearchContent
+            Title: Search Content
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 3
+                ElementId: 03293627-7cf9-40f9-b84b-d18c57fd07de
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 3
+                ColumnSpan: 3
+                ElementId: 52d171b9-e0d4-4498-ae77-e719d1a4b29e
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 6
+                ColumnSpan: 3
+                ElementId: 439bb6bc-9690-4507-8abd-dfb28cd2b7cb
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+        SheetId: e39fa020-ea0b-469b-8218-75a0fb46e187
+        TextBoxes:
+        - Content: |-
+            <text-box>
+              <inline font-size="32px">AWS What's New</inline>
+            </text-box>
+          SheetTextBoxId: 1c1f4866-cf8d-4cc2-9151-ef24f3ec30c6
+        Visuals:
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - b803cd8a-acba-4cc0-95cb-5c91769066a6.service.0.1713527804044
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 095b8a95-e80b-4abe-92df-219bdb4aaf31
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: date
+                        DataSetIdentifier: whats_new
+                      DateGranularity: WEEK
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634655094
+                      HierarchyId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634655094
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: service
+                        DataSetIdentifier: whats_new
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.0.1713527804044
+                  Values: []
+              Legend:
+                Visibility: VISIBLE
+                Width: 319px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634655094
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.0.1713527804044
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634655094
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                HierarchyId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634655094
+            Subtitle:
+              Visibility: HIDDEN
+            Title:
+              FormatText:
+                RichText: <visual-title>Services</visual-title>
+              Visibility: VISIBLE
+            VisualId: c98ba133-78d7-42e7-b5da-16516ea2da3a
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: f4838a5b-1d4c-49d1-b86d-19ce0c9f52a2
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.title.3.1713511614848
+                    FieldValue: title
+                  Width: 579px
+                - DataPathList:
+                  - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713522986805
+                    FieldValue: category
+                  Width: 203px
+                - DataPathList:
+                  - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.2.1713523006010
+                    FieldValue: service
+                  Width: 188px
+                SelectedFieldOptions:
+                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.3.1714634621010
+                  Visibility: VISIBLE
+                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.title.3.1713511614848
+                  Visibility: VISIBLE
+                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713522986805
+                  Visibility: VISIBLE
+                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.2.1713523006010
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns: []
+                  Rows:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: date
+                        DataSetIdentifier: whats_new
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.3.1714634621010
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: title
+                        DataSetIdentifier: whats_new
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.title.3.1713511614848
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: category
+                        DataSetIdentifier: whats_new
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713522986805
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: service
+                        DataSetIdentifier: whats_new
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.2.1713523006010
+                  Values: []
+              SortConfiguration:
+                FieldSortOptions:
+                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.3.1714634621010
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.3.1714634621010
+              TableOptions:
+                CellStyle:
+                  Height: 25
+                  TextWrap: WRAP
+                CollapsedRowDimensionsVisibility: HIDDEN
+                ColumnHeaderStyle:
+                  BackgroundColor: '#0A87AF'
+                  Height: 28
+                  TextWrap: WRAP
+                MetricPlacement: ROW
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle:
+                  BackgroundColor: '#0A87AF'
+                  Height: 28
+                  TextWrap: WRAP
+                RowHeaderStyle:
+                  HorizontalTextAlignment: LEFT
+                RowsLayout: TABULAR
+                SingleMetricVisibility: HIDDEN
+                ToggleButtonsVisibility: HIDDEN
+              TotalOptions:
+                ColumnTotalOptions:
+                  Placement: END
+                  TotalsVisibility: HIDDEN
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: HIDDEN
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  Placement: AUTO
+                  TotalsVisibility: HIDDEN
+            Subtitle:
+              Visibility: HIDDEN
+            Title:
+              FormatText:
+                RichText: <visual-title>AWS What's New</visual-title>
+              Visibility: HIDDEN
+            VisualId: 3e542321-7272-4316-b99d-911c199bb08d
+        - TableVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldOptions:
+                Order: []
+                SelectedFieldOptions:
+                - FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.summary.0.1713118658080
+                  URLStyling:
+                    LinkConfiguration:
+                      Content:
+                        CustomTextContent:
+                          FontConfiguration:
+                            FontDecoration: UNDERLINE
+                      Target: NEW_TAB
+                  Width: 356px
+                - FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.link.2.1713167555800
+                  URLStyling:
+                    LinkConfiguration:
+                      Content:
+                        CustomIconContent:
+                          Icon: LINK
+                      Target: NEW_TAB
+                  Width: 89px
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: description
+                        DataSetIdentifier: whats_new
+                      FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.summary.0.1713118658080
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: link
+                        DataSetIdentifier: whats_new
+                      FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.link.2.1713167555800
+                  Values: []
+              SortConfiguration: {}
+              TableOptions:
+                CellStyle:
+                  Border:
+                    UniformBorder:
+                      Style: NONE
+                      Thickness: 1
+                  FontConfiguration:
+                    FontSize:
+                      Relative: MEDIUM
+                  Height: 400
+                  HorizontalTextAlignment: AUTO
+                  TextWrap: WRAP
+                  VerticalTextAlignment: MIDDLE
+                HeaderStyle:
+                  BackgroundColor: '#0A87AF'
+                  FontConfiguration:
+                    FontSize:
+                      Relative: MEDIUM
+                  HorizontalTextAlignment: AUTO
+                  TextWrap: WRAP
+                  VerticalTextAlignment: TOP
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+            Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <block align="right">
+                      <inline font-size="14px">Click in the link icon to open external view with item details.</inline>
+                    </block>
+                  </visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              Visibility: HIDDEN
+            VisualId: e1053161-0809-462d-bbf4-b8b76f918fd3
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713531618741
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: a226e528-123c-4503-846d-ab544fed0545
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              CategoryAxis:
+                TickLabelOptions:
+                  LabelOptions:
+                    Visibility: VISIBLE
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: date
+                        DataSetIdentifier: whats_new
+                      DateGranularity: WEEK
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634641977
+                      HierarchyId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634641977
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: category
+                        DataSetIdentifier: whats_new
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713531618741
+                  Values: []
+              Legend:
+                Visibility: VISIBLE
+                Width: 256px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634641977
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713531618741
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634641977
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                HierarchyId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634641977
+            Subtitle:
+              Visibility: HIDDEN
+            Title:
+              FormatText:
+                RichText: <visual-title>Categories</visual-title>
+              Visibility: VISIBLE
+            VisualId: d8d0a19c-bd57-4c6f-8c49-51bae7b28662
+      - ContentType: INTERACTIVE
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: d7477d39-2e99-4a9e-bca8-bef0346f7dc8
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 24
+                ElementId: 9ba45230-68fb-4d2a-9367-ffb4d1c439fa
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 9
+              - ColumnIndex: 24
+                ColumnSpan: 12
+                ElementId: 61212055-c401-436b-9105-b5fae7debab9
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 9
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: cdbd2942-1b23-4b64-a222-31b362075132
+                ElementType: VISUAL
+                RowIndex: 11
+                RowSpan: 12
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: 8d605aac-1a13-45fe-a7ee-f3f6eec4298f
+                ElementType: VISUAL
+                RowIndex: 11
+                RowSpan: 12
+        Name: AWS Blog Posts
+        ParameterControls:
+        - Dropdown:
+            DisplayOptions:
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 57b804dc-11eb-45b3-8725-782288b87d2d
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: creator
+                DataSetIdentifier: blog_post
+            SourceParameterName: Author
+            Title: Author
+            Type: SINGLE_SELECT
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: d158759c-3722-458c-91c6-811c8a65fe75
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: category
+                DataSetIdentifier: blog_post
+            SourceParameterName: Category
+            Title: Category
+            Type: SINGLE_SELECT
+        - TextField:
+            DisplayOptions:
+              PlaceholderOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: d93e00aa-5cf4-46e6-bcf6-d9d1348cd95f
+            SourceParameterName: SearchContent2
+            Title: Search Content
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 2
+                ElementId: 57b804dc-11eb-45b3-8725-782288b87d2d
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 2
+                ColumnSpan: 2
+                ElementId: d158759c-3722-458c-91c6-811c8a65fe75
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 4
+                ColumnSpan: 2
+                ElementId: d93e00aa-5cf4-46e6-bcf6-d9d1348cd95f
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+        SheetId: 79413653-5bec-4012-8358-29fac9d1d11f
+        TextBoxes:
+        - Content: |-
+            <text-box>
+              <inline font-size="32px">AWS What's New</inline>
+            </text-box>
+          SheetTextBoxId: 942ed253-7f4e-4e87-902e-ba00f654b2a8
+        - Content: |-
+            <text-box>
+              <inline font-size="32px">AWS Blog Posts</inline>
+            </text-box>
+          SheetTextBoxId: d7477d39-2e99-4a9e-bca8-bef0346f7dc8
+        Visuals:
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.0.1713528383763
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: d0eb8b47-dd81-46e8-a965-76b7ac755c15
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: date
+                        DataSetIdentifier: blog_post
+                      DateGranularity: WEEK
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573960782
+                      HierarchyId: 6c3d7c19-1d87-4348-bbf3-a4ad22eb22fa
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: creator
+                        DataSetIdentifier: blog_post
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.0.1713528383763
+                  Values: []
+              Legend:
+                Visibility: VISIBLE
+                Width: 177px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573960782
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.0.1713528383763
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573960782
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                DrillDownFilters: []
+                HierarchyId: 6c3d7c19-1d87-4348-bbf3-a4ad22eb22fa
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Creator</visual-title>
+              Visibility: VISIBLE
+            VisualId: 8d605aac-1a13-45fe-a7ee-f3f6eec4298f
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 0d258546-b084-438f-a875-2e472f483d9a
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                CollapseStateOptions:
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-05-07 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: Build generative AI applications with Amazon Bedrock Studio
+                        (preview)
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: Antje Barth
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-05-06 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: 'AWS Weekly Roundup: Amazon Q, Amazon QuickSight, AWS
+                        CodeArtifact, Amazon Bedrock, and more (May 6, 2024)'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: Matheus Guimaraes
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-05-02 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: Build RAG applications with MongoDB Atlas, now available
+                        in Knowledge Bases for Amazon Bedrock
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: Abhishek Gupta
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-05-01 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: 'Stop the CNAME chain struggle: Simplified management
+                        with Route 53 Resolver DNS Firewall'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: "S\xE9bastien Stormacq"
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-04-30 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: Add your Ruby gems to AWS CodeArtifact
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: "S\xE9bastien Stormacq"
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-04-30 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: Amazon Q Business, now generally available, helps boost
+                        workforce productivity with generative AI
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: Channy Yun
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-04-30 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: Amazon Q Developer, now generally available, includes
+                        previews of new capabilities to reimagine developer experience
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: Donnie Prakoso
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-04-30 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: Amazon Titan Text Embeddings V2 now available in Amazon
+                        Bedrock, optimized for improving RAG
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: "S\xE9bastien Stormacq"
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-04-29 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: 'AWS Weekly Roundup: Amazon Bedrock, AWS CodeBuild, Amazon
+                        CodeCatalyst, and more (April 29, 2024)'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: Danilo Poccia
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                      FieldValue: '2024-05-07 00:00:00.000'
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                      FieldValue: Build RAG and agent-based generative AI applications with
+                        new Amazon Titan Text Premier model, available in Amazon Bedrock
+                    - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                      FieldValue: Antje Barth
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                    FieldValue: title
+                  Width: 651px
+                - DataPathList:
+                  - DataPathType:
+                      PivotTableDataPathType: COUNT_METRIC_COLUMN
+                  Width: 428px
+                - DataPathList:
+                  - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                    FieldValue: creator
+                  Width: 250px
+                SelectedFieldOptions:
+                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                  Visibility: VISIBLE
+                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                  Visibility: VISIBLE
+                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns: []
+                  Rows:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: date
+                        DataSetIdentifier: blog_post
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: title
+                        DataSetIdentifier: blog_post
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: creator
+                        DataSetIdentifier: blog_post
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                  Values: []
+              SortConfiguration:
+                FieldSortOptions:
+                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+              TableOptions:
+                CellStyle:
+                  Height: 25
+                CollapsedRowDimensionsVisibility: VISIBLE
+                ColumnHeaderStyle:
+                  BackgroundColor: '#0A87AF'
+                ColumnNamesVisibility: VISIBLE
+                MetricPlacement: COLUMN
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle:
+                  BackgroundColor: '#0A87AF'
+                RowsLayout: TABULAR
+                SingleMetricVisibility: VISIBLE
+                ToggleButtonsVisibility: VISIBLE
+              TotalOptions:
+                ColumnTotalOptions:
+                  Placement: END
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: HIDDEN
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  Placement: AUTO
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>AWS Blog Posts</visual-title>
+              Visibility: HIDDEN
+            VisualId: 9ba45230-68fb-4d2a-9367-ffb4d1c439fa
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.category.0.1713528324572
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 1b5d311b-0526-4f01-a5aa-782bd9b81767
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: date
+                        DataSetIdentifier: blog_post
+                      DateGranularity: WEEK
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573947793
+                      HierarchyId: cbf63ca3-0b62-40af-b9fb-86f73946227c
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: category
+                        DataSetIdentifier: blog_post
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.category.0.1713528324572
+                  Values: []
+              Legend:
+                Visibility: VISIBLE
+                Width: 265px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573947793
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.category.0.1713528324572
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573947793
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                DrillDownFilters: []
+                HierarchyId: cbf63ca3-0b62-40af-b9fb-86f73946227c
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Categories</visual-title>
+              Visibility: VISIBLE
+            VisualId: cdbd2942-1b23-4b64-a222-31b362075132
+        - TableVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldOptions:
+                Order: []
+                SelectedFieldOptions:
+                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.description.0.1713526419245
+                  Width: 411px
+                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.link.1.1713526437334
+                  URLStyling:
+                    LinkConfiguration:
+                      Content:
+                        CustomIconContent:
+                          Icon: LINK
+                      Target: NEW_TAB
+                  Width: 83px
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: description
+                        DataSetIdentifier: blog_post
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.description.0.1713526419245
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: link
+                        DataSetIdentifier: blog_post
+                      FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.link.1.1713526437334
+                  Values: []
+              SortConfiguration: {}
+              TableOptions:
+                CellStyle:
+                  Height: 500
+                HeaderStyle:
+                  BackgroundColor: '#0A87AF'
+                  Height: 25
+                  TextWrap: WRAP
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+            Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <block align="right">
+                      <inline font-size="14px">Click in the link icon to open external view with item details.</inline>
+                    </block>
+                  </visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              Visibility: HIDDEN
+            VisualId: 61212055-c401-436b-9105-b5fae7debab9
+      - ContentType: INTERACTIVE
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 4c1cf762-f289-4e7d-8fd6-7ff9e7d721a1
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: d6c1b3d9-143b-4088-bd67-b6a9ca087553
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 12
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: bff99f87-c94f-4a72-8a4c-5dc59bde0ff3
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 12
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: ac6e8233-1368-4b30-a19d-bfb8a46d798c
+                ElementType: VISUAL
+                RowIndex: 14
+                RowSpan: 12
+        Name: AWS YouTube Videos
+        ParameterControls:
+        - TextField:
+            DisplayOptions:
+              PlaceholderOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 8d5764c3-1280-4114-b467-5a49d0490578
+            SourceParameterName: SearchContent3
+            Title: Search Content
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnSpan: 2
+                ElementId: 8d5764c3-1280-4114-b467-5a49d0490578
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+        SheetId: f8bc4a7a-7c27-4964-92ad-8fa25fe9f951
+        TextBoxes:
+        - Content: |-
+            <text-box>
+              <inline font-size="32px">AWS YouTube Videos</inline>
+            </text-box>
+          SheetTextBoxId: 4c1cf762-f289-4e7d-8fd6-7ff9e7d721a1
+        Visuals:
+        - TableVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldOptions:
+                Order: []
+                SelectedFieldOptions:
+                - FieldId: 573c1109-b214-4bec-a018-e8847022f541.description.0.1713549072063
+                  Width: 1359px
+                - FieldId: 573c1109-b214-4bec-a018-e8847022f541.video_url.1.1713549076348
+                  URLStyling:
+                    LinkConfiguration:
+                      Content:
+                        CustomIconContent:
+                          Icon: LINK
+                      Target: NEW_TAB
+                  Width: 200px
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: published
+                        DataSetIdentifier: youtube
+                      FieldId: 573c1109-b214-4bec-a018-e8847022f541.published.3.1714637564439
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: title
+                        DataSetIdentifier: youtube
+                      FieldId: 573c1109-b214-4bec-a018-e8847022f541.title.2.1714637555020
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: description
+                        DataSetIdentifier: youtube
+                      FieldId: 573c1109-b214-4bec-a018-e8847022f541.description.0.1713549072063
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: video_url
+                        DataSetIdentifier: youtube
+                      FieldId: 573c1109-b214-4bec-a018-e8847022f541.video_url.1.1713549076348
+                  Values: []
+              SortConfiguration:
+                RowSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 573c1109-b214-4bec-a018-e8847022f541.published.3.1714637564439
+              TableOptions:
+                CellStyle:
+                  Height: 500
+                HeaderStyle:
+                  BackgroundColor: '#0A87AF'
+                  Height: 25
+                  TextWrap: WRAP
+            Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <block align="right">
+                      <inline font-size="14px">Click in the link icon to open external view with item details.</inline>
+                    </block>
+                  </visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              Visibility: HIDDEN
+            VisualId: ac6e8233-1368-4b30-a19d-bfb8a46d798c
+        - CustomContentVisual:
+            Actions: []
+            ChartConfiguration:
+              ContentUrl: https://www.youtube.com/<<$YouTubeURL>>
+            DataSetIdentifier: youtube
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <parameter>${YouTubeURL}</parameter>
+                  </visual-title>
+              Visibility: HIDDEN
+            VisualId: bff99f87-c94f-4a72-8a4c-5dc59bde0ff3
+        - TableVisual:
+            Actions:
+            - ActionOperations:
+              - NavigationOperation:
+                  LocalNavigationConfiguration:
+                    TargetSheetId: f8bc4a7a-7c27-4964-92ad-8fa25fe9f951
+              - SetParametersOperation:
+                  ParameterValueConfigurations:
+                  - DestinationParameterName: YouTubeURL
+                    Value:
+                      SourceField: 4e94b79b-80ea-426b-a704-63141e0bcc15.1.1714635834667
+              CustomActionId: 9f7d35ba-e0dd-41f9-96dd-e88640feca02
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: published
+                        DataSetIdentifier: youtube
+                      FieldId: 573c1109-b214-4bec-a018-e8847022f541.published.2.1714637371615
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: title
+                        DataSetIdentifier: youtube
+                      FieldId: 573c1109-b214-4bec-a018-e8847022f541.title.0.1714635770123
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: youtube_embedded_url
+                        DataSetIdentifier: youtube
+                      FieldId: 4e94b79b-80ea-426b-a704-63141e0bcc15.1.1714635834667
+                  Values: []
+              SortConfiguration:
+                RowSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 573c1109-b214-4bec-a018-e8847022f541.published.2.1714637371615
+              TableOptions:
+                CellStyle:
+                  Height: 25
+                HeaderStyle:
+                  BackgroundColor: '#0A87AF'
+            Subtitle:
+              Visibility: HIDDEN
+            Title:
+              Visibility: HIDDEN
+            VisualId: d6c1b3d9-143b-4088-bd67-b6a9ca087553
+      - ContentType: INTERACTIVE
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 229cc868-0a6e-4c64-81d4-952c86045e31
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: 80499cae-83ff-4160-a351-7eba8bc5fa89
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 12
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: a535fed0-6a25-4901-8035-8b737dc404d3
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 12
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 88375036-8210-42d6-8c5e-560b3fd0a93f
+                ElementType: VISUAL
+                RowIndex: 14
+                RowSpan: 12
+        Name: AWS Security Bulletin
+        ParameterControls:
+        - TextField:
+            DisplayOptions:
+              PlaceholderOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 0eda8408-895f-417e-9d94-e41cb3320bb3
+            SourceParameterName: SecBulletinSearchContent
+            Title: Search Content
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnSpan: 2
+                ElementId: 0eda8408-895f-417e-9d94-e41cb3320bb3
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+        SheetId: 45229e4f-dd48-4884-82bc-cf25cc030429
+        TextBoxes:
+        - Content: |-
+            <text-box>
+              <inline font-size="32px">AWS Security Bulletin</inline>
+            </text-box>
+          SheetTextBoxId: 229cc868-0a6e-4c64-81d4-952c86045e31
+        Visuals:
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1714205014038
+                    - 4d92b921-93f3-4853-b5a7-189780f0b65c.title.1.1714205060264
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: c11205c5-a826-4760-a9ab-201d4db6a876
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.title.1.1714205060264
+                    FieldValue: title
+                  Width: 509px
+                SelectedFieldOptions:
+                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1714205014038
+                  Visibility: VISIBLE
+                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.title.1.1714205060264
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns: []
+                  Rows:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: published
+                        DataSetIdentifier: security_bulletin
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1714205014038
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: title
+                        DataSetIdentifier: security_bulletin
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.title.1.1714205060264
+                  Values: []
+              SortConfiguration:
+                FieldSortOptions:
+                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1714205014038
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1714205014038
+              TableOptions:
+                CellStyle:
+                  Height: 25
+                CollapsedRowDimensionsVisibility: HIDDEN
+                ColumnHeaderStyle:
+                  BackgroundColor: '#0A87AF'
+                MetricPlacement: ROW
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle:
+                  BackgroundColor: '#0A87AF'
+                RowsLayout: TABULAR
+                SingleMetricVisibility: HIDDEN
+                ToggleButtonsVisibility: HIDDEN
+              TotalOptions:
+                ColumnTotalOptions:
+                  Placement: END
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: HIDDEN
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  Placement: AUTO
+                  TotalsVisibility: HIDDEN
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>AWS Security Bulletin</visual-title>
+              Visibility: VISIBLE
+            VisualId: 80499cae-83ff-4160-a351-7eba8bc5fa89
+        - TableVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldOptions:
+                Order: []
+                SelectedFieldOptions:
+                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.description.0.1714205154146
+                  Width: 678px
+                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1714205160479
+                  URLStyling:
+                    LinkConfiguration:
+                      Content:
+                        CustomIconContent:
+                          Icon: LINK
+                      Target: NEW_TAB
+                  Width: 89px
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: description
+                        DataSetIdentifier: security_bulletin
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.description.0.1714205154146
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: link
+                        DataSetIdentifier: security_bulletin
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1714205160479
+                  Values: []
+              SortConfiguration: {}
+              TableOptions:
+                CellStyle:
+                  Height: 500
+                HeaderStyle:
+                  BackgroundColor: '#0A87AF'
+                  Height: 25
+                  TextWrap: WRAP
+            Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <block align="right">
+                      <inline font-size="14px">Click in the link icon to open external view with item details.</inline>
+                    </block>
+                  </visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              Visibility: HIDDEN
+            VisualId: a535fed0-6a25-4901-8035-8b737dc404d3
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 8064e697-f82e-4a54-9308-feb0883e7309
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: HIDDEN
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: published
+                        DataSetIdentifier: security_bulletin
+                      DateGranularity: WEEK
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1715181803517
+                      HierarchyId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1715181803517
+                  Colors: []
+                  Values:
+                  - CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: link
+                        DataSetIdentifier: security_bulletin
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1715181839743
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1715181803517
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1715181803517
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1715181839743
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+              ValueLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: link
+                      DataSetIdentifier: security_bulletin
+                    FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1715181839743
+                  CustomLabel: Number of Security Bulletins
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                HierarchyId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1715181803517
+            Subtitle:
+              Visibility: HIDDEN
+            Title:
+              Visibility: HIDDEN
+            VisualId: 88375036-8210-42d6-8c5e-560b3fd0a93f
+      - ContentType: INTERACTIVE
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 9967fb47-f60c-444a-8465-7cdc367ca303
+                ElementType: VISUAL
+                RowIndex: 0
+                RowSpan: 7
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 5dc580e2-06f9-4a72-89a5-50d03f28aa2f
+                ElementType: VISUAL
+                RowIndex: 7
+                RowSpan: 12
+        Name: About
+        SheetId: fc9dd3b7-a9f0-4b87-b254-e05ae91a76db
+        Visuals:
+        - InsightVisual:
+            Actions: []
+            DataSetIdentifier: whats_new
+            InsightConfiguration:
+              Computations: []
+              CustomNarrative:
+                Narrative: "<narrative>\n  <block align=\"center\">\n    <inline color=\"\
+                  #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\"\
+                  \ target=\"_blank\">\n        <b>\n          <u>AWS Feeds Dashboard</u>\n\
+                  \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block\
+                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.0.5</b>\n\
+                  \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
+                  \ font-size=\"22.4px\">\n      <b>AWS Feeds Dashboard: What's New, Blog\
+                  \ Posts, YouTube Videos, Security Bulletin</b>\n    </inline>\n  </block>\n\
+                  \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"right\"\
+                  />\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"\
+                  />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
+                  />\n  <br/>\n  <block align=\"right\">Built by: Francisco Tresgallo</block>\n\
+                  \  <br/>\n  <block align=\"right\">Contributors: Iakov Gan, Yuriy Prykhodko</block>\n\
+                  \  <br/>\n  <block align=\"right\">\n    Learn more about AWS Cloud Intelligence\
+                  \ Dashboards (CID) on\n    <inline color=\"#61d1d6\">\n      <a href=\"\
+                  https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+                  \ target=\"_blank\">AWS Well-Architected Labs</a>\n    </inline>\n   \
+                  \ \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
+                  \ target=\"_blank\">CID YouTube Channel</a>\n    </inline>\n  </block>\n\
+                  \  <br/>\n  <block align=\"right\">\n    If you like Cloud Intelligence\
+                  \ Dashboards we kindly ask you to fill out this\n    <inline color=\"\
+                  #61d1d6\">\n      <a href=\"https://eventbox.dev/survey/AJ0EIZ7\" target=\"\
+                  _blank\">customer survey</a>\n    </inline>\n  </block>\n  <br/>\n  <block\
+                  \ align=\"right\">Powered by: Amazon QuickSight, Amazon Athena, Amazon\
+                  \ S3</block>\n  <br/>\n  <block align=\"right\">\n    If you wish to provide\
+                  \ feedback or report an error please email:\n    <inline color=\"#61d1d6\"\
+                  >\_</inline>\n    <inline color=\"#61d1d6\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CID%20Dashboard%20Feedback\"\
+                  \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n   \
+                  \ </inline>\n  </block>\n</narrative>"
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              Visibility: VISIBLE
+            VisualId: 5dc580e2-06f9-4a72-89a5-50d03f28aa2f
+        - InsightVisual:
+            Actions: []
+            DataSetIdentifier: whats_new
+            InsightConfiguration:
+              Computations: []
+              CustomNarrative:
+                Narrative: "<narrative>\n  <inline font-size=\"54.88px\">Notices</inline>\n\
+                  \  <br/>\n  <br/>\n  <inline font-size=\"19.2px\">Customers are responsible\
+                  \ for making their own independent assessment of\_this dashboard and its\
+                  \ content.\_This dashboard and its content: (a) is for informational purposes\
+                  \ only, (b) represents current AWS product offerings and practices, which\
+                  \ are subject to change without notice, and (c) does not create any commitments\
+                  \ or assurances from AWS and its affiliates, suppliers or licensors. AWS\_\
+                  content, products or services are provided \u201Cas is\u201D without warranties,\
+                  \ representations, or conditions of any kind, whether express or implied.\
+                  \ The responsibilities and liabilities of AWS to its customers are controlled\
+                  \ by AWS agreements, and this document is not part of, nor does it modify,\
+                  \ any agreement between AWS and its customers.</inline>\n</narrative>"
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              Visibility: VISIBLE
+            VisualId: 9967fb47-f60c-444a-8465-7cdc367ca303
+datasets:
+  youtube:
+    data:
+      DataSetId: 5258b9ee-48d0-48f3-9ec4-baa4acd1d006
+      Name: youtube
+      PhysicalTableMap:
+        5b308e9b-d8cf-4223-a79c-8cf1d09f371f:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: youtube
+            InputColumns:
+            - Name: video_url
+              Type: STRING
+            - Name: title
+              Type: STRING
+            - Name: published
+              Type: STRING
+            - Name: description
+              Type: STRING
+            - Name: star_rating_count
+              Type: STRING
+            - Name: star_rating_average
+              Type: STRING
+            - Name: star_rating_min
+              Type: STRING
+            - Name: star_rating_max
+              Type: STRING
+            - Name: views
+              Type: STRING
+            - Name: year
+              Type: STRING
+            - Name: month
+              Type: STRING
+            - Name: day
+              Type: STRING
+      LogicalTableMap:
+        573c1109-b214-4bec-a018-e8847022f541:
+          Alias: youtube
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: published
+              NewColumnType: DATETIME
+              Format: yyyy-MM-dd'T'HH:mm:ss'Z'
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: youtube_embedded_url
+                ColumnId: 4e94b79b-80ea-426b-a704-63141e0bcc15
+                Expression: replace(video_url, 'https://www.youtube.com/watch?v=',
+                  'embed/')
+          - ProjectOperation:
+              ProjectedColumns:
+              - video_url
+              - title
+              - published
+              - description
+              - star_rating_count
+              - star_rating_average
+              - star_rating_min
+              - star_rating_max
+              - views
+              - year
+              - month
+              - day
+              - youtube_embedded_url
+          Source:
+            PhysicalTableId: 5b308e9b-d8cf-4223-a79c-8cf1d09f371f
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - youtube
+    schedules:
+    - default
+  whats_new:
+    data:
+      DataSetId: 00e4f86c-96b8-49b7-b68f-8b540e4fa6b7
+      Name: whats_new
+      PhysicalTableMap:
+        720118c4-3819-4fb9-bdbe-1666f7089c5c:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: whats_new
+            InputColumns:
+            - Name: link
+              Type: STRING
+            - Name: title
+              Type: STRING
+            - Name: description
+              Type: STRING
+            - Name: date
+              Type: STRING
+            - Name: service
+              Type: STRING
+            - Name: category
+              Type: STRING
+            - Name: year
+              Type: STRING
+            - Name: month
+              Type: STRING
+            - Name: day
+              Type: STRING
+      LogicalTableMap:
+        b803cd8a-acba-4cc0-95cb-5c91769066a6:
+          Alias: whats_new
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: date
+              NewColumnType: DATETIME
+              Format: YYYY-MM-dd'T'HH:mm:ss'Z'
+          - ProjectOperation:
+              ProjectedColumns:
+              - link
+              - title
+              - description
+              - date
+              - service
+              - category
+              - year
+              - month
+              - day
+          Source:
+            PhysicalTableId: 720118c4-3819-4fb9-bdbe-1666f7089c5c
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - whats_new
+    schedules:
+    - default
+  security_bulletin:
+    data:
+      DataSetId: cd5b5e17-fdde-4563-a944-1c5fc3b27684
+      Name: security_bulletin
+      PhysicalTableMap:
+        ff99854e-942d-4312-9700-423f15e4d21c:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: security_bulletin
+            InputColumns:
+            - Name: link
+              Type: STRING
+            - Name: title
+              Type: STRING
+            - Name: published
+              Type: STRING
+            - Name: description
+              Type: STRING
+            - Name: year
+              Type: STRING
+            - Name: month
+              Type: STRING
+            - Name: day
+              Type: STRING
+      LogicalTableMap:
+        4d92b921-93f3-4853-b5a7-189780f0b65c:
+          Alias: security_bulletin
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: published
+              NewColumnType: DATETIME
+              Format: yyyy-MM-dd'T'HH:mm:ss'Z'
+          - ProjectOperation:
+              ProjectedColumns:
+              - link
+              - title
+              - published
+              - description
+              - year
+              - month
+              - day
+          Source:
+            PhysicalTableId: ff99854e-942d-4312-9700-423f15e4d21c
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - security_bulletin
+    schedules:
+    - default
+  blog_post:
+    data:
+      DataSetId: 173bf994-4763-4044-a96d-1cb6cce591f4
+      Name: blog_post
+      PhysicalTableMap:
+        ce6e7be8-3a44-4325-b55d-26ab590920d1:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: blog_post
+            InputColumns:
+            - Name: title
+              Type: STRING
+            - Name: link
+              Type: STRING
+            - Name: description
+              Type: STRING
+            - Name: date
+              Type: STRING
+            - Name: creator
+              Type: STRING
+            - Name: category
+              Type: STRING
+            - Name: year
+              Type: STRING
+            - Name: month
+              Type: STRING
+            - Name: day
+              Type: STRING
+      LogicalTableMap:
+        633c14f6-0bff-4f6a-ae1b-6508d3a1781f:
+          Alias: blog_post
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: date
+              NewColumnType: DATETIME
+              Format: YYYY-MM-dd'T'HH:mm:ss'Z'
+          - ProjectOperation:
+              ProjectedColumns:
+              - title
+              - link
+              - description
+              - date
+              - creator
+              - category
+              - year
+              - month
+              - day
+          Source:
+            PhysicalTableId: ce6e7be8-3a44-4325-b55d-26ab590920d1
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - blog_post
+    schedules:
+    - default
+  aws_feeds:
+    data:
+      DataSetId: d50473c6-53c1-45f5-9185-361136fb02ef
+      Name: aws_feeds
+      PhysicalTableMap:
+        6593bf38-e15a-41d7-b85c-9d5d2ea4027f:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: aws_feeds
+            InputColumns:
+            - Name: published
+              Type: STRING
+            - Name: feed_type
+              Type: STRING
+            - Name: title
+              Type: STRING
+            - Name: url
+              Type: STRING
+            - Name: category
+              Type: STRING
+      LogicalTableMap:
+        13d7470d-f377-4f2a-bfc5-cda8cb6f493a:
+          Alias: aws_feeds
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: published
+              NewColumnType: DATETIME
+              Format: YYYY-MM-dd'T'HH:mm:ss'Z'
+          - ProjectOperation:
+              ProjectedColumns:
+              - published
+              - feed_type
+              - title
+              - url
+              - category
+          Source:
+            PhysicalTableId: 6593bf38-e15a-41d7-b85c-9d5d2ea4027f
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - aws_feeds
+    schedules:
+    - default
+crawlers: {}
+views:
+  youtube:
+    data: |-
+      CREATE EXTERNAL TABLE `youtube`(
+        `video_url` string COMMENT 'from deserializer',
+        `title` string COMMENT 'from deserializer',
+        `published` string COMMENT 'from deserializer',
+        `description` string COMMENT 'from deserializer',
+        `star_rating_count` string COMMENT 'from deserializer',
+        `star_rating_average` string COMMENT 'from deserializer',
+        `star_rating_min` string COMMENT 'from deserializer',
+        `star_rating_max` string COMMENT 'from deserializer',
+        `views` string COMMENT 'from deserializer')
+      PARTITIONED BY (
+        `year` string,
+        `month` string,
+        `day` string)
+      ROW FORMAT SERDE
+        'org.openx.data.jsonserde.JsonSerDe'
+      WITH SERDEPROPERTIES (
+        'paths'='description,published,star_rating_average,star_rating_count,star_rating_max,star_rating_min,title,video_url,views')
+      STORED AS INPUTFORMAT
+        'org.apache.hadoop.mapred.TextInputFormat'
+      OUTPUTFORMAT
+        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+      LOCATION
+        '${s3path}'
+      TBLPROPERTIES (
+        'CrawlerSchemaDeserializerVersion'='1.0',
+        'CrawlerSchemaSerializerVersion'='1.0',
+        'UPDATED_BY_CRAWLER'='CID-DC-aws-feeds-YouTube-Crawler',
+        'averageRecordSize'='1557',
+        'classification'='json',
+        'compressionType'='none',
+        'objectCount'='12',
+        'partition_filtering.enabled'='true',
+        'recordCount'='28',
+        'sizeKey'='43678',
+        'typeOfData'='file')
+    parameters:
+      s3path:
+        default: s3://cid-data-{account_id}/feeds/youtube/
+        description: S3 Path for youtube table
+  whats_new:
+    data: |-
+      CREATE EXTERNAL TABLE `whats_new`(
+        `link` string COMMENT 'from deserializer',
+        `title` string COMMENT 'from deserializer',
+        `description` string COMMENT 'from deserializer',
+        `date` string COMMENT 'from deserializer',
+        `service` string COMMENT 'from deserializer',
+        `category` string COMMENT 'from deserializer')
+      PARTITIONED BY (
+        `year` string,
+        `month` string,
+        `day` string)
+      ROW FORMAT SERDE
+        'org.openx.data.jsonserde.JsonSerDe'
+      WITH SERDEPROPERTIES (
+        'paths'='category,date,description,link,service,title')
+      STORED AS INPUTFORMAT
+        'org.apache.hadoop.mapred.TextInputFormat'
+      OUTPUTFORMAT
+        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+      LOCATION
+        '${s3path}'
+      TBLPROPERTIES (
+        'CrawlerSchemaDeserializerVersion'='1.0',
+        'CrawlerSchemaSerializerVersion'='1.0',
+        'UPDATED_BY_CRAWLER'='CID-DC-aws-feeds-Whats-New-Crawler',
+        'averageRecordSize'='1366',
+        'classification'='json',
+        'compressionType'='none',
+        'objectCount'='19',
+        'partition_filtering.enabled'='true',
+        'recordCount'='217',
+        'sizeKey'='297068',
+        'typeOfData'='file')
+    parameters:
+      s3path:
+        default: s3://cid-data-{account_id}/feeds/whats_new/
+        description: S3 Path for whats_new table
+  security_bulletin:
+    data: |-
+      CREATE EXTERNAL TABLE `security_bulletin`(
+        `link` string COMMENT 'from deserializer',
+        `title` string COMMENT 'from deserializer',
+        `published` string COMMENT 'from deserializer',
+        `description` string COMMENT 'from deserializer')
+      PARTITIONED BY (
+        `year` string,
+        `month` string,
+        `day` string)
+      ROW FORMAT SERDE
+        'org.openx.data.jsonserde.JsonSerDe'
+      WITH SERDEPROPERTIES (
+        'paths'='description,link,published,title')
+      STORED AS INPUTFORMAT
+        'org.apache.hadoop.mapred.TextInputFormat'
+      OUTPUTFORMAT
+        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+      LOCATION
+        '${s3path}'
+      TBLPROPERTIES (
+        'CrawlerSchemaDeserializerVersion'='1.0',
+        'CrawlerSchemaSerializerVersion'='1.0',
+        'UPDATED_BY_CRAWLER'='CID-DC-aws-feeds-Security-Bulletin-Crawler',
+        'averageRecordSize'='1983',
+        'classification'='json',
+        'compressionType'='none',
+        'objectCount'='10',
+        'partition_filtering.enabled'='true',
+        'recordCount'='10',
+        'sizeKey'='19841',
+        'typeOfData'='file')
+    parameters:
+      s3path:
+        default: s3://cid-data-{account_id}/feeds/security-bulletin/
+        description: S3 Path for security_bulletin table
+  blog_post:
+    data: |-
+      CREATE EXTERNAL TABLE `blog_post`(
+        `title` string COMMENT 'from deserializer',
+        `link` string COMMENT 'from deserializer',
+        `description` string COMMENT 'from deserializer',
+        `date` string COMMENT 'from deserializer',
+        `creator` string COMMENT 'from deserializer',
+        `category` string COMMENT 'from deserializer')
+      PARTITIONED BY (
+        `year` string,
+        `month` string,
+        `day` string)
+      ROW FORMAT SERDE
+        'org.openx.data.jsonserde.JsonSerDe'
+      WITH SERDEPROPERTIES (
+        'paths'='category,creator,date,description,link,title')
+      STORED AS INPUTFORMAT
+        'org.apache.hadoop.mapred.TextInputFormat'
+      OUTPUTFORMAT
+        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+      LOCATION
+        '${s3path}'
+      TBLPROPERTIES (
+        'CrawlerSchemaDeserializerVersion'='1.0',
+        'CrawlerSchemaSerializerVersion'='1.0',
+        'UPDATED_BY_CRAWLER'='CID-DC-aws-feeds-Blog-Post-Crawler',
+        'averageRecordSize'='625',
+        'classification'='json',
+        'compressionType'='none',
+        'objectCount'='14',
+        'partition_filtering.enabled'='true',
+        'recordCount'='165',
+        'sizeKey'='103575',
+        'typeOfData'='file')
+    parameters:
+      s3path:
+        default: s3://cid-data-{account_id}/feeds/blog_post/
+        description: S3 Path for blog_post table
+  aws_feeds:
+    dependsOn:
+      views:
+      - blog_post
+      - security_bulletin
+      - whats_new
+      - youtube
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.aws_feeds AS
+      SELECT
+        date published
+      , 'blog_post' feed_type
+      , title
+      , link url
+      , category
+      FROM
+        blog_post
+      UNION SELECT
+        published
+      , 'security_bulletin' feed_type
+      , title
+      , link url
+      , 'security_bulletins' category
+      FROM
+        security_bulletin
+      UNION SELECT
+        date published
+      , 'whats_new' feed_type
+      , title
+      , link url
+      , category
+      FROM
+        whats_new
+      UNION SELECT
+        published
+      , 'youtube' feed_type
+      , title
+      , video_url url
+      , 'video' category
+      FROM
+        youtube
