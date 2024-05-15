@@ -240,7 +240,7 @@ resource "aws_cur_report_definition" "this" {
   time_unit                  = "HOURLY"
   format                     = "Parquet"
   compression                = "Parquet"
-  additional_schema_elements = ["RESOURCES"]
+  additional_schema_elements = var.enable_split_cost_allocation_data ? ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"] : ["RESOURCES"]
   s3_bucket                  = aws_s3_bucket.this.bucket
   s3_region                  = data.aws_region.this.name
   s3_prefix                  = "cur/${data.aws_caller_identity.this.account_id}"
