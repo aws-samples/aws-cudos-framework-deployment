@@ -1,12 +1,12 @@
 # What's new in the Graviton Opportunities Dashboard
 
 ## Graviton Opportunities Dashboard v1.0.2:
-**Important:** Update to this version requires cid-cmd v0.2.27. Please update cid-cmd first before updating the dashboard. To update run these commands in your CloudShell (recommended) or other terminal:
+**Important:** If attempting to update the dashboard, please update cid-cmd first. To update run these commands in your CloudShell (recommended) or other terminal:
 
 ```
 python3 -m ensurepip --upgrade
 pip3 install --upgrade cid-cmd
-cid-cmd update --dashboard-id ta-organizational-view --recursive
+cid-cmd update --dashboard-id graviton-opportunities --force --recursive
 ```
 
 **Bug fixes and improvements:**:
