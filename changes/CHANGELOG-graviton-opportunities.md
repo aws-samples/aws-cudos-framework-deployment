@@ -9,7 +9,7 @@ pip3 install --upgrade cid-cmd
 cid-cmd update --dashboard-id graviton-opportunities --force --recursive
 ```
 
-**Bug fixes and improvements:**:
+**Bug fixes and improvements**
  * Updates to visuals
  * Bug fix for duplicate resources caused by data collector storing multiple versions of upgraded resources
 
