@@ -1714,7 +1714,7 @@ class Cid():
             )
 
         if not crawler_role.startswith('arn:'):
-            crawler_role_arn = f"arn:aws:iam::{self.base.account_id}:role/{crawler_role}"
+            crawler_role_arn = f"arn:{self.base.partition}:iam::{self.base.account_id}:role/{crawler_role}"
         else:
             crawler_role_arn = crawler_role
         params = {
