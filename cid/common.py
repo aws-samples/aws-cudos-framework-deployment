@@ -1321,12 +1321,16 @@ class Cid():
                 default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
-                # TODO: allow customer add buckets
+                # TODO: get buckets from dashboard parameters
                 buckets = [
                     f'cid-{self.base.account_id}-share',
                     f'cid-data-{self.base.account_id}',
                     f'costoptimizationdata{self.base.account_id}',
                 ]
+                additional_buckets = get_parameters().get('allow-buckets')
+                if additional_buckets:
+                    buckets += additional_buckets.split(',')
+
                 role_name = self.iam.ensure_data_source_role_exists(
                     role_name=cid_role_name,
                     database=self.athena.DatabaseName,
