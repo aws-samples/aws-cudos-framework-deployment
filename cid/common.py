@@ -1300,7 +1300,7 @@ class Cid():
         if not role_arn:
             role_name = get_parameters().get('quicksight-datasource-role')
             if role_name:
-                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+                role_arn = f'arn:{self.base.partition}:iam::{self.base.account_id}:role/{role_name}'
 
         if not role_arn:
             quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].RoleName"))
@@ -1335,7 +1335,7 @@ class Cid():
                     output_location_bucket = self.athena.workgroup_output_location().split('/')[2],
                 )
                 cid_print(f'Role {role_name} was updated. https://console.aws.amazon.com/iam/home?#/roles/details/{role_name}')
-                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+                role_arn = f'arn:{self.base.partition}:iam::{self.base.account_id}:role/{role_name}'
             elif 'USE DEFAULT QuickSight ROLE' in choice:
                 role_arn = None
             else:
@@ -1710,7 +1710,7 @@ class Cid():
             )
 
         if not crawler_role.startswith('arn:'):
-            crawler_role_arn = f"arn:aws:iam::{self.base.account_id}:role/{crawler_role}"
+            crawler_role_arn = f"arn:{self.base.partition}:iam::{self.base.account_id}:role/{crawler_role}"
         else:
             crawler_role_arn = crawler_role
         params = {
