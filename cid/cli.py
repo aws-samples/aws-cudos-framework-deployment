@@ -125,6 +125,7 @@ def deploy(ctx, **kwargs):
      --cur-table-name TEXT                 CUR table name
      --quicksight-datasource-id TEXT       QuickSight Datasource ARN (if not found one with provided Athena workgroup)
      --quicksight-datasource-role-arn TEXT IAM Role used for DataSource Creation (if not provided, will use the default QS Role). Must have access to Athena and S3 buckets.
+     --allow-buckets                       Comma separated list of buckets names to add to the default Cid QuickSight role
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}

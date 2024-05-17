@@ -1300,11 +1300,11 @@ class Cid():
         if not role_arn:
             role_name = get_parameters().get('quicksight-datasource-role')
             if role_name:
-                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+                role_arn = self.iam.get_role_arn(role_name)
 
         if not role_arn:
             quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].RoleName"))
-            #quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
+            quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
             # TODO: filter only roles with Athena and S3 policies
             cid_role_name = 'CidCmdQuickSightDataSourceRole'
             choices = quicksight_trusted_roles
@@ -1335,11 +1335,11 @@ class Cid():
                     output_location_bucket = self.athena.workgroup_output_location().split('/')[2],
                 )
                 cid_print(f'Role {role_name} was updated. https://console.aws.amazon.com/iam/home?#/roles/details/{role_name}')
-                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
-            elif 'USE DEFAULT QuickSight ROLE' in choice:
+                role_arn = self.iam.get_role_arn(role_name)
+            elif 'USE DEFAULT QuickSight ROLE' in choice or choice == 'default':
                 role_arn = None
             else:
-                role_arn = choice
+                role_arn = self.iam.get_role_arn(choice)
 
         athena_datasource = self.qs.create_data_source(
             athena_workgroup=self.athena.WorkGroup,
