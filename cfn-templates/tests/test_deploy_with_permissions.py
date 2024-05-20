@@ -310,8 +310,9 @@ def test_crawler_results():
             last_crawl = crawler.get('LastCrawl')
             if last_crawl:
                 logger.debug(last_crawl)
-                if last_crawl.get('STATUS') != 'SUCCEEDED' or last_crawl.get('ErrorMessage'):
+                if last_crawl.get('Status') != 'SUCCEEDED' or last_crawl.get('ErrorMessage'):
                     raise AssertionError(f'Something wrong with crawler {last_crawl}')
+                logger.info('Crawler SUCCEEDED')
                 break
         except glue.exceptions.EntityNotFoundException:
             logger.debug('Crawler is not there yet ')
