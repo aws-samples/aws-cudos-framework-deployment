@@ -1090,7 +1090,7 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers/Cid*'
+                Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:log-stream:Cid*'
   KmsPolicyForCidCURCrawlerRole:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKmsAndNeedCURTable
