@@ -14,6 +14,11 @@ Metadata:
           default: "Parameters needed in Destination (Data Collection) Account only"
         Parameters:
           - SourceAccountIds
+      -
+        Label:
+          default: "Technical Parameters. Please do not change."
+        Parameters:
+          - SCADEnabled
 
     ParameterLabels:
       DestinationAccountId:
@@ -22,6 +27,8 @@ Metadata:
         default: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
       SourceAccountIds:
         default: "Source Account Ids (Comma separated list)"
+      SCADEnabled:
+        default: "Enable/Disable Split Cost Allocation Data (SCAD)."
 
 
 Parameters:
@@ -40,11 +47,15 @@ Parameters:
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   CreateCUR2:
     Type: String
-    Description: Whether to create a local CUR2 in the destination account or not. Set this to False only if the current account is covered in the CUR2 of its Management (Payer) Account.
+    Description: Whether to create a local CUR2 in the destination account or not. Set this to True if your Management (Payer)/Source Account is the same as your Destination account (where you want to deploy the dashboards).
     AllowedValues:
       - "True"
       - "False"
-    Default: "True"
+    Default: "False"
+  RolePath:
+    Type: String
+    Default: '/'
+    Description: Path for roles where PermissionBoundaries can limit location
 
   ##
   # Destination specific params
@@ -55,6 +66,17 @@ Parameters:
     AllowedPattern: "^((\\d{12})\\,?)*$"
     Default: ''
     Description: "A comma separated list of all Source accounts that will replicate CUR2 Data. Ex:  12345678912,98745612312,...."
+  
+  ##
+  # Technical params
+  ##
+  SCADEnable:
+    Type: String
+    Description: Whether to enable Split Cost Allocation Data (Scad). Set this to False, only if you experience performance issues due to dataset size.
+    AllowedValues:
+      - "True"
+      - "False"
+    Default: "True"
 
 Conditions:
   IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref AWS::AccountId]
@@ -64,6 +86,7 @@ Conditions:
       - !Equals [!Ref AWS::Region, 'us-east-1']
       - !Equals [!Ref AWS::Region, 'cn-northwest-1']
   CUR2Enable: !Equals [!Ref CreateCUR2, 'True']
+  SCADEnabled: !Equals [!Ref SCADEnable, 'True']
   DeployCUR2ViaCFNInSource: !And [!Condition CUR2Enable, !Condition IsSourceAccount, !Condition RegionSupportsCUR2viaCFN]
   DeployCUR2ViaCFNInDestination: !And [!Condition CUR2Enable, !Condition IsDestinationAccount, !Condition RegionSupportsCUR2viaCFN]
   DeployCUR2ViaLambda: !And [!Condition CUR2Enable, !Not [!Condition RegionSupportsCUR2viaCFN]]
@@ -75,6 +98,9 @@ Mappings:
     CUR2:
       DefaultQuery: >-
         SELECT bill_bill_type, bill_billing_entity, bill_billing_period_end_date, bill_billing_period_start_date, bill_invoice_id, bill_invoicing_entity, bill_payer_account_id, bill_payer_account_name, cost_category, discount, discount_bundled_discount, discount_total_discount, identity_line_item_id, identity_time_interval, line_item_availability_zone, line_item_blended_cost, line_item_blended_rate, line_item_currency_code, line_item_legal_entity, line_item_line_item_description, line_item_line_item_type, line_item_net_unblended_cost, line_item_net_unblended_rate, line_item_normalization_factor, line_item_normalized_usage_amount, line_item_operation, line_item_product_code, line_item_resource_id, line_item_tax_type, line_item_unblended_cost, line_item_unblended_rate, line_item_usage_account_id, line_item_usage_account_name, line_item_usage_amount, line_item_usage_end_date, line_item_usage_start_date, line_item_usage_type, pricing_currency, pricing_lease_contract_length, pricing_offering_class, pricing_public_on_demand_cost, pricing_public_on_demand_rate, pricing_purchase_option, pricing_rate_code, pricing_rate_id, pricing_term, pricing_unit, product, product_comment, product_fee_code, product_fee_description, product_from_location, product_from_location_type, product_from_region_code, product_instance_family, product_instance_type, product_instancesku, product_location, product_location_type, product_operation, product_pricing_unit, product_product_family, product_region_code, product_servicecode, product_sku, product_to_location, product_to_location_type, product_to_region_code, product_usagetype, reservation_amortized_upfront_cost_for_usage, reservation_amortized_upfront_fee_for_billing_period, reservation_availability_zone, reservation_effective_cost, reservation_end_time, reservation_modification_status, reservation_net_amortized_upfront_cost_for_usage, reservation_net_amortized_upfront_fee_for_billing_period, reservation_net_effective_cost, reservation_net_recurring_fee_for_usage, reservation_net_unused_amortized_upfront_fee_for_billing_period, reservation_net_unused_recurring_fee, reservation_net_upfront_value, reservation_normalized_units_per_reservation, reservation_number_of_reservations, reservation_recurring_fee_for_usage, reservation_reservation_a_r_n, reservation_start_time, reservation_subscription_id, reservation_total_reserved_normalized_units, reservation_total_reserved_units, reservation_units_per_reservation, reservation_unused_amortized_upfront_fee_for_billing_period, reservation_unused_normalized_unit_quantity, reservation_unused_quantity, reservation_unused_recurring_fee, reservation_upfront_value, resource_tags, savings_plan_amortized_upfront_commitment_for_billing_period, savings_plan_end_time, savings_plan_instance_type_family, savings_plan_net_amortized_upfront_commitment_for_billing_period, savings_plan_net_recurring_commitment_for_billing_period, savings_plan_net_savings_plan_effective_cost, savings_plan_offering_type, savings_plan_payment_option, savings_plan_purchase_term, savings_plan_recurring_commitment_for_billing_period, savings_plan_region, savings_plan_savings_plan_a_r_n, savings_plan_savings_plan_effective_cost, savings_plan_savings_plan_rate, savings_plan_start_time, savings_plan_total_commitment_to_date, savings_plan_used_commitment 
+        FROM COST_AND_USAGE_REPORT
+      SCADQuery: >-
+        SELECT bill_bill_type, bill_billing_entity, bill_billing_period_end_date, bill_billing_period_start_date, bill_invoice_id, bill_invoicing_entity, bill_payer_account_id, bill_payer_account_name, cost_category, discount, discount_bundled_discount, discount_total_discount, identity_line_item_id, identity_time_interval, line_item_availability_zone, line_item_blended_cost, line_item_blended_rate, line_item_currency_code, line_item_legal_entity, line_item_line_item_description, line_item_line_item_type, line_item_net_unblended_cost, line_item_net_unblended_rate, line_item_normalization_factor, line_item_normalized_usage_amount, line_item_operation, line_item_product_code, line_item_resource_id, line_item_tax_type, line_item_unblended_cost, line_item_unblended_rate, line_item_usage_account_id, line_item_usage_account_name, line_item_usage_amount, line_item_usage_end_date, line_item_usage_start_date, line_item_usage_type, pricing_currency, pricing_lease_contract_length, pricing_offering_class, pricing_public_on_demand_cost, pricing_public_on_demand_rate, pricing_purchase_option, pricing_rate_code, pricing_rate_id, pricing_term, pricing_unit, product, product_comment, product_fee_code, product_fee_description, product_from_location, product_from_location_type, product_from_region_code, product_instance_family, product_instance_type, product_instancesku, product_location, product_location_type, product_operation, product_pricing_unit, product_product_family, product_region_code, product_servicecode, product_sku, product_to_location, product_to_location_type, product_to_region_code, product_usagetype, reservation_amortized_upfront_cost_for_usage, reservation_amortized_upfront_fee_for_billing_period, reservation_availability_zone, reservation_effective_cost, reservation_end_time, reservation_modification_status, reservation_net_amortized_upfront_cost_for_usage, reservation_net_amortized_upfront_fee_for_billing_period, reservation_net_effective_cost, reservation_net_recurring_fee_for_usage, reservation_net_unused_amortized_upfront_fee_for_billing_period, reservation_net_unused_recurring_fee, reservation_net_upfront_value, reservation_normalized_units_per_reservation, reservation_number_of_reservations, reservation_recurring_fee_for_usage, reservation_reservation_a_r_n, reservation_start_time, reservation_subscription_id, reservation_total_reserved_normalized_units, reservation_total_reserved_units, reservation_units_per_reservation, reservation_unused_amortized_upfront_fee_for_billing_period, reservation_unused_normalized_unit_quantity, reservation_unused_quantity, reservation_unused_recurring_fee, reservation_upfront_value, resource_tags, savings_plan_amortized_upfront_commitment_for_billing_period, savings_plan_end_time, savings_plan_instance_type_family, savings_plan_net_amortized_upfront_commitment_for_billing_period, savings_plan_net_recurring_commitment_for_billing_period, savings_plan_net_savings_plan_effective_cost, savings_plan_offering_type, savings_plan_payment_option, savings_plan_purchase_term, savings_plan_recurring_commitment_for_billing_period, savings_plan_region, savings_plan_savings_plan_a_r_n, savings_plan_savings_plan_effective_cost, savings_plan_savings_plan_rate, savings_plan_start_time, savings_plan_total_commitment_to_date, savings_plan_used_commitment, split_line_item_actual_usage, split_line_item_net_split_cost, split_line_item_net_unused_cost, split_line_item_parent_resource_id, split_line_item_public_on_demand_split_cost, split_line_item_public_on_demand_unused_cost, split_line_item_reserved_usage, split_line_item_split_cost, split_line_item_split_usage, split_line_item_split_usage_ratio, split_line_item_unused_cost    
         FROM COST_AND_USAGE_REPORT
 
 Resources:
@@ -183,7 +209,7 @@ Resources:
             Action:
               - s3:PutObject
             Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
+              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*/data/*'
           - Sid: AllowReplicationWrite
             Effect: Allow
             Principal:
@@ -212,6 +238,158 @@ Resources:
               - s3:PutBucketVersioning
             Resource:
               - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
+
+####
+# S3 Bucket to store local CUR2 in Destination account and replicate to aggregated bucket
+####
+  LocalS3:
+    Type: AWS::S3::Bucket
+    Condition: DeployCUR2ViaCFNInDestination
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      BucketName:
+        Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-local
+
+      ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
+      # LoggingConfiguration:
+      #   DestinationBucketName: REPLACE_WITH_YOUR_LOGGING_BUCKET
+      #   LogFilePrefix: REPLACE_WITH_YOUR_PREFIX
+
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256 ## Use AWS managed KMS
+              ## If you need Customer managed KMS key, yoy can do that using following parameters:
+              # SSEAlgorithm: aws:kms
+              # KMSMasterKeyID: "REPLACE_WITH_YOUR_KEY_ARN"
+      AccessControl: BucketOwnerFullControl
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      ReplicationConfiguration:
+        Role: !GetAtt LocalReplicationRole.Arn
+        Rules:
+          -
+            Destination:
+              Bucket:
+                Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared"
+              StorageClass: STANDARD
+            Id: ReplicationRule1
+            Prefix: !Sub "cur2/${AWS::AccountId}/cid2/data/"
+            Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: Object&Version Expiration
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 32 # 1 month
+            ExpirationInDays: 64 # 2 months
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W35'
+            reason: "Data buckets would generate too much logs"
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045 # Need to use AccessControl for replication
+
+  LocalS3BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Condition: DeployCUR2ViaCFNInDestination
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      Bucket: !Ref LocalS3
+      PolicyDocument:
+        Id: AccessPolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowTLS12Only
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}'
+              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}/*'
+            Condition:
+              NumericLessThan:
+                s3:TlsVersion: 1.2
+          - Sid: AllowOnlyHTTPS
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}'
+              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+          - Sid: AllowReadBilling
+            Effect: Allow
+            Principal:
+              Service: bcm-data-exports.amazonaws.com
+            Action:
+              - s3:GetBucketAcl
+              - s3:GetBucketPolicy
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}'
+              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}/*'
+          - Sid: AllowWriteBilling
+            Effect: Allow
+            Principal:
+              Service: bcm-data-exports.amazonaws.com
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}/*'
+  
+  LocalReplicationRole:
+    Condition: DeployCUR2ViaCFNInDestination
+    Type: AWS::IAM::Role
+    Properties:
+      Path:
+        Fn::Sub: /${ResourcePrefix}/
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - "s3.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: ReplicationPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetReplicationConfiguration
+                  - s3:ListBucket
+                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local"
+              - Effect: Allow
+                Action:
+                  - s3:GetObjectVersionForReplication
+                  - s3:GetObjectVersionAcl
+                  - s3:GetObjectVersionTagging
+                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local/*"
+              - Effect: Allow
+                Action:
+                  - s3:ReplicateObject
+                  - s3:ReplicateDelete
+                  - s3:ReplicateTags
+                Resource:
+                  Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared/cur2/${AWS::AccountId}/*"
 
 
 ###########################################################################
@@ -263,7 +441,7 @@ Resources:
                 Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared"
               StorageClass: STANDARD
             Id: ReplicationRule1
-            Prefix: ""
+            Prefix: !Sub "cur2/${AWS::AccountId}/cid2/data/"
             Status: Enabled
       LifecycleConfiguration:
         Rules:
@@ -361,13 +539,13 @@ Resources:
                 Action:
                   - s3:GetObjectVersionForReplication
                   - s3:GetObjectVersionAcl
+                  - s3:GetObjectVersionTagging
                 Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local/*"
               - Effect: Allow
                 Action:
                   - s3:ReplicateObject
                   - s3:ReplicateDelete
                   - s3:ReplicateTags
-                  - s3:GetObjectVersionTagging
                 Resource:
                   Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared/cur2/${AWS::AccountId}/*"
 
@@ -384,17 +562,17 @@ Resources:
     Properties:
       Export:
         DataQuery:
-          QueryStatement: !FindInMap [DataExports, CUR2, DefaultQuery]
+          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
               TIME_GRANULARITY: "HOURLY"
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: "FALSE"
+              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
         Description: "CUR 2.0 export for aggregation in CID"
         DestinationConfigurations: 
           S3Destination:
-            S3Bucket: !If [ IsDestinationAccount, !Ref DestinationS3, !Ref SourceS3 ]
+            S3Bucket: !If [ IsDestinationAccount, !Ref LocalS3, !Ref SourceS3 ]
             S3Prefix: !Sub "cur2/${AWS::AccountId}"
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
@@ -410,21 +588,21 @@ Resources:
     Type: AWS::BCMDataExports::Export
     Condition: DeployCUR2ViaCFNInDestination
     DependsOn:
-      - DestinationS3BucketPolicy # Conditional DependsOn is not supported, so we need 2 resources
+      - LocalS3BucketPolicy # Conditional DependsOn is not supported, so we need 2 resources
     Properties:
       Export:
         DataQuery:
-          QueryStatement: !FindInMap [DataExports, CUR2, DefaultQuery]
+          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
               TIME_GRANULARITY: "HOURLY"
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: "FALSE"
+              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
         Description: "CUR 2.0 export for aggregation in CID"
         DestinationConfigurations: 
           S3Destination:
-            S3Bucket: !If [ IsDestinationAccount, !Ref DestinationS3, !Ref SourceS3 ]
+            S3Bucket: !If [ IsDestinationAccount, !Ref LocalS3, !Ref SourceS3 ]
             S3Prefix: !Sub "cur2/${AWS::AccountId}"
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
@@ -446,17 +624,17 @@ Resources:
       BucketPolicyWait: !If [ IsDestinationAccount, !Ref DestinationS3BucketPolicy, !Ref SourceS3BucketPolicy ]
       Export:
         DataQuery:
-          QueryStatement: !FindInMap [DataExports, CUR2, DefaultQuery]
+          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
               TIME_GRANULARITY: "HOURLY"
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: "FALSE"
+              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
         Description: "CUR 2.0 export for aggregation in CID"
         DestinationConfigurations: 
           S3Destination:
-            S3Bucket: !If [ IsDestinationAccount, !Ref DestinationS3, !Ref SourceS3 ]
+            S3Bucket: !If [ IsDestinationAccount, !Ref LocalS3, !Ref SourceS3 ]
             S3Prefix: !Sub "cur2/${AWS::AccountId}"
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
@@ -602,7 +780,177 @@ Resources:
           - id: 'W92'
             reason: "One Time execution. No need for ReservedConcurrentExecutions"
 
+###########################################################################
+# Glue Database for CID framework
+###########################################################################
+  CIDDatabase:
+    Type: AWS::Glue::Database
+    Condition: IsDestinationAccount
+    Properties:
+      DatabaseInput:
+        Name: 
+          Fn::Sub: "${ResourcePrefix}-database"
+      CatalogId: !Sub "${AWS::AccountId}"
 
+###########################################################################
+# Glue/Athena Table for CID framework
+###########################################################################
+
+  CURTable:  # Initial creation of table. it will be updated by crawler later
+    Type: AWS::Glue::Table
+    Condition: IsDestinationAccount
+    Properties:
+      CatalogId: !Sub "${AWS::AccountId}"
+      DatabaseName: !Ref CIDDatabase
+      TableInput:
+        Name: !Sub "${ResourcePrefix}-table"
+        Owner: owner
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          compressionType: none
+          classification: parquet
+          UPDATED_BY_CRAWLER: !Ref GlueCURCrawler
+        StorageDescriptor:
+          BucketColumns: []
+          Compressed: false
+          Location: !Sub "s3://${DestinationS3}/cur2/"
+          NumberOfBuckets: -1
+          InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
+          SerdeInfo:
+            Parameters:
+              serialization.format: '1'
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
+          StoredAsSubDirectories: false
+          Columns: # All fields required for CID
+            - {"Name": "bill_bill_type", "Type": "string" }
+            - {"Name": "bill_billing_entity", "Type": "string" }
+            - {"Name": "bill_billing_period_end_date", "Type": "timestamp" }
+            - {"Name": "bill_billing_period_start_date", "Type": "timestamp" }
+            - {"Name": "bill_invoice_id", "Type": "string" }
+            - {"Name": "bill_payer_account_id", "Type": "string" }
+            - {"Name": "bill_payer_account_name", "Type": "string" }
+            - {"Name": "identity_line_item_id", "Type": "string" }
+            - {"Name": "identity_time_interval", "Type": "string" }
+            - {"Name": "line_item_availability_zone", "Type": "string" }
+            - {"Name": "line_item_legal_entity", "Type": "string" }
+            - {"Name": "line_item_line_item_description", "Type": "string" }
+            - {"Name": "line_item_line_item_type", "Type": "string" }
+            - {"Name": "line_item_operation", "Type": "string" }
+            - {"Name": "line_item_product_code", "Type": "string" }
+            - {"Name": "line_item_resource_id", "Type": "string" }
+            - {"Name": "line_item_unblended_cost", "Type": "double" }
+            - {"Name": "line_item_usage_account_id", "Type": "string" }
+            - {"Name": "line_item_usage_amount", "Type": "double" }
+            - {"Name": "line_item_usage_end_date", "Type": "timestamp" }
+            - {"Name": "line_item_usage_start_date", "Type": "timestamp" }
+            - {"Name": "line_item_usage_type", "Type": "string" }
+            - {"Name": "pricing_lease_contract_length", "Type": "string" }
+            - {"Name": "pricing_offering_class", "Type": "string" }
+            - {"Name": "pricing_public_on_demand_cost", "Type": "double" }
+            - {"Name": "pricing_purchase_option", "Type": "string" }
+            - {"Name": "pricing_term", "Type": "string" }
+            - {"Name": "pricing_unit", "Type": "string" }
+            - {"Name": "product", "Type": "map" }
+            - {"Name": "product_from_location", "Type": "string" }        
+            - {"Name": "product_instance_type", "Type": "string" }         
+            - {"Name": "product_product_family", "Type": "string" }             
+            - {"Name": "product_servicecode", "Type": "string" }          
+            - {"Name": "product_to_location", "Type": "string" }          
+            - {"Name": "reservation_amortized_upfront_fee_for_billing_period", "Type": "double" }
+            - {"Name": "reservation_effective_cost", "Type": "double" }
+            - {"Name": "reservation_end_time", "Type": "timestamp" }
+            - {"Name": "reservation_reservation_a_r_n", "Type": "string" }
+            - {"Name": "reservation_start_time", "Type": "timestamp" }
+            - {"Name": "reservation_unused_amortized_upfront_fee_for_billing_period", "Type": "double" }
+            - {"Name": "reservation_unused_recurring_fee", "Type": "double" }
+            - {"Name": "savings_plan_amortized_upfront_commitment_for_billing_period", "Type": "double" }
+            - {"Name": "savings_plan_end_time", "Type": "timestamp" }
+            - {"Name": "savings_plan_offering_type", "Type": "string" }
+            - {"Name": "savings_plan_payment_option", "Type": "string" }
+            - {"Name": "savings_plan_purchase_term", "Type": "string" }
+            - {"Name": "savings_plan_savings_plan_a_r_n", "Type": "string" }
+            - {"Name": "savings_plan_savings_plan_effective_cost", "Type": "double" }
+            - {"Name": "savings_plan_start_time", "Type": "timestamp" }
+            - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
+            - {"Name": "savings_plan_used_commitment", "Type": "double" }
+        PartitionKeys:
+          - {"Name": "source_account_id", "Type": "string" }
+          - {"Name": "report_name", "Type": "string" }
+          - {"Name": "data", "Type": "string" }
+          - {"Name": "billing_period", "Type": "string" }
+          
+
+  
+  GlueCURCrawler:
+    Type: AWS::Glue::Crawler
+    Condition: IsDestinationAccount
+    Properties:
+      Name:  !Sub "${ResourcePrefix}-CURCrawler"
+      Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
+      Role:
+        Fn::GetAtt: CidCURCrawlerRole.Arn
+      DatabaseName: !Ref CIDDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://${DestinationS3}/cur2/"
+            Exclusions:
+              - '**.json'
+              - '**.yml'
+              - '**.sql'
+              - '**.csv'
+              - '**.csv.metadata'
+              - '**.gz'
+              - '**.zip'
+              - '**/cost_and_usage_data_status/*'
+              - 'aws-programmatic-access-test-object'
+      SchemaChangePolicy:
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      Schedule:
+        ScheduleExpression: cron(0 2 * * ? *)
+      Configuration: |
+        {
+          "Version":1.0,
+          "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+          },
+          "CrawlerOutput":{
+            "Tables":{
+              "AddOrUpdateBehavior":"MergeNewColumns"
+            }
+          }
+        }
+  CidCURCrawlerRole:
+    Type: AWS::IAM::Role
+    Condition: IsDestinationAccount
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: !Ref RolePath
+      ManagedPolicyArns:
+        - Fn::Sub: 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
+      Policies:
+        - PolicyName: AWSCURCrawlerComponentFunction
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                Resource:
+                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/cur2/*'
+  
 ###########################################################################
 # Analytics: used by CID team to track adoption, by retrieving AWS AccountId
 ###########################################################################
