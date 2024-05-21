@@ -1066,13 +1066,22 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'glue:GetDatabase'
-                  - 'glue:GetDatabases'
-                  - 'glue:UpdateDatabase'
-                  - 'glue:UpdatePartition'
-                  - 'glue:CreateTable'
-                  - 'glue:UpdateTable'
-                  - 'glue:ImportCatalogToGlue'
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:UpdateDatabase
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:BatchCreatePartition
+                  - glue:CreatePartition
+                  - glue:DeletePartition
+                  - glue:BatchDeletePartition
+                  - glue:UpdatePartition
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:BatchGetPartition
+                  - glue:ImportCatalogToGlue
                 Resource:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
                   - Fn::If:
