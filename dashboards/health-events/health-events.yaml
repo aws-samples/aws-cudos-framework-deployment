@@ -1854,11 +1854,11 @@ dashboards:
                         Expression: '{start_time} > parseDate(''1900-01-01 00:00:00.000'')'
             Subtitle:
               FormatText:
-                RichText: "<visual-subtitle>\n  <inline color=\"#a7a7a7\" font-size=\"12px\"\
-                  >\n    <b>CLICK AN EVENT\_</b>\n  </inline>\n  <inline color=\"#a7a7a7\"\
-                  \ font-size=\"14px\">\n    <b>\u23EC</b>\n  </inline>\n  <inline color=\"\
-                  #a7a7a7\" font-size=\"12px\">\n    <b>\_TO FILTER\_</b>\n  </inline>\n\
-                  </visual-subtitle>"
+                RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>CLICK\
+                  \ AN EVENT\_</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
+                  14px\">\n    <b>\u23EC</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
+                  12px\">\n    <b>\_</b>\n  </inline>\n  <inline font-size=\"12px\">\n \
+                  \   <b>TO FILTER</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -2316,13 +2316,13 @@ dashboards:
                   Width: 155px
                 - CustomLabel: Description
                   FieldId: 2616df31-78e9-42f6-b497-932c38d75236.10.1712628402023
-                  Width: 511px
-                - CustomLabel: Accts.
+                  Width: 531px
+                - CustomLabel: Accounts
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.account_id.9.1712679655492
-                  Width: 62px
-                - CustomLabel: Rsrcs.
+                  Width: 81px
+                - CustomLabel: Resources
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1712335457484
-                  Width: 61px
+                  Width: 88px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -2512,9 +2512,10 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: account_name
+                        ColumnName: region
                         DataSetIdentifier: health_events_view
-                      FieldId: c6c67b69-7af4-41a3-ab40-5652c8e6416c.account_name.2.1715215512517
+                      FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.region.2.1716423683201
+                      HierarchyId: bd67314f-2a8a-46f8-8a6b-57a50264c784
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
@@ -2552,19 +2553,32 @@ dashboards:
                       FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.2.1712085469800
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: c6c67b69-7af4-41a3-ab40-5652c8e6416c.account_name.2.1715215512517
+                      FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.region.2.1716423683201
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
-            ColumnHierarchies: []
+            ColumnHierarchies:
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: region
+                  DataSetIdentifier: health_events_view
+                - ColumnName: account_name
+                  DataSetIdentifier: health_events_view
+                - ColumnName: event_category
+                  DataSetIdentifier: health_events_view
+                - ColumnName: affected_entity_status_code
+                  DataSetIdentifier: health_events_view
+                - ColumnName: Event ID
+                  DataSetIdentifier: health_events_view
+                DrillDownFilters: []
+                HierarchyId: bd67314f-2a8a-46f8-8a6b-57a50264c784
             Subtitle:
               FormatText:
-                RichText: "<visual-subtitle>\n  <inline color=\"#a7a7a7\" font-size=\"12px\"\
-                  >\n    <b>USE</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
-                  14px\">\n    <b>\u2193\u2191</b>\n  </inline>\n  <inline color=\"#a7a7a7\"\
-                  \ font-size=\"12px\">\n    <b>TO TOGGLE BETWEEN DIMENSIONS</b>\n  </inline>\n\
-                  </visual-subtitle>"
+                RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE</b>\n\
+                  \  </inline>\n  <inline color=\"#21a0d7\" font-size=\"14px\">\n    <b>\u2193\
+                  \u2191\_</b>\n  </inline>\n  <inline font-size=\"12px\">\n    <b>TO TOGGLE\
+                  \ BETWEEN DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3273,7 +3287,8 @@ dashboards:
                       Column:
                         ColumnName: account_name
                         DataSetIdentifier: health_events_view
-                      FieldId: c6c67b69-7af4-41a3-ab40-5652c8e6416c.account_name.2.1715215501782
+                      FieldId: 1bb2f045-5cc6-4823-b28a-21a475c22844.account_name.2.1716423593652
+                      HierarchyId: ef9f6cbf-a4a1-4643-ac05-fe5ab43a0fbb
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
@@ -3311,19 +3326,32 @@ dashboards:
                       FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.affected_entity_value.1.1709241948801
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: c6c67b69-7af4-41a3-ab40-5652c8e6416c.account_name.2.1715215501782
+                      FieldId: 1bb2f045-5cc6-4823-b28a-21a475c22844.account_name.2.1716423593652
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
-            ColumnHierarchies: []
+            ColumnHierarchies:
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: account_name
+                  DataSetIdentifier: health_events_view
+                - ColumnName: service
+                  DataSetIdentifier: health_events_view
+                - ColumnName: region
+                  DataSetIdentifier: health_events_view
+                - ColumnName: Event ID
+                  DataSetIdentifier: health_events_view
+                - ColumnName: status_code
+                  DataSetIdentifier: health_events_view
+                DrillDownFilters: []
+                HierarchyId: ef9f6cbf-a4a1-4643-ac05-fe5ab43a0fbb
             Subtitle:
               FormatText:
-                RichText: "<visual-subtitle>\n  <inline color=\"#a7a7a7\" font-size=\"12px\"\
-                  >\n    <b>USE</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
-                  14px\">\n    <b>\u2193\u2191</b>\n  </inline>\n  <inline color=\"#a7a7a7\"\
-                  \ font-size=\"12px\">\n    <b>TO TOGGLE BETWEEN DIMENSIONS</b>\n  </inline>\n\
-                  </visual-subtitle>"
+                RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE\_\
+                  </b>\n  </inline>\n  <inline color=\"#21a0d7\" font-size=\"14px\">\n \
+                  \   <b>\u2193\u2191</b>\n  </inline>\n  <inline font-size=\"12px\">\n\
+                  \    <b>TO TOGGLE BETWEEN DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3568,11 +3596,11 @@ dashboards:
                 HierarchyId: 04eb8c80-42ba-45ec-88f7-bb7a3177a93c
             Subtitle:
               FormatText:
-                RichText: "<visual-subtitle>\n  <inline color=\"#a7a7a7\" font-size=\"12px\"\
-                  >\n    <b>USE</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
-                  14px\">\n    <b>\u2193\u2191(</b>\n  </inline>\n  <inline color=\"#a7a7a7\"\
-                  \ font-size=\"12px\">\n    <b>TOP RIGHT OF CHART) TO ADJUST TIME SCALE\
-                  \ OR TOGGLE EVENT ID AND CATEGORY DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
+                RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE\_\
+                  </b>\n  </inline>\n  <inline color=\"#21a0d7\" font-size=\"14px\">\n \
+                  \   <b>\u2193\u2191\_</b>\n  </inline>\n  <inline font-size=\"12px\">\n\
+                  \    <b>(TOP RIGHT OF CHART) TO ADJUST TIME SCALE OR TOGGLE EVENT ID AND\
+                  \ CATEGORY DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3937,6 +3965,13 @@ dashboards:
                   Status: DISABLED
                   UsePrimaryBackgroundColor: ENABLED
             Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <inline font-size="12px">
+                      <b>FIND RESOURCES IMPACTED BY MULTIPLE EVENTS</b>
+                    </inline>
+                  </visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -4253,6 +4288,8 @@ datasets:
               Type: STRING
             - Name: account_name
               Type: STRING
+            - Name: account_email_id
+              Type: STRING
         f4dcb024-0054-4fbc-a82b-13cabd459f66:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -4405,10 +4442,10 @@ views:
          , "status_code"
          , "service"
          , "region"
-         , substr(replace("event_description", chr(10), '\n'), 1, 2047) "event_description1"
-         , substr(replace("event_description", chr(10), '\n'), 2048, 2047) "event_description2"
-         , substr(replace("event_description", chr(10), '\n'), 4095, 2047) "event_description3"
-         , substr(replace("event_description", chr(10), '\n'), 6144) "event_description4"
+         , replace(substr("event_description", 1, 2047), chr(10), '\n') "event_description1"
+         , replace(substr("event_description", 2048, 2047), chr(10), '\n') "event_description2"
+         , replace(substr("event_description", 4095, 2047), chr(10), '\n') "event_description3"
+         , replace(substr("event_description", 6144), chr(10), '\n') "event_description4"
          , "affected_entity_value"
          , "affected_entity_arn"
          , "affected_entity_status_code"
@@ -4426,7 +4463,7 @@ views:
          , "event_arn"
          , from_big_endian_64(xxhash64(CAST("event_arn" AS varbinary))) "event_arn_hash"
          FROM
-           ${data_collection_database_name}.${table_name}
+           "${data_collection_database_name}"."${table_name}"
       )
       , "hed" AS (
          SELECT "core".*
