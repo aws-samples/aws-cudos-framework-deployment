@@ -2,6 +2,13 @@
 
 # CUDOS v5
 
+# CUDOS - 5.4
+* **[new tab] Security**: Introducing Security tab with cost and usage details for Security services. New tab includes visuals 'Security Spend per Service', 'Security Spend per Account' and respective detailed view sections for Amazon Cognito and Amazon GuardDuty
+* **Security**: New Amazon Cognito section with visuals 'Amazon Cognito Spend and Projected Cost for M2M App Clients and Tokens', 'Amazon Cognito Spend and Projected Cost for M2M App Clients and Tokens per Account' and 'Amazon Cognito Detailed View'
+* **Security**: New Amazon GuardDuty section with visuals 'Amazon GuardDuty Spend per UsageType', 'Amazon GuardDuty Spend per Account' and 'Accounts and Regions where Amazon GuardDuty is not enabled'
+* **Databases**: Bugfix for Storage Type categorization on 'Daily Storage Cost'
+* **DynamoDB**: Improved 'TOP 15 Candidates for Infrequent Access Tables Last 30 Days' visual to exclude tables after they migrated to Infrequent Access
+
 # CUDOS - 5.3
 
 * **AI/ML:** Added section 'Amazon Q' which provide insights into Amazon Q spend and usage details with visuals 'Amazon Q spend trend', 'Amazon Q Index usage trend', 'Amazon Q spend per Account', 'Amazon Q spend per Region', 'Amazon Q spend per Operation', 'Amazon Q Index Daily Unit Usage per Account'
