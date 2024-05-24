@@ -333,28 +333,6 @@ dashboards:
               - 16ec0cb3-5024-470d-a5db-faaf62a89e04
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: caa76e2e-4cc1-42ef-b980-feb5ae60cbc4
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: affected_entity_value
-              DataSetIdentifier: health_events_view
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - ''
-                MatchOperator: DOES_NOT_CONTAIN
-                NullOption: NON_NULLS_ONLY
-            FilterId: 02afcc3b-0a17-4ad3-b582-d4add0e9af77
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 1486a2b6-d31f-440a-8a03-215c4f216dda
-              VisualIds:
-              - 16ec0cb3-5024-470d-a5db-faaf62a89e04
-        Status: DISABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: d8a48cb6-76e3-4f1d-888d-9b65284fa52c
         Filters:
         - CategoryFilter:
@@ -639,16 +617,7 @@ dashboards:
             - Scope: SELECTED_VISUALS
               SheetId: 181ff69f-21f1-40db-9c73-153290fa44e0
               VisualIds:
-              - a40a506c-d399-4bf4-a9da-217e3e9d06ce
               - 96269065-5b18-4b12-ad9a-0026040e1564
-              - 35258440-2df0-4cd6-80e1-40ed7ff34f42
-              - e00fc0ea-a43c-4522-86fc-7ec372c68321
-              - 5dd0b30c-8c92-4f9f-a716-57f49b822a66
-              - dbac6c91-8eaf-45ce-a848-797db72cd6c1
-              - e7bd8590-6061-409d-9eda-c21f40d72d90
-              - 66e2350a-2e64-4907-a69d-909fef50eef4
-              - 5a4e4c8d-8620-4f97-8a6e-a8bf9556170a
-              - 3af542c7-e7e8-483d-91ca-dd0aa5e227db
               - 550745e2-f5b7-4364-97bd-ca8dc5b17fec
               - 194b6ec2-3420-4bd6-a6f6-fb8ccdf7eb18
               - cd97de46-d525-4aeb-bae7-33462129d261
@@ -666,10 +635,7 @@ dashboards:
               - 3bb87d15-179e-434f-9e2a-e435e71eca8f
               - 143d9f8d-89a1-49fb-8962-6c8823ec52d3
               - e719f0fb-f47f-4356-ac02-92546be22131
-              - 5d6d5fb1-cab9-4900-bd99-37b65ad9539c
-              - 9d655d13-b1da-40bf-9587-860413e800da
               - e3aca643-b389-4ec2-9029-a1a66b95f791
-              - e14140c8-b2ce-4c31-adc0-5e48e22c6d50
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 57aa9cf0-26f3-4a92-8181-97217697c0fe
@@ -1428,7 +1394,7 @@ dashboards:
                 ColumnName: payer_account_id
                 DataSetIdentifier: health_events_view
             SourceParameterName: Payer
-            Title: Payer Account
+            Title: Payer Accounts
             Type: MULTI_SELECT
         - Dropdown:
             DisplayOptions:
@@ -1481,7 +1447,7 @@ dashboards:
                 ColumnName: event_code
                 DataSetIdentifier: health_events_view
             SourceParameterName: EventCode
-            Title: Event Code
+            Title: Event Codes
             Type: MULTI_SELECT
         - Dropdown:
             DisplayOptions:
@@ -1502,6 +1468,8 @@ dashboards:
             Type: MULTI_SELECT
         - Dropdown:
             DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
               SelectAllOptions:
                 Visibility: VISIBLE
               TitleOptions:
@@ -1515,7 +1483,7 @@ dashboards:
                 ColumnName: service
                 DataSetIdentifier: health_events_view
             SourceParameterName: Service
-            Title: Service
+            Title: Services
             Type: MULTI_SELECT
         - Dropdown:
             DisplayOptions:
@@ -1862,9 +1830,9 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: "<visual-title>\n  <inline font-size=\"16px\">Open and approaching\
-                  \ change events within\_</inline>\n  <inline font-size=\"16px\">\n   \
-                  \ <parameter>${StartTimeWarn}</parameter>\n  </inline>\n  <inline font-size=\"\
+                RichText: "<visual-title>\n  <inline font-size=\"16px\">Change events open\
+                  \ or approaching within\_</inline>\n  <inline font-size=\"16px\">\n  \
+                  \  <parameter>${StartTimeWarn}</parameter>\n  </inline>\n  <inline font-size=\"\
                   16px\">\_days</inline>\n</visual-title>"
               Visibility: VISIBLE
             VisualId: 96269065-5b18-4b12-ad9a-0026040e1564
@@ -3729,7 +3697,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Event codes (all)</inline>
+                    <inline font-size="16px">Event codes</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 143d9f8d-89a1-49fb-8962-6c8823ec52d3
@@ -4027,17 +3995,107 @@ dashboards:
             SourceParameterName: EventArn
             Title: Event ARN
             Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: c235b00c-8cf6-4802-b967-e1674dfbced0
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: payer_account_id
+                DataSetIdentifier: health_events_view
+            SourceParameterName: Payer
+            Title: Payer Account
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 3842f9c8-59f5-4415-9b3d-8fd5c4678c9e
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: account_id
+                DataSetIdentifier: health_events_view
+            SourceParameterName: AccountId
+            Title: Linked Account IDs
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: c46efb4c-6827-4a96-92f0-54d878136187
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: account_name
+                DataSetIdentifier: health_events_view
+            SourceParameterName: AccountName
+            Title: Account Names
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 1b143200-68d1-4745-9e27-f891fdd09690
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: service
+                DataSetIdentifier: health_events_view
+            SourceParameterName: Service
+            Title: Services
+            Type: MULTI_SELECT
         SheetControlLayouts:
         - Configuration:
             GridLayout:
-              Elements: []
+              Elements:
+              - ColumnSpan: 2
+                ElementId: c235b00c-8cf6-4802-b967-e1674dfbced0
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 3842f9c8-59f5-4415-9b3d-8fd5c4678c9e
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: c46efb4c-6827-4a96-92f0-54d878136187
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 1b143200-68d1-4745-9e27-f891fdd09690
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
         SheetId: 1486a2b6-d31f-440a-8a03-215c4f216dda
         TextBoxes:
         - Content: |-
             <text-box>
               <inline font-size="36px">Resource detail</inline>
               <br/>
-              This sheet is optimized to be used in conjunction with the Summary tab after filtering to a single event. From the Single event detail section of the Summary, click the highlighted event arn to navigate to this page and render a filtered list. You can also filter more broadly across events with the top-level filters on the Summary.
+              This sheet is optimized to be used in conjunction with the Summary tab after filtering to a single event. From the Single event detail section of the Summary tab, click the highlighted event arn to navigate to this page and render a filtered list. You can also filter more broadly across events with the top-level filters above or on the Summary tab.
               <br/>
               <br/>
               The content of the table can be exported as a list of resources impacted by the specific event.
