@@ -1047,6 +1047,66 @@ dashboards:
               VisualIds:
               - 041dac6c-10b2-4041-b994-2d6fe2ed0207
         Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 485493c3-babc-4612-8821-594a64d3d53a
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: deprecated_versions
+              DataSetIdentifier: health_events_view
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: DeprecatedVersion
+            FilterId: d03d02cc-6138-4653-91c7-fc238dbdf264
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 1486a2b6-d31f-440a-8a03-215c4f216dda
+              VisualIds:
+              - 16ec0cb3-5024-470d-a5db-faaf62a89e04
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 5425fccf-8195-439c-80ee-2f063ccdfb67
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: deprecated_versions
+              DataSetIdentifier: health_events_view
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: DeprecatedVersion
+            FilterId: 6e39b497-641b-46de-bf5f-d24b777e864b
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 181ff69f-21f1-40db-9c73-153290fa44e0
+              VisualIds:
+              - 96269065-5b18-4b12-ad9a-0026040e1564
+              - 550745e2-f5b7-4364-97bd-ca8dc5b17fec
+              - 194b6ec2-3420-4bd6-a6f6-fb8ccdf7eb18
+              - cd97de46-d525-4aeb-bae7-33462129d261
+              - fb75a537-ece3-4827-a7a4-84c5d3c3c371
+              - ebc1004c-a279-4a56-b2ca-f7b7af9dd877
+              - 5beb8da9-8b74-425e-8c4c-b7f53f93eb11
+              - 8311768b-aa4d-413a-a665-d229cf013217
+              - 397a6622-e963-48fe-9089-d6af212c5fbc
+              - 4afda3c8-a44b-4c6f-9980-1486ae0c958e
+              - cfc1b625-6e48-4478-aed4-49ea26d2acfd
+              - cbb49bb3-2f0e-455f-a045-6b9b226a419f
+              - 504580f8-5bcd-46dd-9b0d-391bc2715054
+              - 69108f3e-7898-457a-8abc-446e097123bb
+              - 041dac6c-10b2-4041-b994-2d6fe2ed0207
+              - 3bb87d15-179e-434f-9e2a-e435e71eca8f
+              - 143d9f8d-89a1-49fb-8962-6c8823ec52d3
+              - e719f0fb-f47f-4356-ac02-92546be22131
+              - e3aca643-b389-4ec2-9029-a1a66b95f791
+        Status: ENABLED
       Options:
         WeekStart: SUNDAY
       ParameterDeclarations:
@@ -1123,6 +1183,12 @@ dashboards:
             StaticValues: []
           Name: EventID
           ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues: {}
+          Name: DeprecatedVersion
+          ParameterValueType: MULTI_VALUED
           ValueWhenUnset:
             ValueWhenUnsetOption: RECOMMENDED_VALUE
       - DateTimeParameterDeclaration:
@@ -1239,7 +1305,13 @@ dashboards:
                 RowIndex: 7
                 RowSpan: 2
               - ColumnIndex: 8
-                ColumnSpan: 28
+                ColumnSpan: 5
+                ElementId: 861ef53e-fdd4-4f2d-bfe4-d0771af08b2d
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 7
+                RowSpan: 2
+              - ColumnIndex: 13
+                ColumnSpan: 23
                 ElementId: 226886bd-234d-4221-bd24-ea54dc104467
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 7
@@ -1523,6 +1595,23 @@ dashboards:
             SourceParameterName: EventArn
             Title: Event ARN search (click Reset from the menu to clear the event filter
               parameter back to all events)
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 861ef53e-fdd4-4f2d-bfe4-d0771af08b2d
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: deprecated_versions
+                DataSetIdentifier: health_events_view
+            SourceParameterName: DeprecatedVersion
+            Title: Deprecation
             Type: MULTI_SELECT
         - TextField:
             DisplayOptions:
@@ -1826,7 +1915,7 @@ dashboards:
                   \ AN EVENT\_</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
                   14px\">\n    <b>\u23EC</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
                   12px\">\n    <b>\_</b>\n  </inline>\n  <inline font-size=\"12px\">\n \
-                  \   <b>TO FILTER</b>\n  </inline>\n</visual-subtitle>"
+                  \   <b>TO FILTER THE DETAIL SECTION BELOW</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -2284,7 +2373,7 @@ dashboards:
                   Width: 155px
                 - CustomLabel: Description
                   FieldId: 2616df31-78e9-42f6-b497-932c38d75236.10.1712628402023
-                  Width: 531px
+                  Width: 505px
                 - CustomLabel: Accounts
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.account_id.9.1712679655492
                   Width: 81px
@@ -3567,8 +3656,8 @@ dashboards:
                 RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE\_\
                   </b>\n  </inline>\n  <inline color=\"#21a0d7\" font-size=\"14px\">\n \
                   \   <b>\u2193\u2191\_</b>\n  </inline>\n  <inline font-size=\"12px\">\n\
-                  \    <b>(TOP RIGHT OF CHART) TO ADJUST TIME SCALE OR TOGGLE EVENT ID AND\
-                  \ CATEGORY DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
+                  \    <b>(TOP RIGHT OF CHART) TO ADJUST TIME SCALE OR TOGGLE BETWEEN EVENT\
+                  \ AND CATEGORY</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3785,7 +3874,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="16px">
-                      <b>Total events</b>
+                      <b>Total event entries</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -4069,6 +4158,57 @@ dashboards:
             SourceParameterName: Service
             Title: Services
             Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 65e62386-3730-42f7-aa5a-0848036d7631
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: status_code
+                DataSetIdentifier: health_events_view
+            SourceParameterName: EventStatus
+            Title: Status
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 80c5a3c7-1623-4ca6-8a8c-bbc5289af5ff
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: event_category
+                DataSetIdentifier: health_events_view
+            SourceParameterName: EventCategory
+            Title: Category
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 4b44d13a-1406-43a9-8298-7ffb7074a98b
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: deprecated_versions
+                DataSetIdentifier: health_events_view
+            SourceParameterName: DeprecatedVersion
+            Title: Deprecation
+            Type: MULTI_SELECT
         SheetControlLayouts:
         - Configuration:
             GridLayout:
@@ -4087,6 +4227,18 @@ dashboards:
                 RowSpan: 1
               - ColumnSpan: 2
                 ElementId: 1b143200-68d1-4745-9e27-f891fdd09690
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 65e62386-3730-42f7-aa5a-0848036d7631
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 80c5a3c7-1623-4ca6-8a8c-bbc5289af5ff
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 4b44d13a-1406-43a9-8298-7ffb7074a98b
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
         SheetId: 1486a2b6-d31f-440a-8a03-215c4f216dda
@@ -4295,7 +4447,7 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US\"\
                   \ target=\"_blank\">\n        <b>Heath Events Dashboard</b>\n      </a>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ font-size=\"68.8px\">\n      <b>v1.0.0</b>\n    </inline>\n  </block>\n\
+                  \ font-size=\"68.8px\">\n      <b>v0.9.0</b>\n    </inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
                   />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
                   />\n  <br/>\n  <block align=\"right\">Built by: Eric Christensen, Iakov\
