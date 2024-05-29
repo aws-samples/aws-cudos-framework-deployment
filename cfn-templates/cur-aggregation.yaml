@@ -9,6 +9,7 @@ Metadata:
           - DestinationAccountId
           - ResourcePrefix
           - CreateCUR
+          - AddSCAD
       -
         Label:
           default: "Parameters needed in Destination (Data Collection) Account only"
@@ -22,6 +23,8 @@ Metadata:
         default: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
       SourceAccountIds:
         default: "Source Account Ids (Comma separated list)"
+      AddSCAD:
+        default: "Add Split Cost Allocation Data (SCAD) to CUR."
 
 
 Parameters:
@@ -41,10 +44,13 @@ Parameters:
   CreateCUR:
     Type: String
     Description: Whether to create a local CUR in the destination account or not. Set this to False only if the current account is covered in the CUR of its Management (Payer) Account.
-    AllowedValues:
-      - "True"
-      - "False"
+    AllowedValues: ["True", "False"]
     Default: "True"
+  AddSCAD:
+    Type: String
+    Description: Add Split Cost Allocation Data (SCAD) to CUR
+    AllowedValues: ['yes', 'no']
+    Default: "no"
 
   ##
   # Destination specific params
@@ -55,19 +61,19 @@ Parameters:
     AllowedPattern: "^((\\d{12})\\,?)*$"
     Default: ''
     Description: "A comma separated list of all Source accounts that will replicate CUR Data. Ex:  12345678912,98745612312,...."
-
   PermissionsBoundary:
     Type: String
     Default: ''
     Description: Define Permission Boundary for Roles if required by SCP
 
 Conditions:
-  IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref AWS::AccountId]
+  NeedSCAD: !Equals [!Ref AddSCAD, 'yes']
+  IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref 'AWS::AccountId']
   IsSourceAccount: !Not [!Condition IsDestinationAccount]
   RegionSupportsCURviaCFN: # CFN supports CUR only in us-east-1 and cn-northwest-1. Other regions must use lambda
     Fn::Or:
-      - !Equals [!Ref AWS::Region, 'us-east-1']
-      - !Equals [!Ref AWS::Region, 'cn-northwest-1']
+      - !Equals [!Ref 'AWS::Region', 'us-east-1']
+      - !Equals [!Ref 'AWS::Region', 'cn-northwest-1']
   CUREnable: !Equals [!Ref CreateCUR, 'True']
   DeployCURViaCFNInSource: !And [!Condition CUREnable, !Condition IsSourceAccount, !Condition RegionSupportsCURviaCFN]
   DeployCURViaCFNInDestination: !And [!Condition CUREnable, !Condition IsDestinationAccount, !Condition RegionSupportsCURviaCFN]
@@ -345,7 +351,7 @@ Resources:
                 - "s3.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref "AWS::NoValue"]
       Policies:
         - PolicyName: CrossRegionPolicy
           PolicyDocument:
@@ -374,7 +380,7 @@ Resources:
 # Local CUR
 ####
 
-  ## Deploy CUR natively via CFN resource if we are in us-east-1
+  ## Deploy CUR natively via CFN resource if we are in a region that supports it
   LocalCurInSource:
     Type: AWS::CUR::ReportDefinition
     Condition: DeployCURViaCFNInSource
@@ -385,6 +391,7 @@ Resources:
         - ATHENA
       AdditionalSchemaElements:
         - RESOURCES
+        - !If [ NeedSCAD, SPLIT_COST_ALLOCATION_DATA, !Ref "AWS::NoValue"]
       Compression: Parquet
       Format: Parquet
       RefreshClosedReports: True
@@ -405,6 +412,7 @@ Resources:
         - ATHENA
       AdditionalSchemaElements:
         - RESOURCES
+        - !If [ NeedSCAD, SPLIT_COST_ALLOCATION_DATA, !Ref "AWS::NoValue"]
       Compression: Parquet
       Format: Parquet
       RefreshClosedReports: True
@@ -429,6 +437,7 @@ Resources:
           - ATHENA
         AdditionalSchemaElements:
           - RESOURCES
+          - !If [ NeedSCAD, SPLIT_COST_ALLOCATION_DATA, !Ref "AWS::NoValue"]
         Compression: Parquet
         Format: Parquet
         RefreshClosedReports: True
@@ -458,7 +467,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref "AWS::NoValue"]
       Policies:
         - PolicyName: "ExecutionDefault"
           PolicyDocument:
@@ -601,7 +610,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref "AWS::NoValue"]
       Policies:
         - PolicyName: "ExecutionDefault"
           PolicyDocument:

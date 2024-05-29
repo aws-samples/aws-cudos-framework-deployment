@@ -8,7 +8,7 @@ import logging
 import boto3
 from tqdm import tqdm
 
-from cid.exceptions import CidCritical
+from cid.exceptions import CidCritical, CidError
 from cid.base import CidBase
 from cid.utils import get_parameter
 
@@ -61,13 +61,13 @@ class IAM(CidBase):
                             "Sid": "AllowListBucket",
                             "Effect": "Allow",
                             "Action": ["s3:ListBucket"],
-                            "Resource": [f"arn:aws:s3:::{s3bucket}"]
+                            "Resource": [f"arn:{self.partition}:s3:::{s3bucket}"]
                         },
                         {
                             "Sid": "AllowReadFromBucket",
                             "Effect": "Allow",
                             "Action": [ "s3:GetObject"],
-                            "Resource": [f"arn:aws:s3:::{s3bucket}/*"]
+                            "Resource": [f"arn:{self.partition}:s3:::{s3bucket}/*"]
                         },
                         {
                             "Sid": "AllowGlueActions",
@@ -151,6 +151,7 @@ class IAM(CidBase):
                                 "glue:GetPartition",
                                 "glue:GetPartitions",
                                 "glue:GetDatabases",
+                                "glue:GetDatabase",
                                 "glue:GetTable",
                                 "glue:GetTables",
                             ],
@@ -322,6 +323,22 @@ class IAM(CidBase):
             yield from self.client.get_paginator('list_roles').paginate().search(search)
         except self.client.exceptions.ClientError as exc:
             logger.warning('Failed to read available IEM roles: {exc}. Most likely not fatal.')
+
+    def get_role_arn(self, role_name:str) -> str:
+        """ Get role arn, and try the best guess if no permissions
+        """
+        try:
+            return self.client.get_role(RoleName=role_name)['Role']['Arn']
+        except self.client.exceptions.NoSuchEntityException:
+            raise CidError(f"Role '{role_name}' does not exist.")
+        except self.client.exceptions.ClientError as exc:
+            if "AccessDenied" in str(exc):
+                logger.debug('Got access denied for describing role. Try the best guess')
+                if role_name.startswith('aws-quicksight-service-role'):
+                    return f'arn:aws:iam::{self.account_id}:role/service-role/{role_name}'
+                else:
+                    return f'arn:aws:iam::{self.account_id}:role/{role_name}'
+            raise CidError(f"An error occurred: {exc}")
 
     def ensure_role_does_not_exist(self, role_name):
         """ Remove a role and all policies if they are not used in other roles
