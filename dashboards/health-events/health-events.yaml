@@ -1305,13 +1305,13 @@ dashboards:
                 RowIndex: 7
                 RowSpan: 2
               - ColumnIndex: 8
-                ColumnSpan: 5
+                ColumnSpan: 7
                 ElementId: 861ef53e-fdd4-4f2d-bfe4-d0771af08b2d
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 7
                 RowSpan: 2
-              - ColumnIndex: 13
-                ColumnSpan: 23
+              - ColumnIndex: 15
+                ColumnSpan: 21
                 ElementId: 226886bd-234d-4221-bd24-ea54dc104467
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 7
@@ -4447,7 +4447,7 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US\"\
                   \ target=\"_blank\">\n        <b>Heath Events Dashboard</b>\n      </a>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ font-size=\"68.8px\">\n      <b>v0.9.0</b>\n    </inline>\n  </block>\n\
+                  \ font-size=\"68.8px\">\n      <b>v0.9.1</b>\n    </inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
                   />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
                   />\n  <br/>\n  <block align=\"right\">Built by: Eric Christensen, Iakov\
