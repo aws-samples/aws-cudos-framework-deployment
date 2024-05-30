@@ -36,6 +36,10 @@ class AccountMap(CidBase):
     _accounts = []
     _metadata_source: str = None
     _athena_table_name: str = None
+
+    # different metadata tables have different keys for the information we need. So here is a mapping showing for each
+    # account map we support, what are the keys depending on the source table:
+    # mappings[target_map][source][key] = key_in_source table
     mappings = {
         'account_map': {
             'acc_metadata_details': {'account_id': 'account_id', 'account_name': 'account_name'},
@@ -123,11 +127,11 @@ class AccountMap(CidBase):
             field_required = list(self.mappings.get(name).get(table_name).values())
             # Check if we have all the required fields
             if all(field in field_found for field in field_required):
-                logger.info(f'All required fields found in {table_name} ')
-                return table.get('Name')
-            logger.info('Missing required fields')
-            logger.info(f"Detected fields: {field_found}")
-            logger.info(f"Required fields: {field_required}")
+                logger.debug(f'All required fields found in {table_name} ')
+                return table.get('Name') # return the first found. FIXME: probably need a choice if more then one
+            logger.debug('Missing required fields')
+            logger.debug(f"Detected fields: {field_found}")
+            logger.debug(f"Required fields: {field_required}")
         return None
 
 
@@ -142,27 +146,10 @@ class AccountMap(CidBase):
             if get_parameters().get('account-map-source'):
                 raise CidError('Skipping autodiscovery')
 
-            # try to find a table with data about accounts
+            # First try to find a table with data about accounts
             self._athena_table_name = self.detect_metadata_table(name)
-            if not self._athena_table_name:
-                raise CidError('Metadata table not found') # catch you later
-
-            if self.cur.version.startswith('2'):
-                template_str = '''
-                    CREATE OR REPLACE VIEW  ${athena_view_name} AS
-                    SELECT DISTINCT
-                        line_item_usage_account_id                                        account_id,
-                        MAX_BY(bill_payer_account_id,      line_item_usage_start_date)    parent_account_id,
-                        MAX_BY(line_item_usage_account_name, line_item_usage_start_date)  account_name,
-                        MAX_BY(bill_payer_account_name, line_item_usage_start_date)       parent_account_name
-                    FROM
-                        "${cur_table_name}"
-                    GROUP BY
-                        line_item_usage_account_id
-                '''
-                template = Template(template_str)
-            else:
-                # Query path
+            if self._athena_table_name:
+                # create account map from the found metadata table
                 view_definition = self.athena._resources.get('views').get(name, {})
                 if view_definition.get('File'):
                     view_file = view_definition.get('File')
@@ -172,19 +159,38 @@ class AccountMap(CidBase):
                 else:
                     raise CidError(f'{name} definition does not contain File or data: {view_definition}')
 
-            # Fill in TPLs
-            columns_tpl = {
-                'metadata_table_name': self._athena_table_name,
-                'cur_table_name': self.cur.table_name # only for trends
-            }
-            for key, val in self.mappings.get(name).get(self._athena_table_name).items():
-                logger.debug(f'Mapping field {key} to {val}')
-                columns_tpl[key] = val
-            compiled_query = template.safe_substitute(columns_tpl)
-            logger.debug('compiled view.')
+                # Fill template variables
+                vars = {
+                    'metadata_table_name': self._athena_table_name,
+                    'cur_table_name': self.cur.table_name # only for trends
+                }
+                for key, val in self.mappings.get(name).get(self._athena_table_name).items():
+                    logger.debug(f'Mapping field {key} to {val}')
+                    vars[key] = val
+                compiled_query = template.safe_substitute(vars)
+                logger.debug('compiled view.')
+
+            # Secondly if we have CUR2 try to get it from there
+            elif self.cur.version.startswith('2'):
+                logger.info(f'Creating dummy account mapping for {name}')
+                template = Template(resource_string(
+                    package_or_requirement='cid.builtin.core',
+                    resource_name='data/queries/shared/account_map_cur2.sql',
+                ).decode('utf-8'))
+
+                # Fill template variables
+                vars = {
+                    'cur_table_name': self.cur.table_name,
+                }
+                compiled_query = template.safe_substitute(vars)
+
+            # If nothing found failover to other methods
+            else:
+                raise CidError('Metadata table not found') # catch you later
 
         except CidError as exc:
-            logger.info(exc)
+            # Failover with other methods
+            logger.debug(exc)
             compiled_query = self.create_account_mapping_sql(name)
 
         # Execute query
@@ -208,7 +214,6 @@ class AccountMap(CidBase):
 
     def get_organization_accounts(self) -> list:
         """ Retrieve AWS Organization account """
-        # Init clients
         accounts = []
         orgs = self.session.client('organizations')
         try:
@@ -251,7 +256,7 @@ class AccountMap(CidBase):
         logger.info('Metadata source selection')
         # Ask user which method to use to retrieve account list
         account_map_sources = {
-            'Dummy (CUR account data, no names)': 'dummy',
+            'Dummy (CUR account data, no names for CUR1)': 'dummy',
             'AWS Organizations (one time account listing)': 'organization',
             'CSV file (relative path required)': 'csv',
         }
