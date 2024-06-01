@@ -136,6 +136,7 @@ def deploy(ctx, **kwargs):
      --resources TEXT                      CID resources yaml file or url
      --category TEXT                       Comma separated list of categories of dashboards (ex: foundational,advanced )
      --catalog TEXT                        Comma separated list of catalog files or urls (ex: foundational,advanced )
+     --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
     """
     ctx.obj.deploy(**kwargs)
 
@@ -201,6 +202,7 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
     \b
 
      --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
+     --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
 
     """
     ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)

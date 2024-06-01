@@ -1335,7 +1335,7 @@ class QuickSight(CidBase):
             'Name': definition.get('name'),
             'ValidationStrategy': {'Mode': 'LENIENT'},
         }
-        theme = definition.get('theme')
+        theme = get_parameters().get('theme') or definition.get('theme')
         if theme:
             if not theme.startswith('arn:'):
                 theme_arn = f'arn:{self.partition}:quicksight::aws:theme/' + theme
