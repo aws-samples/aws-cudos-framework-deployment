@@ -68,6 +68,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
   }
 }
 
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "bucket_policy" {
   policy_id = "CrossAccessPolicy"
   statement {
@@ -121,6 +125,16 @@ data "aws_iam_policy_document" "bucket_policy" {
       aws_s3_bucket.this.arn,
       "${aws_s3_bucket.this.arn}/*",
     ]
+    condition {
+      test     = "StringEquals"
+      values   = ["arn:${data.aws_partition.current.partition}:cur:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:definition/*"]
+      variable = "aws:SourceArn"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = ["${data.aws_caller_identity.current.account_id}"]
+      variable = "aws:SourceAccount"
+    }
   }
   statement {
     sid    = "AllowWriteBilling"
@@ -135,6 +149,16 @@ data "aws_iam_policy_document" "bucket_policy" {
     resources = [
       "${aws_s3_bucket.this.arn}/*",
     ]
+    condition {
+      test     = "StringEquals"
+      values   = ["arn:${data.aws_partition.current.partition}:cur:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:definition/*"]
+      variable = "aws:SourceArn"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = ["${data.aws_caller_identity.current.account_id}"]
+      variable = "aws:SourceAccount"
+    }
   }
 }
 
