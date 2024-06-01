@@ -149,12 +149,11 @@ class Cid():
     @property
     def accountMap(self) -> AccountMap:
         if not self._clients.get('accountMap'):
-            _account_map = AccountMap(self.base.session)
-            _account_map.athena = self.athena
-            _account_map.cur = self.cur
-            self._clients.update({
-                'accountMap': _account_map
-            })
+            self._clients['accountMap'] = AccountMap(
+                self.base.session,
+                self.athena,
+                self.cur
+            )
         return self._clients.get('accountMap')
 
     def command(func):

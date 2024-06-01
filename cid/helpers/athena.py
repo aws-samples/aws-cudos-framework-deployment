@@ -25,9 +25,11 @@ class Athena(CidBase):
     _resources = dict()
     _client = None
 
-    def __init__(self, session, resources: dict=None) -> None:
+    def __init__(self, session, resources: dict=None, database_name: str=None) -> None:
         super().__init__(session)
         self._resources = resources
+        if database_name:
+           self.DatabaseName = database_name # this can raise AccessDenied or CidError if database not found
 
     @property
     def client(self):
@@ -63,7 +65,8 @@ class Athena(CidBase):
     @property
     def DatabaseName(self) -> str:
         """ Check if Athena database exist """
-        if self._DatabaseName: return self._DatabaseName
+        if self._DatabaseName:
+            return self._DatabaseName
 
         if get_parameters().get('athena-database'):
             self._DatabaseName = get_parameters().get('athena-database')
@@ -100,8 +103,12 @@ class Athena(CidBase):
         return self._DatabaseName
 
     @DatabaseName.setter
-    def DatabaseName(self, database):
-        self._DatabaseName = database
+    def DatabaseName(self, database_name):
+        database = self.get_database(database_name) # this can raise AccessDenied error
+        if database:
+            self._DatabaseName = database_name
+        else:
+            raise CidError(f'Database {database_name} not found')
 
     @property
     def WorkGroup(self) -> str:
