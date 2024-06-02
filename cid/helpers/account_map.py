@@ -82,19 +82,19 @@ class AccountMap(CidBase):
         :returns: a table object
         """
         cid_print('Autodiscover metadata table')
-        databases_to_look_for = set(
+        databases_to_look_for = set([
             self.athena.DatabaseName, # current database
             'organization_data', #  from data collection
             'organisation_data', #  from older versions of data collection
             # FIXME probably also can be customizable via command line parameter
-        )
+        ])
         found_metadata_table = None
         for database_name in databases_to_look_for:
             try:
                 athena = Athena(session=self.athena.session, database_name=database_name)
                 tables = athena.list_table_metadata()
             except Exception as exc:
-                logger.debug(exc_info=exc)
+                logger.debug(f'{type(exc)}: {exc}')
                 continue
             tables = [t for t in tables if t.get('TableType') == 'EXTERNAL_TABLE'] #filter only tables
             tables = [t for t in tables if t.get('Name') in self.mappings[target_name]] #filter only with supported names
@@ -303,7 +303,6 @@ class AccountMap(CidBase):
                     accounts = self.get_organization_accounts()
                     compiled_query = self.get_sql_for_accounts(name=name, accounts=accounts)
                 elif metadata_source == 'dummy':
-                    cid_print('Notice: Dummy account mapping will be created.')
                     compiled_query = self.get_dummy_account_mapping_sql(name)
                 else:
                     cid_print('Unsupported selection')

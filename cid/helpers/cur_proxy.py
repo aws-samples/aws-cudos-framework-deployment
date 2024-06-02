@@ -188,7 +188,7 @@ cur1to2_mapping = {
     '''concat('name', "line_item_usage_account_id")''': 'line_item_usage_account_name',
 }
 
-
+# Default columns are used as a basic set of columns when CUR is created. More can be added by views. For CUR1 and 2 these are different     ,,,,,,,,
 default_columns = {
     '1': [
         "year",
@@ -364,26 +364,31 @@ class ProxyView():
         self.fields_to_expose_in_maps = {}
 
     def read_from_athena(self):
-        """ read the current state from athena
+        """ read the current state from athena. read all fields and their types from existing SQL view and also for each MAP read existing keys
         """
+        # Read fields from the current view
         exposed_fields_and_types = dict(self.athena.query(f'''
             SELECT column_name, data_type
             FROM information_schema.columns
             WHERE table_schema = '{self.athena.DatabaseName}'
             AND table_name = '{self.name}';
         '''))
-
         self.exposed_fields = list(exposed_fields_and_types.keys())
         logger.debug(f'exposed fields: {self.exposed_fields}')
-
         if not self.exposed_fields:
             return
 
+        # If we have existing fields, we need to read also all map definitions from the SQL of the existing view
         def _parse_mapping_string(mapping_string):
+            ''' read keys and values from definition
+            ex:
+                MAP(ARRAY['key1', 'key2'], ARRAY[value1, value2])
+            '''
             arrays = re.findall(r'ARRAY\[(.*?)\]', mapping_string) # Extract arrays from the string
             keys = arrays[0].strip('\'').split(',') # Split arrays into elements
             values = arrays[1].strip('\'').split(',')
             return {key.strip(): value.strip() for key, value in zip(keys, values)}
+
         _current_sql = '\n'.join([line[0] for line in self.athena.query(f'SHOW CREATE VIEW {self.name}')])
         for field, field_type in exposed_fields_and_types.items():
             if field_type.startswith('map('):
@@ -391,7 +396,8 @@ class ProxyView():
                     self.exposed_maps[field] = set()
                 maps = re.findall(f'MAP\(ARRAY\[.+?\], ARRAY\[.+?\]\) {field}', _current_sql)
                 if not maps:
-                    logger.warning(f'cannot find map {field} definition in {self.name}')
+                    logger.warning(f'Cannot find map {field} definition in the view {self.name}. It must be defined as MAP.')
+                    continue
                 current_map = _parse_mapping_string(maps[0])
                 logger.debug(f'current definition of {field} of {current_map}')
                 self.exposed_maps[field].update([key[0] for key in current_map])
