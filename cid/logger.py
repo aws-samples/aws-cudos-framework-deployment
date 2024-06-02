@@ -59,7 +59,7 @@ def set_cid_logger(verbosity=2, log_filename=None):
             4: logging.DEBUG,
             5: logging.TRACE,
         }
-        logger.setLevel(level_map.get(verbosity, logging.INFO))
+        logger.setLevel(level_map.get(2 + verbosity, logging.INFO))
         # Logging application start here due to logging configuration
         print(f'Logging level set to: {logging.getLevelName(logger.getEffectiveLevel())}')
 
