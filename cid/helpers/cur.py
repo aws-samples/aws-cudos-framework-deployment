@@ -1,7 +1,6 @@
 """ Manage AWS CUR
 """
 import json
-import time
 import logging
 from abc import abstractmethod
 
@@ -173,6 +172,7 @@ class AbstractCUR(CidBase):
 
 
 class CUR(AbstractCUR):
+    """This Class represents CUR table (1 or 2 versions)"""
 
     def __init__(self, athena, glue):
         super().__init__(athena, glue)
@@ -261,7 +261,7 @@ class CUR(AbstractCUR):
 
 
 class ProxyCUR(AbstractCUR):
-    """ Cur Proxy behaves as CUR but actually a proxy
+    """ Cur Proxy behaves as CUR (1 or 2) but actually is a proxy view in Athena
     """
     def __init__(self, cur, target_cur_version):
         self.proxy = []
@@ -271,12 +271,12 @@ class ProxyCUR(AbstractCUR):
 
     @property
     def metadata(self) -> dict:
-        """get Athena metadata for the table of CUR """
+        """get Athena metadata for the view of CUR """
         if self._metadata:
             return self._metadata
         self.cur = CUR(self.athena, self.glue)
         if self.cur.version != self.target_cur_version:
-            cid_print(f'CUR{self.cur.version} ({self.athena.DatabaseName}/{self.cur.table_name}) provided but {self.target_cur_version} is needed. CUR Proxy view will be used.')
+            cid_print(f'CUR{self.cur.version} ({self.athena.DatabaseName}.{self.cur.table_name}) provided but {self.target_cur_version} is needed. CUR Proxy view will be used.')
         self.proxy = ProxyView(cur=self.cur, target_cur_version=self.target_cur_version)
         try:
             self._metadata = self.athena.get_table_metadata(self.proxy.name)

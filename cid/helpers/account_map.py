@@ -141,14 +141,11 @@ class AccountMap(CidBase):
         compiled_query = template.safe_substitute(vars)
         return compiled_query
 
-    def create(self, name) -> bool:
+    def create_or_update(self, name) -> bool:
         """Create account map"""
         cid_print(f'Creating account mapping <BOLD>{name}<END>')
         compiled_query = self.create_account_mapping_sql(name)
-
-        cid_print('Creating Athena view')
-        self.athena.query(compiled_query)
-        cid_print(f'Created account mapping <BOLD>{name}<END>')
+        self.athena.create_or_update_view(name, compiled_query)
 
     def get_dummy_account_mapping_sql(self, name) -> list:
         """Create dummy account mapping"""
