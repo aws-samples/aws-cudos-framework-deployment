@@ -831,6 +831,8 @@ Resources:
             - {"Name": "bill_invoice_id", "Type": "string" }
             - {"Name": "bill_payer_account_id", "Type": "string" }
             - {"Name": "bill_payer_account_name", "Type": "string" }
+            - {"Name": "cost_category", "Type": "map<string,string>" }
+            - {"Name": "discount", "Type": "map<string,string>" }
             - {"Name": "identity_line_item_id", "Type": "string" }
             - {"Name": "identity_time_interval", "Type": "string" }
             - {"Name": "line_item_availability_zone", "Type": "string" }
@@ -852,7 +854,7 @@ Resources:
             - {"Name": "pricing_purchase_option", "Type": "string" }
             - {"Name": "pricing_term", "Type": "string" }
             - {"Name": "pricing_unit", "Type": "string" }
-            - {"Name": "product", "Type": "map" }
+            - {"Name": "product", "Type": "map<string,string>" }
             - {"Name": "product_from_location", "Type": "string" }        
             - {"Name": "product_instance_type", "Type": "string" }         
             - {"Name": "product_product_family", "Type": "string" }             
@@ -865,6 +867,7 @@ Resources:
             - {"Name": "reservation_start_time", "Type": "timestamp" }
             - {"Name": "reservation_unused_amortized_upfront_fee_for_billing_period", "Type": "double" }
             - {"Name": "reservation_unused_recurring_fee", "Type": "double" }
+            - {"Name": "resource_tags", "Type": "map<string,string>" }
             - {"Name": "savings_plan_amortized_upfront_commitment_for_billing_period", "Type": "double" }
             - {"Name": "savings_plan_end_time", "Type": "timestamp" }
             - {"Name": "savings_plan_offering_type", "Type": "string" }
