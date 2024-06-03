@@ -1,4 +1,5 @@
 data "aws_caller_identity" "this" {}
+data "aws_partition" "current" {}
 data "aws_region" "this" {}
 
 ###
@@ -153,6 +154,16 @@ data "aws_iam_policy_document" "bucket_policy" {
         aws_s3_bucket.this.arn,
         "${aws_s3_bucket.this.arn}/*",
       ]
+      condition {
+        test     = "StringEquals"
+        values   = ["arn:${data.aws_partition.current.partition}:cur:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:definition/*"]
+        variable = "aws:SourceArn"
+      }
+      condition {
+        test     = "StringEquals"
+        values   = [data.aws_caller_identity.current.account_id]
+        variable = "aws:SourceAccount"
+      }
     }
   }
   dynamic "statement" {
@@ -170,6 +181,16 @@ data "aws_iam_policy_document" "bucket_policy" {
       resources = [
         "${aws_s3_bucket.this.arn}/*",
       ]
+      condition {
+        test     = "StringEquals"
+        values   = ["arn:${data.aws_partition.current.partition}:cur:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:definition/*"]
+        variable = "aws:SourceArn"
+      }
+      condition {
+        test     = "StringEquals"
+        values   = [data.aws_caller_identity.current.account_id]
+        variable = "aws:SourceAccount"
+      }
     }
   }
 }
