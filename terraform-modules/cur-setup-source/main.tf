@@ -1,4 +1,5 @@
 data "aws_caller_identity" "this" {}
+data "aws_partition" "current" {}
 data "aws_region" "this" {}
 
 ###
@@ -68,10 +69,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
   }
 }
 
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
-
 data "aws_iam_policy_document" "bucket_policy" {
   policy_id = "CrossAccessPolicy"
   statement {
@@ -132,7 +129,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     }
     condition {
       test     = "StringEquals"
-      values   = ["${data.aws_caller_identity.current.account_id}"]
+      values   = [data.aws_caller_identity.current.account_id]
       variable = "aws:SourceAccount"
     }
   }
@@ -156,7 +153,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     }
     condition {
       test     = "StringEquals"
-      values   = ["${data.aws_caller_identity.current.account_id}"]
+      values   = [data.aws_caller_identity.current.account_id]
       variable = "aws:SourceAccount"
     }
   }
