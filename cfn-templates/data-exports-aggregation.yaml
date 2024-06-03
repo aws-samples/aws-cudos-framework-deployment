@@ -878,6 +878,17 @@ Resources:
             - {"Name": "savings_plan_start_time", "Type": "timestamp" }
             - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
+            - {"Name": "split_line_item_parent_resource_id", "Type": "string" }
+            - {"Name": "split_line_item_reserved_usage", "Type": "double" }
+            - {"Name": "split_line_item_actual_usage", "Type": "double" }
+            - {"Name": "split_line_item_split_usage", "Type": "double" }
+            - {"Name": "split_line_item_split_usage_ratio", "Type": "double" }
+            - {"Name": "split_line_item_split_cost", "Type": "double" }
+            - {"Name": "split_line_item_unused_cost", "Type": "double" }
+            - {"Name": "split_line_item_net_split_cost", "Type": "double" }
+            - {"Name": "split_line_item_net_unused_cost", "Type": "double" }
+            - {"Name": "split_line_item_public_on_demand_split_cost", "Type": "double" }
+            - {"Name": "split_line_item_public_on_demand_unused_cost", "Type": "double" }
         PartitionKeys:
           - {"Name": "source_account_id", "Type": "string" }
           - {"Name": "report_name", "Type": "string" }
