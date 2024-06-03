@@ -152,7 +152,7 @@ class Cid():
             self._clients['accountMap'] = AccountMap(
                 self.base.session,
                 self.athena,
-                self.cur
+                self.cur,
             )
         return self._clients.get('accountMap')
 
@@ -1586,10 +1586,10 @@ class Cid():
 
         # For account mappings create a view using a special helper
         if view_name in ['account_map', 'aws_accounts']:
-            if view_name in self.athena._metadata.keys():
+            if view_name in self.athena._metadata.keys() and (not update and not recursive):
                 print(f'Account map {view_name} exists. Skipping.')
             else:
-                self.accountMap.create(view_name) #FIXME: add or_update
+                self.accountMap.create_or_update(view_name)
             return
 
         # Create a view
@@ -1761,7 +1761,7 @@ class Cid():
     def map(self, **kwargs):
         """Create account mapping Athena views"""
         for v in ['account_map', 'aws_accounts']:
-            self.accountMap.create(v)
+            self.accountMap.create_or_update(v)
 
     @command
     def teardown(self, **kwargs):
