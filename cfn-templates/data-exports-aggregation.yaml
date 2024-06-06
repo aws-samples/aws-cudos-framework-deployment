@@ -18,7 +18,7 @@ Metadata:
         Label:
           default: "Technical Parameters. Please do not change."
         Parameters:
-          - SCADEnabled
+          - SCADEnable
 
     ParameterLabels:
       DestinationAccountId:
@@ -27,7 +27,7 @@ Metadata:
         default: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
       SourceAccountIds:
         default: "Source Account Ids (Comma separated list)"
-      SCADEnabled:
+      SCADEnable:
         default: "Enable/Disable Split Cost Allocation Data (SCAD)."
 
 
@@ -47,7 +47,7 @@ Parameters:
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   CreateCUR2:
     Type: String
-    Description: Whether to create a local CUR2 in the destination account or not. Set this to True if your Management (Payer)/Source Account is the same as your Destination account (where you want to deploy the dashboards).
+    Description: Whether to create a local CUR2 or not. Set this to True if your Management (Payer)/Source Account is the same as your Destination account (where you want to deploy the dashboards).
     AllowedValues:
       - "True"
       - "False"
@@ -86,6 +86,8 @@ Conditions:
       - !Equals [!Ref AWS::Region, 'us-east-1']
       - !Equals [!Ref AWS::Region, 'cn-northwest-1']
   CUR2Enable: !Equals [!Ref CreateCUR2, 'True']
+  CreateLocalS3BucketInDestination: !And [!Condition CUR2Enable, !Condition IsDestinationAccount]
+  CreateLocalS3Bucket: !Or [!Condition IsSourceAccount, !Condition CreateLocalS3BucketInDestination]
   SCADEnabled: !Equals [!Ref SCADEnable, 'True']
   DeployCUR2ViaCFNInSource: !And [!Condition CUR2Enable, !Condition IsSourceAccount, !Condition RegionSupportsCUR2viaCFN]
   DeployCUR2ViaCFNInDestination: !And [!Condition CUR2Enable, !Condition IsDestinationAccount, !Condition RegionSupportsCUR2viaCFN]
@@ -240,169 +242,12 @@ Resources:
               - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
 
 ####
-# S3 Bucket to store local CUR2 in Destination account and replicate to aggregated bucket
-####
-  LocalS3:
-    Type: AWS::S3::Bucket
-    Condition: DeployCUR2ViaCFNInDestination
-    DeletionPolicy: Delete
-    UpdateReplacePolicy: Delete
-    Properties:
-      BucketName:
-        Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-local
-
-      ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
-      # LoggingConfiguration:
-      #   DestinationBucketName: REPLACE_WITH_YOUR_LOGGING_BUCKET
-      #   LogFilePrefix: REPLACE_WITH_YOUR_PREFIX
-
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256 ## Use AWS managed KMS
-              ## If you need Customer managed KMS key, yoy can do that using following parameters:
-              # SSEAlgorithm: aws:kms
-              # KMSMasterKeyID: "REPLACE_WITH_YOUR_KEY_ARN"
-      AccessControl: BucketOwnerFullControl
-      OwnershipControls:
-        Rules:
-          - ObjectOwnership: BucketOwnerEnforced
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      ReplicationConfiguration:
-        Role: !GetAtt LocalReplicationRole.Arn
-        Rules:
-          -
-            Destination:
-              Bucket:
-                Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared"
-              StorageClass: STANDARD
-            Id: ReplicationRule1
-            Prefix: !Sub "cur2/${AWS::AccountId}/cid2/data/"
-            Status: Enabled
-      LifecycleConfiguration:
-        Rules:
-          - Id: Object&Version Expiration
-            Status: Enabled
-            NoncurrentVersionExpirationInDays: 32 # 1 month
-            ExpirationInDays: 64 # 2 months
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: 'W35'
-            reason: "Data buckets would generate too much logs"
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W3045 # Need to use AccessControl for replication
-
-  LocalS3BucketPolicy:
-    Type: 'AWS::S3::BucketPolicy'
-    Condition: DeployCUR2ViaCFNInDestination
-    DeletionPolicy: Delete
-    UpdateReplacePolicy: Delete
-    Properties:
-      Bucket: !Ref LocalS3
-      PolicyDocument:
-        Id: AccessPolicy
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowTLS12Only
-            Effect: Deny
-            Principal: "*"
-            Action: s3:*
-            Resource:
-              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}'
-              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}/*'
-            Condition:
-              NumericLessThan:
-                s3:TlsVersion: 1.2
-          - Sid: AllowOnlyHTTPS
-            Effect: Deny
-            Principal: "*"
-            Action: s3:*
-            Resource:
-              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}'
-              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}/*'
-            Condition:
-              Bool:
-                aws:SecureTransport: false
-          - Sid: AllowReadBilling
-            Effect: Allow
-            Principal:
-              Service: bcm-data-exports.amazonaws.com
-            Action:
-              - s3:GetBucketAcl
-              - s3:GetBucketPolicy
-            Resource:
-              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}'
-              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}/*'
-          - Sid: AllowWriteBilling
-            Effect: Allow
-            Principal:
-              Service: bcm-data-exports.amazonaws.com
-            Action:
-              - s3:PutObject
-            Resource:
-              - !Sub 'arn:${AWS::Partition}:s3:::${LocalS3}/*'
-  
-  LocalReplicationRole:
-    Condition: DeployCUR2ViaCFNInDestination
-    Type: AWS::IAM::Role
-    Properties:
-      Path:
-        Fn::Sub: /${ResourcePrefix}/
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          -
-            Effect: Allow
-            Principal:
-              Service:
-                - "s3.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-      Policies:
-        - PolicyName: ReplicationPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetReplicationConfiguration
-                  - s3:ListBucket
-                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local"
-              - Effect: Allow
-                Action:
-                  - s3:GetObjectVersionForReplication
-                  - s3:GetObjectVersionAcl
-                  - s3:GetObjectVersionTagging
-                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local/*"
-              - Effect: Allow
-                Action:
-                  - s3:ReplicateObject
-                  - s3:ReplicateDelete
-                  - s3:ReplicateTags
-                Resource:
-                  Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared/cur2/${AWS::AccountId}/*"
-
-
-###########################################################################
-# Source Account Resources
-###########################################################################
-
-####
-# S3 Bucket with replication
+# S3 Bucket in account with CUR enabled with replication to aggregated bucket
 ####
 
   SourceS3:
     Type: AWS::S3::Bucket
-    Condition: IsSourceAccount
+    Condition: CreateLocalS3Bucket
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
@@ -433,7 +278,7 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
       ReplicationConfiguration:
-        Role: !GetAtt CrossRegionReplicationRole.Arn
+        Role: !GetAtt ReplicationRole.Arn
         Rules:
           -
             Destination:
@@ -461,7 +306,7 @@ Resources:
 
   SourceS3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
-    Condition: IsSourceAccount
+    Condition: CreateLocalS3Bucket
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
@@ -509,8 +354,8 @@ Resources:
             Resource:
               - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}/*'
 
-  CrossRegionReplicationRole:
-    Condition: IsSourceAccount
+  ReplicationRole:
+    Condition: CreateLocalS3Bucket
     Type: AWS::IAM::Role
     Properties:
       Path:
@@ -526,7 +371,7 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: CrossRegionPolicy
+        - PolicyName: ReplicationPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -572,7 +417,7 @@ Resources:
         Description: "CUR 2.0 export for aggregation in CID"
         DestinationConfigurations: 
           S3Destination:
-            S3Bucket: !If [ IsDestinationAccount, !Ref LocalS3, !Ref SourceS3 ]
+            S3Bucket: !Ref SourceS3
             S3Prefix: !Sub "cur2/${AWS::AccountId}"
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
@@ -588,7 +433,7 @@ Resources:
     Type: AWS::BCMDataExports::Export
     Condition: DeployCUR2ViaCFNInDestination
     DependsOn:
-      - LocalS3BucketPolicy # Conditional DependsOn is not supported, so we need 2 resources
+      - SourceS3BucketPolicy # Conditional DependsOn is not supported, so we need 2 resources
     Properties:
       Export:
         DataQuery:
@@ -602,7 +447,7 @@ Resources:
         Description: "CUR 2.0 export for aggregation in CID"
         DestinationConfigurations: 
           S3Destination:
-            S3Bucket: !If [ IsDestinationAccount, !Ref LocalS3, !Ref SourceS3 ]
+            S3Bucket: !Ref SourceS3
             S3Prefix: !Sub "cur2/${AWS::AccountId}"
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
@@ -634,7 +479,7 @@ Resources:
         Description: "CUR 2.0 export for aggregation in CID"
         DestinationConfigurations: 
           S3Destination:
-            S3Bucket: !If [ IsDestinationAccount, !Ref LocalS3, !Ref SourceS3 ]
+            S3Bucket: !Ref SourceS3
             S3Prefix: !Sub "cur2/${AWS::AccountId}"
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
@@ -803,7 +648,7 @@ Resources:
       CatalogId: !Sub "${AWS::AccountId}"
       DatabaseName: !Ref CIDDatabase
       TableInput:
-        Name: !Sub "${ResourcePrefix}-table"
+        Name: cur2
         Owner: owner
         Retention: 0
         TableType: EXTERNAL_TABLE
