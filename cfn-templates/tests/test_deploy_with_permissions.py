@@ -295,6 +295,31 @@ def test_dashboard_exists():
     )['Dashboard']
     logger.info("Dashboard exists with status = %s", dash['Version']['Status'])
 
+def test_crawler_results():
+    glue = boto3.client('glue')
+    logger.info('Waiting For Crawler to finish')
+    timeout_seconds = 300
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        try:
+            time.sleep(3)
+            crawler = glue.get_crawler(Name='CidCrawler')['Crawler']
+            logger.debug('Crawler state = ' + crawler['State'])
+            if crawler['State'] != 'READY':
+                continue
+            last_crawl = crawler.get('LastCrawl')
+            if last_crawl:
+                logger.debug(last_crawl)
+                if last_crawl.get('Status') != 'SUCCEEDED' or last_crawl.get('ErrorMessage'):
+                    raise AssertionError(f'Something wrong with crawler {last_crawl}')
+                logger.info('Crawler SUCCEEDED')
+                break
+        except glue.exceptions.EntityNotFoundException:
+            logger.debug('Crawler is not there yet ')
+            continue
+    else:
+        raise AssertionError('Timeout while waiting for crawler')
+
 
 def test_dataset_scheduled():
     """check that dataset and schedule exist"""
@@ -414,6 +439,7 @@ def main(update, keep):
         test_dashboard_exists()
         test_dataset_scheduled()
         test_ingestion_successful()
+        test_crawler_results()
     except Exception as exc:
         logger.error(exc)
         raise
