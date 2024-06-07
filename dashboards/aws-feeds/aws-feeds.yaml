@@ -1,14 +1,14 @@
 dashboards:
-  AWS FEEDS V0.0.5:
+  AWS FEEDS:
     dependsOn:
       datasets:
       - aws_feeds
-      - blog_post
-      - security_bulletin
-      - whats_new
-      - youtube
-    name: AWS Feeds v0.0.5
-    dashboardId: aws-feeds-v0-0-5
+      - aws_feeds_blog_post
+      - aws_feeds_security_bulletin
+      - aws_feeds_whats_new
+      - aws_feeds_youtube
+    name: AWS Feeds
+    dashboardId: aws-feeds
     category: Custom
     theme: MIDNIGHT
     data: |-
@@ -24,13 +24,13 @@ dashboards:
       CalculatedFields: []
       DataSetIdentifierDeclarations:
       - DataSetArn: arn:aws:quicksight:::dataset/5258b9ee-48d0-48f3-9ec4-baa4acd1d006
-        Identifier: youtube
+        Identifier: aws_feeds_youtube
       - DataSetArn: arn:aws:quicksight:::dataset/cd5b5e17-fdde-4563-a944-1c5fc3b27684
-        Identifier: security_bulletin
+        Identifier: aws_feeds_security_bulletin
       - DataSetArn: arn:aws:quicksight:::dataset/00e4f86c-96b8-49b7-b68f-8b540e4fa6b7
-        Identifier: whats_new
+        Identifier: aws_feeds_whats_new
       - DataSetArn: arn:aws:quicksight:::dataset/173bf994-4763-4044-a96d-1cb6cce591f4
-        Identifier: blog_post
+        Identifier: aws_feeds_blog_post
       - DataSetArn: arn:aws:quicksight:::dataset/d50473c6-53c1-45f5-9185-361136fb02ef
         Identifier: aws_feeds
       FilterGroups:
@@ -40,7 +40,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: description
-              DataSetIdentifier: youtube
+              DataSetIdentifier: aws_feeds_youtube
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: CONTAINS
@@ -59,7 +59,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: description
-              DataSetIdentifier: whats_new
+              DataSetIdentifier: aws_feeds_whats_new
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: CONTAINS
@@ -78,7 +78,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: service
-              DataSetIdentifier: whats_new
+              DataSetIdentifier: aws_feeds_whats_new
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: EQUALS
@@ -97,7 +97,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: service
-              DataSetIdentifier: whats_new
+              DataSetIdentifier: aws_feeds_whats_new
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -113,7 +113,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: category
-              DataSetIdentifier: whats_new
+              DataSetIdentifier: aws_feeds_whats_new
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: EQUALS
@@ -132,7 +132,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: description
-              DataSetIdentifier: blog_post
+              DataSetIdentifier: aws_feeds_blog_post
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: CONTAINS
@@ -151,7 +151,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: category
-              DataSetIdentifier: blog_post
+              DataSetIdentifier: aws_feeds_blog_post
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: EQUALS
@@ -170,7 +170,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: creator
-              DataSetIdentifier: blog_post
+              DataSetIdentifier: aws_feeds_blog_post
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: EQUALS
@@ -259,7 +259,7 @@ dashboards:
         - TimeRangeFilter:
             Column:
               ColumnName: date
-              DataSetIdentifier: whats_new
+              DataSetIdentifier: aws_feeds_whats_new
             FilterId: fb90fe32-103e-4a6d-9edf-3ea21be9fcbc
             IncludeMinimum: true
             NullOption: NON_NULLS_ONLY
@@ -275,7 +275,7 @@ dashboards:
         - TimeRangeFilter:
             Column:
               ColumnName: date
-              DataSetIdentifier: blog_post
+              DataSetIdentifier: aws_feeds_blog_post
             FilterId: d5904df6-1c58-4bda-b7f6-1d20a640c608
             IncludeMinimum: true
             NullOption: NON_NULLS_ONLY
@@ -291,7 +291,7 @@ dashboards:
         - TimeRangeFilter:
             Column:
               ColumnName: published
-              DataSetIdentifier: youtube
+              DataSetIdentifier: aws_feeds_youtube
             FilterId: 2df2d5e1-8fe1-459e-812b-6133fd1ec0b4
             IncludeMinimum: true
             NullOption: NON_NULLS_ONLY
@@ -307,7 +307,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: description
-              DataSetIdentifier: security_bulletin
+              DataSetIdentifier: aws_feeds_security_bulletin
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: CONTAINS
@@ -323,7 +323,7 @@ dashboards:
         - TimeRangeFilter:
             Column:
               ColumnName: published
-              DataSetIdentifier: security_bulletin
+              DataSetIdentifier: aws_feeds_security_bulletin
             FilterId: 9ccdd0a1-3718-4662-9db6-63b8ab63e2f1
             IncludeMinimum: true
             NullOption: NON_NULLS_ONLY
@@ -416,13 +416,13 @@ dashboards:
             DynamicValue:
               DefaultValueColumn:
                 ColumnName: youtube_embedded_url
-                DataSetIdentifier: youtube
+                DataSetIdentifier: aws_feeds_youtube
               GroupNameColumn:
                 ColumnName: title
-                DataSetIdentifier: youtube
+                DataSetIdentifier: aws_feeds_youtube
               UserNameColumn:
                 ColumnName: title
-                DataSetIdentifier: youtube
+                DataSetIdentifier: aws_feeds_youtube
             StaticValues: []
           Name: YouTubeURL
           ParameterValueType: SINGLE_VALUED
@@ -433,10 +433,10 @@ dashboards:
             DynamicValue:
               DefaultValueColumn:
                 ColumnName: youtube_embedded_url
-                DataSetIdentifier: youtube
+                DataSetIdentifier: aws_feeds_youtube
               UserNameColumn:
                 ColumnName: title
-                DataSetIdentifier: youtube
+                DataSetIdentifier: aws_feeds_youtube
             StaticValues: []
           Name: pTitle
           ParameterValueType: SINGLE_VALUED
@@ -1010,7 +1010,7 @@ dashboards:
             SelectableValues:
               LinkToDataSetColumn:
                 ColumnName: category
-                DataSetIdentifier: whats_new
+                DataSetIdentifier: aws_feeds_whats_new
             SourceParameterName: Theme
             Title: Category
             Type: MULTI_SELECT
@@ -1029,7 +1029,7 @@ dashboards:
             SelectableValues:
               LinkToDataSetColumn:
                 ColumnName: service
-                DataSetIdentifier: whats_new
+                DataSetIdentifier: aws_feeds_whats_new
             SourceParameterName: Service
             Title: Service
             Type: MULTI_SELECT
@@ -1100,7 +1100,7 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: date
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       DateGranularity: WEEK
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634655094
                       HierarchyId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634655094
@@ -1108,7 +1108,7 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: service
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.0.1713527804044
                   Values: []
               Legend:
@@ -1193,22 +1193,22 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: date
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.3.1714634621010
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: title
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.title.3.1713511614848
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: category
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713522986805
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: service
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.2.1713523006010
                   Values: []
               SortConfiguration:
@@ -1293,12 +1293,12 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: description
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.summary.0.1713118658080
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: link
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.link.2.1713167555800
                   Values: []
               SortConfiguration: {}
@@ -1367,7 +1367,7 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: date
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       DateGranularity: WEEK
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634641977
                       HierarchyId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634641977
@@ -1375,7 +1375,7 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: category
-                        DataSetIdentifier: whats_new
+                        DataSetIdentifier: aws_feeds_whats_new
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713531618741
                   Values: []
               Legend:
@@ -1470,7 +1470,7 @@ dashboards:
             SelectableValues:
               LinkToDataSetColumn:
                 ColumnName: creator
-                DataSetIdentifier: blog_post
+                DataSetIdentifier: aws_feeds_blog_post
             SourceParameterName: Author
             Title: Author
             Type: SINGLE_SELECT
@@ -1489,7 +1489,7 @@ dashboards:
             SelectableValues:
               LinkToDataSetColumn:
                 ColumnName: category
-                DataSetIdentifier: blog_post
+                DataSetIdentifier: aws_feeds_blog_post
             SourceParameterName: Category
             Title: Category
             Type: SINGLE_SELECT
@@ -1565,7 +1565,7 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: date
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       DateGranularity: WEEK
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573960782
                       HierarchyId: 6c3d7c19-1d87-4348-bbf3-a4ad22eb22fa
@@ -1573,7 +1573,7 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: creator
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.0.1713528383763
                   Values: []
               Legend:
@@ -1758,17 +1758,17 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: date
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: title
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: creator
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
                   Values: []
               SortConfiguration:
@@ -1841,7 +1841,7 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: date
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       DateGranularity: WEEK
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573947793
                       HierarchyId: cbf63ca3-0b62-40af-b9fb-86f73946227c
@@ -1849,7 +1849,7 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: category
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.category.0.1713528324572
                   Values: []
               Legend:
@@ -1913,12 +1913,12 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: description
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.description.0.1713526419245
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: link
-                        DataSetIdentifier: blog_post
+                        DataSetIdentifier: aws_feeds_blog_post
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.link.1.1713526437334
                   Values: []
               SortConfiguration: {}
@@ -2029,22 +2029,22 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: published
-                        DataSetIdentifier: youtube
+                        DataSetIdentifier: aws_feeds_youtube
                       FieldId: 573c1109-b214-4bec-a018-e8847022f541.published.3.1714637564439
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: title
-                        DataSetIdentifier: youtube
+                        DataSetIdentifier: aws_feeds_youtube
                       FieldId: 573c1109-b214-4bec-a018-e8847022f541.title.2.1714637555020
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: description
-                        DataSetIdentifier: youtube
+                        DataSetIdentifier: aws_feeds_youtube
                       FieldId: 573c1109-b214-4bec-a018-e8847022f541.description.0.1713549072063
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: video_url
-                        DataSetIdentifier: youtube
+                        DataSetIdentifier: aws_feeds_youtube
                       FieldId: 573c1109-b214-4bec-a018-e8847022f541.video_url.1.1713549076348
                   Values: []
               SortConfiguration:
@@ -2075,7 +2075,7 @@ dashboards:
             Actions: []
             ChartConfiguration:
               ContentUrl: https://www.youtube.com/<<$YouTubeURL>>
-            DataSetIdentifier: youtube
+            DataSetIdentifier: aws_feeds_youtube
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -2108,17 +2108,17 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: published
-                        DataSetIdentifier: youtube
+                        DataSetIdentifier: aws_feeds_youtube
                       FieldId: 573c1109-b214-4bec-a018-e8847022f541.published.2.1714637371615
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: title
-                        DataSetIdentifier: youtube
+                        DataSetIdentifier: aws_feeds_youtube
                       FieldId: 573c1109-b214-4bec-a018-e8847022f541.title.0.1714635770123
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: youtube_embedded_url
-                        DataSetIdentifier: youtube
+                        DataSetIdentifier: aws_feeds_youtube
                       FieldId: 4e94b79b-80ea-426b-a704-63141e0bcc15.1.1714635834667
                   Values: []
               SortConfiguration:
@@ -2233,12 +2233,12 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: published
-                        DataSetIdentifier: security_bulletin
+                        DataSetIdentifier: aws_feeds_security_bulletin
                       FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1714205014038
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: title
-                        DataSetIdentifier: security_bulletin
+                        DataSetIdentifier: aws_feeds_security_bulletin
                       FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.title.1.1714205060264
                   Values: []
               SortConfiguration:
@@ -2308,12 +2308,12 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: description
-                        DataSetIdentifier: security_bulletin
+                        DataSetIdentifier: aws_feeds_security_bulletin
                       FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.description.0.1714205154146
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: link
-                        DataSetIdentifier: security_bulletin
+                        DataSetIdentifier: aws_feeds_security_bulletin
                       FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1714205160479
                   Values: []
               SortConfiguration: {}
@@ -2360,7 +2360,7 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: published
-                        DataSetIdentifier: security_bulletin
+                        DataSetIdentifier: aws_feeds_security_bulletin
                       DateGranularity: WEEK
                       FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1715181803517
                       HierarchyId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1715181803517
@@ -2370,7 +2370,7 @@ dashboards:
                       AggregationFunction: COUNT
                       Column:
                         ColumnName: link
-                        DataSetIdentifier: security_bulletin
+                        DataSetIdentifier: aws_feeds_security_bulletin
                       FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1715181839743
               Orientation: VERTICAL
               SortConfiguration:
@@ -2402,7 +2402,7 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: link
-                      DataSetIdentifier: security_bulletin
+                      DataSetIdentifier: aws_feeds_security_bulletin
                     FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1715181839743
                   CustomLabel: Number of Security Bulletins
             ColumnHierarchies:
@@ -2439,7 +2439,7 @@ dashboards:
         Visuals:
         - InsightVisual:
             Actions: []
-            DataSetIdentifier: whats_new
+            DataSetIdentifier: aws_feeds_whats_new
             InsightConfiguration:
               Computations: []
               CustomNarrative:
@@ -2447,7 +2447,7 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\"\
                   \ target=\"_blank\">\n        <b>\n          <u>AWS Feeds Dashboard</u>\n\
                   \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block\
-                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.0.5</b>\n\
+                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.0.6</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
                   \ font-size=\"22.4px\">\n      <b>AWS Feeds Dashboard: What's New, Blog\
                   \ Posts, YouTube Videos, Security Bulletin</b>\n    </inline>\n  </block>\n\
@@ -2479,7 +2479,7 @@ dashboards:
             VisualId: 5dc580e2-06f9-4a72-89a5-50d03f28aa2f
         - InsightVisual:
             Actions: []
-            DataSetIdentifier: whats_new
+            DataSetIdentifier: aws_feeds_whats_new
             InsightConfiguration:
               Computations: []
               CustomNarrative:
@@ -2501,17 +2501,17 @@ dashboards:
               Visibility: VISIBLE
             VisualId: 9967fb47-f60c-444a-8465-7cdc367ca303
 datasets:
-  youtube:
+  aws_feeds_youtube:
     data:
       DataSetId: 5258b9ee-48d0-48f3-9ec4-baa4acd1d006
-      Name: youtube
+      Name: aws_feeds_youtube
       PhysicalTableMap:
         5b308e9b-d8cf-4223-a79c-8cf1d09f371f:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
             Schema: ${athena_database_name}
-            Name: youtube
+            Name: aws_feeds_youtube
             InputColumns:
             - Name: video_url
               Type: STRING
@@ -2539,7 +2539,7 @@ datasets:
               Type: STRING
       LogicalTableMap:
         573c1109-b214-4bec-a018-e8847022f541:
-          Alias: youtube
+          Alias: aws_feeds_youtube
           DataTransforms:
           - CastColumnTypeOperation:
               ColumnName: published
@@ -2571,20 +2571,20 @@ datasets:
       ImportMode: SPICE
     dependsOn:
       views:
-      - youtube
+      - aws_feeds_youtube
     schedules:
     - default
-  whats_new:
+  aws_feeds_whats_new:
     data:
       DataSetId: 00e4f86c-96b8-49b7-b68f-8b540e4fa6b7
-      Name: whats_new
+      Name: aws_feeds_whats_new
       PhysicalTableMap:
         720118c4-3819-4fb9-bdbe-1666f7089c5c:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
             Schema: ${athena_database_name}
-            Name: whats_new
+            Name: aws_feeds_whats_new
             InputColumns:
             - Name: link
               Type: STRING
@@ -2606,7 +2606,7 @@ datasets:
               Type: STRING
       LogicalTableMap:
         b803cd8a-acba-4cc0-95cb-5c91769066a6:
-          Alias: whats_new
+          Alias: aws_feeds_whats_new
           DataTransforms:
           - CastColumnTypeOperation:
               ColumnName: date
@@ -2628,20 +2628,20 @@ datasets:
       ImportMode: SPICE
     dependsOn:
       views:
-      - whats_new
+      - aws_feeds_whats_new
     schedules:
     - default
-  security_bulletin:
+  aws_feeds_security_bulletin:
     data:
       DataSetId: cd5b5e17-fdde-4563-a944-1c5fc3b27684
-      Name: security_bulletin
+      Name: aws_feeds_security_bulletin
       PhysicalTableMap:
         ff99854e-942d-4312-9700-423f15e4d21c:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
             Schema: ${athena_database_name}
-            Name: security_bulletin
+            Name: aws_feeds_security_bulletin
             InputColumns:
             - Name: link
               Type: STRING
@@ -2659,7 +2659,7 @@ datasets:
               Type: STRING
       LogicalTableMap:
         4d92b921-93f3-4853-b5a7-189780f0b65c:
-          Alias: security_bulletin
+          Alias: aws_feeds_security_bulletin
           DataTransforms:
           - CastColumnTypeOperation:
               ColumnName: published
@@ -2679,20 +2679,20 @@ datasets:
       ImportMode: SPICE
     dependsOn:
       views:
-      - security_bulletin
+      - aws_feeds_security_bulletin
     schedules:
     - default
-  blog_post:
+  aws_feeds_blog_post:
     data:
       DataSetId: 173bf994-4763-4044-a96d-1cb6cce591f4
-      Name: blog_post
+      Name: aws_feeds_blog_post
       PhysicalTableMap:
         ce6e7be8-3a44-4325-b55d-26ab590920d1:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
             Schema: ${athena_database_name}
-            Name: blog_post
+            Name: aws_feeds_blog_post
             InputColumns:
             - Name: title
               Type: STRING
@@ -2714,7 +2714,7 @@ datasets:
               Type: STRING
       LogicalTableMap:
         633c14f6-0bff-4f6a-ae1b-6508d3a1781f:
-          Alias: blog_post
+          Alias: aws_feeds_blog_post
           DataTransforms:
           - CastColumnTypeOperation:
               ColumnName: date
@@ -2736,7 +2736,7 @@ datasets:
       ImportMode: SPICE
     dependsOn:
       views:
-      - blog_post
+      - aws_feeds_blog_post
     schedules:
     - default
   aws_feeds:
@@ -2786,170 +2786,7 @@ datasets:
     - default
 crawlers: {}
 views:
-  youtube:
-    data: |-
-      CREATE EXTERNAL TABLE `youtube`(
-        `video_url` string COMMENT 'from deserializer',
-        `title` string COMMENT 'from deserializer',
-        `published` string COMMENT 'from deserializer',
-        `description` string COMMENT 'from deserializer',
-        `star_rating_count` string COMMENT 'from deserializer',
-        `star_rating_average` string COMMENT 'from deserializer',
-        `star_rating_min` string COMMENT 'from deserializer',
-        `star_rating_max` string COMMENT 'from deserializer',
-        `views` string COMMENT 'from deserializer')
-      PARTITIONED BY (
-        `year` string,
-        `month` string,
-        `day` string)
-      ROW FORMAT SERDE
-        'org.openx.data.jsonserde.JsonSerDe'
-      WITH SERDEPROPERTIES (
-        'paths'='description,published,star_rating_average,star_rating_count,star_rating_max,star_rating_min,title,video_url,views')
-      STORED AS INPUTFORMAT
-        'org.apache.hadoop.mapred.TextInputFormat'
-      OUTPUTFORMAT
-        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
-      LOCATION
-        '${s3path}'
-      TBLPROPERTIES (
-        'CrawlerSchemaDeserializerVersion'='1.0',
-        'CrawlerSchemaSerializerVersion'='1.0',
-        'UPDATED_BY_CRAWLER'='CID-DC-aws-feeds-YouTube-Crawler',
-        'averageRecordSize'='1557',
-        'classification'='json',
-        'compressionType'='none',
-        'objectCount'='12',
-        'partition_filtering.enabled'='true',
-        'recordCount'='28',
-        'sizeKey'='43678',
-        'typeOfData'='file')
-    parameters:
-      s3path:
-        default: s3://cid-data-{account_id}/feeds/youtube/
-        description: S3 Path for youtube table
-  whats_new:
-    data: |-
-      CREATE EXTERNAL TABLE `whats_new`(
-        `link` string COMMENT 'from deserializer',
-        `title` string COMMENT 'from deserializer',
-        `description` string COMMENT 'from deserializer',
-        `date` string COMMENT 'from deserializer',
-        `service` string COMMENT 'from deserializer',
-        `category` string COMMENT 'from deserializer')
-      PARTITIONED BY (
-        `year` string,
-        `month` string,
-        `day` string)
-      ROW FORMAT SERDE
-        'org.openx.data.jsonserde.JsonSerDe'
-      WITH SERDEPROPERTIES (
-        'paths'='category,date,description,link,service,title')
-      STORED AS INPUTFORMAT
-        'org.apache.hadoop.mapred.TextInputFormat'
-      OUTPUTFORMAT
-        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
-      LOCATION
-        '${s3path}'
-      TBLPROPERTIES (
-        'CrawlerSchemaDeserializerVersion'='1.0',
-        'CrawlerSchemaSerializerVersion'='1.0',
-        'UPDATED_BY_CRAWLER'='CID-DC-aws-feeds-Whats-New-Crawler',
-        'averageRecordSize'='1366',
-        'classification'='json',
-        'compressionType'='none',
-        'objectCount'='19',
-        'partition_filtering.enabled'='true',
-        'recordCount'='217',
-        'sizeKey'='297068',
-        'typeOfData'='file')
-    parameters:
-      s3path:
-        default: s3://cid-data-{account_id}/feeds/whats_new/
-        description: S3 Path for whats_new table
-  security_bulletin:
-    data: |-
-      CREATE EXTERNAL TABLE `security_bulletin`(
-        `link` string COMMENT 'from deserializer',
-        `title` string COMMENT 'from deserializer',
-        `published` string COMMENT 'from deserializer',
-        `description` string COMMENT 'from deserializer')
-      PARTITIONED BY (
-        `year` string,
-        `month` string,
-        `day` string)
-      ROW FORMAT SERDE
-        'org.openx.data.jsonserde.JsonSerDe'
-      WITH SERDEPROPERTIES (
-        'paths'='description,link,published,title')
-      STORED AS INPUTFORMAT
-        'org.apache.hadoop.mapred.TextInputFormat'
-      OUTPUTFORMAT
-        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
-      LOCATION
-        '${s3path}'
-      TBLPROPERTIES (
-        'CrawlerSchemaDeserializerVersion'='1.0',
-        'CrawlerSchemaSerializerVersion'='1.0',
-        'UPDATED_BY_CRAWLER'='CID-DC-aws-feeds-Security-Bulletin-Crawler',
-        'averageRecordSize'='1983',
-        'classification'='json',
-        'compressionType'='none',
-        'objectCount'='10',
-        'partition_filtering.enabled'='true',
-        'recordCount'='10',
-        'sizeKey'='19841',
-        'typeOfData'='file')
-    parameters:
-      s3path:
-        default: s3://cid-data-{account_id}/feeds/security-bulletin/
-        description: S3 Path for security_bulletin table
-  blog_post:
-    data: |-
-      CREATE EXTERNAL TABLE `blog_post`(
-        `title` string COMMENT 'from deserializer',
-        `link` string COMMENT 'from deserializer',
-        `description` string COMMENT 'from deserializer',
-        `date` string COMMENT 'from deserializer',
-        `creator` string COMMENT 'from deserializer',
-        `category` string COMMENT 'from deserializer')
-      PARTITIONED BY (
-        `year` string,
-        `month` string,
-        `day` string)
-      ROW FORMAT SERDE
-        'org.openx.data.jsonserde.JsonSerDe'
-      WITH SERDEPROPERTIES (
-        'paths'='category,creator,date,description,link,title')
-      STORED AS INPUTFORMAT
-        'org.apache.hadoop.mapred.TextInputFormat'
-      OUTPUTFORMAT
-        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
-      LOCATION
-        '${s3path}'
-      TBLPROPERTIES (
-        'CrawlerSchemaDeserializerVersion'='1.0',
-        'CrawlerSchemaSerializerVersion'='1.0',
-        'UPDATED_BY_CRAWLER'='CID-DC-aws-feeds-Blog-Post-Crawler',
-        'averageRecordSize'='625',
-        'classification'='json',
-        'compressionType'='none',
-        'objectCount'='14',
-        'partition_filtering.enabled'='true',
-        'recordCount'='165',
-        'sizeKey'='103575',
-        'typeOfData'='file')
-    parameters:
-      s3path:
-        default: s3://cid-data-{account_id}/feeds/blog_post/
-        description: S3 Path for blog_post table
   aws_feeds:
-    dependsOn:
-      views:
-      - blog_post
-      - security_bulletin
-      - whats_new
-      - youtube
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.aws_feeds AS
       SELECT
@@ -2959,7 +2796,7 @@ views:
       , link url
       , category
       FROM
-        blog_post
+        "${data_collection_database_name}"."aws_feeds_blog_post"
       UNION SELECT
         published
       , 'security_bulletin' feed_type
@@ -2967,7 +2804,7 @@ views:
       , link url
       , 'security_bulletins' category
       FROM
-        security_bulletin
+        "${data_collection_database_name}"."aws_feeds_security_bulletin"
       UNION SELECT
         date published
       , 'whats_new' feed_type
@@ -2975,7 +2812,7 @@ views:
       , link url
       , category
       FROM
-        whats_new
+        "${data_collection_database_name}"."aws_feeds_whats_new"
       UNION SELECT
         published
       , 'youtube' feed_type
@@ -2983,4 +2820,9 @@ views:
       , video_url url
       , 'video' category
       FROM
-        youtube
+        "${data_collection_database_name}"."aws_feeds_youtube"
+    parameters:
+        data_collection_database_name:
+          default: optimization_data
+          description: "Enter the name of the data collection database"
+          global: True
