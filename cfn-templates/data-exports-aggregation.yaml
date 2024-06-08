@@ -46,7 +46,7 @@ Parameters:
     Type: String
     Default: "cid"
     Description: "Resource prefix. Will be used as a prefix for bucket and a name of a CUR2"
-    MaxLength:  37 # = 63 - len('1234567890123-data-exports')
+    MaxLength:  37 # = 63 - len('-123456789012-data-exports')
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   CreateCUR2:
     Type: String
@@ -426,12 +426,12 @@ Resources:
           Frequency: "SYNCHRONOUS"
 
   # Deploy CUR2 via lambda due to missing cfn resource definition
-  # AWS::BCMDataExports::Export outside us-east-1
+  # AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
   LocalCUR2viaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployCUR2ViaLambda
     Properties:
-      ServiceToken: !GetAtt CIDLambdaCUR2Creator.Arn
+      ServiceToken: !GetAtt CidDataExportCreatorLambda.Arn
       #BucketPolicyWait: !If [ IsDestinationAccount, !Ref DestinationS3BucketPolicy, !Ref SourceS3BucketPolicy ]
       Export:
         DataQuery:
@@ -458,10 +458,10 @@ Resources:
           Frequency: "SYNCHRONOUS"
 
 ###########################################################################
-# Lambda CUR2 Creator: used to create CUR2 from outside us-east-1
+# Lambda CUR2 Creator: used to create CUR2 from outside us-east-1 or cn-northwest-1
 ###########################################################################
 
-  CIDLambdaCUR2CreatorRole: #Execution role for the custom resource CIDLambdaAnalyticsExecutor
+  CidDataExportCreatorLambdaRole:
     Type: AWS::IAM::Role
     Condition: DeployCUR2ViaLambda
     Properties:
@@ -503,17 +503,17 @@ Resources:
               Resource:
                 - Fn::Sub: arn:${AWS::Partition}:bcm-data-exports:*:${AWS::AccountId}:export/*
 
-  CIDLambdaCUR2Creator:
+  CidDataExportCreatorLambda:
     Type: AWS::Lambda::Function
     Condition: DeployCUR2ViaLambda
     Properties:
-      Runtime: python3.11
+      Runtime: python3.12
       FunctionName:
         Fn::Sub: ${ResourcePrefix}-CID-CUR2Creator
       Handler: index.lambda_handler
       MemorySize: 128
       Role:
-        Fn::GetAtt: CIDLambdaCUR2CreatorRole.Arn
+        Fn::GetAtt: CidDataExportCreatorLambdaRole.Arn
       Timeout: 15
       Code:
         ZipFile: |
@@ -666,11 +666,11 @@ Resources:
             - {"Name": "pricing_term", "Type": "string" }
             - {"Name": "pricing_unit", "Type": "string" }
             - {"Name": "product", "Type": "map<string,string>" }
-            - {"Name": "product_from_location", "Type": "string" }        
-            - {"Name": "product_instance_type", "Type": "string" }         
-            - {"Name": "product_product_family", "Type": "string" }             
-            - {"Name": "product_servicecode", "Type": "string" }          
-            - {"Name": "product_to_location", "Type": "string" }          
+            - {"Name": "product_from_location", "Type": "string" }
+            - {"Name": "product_instance_type", "Type": "string" }
+            - {"Name": "product_product_family", "Type": "string" }
+            - {"Name": "product_servicecode", "Type": "string" }
+            - {"Name": "product_to_location", "Type": "string" }
             - {"Name": "reservation_amortized_upfront_fee_for_billing_period", "Type": "double" }
             - {"Name": "reservation_effective_cost", "Type": "double" }
             - {"Name": "reservation_end_time", "Type": "timestamp" }
@@ -761,8 +761,6 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Path: !Ref RolePath
-      ManagedPolicyArns:
-        - Fn::Sub: 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
       Policies:
         - PolicyName: AWSCURCrawlerComponentFunction
           PolicyDocument:
@@ -771,9 +769,44 @@ Resources:
               - Effect: Allow
                 Action:
                   - 's3:GetObject'
-                  - 's3:PutObject'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}'
+              - Effect: Allow
+                Action:
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:UpdateDatabase
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:BatchCreatePartition
+                  - glue:CreatePartition
+                  - glue:DeletePartition
+                  - glue:BatchDeletePartition
+                  - glue:UpdatePartition
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:BatchGetPartition
+                  - glue:ImportCatalogToGlue
                 Resource:
-                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/cur2/*'
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CIDDatabase}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CIDDatabase}/*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:*'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:log-stream:*'
 
 ###########################################################################
 # Analytics: used by CID team to track adoption, by retrieving AWS AccountId
