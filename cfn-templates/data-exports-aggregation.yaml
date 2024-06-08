@@ -819,7 +819,7 @@ Resources:
 # Analytics: used by CID team to track adoption, by retrieving AWS AccountId
 ###########################################################################
 
-  CIDLambdaAnalyticsRole: #Execution role for the custom resource CIDLambdaAnalyticsExecutor
+  CidLambdaAnalyticsRole: #Execution role for the custom resource CidLambdaAnalyticsExecutor
     Type: AWS::IAM::Role
     Properties:
       Path:
@@ -849,16 +849,16 @@ Resources:
               - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics:*"
               - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics:*:*"
 
-  CIDLambdaAnalytics:
+  CidLambdaAnalytics:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.12
       FunctionName:
-        Fn::Sub: ${ResourcePrefix}-CID-Analytics
+        Fn::Sub: ${ResourcePrefix}-CID-Analytics-DataExports
       Handler: index.lambda_handler
       MemorySize: 128
       Role:
-        Fn::GetAtt: CIDLambdaAnalyticsRole.Arn
+        Fn::GetAtt: CidLambdaAnalyticsRole.Arn
       Timeout: 15
       Environment:
         Variables:
@@ -933,10 +933,10 @@ Resources:
           - id: 'W92'
             reason: "One Time execution. No need for ReservedConcurrentExecutions"
 
-  CIDLambdaAnalyticsExecutor:
-    Type: Custom::CIDLambdaAnalyticsExecutor
+  CidLambdaAnalyticsExecutorForDataExports:
+    Type: Custom::CidLambdaAnalyticsExecutorForDataExports
     Properties:
-      ServiceToken: !GetAtt CIDLambdaAnalytics.Arn
+      ServiceToken: !GetAtt CidLambdaAnalytics.Arn
       DeploymentType:
         - Fn::If:
           - IsDestinationAccount
