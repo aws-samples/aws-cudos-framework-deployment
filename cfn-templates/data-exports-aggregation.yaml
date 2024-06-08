@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS Billing Data Export Aggregation v0.0.1
 Metadata:
+
   AWS::CloudFormation::Interface:
     ParameterGroups:
       -
@@ -18,7 +20,7 @@ Metadata:
         Label:
           default: "Technical Parameters. Please do not change."
         Parameters:
-          - SCADEnable
+          - EnableSCAD
 
     ParameterLabels:
       DestinationAccountId:
@@ -27,7 +29,7 @@ Metadata:
         default: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
       SourceAccountIds:
         default: "Source Account Ids (Comma separated list)"
-      SCADEnable:
+      EnableSCAD:
         default: "Enable/Disable Split Cost Allocation Data (SCAD)."
 
 
@@ -42,16 +44,14 @@ Parameters:
     AllowedPattern: '\d{12}'
   ResourcePrefix:
     Type: String
-    Default: "cid2"
+    Default: "data-export"
     Description: "Resource prefix. Will be used as a prefix for bucket and a name of a CUR2"
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   CreateCUR2:
     Type: String
     Description: Whether to create a local CUR2 or not. Set this to True if your Management (Payer)/Source Account is the same as your Destination account (where you want to deploy the dashboards).
-    AllowedValues:
-      - "True"
-      - "False"
-    Default: "False"
+    AllowedValues: ['yes', 'no']
+    Default: "yes"
   RolePath:
     Type: String
     Default: '/'
@@ -66,32 +66,27 @@ Parameters:
     AllowedPattern: "^((\\d{12})\\,?)*$"
     Default: ''
     Description: "A comma separated list of all Source accounts that will replicate CUR2 Data. Ex:  12345678912,98745612312,...."
-  
+
   ##
   # Technical params
   ##
-  SCADEnable:
+  EnableSCAD:
     Type: String
     Description: Whether to enable Split Cost Allocation Data (Scad). Set this to False, only if you experience performance issues due to dataset size.
-    AllowedValues:
-      - "True"
-      - "False"
-    Default: "True"
+    AllowedValues: ['yes', 'no']
+    Default: "yes"
 
 Conditions:
-  IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref AWS::AccountId]
-  IsSourceAccount: !Not [!Condition IsDestinationAccount]
-  RegionSupportsCUR2viaCFN: # CFN supports CUR2 only in us-east-1 and cn-northwest-1. Other regions must use lambda
+  IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref 'AWS::AccountId']
+  RegionSupportsDataExportsViaCFN: # CFN supports DataExports only in us-east-1 and cn-northwest-1. Other regions must use lambda.
     Fn::Or:
-      - !Equals [!Ref AWS::Region, 'us-east-1']
-      - !Equals [!Ref AWS::Region, 'cn-northwest-1']
-  CUR2Enable: !Equals [!Ref CreateCUR2, 'True']
-  CreateLocalS3BucketInDestination: !And [!Condition CUR2Enable, !Condition IsDestinationAccount]
-  CreateLocalS3Bucket: !Or [!Condition IsSourceAccount, !Condition CreateLocalS3BucketInDestination]
-  SCADEnabled: !Equals [!Ref SCADEnable, 'True']
-  DeployCUR2ViaCFNInSource: !And [!Condition CUR2Enable, !Condition IsSourceAccount, !Condition RegionSupportsCUR2viaCFN]
-  DeployCUR2ViaCFNInDestination: !And [!Condition CUR2Enable, !Condition IsDestinationAccount, !Condition RegionSupportsCUR2viaCFN]
-  DeployCUR2ViaLambda: !And [!Condition CUR2Enable, !Not [!Condition RegionSupportsCUR2viaCFN]]
+      - !Equals [!Ref 'AWS::Region', 'us-east-1']
+      - !Equals [!Ref 'AWS::Region', 'cn-northwest-1']
+  CreateCUR2: !Equals [!Ref CreateCUR2, 'yes']
+  EnableSCAD: !Equals [!Ref EnableSCAD, 'yes']
+  DeployDataExport: !Condition CreateCUR2 # Will be other reports later, so keep it generic
+  DeployCUR2ViaCFN: !And [!Condition CreateCUR2, !Condition RegionSupportsDataExportsViaCFN]
+  DeployCUR2ViaLambda: !And [!Condition CreateCUR2, !Not [!Condition RegionSupportsDataExportsViaCFN]]
   EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
 
 Mappings:
@@ -247,7 +242,7 @@ Resources:
 
   SourceS3:
     Type: AWS::S3::Bucket
-    Condition: CreateLocalS3Bucket
+    Condition: DeployDataExport
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
@@ -285,8 +280,8 @@ Resources:
               Bucket:
                 Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared"
               StorageClass: STANDARD
-            Id: ReplicationRule1
-            Prefix: !Sub "cur2/${AWS::AccountId}/cid2/data/"
+            Id: ReplicateCUR2Data
+            Prefix: !Sub "cur2/${AWS::AccountId}/${ResourcePrefix}/data/"
             Status: Enabled
       LifecycleConfiguration:
         Rules:
@@ -306,7 +301,7 @@ Resources:
 
   SourceS3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
-    Condition: CreateLocalS3Bucket
+    Condition: DeployDataExport
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
@@ -355,7 +350,7 @@ Resources:
               - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}/*'
 
   ReplicationRole:
-    Condition: CreateLocalS3Bucket
+    Condition: DeployDataExport
     Type: AWS::IAM::Role
     Properties:
       Path:
@@ -398,57 +393,27 @@ Resources:
 # Local CUR2
 ####
 
-  ## Deploy CUR2 natively via CFN resource if we are in us-east-1
-  LocalCUR2InSource:
+  ## Deploy CUR2 natively via CFN resource if we are regions that support native CFN
+  LocalCUR2viaCFN:
     Type: AWS::BCMDataExports::Export
-    Condition: DeployCUR2ViaCFNInSource
+    Condition: DeployCUR2ViaCFN
     DependsOn:
       - SourceS3BucketPolicy
     Properties:
       Export:
         DataQuery:
-          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
+          QueryStatement: !If [EnableSCAD, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
               TIME_GRANULARITY: "HOURLY"
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
+              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [EnableSCAD, "TRUE", "FALSE"]
         Description: "CUR 2.0 export for aggregation in CID"
-        DestinationConfigurations: 
+        DestinationConfigurations:
           S3Destination:
             S3Bucket: !Ref SourceS3
-            S3Prefix: !Sub "cur2/${AWS::AccountId}"
-            S3Region: !Ref AWS::Region
-            S3OutputConfigurations:
-              Overwrite: "OVERWRITE_REPORT"
-              Format: "PARQUET"
-              Compression: "PARQUET"
-              OutputType: "CUSTOM"
-        Name: !Ref ResourcePrefix
-        RefreshCadence:
-          Frequency: "SYNCHRONOUS"
-
-  LocalCUR2InDestination:
-    Type: AWS::BCMDataExports::Export
-    Condition: DeployCUR2ViaCFNInDestination
-    DependsOn:
-      - SourceS3BucketPolicy # Conditional DependsOn is not supported, so we need 2 resources
-    Properties:
-      Export:
-        DataQuery:
-          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
-          TableConfigurations:
-            COST_AND_USAGE_REPORT:
-              TIME_GRANULARITY: "HOURLY"
-              INCLUDE_RESOURCES: "TRUE"
-              INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
-        Description: "CUR 2.0 export for aggregation in CID"
-        DestinationConfigurations: 
-          S3Destination:
-            S3Bucket: !Ref SourceS3
-            S3Prefix: !Sub "cur2/${AWS::AccountId}"
+            S3Prefix: !Sub "cur2/${AWS::AccountId}" # Explicitly hardcode name of folder (it will be the same as table name)
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
               Overwrite: "OVERWRITE_REPORT"
@@ -461,26 +426,26 @@ Resources:
 
   # Deploy CUR2 via lambda due to missing cfn resource definition
   # AWS::BCMDataExports::Export outside us-east-1
-  CUR2viaCustomResource:
+  LocalCUR2viaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployCUR2ViaLambda
     Properties:
       ServiceToken: !GetAtt CIDLambdaCUR2Creator.Arn
-      BucketPolicyWait: !If [ IsDestinationAccount, !Ref DestinationS3BucketPolicy, !Ref SourceS3BucketPolicy ]
+      #BucketPolicyWait: !If [ IsDestinationAccount, !Ref DestinationS3BucketPolicy, !Ref SourceS3BucketPolicy ]
       Export:
         DataQuery:
-          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
+          QueryStatement: !If [EnableSCAD, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
               TIME_GRANULARITY: "HOURLY"
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
+              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [EnableSCAD, "TRUE", "FALSE"]
         Description: "CUR 2.0 export for aggregation in CID"
-        DestinationConfigurations: 
+        DestinationConfigurations:
           S3Destination:
             S3Bucket: !Ref SourceS3
-            S3Prefix: !Sub "cur2/${AWS::AccountId}"
+            S3Prefix: !Sub "cur2/${AWS::AccountId}" # Explicitly hardcode name of folder (it will be the same as table name)
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
               Overwrite: "OVERWRITE_REPORT"
@@ -944,7 +909,7 @@ Outputs:
     Value:
       Fn::Sub: ${ResourcePrefix}-${DestinationAccountId}-shared
   LocalAccountBucket:
-    Condition: IsSourceAccount
+    Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
     Value:
       Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-local
