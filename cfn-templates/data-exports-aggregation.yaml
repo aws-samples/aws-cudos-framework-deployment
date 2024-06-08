@@ -44,8 +44,9 @@ Parameters:
     AllowedPattern: '\d{12}'
   ResourcePrefix:
     Type: String
-    Default: "data-export"
+    Default: "cid"
     Description: "Resource prefix. Will be used as a prefix for bucket and a name of a CUR2"
+    MaxLength:  37 # = 63 - len('1234567890123-data-exports')
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   CreateCUR2:
     Type: String
@@ -117,7 +118,7 @@ Resources:
     UpdateReplacePolicy: Retain
     Properties:
       BucketName:
-        Fn::Sub: "${ResourcePrefix}-${AWS::AccountId}-shared"
+        Fn::Sub: "${ResourcePrefix}-${AWS::AccountId}-data-exports"
 
       ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
       # LoggingConfiguration:
@@ -247,7 +248,7 @@ Resources:
     UpdateReplacePolicy: Delete
     Properties:
       BucketName:
-        Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-local
+        Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-data-local
 
       ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
       # LoggingConfiguration:
@@ -278,7 +279,7 @@ Resources:
           -
             Destination:
               Bucket:
-                Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared"
+                Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
               StorageClass: STANDARD
             Id: ReplicateCUR2Data
             Prefix: !Sub "cur2/${AWS::AccountId}/${ResourcePrefix}/data/"
@@ -374,20 +375,20 @@ Resources:
                 Action:
                   - s3:GetReplicationConfiguration
                   - s3:ListBucket
-                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local"
+                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-data-local"
               - Effect: Allow
                 Action:
                   - s3:GetObjectVersionForReplication
                   - s3:GetObjectVersionAcl
                   - s3:GetObjectVersionTagging
-                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local/*"
+                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-data-local/*"
               - Effect: Allow
                 Action:
                   - s3:ReplicateObject
                   - s3:ReplicateDelete
                   - s3:ReplicateTags
                 Resource:
-                  Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared/cur2/${AWS::AccountId}/*"
+                  Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/cur2/${AWS::AccountId}/*"
 
 ####
 # Local CUR2
@@ -598,8 +599,8 @@ Resources:
     Condition: IsDestinationAccount
     Properties:
       DatabaseInput:
-        Name: 
-          Fn::Sub: "${ResourcePrefix}-database"
+        Name:
+          Fn::Sub: "${ResourcePrefix}_data_export"
       CatalogId: !Sub "${AWS::AccountId}"
 
 ###########################################################################
@@ -704,9 +705,8 @@ Resources:
           - {"Name": "report_name", "Type": "string" }
           - {"Name": "data", "Type": "string" }
           - {"Name": "billing_period", "Type": "string" }
-          
 
-  
+
   GlueCURCrawler:
     Type: AWS::Glue::Crawler
     Condition: IsDestinationAccount
@@ -774,7 +774,7 @@ Resources:
                   - 's3:PutObject'
                 Resource:
                   Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/cur2/*'
-  
+
 ###########################################################################
 # Analytics: used by CID team to track adoption, by retrieving AWS AccountId
 ###########################################################################
@@ -812,7 +812,7 @@ Resources:
   CIDLambdaAnalytics:
     Type: AWS::Lambda::Function
     Properties:
-      Runtime: python3.11 # before updating 
+      Runtime: python3.13
       FunctionName:
         Fn::Sub: ${ResourcePrefix}-CID-Analytics
       Handler: index.lambda_handler
@@ -907,9 +907,9 @@ Outputs:
   GovernanceBucketName:
     Description: Bucket where to store and aggregate CUR2
     Value:
-      Fn::Sub: ${ResourcePrefix}-${DestinationAccountId}-shared
+      Fn::Sub: ${ResourcePrefix}-${DestinationAccountId}-data-exports
   LocalAccountBucket:
     Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
     Value:
-      Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-local
+      Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-data-local
