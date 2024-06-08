@@ -24,7 +24,7 @@ Metadata:
 
     ParameterLabels:
       DestinationAccountId:
-        default: "Destination (Data Collection) Account Account Id"
+        default: "Destination (Data Collection) Account Id"
       ResourcePrefix:
         default: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
       SourceAccountIds:
@@ -282,7 +282,7 @@ Resources:
                 Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
               StorageClass: STANDARD
             Id: ReplicateCUR2Data
-            Prefix: !Sub "cur2/${AWS::AccountId}/${ResourcePrefix}/data/"
+            Prefix: !Sub "cur2/${AWS::AccountId}/${ResourcePrefix}-cur2/data/"
             Status: Enabled
       LifecycleConfiguration:
         Rules:
@@ -421,7 +421,7 @@ Resources:
               Format: "PARQUET"
               Compression: "PARQUET"
               OutputType: "CUSTOM"
-        Name: !Ref ResourcePrefix
+        Name: !Sub '${ResourcePrefix}-cur2'
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
@@ -453,7 +453,7 @@ Resources:
               Format: "PARQUET"
               Compression: "PARQUET"
               OutputType: "CUSTOM"
-        Name: !Ref ResourcePrefix
+        Name: !Sub '${ResourcePrefix}-cur2'
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
