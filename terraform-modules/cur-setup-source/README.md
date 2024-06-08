@@ -183,6 +183,14 @@ Default:
 }
 ```
 
+### enable\_split\_cost\_allocation\_data
+
+Description: Activate split cost allocation data for ECS and EKS to aggregate cost and usage data for container-level resources
+
+Type: `bool`
+
+Default: `false`
+
 ## Outputs
 
 The following outputs are exported:
