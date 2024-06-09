@@ -190,24 +190,6 @@ Resources:
             Condition:
               Bool:
                 aws:SecureTransport: false
-          - Sid: AllowReadBilling
-            Effect: Allow
-            Principal:
-              Service: bcm-data-exports.amazonaws.com
-            Action:
-              - s3:GetBucketAcl
-              - s3:GetBucketPolicy
-            Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
-          - Sid: AllowWriteBilling
-            Effect: Allow
-            Principal:
-              Service: bcm-data-exports.amazonaws.com
-            Action:
-              - s3:PutObject
-            Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*/data/*'
           - Sid: AllowReplicationWrite
             Effect: Allow
             Principal:
@@ -331,24 +313,20 @@ Resources:
             Condition:
               Bool:
                 aws:SecureTransport: false
-          - Sid: AllowReadBilling
+          - Sid: AllowBillingReadAndWrite
             Effect: Allow
             Principal:
               Service: bcm-data-exports.amazonaws.com
             Action:
               - s3:GetBucketAcl
               - s3:GetBucketPolicy
+              - s3:PutObject
             Resource:
               - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}'
               - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}/*'
-          - Sid: AllowWriteBilling
-            Effect: Allow
-            Principal:
-              Service: bcm-data-exports.amazonaws.com
-            Action:
-              - s3:PutObject
-            Resource:
-              - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}/*'
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
 
   ReplicationRole:
     Condition: DeployDataExport
