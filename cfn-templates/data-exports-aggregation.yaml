@@ -21,16 +21,19 @@ Metadata:
           default: "Technical Parameters. Please do not change."
         Parameters:
           - EnableSCAD
+          - RolePath
 
     ParameterLabels:
+      CreateCUR2:
+        default: "Create CUR 2.0 DataExport"
       DestinationAccountId:
         default: "Destination (Data Collection) Account Id"
       ResourcePrefix:
-        default: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
+        default: "Resource Prefix"
       SourceAccountIds:
         default: "Source Account Ids (Comma separated list)"
       EnableSCAD:
-        default: "Enable/Disable Split Cost Allocation Data (SCAD)."
+        default: "Enable Split Cost Allocation Data (SCAD) in CUR 2.0"
 
 
 Parameters:
@@ -40,42 +43,41 @@ Parameters:
   ##
   DestinationAccountId:
     Type: String
-    Description: "AWS Account Id where CID Quicksight Dashboard will be deployed"
+    Description: "AWS Account Id where DataExport will be replicated to (Where you deploy CID Quicksight Dashboards or Data Collection)"
     AllowedPattern: '\d{12}'
   ResourcePrefix:
     Type: String
     Default: "cid"
-    Description: "Resource prefix. Will be used as a prefix for bucket and a name of a CUR2"
+    Description: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
     MaxLength:  37 # = 63 - len('-123456789012-data-exports')
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   CreateCUR2:
     Type: String
-    Description: Whether to create a local CUR2 or not. Set this to True if your Management (Payer)/Source Account is the same as your Destination account (where you want to deploy the dashboards).
+    Description: Whether to create a local CUR2. Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
     AllowedValues: ['yes', 'no']
     Default: "yes"
-  RolePath:
-    Type: String
-    Default: '/'
-    Description: Path for roles where PermissionBoundaries can limit location
 
   ##
   # Destination specific params
   ##
-
   SourceAccountIds:
     Type: String
     AllowedPattern: "^((\\d{12})\\,?)*$"
     Default: ''
-    Description: "A comma separated list of all Source accounts that will replicate CUR2 Data. Ex:  12345678912,98745612312,...."
+    Description: "A comma separated list of all accounts that will replicate DataExport to this account. Ex:  12345678912,98745612312,...."
 
   ##
   # Technical params
   ##
   EnableSCAD:
     Type: String
-    Description: Whether to enable Split Cost Allocation Data (Scad). Set this to False, only if you experience performance issues due to dataset size.
+    Description: Whether to enable Split Cost Allocation Data (Scad). Set this to 'No', if you experience performance issues due to dataset size.
     AllowedValues: ['yes', 'no']
     Default: "yes"
+  RolePath:
+    Type: String
+    Default: '/'
+    Description: Path for roles where PermissionBoundaries can limit location
 
 Conditions:
   IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref 'AWS::AccountId']
@@ -106,10 +108,6 @@ Resources:
 ###########################################################################
 # Destination Account Resources
 ###########################################################################
-
-####
-# S3 Bucket which store all CUR2 from Accounts
-####
 
   DestinationS3:
     Type: AWS::S3::Bucket
@@ -218,10 +216,6 @@ Resources:
               - s3:PutBucketVersioning
             Resource:
               - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
-
-####
-# S3 Bucket in account with CUR enabled with replication to aggregated bucket
-####
 
   SourceS3:
     Type: AWS::S3::Bucket
@@ -368,10 +362,6 @@ Resources:
                 Resource:
                   Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/cur2/${AWS::AccountId}/*"
 
-####
-# Local CUR2
-####
-
   ## Deploy CUR2 natively via CFN resource if we are regions that support native CFN
   LocalCUR2viaCFN:
     Type: AWS::BCMDataExports::Export
@@ -436,7 +426,7 @@ Resources:
           Frequency: "SYNCHRONOUS"
 
 ###########################################################################
-# Lambda CUR2 Creator: used to create CUR2 from outside us-east-1 or cn-northwest-1
+# Lambda DataExport Creator: used to create DataExport from outside us-east-1 or cn-northwest-1
 ###########################################################################
 
   CidDataExportCreatorLambdaRole:
@@ -576,9 +566,6 @@ Resources:
           - id: 'W92'
             reason: "One Time execution. No need for ReservedConcurrentExecutions"
 
-###########################################################################
-# Glue Database for CID framework
-###########################################################################
   CIDDatabase:
     Type: AWS::Glue::Database
     Condition: IsDestinationAccount
@@ -587,10 +574,6 @@ Resources:
         Name:
           Fn::Sub: "${ResourcePrefix}_data_export"
       CatalogId: !Sub "${AWS::AccountId}"
-
-###########################################################################
-# Glue/Athena Table for CID framework
-###########################################################################
 
   CURTable:  # Initial creation of table. it will be updated by crawler later
     Type: AWS::Glue::Table
@@ -699,7 +682,7 @@ Resources:
       Name:  !Sub "${ResourcePrefix}-CURCrawler"
       Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
       Role:
-        Fn::GetAtt: CidCURCrawlerRole.Arn
+        Fn::GetAtt: CidDataExportCrawlerRole.Arn
       DatabaseName: !Ref CIDDatabase
       Targets:
         S3Targets:
@@ -732,7 +715,7 @@ Resources:
             }
           }
         }
-  CidCURCrawlerRole:
+  CidDataExportCrawlerRole:
     Type: AWS::IAM::Role
     Condition: IsDestinationAccount
     Properties:
@@ -747,7 +730,7 @@ Resources:
               - 'sts:AssumeRole'
       Path: !Ref RolePath
       Policies:
-        - PolicyName: AWSCURCrawlerComponentFunction
+        - PolicyName: CrawlerPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
