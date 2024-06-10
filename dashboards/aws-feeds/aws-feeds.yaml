@@ -9,7 +9,7 @@ dashboards:
       - aws_feeds_youtube
     name: AWS Feeds
     dashboardId: aws-feeds
-    category: Custom
+    category: Advanced
     theme: MIDNIGHT
     data: |-
       AnalysisDefaults:
