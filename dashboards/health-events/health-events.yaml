@@ -1789,12 +1789,13 @@ dashboards:
           SheetTextBoxId: ece4dd3d-0666-4557-9953-e61d368f0f6a
         - Content: "<text-box>\_\_\_</text-box>"
           SheetTextBoxId: f30441db-78aa-4ace-ba3a-72749d69cd8f
-        - Content: "<text-box>\n  <block align=\"center\">\n    <inline color=\"#eb4444\"\
-            \ font-size=\"18px\">\n      <b>OPEN EVENTS\_\_\_</b>\n    </inline>\n    <inline\
-            \ color=\"#b3b1b1\" font-size=\"18px\">\n      <b>(AS OF\_</b>\n    </inline>\n\
-            \    <inline color=\"#b3b1b1\" font-size=\"18px\">\n      <b>\n        <expression>${StartTime}</expression>\n\
-            \      </b>\n    </inline>\n    <inline color=\"#b3b1b1\" font-size=\"18px\"\
-            >)</inline>\n  </block>\n</text-box>"
+        - Content: "<text-box>\n  <block align=\"center\">\n    <inline color=\"#de3b00\"\
+            \ font-size=\"18px\">\n      <b>OPEN EVENTS</b>\n    </inline>\n    <inline\
+            \ color=\"#eb4444\" font-size=\"18px\">\n      <b>\_\_\_</b>\n    </inline>\n\
+            \    <inline color=\"#b3b1b1\" font-size=\"18px\">\n      <b>(AS OF\_</b>\n\
+            \    </inline>\n    <inline color=\"#b3b1b1\" font-size=\"18px\">\n      <b>\n\
+            \        <expression>${StartTime}</expression>\n      </b>\n    </inline>\n\
+            \    <inline color=\"#b3b1b1\" font-size=\"18px\">)</inline>\n  </block>\n</text-box>"
           SheetTextBoxId: c68cd9d9-fae7-4e99-99f2-52c7b6d2855c
         - Content: "<text-box>\n  <block align=\"center\">\n    <inline color=\"#d78521\"\
             \ font-size=\"18px\">\n      <b>IMPENDING EVENTS\_\_\_</b>\n    </inline>\n\
@@ -2150,7 +2151,8 @@ dashboards:
                   \ AN EVENT\_</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
                   14px\">\n    <b>\u23EC</b>\n  </inline>\n  <inline color=\"#a7a7a7\" font-size=\"\
                   12px\">\n    <b>\_</b>\n  </inline>\n  <inline font-size=\"12px\">\n \
-                  \   <b>TO FILTER THE DETAIL SECTION BELOW</b>\n  </inline>\n</visual-subtitle>"
+                  \   <b>TO FILTER THE SINGLE EVENT DETAIL SECTION BELOW</b>\n  </inline>\n\
+                  </visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3958,10 +3960,10 @@ dashboards:
                   Width: 44px
                 - CustomLabel: Events
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.4.1712628646208
-                  Width: 65px
+                  Width: 58px
                 - CustomLabel: Accounts
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.account_id.2.1712085867749
-                  Width: 69px
+                  Width: 80px
                 - CustomLabel: Resources
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.2.1710953947578
                   Width: 81px
@@ -4087,11 +4089,11 @@ dashboards:
                 TrendGroups: []
                 Values:
                 - CategoricalMeasureField:
-                    AggregationFunction: COUNT
+                    AggregationFunction: DISTINCT_COUNT
                     Column:
-                      ColumnName: event_arn
+                      ColumnName: affected_entity_value
                       DataSetIdentifier: health_events_view
-                    FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.0.1712331220246
+                    FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.0.1717686659301
               KPIOptions:
                 Comparison:
                   ComparisonMethod: PERCENT_DIFFERENCE
@@ -4212,11 +4214,11 @@ dashboards:
                   Width: 154px
                 - CustomLabel: Service
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.service.3.1714575675916
-                  Width: 100px
+                  Width: 125px
                 - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.region.4.1715302668284
                   Width: 108px
                 - FieldId: 75b6e7c1-56e8-48e7-b7c0-7eedf1687806.3.1715216580260
-                  Width: 440px
+                  Width: 425px
                 - CustomLabel: '# of Events'
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.2.1713478039827
                   Width: 82px
@@ -4694,35 +4696,41 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US\"\
                   \ target=\"_blank\">\n        <b>Heath Events Dashboard</b>\n      </a>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ font-size=\"68.8px\">\n      <b>v0.9.2</b>\n    </inline>\n  </block>\n\
+                  \ font-size=\"68.8px\">\n      <b>v0.9.3</b>\n    </inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
                   />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
-                  />\n  <br/>\n  <block align=\"right\">Built by: Eric Christensen, Iakov\
-                  \ Gan</block>\n  <br/>\n  <block align=\"right\">\n    Learn more\n  \
+                  />\n  <br/>\n  <block align=\"right\">\n    <inline background-color=\"\
+                  #ffffff\">Built by: Eric Christensen, Iakov Gan</inline>\n  </block>\n\
+                  \  <br/>\n  <block align=\"right\">\n    <inline background-color=\"#ffffff\"\
+                  >Learn more</inline>\n    <inline background-color=\"#ffffff\">\n    \
                   \  <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
-                  \ target=\"_blank\">\_</a>\n    about AWS Cloud Intelligence Dashboards\
-                  \ (CID) on\n    <inline color=\"#61d1d6\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US\"\
-                  \ target=\"_blank\">\n        <b>AWS Well-Architected Labs</b>\n     \
-                  \ </a>\n    </inline>\n    \_and the\n    <inline color=\"#61d1d6\">\n\
-                  \      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
+                  \ target=\"_blank\">\_</a>\n    </inline>\n    <inline background-color=\"\
+                  #ffffff\">about AWS Cloud Intelligence Dashboards (CID) on</inline>\n\
+                  \    <inline background-color=\"#ffffff\" color=\"#61d1d6\">\n      <a\
+                  \ href=\"https://catalog.workshops.aws/awscid/en-US\" target=\"_blank\"\
+                  >\n        <b>AWS Well-Architected Labs</b>\n      </a>\n    </inline>\n\
+                  \    <inline background-color=\"#ffffff\">\_and the</inline>\n    <inline\
+                  \ background-color=\"#ffffff\" color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
                   \ target=\"_blank\">\n        <b>CID YouTube Channe</b>\n      </a>\n\
-                  \    </inline>\n    <inline color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
+                  \    </inline>\n    <inline background-color=\"#ffffff\" color=\"#61d1d6\"\
+                  >\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
                   \ target=\"_blank\">\n        <u>l</u>\n      </a>\n    </inline>\n  </block>\n\
-                  \  <br/>\n  <block align=\"right\">\n    If you wish to provide feedback\
-                  \ please or report an error please em\n    <inline background-color=\"\
-                  #000000\">ail:</inline>\n    <inline background-color=\"#000000\" color=\"\
-                  #61d1d6\">\_</inline>\n    <inline background-color=\"#000000\" color=\"\
-                  #61d1d6\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
+                  \  <br/>\n  <block align=\"right\">\n    <inline background-color=\"#ffffff\"\
+                  >If you wish to provide feedback please or report an error please email:</inline>\n\
+                  \    <inline background-color=\"#ffffff\" color=\"#61d1d6\">\_</inline>\n\
+                  \    <inline background-color=\"#ffffff\" color=\"#61d1d6\">\n      <a\
+                  \ href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
                   \ target=\"_blank\">\n        <b>cloud-intelligence-dashboards@amazon.com</b>\n\
                   \      </a>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"\
-                  >\n    <inline background-color=\"#000000\">If you like Cloud Intelligence\
+                  >\n    <inline background-color=\"#ffffff\">If you like Cloud Intelligence\
                   \ Dashboards we kindly ask you to fill out\_</inline>\n    <inline background-color=\"\
-                  #000000\" color=\"#61d1d6\">\n      <a href=\"https://eventbox.dev/survey/AJ0EIZ7\"\
+                  #ffffff\" color=\"#61d1d6\">\n      <a href=\"https://eventbox.dev/survey/AJ0EIZ7\"\
                   \ target=\"_blank\">\n        <b>this customer survey</b>\n      </a>\n\
-                  \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\">Powered\
-                  \ by: Amazon QuickSight, Amazon Athena, Amazon S3</block>\n  <br/>\n \
-                  \ <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n\
-                  \  <block align=\"center\"/>\n</narrative>"
+                  \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\">\n    <inline\
+                  \ background-color=\"#ffffff\">Powered by: Amazon QuickSight, Amazon Athena,\
+                  \ Amazon S3</inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n\
+                  \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"center\"\
+                  />\n</narrative>"
             Subtitle:
               Visibility: VISIBLE
             Title:
