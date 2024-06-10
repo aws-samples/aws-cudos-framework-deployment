@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v0.3.3
+Description: Deployment of Cloud Intelligence Dashboards v0.3.4
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -317,8 +317,13 @@ Resources:
                 Action: quicksight:ListIngestions
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/ingestion/*'
-      ManagedPolicyArns:
-        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Cid*'
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -678,9 +683,14 @@ Resources:
               - Effect: Allow
                 Action: quicksight:DescribeUser
                 Resource: !Sub 'arn:${AWS::Partition}:quicksight:*:${AWS::AccountId}:user/default/${QuickSightUser}' # region=* as at this moment we do not know the Identity region where QS stores users
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Cid*'
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-      ManagedPolicyArns:
-        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
   InitLambdaExecutionRoleWorkGroupPolicy:
     Type: AWS::IAM::Policy
@@ -767,8 +777,18 @@ Resources:
               - sts:AssumeRole
       Path: !Ref RolePath
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-      ManagedPolicyArns:
-        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: AWSCURCrawlerComponentFunction
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Cid*'
   CustomResourceProcessPath:
     Type: AWS::Lambda::Function
     Properties:
@@ -1039,8 +1059,6 @@ Resources:
               - 'sts:AssumeRole'
       Path: !Ref RolePath
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-      ManagedPolicyArns:
-        - Fn::Sub: 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
       Policies:
         - PolicyName: AWSCURCrawlerComponentFunction
           PolicyDocument:
@@ -1048,11 +1066,22 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'glue:UpdateDatabase'
-                  - 'glue:UpdatePartition'
-                  - 'glue:CreateTable'
-                  - 'glue:UpdateTable'
-                  - 'glue:ImportCatalogToGlue'
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:UpdateDatabase
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:BatchCreatePartition
+                  - glue:CreatePartition
+                  - glue:DeletePartition
+                  - glue:BatchDeletePartition
+                  - glue:UpdatePartition
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:BatchGetPartition
+                  - glue:ImportCatalogToGlue
                 Resource:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
                   - Fn::If:
@@ -1065,9 +1094,23 @@ Resources:
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/${CURPath.Folder}
               - Effect: Allow
                 Action:
+                  - 's3:ListBucket'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${CURPath.Bucket}'
+              - Effect: Allow
+                Action:
                   - 's3:GetObject'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${CURPath.Bucket}/${CURPath.Path}/*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
                 Resource:
-                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${CURPath.Bucket}/${CURPath.Path}/*'
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:*'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:log-stream:Cid*'
 
   KmsPolicyForCidCURCrawlerRole:
     Type: AWS::IAM::Policy
@@ -1181,10 +1224,10 @@ Resources:
                 Effect: Allow
                 Action: s3:ListBucket
                 Resource:
-                  - !Sub arn:aws:s3:::${ODCPath.Bucket}
+                  - !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}
                   - !If
                       - NeedQuickSightDataSourceRoleAndCUR
-                      - !Sub arn:aws:s3:::${CURPath.Bucket}
+                      - !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}
                       - !Ref "AWS::NoValue"
               - Sid: AllowReadBucket
                 Effect: Allow
@@ -1192,10 +1235,10 @@ Resources:
                   - s3:GetObject
                   - s3:GetObjectVersion
                 Resource:
-                  - !Sub arn:aws:s3:::${ODCPath.Bucket}/*
+                  - !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}/*
                   - !If
                       - NeedQuickSightDataSourceRoleAndCUR
-                      - !Sub arn:aws:s3:::${CURPath.Bucket}/*
+                      - !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}/*
                       - !Ref "AWS::NoValue"
               - !If
                   - NeedQuickSightDataSourceKMS
@@ -1250,8 +1293,6 @@ Resources:
             Action:
               - sts:AssumeRole
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-      ManagedPolicyArns:
-        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: CidExecPolicy
           PolicyDocument:
@@ -1347,6 +1388,13 @@ Resources:
                   - athena:ListWorkGroups
                   - athena:GetDatabase
                 Resource: '*'  # This is needed to allow Autodetect in CID-CMD
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Cid*'
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -1569,7 +1617,7 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: 'cid-resource-lambda-layer/cid-0.3.3.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-0.3.4.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11

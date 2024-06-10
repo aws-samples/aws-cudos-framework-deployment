@@ -7,3 +7,4 @@ Resources:
   - Url: graviton-opportunities-dashboard/graviton_dashboard.yaml
   - Url: health-events/health-events.yaml
   - Url: scad-containers-cost-allocation/scad-containers-cost-allocation.yaml
+  - Url: aws-feeds/aws-feeds.yaml
