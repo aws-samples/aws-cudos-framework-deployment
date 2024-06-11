@@ -40,3 +40,9 @@ variable "kms_key_id" {
         on permissions required for replicating KMS-encrypted objects
   EOF
 }
+
+variable "enable_split_cost_allocation_data" {
+  type        = bool
+  description = "Enable split cost allocation data for ECS and EKS for this CUR report"
+  default     = false
+}

@@ -122,8 +122,9 @@ class Athena(CidBase):
             # Select default workgroup if present
             if self.defaults.get('WorkGroup') not in {wgr['Name'] for wgr in workgroups}:
                 workgroups.append({'Name': f"{self.defaults.get('WorkGroup')} (create new)"})
-            default_workgroup = next(iter([wgr.get('Name') for wgr in workgroups if wgr['Name'] == self.defaults.get('WorkGroup')]), None)
-            if default_workgroup: logger.info(f'Found "{default_workgroup}" as a default workgroup')
+            default_workgroup = next(iter([wgr.get('Name') for wgr in workgroups if  self.defaults.get('WorkGroup') in wgr['Name']]), None)
+            if default_workgroup:
+                logger.info(f'Found "{default_workgroup}" as a default workgroup')
             # Ask user
             selected_workgroup = get_parameter(
                 param_name='athena-workgroup',
@@ -158,38 +159,44 @@ class Athena(CidBase):
 
     def _ensure_workgroup(self, name: str) -> str:
         """Ensure a workgroup exists and configured with an S3 bucket"""
-        try:
-            s3 = S3(session=self.session)
+        s3 = S3(session=self.session)
+        if name == 'primary': # QuickSight manages primary wg differently, relying exclusively on bucket with a predefined name
+            bucket_name = f'{self.partition}-athena-query-results-{self.region}-{self.account_id}'
+        else:
             bucket_name = f'{self.partition}-athena-query-results-cid-{self.account_id}-{self.region}'
 
+        try:
             workgroup = self.client.get_work_group(WorkGroup=name)
-            if not workgroup.get('WorkGroup', {}).get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation', None):
-                buckets = s3.list_buckets(region_name=self.region)
-                if bucket_name not in buckets:
-                    buckets.append(f'{bucket_name} (create new)')
-                bucket_name = get_parameter(
-                    param_name='athena-result-bucket',
-                    message=f"Select S3 bucket to use with Amazon Athena Workgroup [{name}]",
-                    choices=[bucket for bucket in buckets]
-                )
-                if ' (create new)' in bucket_name:
-                    bucket_name = bucket_name.replace(' (create new)', '')
-                s3.ensure_bucket(name=bucket_name)
-                self.client.update_work_group(
-                    WorkGroup=name,
-                    Description='string',
-                    ConfigurationUpdates={
-                        'ResultConfigurationUpdates': {
-                            'OutputLocation': f's3://{bucket_name}',
-                            'EncryptionConfiguration': {
-                                'EncryptionOption': 'SSE_S3',
-                            },
-                            'AclConfiguration': {
-                                'S3AclOption': 'BUCKET_OWNER_FULL_CONTROL'
-                            }
+            if workgroup.get('WorkGroup', {}).get('Configuration', {}).get('ResultConfiguration', {}).get('OutputLocation', None):
+                return name # all good we have Output Bucket Configured.
+
+            # there no result bucket configured for this WG
+            buckets = s3.list_buckets(region_name=self.region)
+            if bucket_name not in buckets:
+                buckets.append(f'{bucket_name} (create new)')
+            bucket_name = get_parameter(
+                param_name='athena-result-bucket',
+                message=f"Select S3 bucket to use with Amazon Athena Workgroup [{name}]",
+                choices=[bucket for bucket in buckets]
+            )
+            if ' (create new)' in bucket_name:
+                bucket_name = bucket_name.replace(' (create new)', '')
+            s3.ensure_bucket(name=bucket_name)
+            self.client.update_work_group(
+                WorkGroup=name,
+                Description='string',
+                ConfigurationUpdates={
+                    'ResultConfigurationUpdates': {
+                        'OutputLocation': f's3://{bucket_name}',
+                        'EncryptionConfiguration': {
+                            'EncryptionOption': 'SSE_S3',
+                        },
+                        'AclConfiguration': {
+                            'S3AclOption': 'BUCKET_OWNER_FULL_CONTROL'
                         }
                     }
-                )
+                }
+            )
             return name
         except self.client.exceptions.InvalidRequestException as exc:
             # Workgroup does not exist

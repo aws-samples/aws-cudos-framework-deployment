@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS Billing Data Export Aggregation v0.0.1
 Metadata:
+
   AWS::CloudFormation::Interface:
     ParameterGroups:
       -
@@ -18,17 +20,20 @@ Metadata:
         Label:
           default: "Technical Parameters. Please do not change."
         Parameters:
-          - SCADEnable
+          - EnableSCAD
+          - RolePath
 
     ParameterLabels:
+      CreateCUR2:
+        default: "Create CUR 2.0 DataExport"
       DestinationAccountId:
-        default: "Destination (Data Collection) Account Account Id"
+        default: "Destination (Data Collection) Account Id"
       ResourcePrefix:
-        default: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
+        default: "Resource Prefix"
       SourceAccountIds:
         default: "Source Account Ids (Comma separated list)"
-      SCADEnable:
-        default: "Enable/Disable Split Cost Allocation Data (SCAD)."
+      EnableSCAD:
+        default: "Enable Split Cost Allocation Data (SCAD) in CUR 2.0"
 
 
 Parameters:
@@ -38,60 +43,53 @@ Parameters:
   ##
   DestinationAccountId:
     Type: String
-    Description: "AWS Account Id where CID Quicksight Dashboard will be deployed"
+    Description: "AWS Account Id where DataExport will be replicated to (Where you deploy CID Quicksight Dashboards or Data Collection)"
     AllowedPattern: '\d{12}'
   ResourcePrefix:
     Type: String
-    Default: "cid2"
-    Description: "Resource prefix. Will be used as a prefix for bucket and a name of a CUR2"
+    Default: "cid"
+    Description: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
+    MaxLength:  37 # = 63 - len('-123456789012-data-exports')
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   CreateCUR2:
     Type: String
-    Description: Whether to create a local CUR2 or not. Set this to True if your Management (Payer)/Source Account is the same as your Destination account (where you want to deploy the dashboards).
-    AllowedValues:
-      - "True"
-      - "False"
-    Default: "False"
+    Description: Whether to create a local CUR2. Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
+    AllowedValues: ['yes', 'no']
+    Default: "yes"
+
+  ##
+  # Destination specific params
+  ##
+  SourceAccountIds:
+    Type: String
+    AllowedPattern: "^((\\d{12})\\,?)*$"
+    Default: ''
+    Description: "A comma separated list of all accounts that will replicate DataExport to this account. Ex:  12345678912,98745612312,...."
+
+  ##
+  # Technical params
+  ##
+  EnableSCAD:
+    Type: String
+    Description: Whether to enable Split Cost Allocation Data (Scad). Set this to 'No', if you experience performance issues due to dataset size.
+    AllowedValues: ['yes', 'no']
+    Default: "yes"
   RolePath:
     Type: String
     Default: '/'
     Description: Path for roles where PermissionBoundaries can limit location
 
-  ##
-  # Destination specific params
-  ##
-
-  SourceAccountIds:
-    Type: String
-    AllowedPattern: "^((\\d{12})\\,?)*$"
-    Default: ''
-    Description: "A comma separated list of all Source accounts that will replicate CUR2 Data. Ex:  12345678912,98745612312,...."
-  
-  ##
-  # Technical params
-  ##
-  SCADEnable:
-    Type: String
-    Description: Whether to enable Split Cost Allocation Data (Scad). Set this to False, only if you experience performance issues due to dataset size.
-    AllowedValues:
-      - "True"
-      - "False"
-    Default: "True"
-
 Conditions:
-  IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref AWS::AccountId]
-  IsSourceAccount: !Not [!Condition IsDestinationAccount]
-  RegionSupportsCUR2viaCFN: # CFN supports CUR2 only in us-east-1 and cn-northwest-1. Other regions must use lambda
+  IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref 'AWS::AccountId']
+  RegionSupportsDataExportsViaCFN: # CFN supports DataExports only in us-east-1 and cn-northwest-1. Other regions must use lambda.
     Fn::Or:
-      - !Equals [!Ref AWS::Region, 'us-east-1']
-      - !Equals [!Ref AWS::Region, 'cn-northwest-1']
-  CUR2Enable: !Equals [!Ref CreateCUR2, 'True']
-  CreateLocalS3BucketInDestination: !And [!Condition CUR2Enable, !Condition IsDestinationAccount]
-  CreateLocalS3Bucket: !Or [!Condition IsSourceAccount, !Condition CreateLocalS3BucketInDestination]
-  SCADEnabled: !Equals [!Ref SCADEnable, 'True']
-  DeployCUR2ViaCFNInSource: !And [!Condition CUR2Enable, !Condition IsSourceAccount, !Condition RegionSupportsCUR2viaCFN]
-  DeployCUR2ViaCFNInDestination: !And [!Condition CUR2Enable, !Condition IsDestinationAccount, !Condition RegionSupportsCUR2viaCFN]
-  DeployCUR2ViaLambda: !And [!Condition CUR2Enable, !Not [!Condition RegionSupportsCUR2viaCFN]]
+      - !Equals [!Ref 'AWS::Region', 'us-east-1']
+      - !Equals [!Ref 'AWS::Region', 'cn-northwest-1']
+  CreateCUR2: !Equals [!Ref CreateCUR2, 'yes']
+  EnableSCAD: !Equals [!Ref EnableSCAD, 'yes']
+  DeployDataExport: !Condition CreateCUR2 # Will be other reports later, so keep it generic
+  DeployCUR2ViaCFN: !And [!Condition CreateCUR2, !Condition RegionSupportsDataExportsViaCFN]
+  DeployCUR2ViaLambda: !And [!Condition CreateCUR2, !Not [!Condition RegionSupportsDataExportsViaCFN]]
   EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
 
 Mappings:
@@ -111,10 +109,6 @@ Resources:
 # Destination Account Resources
 ###########################################################################
 
-####
-# S3 Bucket which store all CUR2 from Accounts
-####
-
   DestinationS3:
     Type: AWS::S3::Bucket
     Condition: IsDestinationAccount
@@ -122,7 +116,7 @@ Resources:
     UpdateReplacePolicy: Retain
     Properties:
       BucketName:
-        Fn::Sub: "${ResourcePrefix}-${AWS::AccountId}-shared"
+        Fn::Sub: "${ResourcePrefix}-${AWS::AccountId}-data-exports"
 
       ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
       # LoggingConfiguration:
@@ -194,24 +188,6 @@ Resources:
             Condition:
               Bool:
                 aws:SecureTransport: false
-          - Sid: AllowReadBilling
-            Effect: Allow
-            Principal:
-              Service: bcm-data-exports.amazonaws.com
-            Action:
-              - s3:GetBucketAcl
-              - s3:GetBucketPolicy
-            Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
-          - Sid: AllowWriteBilling
-            Effect: Allow
-            Principal:
-              Service: bcm-data-exports.amazonaws.com
-            Action:
-              - s3:PutObject
-            Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*/data/*'
           - Sid: AllowReplicationWrite
             Effect: Allow
             Principal:
@@ -241,18 +217,14 @@ Resources:
             Resource:
               - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
 
-####
-# S3 Bucket in account with CUR enabled with replication to aggregated bucket
-####
-
   SourceS3:
     Type: AWS::S3::Bucket
-    Condition: CreateLocalS3Bucket
+    Condition: DeployDataExport
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
       BucketName:
-        Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-local
+        Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-data-local
 
       ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
       # LoggingConfiguration:
@@ -283,10 +255,10 @@ Resources:
           -
             Destination:
               Bucket:
-                Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared"
+                Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
               StorageClass: STANDARD
-            Id: ReplicationRule1
-            Prefix: !Sub "cur2/${AWS::AccountId}/cid2/data/"
+            Id: ReplicateCUR2Data
+            Prefix: !Sub "cur2/${AWS::AccountId}/${ResourcePrefix}-cur2/data/"
             Status: Enabled
       LifecycleConfiguration:
         Rules:
@@ -306,7 +278,7 @@ Resources:
 
   SourceS3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
-    Condition: CreateLocalS3Bucket
+    Condition: DeployDataExport
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
@@ -335,27 +307,23 @@ Resources:
             Condition:
               Bool:
                 aws:SecureTransport: false
-          - Sid: AllowReadBilling
+          - Sid: AllowBillingReadAndWrite
             Effect: Allow
             Principal:
               Service: bcm-data-exports.amazonaws.com
             Action:
               - s3:GetBucketAcl
               - s3:GetBucketPolicy
+              - s3:PutObject
             Resource:
               - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}'
               - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}/*'
-          - Sid: AllowWriteBilling
-            Effect: Allow
-            Principal:
-              Service: bcm-data-exports.amazonaws.com
-            Action:
-              - s3:PutObject
-            Resource:
-              - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}/*'
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
 
   ReplicationRole:
-    Condition: CreateLocalS3Bucket
+    Condition: DeployDataExport
     Type: AWS::IAM::Role
     Properties:
       Path:
@@ -379,123 +347,89 @@ Resources:
                 Action:
                   - s3:GetReplicationConfiguration
                   - s3:ListBucket
-                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local"
+                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-data-local"
               - Effect: Allow
                 Action:
                   - s3:GetObjectVersionForReplication
                   - s3:GetObjectVersionAcl
                   - s3:GetObjectVersionTagging
-                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-local/*"
+                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${AWS::AccountId}-data-local/*"
               - Effect: Allow
                 Action:
                   - s3:ReplicateObject
                   - s3:ReplicateDelete
                   - s3:ReplicateTags
                 Resource:
-                  Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared/cur2/${AWS::AccountId}/*"
+                  Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/cur2/${AWS::AccountId}/*"
 
-####
-# Local CUR2
-####
-
-  ## Deploy CUR2 natively via CFN resource if we are in us-east-1
-  LocalCUR2InSource:
+  ## Deploy CUR2 natively via CFN resource if we are regions that support native CFN
+  LocalCUR2viaCFN:
     Type: AWS::BCMDataExports::Export
-    Condition: DeployCUR2ViaCFNInSource
+    Condition: DeployCUR2ViaCFN
     DependsOn:
       - SourceS3BucketPolicy
     Properties:
       Export:
         DataQuery:
-          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
+          QueryStatement: !If [EnableSCAD, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
               TIME_GRANULARITY: "HOURLY"
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
+              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [EnableSCAD, "TRUE", "FALSE"]
         Description: "CUR 2.0 export for aggregation in CID"
-        DestinationConfigurations: 
+        DestinationConfigurations:
           S3Destination:
             S3Bucket: !Ref SourceS3
-            S3Prefix: !Sub "cur2/${AWS::AccountId}"
+            S3Prefix: !Sub "cur2/${AWS::AccountId}" # Explicitly hardcode name of folder (it will be the same as table name)
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
               Overwrite: "OVERWRITE_REPORT"
               Format: "PARQUET"
               Compression: "PARQUET"
               OutputType: "CUSTOM"
-        Name: !Ref ResourcePrefix
-        RefreshCadence:
-          Frequency: "SYNCHRONOUS"
-
-  LocalCUR2InDestination:
-    Type: AWS::BCMDataExports::Export
-    Condition: DeployCUR2ViaCFNInDestination
-    DependsOn:
-      - SourceS3BucketPolicy # Conditional DependsOn is not supported, so we need 2 resources
-    Properties:
-      Export:
-        DataQuery:
-          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
-          TableConfigurations:
-            COST_AND_USAGE_REPORT:
-              TIME_GRANULARITY: "HOURLY"
-              INCLUDE_RESOURCES: "TRUE"
-              INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
-        Description: "CUR 2.0 export for aggregation in CID"
-        DestinationConfigurations: 
-          S3Destination:
-            S3Bucket: !Ref SourceS3
-            S3Prefix: !Sub "cur2/${AWS::AccountId}"
-            S3Region: !Ref AWS::Region
-            S3OutputConfigurations:
-              Overwrite: "OVERWRITE_REPORT"
-              Format: "PARQUET"
-              Compression: "PARQUET"
-              OutputType: "CUSTOM"
-        Name: !Ref ResourcePrefix
+        Name: !Sub '${ResourcePrefix}-cur2'
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
   # Deploy CUR2 via lambda due to missing cfn resource definition
-  # AWS::BCMDataExports::Export outside us-east-1
-  CUR2viaCustomResource:
+  # AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
+  LocalCUR2viaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployCUR2ViaLambda
     Properties:
-      ServiceToken: !GetAtt CIDLambdaCUR2Creator.Arn
-      BucketPolicyWait: !If [ IsDestinationAccount, !Ref DestinationS3BucketPolicy, !Ref SourceS3BucketPolicy ]
+      ServiceToken: !GetAtt CidDataExportCreatorLambda.Arn
+      BucketPolicyWait: !Ref SourceS3BucketPolicy
       Export:
         DataQuery:
-          QueryStatement: !If [SCADEnabled, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
+          QueryStatement: !If [EnableSCAD, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
               TIME_GRANULARITY: "HOURLY"
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
-              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [SCADEnabled, "TRUE", "FALSE"]
+              INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [EnableSCAD, "TRUE", "FALSE"]
         Description: "CUR 2.0 export for aggregation in CID"
-        DestinationConfigurations: 
+        DestinationConfigurations:
           S3Destination:
             S3Bucket: !Ref SourceS3
-            S3Prefix: !Sub "cur2/${AWS::AccountId}"
+            S3Prefix: !Sub "cur2/${AWS::AccountId}" # Explicitly hardcode name of folder (it will be the same as table name)
             S3Region: !Ref AWS::Region
             S3OutputConfigurations:
               Overwrite: "OVERWRITE_REPORT"
               Format: "PARQUET"
               Compression: "PARQUET"
               OutputType: "CUSTOM"
-        Name: !Ref ResourcePrefix
+        Name: !Sub '${ResourcePrefix}-cur2'
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
 ###########################################################################
-# Lambda CUR2 Creator: used to create CUR2 from outside us-east-1
+# Lambda DataExport Creator: used to create DataExport from outside us-east-1 or cn-northwest-1
 ###########################################################################
 
-  CIDLambdaCUR2CreatorRole: #Execution role for the custom resource CIDLambdaAnalyticsExecutor
+  CidDataExportCreatorLambdaRole:
     Type: AWS::IAM::Role
     Condition: DeployCUR2ViaLambda
     Properties:
@@ -537,17 +471,17 @@ Resources:
               Resource:
                 - Fn::Sub: arn:${AWS::Partition}:bcm-data-exports:*:${AWS::AccountId}:export/*
 
-  CIDLambdaCUR2Creator:
+  CidDataExportCreatorLambda:
     Type: AWS::Lambda::Function
     Condition: DeployCUR2ViaLambda
     Properties:
-      Runtime: python3.11
+      Runtime: python3.12
       FunctionName:
-        Fn::Sub: ${ResourcePrefix}-CID-CUR2Creator
+        Fn::Sub: ${ResourcePrefix}-DataExportCreator
       Handler: index.lambda_handler
       MemorySize: 128
       Role:
-        Fn::GetAtt: CIDLambdaCUR2CreatorRole.Arn
+        Fn::GetAtt: CidDataExportCreatorLambdaRole.Arn
       Timeout: 15
       Code:
         ZipFile: |
@@ -589,6 +523,13 @@ Resources:
                           Export=export
                       )
                       print(json.dumps(res))
+                      try:
+                          res = client.delete_export(
+                              Name=old_export_name
+                          )
+                          print(json.dumps(res))
+                      except:
+                          pass # Do not block deletion
                   else:
                       res = client.update_export(
                           Name=old_export_name,
@@ -625,21 +566,14 @@ Resources:
           - id: 'W92'
             reason: "One Time execution. No need for ReservedConcurrentExecutions"
 
-###########################################################################
-# Glue Database for CID framework
-###########################################################################
   CIDDatabase:
     Type: AWS::Glue::Database
     Condition: IsDestinationAccount
     Properties:
       DatabaseInput:
-        Name: 
-          Fn::Sub: "${ResourcePrefix}-database"
+        Name:
+          Fn::Sub: "${ResourcePrefix}_data_export"
       CatalogId: !Sub "${AWS::AccountId}"
-
-###########################################################################
-# Glue/Athena Table for CID framework
-###########################################################################
 
   CURTable:  # Initial creation of table. it will be updated by crawler later
     Type: AWS::Glue::Table
@@ -700,11 +634,11 @@ Resources:
             - {"Name": "pricing_term", "Type": "string" }
             - {"Name": "pricing_unit", "Type": "string" }
             - {"Name": "product", "Type": "map<string,string>" }
-            - {"Name": "product_from_location", "Type": "string" }        
-            - {"Name": "product_instance_type", "Type": "string" }         
-            - {"Name": "product_product_family", "Type": "string" }             
-            - {"Name": "product_servicecode", "Type": "string" }          
-            - {"Name": "product_to_location", "Type": "string" }          
+            - {"Name": "product_from_location", "Type": "string" }
+            - {"Name": "product_instance_type", "Type": "string" }
+            - {"Name": "product_product_family", "Type": "string" }
+            - {"Name": "product_servicecode", "Type": "string" }
+            - {"Name": "product_to_location", "Type": "string" }
             - {"Name": "reservation_amortized_upfront_fee_for_billing_period", "Type": "double" }
             - {"Name": "reservation_effective_cost", "Type": "double" }
             - {"Name": "reservation_end_time", "Type": "timestamp" }
@@ -739,9 +673,8 @@ Resources:
           - {"Name": "report_name", "Type": "string" }
           - {"Name": "data", "Type": "string" }
           - {"Name": "billing_period", "Type": "string" }
-          
 
-  
+
   GlueCURCrawler:
     Type: AWS::Glue::Crawler
     Condition: IsDestinationAccount
@@ -749,7 +682,7 @@ Resources:
       Name:  !Sub "${ResourcePrefix}-CURCrawler"
       Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
       Role:
-        Fn::GetAtt: CidCURCrawlerRole.Arn
+        Fn::GetAtt: CidDataExportCrawlerRole.Arn
       DatabaseName: !Ref CIDDatabase
       Targets:
         S3Targets:
@@ -782,7 +715,7 @@ Resources:
             }
           }
         }
-  CidCURCrawlerRole:
+  CidDataExportCrawlerRole:
     Type: AWS::IAM::Role
     Condition: IsDestinationAccount
     Properties:
@@ -796,25 +729,58 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Path: !Ref RolePath
-      ManagedPolicyArns:
-        - Fn::Sub: 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole'
       Policies:
-        - PolicyName: AWSCURCrawlerComponentFunction
+        - PolicyName: CrawlerPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
                   - 's3:GetObject'
-                  - 's3:PutObject'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}'
+              - Effect: Allow
+                Action:
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:UpdateDatabase
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:BatchCreatePartition
+                  - glue:CreatePartition
+                  - glue:DeletePartition
+                  - glue:BatchDeletePartition
+                  - glue:UpdatePartition
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:BatchGetPartition
+                  - glue:ImportCatalogToGlue
                 Resource:
-                  Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/cur2/*'
-  
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CIDDatabase}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CIDDatabase}/*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:*'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:log-stream:*'
+
 ###########################################################################
 # Analytics: used by CID team to track adoption, by retrieving AWS AccountId
 ###########################################################################
 
-  CIDLambdaAnalyticsRole: #Execution role for the custom resource CIDLambdaAnalyticsExecutor
+  CidLambdaAnalyticsRole: #Execution role for the custom resource CidLambdaAnalyticsExecutor
     Type: AWS::IAM::Role
     Properties:
       Path:
@@ -844,16 +810,16 @@ Resources:
               - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics:*"
               - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics:*:*"
 
-  CIDLambdaAnalytics:
+  CidLambdaAnalytics:
     Type: AWS::Lambda::Function
     Properties:
-      Runtime: python3.11 # before updating 
+      Runtime: python3.12
       FunctionName:
-        Fn::Sub: ${ResourcePrefix}-CID-Analytics
+        Fn::Sub: ${ResourcePrefix}-CID-Analytics-DataExports
       Handler: index.lambda_handler
       MemorySize: 128
       Role:
-        Fn::GetAtt: CIDLambdaAnalyticsRole.Arn
+        Fn::GetAtt: CidLambdaAnalyticsRole.Arn
       Timeout: 15
       Environment:
         Variables:
@@ -928,10 +894,10 @@ Resources:
           - id: 'W92'
             reason: "One Time execution. No need for ReservedConcurrentExecutions"
 
-  CIDLambdaAnalyticsExecutor:
-    Type: Custom::CIDLambdaAnalyticsExecutor
+  CidLambdaAnalyticsExecutorForDataExports:
+    Type: Custom::CidLambdaAnalyticsExecutorForDataExports
     Properties:
-      ServiceToken: !GetAtt CIDLambdaAnalytics.Arn
+      ServiceToken: !GetAtt CidLambdaAnalytics.Arn
       DeploymentType:
         - Fn::If:
           - IsDestinationAccount
@@ -942,9 +908,9 @@ Outputs:
   GovernanceBucketName:
     Description: Bucket where to store and aggregate CUR2
     Value:
-      Fn::Sub: ${ResourcePrefix}-${DestinationAccountId}-shared
+      Fn::Sub: ${ResourcePrefix}-${DestinationAccountId}-data-exports
   LocalAccountBucket:
-    Condition: IsSourceAccount
+    Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
     Value:
-      Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-local
+      Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-data-local
