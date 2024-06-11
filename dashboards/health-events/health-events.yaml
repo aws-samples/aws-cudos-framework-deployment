@@ -977,7 +977,7 @@ dashboards:
               SheetId: f8adfe5d-9466-4c69-a711-10fda4abeb8f
               VisualIds:
               - 0a0dbb09-8130-4662-9d80-3379a0826e3f
-        Status: DISABLED
+        Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a27800d9-1106-4a98-b5f7-4af8ace80aca
         Filters:
@@ -1766,12 +1766,12 @@ dashboards:
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"32px\">\n    <b>Single event detail</b>\n\
             \  </inline>\n  <br/>\n  The tables below provide the description, affected\
-            \ accounts and resources of a\n  <i>single\_</i>\n  event.\n  <br/>\n  Use the\
+            \ accounts and impacted resources of a\n  <i>\_single\_</i>\n  event. Use the\
             \ event ARN search and/or select events (\n  <inline color=\"#a7a7a7\" font-size=\"\
             14px\">\n    <b>\u23EC)\_</b>\n  </inline>\n  in a chart above to focus on a\
-            \ single event.\n  <br/>\n  <inline color=\"#f97d2a\" font-size=\"20px\">\n\
-            \    <b>\n      <i>You must filter to a single event to display the details\
-            \ below.</i>\n    </b>\n  </inline>\n</text-box>"
+            \ single event.\n  <br/>\n  <br/>\n  <inline color=\"#f97d2a\" font-size=\"\
+            20px\">\n    <b>\n      <i>You must filter to a single event to display the\
+            \ details below.</i>\n    </b>\n  </inline>\n</text-box>"
           SheetTextBoxId: 2e0575fd-3221-496a-99c2-06ceb3e97bc6
         - Content: |-
             <text-box>
@@ -2883,13 +2883,13 @@ dashboards:
                 RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE</b>\n\
                   \  </inline>\n  <inline color=\"#21a0d7\" font-size=\"14px\">\n    <b>\u2193\
                   \u2191\_</b>\n  </inline>\n  <inline font-size=\"12px\">\n    <b>TO TOGGLE\
-                  \ BETWEEN DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
+                  \ BETWEEN GROUPING DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Services impacted (top 10 by affected resource count)</inline>
+                    <inline font-size="16px">Services (top 10 by resource impact count)</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 54bafeba-5379-448b-815e-8900a0250b3d
@@ -3144,7 +3144,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Affected resources</inline>
+                    <inline font-size="16px">Impacted resources</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: e9e301fb-c35d-4887-a645-69e7db1fc36e
@@ -3577,6 +3577,10 @@ dashboards:
               CategoryAxis:
                 ScrollbarOptions:
                   Visibility: VISIBLE
+                  VisibleRange:
+                    PercentRange:
+                      From: 38.888888888888886
+                      To: 94.44444444444446
               DataLabels:
                 LabelContent: VALUE
                 MeasureLabelVisibility: VISIBLE
@@ -3661,7 +3665,7 @@ dashboards:
                 RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE\_\
                   </b>\n  </inline>\n  <inline color=\"#21a0d7\" font-size=\"14px\">\n \
                   \   <b>\u2193\u2191</b>\n  </inline>\n  <inline font-size=\"12px\">\n\
-                  \    <b>TO TOGGLE BETWEEN DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
+                  \    <b>TO TOGGLE BETWEEN GROUPING DIMENSIONS</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3913,7 +3917,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Schedule for affected resources</inline>
+                    <inline font-size="16px">Schedule for impacted resources</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 2d19f67d-8997-454d-99fc-b7cf89684bf2
@@ -4215,9 +4219,11 @@ dashboards:
                 - CustomLabel: Service
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.service.3.1714575675916
                   Width: 125px
-                - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.region.4.1715302668284
+                - CustomLabel: Region
+                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.region.4.1715302668284
                   Width: 108px
-                - FieldId: 75b6e7c1-56e8-48e7-b7c0-7eedf1687806.3.1715216580260
+                - CustomLabel: Impacted resource
+                  FieldId: 75b6e7c1-56e8-48e7-b7c0-7eedf1687806.3.1715216580260
                   Width: 425px
                 - CustomLabel: '# of Events'
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.2.1713478039827
@@ -4277,7 +4283,7 @@ dashboards:
                 RichText: |-
                   <visual-subtitle>
                     <inline font-size="12px">
-                      <b>FIND RESOURCES IMPACTED BY MULTIPLE EVENTS</b>
+                      <b>RESOURCE ARNS ARE TRUNCATED; USE THE DETAIL TAB FOR FULL ARNS</b>
                     </inline>
                   </visual-subtitle>
               Visibility: VISIBLE
@@ -4285,7 +4291,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Resources impacted and number of events</inline>
+                    <inline font-size="16px">Resources impacted by multiple events</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 0a0dbb09-8130-4662-9d80-3379a0826e3f
@@ -4305,7 +4311,31 @@ dashboards:
                 RowIndex: 0
                 RowSpan: 4
               - ColumnIndex: 0
-                ColumnSpan: 34
+                ColumnSpan: 4
+                ElementId: 65e62386-3730-42f7-aa5a-0848036d7631
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 4
+                RowSpan: 2
+              - ColumnIndex: 4
+                ColumnSpan: 5
+                ElementId: 80c5a3c7-1623-4ca6-8a8c-bbc5289af5ff
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 4
+                RowSpan: 2
+              - ColumnIndex: 9
+                ColumnSpan: 5
+                ElementId: 1b143200-68d1-4745-9e27-f891fdd09690
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 4
+                RowSpan: 2
+              - ColumnIndex: 14
+                ColumnSpan: 8
+                ElementId: 4b44d13a-1406-43a9-8298-7ffb7074a98b
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 4
+                RowSpan: 2
+              - ColumnIndex: 22
+                ColumnSpan: 12
                 ElementId: 4d9c130c-9be3-480c-89fd-0010e85bc2b0
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 4
@@ -4474,22 +4504,6 @@ dashboards:
                 RowSpan: 1
               - ColumnSpan: 2
                 ElementId: c46efb4c-6827-4a96-92f0-54d878136187
-                ElementType: PARAMETER_CONTROL
-                RowSpan: 1
-              - ColumnSpan: 2
-                ElementId: 1b143200-68d1-4745-9e27-f891fdd09690
-                ElementType: PARAMETER_CONTROL
-                RowSpan: 1
-              - ColumnSpan: 2
-                ElementId: 65e62386-3730-42f7-aa5a-0848036d7631
-                ElementType: PARAMETER_CONTROL
-                RowSpan: 1
-              - ColumnSpan: 2
-                ElementId: 80c5a3c7-1623-4ca6-8a8c-bbc5289af5ff
-                ElementType: PARAMETER_CONTROL
-                RowSpan: 1
-              - ColumnSpan: 2
-                ElementId: 4b44d13a-1406-43a9-8298-7ffb7074a98b
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
         SheetId: 701e8538-8909-4869-bcfd-9552b0c4cca8
@@ -4696,7 +4710,7 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US\"\
                   \ target=\"_blank\">\n        <b>Heath Events Dashboard</b>\n      </a>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ font-size=\"68.8px\">\n      <b>v1.0.0</b>\n    </inline>\n  </block>\n\
+                  \ font-size=\"68.8px\">\n      <b>v1.0.1</b>\n    </inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
                   />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
                   />\n  <br/>\n  <block align=\"right\">\n    <inline background-color=\"\
