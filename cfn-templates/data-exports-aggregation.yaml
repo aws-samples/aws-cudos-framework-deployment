@@ -891,7 +891,7 @@ Resources:
 
 Outputs:
   GovernanceBucketName:
-    Description: Bucket where to store and aggregate CUR2
+    Description: Bucket with aggregate Data Exports
     Value:
       Fn::Sub: ${ResourcePrefix}-${DestinationAccountId}-data-exports
   LocalAccountBucket:
