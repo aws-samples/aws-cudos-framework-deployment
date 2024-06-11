@@ -91,6 +91,7 @@ Conditions:
   DeployCUR2ViaCFN: !And [!Condition CreateCUR2, !Condition RegionSupportsDataExportsViaCFN]
   DeployCUR2ViaLambda: !And [!Condition CreateCUR2, !Not [!Condition RegionSupportsDataExportsViaCFN]]
   EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
+  DeployAnyExportViaLambda: !Condition DeployCUR2ViaLambda
 
 Mappings:
   DataExports:
@@ -431,7 +432,7 @@ Resources:
 
   CidDataExportCreatorLambdaRole:
     Type: AWS::IAM::Role
-    Condition: DeployCUR2ViaLambda
+    Condition: DeployAnyExportViaLambda
     Properties:
       Path:
         Fn::Sub: /${ResourcePrefix}/
@@ -455,9 +456,9 @@ Resources:
               - logs:PutLogEvents
               - logs:CreateLogGroup
               Resource:
-              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-CUR2Creator"
-              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-CUR2Creator:*"
-              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-CUR2Creator:*:*"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-DataExportCreator"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-DataExportCreator:*"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-DataExportCreator:*:*"
         - PolicyName: "ExecutionSpecific"
           PolicyDocument:
             Version: '2012-10-17'
@@ -469,11 +470,11 @@ Resources:
               - bcm-data-exports:UpdateExport
               - bcm-data-exports:DeleteExport
               Resource:
-                - Fn::Sub: arn:${AWS::Partition}:bcm-data-exports:*:${AWS::AccountId}:export/*
+                - Fn::Sub: arn:${AWS::Partition}:bcm-data-exports:*:${AWS::AccountId}:*
 
   CidDataExportCreatorLambda:
     Type: AWS::Lambda::Function
-    Condition: DeployCUR2ViaLambda
+    Condition: DeployAnyExportViaLambda
     Properties:
       Runtime: python3.12
       FunctionName:
@@ -492,15 +493,10 @@ Resources:
           import boto3
           import cfnresponse
 
-          region = os.environ['AWS_REGION']
+          # DataExports only exist in us-east-1 and cn-northwest-1 regions
+          region = 'us-east-1' if not os.environ['AWS_REGION'].startswith('cn-') else 'cn-northwest-1'
 
-          # CUR2 only exists in us-east-1 and cn-northwest-1 regions
-          if region.startswith('cn-'):
-              region = 'cn-northwest-1'
-          else:
-              region = 'us-east-1'
-
-          client = boto3.client('cur', region_name=region)
+          client = boto3.client('bcm-data-exports', region_name=region)
 
           def lambda_handler(event, context):
 
@@ -512,36 +508,25 @@ Resources:
               export_name = event['ResourceProperties']['Export']['Name']
 
               if event['RequestType'] == 'Create':
-                  res = client.put_export_definition(
-                      Export=export
-                  )
-                  print(json.dumps(res))
+                  res = client.create_export(Export=export)
+                  print('created:', json.dumps(res))
               elif event['RequestType'] == 'Update':
                   old_export_name = event['OldResourceProperties']['Export']['Name']
                   if export["Name"] != old_export_name:
-                      res = client.create_export(
-                          Export=export
-                      )
-                      print(json.dumps(res))
+                      res = client.create_export(Export=export)
+                      print('created:', json.dumps(res))
                       try:
-                          res = client.delete_export(
-                              Name=old_export_name
-                          )
-                          print(json.dumps(res))
+                          res = client.delete_export(Name=old_export_name)
+                          print('deleted:', json.dumps(res))
                       except:
                           pass # Do not block deletion
                   else:
-                      res = client.update_export(
-                          Name=old_export_name,
-                          Export=export
-                      )
-                      print(json.dumps(res))
+                      res = client.update_export(Name=old_export_name, Export=export)
+                      print('updated:', json.dumps(res))
               elif event['RequestType'] == 'Delete':
                   try:
-                      res = client.delete_export(
-                          Name=export_name
-                      )
-                      print(json.dumps(res))
+                      res = client.delete_export(Name=old_export_name)
+                      print('deleted:', json.dumps(res))
                   except:
                       pass # Do not block deletion
               else:
@@ -679,7 +664,7 @@ Resources:
     Type: AWS::Glue::Crawler
     Condition: IsDestinationAccount
     Properties:
-      Name:  !Sub "${ResourcePrefix}-CURCrawler"
+      Name:  !Sub "${ResourcePrefix}-DataExportCUR2Crawler"
       Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
       Role:
         Fn::GetAtt: CidDataExportCrawlerRole.Arn
