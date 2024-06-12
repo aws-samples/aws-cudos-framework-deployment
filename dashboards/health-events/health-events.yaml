@@ -5,7 +5,7 @@ dashboards:
       - health_events_view
     name: Health Events Dashboard
     dashboardId: health-events-dashboard
-    category: Custom
+    category: Advanced
     theme: MIDNIGHT
     data: |-
       AnalysisDefaults:
