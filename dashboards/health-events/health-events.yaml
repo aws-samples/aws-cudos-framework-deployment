@@ -5498,11 +5498,7 @@ datasets:
             InputColumns:
             - Name: account_id
               Type: STRING
-            - Name: parent_account_id
-              Type: STRING
             - Name: account_name
-              Type: STRING
-            - Name: account_email_id
               Type: STRING
         f4dcb024-0054-4fbc-a82b-13cabd459f66:
           RelationalTable:
