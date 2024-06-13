@@ -5462,39 +5462,22 @@ dashboards:
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
                   \ font-size=\"68.8px\">\n      <b>v1.0.2</b>\n    </inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
-                  />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
-                  />\n  <br/>\n  <block align=\"right\">\n    <inline background-color=\"\
-                  #ffffff\">Built by: Eric Christensen, Iakov Gan</inline>\n  </block>\n\
-                  \  <br/>\n  <block align=\"right\">\n    <inline background-color=\"#ffffff\"\
-                  >Learn more</inline>\n    <inline background-color=\"#ffffff\">\n    \
-                  \  <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
-                  \ target=\"_blank\">\_</a>\n    </inline>\n    <inline background-color=\"\
-                  #ffffff\">about AWS Cloud Intelligence Dashboards (CID) on</inline>\n\
-                  \    <inline background-color=\"#ffffff\" color=\"#61d1d6\">\n      <a\
-                  \ href=\"https://catalog.workshops.aws/awscid/en-US\" target=\"_blank\"\
-                  >\n        <b>AWS Well-Architected Labs</b>\n      </a>\n    </inline>\n\
-                  \    <inline background-color=\"#ffffff\">\_and the</inline>\n    <inline\
-                  \ background-color=\"#ffffff\" color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
-                  \ target=\"_blank\">\n        <b>CID YouTube Channe</b>\n      </a>\n\
-                  \    </inline>\n    <inline background-color=\"#ffffff\" color=\"#61d1d6\"\
-                  >\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
-                  \ target=\"_blank\">\n        <u>l</u>\n      </a>\n    </inline>\n  </block>\n\
-                  \  <br/>\n  <block align=\"right\">\n    <inline background-color=\"#ffffff\"\
-                  >If you wish to provide feedback please or report an error please email:</inline>\n\
-                  \    <inline background-color=\"#ffffff\" color=\"#61d1d6\">\_</inline>\n\
-                  \    <inline background-color=\"#ffffff\" color=\"#61d1d6\">\n      <a\
-                  \ href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
-                  \ target=\"_blank\">\n        <b>cloud-intelligence-dashboards@amazon.com</b>\n\
-                  \      </a>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"\
-                  >\n    <inline background-color=\"#ffffff\">If you like Cloud Intelligence\
-                  \ Dashboards we kindly ask you to fill out\_</inline>\n    <inline background-color=\"\
-                  #ffffff\" color=\"#61d1d6\">\n      <a href=\"https://eventbox.dev/survey/AJ0EIZ7\"\
-                  \ target=\"_blank\">\n        <b>this customer survey</b>\n      </a>\n\
-                  \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\">\n    <inline\
-                  \ background-color=\"#ffffff\">Powered by: Amazon QuickSight, Amazon Athena,\
-                  \ Amazon S3</inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n\
-                  \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"center\"\
-                  />\n</narrative>"
+                  />\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"\
+                  />\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"\
+                  >Built by: Eric Christensen, Iakov Gan</block>\n  <br/>\n  <block align=\"\
+                  right\">\n    Learn more about AWS Cloud Intelligence Dashboards (CID)\
+                  \ on\n    <a href=\"https://wellarchitectedlabs.com/cloud-intelligence-dashboards/\"\
+                  \ target=\"_blank\">AWS Well-Architected Labs</a>\n    \_and the\n   \
+                  \ <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
+                  \ target=\"_blank\">\_CID YouTube Channel</a>\n  </block>\n  <br/>\n \
+                  \ <block align=\"right\">If you wish to provide feedback please or report\
+                  \ an error please email: cloud-intelligence-dashboards@amazon.com</block>\n\
+                  \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"\
+                  >Powered by: Amazon QuickSight, Amazon Athena, Amazon S3</block>\n  <br/>\n\
+                  \  <block align=\"center\"/>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n\
+                  \  <block align=\"right\"/>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
+                  \  <block align=\"center\"/>\n  <br/>\n  <br/>\n  <block align=\"right\"\
+                  />\n  <br/>\n  <block align=\"center\"/>\n</narrative>"
             Subtitle:
               Visibility: VISIBLE
             Title:
