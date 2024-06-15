@@ -819,7 +819,7 @@ dashboards:
                         Expression: DISTINCT_COUNT({category}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'title' to filter an then open
+                RichText: <visual-subtitle>Click on desired 'title' to filter and then open
                   the icon link on the right table under 'url'</visual-subtitle>
               Visibility: VISIBLE
             Title:
@@ -1419,7 +1419,7 @@ dashboards:
                         Expression: COUNT({description}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'title' to filter an then open
+                RichText: <visual-subtitle>Click on desired 'title' to filter and then open
                   the icon link on the right table under 'link'</visual-subtitle>
               Visibility: VISIBLE
             Title:
@@ -1991,7 +1991,7 @@ dashboards:
                         Expression: COUNT({description}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'title' to filter an then open
+                RichText: <visual-subtitle>Click on desired 'title' to filter and then open
                   the icon link on the right table under 'link'</visual-subtitle>
               Visibility: VISIBLE
             Title:
@@ -2325,8 +2325,7 @@ dashboards:
                   TextWrap: WRAP
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on the desired 'title' in order to display
-                  on the right side</visual-subtitle>
+                RichText: <visual-subtitle>Click on the desired 'title' to display the video on the right side</visual-subtitle>
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
