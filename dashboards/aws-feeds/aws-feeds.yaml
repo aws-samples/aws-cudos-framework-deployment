@@ -1204,7 +1204,7 @@ dashboards:
               <inline font-size="32px">AWS What's New</inline>
               <br/>
               <block align="right">
-                Source:
+                <inline font-size="14px">Source: </inline>
                 <a href="https://aws.amazon.com/about-aws/whats-new/recent/feed/" target="_blank">https://aws.amazon.com/about-aws/whats-new/recent/feed/</a>
               </block>
             </text-box>
