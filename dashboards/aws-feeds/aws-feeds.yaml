@@ -3007,7 +3007,7 @@ crawlers: {}
 views:
   aws_feeds:
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.aws_feeds AS
+      CREATE OR REPLACE VIEW ${data_collection_database_name}.aws_feeds AS
       SELECT
         date published
       , 'blog_post' feed_type
@@ -3015,7 +3015,7 @@ views:
       , link url
       , category
       FROM
-        "${athena_database_name}"."aws_feeds_blog_post"
+        "${data_collection_database_name}"."aws_feeds_blog_post"
       UNION SELECT
         published
       , 'security_bulletin' feed_type
@@ -3023,7 +3023,7 @@ views:
       , link url
       , 'security_bulletins' category
       FROM
-        "${athena_database_name}"."aws_feeds_security_bulletin"
+        "${data_collection_database_name}"."aws_feeds_security_bulletin"
       UNION SELECT
         date published
       , 'whats_new' feed_type
@@ -3031,7 +3031,7 @@ views:
       , link url
       , category
       FROM
-        "${athena_database_name}"."aws_feeds_whats_new"
+        "${data_collection_database_name}"."aws_feeds_whats_new"
       UNION SELECT
         published
       , 'youtube' feed_type
@@ -3039,4 +3039,9 @@ views:
       , video_url url
       , 'video' category
       FROM
-        "${athena_database_name}"."aws_feeds_youtube"
+        "${data_collection_database_name}"."aws_feeds_youtube"
+    parameters:
+      data_collection_database_name:
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
