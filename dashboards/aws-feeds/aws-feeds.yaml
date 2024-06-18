@@ -26,6 +26,11 @@ dashboards:
         Expression: max(published)
         Name: LastRefreshed
       - DataSetIdentifier: aws_feeds
+        Expression: "ifelse(\n{feed_type}='whats_new', '\U0001F680',\n{feed_type}='blog_post',\
+          \ '\U0001F4C3',\n{feed_type}='youtube', '\U0001F4FA',\n{feed_type}='security_bulletin',\
+          \ '\U0001F510',\n{feed_type})"
+        Name: icon_feed_type
+      - DataSetIdentifier: aws_feeds
         Expression: toLower(title)
         Name: lowercase_title
       - DataSetIdentifier: aws_feeds
@@ -298,10 +303,8 @@ dashboards:
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
+            - Scope: ALL_VISUALS
               SheetId: c1748dab-6d8a-4369-ab47-af40ae68d0aa
-              VisualIds:
-              - 9da960d5-d690-4ea1-b0ca-ba0097e34c0e
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 48df37cd-0bd8-477e-9326-6d9e2bb0105f
@@ -361,10 +364,8 @@ dashboards:
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
+            - Scope: ALL_VISUALS
               SheetId: 3cd43b90-2aa0-4f0c-9758-732d0c8e2bdd
-              VisualIds:
-              - ad3a912a-4ffb-402a-82bc-6c2a8e69c418
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2b6d028d-3785-443d-9658-42218c41513c
@@ -382,10 +383,8 @@ dashboards:
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
+            - Scope: ALL_VISUALS
               SheetId: af3c8713-9fac-4a56-b190-2a3501c559b9
-              VisualIds:
-              - 92c92b12-0109-4c22-92d9-e09d26aaa7a4
         Status: ENABLED
       Options:
         WeekStart: SUNDAY
@@ -560,46 +559,64 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 29
+                ColumnSpan: 36
                 ElementId: 9ce13dcc-f4c6-4b14-aac6-9201d4ad7930
                 ElementType: TEXT_BOX
                 RowIndex: 0
                 RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 15
+                ElementId: e54aeeef-6e3e-465e-924f-b488143f8fbc
+                ElementType: TEXT_BOX
+                RowIndex: 2
+                RowSpan: 3
+              - ColumnIndex: 15
+                ColumnSpan: 14
+                ElementId: f8876593-8435-4fc3-b5c8-b827ed806f21
+                ElementType: TEXT_BOX
+                RowIndex: 2
+                RowSpan: 3
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: 87da4858-7673-4e6e-b686-e1801dceb756
                 ElementType: VISUAL
-                RowIndex: 0
+                RowIndex: 2
+                RowSpan: 5
+              - ColumnIndex: 0
+                ColumnSpan: 29
+                ElementId: 21276919-3bb4-466c-bcde-06b6f222e1db
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 5
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 29
                 ElementId: 9da960d5-d690-4ea1-b0ca-ba0097e34c0e
                 ElementType: VISUAL
-                RowIndex: 2
+                RowIndex: 7
                 RowSpan: 9
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: 3c77812c-ac5b-4c7c-9cd8-cca6ad7fc87f
                 ElementType: VISUAL
-                RowIndex: 2
+                RowIndex: 7
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 16
                 ElementId: 4197c57e-b14d-4cb5-8f2d-626b115cbbe2
                 ElementType: VISUAL
-                RowIndex: 11
+                RowIndex: 16
                 RowSpan: 12
               - ColumnIndex: 16
                 ColumnSpan: 20
                 ElementId: b19b5337-63d7-4b53-8d93-e71a437e8bc3
                 ElementType: VISUAL
-                RowIndex: 11
+                RowIndex: 16
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 637d261d-2744-46bd-be71-78d1352a1a23
                 ElementType: VISUAL
-                RowIndex: 23
+                RowIndex: 28
                 RowSpan: 12
         Name: AWS Feeds Summary
         ParameterControls:
@@ -676,31 +693,60 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 2
-                ColumnSpan: 2
+              - ColumnSpan: 2
                 ElementId: f1975aad-1db5-417e-b33d-fc8cea2cc9df
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 4
-                ColumnSpan: 2
+              - ColumnSpan: 2
                 ElementId: 9cc495ee-6805-45af-b90b-7277746e4a0e
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 0
-                RowSpan: 1
-              - ColumnIndex: 6
-                ColumnSpan: 2
-                ElementId: 21276919-3bb4-466c-bcde-06b6f222e1db
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 0
                 RowSpan: 1
         SheetId: c1748dab-6d8a-4369-ab47-af40ae68d0aa
         TextBoxes:
         - Content: |-
             <text-box>
-              <inline font-size="32px">AWS Feeds Summary</inline>
+              <inline font-size="32px">AWS News Feeds Summary</inline>
+              <br/>
+              <inline font-size="14px">This set of Amazon Quicksight dashboards show the latest content from What's New, Blog Post, Videos and Security Bulletin</inline>
             </text-box>
           SheetTextBoxId: 9ce13dcc-f4c6-4b14-aac6-9201d4ad7930
+        - Content: |-
+            <text-box>
+              How to follow AWS News:
+              <br/>
+              <ul>
+                <li>
+                  <a href="https://aws.amazon.com/new/" target="_blank">What's New with AWS?</a>
+                </li>
+                <li>
+                  <a href="https://aws.amazon.com/blogs/" target="_blank">AWS Blog</a>
+                </li>
+                <li>
+                  <a href="https://www.youtube.com/channel/UCd6MoB9NC6uYN2grvUNT-Zg" target="_blank">The official YouTube channel for AWS</a>
+                </li>
+                <li>
+                  <a href="https://aws.amazon.com/security/security-bulletins/" target="_blank">AWS Security Bulletins</a>
+                </li>
+              </ul>
+            </text-box>
+          SheetTextBoxId: e54aeeef-6e3e-465e-924f-b488143f8fbc
+        - Content: |-
+            <text-box>
+              But also check out:
+              <br/>
+              <ul>
+                <li>
+                  <a href="https://www.twitch.tv/aws" target="_blank">AWS Twitch</a>
+                </li>
+                <li>
+                  <a href="https://aws.amazon.com/blogs/aws-cloud-financial-management/improving-your-finops-practice-with-real-time-slack-notifications-of-aws-cfm-announcements/" target="_blank">Slack notifications of AWS CFM announcements</a>
+                </li>
+                <li>
+                  <a href="https://aws.amazon.com/events/" target="_blank">AWS Events and Webinars</a>
+                </li>
+              </ul>
+            </text-box>
+          SheetTextBoxId: f8876593-8435-4fc3-b5c8-b827ed806f21
         Visuals:
         - PivotTableVisual:
             Actions:
@@ -721,17 +767,24 @@ dashboards:
                 - DataPathList:
                   - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
                     FieldValue: title
-                  Width: 983px
+                  Width: 1042px
+                - DataPathList:
+                  - FieldId: 6ac2dd26-ad87-41f5-b819-a33b3efe4894.3.1718643256166
+                    FieldValue: icon_feed_type
+                  Width: 52px
                 - DataPathList:
                   - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.3.1718197925680
                     FieldValue: category
                   Width: 25px
                 SelectedFieldOptions:
-                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
+                - CustomLabel: Date
+                  FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
                   Visibility: VISIBLE
-                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.feed_type.1.1714570083180
+                - CustomLabel: Type
+                  FieldId: 6ac2dd26-ad87-41f5-b819-a33b3efe4894.3.1718643256166
                   Visibility: VISIBLE
-                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
+                - CustomLabel: Title
+                  FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
                   Visibility: VISIBLE
                 - CustomLabel: ' '
                   FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.3.1718197925680
@@ -747,9 +800,9 @@ dashboards:
                       FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: feed_type
+                        ColumnName: icon_feed_type
                         DataSetIdentifier: aws_feeds
-                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.feed_type.1.1714570083180
+                      FieldId: 6ac2dd26-ad87-41f5-b819-a33b3efe4894.3.1718643256166
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: title
@@ -772,6 +825,7 @@ dashboards:
               TableOptions:
                 CellStyle:
                   Height: 25
+                  HorizontalTextAlignment: LEFT
                 CollapsedRowDimensionsVisibility: VISIBLE
                 ColumnHeaderStyle:
                   BackgroundColor: '#0A87AF'
@@ -785,6 +839,8 @@ dashboards:
                   BackgroundColor: '#0A87AF'
                   Height: 25
                   TextWrap: WRAP
+                RowHeaderStyle:
+                  HorizontalTextAlignment: LEFT
                 RowsLayout: TABULAR
                 SingleMetricVisibility: HIDDEN
                 ToggleButtonsVisibility: HIDDEN
@@ -819,8 +875,8 @@ dashboards:
                         Expression: DISTINCT_COUNT({category}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'title' to filter and then open
-                  the icon link on the right table under 'url'</visual-subtitle>
+                RichText: <visual-subtitle>Click on desired 'Title' to filter an then open
+                  the icon link on the right table under 'Link'</visual-subtitle>
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
@@ -936,7 +992,8 @@ dashboards:
               FieldOptions:
                 Order: []
                 SelectedFieldOptions:
-                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.3.1715191049889
+                - CustomLabel: Link
+                  FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.3.1715191049889
                   URLStyling:
                     LinkConfiguration:
                       Content:
@@ -1055,7 +1112,7 @@ dashboards:
                 SelectedFieldOptions:
                 - CustomLabel: Last refreshed
                   FieldId: 9992ef85-c350-4719-979d-9c66ded1c8dd.0.1718378098821
-                  Width: 290px
+                  Width: 277px
               FieldWells:
                 TableUnaggregatedFieldWells:
                   Values:
@@ -1066,6 +1123,7 @@ dashboards:
               SortConfiguration: {}
               TableOptions:
                 CellStyle:
+                  Height: 172
                   HorizontalTextAlignment: CENTER
                 HeaderStyle:
                   Border:
@@ -1073,6 +1131,7 @@ dashboards:
                       Style: SOLID
                   HorizontalTextAlignment: CENTER
                   TextWrap: WRAP
+                  VerticalTextAlignment: MIDDLE
                 RowAlternateColorOptions:
                   Status: DISABLED
                   UsePrimaryBackgroundColor: ENABLED
@@ -1094,9 +1153,15 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 36
+                ColumnSpan: 19
                 ElementId: 1c1f4866-cf8d-4cc2-9151-ef24f3ec30c6
                 ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 19
+                ColumnSpan: 17
+                ElementId: 439bb6bc-9690-4507-8abd-dfb28cd2b7cb
+                ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 2
               - ColumnIndex: 0
@@ -1191,23 +1256,13 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 6
-                ColumnSpan: 3
-                ElementId: 439bb6bc-9690-4507-8abd-dfb28cd2b7cb
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 0
-                RowSpan: 1
         SheetId: 0445c2bf-c40b-4923-983d-461b01824280
         TextBoxes:
-        - Content: |-
-            <text-box>
-              <inline font-size="32px">AWS What's New</inline>
-              <br/>
-              <block align="right">
-                <inline font-size="14px">Source: </inline>
-                <a href="https://aws.amazon.com/about-aws/whats-new/recent/feed/" target="_blank">https://aws.amazon.com/about-aws/whats-new/recent/feed/</a>
-              </block>
-            </text-box>
+        - Content: "<text-box>\n  <inline font-size=\"32px\">AWS What's New\_</inline>\n\
+            \  <inline font-size=\"32px\"/>\n  &#128640;\n  <br/>\n  <block align=\"right\"\
+            >\n    Source:\n    <a href=\"https://aws.amazon.com/about-aws/whats-new/recent/feed/\"\
+            \ target=\"_blank\">https://aws.amazon.com/about-aws/whats-new/recent/feed/</a>\n\
+            \  </block>\n</text-box>"
           SheetTextBoxId: 1c1f4866-cf8d-4cc2-9151-ef24f3ec30c6
         Visuals:
         - BarChartVisual:
@@ -1318,13 +1373,17 @@ dashboards:
                       PivotTableDataPathType: EMPTY_COLUMN_HEADER
                   Width: 25px
                 SelectedFieldOptions:
-                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.3.1714634621010
+                - CustomLabel: Date
+                  FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.3.1714634621010
                   Visibility: VISIBLE
-                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.title.3.1713511614848
+                - CustomLabel: Title
+                  FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.title.3.1713511614848
                   Visibility: VISIBLE
-                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713522986805
+                - CustomLabel: Category
+                  FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.category.1.1713522986805
                   Visibility: VISIBLE
-                - FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.2.1713523006010
+                - CustomLabel: Service
+                  FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.service.2.1713523006010
                   Visibility: VISIBLE
                 - CustomLabel: '-'
                   FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.description.4.1718200035508
@@ -1419,8 +1478,8 @@ dashboards:
                         Expression: COUNT({description}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'title' to filter and then open
-                  the icon link on the right table under 'link'</visual-subtitle>
+                RichText: <visual-subtitle>Click on desired 'Title' to filter an then open
+                  the icon link on the right table under 'Link'</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -1433,7 +1492,8 @@ dashboards:
               FieldOptions:
                 Order: []
                 SelectedFieldOptions:
-                - FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.summary.0.1713118658080
+                - CustomLabel: Description
+                  FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.summary.0.1713118658080
                   URLStyling:
                     LinkConfiguration:
                       Content:
@@ -1442,7 +1502,8 @@ dashboards:
                             FontDecoration: UNDERLINE
                       Target: NEW_TAB
                   Width: 383px
-                - FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.link.2.1713167555800
+                - CustomLabel: Link
+                  FieldId: 19dfe594-20b4-43ed-a346-1bb859ba0544.link.2.1713167555800
                   URLStyling:
                     LinkConfiguration:
                       Content:
@@ -1477,7 +1538,7 @@ dashboards:
                   Height: 400
                   HorizontalTextAlignment: AUTO
                   TextWrap: WRAP
-                  VerticalTextAlignment: MIDDLE
+                  VerticalTextAlignment: TOP
                 HeaderStyle:
                   BackgroundColor: '#0A87AF'
                   FontConfiguration:
@@ -1585,9 +1646,15 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 36
+                ColumnSpan: 19
                 ElementId: d7477d39-2e99-4a9e-bca8-bef0346f7dc8
                 ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 19
+                ColumnSpan: 17
+                ElementId: d93e00aa-5cf4-46e6-bcf6-d9d1348cd95f
+                ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 2
               - ColumnIndex: 0
@@ -1680,12 +1747,6 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 4
-                ColumnSpan: 2
-                ElementId: d93e00aa-5cf4-46e6-bcf6-d9d1348cd95f
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 0
-                RowSpan: 1
         SheetId: e12647d7-be4f-4b9d-8b7c-4250c49bbc4a
         TextBoxes:
         - Content: |-
@@ -1693,9 +1754,9 @@ dashboards:
               <inline font-size="32px">AWS What's New</inline>
             </text-box>
           SheetTextBoxId: 942ed253-7f4e-4e87-902e-ba00f654b2a8
-        - Content: "<text-box>\n  <inline font-size=\"32px\">AWS Blog Posts</inline>\n \
-            \ <br/>\n  <block align=\"right\">\n    <inline font-size=\"14px\">Source:\_\
-            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"https://aws.amazon.com/blogs/aws/feed/\"\
+        - Content: "<text-box>\n  <inline font-size=\"32px\">AWS Blog Posts\_</inline>\n\
+            \  &#128195;\n  <br/>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
+            >Source:\_</inline>\n    <inline font-size=\"14px\">\n      <a href=\"https://aws.amazon.com/blogs/aws/feed/\"\
             \ target=\"_blank\">https://aws.amazon.com/blogs/aws/feed/</a>\n    </inline>\n\
             \  </block>\n</text-box>"
           SheetTextBoxId: d7477d39-2e99-4a9e-bca8-bef0346f7dc8
@@ -1903,15 +1964,18 @@ dashboards:
                 - DataPathList:
                   - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.description.3.1718200476916
                     FieldValue: description
-                  Width: 38px
+                  Width: 25px
                 SelectedFieldOptions:
-                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
+                - CustomLabel: Date
+                  FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.3.1714573924762
                   Visibility: VISIBLE
-                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
+                - CustomLabel: Title
+                  FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.title.1.1713526245017
                   Visibility: VISIBLE
-                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
+                - CustomLabel: Creator
+                  FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.creator.3.1713526311697
                   Visibility: VISIBLE
-                - CustomLabel: ' '
+                - CustomLabel: ' Description'
                   FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.description.3.1718200476916
                   Visibility: VISIBLE
               FieldWells:
@@ -1991,8 +2055,8 @@ dashboards:
                         Expression: COUNT({description}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'title' to filter and then open
-                  the icon link on the right table under 'link'</visual-subtitle>
+                RichText: <visual-subtitle>Click on desired 'Title' to filter an then open
+                  the icon link on the right table under 'Link'</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -2080,9 +2144,11 @@ dashboards:
               FieldOptions:
                 Order: []
                 SelectedFieldOptions:
-                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.description.0.1713526419245
+                - CustomLabel: Description
+                  FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.description.0.1713526419245
                   Width: 411px
-                - FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.link.1.1713526437334
+                - CustomLabel: Link
+                  FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.link.1.1713526437334
                   URLStyling:
                     LinkConfiguration:
                       Content:
@@ -2107,7 +2173,8 @@ dashboards:
               SortConfiguration: {}
               TableOptions:
                 CellStyle:
-                  Height: 500
+                  Height: 327
+                  VerticalTextAlignment: TOP
                 HeaderStyle:
                   BackgroundColor: '#0A87AF'
                   Height: 25
@@ -2132,19 +2199,25 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 36
+                ColumnSpan: 19
                 ElementId: 4c1cf762-f289-4e7d-8fd6-7ff9e7d721a1
                 ElementType: TEXT_BOX
                 RowIndex: 0
                 RowSpan: 2
+              - ColumnIndex: 19
+                ColumnSpan: 17
+                ElementId: 8d5764c3-1280-4114-b467-5a49d0490578
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 18
+                ColumnSpan: 19
                 ElementId: ad3a912a-4ffb-402a-82bc-6c2a8e69c418
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 12
-              - ColumnIndex: 18
-                ColumnSpan: 18
+              - ColumnIndex: 19
+                ColumnSpan: 17
                 ElementId: aa641cbe-6952-477a-b513-6056cc3cdf58
                 ElementType: VISUAL
                 RowIndex: 2
@@ -2172,16 +2245,12 @@ dashboards:
         SheetControlLayouts:
         - Configuration:
             GridLayout:
-              Elements:
-              - ColumnSpan: 2
-                ElementId: 8d5764c3-1280-4114-b467-5a49d0490578
-                ElementType: PARAMETER_CONTROL
-                RowSpan: 1
+              Elements: []
         SheetId: 3cd43b90-2aa0-4f0c-9758-732d0c8e2bdd
         TextBoxes:
-        - Content: "<text-box>\n  <inline font-size=\"32px\">AWS YouTube Videos</inline>\n\
-            \  <br/>\n  <block align=\"right\">\n    <inline font-size=\"14px\">Source:\_\
-            </inline>\n    <a href=\"https://www.youtube.com/feeds/videos.xml?channel_id=UCd6MoB9NC6uYN2grvUNT-Zg\"\
+        - Content: "<text-box>\n  <inline font-size=\"32px\">AWS YouTube Videos\_</inline>\n\
+            \  &#128250;\n  <br/>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
+            >Source:\_</inline>\n    <a href=\"https://www.youtube.com/feeds/videos.xml?channel_id=UCd6MoB9NC6uYN2grvUNT-Zg\"\
             \ target=\"_blank\">https://www.youtube.com/feeds/videos.xml?channel_id=UCd6MoB9NC6uYN2grvUNT-Zg</a>\n\
             \  </block>\n</text-box>"
           SheetTextBoxId: 4c1cf762-f289-4e7d-8fd6-7ff9e7d721a1
@@ -2192,11 +2261,16 @@ dashboards:
               FieldOptions:
                 Order: []
                 SelectedFieldOptions:
-                - FieldId: 573c1109-b214-4bec-a018-e8847022f541.title.2.1714637555020
+                - CustomLabel: Date
+                  FieldId: 573c1109-b214-4bec-a018-e8847022f541.published.3.1714637564439
+                - CustomLabel: Title
+                  FieldId: 573c1109-b214-4bec-a018-e8847022f541.title.2.1714637555020
                   Width: 499px
-                - FieldId: 573c1109-b214-4bec-a018-e8847022f541.description.0.1713549072063
+                - CustomLabel: Description
+                  FieldId: 573c1109-b214-4bec-a018-e8847022f541.description.0.1713549072063
                   Width: 755px
-                - FieldId: 573c1109-b214-4bec-a018-e8847022f541.video_url.1.1713549076348
+                - CustomLabel: Link
+                  FieldId: 573c1109-b214-4bec-a018-e8847022f541.video_url.1.1713549076348
                   URLStyling:
                     LinkConfiguration:
                       Content:
@@ -2236,6 +2310,7 @@ dashboards:
               TableOptions:
                 CellStyle:
                   Height: 500
+                  VerticalTextAlignment: TOP
                 HeaderStyle:
                   BackgroundColor: '#0A87AF'
                   Height: 25
@@ -2245,7 +2320,7 @@ dashboards:
                 RichText: |-
                   <visual-subtitle>
                     <block align="right">
-                      <inline font-size="14px">Click in the link icon to open external view with item details.</inline>
+                      <inline font-size="14px">Click in the 'Link' icon to open external view with item details.</inline>
                     </block>
                   </visual-subtitle>
               Visibility: VISIBLE
@@ -2288,8 +2363,11 @@ dashboards:
               FieldOptions:
                 Order: []
                 SelectedFieldOptions:
-                - FieldId: 573c1109-b214-4bec-a018-e8847022f541.title.0.1714635770123
-                  Width: 631px
+                - CustomLabel: Date
+                  FieldId: 573c1109-b214-4bec-a018-e8847022f541.published.2.1714637371615
+                - CustomLabel: Title
+                  FieldId: 573c1109-b214-4bec-a018-e8847022f541.title.0.1714635770123
+                  Width: 682px
                 - FieldId: 4e94b79b-80ea-426b-a704-63141e0bcc15.1.1714635834667
                   Visibility: HIDDEN
               FieldWells:
@@ -2325,7 +2403,8 @@ dashboards:
                   TextWrap: WRAP
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on the desired 'title' to display the video on the right side</visual-subtitle>
+                RichText: <visual-subtitle>Click on the desired 'title' in order to display
+                  on the right side</visual-subtitle>
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
@@ -2340,19 +2419,25 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 36
+                ColumnSpan: 19
                 ElementId: 229cc868-0a6e-4c64-81d4-952c86045e31
                 ElementType: TEXT_BOX
                 RowIndex: 0
                 RowSpan: 2
+              - ColumnIndex: 19
+                ColumnSpan: 17
+                ElementId: 0eda8408-895f-417e-9d94-e41cb3320bb3
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 18
+                ColumnSpan: 19
                 ElementId: 92c92b12-0109-4c22-92d9-e09d26aaa7a4
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 12
-              - ColumnIndex: 18
-                ColumnSpan: 18
+              - ColumnIndex: 19
+                ColumnSpan: 17
                 ElementId: 22d57d9b-7ae2-4169-9e78-2daa8c45f3bd
                 ElementType: VISUAL
                 RowIndex: 2
@@ -2380,16 +2465,12 @@ dashboards:
         SheetControlLayouts:
         - Configuration:
             GridLayout:
-              Elements:
-              - ColumnSpan: 2
-                ElementId: 0eda8408-895f-417e-9d94-e41cb3320bb3
-                ElementType: PARAMETER_CONTROL
-                RowSpan: 1
+              Elements: []
         SheetId: af3c8713-9fac-4a56-b190-2a3501c559b9
         TextBoxes:
-        - Content: "<text-box>\n  <inline font-size=\"32px\">AWS Security Bulletin</inline>\n\
-            \  <br/>\n  <block align=\"right\">\n    <inline font-size=\"14px\">Source:\_\
-            </inline>\n    <a href=\"https://aws.amazon.com/security/security-bulletins/rss/feed/\"\
+        - Content: "<text-box>\n  <inline font-size=\"32px\">AWS Security Bulletin\_</inline>\n\
+            \  &#128272;\n  <br/>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
+            >Source:\_</inline>\n    <a href=\"https://aws.amazon.com/security/security-bulletins/rss/feed/\"\
             \ target=\"_blank\">https://aws.amazon.com/security/security-bulletins/rss/feed/</a>\n\
             \  </block>\n</text-box>"
           SheetTextBoxId: 229cc868-0a6e-4c64-81d4-952c86045e31
@@ -2415,15 +2496,17 @@ dashboards:
                 - DataPathList:
                   - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.title.1.1714205060264
                     FieldValue: title
-                  Width: 591px
+                  Width: 650px
                 - DataPathList:
                   - DataPathType:
                       PivotTableDataPathType: EMPTY_COLUMN_HEADER
                   Width: 25px
                 SelectedFieldOptions:
-                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1714205014038
+                - CustomLabel: Date
+                  FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1714205014038
                   Visibility: VISIBLE
-                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.title.1.1714205060264
+                - CustomLabel: Title
+                  FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.title.1.1714205060264
                   Visibility: VISIBLE
                 - CustomLabel: ' '
                   FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.description.2.1718200602319
@@ -2499,11 +2582,12 @@ dashboards:
                         Color: '#212325'
                         Expression: COUNT({description}) <> -1
             Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Click on desired 'Title' to filter an then open
+                  the icon link on the right table under 'Link'</visual-subtitle>
               Visibility: VISIBLE
             Title:
-              FormatText:
-                RichText: <visual-title>AWS Security Bulletin</visual-title>
-              Visibility: VISIBLE
+              Visibility: HIDDEN
             VisualId: 92c92b12-0109-4c22-92d9-e09d26aaa7a4
         - TableVisual:
             Actions: []
@@ -2511,9 +2595,11 @@ dashboards:
               FieldOptions:
                 Order: []
                 SelectedFieldOptions:
-                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.description.0.1714205154146
-                  Width: 678px
-                - FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1714205160479
+                - CustomLabel: Description
+                  FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.description.0.1714205154146
+                  Width: 625px
+                - CustomLabel: Luink
+                  FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1714205160479
                   URLStyling:
                     LinkConfiguration:
                       Content:
@@ -2539,6 +2625,7 @@ dashboards:
               TableOptions:
                 CellStyle:
                   Height: 500
+                  VerticalTextAlignment: TOP
                 HeaderStyle:
                   BackgroundColor: '#0A87AF'
                   Height: 25
@@ -2653,7 +2740,7 @@ dashboards:
                 ElementId: fb6ed0b5-5e38-4657-993d-c4fba95c317a
                 ElementType: VISUAL
                 RowIndex: 7
-                RowSpan: 13
+                RowSpan: 11
         Name: About
         SheetId: b272e9b7-7d32-4e9c-848e-59b98e2cf8d3
         Visuals:
@@ -2667,16 +2754,16 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\"\
                   \ target=\"_blank\">\n        <b>\n          <u>AWS Feeds Dashboard</u>\n\
                   \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block\
-                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.0.7</b>\n\
+                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.0.8</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
                   \ font-size=\"22.4px\">\n      <b>AWS Feeds Dashboard: What's New, Blog\
-                  \ Posts, YouTube Videos, Security Bulletin</b>\n    </inline>\n  </block>\n\
+                  \ Posts, Videos and Security Bulletins</b>\n    </inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <br/>\n  <br/>\n  <br/>\n\
-                  \  <br/>\n  <br/>\n  <br/>\n  <br/>\n  <block align=\"right\">Built by:\
-                  \ Francisco Tresgallo</block>\n  <br/>\n  <block align=\"right\">Contributors:\
-                  \ Iakov Gan, Yuriy Prykhodko</block>\n  <br/>\n  <block align=\"right\"\
-                  >\n    Learn more about AWS Cloud Intelligence Dashboards (CID) on\n \
-                  \   <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+                  \  <br/>\n  <block align=\"right\">Built by: Francisco Tresgallo</block>\n\
+                  \  <br/>\n  <block align=\"right\">Contributors: Iakov Gan, Yuriy Prykhodko</block>\n\
+                  \  <br/>\n  <block align=\"right\">\n    Learn more about AWS Cloud Intelligence\
+                  \ Dashboards (CID) on\n    <inline color=\"#61d1d6\">\n      <a href=\"\
+                  https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
                   \ target=\"_blank\">AWS Well-Architected Labs</a>\n    </inline>\n   \
                   \ \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
                   \ target=\"_blank\">CID YouTube Channel</a>\n    </inline>\n  </block>\n\
