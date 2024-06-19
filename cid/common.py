@@ -1681,8 +1681,8 @@ class Cid():
                     pass
             else:
                 self.athena.execute_query(view_query)
-                assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
-                logger.info(f'View "{view_name}" created')
+            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+            logger.info(f'View "{view_name}" created')
 
         if 'crawler' in view_definition:
             if not ('CREATE EXTERNAL TABLE' in view_query.upper() or view_definition.get('type') == 'Glue_Table'):
