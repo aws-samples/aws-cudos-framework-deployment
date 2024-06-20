@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deployment of Cloud Intelligence Dashboards v0.3.5
+
+Parameters:
+  CidMainStackPrefix:
+    Type: String
+    Description:  'Please enter exactly the same prefix as you have in your main CID stack'
+    Default: 'cid'
+  DashboardId:
+    Type: String
+    Description:  'Dashboard id'
+    Default: ''
+  ResourcesUrl:
+    Type: String
+    Description:  'Resources url'
+    Default: ''
+
+Conditions:
+  ResourcesUrlIsEmpty: !Equals [!Ref ResourcesUrl, '']
+
+Resources:
+  Dashboard:
+    Type: Custom::CidDashboard
+    Properties:
+      Name: !Ref DashboardId
+      ServiceToken: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-CidExecArn" }
+      Dashboard:
+        dashboard-id: !Ref DashboardId
+        athena-workgroup: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-AthenaWorkgroup" }
+        quicksight-datasource-id: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-QuickSightDatasourceId" }
+        quicksight-datasource-role-arn: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-QuickSightDatasourceRoleArn" }
+        athena-database: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-AthenaDatabase" }
+        glue-data-catalog: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-GlueCatalog" }
+        cur-table-name: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-CurTableName" }
+        quicksight-user: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-QuickSightUser" }
+        share-with-account: 'yes'
+        resources: !If [ResourcesUrlIsEmpty, !Ref 'AWS::NoValue', !Ref ResourcesUrl ]
+
+Outputs:
+  DashboardURL:
+    Description: "URL of Dashboard"
+    Value: !GetAtt Dashboard.DashboardURL
