@@ -4,7 +4,7 @@ Terraform module to set up a Cost and Usage Report in a source (payer) account
 for use in Cost Intelligence Dashboards. The module creates an S3 bucket with the necessary
 permissions and configuration to replicate CUR data to the destination/aggregation account.
 If you are deploying Cost Intelligence Cashboards for a multi-payer environment, you can
-one instance of this module for each payer account. 
+one instance of this module for each payer account.
 
 ## Example Usage
 
@@ -35,7 +35,7 @@ provider "aws" {
 
 # Configure exactly one destination account
 module "cur_destination" {
-  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination
+  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination"
 
   source_account_ids = ["1234567890"]
   create_cur         = false # Set to true to create an additional CUR in the aggregation account
@@ -141,10 +141,10 @@ Default: `"cur"`
 
 ### kms\_key\_id
 
-Description: !!!WARNING!!! EXPERIMENTAL - Do not use unless you know what you are doing. The correct key policies and IAM permissions  
+Description: !!!WARNING!!! EXPERIMENTAL - Do not use unless you know what you are doing. The correct key policies and IAM permissions
 on the S3 replication role must be configured external to this module.
   - The "billingreports.amazonaws.com" service must have access to encrypt objects with the key ID provided
-  - See https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-config-for-kms-objects.html for information  
+  - See https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-config-for-kms-objects.html for information
     on permissions required for replicating KMS-encrypted objects
 
 Type: `string`
