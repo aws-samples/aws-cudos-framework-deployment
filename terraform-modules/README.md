@@ -25,7 +25,7 @@ for use in Cost Intelligence Dashboards. The module creates an S3 bucket with
 the necessary permissions and configuration to replicate CUR data to the
 data collection account. If you are deploying Cost Intelligence Dashboards
 for a multi-payer environment, you can deploy one instance of this module for
-each payer account. 
+each payer account.
 
 Review [module documentation](./cur-setup-source/README.md) for details
 on module requirements, inputs, and outputs.
@@ -48,7 +48,7 @@ the GitHub / git source as below.
 
 ```hcl
 module "example" {
-  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/<module name>"
+  source = "github.com/aws-samples/aws-cudos-framework-deployment/terraform-modules/<module name>"
   ...
 }
 ```
@@ -65,7 +65,7 @@ example, the following source reference will use the Terraform module
 and Cloudformation template from version 0.2.14 of this module:
 
 ```
-source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-source?ref=0.2.14"
+source = "github.com/aws-samples/aws-cudos-framework-deployment/terraform-modules/cur-setup-source?ref=0.2.14"
 ```
 
 For a complete list of release tags, visit https://github.com/aws-samples/aws-cudos-framework-deployment/tags.
@@ -119,7 +119,7 @@ provider "aws" {
 
 # Configure exactly one destination account
 module "cur_data_collection_account" {
-  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination
+  source = "github.com/aws-samples/aws-cudos-framework-deployment/terraform-modules/cur-setup-destination
 
   source_account_ids = ["1234567890"]
   create_cur         = false # Set to true to create an additional CUR in the aggregation account
@@ -134,7 +134,7 @@ module "cur_data_collection_account" {
 
 # Configure one or more source (payer) accounts
 module "cur_payer" {
-  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-source"
+  source = "github.com/aws-samples/aws-cudos-framework-deployment/terraform-modules/cur-setup-source"
 
   destination_bucket_arn = module.cur_data_collection_account.cur_bucket_arn
 
@@ -169,7 +169,7 @@ used `stack_parameters`.
 # dashboard_deployment.tf
 
 module "cid_dashboards" {
-    source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cid-dashboards"
+    source = "github.com/aws-samples/aws-cudos-framework-deployment/terraform-modules/cid-dashboards"
 
     stack_name      = "Cloud-Intelligence-Dashboards"
     template_bucket = "UPDATEME" # Update with S3 bucket name

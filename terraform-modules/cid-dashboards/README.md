@@ -14,11 +14,11 @@ resources and a custom Lambda function to create the dashboards using `cid-cmd`.
 
 ```hcl
 module "cid_dashboards" {
-    source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cid-dashboards"
+    source = "github.com/aws-samples/aws-cudos-framework-deployment/terraform-modules/cid-dashboards"
 
     stack_name      = "Cloud-Intelligence-Dashboards"
     template_bucket = "UPDATEME"
-  
+
     stack_parameters = {
       "PrerequisitesQuickSight"            = "yes"
       "PrerequisitesQuickSightPermissions" = "yes"
@@ -38,7 +38,7 @@ to the module source. For example, the following source reference will use the T
 and Cloudformation template from version 0.2.13 of this module:
 
 ```
-source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cid-dashboards?ref=0.2.13"
+source = "github.com/aws-samples/aws-cudos-framework-deployment/terraform-modules/cid-dashboards?ref=0.2.13"
 ```
 
 For a complete list of release tags, visit https://github.com/aws-samples/aws-cudos-framework-deployment/tags.
@@ -79,8 +79,8 @@ Type: `string`
 
 ### stack\_parameters
 
-Description: CloudFormation stack parameters. For the full list of available parameters, refer to  
-https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/cfn-templates/cid-cfn.yml.  
+Description: CloudFormation stack parameters. For the full list of available parameters, refer to
+https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/cfn-templates/cid-cfn.yml.
 For most setups, you will want to set the following parameters:
   - PrerequisitesQuickSight: yes/no
   - PrerequisitesQuickSightPermissions: yes/no
