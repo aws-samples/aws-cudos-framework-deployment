@@ -1,19 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v0.3.5
+Description: A Plugin for Cloud Intelligence Dashboards
 
 Parameters:
-  CidMainStackPrefix:
-    Type: String
-    Description:  'Please enter exactly the same prefix as you have in your main CID stack'
-    Default: 'cid'
   DashboardId:
     Type: String
     Description:  'Dashboard id'
     Default: ''
+    MinLength: 3
+    AllowedPattern: "^[a-zA-Z0-9_\-]*$"
   ResourcesUrl:
     Type: String
-    Description:  'Resources url'
+    Description:  'Resources File URL. Keep it empty if not sure.'
     Default: ''
+  CidMainStackPrefix:
+    Type: String
+    Description:  'Please enter exactly the same prefix as you have in your main CID stack. Keep it empty if not sure.'
+    Default: 'cid'
 
 Conditions:
   ResourcesUrlIsEmpty: !Equals [!Ref ResourcesUrl, '']
