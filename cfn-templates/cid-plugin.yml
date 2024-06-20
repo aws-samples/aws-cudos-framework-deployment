@@ -7,7 +7,7 @@ Parameters:
     Description:  'Dashboard id'
     Default: ''
     MinLength: 3
-    AllowedPattern: "^[a-zA-Z0-9_\-]*$"
+    AllowedPattern: "^[a-zA-Z0-9_-]*$"
   ResourcesUrl:
     Type: String
     Description:  'Resources File URL. Keep it empty if not sure.'
