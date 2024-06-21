@@ -151,7 +151,7 @@ module "cur_payer" {
 
 After enabling CUR with Terraform as describe above, a few steps are necessary
 to prepare for dashboard deployment:
-  1. Complete prerequisites in [Before You Start](../../README.md#before-you-start) including Quicksight setup
+  1. Complete prerequisites in [Before You Start](../README.md#before-you-start) including Quicksight setup
   2. Create an S3 bucket to upload the CloudFormation template
 
 ### Step 3: Dashboard Setup
