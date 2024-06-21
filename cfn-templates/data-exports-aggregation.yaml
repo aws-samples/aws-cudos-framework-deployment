@@ -10,7 +10,8 @@ Metadata:
         Parameters:
           - DestinationAccountId
           - ResourcePrefix
-          - CreateCUR2
+          - ManageCUR2
+          - ManageFOCUS
       -
         Label:
           default: "Parameters needed in Destination (Data Collection) Account only"
@@ -24,8 +25,10 @@ Metadata:
           - RolePath
 
     ParameterLabels:
-      CreateCUR2:
+      ManageCUR2:
         default: "Create CUR 2.0 DataExport"
+      ManageFOCUS:
+        default: "Create FOCUS DataExport"
       DestinationAccountId:
         default: "Destination (Data Collection) Account Id"
       ResourcePrefix:
@@ -51,9 +54,14 @@ Parameters:
     Description: "Prefix used for all named resources, including S3 Bucket. Must be the same in destination and source stacks"
     MaxLength:  37 # = 63 - len('-123456789012-data-exports')
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
-  CreateCUR2:
+  ManageCUR2:
     Type: String
-    Description: Whether to create a local CUR2. Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
+    Description: Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
+    AllowedValues: ['yes', 'no']
+    Default: "yes"
+  ManageFOCUS:
+    Type: String
+    Description: Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
     AllowedValues: ['yes', 'no']
     Default: "yes"
 
@@ -64,7 +72,7 @@ Parameters:
     Type: String
     AllowedPattern: "^((\\d{12})\\,?)*$"
     Default: ''
-    Description: "A comma separated list of all accounts that will replicate DataExport to this account. Ex:  12345678912,98745612312,...."
+    Description: "Ex:  12345678912,98745612312,.... In a rare case if you need Destination Account to produce Data Exports please put Destination Account Id first in the list. "
 
   ##
   # Technical params
@@ -80,18 +88,33 @@ Parameters:
     Description: Path for roles where PermissionBoundaries can limit location
 
 Conditions:
+  EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
   IsDestinationAccount: !Equals [!Ref DestinationAccountId, !Ref 'AWS::AccountId']
+  IsSourceAccount:
+    # it is Source account if it is not a destination or if it is a destination and it is listed in Source Accounts (as the list one).
+    # Unfortunately, there no 'Fn::Contains' in Conditions, so we need to request user setting Dest account as the first.
+    Fn::Or:
+      - !Not [!Condition IsDestinationAccount]
+      - !Equals [!Ref 'AWS::AccountId', !Select [0, !Split [',', !Sub '${SourceAccountIds},']]]
   RegionSupportsDataExportsViaCFN: # CFN supports DataExports only in us-east-1 and cn-northwest-1. Other regions must use lambda.
     Fn::Or:
       - !Equals [!Ref 'AWS::Region', 'us-east-1']
       - !Equals [!Ref 'AWS::Region', 'cn-northwest-1']
-  CreateCUR2: !Equals [!Ref CreateCUR2, 'yes']
+  ManageCUR2: !Equals [!Ref ManageCUR2, 'yes']
+  ManageFOCUS: !Equals [!Ref ManageFOCUS, 'yes']
   EnableSCAD: !Equals [!Ref EnableSCAD, 'yes']
-  DeployDataExport: !Condition CreateCUR2 # Will be other reports later, so keep it generic
-  DeployCUR2ViaCFN: !And [!Condition CreateCUR2, !Condition RegionSupportsDataExportsViaCFN]
-  DeployCUR2ViaLambda: !And [!Condition CreateCUR2, !Not [!Condition RegionSupportsDataExportsViaCFN]]
-  EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
-  DeployAnyExportViaLambda: !Condition DeployCUR2ViaLambda
+  DeployDataExport:
+    Fn::Or:
+      - !Condition ManageCUR2
+      - !Condition ManageFOCUS
+  DeployCUR2ViaCFN:      !And [!Condition IsSourceAccount, !Condition ManageCUR2,        !Condition RegionSupportsDataExportsViaCFN]
+  DeployFOCUSViaCFN:     !And [!Condition IsSourceAccount, !Condition ManageFOCUS,       !Condition RegionSupportsDataExportsViaCFN]
+  DeployCUR2ViaLambda:   !And [!Condition IsSourceAccount, !Condition ManageCUR2,  !Not [!Condition RegionSupportsDataExportsViaCFN]]
+  DeployFOCUSViaLambda:  !And [!Condition IsSourceAccount, !Condition ManageFOCUS, !Not [!Condition RegionSupportsDataExportsViaCFN]]
+  DeployCUR2Table:       !And [!Condition IsDestinationAccount, !Condition ManageCUR2]
+  DeployFOCUSTable:      !And [!Condition IsDestinationAccount, !Condition ManageFOCUS]
+  DeployAnyExportViaLambda: !Or [!Condition DeployCUR2ViaLambda, !Condition DeployFOCUSViaLambda]
+  DeployAnyTable: !Or [!Condition DeployFOCUSTable, !Condition DeployCUR2Table]
 
 Mappings:
   DataExports:
@@ -103,6 +126,10 @@ Mappings:
       SCADQuery: >-
         SELECT bill_bill_type, bill_billing_entity, bill_billing_period_end_date, bill_billing_period_start_date, bill_invoice_id, bill_invoicing_entity, bill_payer_account_id, bill_payer_account_name, cost_category, discount, discount_bundled_discount, discount_total_discount, identity_line_item_id, identity_time_interval, line_item_availability_zone, line_item_blended_cost, line_item_blended_rate, line_item_currency_code, line_item_legal_entity, line_item_line_item_description, line_item_line_item_type, line_item_net_unblended_cost, line_item_net_unblended_rate, line_item_normalization_factor, line_item_normalized_usage_amount, line_item_operation, line_item_product_code, line_item_resource_id, line_item_tax_type, line_item_unblended_cost, line_item_unblended_rate, line_item_usage_account_id, line_item_usage_account_name, line_item_usage_amount, line_item_usage_end_date, line_item_usage_start_date, line_item_usage_type, pricing_currency, pricing_lease_contract_length, pricing_offering_class, pricing_public_on_demand_cost, pricing_public_on_demand_rate, pricing_purchase_option, pricing_rate_code, pricing_rate_id, pricing_term, pricing_unit, product, product_comment, product_fee_code, product_fee_description, product_from_location, product_from_location_type, product_from_region_code, product_instance_family, product_instance_type, product_instancesku, product_location, product_location_type, product_operation, product_pricing_unit, product_product_family, product_region_code, product_servicecode, product_sku, product_to_location, product_to_location_type, product_to_region_code, product_usagetype, reservation_amortized_upfront_cost_for_usage, reservation_amortized_upfront_fee_for_billing_period, reservation_availability_zone, reservation_effective_cost, reservation_end_time, reservation_modification_status, reservation_net_amortized_upfront_cost_for_usage, reservation_net_amortized_upfront_fee_for_billing_period, reservation_net_effective_cost, reservation_net_recurring_fee_for_usage, reservation_net_unused_amortized_upfront_fee_for_billing_period, reservation_net_unused_recurring_fee, reservation_net_upfront_value, reservation_normalized_units_per_reservation, reservation_number_of_reservations, reservation_recurring_fee_for_usage, reservation_reservation_a_r_n, reservation_start_time, reservation_subscription_id, reservation_total_reserved_normalized_units, reservation_total_reserved_units, reservation_units_per_reservation, reservation_unused_amortized_upfront_fee_for_billing_period, reservation_unused_normalized_unit_quantity, reservation_unused_quantity, reservation_unused_recurring_fee, reservation_upfront_value, resource_tags, savings_plan_amortized_upfront_commitment_for_billing_period, savings_plan_end_time, savings_plan_instance_type_family, savings_plan_net_amortized_upfront_commitment_for_billing_period, savings_plan_net_recurring_commitment_for_billing_period, savings_plan_net_savings_plan_effective_cost, savings_plan_offering_type, savings_plan_payment_option, savings_plan_purchase_term, savings_plan_recurring_commitment_for_billing_period, savings_plan_region, savings_plan_savings_plan_a_r_n, savings_plan_savings_plan_effective_cost, savings_plan_savings_plan_rate, savings_plan_start_time, savings_plan_total_commitment_to_date, savings_plan_used_commitment, split_line_item_actual_usage, split_line_item_net_split_cost, split_line_item_net_unused_cost, split_line_item_parent_resource_id, split_line_item_public_on_demand_split_cost, split_line_item_public_on_demand_unused_cost, split_line_item_reserved_usage, split_line_item_split_cost, split_line_item_split_usage, split_line_item_split_usage_ratio, split_line_item_unused_cost    
         FROM COST_AND_USAGE_REPORT
+    FOCUS:
+      DefaultQuery: >-
+        SELECT AvailabilityZone, BilledCost, BillingAccountId, BillingAccountName, BillingCurrency, BillingPeriodEnd, BillingPeriodStart, ChargeCategory, ChargeClass, ChargeDescription, ChargeFrequency, ChargePeriodEnd, ChargePeriodStart, CommitmentDiscountCategory, CommitmentDiscountId, CommitmentDiscountName, CommitmentDiscountType, CommitmentDiscountStatus, ConsumedQuantity, ConsumedUnit, ContractedCost, ContractedUnitPrice, EffectiveCost, InvoiceIssuerName, ListCost, ListUnitPrice, PricingCategory, PricingQuantity, PricingUnit, ProviderName, PublisherName, RegionId, RegionName, ResourceId, ResourceName, ResourceType, ServiceCategory, ServiceName, SkuId, SkuPriceId, SubAccountId, SubAccountName, Tags, x_CostCategories, x_Discounts, x_Operation, x_ServiceCode, x_UsageType
+        FROM FOCUS_1_0_AWS_PREVIEW
 
 Resources:
 
@@ -116,8 +143,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName:
-        Fn::Sub: "${ResourcePrefix}-${AWS::AccountId}-data-exports"
+      BucketName: !Sub "${ResourcePrefix}-${AWS::AccountId}-data-exports"
 
       ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
       # LoggingConfiguration:
@@ -166,7 +192,7 @@ Resources:
       Bucket:
         Ref: DestinationS3
       PolicyDocument:
-        Id: CrossAccessPolicy
+        Id: AllowReplication
         Version: "2012-10-17"
         Statement:
           - Sid: AllowTLS12Only
@@ -174,8 +200,8 @@ Resources:
             Principal: "*"
             Action: s3:*
             Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
+              - !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}'
+              - !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
             Condition:
               NumericLessThan:
                 s3:TlsVersion: 1.2
@@ -184,8 +210,8 @@ Resources:
             Principal: "*"
             Action: s3:*
             Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
+              - !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}'
+              - !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
             Condition:
               Bool:
                 aws:SecureTransport: false
@@ -200,8 +226,7 @@ Resources:
             Action:
               - s3:ReplicateDelete
               - s3:ReplicateObject
-            Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
           - Sid: AllowReplicationRead
             Effect: Allow
             Principal:
@@ -215,8 +240,7 @@ Resources:
               - s3:ListBucketVersions
               - s3:GetBucketVersioning
               - s3:PutBucketVersioning
-            Resource:
-              - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}'
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${DestinationS3}'
 
   SourceS3:
     Type: AWS::S3::Bucket
@@ -224,8 +248,7 @@ Resources:
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
-      BucketName:
-        Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-data-local
+      BucketName: !Sub ${ResourcePrefix}-${AWS::AccountId}-data-local
 
       ## Uncomment following lines to enable bucket logging if needed. Please be careful with the cost of logging.
       # LoggingConfiguration:
@@ -253,13 +276,17 @@ Resources:
       ReplicationConfiguration:
         Role: !GetAtt ReplicationRole.Arn
         Rules:
-          -
-            Destination:
-              Bucket:
-                Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
+          - Destination:
+              Bucket: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
               StorageClass: STANDARD
             Id: ReplicateCUR2Data
-            Prefix: !Sub "cur2/${AWS::AccountId}/${ResourcePrefix}-cur2/data/"
+            Prefix: !Sub "cur2/${AWS::AccountId}/${ResourcePrefix}-cur2/data/"  # Hardcoded export name
+            Status: Enabled
+          - Destination:
+              Bucket: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
+              StorageClass: STANDARD
+            Id: ReplicateFOCUSData
+            Prefix: !Sub "focus/${AWS::AccountId}/${ResourcePrefix}-focus/data/" # Hardcoded export name
             Status: Enabled
       LifecycleConfiguration:
         Rules:
@@ -285,7 +312,7 @@ Resources:
     Properties:
       Bucket: !Ref SourceS3
       PolicyDocument:
-        Id: CrossAccessPolicy
+        Id: AllowBillingReadAndWrite
         Version: "2012-10-17"
         Statement:
           - Sid: AllowTLS12Only
@@ -327,8 +354,7 @@ Resources:
     Condition: DeployDataExport
     Type: AWS::IAM::Role
     Properties:
-      Path:
-        Fn::Sub: /${ResourcePrefix}/
+      Path: !Sub /${ResourcePrefix}/
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -360,8 +386,7 @@ Resources:
                   - s3:ReplicateObject
                   - s3:ReplicateDelete
                   - s3:ReplicateTags
-                Resource:
-                  Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/cur2/${AWS::AccountId}/*"
+                Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/*/${AWS::AccountId}/*"
 
   ## Deploy CUR2 natively via CFN resource if we are regions that support native CFN
   LocalCUR2viaCFN:
@@ -426,6 +451,58 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
+
+  ## Deploy FOCUS natively via CFN resource if we are regions that support native CFN
+  LocalFOCUSviaCFN:
+    Type: AWS::BCMDataExports::Export
+    Condition: DeployFOCUSViaCFN
+    DependsOn:
+      - SourceS3BucketPolicy
+    Properties:
+      Export:
+        DataQuery:
+          QueryStatement: !FindInMap [DataExports, FOCUS, DefaultQuery]
+        Description: "FOCUS export for aggregation in CID"
+        DestinationConfigurations:
+          S3Destination:
+            S3Bucket: !Ref SourceS3
+            S3Prefix: !Sub "focus/${AWS::AccountId}" # Explicitly hardcode name of folder (it will be the same as table name)
+            S3Region: !Ref AWS::Region
+            S3OutputConfigurations:
+              Overwrite: "OVERWRITE_REPORT"
+              Format: "PARQUET"
+              Compression: "PARQUET"
+              OutputType: "CUSTOM"
+        Name: !Sub '${ResourcePrefix}-focus'
+        RefreshCadence:
+          Frequency: "SYNCHRONOUS"
+
+  ## Deploy FOCUS natively via CFN resource if we are regions that support native CFN
+  LocalFOCUSviaCustomResource:
+    Type: Custom::CUR2Creator
+    Condition: DeployFOCUSViaLambda
+    Properties:
+      ServiceToken: !GetAtt CidDataExportCreatorLambda.Arn
+      BucketPolicyWait: !Ref SourceS3BucketPolicy
+      Export:
+        DataQuery:
+          QueryStatement: !FindInMap [DataExports, FOCUS, DefaultQuery]
+        Description: "FOCUS export for aggregation in CID"
+        DestinationConfigurations:
+          S3Destination:
+            S3Bucket: !Ref SourceS3
+            S3Prefix: !Sub "focus/${AWS::AccountId}" # Explicitly hardcode name of folder (it will be the same as table name)
+            S3Region: !Ref AWS::Region
+            S3OutputConfigurations:
+              Overwrite: "OVERWRITE_REPORT"
+              Format: "PARQUET"
+              Compression: "PARQUET"
+              OutputType: "CUSTOM"
+        Name: !Sub '${ResourcePrefix}-focus'
+        RefreshCadence:
+          Frequency: "SYNCHRONOUS"
+
+
 ###########################################################################
 # Lambda DataExport Creator: used to create DataExport from outside us-east-1 or cn-northwest-1
 ###########################################################################
@@ -434,8 +511,7 @@ Resources:
     Type: AWS::IAM::Role
     Condition: DeployAnyExportViaLambda
     Properties:
-      Path:
-        Fn::Sub: /${ResourcePrefix}/
+      Path: !Sub /${ResourcePrefix}/
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -465,24 +541,21 @@ Resources:
             Statement:
             - Effect: Allow
               Action:
-              - cur:PutReportDefinition
+              - cur:PutReportDefinition #need this permission for bcm-data-exports to work
               - bcm-data-exports:CreateExport
               - bcm-data-exports:UpdateExport
               - bcm-data-exports:DeleteExport
-              Resource:
-                - Fn::Sub: arn:${AWS::Partition}:bcm-data-exports:*:${AWS::AccountId}:*
+              Resource: !Sub "arn:${AWS::Partition}:bcm-data-exports:*:${AWS::AccountId}:*"
 
   CidDataExportCreatorLambda:
     Type: AWS::Lambda::Function
     Condition: DeployAnyExportViaLambda
     Properties:
       Runtime: python3.12
-      FunctionName:
-        Fn::Sub: ${ResourcePrefix}-DataExportCreator
+      FunctionName: !Sub ${ResourcePrefix}-DataExportCreator
       Handler: index.lambda_handler
       MemorySize: 128
-      Role:
-        Fn::GetAtt: CidDataExportCreatorLambdaRole.Arn
+      Role: !GetAtt CidDataExportCreatorLambdaRole.Arn
       Timeout: 15
       Code:
         ZipFile: |
@@ -553,16 +626,19 @@ Resources:
 
   CIDDatabase:
     Type: AWS::Glue::Database
-    Condition: IsDestinationAccount
+    Condition: DeployAnyTable
     Properties:
       DatabaseInput:
-        Name:
-          Fn::Sub: "${ResourcePrefix}_data_export"
+        Name: !Sub "${ResourcePrefix}_data_export"
       CatalogId: !Sub "${AWS::AccountId}"
+
+###########################################################################
+# CUR2
+###########################################################################
 
   CURTable:  # Initial creation of table. it will be updated by crawler later
     Type: AWS::Glue::Table
-    Condition: IsDestinationAccount
+    Condition: DeployCUR2Table
     Properties:
       CatalogId: !Sub "${AWS::AccountId}"
       DatabaseName: !Ref CIDDatabase
@@ -574,7 +650,7 @@ Resources:
         Parameters:
           compressionType: none
           classification: parquet
-          UPDATED_BY_CRAWLER: !Ref GlueCURCrawler
+          UPDATED_BY_CRAWLER: !Ref CURCrawler
         StorageDescriptor:
           BucketColumns: []
           Compressed: false
@@ -660,14 +736,13 @@ Resources:
           - {"Name": "billing_period", "Type": "string" }
 
 
-  GlueCURCrawler:
+  CURCrawler:
     Type: AWS::Glue::Crawler
-    Condition: IsDestinationAccount
+    Condition: DeployCUR2Table
     Properties:
       Name:  !Sub "${ResourcePrefix}-DataExportCUR2Crawler"
       Description: A recurring crawler that keeps your CUR table in Athena up-to-date.
-      Role:
-        Fn::GetAtt: CidDataExportCrawlerRole.Arn
+      Role: !GetAtt CidDataExportCrawlerRole.Arn
       DatabaseName: !Ref CIDDatabase
       Targets:
         S3Targets:
@@ -700,9 +775,136 @@ Resources:
             }
           }
         }
+
+###########################################################################
+# FOCUS
+###########################################################################
+
+  FOCUSTable:  # Initial creation of table. it will be updated by crawler later
+    Type: AWS::Glue::Table
+    Condition: DeployFOCUSTable
+    Properties:
+      CatalogId: !Sub "${AWS::AccountId}"
+      DatabaseName: !Ref CIDDatabase
+      TableInput:
+        Name: focus
+        Owner: owner
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          compressionType: none
+          classification: parquet
+          UPDATED_BY_CRAWLER: !Ref FOCUSCrawler
+        StorageDescriptor:
+          BucketColumns: []
+          Compressed: false
+          Location: !Sub "s3://${DestinationS3}/focus/"
+          NumberOfBuckets: -1
+          InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
+          SerdeInfo:
+            Parameters:
+              serialization.format: '1'
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
+          StoredAsSubDirectories: false
+          Columns:
+            - {"Name": "availabilityzone", "Type": "string" }
+            - {"Name": "billedcost", "Type": "double" }
+            - {"Name": "billingaccountid", "Type": "string" }
+            - {"Name": "billingaccountname", "Type": "string" }
+            - {"Name": "billingcurrency", "Type": "string" }
+            - {"Name": "billingperiodend", "Type": "timestamp" }
+            - {"Name": "billingperiodstart", "Type": "timestamp" }
+            - {"Name": "chargecategory", "Type": "string" }
+            - {"Name": "chargeclass", "Type": "string" }
+            - {"Name": "chargedescription", "Type": "string" }
+            - {"Name": "chargefrequency", "Type": "string" }
+            - {"Name": "chargeperiodend", "Type": "timestamp" }
+            - {"Name": "chargeperiodstart", "Type": "timestamp" }
+            - {"Name": "commitmentdiscountcategory", "Type": "string" }
+            - {"Name": "commitmentdiscountid", "Type": "string" }
+            - {"Name": "commitmentdiscountname", "Type": "string" }
+            - {"Name": "commitmentdiscounttype", "Type": "string" }
+            - {"Name": "commitmentdiscountstatus", "Type": "string" }
+            - {"Name": "consumedquantity", "Type": "double" }
+            - {"Name": "consumedunit", "Type": "string" }
+            - {"Name": "contractedcost", "Type": "double" }
+            - {"Name": "contractedunitprice", "Type": "double" }
+            - {"Name": "effectivecost", "Type": "double" }
+            - {"Name": "invoiceissuername", "Type": "string" }
+            - {"Name": "listcost", "Type": "double" }
+            - {"Name": "listunitprice", "Type": "double" }
+            - {"Name": "pricingcategory", "Type": "string" }
+            - {"Name": "pricingquantity", "Type": "double" }
+            - {"Name": "pricingunit", "Type": "string" }
+            - {"Name": "providername", "Type": "string" }
+            - {"Name": "publishername", "Type": "string" }
+            - {"Name": "regionid", "Type": "string" }
+            - {"Name": "regionname", "Type": "string" }
+            - {"Name": "resourceid", "Type": "string" }
+            - {"Name": "resourcename", "Type": "string" }
+            - {"Name": "resourcetype", "Type": "string" }
+            - {"Name": "servicecategory", "Type": "string" }
+            - {"Name": "servicename", "Type": "string" }
+            - {"Name": "skuid", "Type": "string" }
+            - {"Name": "skupriceid", "Type": "string" }
+            - {"Name": "subaccountid", "Type": "string" }
+            - {"Name": "subaccountname", "Type": "string" }
+            - {"Name": "tags", "Type": "map<string,string>" }
+        PartitionKeys:
+          - {"Name": "source_account_id", "Type": "string" }
+          - {"Name": "report_name", "Type": "string" }
+          - {"Name": "data", "Type": "string" }
+          - {"Name": "billing_period", "Type": "string" }
+
+
+  FOCUSCrawler:
+    Type: AWS::Glue::Crawler
+    Condition: DeployFOCUSTable
+    Properties:
+      Name:  !Sub "${ResourcePrefix}-DataExportFOCUSCrawler"
+      Description: A recurring crawler that keeps your FOCUS table in Athena up-to-date.
+      Role: !GetAtt CidDataExportCrawlerRole.Arn
+      DatabaseName: !Ref CIDDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://${DestinationS3}/focus/"
+            Exclusions:
+              - '**.json'
+              - '**.yml'
+              - '**.sql'
+              - '**.csv'
+              - '**.csv.metadata'
+              - '**.gz'
+              - '**.zip'
+              - '**/cost_and_usage_data_status/*'
+              - 'aws-programmatic-access-test-object'
+      SchemaChangePolicy:
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      Schedule:
+        ScheduleExpression: cron(0 2 * * ? *)
+      Configuration: |
+        {
+          "Version":1.0,
+          "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+          },
+          "CrawlerOutput":{
+            "Tables":{
+              "AddOrUpdateBehavior":"MergeNewColumns"
+            }
+          }
+        }
+
+###########################################################################
+# Generic Resources
+###########################################################################
+
   CidDataExportCrawlerRole:
     Type: AWS::IAM::Role
-    Condition: IsDestinationAccount
+    Condition: DeployAnyTable
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -768,8 +970,7 @@ Resources:
   CidLambdaAnalyticsRole: #Execution role for the custom resource CidLambdaAnalyticsExecutor
     Type: AWS::IAM::Role
     Properties:
-      Path:
-        Fn::Sub: /${ResourcePrefix}/
+      Path: !Sub /${ResourcePrefix}/
       #RoleName: CID-Analytics
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -799,12 +1000,10 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.12
-      FunctionName:
-        Fn::Sub: ${ResourcePrefix}-CID-Analytics-DataExports
+      FunctionName: !Sub ${ResourcePrefix}-CID-Analytics-DataExports
       Handler: index.lambda_handler
       MemorySize: 128
-      Role:
-        Fn::GetAtt: CidLambdaAnalyticsRole.Arn
+      Role: !GetAtt CidLambdaAnalyticsRole.Arn
       Timeout: 15
       Environment:
         Variables:
@@ -884,18 +1083,14 @@ Resources:
     Properties:
       ServiceToken: !GetAtt CidLambdaAnalytics.Arn
       DeploymentType:
-        - Fn::If:
-          - IsDestinationAccount
-          - "cid-dataexport-aggregator"
-          - "cid-dataexport-replication"
+        - !If [IsDestinationAccount,  "cid-dataexport-destination", !Ref 'AWS::NoValue']
+        - !If [IsSourceAccount,       "cid-dataexport-source",      !Ref 'AWS::NoValue']
 
 Outputs:
-  GovernanceBucketName:
+  DestinationBucketName:
     Description: Bucket with aggregate Data Exports
-    Value:
-      Fn::Sub: ${ResourcePrefix}-${DestinationAccountId}-data-exports
+    Value: !Sub ${ResourcePrefix}-${DestinationAccountId}-data-exports
   LocalAccountBucket:
     Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
-    Value:
-      Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-data-local
+    Value: !Sub ${ResourcePrefix}-${AWS::AccountId}-data-local
