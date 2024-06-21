@@ -14,7 +14,7 @@ Parameters:
     Default: ''
   CidMainStackPrefix:
     Type: String
-    Description:  'Please enter exactly the same prefix as you have in your main CID stack. Keep it empty if not sure.'
+    Description:  'Please enter exactly the same prefix as you have in your main CID stack. Keep it default if not sure.'
     Default: 'cid'
 
 Conditions:
