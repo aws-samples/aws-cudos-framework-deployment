@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v0.3.4
+Description: Deployment of Cloud Intelligence Dashboards v0.3.5
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -1066,11 +1066,22 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'glue:UpdateDatabase'
-                  - 'glue:UpdatePartition'
-                  - 'glue:CreateTable'
-                  - 'glue:UpdateTable'
-                  - 'glue:ImportCatalogToGlue'
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:UpdateDatabase
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:BatchCreatePartition
+                  - glue:CreatePartition
+                  - glue:DeletePartition
+                  - glue:BatchDeletePartition
+                  - glue:UpdatePartition
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:BatchGetPartition
+                  - glue:ImportCatalogToGlue
                 Resource:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
                   - Fn::If:
@@ -1083,14 +1094,24 @@ Resources:
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/${CURPath.Folder}
               - Effect: Allow
                 Action:
+                  - 's3:ListBucket'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${CURPath.Bucket}'
+              - Effect: Allow
+                Action:
                   - 's3:GetObject'
                 Resource: !Sub 'arn:${AWS::Partition}:s3:::${CURPath.Bucket}/${CURPath.Path}/*'
               - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:*'
+              - Effect: Allow
+                Action:
                   - logs:PutLogEvents
-                Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/Cid*'
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:log-stream:Cid*'
+
   KmsPolicyForCidCURCrawlerRole:
     Type: AWS::IAM::Policy
     Condition: NeedDataBucketsKmsAndNeedCURTable
@@ -1596,7 +1617,7 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: 'cid-resource-lambda-layer/cid-0.3.4.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-0.3.5.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11
