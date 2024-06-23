@@ -150,7 +150,7 @@ datasets:
     dependsOn:
       cur: true
       views:
-        - ${cur_table_name}
+        - ${cur1_table_name}
   # CUDOS v5 datasets
   hourly_view:
     File: cudos/hourly_view.json

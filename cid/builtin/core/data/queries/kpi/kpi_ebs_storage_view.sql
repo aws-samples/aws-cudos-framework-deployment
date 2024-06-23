@@ -21,7 +21,7 @@ ebs_all AS (
 	, line_item_unblended_cost
 	, line_item_usage_amount
 	FROM
-		"${cur_table_name}"
+		"${cur1_database}"."${cur1_table_name}"
 	WHERE (line_item_product_code = 'AmazonEC2') AND (line_item_line_item_type = 'Usage') 
 	AND bill_payer_account_id <> ''
 	AND line_item_usage_account_id <> ''	   

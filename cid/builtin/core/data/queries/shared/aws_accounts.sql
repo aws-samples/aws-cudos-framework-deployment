@@ -12,7 +12,7 @@ WITH
         SELECT DISTINCT
             line_item_usage_account_id,
             bill_payer_account_id parent_account_id
-        FROM "${cur_table_name}"
+        FROM "${cur1_database}"."${cur1_table_name}"
     )
 SELECT
     m.account_id,

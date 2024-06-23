@@ -55,7 +55,7 @@
 				WHEN ("line_item_usage_type" LIKE '%Spot%' AND "pricing_public_on_demand_cost" > 0) THEN "pricing_public_on_demand_cost" 
 				ELSE ("line_item_unblended_cost" ) END)) "adjusted_amortized_cost"
 		   , "sum"("pricing_public_on_demand_cost") "public_cost"
-		   from "${cur_table_name}"
+		   FROM "${cur1_database}"."${cur1_table_name}"
 		   WHERE 
 			(CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '3' MONTH)
 		   AND ("bill_payer_account_id" <>'') 

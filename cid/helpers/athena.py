@@ -41,19 +41,17 @@ class Athena(CidBase):
     def CatalogName(self) -> str:
         """ Check if AWS DataCatalog and Athena database exist """
         if not self._CatalogName:
-            # Get AWS Glue DataCatalogs
-            glue_data_catalogs = [d for d in self.list_data_catalogs() if d['Type'] == 'GLUE']
-            if not len(glue_data_catalogs):
-                logger.error('AWS DataCatalog of type GLUE not found!')
-                self._status = 'AWS DataCatalog of type GLUE not found'
+            glue_data_catalogs = self.list_data_catalogs()
+            if not glue_data_catalogs:
+                raise CidCritical('AWS DataCatalog of type GLUE not found!')
             if len(glue_data_catalogs) == 1:
-                self._CatalogName = glue_data_catalogs.pop().get('CatalogName')
+                self._CatalogName = glue_data_catalogs[0]
             elif len(glue_data_catalogs) > 1:
                 # Ask user
                 self._CatalogName = get_parameter(
                     param_name='glue-data-catalog',
                     message="Select AWS DataCatalog to use",
-                    choices=[catalog.get('CatalogName') for catalog in glue_data_catalogs],
+                    choices=glue_data_catalogs,
                 )
             logger.info(f'Using DataCatalog: {self._CatalogName}')
         return self._CatalogName
@@ -82,13 +80,12 @@ class Athena(CidBase):
         athena_databases = self.list_databases()
 
         # Select default database if present
-        default_databases = [database for database in athena_databases if database['Name'] == self.defaults.get('DatabaseName')]
-        if len(default_databases):
+        if self.defaults['DatabaseName'] in athena_databases:
             # Silently choose an existing default database
-            self._DatabaseName = default_databases.pop().get('Name')
+            self._DatabaseName = self.defaults['DatabaseName']
         else:
             # Ask user
-            choices = [d['Name'] for d in athena_databases]
+            choices = athena_databases
             if self.defaults.get('DatabaseName') not in choices:
                 choices.append(self.defaults.get('DatabaseName') + ' (CREATE NEW)')
             self._DatabaseName = get_parameter(
@@ -230,11 +227,16 @@ class Athena(CidBase):
             logger.exception(exc)
             raise CidCritical(f'Failed to create Athena work group ({exc})') from exc
 
-    def list_data_catalogs(self) -> list:
-        return self.client.list_data_catalogs().get('DataCatalogsSummary')
+    def list_data_catalogs(self, type_: str='GLUE', workgroup: str=None) -> list:
+        """get data catalogs"""
+        params = {}
+        if workgroup:
+            params['WorkGroup'] = workgroup
+        return list(self.client.get_paginator('list_data_catalogs').paginate(**params).search('DataCatalogsSummary[].CatalogName'))
 
-    def list_databases(self) -> list:
-        return self.client.list_databases(CatalogName=self.CatalogName).get('DatabaseList')
+    def list_databases(self, catalog_name: str=None) -> list:
+        """get database"""
+        return list(self.client.get_paginator('list_databases').paginate(CatalogName=catalog_name or self.CatalogName).search('DatabaseList[].Name'))
 
     def get_database(self, DatabaseName: str=None) -> bool:
         """ Check if AWS DataCatalog and Athena database exist """
@@ -248,10 +250,10 @@ class Athena(CidBase):
                 logger.debug(exc, exc_info=True)
                 return None
 
-    def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
+    def list_table_metadata(self, database_name: str=None, max_items: int=None) -> dict:
         params = {
             'CatalogName': self.CatalogName,
-            'DatabaseName': DatabaseName or self.DatabaseName,
+            'DatabaseName': database_name or self.DatabaseName,
             'PaginationConfig':{
                 'MaxItems': max_items,
             },
@@ -263,9 +265,9 @@ class Athena(CidBase):
             for page in response_iterator:
                 table_metadata.extend(page.get('TableMetadataList'))
             logger.debug(f'Table metadata: {table_metadata}')
-            logger.info(f'Found {len(table_metadata)} tables in {DatabaseName if DatabaseName else self.DatabaseName}')
+            logger.info(f'Found {len(table_metadata)} tables in {database_name or self.DatabaseName}')
         except Exception as e:
-            logger.error(f'Failed to list tables in {DatabaseName if DatabaseName else self.DatabaseName}')
+            logger.error(f'Failed to list tables in {database_name or self.DatabaseName}')
             logger.error(e)
 
         return table_metadata
@@ -276,16 +278,16 @@ class Athena(CidBase):
         logger.debug(f'WorkGroups: {result.get("WorkGroups")}')
         return result.get('WorkGroups')
 
-    def get_table_metadata(self, TableName: str) -> dict:
-        table_metadata = self._metadata.get(TableName)
+    def get_table_metadata(self, table_name: str, database_name: str=None) -> dict:
+        table_metadata = self._metadata.get(table_name)
         params = {
             'CatalogName': self.CatalogName,
-            'DatabaseName': self.DatabaseName,
-            'TableName': TableName
+            'DatabaseName': database_name or self.DatabaseName,
+            'TableName': table_name
         }
         if not table_metadata:
             table_metadata = self.client.get_table_metadata(**params).get('TableMetadata')
-            self._metadata.update({TableName: table_metadata})
+            self._metadata.update({table_name: table_metadata})
 
         return table_metadata
 
@@ -571,3 +573,38 @@ class Athena(CidBase):
         if update_view:
             cid_print(f'Updating view: "{view_name}"')
             self.execute_query(view_query)
+
+
+    def find_tables_with_columns_in_information_schema(self, columns):
+        """ find table and database that contain given set of columns
+        this function takes 1 min to fetch information schema. For better performance consider other ways.
+        """
+        columns = set(columns)
+        return self.execute_query(f'''
+        SELECT
+            table_schema,
+            table_name
+        FROM
+            information_schema.columns
+        WHERE
+            column_name IN ({[','.join(["'"+col+"'" for col in columns])]})
+        GROUP BY
+            table_schema,
+            table_name
+        HAVING
+            COUNT(DISTINCT column_name) = {len(columns)}
+        ''')
+
+    def find_tables_with_columns(self, columns: list, database_name: str=None, catalog_name: str=None, max_items: int=10000):
+        """ This function searches a table with a given set of columns
+        """
+        iterator = self.client.get_paginator('list_table_metadata').paginate(
+            DatabaseName=database_name or self.DatabaseName,
+            CatalogName=catalog_name or self.CatalogName,
+            PaginationConfig= {
+                'MaxItems': max_items, # sometimes customers can have 1'000s of tables (due to a crawler going crazy for example)
+            },
+        )
+        return iterator.search(f"""
+            TableMetadataList[?{' && '.join(["contains(Columns[].Name, '"+col+"' )" for col in columns])}].Name
+        """)

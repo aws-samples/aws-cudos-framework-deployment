@@ -7,8 +7,9 @@ from abc import abstractmethod
 from cid.base import CidBase
 from cid.utils import get_parameter, get_parameters, cid_print
 from cid.exceptions import CidCritical
-
 from cid.helpers.cur_proxy import ProxyView
+
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,7 @@ class AbstractCUR(CidBase):
         'savings_plan_payment_option'
     ]
     _metadata = None
+    _database = None
 
     def __init__(self, athena, glue):
         self.athena = athena
@@ -66,9 +68,16 @@ class AbstractCUR(CidBase):
         self.proxy = None
 
     @property
+    def database(self) -> str:
+        """get Athena database of CUR """
+        if self.metadata is None: # Need explicit call of metadata. Do not remove this line
+            raise CidCritical('Error: Cannot detect any CUR table. Hint: Check if AWS Lake Formation is activated on your account, verify that the LakeFormationEnabled parameter is set to yes on the deployment stack')
+        return self._database
+
+    @property
     def table_name(self) -> str:
         """ Get Athena table name """
-        if self.metadata is None:
+        if self.metadata is None: # Need explicit call of metadata. Do not remove this line
             raise CidCritical('Error: Cannot detect any CUR table. Hint: Check if AWS Lake Formation is activated on your account, verify that the LakeFormationEnabled parameter is set to yes on the deployment stack')
         return self.metadata.get('Name')
 
@@ -182,45 +191,58 @@ class CUR(AbstractCUR):
         """get Athena metadata for the table of CUR """
         if self._metadata:
             return self._metadata
-        self._metadata = self.find_cur()
+        self._database, self._metadata = self.find_cur()
         return self._metadata
 
     def find_cur(self):
         """Choose CUR"""
         metadata = None
+        cur_database = get_parameters().get('cur-database')
         if get_parameters().get('cur-table-name'):
             table_name = get_parameters().get('cur-table-name')
             try:
-                metadata = self.athena.get_table_metadata(table_name)
+                metadata = self.athena.get_table_metadata(table_name, cur_database)
             except self.athena.client.exceptions.MetadataException as exc:
-                raise CidCritical(f'Provided cur-table-name "{table_name}" is not found. Please make sure the table exists.') from exc
+                raise CidCritical(f'Provided cur-table-name "{table_name}" in database "{cur_database or self.athena.DatabaseName}" is not found. Please make sure the table exists.') from exc
             res, message = self.table_is_cur(table=metadata, return_reason=True)
             if not res:
                 raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
+            return metadata
+
+        all_cur_tables = []
+        if cur_database:
+            cur_databases = [cur_database]
         else:
-            # Look all tables and filter ones with CUR fields
-            all_tables = self.athena.list_table_metadata()
-            if not all_tables:
-                logger.warning(
-                    f'No tables found in Athena Database {self.athena.DatabaseName} in {self.athena.region}.'
-                    f' (Hint: If you see tables in this Database, please check AWS Lake Formation permissions)'
+            cur_databases = list(self.athena.list_databases()) # user have not provided the cur database
+        for database in tqdm(cur_databases, message='Fining CUR in Athena Databases'):
+            try:
+                tables = self.athena.find_tables_with_columns(
+                    columns=self.cur_minimal_required_columns,
+                    database_name=database,
                 )
-            cur_tables = [tab for tab in all_tables if self.table_is_cur(table=tab)]
+                all_cur_tables += [(database, table) for table in tables]
+            except self.athena.client.exceptions.AccessDenied:
+                logger.info(f'Cannot read from athena database {database}')
 
-            if not cur_tables:
-                raise CidCritical(f'CUR table not found. (scanned {len(all_tables)} tables in Athena Database {self.athena.DatabaseName} in {self.athena.region}). But none has required fields: {self.cur_minimal_required_columns}.')
-
-            choices = sorted([tab.get('Name') for tab in cur_tables], reverse=True)
-
-            answer =  get_parameter(
-                param_name='cur-table-name',
-                message="Please select CUR",
-                choices=choices + ['<CREATE CUR TABLE AND CRAWLER>'],
+        if not all_cur_tables:
+            # FIXME : distinguish a case where we have NONE tables in any database. This might be because
+            raise CidCritical(
+                f'CUR table not found in {self.athena.region}. We need a least one table with these columns: {self.cur_minimal_required_columns}.'
+                 ' Please make sure you created cur and created Athena table, preferably with CID Cloud Formation stack.'
+                 ' Also if you have AWS Lake Formation, the user running the tool might need additional permissions'
             )
-            if answer == '<CREATE CUR TABLE AND CRAWLER>':
-                raise CidCritical('CUR creation was requested') # to be captured in common.py
-            metadata = self.athena.get_table_metadata(answer)
-        return metadata
+        choices = sorted({'{database}.{tab}': (database, tab) for database, tab in all_cur_tables}, reverse=True)
+        if not choices:
+            choices['<CREATE CUR TABLE AND CRAWLER>'] = '<CREATE CUR TABLE AND CRAWLER>'
+        answer =  get_parameter(
+            param_name='cur-table-name',
+            message="Please select CUR table",
+            choices=choices,
+        )
+        if answer == '<CREATE CUR TABLE AND CRAWLER>':
+            raise CidCritical('CUR creation was requested') # to be captured in common.py
+        database, table = answer
+        return database, self.athena.get_table_metadata(table, database_name=database)
 
     def ensure_column(self, column: str, column_type: str=None):
         """ Ensure column is in the cur. If it is not there - add column """
@@ -268,6 +290,10 @@ class ProxyCUR(AbstractCUR):
         self.cur = cur
         self.target_cur_version = target_cur_version
         super().__init__(cur.athena, cur.glue)
+
+    @property
+    def database(self) -> str:
+        return self.athena.DatabaseName # use CID database for proxy view
 
     @property
     def metadata(self) -> dict:

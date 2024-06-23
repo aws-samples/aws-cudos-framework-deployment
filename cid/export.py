@@ -214,7 +214,7 @@ def export_analysis(qs, athena, glue):
     cur_tables = []
     for key, view_data in all_views_data.items():
         if all_databases and isinstance(view_data.get('data'), str):
-            view_data['data'] = view_data['data'].replace(f'{all_databases[0]}.', '${athena_database_name}.')
+            view_data['data'] = view_data['data'].replace(f'{all_databases[0]}.', '"${athena_database_name}".')
 
         if isinstance(view_data.get('data'), str):
             view_data['data'] = view_data['data'].replace('CREATE VIEW ', 'CREATE OR REPLACE VIEW ')
@@ -225,12 +225,17 @@ def export_analysis(qs, athena, glue):
         for dep_view in deps.get('views', []):
             dep_view_name = dep_view.split('.')[-1]
             if dep_view_name in cur_tables or cur_helper.table_is_cur(name=dep_view_name):
+                cur_version = cur_helper.table_is_cur(name=dep_view_name)
                 logger.debug(f'{dep_view_name} is cur')
                 view_data['dependsOn']['cur'] = True
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
                     # cur tables treated separately as we don't manage CUR table here
-                    view_data['data'] = view_data['data'].replace(f'{dep_view_name}', '${cur_table_name}')
+                    if dep_view_name != 'cur':
+                        backslash = "\\" # workaround f-string limitation
+                        view_data['data'] = view_data['data'].replace(f'{dep_view_name}', f'"${backslash}cur{cur_version}_database{backslash}"."${backslash}cur{cur_version}_table_name{backslash}"')
+                    else:
+                        pass # FIXME: this replace is too dangerous as cur can be a part of other words. Need to find some other way
                 cur_tables.append(dep_view_name)
             else:
                 logger.debug(f'{dep_view_name} is not cur')

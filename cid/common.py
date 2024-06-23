@@ -1493,8 +1493,11 @@ class Cid():
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
-            'cur_table_name': self.cur1.table_name if cur1_required else None,
+            'cur_database':    self.cur1.database   if cur1_required else None, # for backward compatibly
+            'cur_table_name':  self.cur1.table_name if cur1_required else None, # for backward compatibly
+            'cur1_database':   self.cur1.database   if cur1_required else None,
             'cur1_table_name': self.cur1.table_name if cur1_required else None,
+            'cur2_database':   self.cur2.database   if cur2_required else None,
             'cur2_table_name': self.cur2.table_name if cur2_required else None,
         }
 
@@ -1731,11 +1734,14 @@ class Cid():
 
         # Prepare template parameters
         columns_tpl = {
-            'cur_table_name': self.cur1.table_name if cur1_required else None,
-            'cur1_table_name': self.cur1.table_name if cur1_required else None,
-            'cur2_table_name': self.cur2.table_name if cur2_required else None,
-            'athenaTableName': view_name,
+            #'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
+            'cur_database':    self.cur1.database   if cur1_required else None, # for backward compatibly
+            'cur_table_name':  self.cur1.table_name if cur1_required else None, # for backward compatibly
+            'cur1_database':   self.cur1.database   if cur1_required else None,
+            'cur1_table_name': self.cur1.table_name if cur1_required else None,
+            'cur2_database':   self.cur2.database   if cur2_required else None,
+            'cur2_table_name': self.cur2.table_name if cur2_required else None,
         }
 
         columns_tpl = self.get_template_parameters(

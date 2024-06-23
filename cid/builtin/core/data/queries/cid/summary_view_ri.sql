@@ -72,7 +72,7 @@
  , sum(CASE
      WHEN ("line_item_line_item_type" <> 'SavingsPlanNegation') THEN "pricing_public_on_demand_cost" ELSE 0 END) "public_cost"
  FROM
-  "${cur_table_name}"
+  "${cur1_database}"."${cur1_table_name}"
  WHERE 
     (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) 
     AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))
