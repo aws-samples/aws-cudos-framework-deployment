@@ -369,7 +369,7 @@ class Athena(CidBase):
         """ Discover views from a given list of view names and cache them. """
         for view_name in views:
             try:
-                self.get_table_metadata(TableName=view_name)
+                self.get_table_metadata(table_name=view_name)
             except self.client.exceptions.MetadataException:
                 pass
 
@@ -577,7 +577,7 @@ class Athena(CidBase):
 
     def find_tables_with_columns_in_information_schema(self, columns):
         """ find table and database that contain given set of columns
-        this function takes 1 min to fetch information schema. For better performance consider other ways.
+        this function takes 1+ min to fetch information schema. For better performance consider find_tables_with_columns.
         """
         columns = set(columns)
         return self.execute_query(f'''

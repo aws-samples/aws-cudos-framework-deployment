@@ -5,7 +5,7 @@ import logging
 from abc import abstractmethod
 
 from cid.base import CidBase
-from cid.utils import get_parameter, get_parameters, cid_print
+from cid.utils import get_parameter, get_parameters, set_parameters, cid_print
 from cid.exceptions import CidCritical
 from cid.helpers.cur_proxy import ProxyView
 
@@ -192,6 +192,7 @@ class CUR(AbstractCUR):
         if self._metadata:
             return self._metadata
         self._database, self._metadata = self.find_cur()
+        # good place to set a database for athena
         return self._metadata
 
     def find_cur(self):
@@ -207,14 +208,14 @@ class CUR(AbstractCUR):
             res, message = self.table_is_cur(table=metadata, return_reason=True)
             if not res:
                 raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
-            return metadata
+            return cur_database, metadata
 
         all_cur_tables = []
         if cur_database:
             cur_databases = [cur_database]
         else:
             cur_databases = list(self.athena.list_databases()) # user have not provided the cur database
-        for database in tqdm(cur_databases, message='Fining CUR in Athena Databases'):
+        for database in tqdm(cur_databases, desc='Fining CUR in Athena Databases'):
             try:
                 tables = self.athena.find_tables_with_columns(
                     columns=self.cur_minimal_required_columns,
@@ -231,17 +232,22 @@ class CUR(AbstractCUR):
                  ' Please make sure you created cur and created Athena table, preferably with CID Cloud Formation stack.'
                  ' Also if you have AWS Lake Formation, the user running the tool might need additional permissions'
             )
-        choices = sorted({'{database}.{tab}': (database, tab) for database, tab in all_cur_tables}, reverse=True)
+        databases = set([database for database, _ in all_cur_tables])
+        if len(databases) > 1:
+            choices = dict(sorted([(f'{database}.{tab}', (database, tab)) for database, tab in all_cur_tables], reverse=True))
+        else:
+            choices = dict(sorted([(f'{tab}', (database, tab)) for database, tab in all_cur_tables], reverse=True))
         if not choices:
             choices['<CREATE CUR TABLE AND CRAWLER>'] = '<CREATE CUR TABLE AND CRAWLER>'
         answer =  get_parameter(
-            param_name='cur-table-name',
+            param_name='cur-table-name-and-db',
             message="Please select CUR table",
             choices=choices,
         )
         if answer == '<CREATE CUR TABLE AND CRAWLER>':
             raise CidCritical('CUR creation was requested') # to be captured in common.py
         database, table = answer
+        set_parameters({'cur-table-name': table,'cur-database': database, })
         return database, self.athena.get_table_metadata(table, database_name=database)
 
     def ensure_column(self, column: str, column_type: str=None):
