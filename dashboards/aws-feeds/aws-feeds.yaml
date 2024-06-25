@@ -1,5 +1,5 @@
 dashboards:
-  AWS FEEDS:
+  AWS_NEWS_FEEDS:
     dependsOn:
       datasets:
       - aws_feeds
@@ -8,7 +8,7 @@ dashboards:
       - aws_feeds_whats_new
       - aws_feeds_youtube
     name: AWS News Feeds
-    dashboardId: aws-feeds
+    dashboardId: aws-news-feeds
     category: Advanced
     theme: MIDNIGHT
     data: |-
@@ -44,6 +44,9 @@ dashboards:
         Expression: ifelse(contains({lowercase_description}, ${SearchContent2}, CASE_INSENSITIVE)
           OR isNull(${SearchContent2}), "Yes", "No")
         Name: matches_lowercase_description
+      - DataSetIdentifier: aws_feeds_blog_post
+        Expression: distinctCountOver(title, [], PRE_AGG) = 1
+        Name: one_item_selected
       - DataSetIdentifier: aws_feeds_security_bulletin
         Expression: toLower(description)
         Name: lowercase_description
@@ -51,6 +54,9 @@ dashboards:
         Expression: ifelse(contains({lowercase_description}, ${SecBulletinSearchContent},
           CASE_INSENSITIVE) OR isNull(${SecBulletinSearchContent}), "Yes", "No")
         Name: matches_lowercase_description
+      - DataSetIdentifier: aws_feeds_security_bulletin
+        Expression: distinctCountOver(title, [], PRE_AGG) = 1
+        Name: one_item_selected
       - DataSetIdentifier: aws_feeds_whats_new
         Expression: toLower(description)
         Name: lowercase_description
@@ -58,6 +64,9 @@ dashboards:
         Expression: ifelse(contains({lowercase_description}, ${SearchContent}, CASE_INSENSITIVE)
           OR isNull(${SearchContent}), "Yes", "No")
         Name: matches_lowercase_description
+      - DataSetIdentifier: aws_feeds_whats_new
+        Expression: distinctCountOver(title, [], PRE_AGG) = 1
+        Name: one_item_selected
       - DataSetIdentifier: aws_feeds_youtube
         Expression: toLower(description)
         Name: lowercase_description
@@ -65,6 +74,9 @@ dashboards:
         Expression: ifelse(contains({lowercase_description}, ${SearchContent3}, CASE_INSENSITIVE)
           OR isNull(${SearchContent3}), "Yes", "No")
         Name: matches_lowercase_description
+      - DataSetIdentifier: aws_feeds_youtube
+        Expression: distinctCountOver(title, [], PRE_AGG) = 1
+        Name: one_item_selected
       DataSetIdentifierDeclarations:
       - DataSetArn: arn:aws:quicksight:::dataset/173bf994-4763-4044-a96d-1cb6cce591f4
         Identifier: aws_feeds_blog_post
@@ -386,6 +398,63 @@ dashboards:
             - Scope: ALL_VISUALS
               SheetId: af3c8713-9fac-4a56-b190-2a3501c559b9
         Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 211c4bf7-dd9a-4292-8d69-f0b5094d6868
+        Filters:
+        - NumericEqualityFilter:
+            Column:
+              ColumnName: one_item_selected
+              DataSetIdentifier: aws_feeds_whats_new
+            FilterId: e4067d36-d3c5-4f15-94e0-f774ae0a010d
+            MatchOperator: EQUALS
+            NullOption: ALL_VALUES
+            Value: 1.0
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 0445c2bf-c40b-4923-983d-461b01824280
+              VisualIds:
+              - ca418e7e-5d8c-41f7-a04f-fd1a2498f54d
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: adf2d9c0-c414-4324-9423-8a3331ca81b4
+        Filters:
+        - NumericEqualityFilter:
+            Column:
+              ColumnName: one_item_selected
+              DataSetIdentifier: aws_feeds_blog_post
+            FilterId: 21f528d7-8a9f-49a9-b1bc-e6d59240ee4c
+            MatchOperator: EQUALS
+            NullOption: ALL_VALUES
+            Value: 1.0
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: e12647d7-be4f-4b9d-8b7c-4250c49bbc4a
+              VisualIds:
+              - 02088bac-e7d2-4dcb-a848-27c46992e99a
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 8f09a5d6-b69f-494e-aaf5-9db707797783
+        Filters:
+        - NumericEqualityFilter:
+            Column:
+              ColumnName: one_item_selected
+              DataSetIdentifier: aws_feeds_security_bulletin
+            FilterId: ce6bea39-0739-4328-8b68-52d54c8d316f
+            MatchOperator: EQUALS
+            NullOption: ALL_VALUES
+            Value: 1.0
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: af3c8713-9fac-4a56-b190-2a3501c559b9
+              VisualIds:
+              - 22d57d9b-7ae2-4169-9e78-2daa8c45f3bd
+        Status: ENABLED
       Options:
         WeekStart: SUNDAY
       ParameterDeclarations:
@@ -589,14 +658,14 @@ dashboards:
                 RowIndex: 5
                 RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 29
+                ColumnSpan: 21
                 ElementId: 9da960d5-d690-4ea1-b0ca-ba0097e34c0e
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 9
-              - ColumnIndex: 29
-                ColumnSpan: 7
-                ElementId: 3c77812c-ac5b-4c7c-9cd8-cca6ad7fc87f
+              - ColumnIndex: 21
+                ColumnSpan: 15
+                ElementId: b19b5337-63d7-4b53-8d93-e71a437e8bc3
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 9
@@ -608,15 +677,9 @@ dashboards:
                 RowSpan: 12
               - ColumnIndex: 16
                 ColumnSpan: 20
-                ElementId: b19b5337-63d7-4b53-8d93-e71a437e8bc3
-                ElementType: VISUAL
-                RowIndex: 16
-                RowSpan: 12
-              - ColumnIndex: 0
-                ColumnSpan: 36
                 ElementId: 637d261d-2744-46bd-be71-78d1352a1a23
                 ElementType: VISUAL
-                RowIndex: 28
+                RowIndex: 16
                 RowSpan: 12
         Name: AWS Feeds Summary
         ParameterControls:
@@ -710,25 +773,13 @@ dashboards:
               <inline font-size="14px">This set of Amazon Quicksight dashboards show the latest content from What's New, Blog Post, Videos and Security Bulletin</inline>
             </text-box>
           SheetTextBoxId: 9ce13dcc-f4c6-4b14-aac6-9201d4ad7930
-        - Content: |-
-            <text-box>
-              How to follow AWS News:
-              <br/>
-              <ul>
-                <li>
-                  <a href="https://aws.amazon.com/new/" target="_blank">What's New with AWS?</a>
-                </li>
-                <li>
-                  <a href="https://aws.amazon.com/blogs/" target="_blank">AWS Blog</a>
-                </li>
-                <li>
-                  <a href="https://www.youtube.com/channel/UCd6MoB9NC6uYN2grvUNT-Zg" target="_blank">The official YouTube channel for AWS</a>
-                </li>
-                <li>
-                  <a href="https://aws.amazon.com/security/security-bulletins/" target="_blank">AWS Security Bulletins</a>
-                </li>
-              </ul>
-            </text-box>
+        - Content: "<text-box>\n  How to follow AWS News:\n  <br/>\n  \t&#128640;\n  <a\
+            \ href=\"https://aws.amazon.com/new/\" target=\"_blank\">What's New with AWS?</a>\n\
+            \  <br/>\n  \t&#128195;\n  <a href=\"https://aws.amazon.com/blogs/\" target=\"\
+            _blank\">AWS Blog</a>\n  <br/>\n  \t&#128250;\n  <a href=\"https://www.youtube.com/channel/UCd6MoB9NC6uYN2grvUNT-Zg\"\
+            \ target=\"_blank\">The official YouTube channel for AWS</a>\n  <br/>\n  \t\
+            &#128272;\n  <a href=\"https://aws.amazon.com/security/security-bulletins/\"\
+            \ target=\"_blank\">AWS Security Bulletins</a>\n</text-box>"
           SheetTextBoxId: e54aeeef-6e3e-465e-924f-b488143f8fbc
         - Content: |-
             <text-box>
@@ -748,7 +799,7 @@ dashboards:
             </text-box>
           SheetTextBoxId: f8876593-8435-4fc3-b5c8-b827ed806f21
         Visuals:
-        - PivotTableVisual:
+        - TableVisual:
             Actions:
             - ActionOperations:
               - FilterOperation:
@@ -763,36 +814,30 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               FieldOptions:
-                DataPathOptions:
-                - DataPathList:
-                  - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
-                    FieldValue: title
-                  Width: 1042px
-                - DataPathList:
-                  - FieldId: 6ac2dd26-ad87-41f5-b819-a33b3efe4894.3.1718643256166
-                    FieldValue: icon_feed_type
-                  Width: 52px
-                - DataPathList:
-                  - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.3.1718197925680
-                    FieldValue: category
-                  Width: 25px
+                Order: []
                 SelectedFieldOptions:
                 - CustomLabel: Date
                   FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
-                  Visibility: VISIBLE
                 - CustomLabel: Type
                   FieldId: 6ac2dd26-ad87-41f5-b819-a33b3efe4894.3.1718643256166
-                  Visibility: VISIBLE
                 - CustomLabel: Title
                   FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
-                  Visibility: VISIBLE
+                  Width: 655px
+                - CustomLabel: Link
+                  FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.4.1719336439666
+                  URLStyling:
+                    LinkConfiguration:
+                      Content:
+                        CustomIconContent:
+                          Icon: LINK
+                      Target: NEW_TAB
+                  Width: 62px
                 - CustomLabel: ' '
                   FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.3.1718197925680
-                  Visibility: VISIBLE
+                  Visibility: HIDDEN
               FieldWells:
-                PivotTableAggregatedFieldWells:
-                  Columns: []
-                  Rows:
+                TableAggregatedFieldWells:
+                  GroupBy:
                   - DateDimensionField:
                       Column:
                         ColumnName: published
@@ -808,6 +853,11 @@ dashboards:
                         ColumnName: title
                         DataSetIdentifier: aws_feeds
                       FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.title.2.1714570085756
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: url
+                        DataSetIdentifier: aws_feeds
+                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.4.1719336439666
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: COUNT
@@ -816,67 +866,25 @@ dashboards:
                         DataSetIdentifier: aws_feeds
                       FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.3.1718197925680
               SortConfiguration:
-                FieldSortOptions:
-                - FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
-                  SortBy:
-                    Field:
-                      Direction: DESC
-                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
+                RowSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.3.1714574144827
               TableOptions:
                 CellStyle:
                   Height: 25
                   HorizontalTextAlignment: LEFT
-                CollapsedRowDimensionsVisibility: VISIBLE
-                ColumnHeaderStyle:
+                HeaderStyle:
                   BackgroundColor: '#0A87AF'
                   Height: 25
                   TextWrap: WRAP
-                MetricPlacement: COLUMN
                 RowAlternateColorOptions:
                   Status: DISABLED
                   UsePrimaryBackgroundColor: ENABLED
-                RowFieldNamesStyle:
-                  BackgroundColor: '#0A87AF'
-                  Height: 25
-                  TextWrap: WRAP
-                RowHeaderStyle:
-                  HorizontalTextAlignment: LEFT
-                RowsLayout: TABULAR
-                SingleMetricVisibility: HIDDEN
-                ToggleButtonsVisibility: HIDDEN
-              TotalOptions:
-                ColumnSubtotalOptions:
-                  TotalsVisibility: HIDDEN
-                ColumnTotalOptions:
-                  TotalsVisibility: HIDDEN
-                RowSubtotalOptions:
-                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
-                  MetricHeaderCellStyle: {}
-                  StyleTargets:
-                  - CellType: VALUE
-                  - CellType: TOTAL
-                  - CellType: METRIC_HEADER
-                  TotalCellStyle: {}
-                  TotalsVisibility: HIDDEN
-                  ValueCellStyle: {}
-                RowTotalOptions:
-                  ScrollStatus: SCROLLED
-                  TotalsVisibility: HIDDEN
-            ConditionalFormatting:
-              ConditionalFormattingOptions:
-              - Cell:
-                  FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.category.3.1718197925680
-                  Scopes:
-                  - Role: FIELD
-                  TextFormat:
-                    TextColor:
-                      Solid:
-                        Color: '#212325'
-                        Expression: DISTINCT_COUNT({category}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'Title' to filter an then open
-                  the icon link on the right table under 'Link'</visual-subtitle>
+                RichText: <visual-subtitle>Click on desired row within the 'Link' column
+                  on the right to open external resource.</visual-subtitle>
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
@@ -986,53 +994,6 @@ dashboards:
             Title:
               Visibility: HIDDEN
             VisualId: b19b5337-63d7-4b53-8d93-e71a437e8bc3
-        - TableVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldOptions:
-                Order: []
-                SelectedFieldOptions:
-                - CustomLabel: Link
-                  FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.3.1715191049889
-                  URLStyling:
-                    LinkConfiguration:
-                      Content:
-                        CustomIconContent:
-                          Icon: LINK
-                      Target: NEW_TAB
-                  Width: 279px
-              FieldWells:
-                TableAggregatedFieldWells:
-                  GroupBy:
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: url
-                        DataSetIdentifier: aws_feeds
-                      FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.url.3.1715191049889
-                  Values: []
-              SortConfiguration: {}
-              TableOptions:
-                CellStyle:
-                  Height: 25
-                HeaderStyle:
-                  BackgroundColor: '#0A87AF'
-                  Height: 25
-                  HorizontalTextAlignment: CENTER
-                  TextWrap: WRAP
-            Subtitle:
-              FormatText:
-                RichText: <visual-subtitle>Follow the intructions on the left table</visual-subtitle>
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: |-
-                  <visual-title>
-                    <block align="center">
-                      <inline font-size="14px">Click in the link icon to open.</inline>
-                    </block>
-                  </visual-title>
-              Visibility: HIDDEN
-            VisualId: 3c77812c-ac5b-4c7c-9cd8-cca6ad7fc87f
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -1303,7 +1264,7 @@ dashboards:
                   Values: []
               Legend:
                 Visibility: VISIBLE
-                Width: 319px
+                Width: 215px
               Orientation: VERTICAL
               SortConfiguration:
                 CategoryItemsLimit:
@@ -1478,8 +1439,9 @@ dashboards:
                         Expression: COUNT({description}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'Title' to filter an then open
-                  the icon link on the right table under 'Link'</visual-subtitle>
+                RichText: <visual-subtitle>Click on desired 'Title' to display entry on
+                  the right visual and then click in the link icon on the right table under
+                  'Link' if needed</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -2055,8 +2017,10 @@ dashboards:
                         Expression: COUNT({description}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'Title' to filter an then open
-                  the icon link on the right table under 'Link'</visual-subtitle>
+                RichText: |-
+                  <visual-subtitle>
+                    <inline font-size="14px">Click on desired 'Title' to display entry on the right visual and then click in the link icon on the right table under 'Link' if needed</inline>
+                  </visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -2334,7 +2298,7 @@ dashboards:
             DataSetIdentifier: aws_feeds_youtube
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Follow the instructions on the left</visual-subtitle>
+                RichText: <visual-subtitle>Follow the instructions on the left visual</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -2403,8 +2367,8 @@ dashboards:
                   TextWrap: WRAP
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on the desired 'title' in order to display
-                  on the right side</visual-subtitle>
+                RichText: <visual-subtitle>Click on the desired 'Title' in order to display
+                  the video on the right visual</visual-subtitle>
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
@@ -2583,8 +2547,10 @@ dashboards:
                         Expression: COUNT({description}) <> -1
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click on desired 'Title' to filter an then open
-                  the icon link on the right table under 'Link'</visual-subtitle>
+                RichText: |-
+                  <visual-subtitle>
+                    <inline font-size="14px">Click on desired 'Title' to display entry on the right visual and then click in the link icon on the right table under 'Link' if needed</inline>
+                  </visual-subtitle>
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
@@ -2598,7 +2564,7 @@ dashboards:
                 - CustomLabel: Description
                   FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.description.0.1714205154146
                   Width: 625px
-                - CustomLabel: Luink
+                - CustomLabel: Link
                   FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.link.1.1714205160479
                   URLStyling:
                     LinkConfiguration:
@@ -2634,9 +2600,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-subtitle>
-                    <block align="right">
-                      <inline font-size="14px">Click in the link icon to open external view with item details.</inline>
-                    </block>
+                    <inline font-size="14px">Follow the intructions on the left table</inline>
                   </visual-subtitle>
               Visibility: VISIBLE
             Title:
