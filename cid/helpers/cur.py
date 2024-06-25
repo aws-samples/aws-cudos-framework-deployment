@@ -208,7 +208,7 @@ class CUR(AbstractCUR):
             res, message = self.table_is_cur(table=metadata, return_reason=True)
             if not res:
                 raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
-            return cur_database, metadata
+            return cur_database or self.athena.DatabaseName, metadata
 
         all_cur_tables = []
         if cur_database:
