@@ -5,6 +5,6 @@ SELECT DISTINCT
     MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_name,
     MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_email_id
 FROM
-    "${cur1_database}"."${cur1_table_name}"
+    "${cur_database}"."${cur_table_name}"
 GROUP BY
     line_item_usage_account_id

@@ -154,15 +154,13 @@ class Cid():
                     self.create_cur_table()
         return self._clients['cur']
 
-    @property
-    def accountMap(self) -> AccountMap:
-        if not self._clients.get('accountMap'):
-            self._clients['accountMap'] = AccountMap(
-                self.base.session,
-                self.athena,
-                self.cur,
-            )
-        return self._clients.get('accountMap')
+    def create_or_update_account_map(self, name):
+        account_map = AccountMap(
+            self.base.session,
+            self.athena,
+            self.cur, # can be any CUR. But it is only needed for trends and dummy
+        )
+        return account_map.create_or_update(name)
 
     def command(func):
         ''' a decorator that ensure that we logged in to AWS acc, and loaded additional resource files
@@ -1601,7 +1599,7 @@ class Cid():
             if view_name in self.athena._metadata.keys() and (not update and not recursive):
                 print(f'Account map {view_name} exists. Skipping.')
             else:
-                self.accountMap.create_or_update(view_name)
+                self.create_or_update_account_map(view_name)
             return
 
         # Create a view
@@ -1776,7 +1774,7 @@ class Cid():
     def map(self, **kwargs):
         """Create account mapping Athena views"""
         for v in ['account_map', 'aws_accounts']:
-            self.accountMap.create_or_update(v)
+            self.create_or_update_account_map(v)
 
     @command
     def teardown(self, **kwargs):

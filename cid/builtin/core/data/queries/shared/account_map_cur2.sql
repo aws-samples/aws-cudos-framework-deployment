@@ -5,6 +5,6 @@ SELECT DISTINCT
     MAX_BY(bill_payer_account_id,        line_item_usage_start_date)  parent_account_id,
     MAX_BY(bill_payer_account_name,      line_item_usage_start_date)  parent_account_name
 FROM
-    "${cur1_database}"."${cur1_table_name}"
+    "${cur_database}"."${cur_table_name}"
 GROUP BY
     line_item_usage_account_id
