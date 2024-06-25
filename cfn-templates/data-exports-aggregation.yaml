@@ -890,12 +890,16 @@ Resources:
           - "cid-dataexport-replication"
 
 Outputs:
-  GovernanceBucketName:
+  AggregateBucketName:
     Description: Bucket with aggregate Data Exports
-    Value:
-      Fn::Sub: ${ResourcePrefix}-${DestinationAccountId}-data-exports
-  LocalAccountBucket:
+    Value: !Sub ${ResourcePrefix}-${DestinationAccountId}-data-exports
+    Export: {Name: !Sub '${ResourcePrefix}-DataExports-AggregateBucketName'}
+  LocalBucket:
     Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
-    Value:
-      Fn::Sub: ${ResourcePrefix}-${AWS::AccountId}-data-local
+    Value: !Sub ${ResourcePrefix}-${AWS::AccountId}-data-local
+  Database:
+    Condition: IsDestinationAccount
+    Description: Database
+    Value: !Ref CidDatabase
+    Export: {Name: !Sub '${ResourcePrefix}-DataExports-Database'}

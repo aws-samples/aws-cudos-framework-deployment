@@ -242,12 +242,12 @@ def create_cid_as_finops(update):
     finops_cfn = finops_session.client('cloudformation')
     params = dict(
         StackName="CID-CUR-Destination",
-        TemplateURL=upload_to_s3('cfn-templates/cur-aggregation.yaml'),
+        TemplateURL=upload_to_s3('cfn-templates/data-exports-aggregation.yaml'),
         Parameters=[
             {"ParameterKey": 'DestinationAccountId', "ParameterValue": account_id},
             {"ParameterKey": 'ResourcePrefix', "ParameterValue": 'cid'},
-            {"ParameterKey": 'CreateCUR', "ParameterValue": 'True'},
-            {"ParameterKey": 'SourceAccountIds', "ParameterValue": ''},
+            {"ParameterKey": 'ManageCUR2', "ParameterValue": 'True'},
+            {"ParameterKey": 'SourceAccountIds', "ParameterValue": account_id},
         ],
         Capabilities=['CAPABILITY_IAM'],
     )
@@ -270,6 +270,7 @@ def create_cid_as_finops(update):
             {"ParameterKey": 'PrerequisitesQuickSight', "ParameterValue": 'yes'},
             {"ParameterKey": 'PrerequisitesQuickSightPermissions', "ParameterValue": 'yes'},
             {"ParameterKey": 'QuickSightUser', "ParameterValue": get_qs_user()},
+            {"ParameterKey": 'CURVersion', "ParameterValue": '2.0'},
             {"ParameterKey": 'DeployCUDOSDashboard', "ParameterValue": 'yes'},
             {"ParameterKey": 'DeployCUDOSv5', "ParameterValue": 'yes'},
             {"ParameterKey": 'LambdaLayerBucketPrefix', "ParameterValue": TMP_BUCKET_PREFIX},

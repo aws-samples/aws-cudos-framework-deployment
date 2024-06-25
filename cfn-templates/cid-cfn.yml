@@ -12,7 +12,7 @@ Metadata:
       - Label:
           default: CUDOS, Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually (Dashboard data will appear within 24h after CUR creation).
         Parameters:
-          - CURBucketPath
+          - CURVersion
           - DeployCUDOSv5
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
@@ -39,6 +39,7 @@ Metadata:
           - LambdaLayerBucketPrefix
           - DeployCUDOSDashboard
           - DataBucketsKmsKeysArns
+          - CURBucketPath
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -118,6 +119,11 @@ Parameters:
     Type: String
     Default: 'CidQuickSightDataSourceRole'
     Description: "IAM Role Name to be used on QuickSight Datasource Creation. If empty - then the Default QuickSight Role will be used; if provided other existing role, will use that Role; if name equal to 'CidQuickSightDataSourceRole', then a role will be created by this CloudFromation)."
+  CURVersion:
+    Type: String
+    Default: '2.0'
+    AllowedValues: ["1.0", "2.0"]
+    Description: "We support 2 options: CUR 2.0 from DataExports stack managed by CID or CUR 1(Legacy)."
   CURBucketPath:
     Type: String
     MinLength: 3
@@ -223,13 +229,24 @@ Conditions:
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
+  NeedLegacyCUR: !Equals [ !Ref CURVersion, "1.0" ]
   NeedComputeOptimizerDashboard: !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   NeedCUR:
-    Fn::Or:
-      - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
-      - !Equals [ !Ref DeployCUDOSv5, "yes" ]
-      - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
-      - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+    Fn::And:
+      - !Condition NeedLegacyCUR
+      - Fn::Or:
+        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCUDOSv5, "yes" ]
+        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+  NeedCUR2:
+    Fn::And:
+      - !Not [!Condition NeedLegacyCUR]
+      - Fn::Or:
+        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+        - !Equals [ !Ref DeployCUDOSv5, "yes" ]
+        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedDataCollectionLab:
     Fn::Or:
       - !Equals [ !Ref DeployTAODashboard, "yes" ]
@@ -1638,7 +1655,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1658,7 +1676,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1680,7 +1699,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1702,7 +1722,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1727,7 +1748,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
         view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/trusted-advisor/trusted-advisor-data'
@@ -1747,7 +1769,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
         view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_lambda'
