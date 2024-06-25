@@ -25,7 +25,7 @@ for use in Cost Intelligence Dashboards. The module creates an S3 bucket with
 the necessary permissions and configuration to replicate CUR data to the
 data collection account. If you are deploying Cost Intelligence Dashboards
 for a multi-payer environment, you can deploy one instance of this module for
-each payer account. 
+each payer account.
 
 Review [module documentation](./cur-setup-source/README.md) for details
 on module requirements, inputs, and outputs.
@@ -119,7 +119,7 @@ provider "aws" {
 
 # Configure exactly one destination account
 module "cur_data_collection_account" {
-  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination
+  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination"
 
   source_account_ids = ["1234567890"]
   create_cur         = false # Set to true to create an additional CUR in the aggregation account
@@ -151,7 +151,7 @@ module "cur_payer" {
 
 After enabling CUR with Terraform as describe above, a few steps are necessary
 to prepare for dashboard deployment:
-  1. Complete prerequisites in [Before You Start](../../README.md#before-you-start) including Quicksight setup
+  1. Complete prerequisites in [Before You Start](../README.md#before-you-start) including Quicksight setup
   2. Create an S3 bucket to upload the CloudFormation template
 
 ### Step 3: Dashboard Setup
