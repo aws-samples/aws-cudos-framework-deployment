@@ -1,10 +1,8 @@
 import os
-import sys
 import json
 import urllib
 import logging
 import functools
-from pathlib import Path
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
@@ -112,14 +110,24 @@ class Cid():
 
     @cached_property
     def cur1(self):
-        return ProxyCUR(self.cur, target_cur_version='1')
+        """ get/create a cur1 """
+        return self.get_cur('1')
 
     @cached_property
     def cur2(self):
-        return ProxyCUR(self.cur, target_cur_version='2')
+        """ get/create a cur2 """
+        return self.get_cur('2')
+
+    def get_cur(self, target_cur_version):
+        """ get a cur """
+        cur_version = self.cur.version
+        if cur_version != target_cur_version or get_parameters().get('use-cur-proxy'):
+            return ProxyCUR(self.cur, target_cur_version=target_cur_version)
+        return self.cur
 
     @property
     def cur(self) -> CUR:
+        '''can return any CUR (1 or 2) that customer provides'''
         if not self._clients.get('cur'):
             while True:
                 try:

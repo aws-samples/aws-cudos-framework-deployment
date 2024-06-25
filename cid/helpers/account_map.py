@@ -65,8 +65,8 @@ class AccountMap(CidBase):
         }
     }
 
-    def __init__(self, session: Session, athena: Athena, cur) -> None:
-        self.cur = cur
+    def __init__(self, session: Session, athena: Athena, cur=None) -> None:
+        self.cur = cur # Only for trends
         self.athena = athena
         super().__init__(session)
 
@@ -133,7 +133,8 @@ class AccountMap(CidBase):
         vars = {
             'metadata_table_name': metadata_table['Name'],
             'metadata_database_name': metadata_table['Database'],
-            'cur_table_name': self.cur.table_name # only for trends
+            'cur_database': self.cur.database if name == 'aws_accounts' else None, # only for trends
+            'cur_table_name': self.cur.table_name if name == 'aws_accounts' else None, # only for trends
         }
         for key, val in self.mappings.get(name).get(metadata_table['Name']).items():
             logger.debug(f'Mapping field {key} to {val}')
