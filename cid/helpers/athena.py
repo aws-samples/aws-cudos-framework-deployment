@@ -232,7 +232,7 @@ class Athena(CidBase):
         params = {}
         if workgroup:
             params['WorkGroup'] = workgroup
-        return list(self.client.get_paginator('list_data_catalogs').paginate(**params).search('DataCatalogsSummary[].CatalogName'))
+        return list(self.client.get_paginator('list_data_catalogs').paginate(**params).search(f"DataCatalogsSummary[?Type='{type_}'].CatalogName"))
 
     def list_databases(self, catalog_name: str=None) -> list:
         """get database"""
