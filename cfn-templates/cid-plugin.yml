@@ -6,7 +6,6 @@ Parameters:
     Type: String
     Description:  'Dashboard id'
     Default: ''
-    MinLength: 3
     AllowedPattern: "^[a-zA-Z0-9_-]*$"
   ResourcesUrl:
     Type: String
@@ -28,6 +27,8 @@ Resources:
       ServiceToken: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-CidExecArn" }
       Dashboard:
         dashboard-id: !Ref DashboardId
+        account-map-source: 'dummy'
+        data-collection-database-name: 'optimization_data'
         athena-workgroup: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-AthenaWorkgroup" }
         quicksight-datasource-id: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-QuickSightDatasourceId" }
         quicksight-datasource-role-arn: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-QuickSightDatasourceRoleArn" }
