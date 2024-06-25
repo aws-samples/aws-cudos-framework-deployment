@@ -182,7 +182,6 @@ Resources:
               - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
             Condition:
               StringEquals:
-                aws:SourceArn: !Sub 'arn:${AWS::Partition}:cur:${AWS::Region}:${AWS::AccountId}:definition/*'
                 aws:SourceAccount: !Ref AWS::AccountId
           - Sid: AllowWriteBilling
             Effect: Allow
@@ -194,7 +193,6 @@ Resources:
               - Fn::Sub: 'arn:${AWS::Partition}:s3:::${DestinationS3}/*'
             Condition:
               StringEquals:
-                aws:SourceArn: !Sub 'arn:${AWS::Partition}:cur:${AWS::Region}:${AWS::AccountId}:definition/*'
                 aws:SourceAccount: !Ref AWS::AccountId
           - Sid: AllowReplicationWrite
             Effect: Allow
@@ -336,7 +334,6 @@ Resources:
               - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}/*'
             Condition:
               StringEquals:
-                aws:SourceArn: !Sub 'arn:${AWS::Partition}:cur:${AWS::Region}:${AWS::AccountId}:definition/*'
                 aws:SourceAccount: !Ref AWS::AccountId
           - Sid: AllowWriteBilling
             Effect: Allow
@@ -348,7 +345,6 @@ Resources:
               - !Sub 'arn:${AWS::Partition}:s3:::${SourceS3}/*'
             Condition:
               StringEquals:
-                aws:SourceArn: !Sub 'arn:${AWS::Partition}:cur:${AWS::Region}:${AWS::AccountId}:definition/*'
                 aws:SourceAccount: !Ref AWS::AccountId
 
   CrossRegionReplicationRole:
