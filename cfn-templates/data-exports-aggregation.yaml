@@ -548,7 +548,7 @@ Resources:
             - Effect: Allow
               Action:
               - cur:PutReportDefinition  #need this permission for bcm-data-exports to work
-              Resource: !Sub: "arn:${AWS::Partition}:cur:*:${AWS::AccountId}:definition/*""
+              Resource: !Sub: "arn:${AWS::Partition}:cur:*:${AWS::AccountId}:*""
 
   CidDataExportCreatorLambda:
     Type: AWS::Lambda::Function
