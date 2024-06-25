@@ -1096,7 +1096,7 @@ Outputs:
     Description: Local Bucket Name which replicate objects to centralized bucket
     Value: !Sub ${ResourcePrefix}-${AWS::AccountId}-data-local
   Database:
-    Condition: IsDestinationAccount
+    Condition: DeployAnyTable
     Description: Database
-    Value: !Ref CidDatabase
+    Value: !Sub "${ResourcePrefix}_data_export"
     Export: {Name: !Sub '${ResourcePrefix}-DataExports-Database'}

@@ -240,13 +240,14 @@ def create_cid_as_finops(update):
 
     logger.info('As Finops Creating CUR')
     finops_cfn = finops_session.client('cloudformation')
+    finops_cfn = admin_cfn #FIXME !!!
     params = dict(
         StackName="CID-CUR-Destination",
         TemplateURL=upload_to_s3('cfn-templates/data-exports-aggregation.yaml'),
         Parameters=[
             {"ParameterKey": 'DestinationAccountId', "ParameterValue": account_id},
             {"ParameterKey": 'ResourcePrefix', "ParameterValue": 'cid'},
-            {"ParameterKey": 'ManageCUR2', "ParameterValue": 'True'},
+            {"ParameterKey": 'ManageCUR2', "ParameterValue": 'yes'},
             {"ParameterKey": 'SourceAccountIds', "ParameterValue": account_id},
         ],
         Capabilities=['CAPABILITY_IAM'],
@@ -386,8 +387,11 @@ def teardown():
     logger.info('Finops Session created')
 
     finops_cfn = finops_session.client('cloudformation')
+    finops_cfn = admin_cfn #FIXME: for wip only
 
     logger.info("Deleting bucket")
+    delete_bucket(f'cid-{account_id}-data-exports') # Cannot be done by CFN
+    delete_bucket(f'cid-{account_id}-data-local') # Cannot be done by CFN
     delete_bucket(f'cid-{account_id}-shared') # Cannot be done by CFN
     logger.info("Deleting Dashboards stack")
     try:

@@ -247,18 +247,9 @@ Conditions:
         - !Equals [ !Ref DeployCUDOSv5, "yes" ]
         - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
         - !Equals [ !Ref DeployKPIDashboard, "yes" ]
-  NeedDataCollectionLab:
-    Fn::Or:
-      - !Equals [ !Ref DeployTAODashboard, "yes" ]
-      - !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   NeedAthenaWorkgroup:  !Equals [ !Ref AthenaWorkgroup, "" ]
   NeedAthenaQueryResultsBucket:  !Equals [ !Ref AthenaQueryResultsBucket, "" ]
-  NeedDatabase:
-    Fn::And:
-      - !Equals [ !Ref DatabaseName, "" ]
-      - Fn::Or:
-        - !Condition NeedDataCollectionLab
-        - !Condition NeedCUR
+  NeedDatabase: !Equals [ !Ref DatabaseName, "" ]
   NeedCURTable:
     Fn::And:
       - !Equals [ !Ref CURTableName, "" ]
@@ -1656,7 +1647,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1677,7 +1668,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1700,7 +1691,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1723,7 +1714,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1749,7 +1740,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
         view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/trusted-advisor/trusted-advisor-data'
@@ -1770,7 +1761,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !Import cid-DataExportsDatabase, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
         view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_lambda'
