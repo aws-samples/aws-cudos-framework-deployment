@@ -506,7 +506,7 @@ class ProxyView():
             SELECT
                 {select_block}
             FROM
-                "{self.cur.table_name}"
+                "{self.cur.database}"."{self.cur.table_name}"
         ''')
         res = self.athena.create_or_update_view(self.name, query)
         logging.debug(res)

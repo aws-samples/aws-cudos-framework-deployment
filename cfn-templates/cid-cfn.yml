@@ -1177,6 +1177,13 @@ Resources:
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
                   - Fn::If:
+                    - NeedCUR2
+                    - !Join
+                      - '/'
+                      - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database
+                        - !ImportValue cid-DataExports-Database
+                    - !Ref 'AWS::NoValue'
+                  - Fn::If:
                      - NeedDatabase
                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
@@ -1210,6 +1217,13 @@ Resources:
                      - NeedAthenaWorkgroup
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
+                  - Fn::If:
+                    - NeedCUR2
+                    - !Join
+                      - '/'
+                      - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database
+                        - !ImportValue cid-DataExports-Database
+                    - !Ref 'AWS::NoValue'
               - Effect: Allow
                 Action:
                   - s3:GetBucketLocation
@@ -1237,6 +1251,13 @@ Resources:
                       - NeedQuickSightDataSourceRoleAndCUR
                       - !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}
                       - !Ref "AWS::NoValue"
+                  - Fn::If:
+                    - NeedCUR2
+                    - !Join
+                      - ''
+                      - - !Sub 'arn:${AWS::Partition}:s3:::'
+                        - !ImportValue cid-DataExports-AggregateBucketName
+                    - !Ref 'AWS::NoValue'
               - Sid: AllowReadBucket
                 Effect: Allow
                 Action:
@@ -1248,6 +1269,14 @@ Resources:
                       - NeedQuickSightDataSourceRoleAndCUR
                       - !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}/*
                       - !Ref "AWS::NoValue"
+                  - Fn::If:
+                    - NeedCUR2
+                    - !Join
+                      - ''
+                      - - !Sub 'arn:${AWS::Partition}:s3:::'
+                        - !ImportValue cid-DataExports-AggregateBucketName
+                        - '/*'
+                    - !Ref 'AWS::NoValue'
               - !If
                   - NeedQuickSightDataSourceKMS
                   - Sid: AllowKmsDecrypt
@@ -1345,6 +1374,13 @@ Resources:
                     - NeedAthenaQueryResultsBucket
                     - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
                     - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
+                  - Fn::If:
+                    - NeedCUR2
+                    - !Join
+                      - '/'
+                      - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database
+                        - !ImportValue cid-DataExports-Database
+                    - !Ref 'AWS::NoValue'
               - Effect: Allow
                 Action:
                   - quicksight:DescribeDataSource
@@ -1647,7 +1683,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1668,7 +1704,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1691,7 +1727,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1714,7 +1750,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: 'yes'
@@ -1740,7 +1776,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
         view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/trusted-advisor/trusted-advisor-data'
@@ -1761,7 +1797,7 @@ Resources:
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-table: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: 'yes'
         view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_lambda'

@@ -684,6 +684,7 @@ Resources:
             - {"Name": "line_item_resource_id", "Type": "string" }
             - {"Name": "line_item_unblended_cost", "Type": "double" }
             - {"Name": "line_item_usage_account_id", "Type": "string" }
+            - {"Name": "line_item_usage_account_name", "Type": "string" }
             - {"Name": "line_item_usage_amount", "Type": "double" }
             - {"Name": "line_item_usage_end_date", "Type": "timestamp" }
             - {"Name": "line_item_usage_start_date", "Type": "timestamp" }
