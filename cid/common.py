@@ -1324,12 +1324,13 @@ class Cid():
                 # TODO: get buckets from dashboard parameters
                 buckets = [
                     f'cid-{self.base.account_id}-share',
+                    f'cid-{self.base.account_id}-data-exports',
                     f'cid-data-{self.base.account_id}',
                     f'costoptimizationdata{self.base.account_id}',
                 ]
                 additional_buckets = get_parameters().get('allow-buckets')
                 if additional_buckets:
-                    buckets += additional_buckets.split(',')
+                    buckets += [bucket.strip().replace('{account_id}', self.base.account_id) for bucket in additional_buckets.split(',')]
 
                 role_name = self.iam.ensure_data_source_role_exists(
                     role_name=cid_role_name,
@@ -1681,8 +1682,8 @@ class Cid():
                     pass
             else:
                 self.athena.execute_query(view_query)
-                assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
-                logger.info(f'View "{view_name}" created')
+            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+            logger.info(f'View "{view_name}" created')
 
         if 'crawler' in view_definition:
             if not ('CREATE EXTERNAL TABLE' in view_query.upper() or view_definition.get('type') == 'Glue_Table'):
