@@ -1,5 +1,5 @@
 dashboards:
-  AWS_NEWS_FEEDS:
+  AWS FEEDS:
     dependsOn:
       datasets:
       - aws_feeds
@@ -8,7 +8,7 @@ dashboards:
       - aws_feeds_whats_new
       - aws_feeds_youtube
     name: AWS News Feeds
-    dashboardId: aws-news-feeds
+    dashboardId: aws-feeds
     category: Advanced
     theme: MIDNIGHT
     data: |-
