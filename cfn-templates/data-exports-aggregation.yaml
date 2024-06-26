@@ -535,17 +535,20 @@ Resources:
               - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-DataExportCreator"
               - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-DataExportCreator:*"
               - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-DataExportCreator:*:*"
-        - PolicyName: "ExecutionSpecific"
+        - PolicyName: "AllowDataExports"
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
             - Effect: Allow
               Action:
-              - cur:PutReportDefinition #need this permission for bcm-data-exports to work
               - bcm-data-exports:CreateExport
               - bcm-data-exports:UpdateExport
               - bcm-data-exports:DeleteExport
               Resource: !Sub "arn:${AWS::Partition}:bcm-data-exports:*:${AWS::AccountId}:*"
+            - Effect: Allow
+              Action:
+              - cur:PutReportDefinition  #need this permission for bcm-data-exports to work
+              Resource: !Sub: "arn:${AWS::Partition}:cur:*:${AWS::AccountId}:*"
 
   CidDataExportCreatorLambda:
     Type: AWS::Lambda::Function
