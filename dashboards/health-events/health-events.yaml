@@ -85,10 +85,9 @@ dashboards:
         Expression: truncDate("WK", {start_time})
         Name: Start week
       - DataSetIdentifier: health_events_view
-        Expression: "ifelse(\n    {status_code} = 'upcoming', '\u23F3 upcoming',\n    {status_code}\
-          \ = 'closed', '\u2705 closed',\n    {status_code} = 'open', '\U0001F6A8 open',\n\
-          \    {status_code}\n)"
-        Name: Status Icon
+        Expression: '    {affected_entity_status_code}
+          '
+        Name: Status
       - DataSetIdentifier: health_events_view
         Expression: |-
           ifelse(
@@ -125,6 +124,11 @@ dashboards:
         Expression: (({start_time} >= now()) or {status_code} = "open") and (dateDiff(now(),
           {start_time}, "DD") <= ${StartTimeWarn})
         Name: warn_days_within
+      ColumnConfigurations:
+      - Column:
+          ColumnName: Event category
+          DataSetIdentifier: health_events_view
+        Role: MEASURE
       DataSetIdentifierDeclarations:
       - DataSetArn: arn:aws:quicksight:::dataset/0b271cc3-17d7-487a-95f1-affa03366700
         Identifier: health_events_view
@@ -147,9 +151,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
+              - 4fedfe04-9b70-4272-8c5d-4c53048c1697
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 47af51d8-95d2-49b6-86f7-159d5af0bc79
@@ -168,7 +172,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: dd430445-7cd0-425c-907a-9ad340df5a6f
@@ -187,7 +191,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 6946b85a-18a1-4d17-ab82-8e766b6d3f3c
@@ -206,7 +210,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: ed50b840-483a-443f-b037-085b45531b65
@@ -225,7 +229,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 4575af61-2b00-4df0-a3a4-404cfa73088f
@@ -244,7 +248,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 749e9526-dd3d-4c22-834f-034f6d185b47
@@ -263,26 +267,26 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - a71d3551-53e9-461a-a061-d8708dbd4924
-              - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-              - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-              - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-              - 286793a3-84ea-40b3-b6db-03619cc3287c
-              - ce7e93b0-0e27-4812-a31d-95df13df1700
-              - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-              - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-              - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-              - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-              - adaa4541-b923-4303-ae3a-34c854cc8a73
-              - 74fa5821-533e-4b28-9487-2567c6d6287b
-              - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-              - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-              - fe91db41-7be4-460a-900c-958d82357a60
-              - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-              - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-              - 663cc005-598c-4e19-b117-6097775755ca
+              - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+              - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+              - e28800d3-3367-4440-981f-619d5c8d94ea
+              - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+              - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+              - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+              - 16105473-d44c-4100-85c0-91dc7ba57a77
+              - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+              - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+              - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+              - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+              - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+              - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+              - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+              - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+              - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+              - b68622db-5877-4778-bb9b-1a4ff98316ff
+              - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 31676872-9a46-4702-a929-4b274ea98afc
@@ -301,7 +305,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 57aa9cf0-26f3-4a92-8181-97217697c0fe
@@ -320,7 +324,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 54fbccb2-128e-4d5d-bfb3-5a6702cf6cb8
@@ -339,7 +343,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 6a2253f1-2fa5-48c7-a428-4ec777f51f97
@@ -358,7 +362,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 3fd3373d-2df0-4c5a-ba75-dc971c8eb996
@@ -377,9 +381,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c2b5526c-44d9-4a34-abd1-c42372be1056
@@ -398,9 +402,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 63b8e951-28b7-4f65-a744-8636aa405a2e
@@ -419,9 +423,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: b8adaba6-c962-43df-9f65-e8097b490ae9
@@ -440,9 +444,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 60c1cd0f-bff5-40b3-9166-d16239071eea
@@ -461,9 +465,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4be9f5c3-f0d7-45bc-a8c4-6ad26736762b
@@ -483,9 +487,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 5f51ae09-109c-4b53-aa9a-1207c40aa9cd
+              - 381f857a-db54-40a5-849a-6e085a6cde2f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2cba358d-ddd2-46b4-9b9f-3fcf753e3a67
@@ -504,9 +508,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 987bc3da-06a0-4486-a4b7-914e48dcbd52
@@ -525,9 +529,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: d8a48cb6-76e3-4f1d-888d-9b65284fa52c
@@ -546,9 +550,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 63290c30-9460-4835-9af8-4107b9c9c8ce
+              - b51cd634-465e-46f2-8353-908f08359898
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 96a36e9b-5c23-4584-93c4-3828984b41a8
@@ -567,9 +571,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: e8983472-7c4c-4f31-bf8c-8708a4805d50
@@ -591,9 +595,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 676e5b59-8faa-44e3-b97d-37264bec9e97
@@ -613,9 +617,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 2f60ef03-8d70-44b7-8600-61ffb6fa2fcb
+              - 6002b12a-c7bb-4cda-9c33-b4bf95a2bd0f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: bb33e156-a8fc-4781-ba2d-ea5ce70225ee
@@ -635,10 +639,10 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - a5f3de62-bb42-4ab1-9663-aa14492e8c2d
-              - c05d5962-9c4d-4288-b78a-f95432e7ea1e
+              - f071a7da-3fc3-4268-94b2-9645aeabc71f
+              - cfd78ce2-d890-402a-9e18-d092dae0a52e
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 24fe553c-fa54-4170-8da0-ec19414efb58
@@ -657,9 +661,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 3530c295-f322-4db1-ac25-800af97a48af
@@ -678,9 +682,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 1a185884-5c4b-4511-b8c8-5a352f16e754
@@ -699,27 +703,27 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - d529e86b-e31f-425a-8892-f205d0e56555
-              - a71d3551-53e9-461a-a061-d8708dbd4924
-              - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-              - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-              - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-              - 286793a3-84ea-40b3-b6db-03619cc3287c
-              - ce7e93b0-0e27-4812-a31d-95df13df1700
-              - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-              - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-              - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-              - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-              - adaa4541-b923-4303-ae3a-34c854cc8a73
-              - 74fa5821-533e-4b28-9487-2567c6d6287b
-              - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-              - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-              - fe91db41-7be4-460a-900c-958d82357a60
-              - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-              - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-              - 663cc005-598c-4e19-b117-6097775755ca
+              - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+              - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+              - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+              - e28800d3-3367-4440-981f-619d5c8d94ea
+              - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+              - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+              - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+              - 16105473-d44c-4100-85c0-91dc7ba57a77
+              - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+              - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+              - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+              - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+              - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+              - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+              - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+              - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+              - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+              - b68622db-5877-4778-bb9b-1a4ff98316ff
+              - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 6c9a21b3-d444-4b59-a1a0-8c24e7f013c5
@@ -739,11 +743,11 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 63290c30-9460-4835-9af8-4107b9c9c8ce
-              - 2f60ef03-8d70-44b7-8600-61ffb6fa2fcb
-              - d4b873df-e942-4137-bd07-78377f415516
+              - b51cd634-465e-46f2-8353-908f08359898
+              - 6002b12a-c7bb-4cda-9c33-b4bf95a2bd0f
+              - a87c4e38-0e9a-46cf-ad73-3ebdb932ed17
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: d8ffff6c-d225-4e37-83dd-951e0c72007b
@@ -762,40 +766,40 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - d4b873df-e942-4137-bd07-78377f415516
-              - d529e86b-e31f-425a-8892-f205d0e56555
-              - 3ca3445a-b654-4e6c-b7eb-dc5cd46a363c
-              - c362d456-30d4-4d91-a28a-6dc45b550b13
-              - 30220003-2712-4a70-9907-8864c37c3cd8
-              - 5f51ae09-109c-4b53-aa9a-1207c40aa9cd
-              - a5f3de62-bb42-4ab1-9663-aa14492e8c2d
-              - 2f60ef03-8d70-44b7-8600-61ffb6fa2fcb
-              - 63290c30-9460-4835-9af8-4107b9c9c8ce
-              - 2d92bdc6-3a09-46a6-be5d-d8d68bde7510
-              - a71d3551-53e9-461a-a061-d8708dbd4924
-              - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-              - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-              - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-              - 286793a3-84ea-40b3-b6db-03619cc3287c
-              - ce7e93b0-0e27-4812-a31d-95df13df1700
-              - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-              - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-              - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-              - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-              - adaa4541-b923-4303-ae3a-34c854cc8a73
-              - 74fa5821-533e-4b28-9487-2567c6d6287b
-              - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-              - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-              - fe91db41-7be4-460a-900c-958d82357a60
-              - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-              - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-              - 5a7afa1c-2f0a-41ea-a1cf-837b4974ddd5
-              - 9cab58fe-4a7b-441f-813c-8e270ecc415e
-              - 254723df-ac0d-4a55-8a06-cf90207665f5
-              - 33b8705f-5649-4854-9148-c949d28fc8db
-              - c05d5962-9c4d-4288-b78a-f95432e7ea1e
+              - a87c4e38-0e9a-46cf-ad73-3ebdb932ed17
+              - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+              - c81f15de-be6b-4746-9e1e-30a443dc8c2c
+              - b3c67013-e29d-4834-8c9e-6d2a9899bb2a
+              - a42c16a5-8958-4267-9638-2df115ad0d96
+              - 381f857a-db54-40a5-849a-6e085a6cde2f
+              - f071a7da-3fc3-4268-94b2-9645aeabc71f
+              - 6002b12a-c7bb-4cda-9c33-b4bf95a2bd0f
+              - b51cd634-465e-46f2-8353-908f08359898
+              - 4bd57cce-80db-481b-9d72-66f6c745ecff
+              - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+              - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+              - e28800d3-3367-4440-981f-619d5c8d94ea
+              - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+              - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+              - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+              - 16105473-d44c-4100-85c0-91dc7ba57a77
+              - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+              - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+              - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+              - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+              - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+              - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+              - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+              - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+              - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+              - b68622db-5877-4778-bb9b-1a4ff98316ff
+              - d90c8857-e046-4420-9507-184dfed6a8c8
+              - b827bbb0-6519-4c30-8074-959620de44bd
+              - fc9855dc-ef8f-4cdb-b1b0-8293aa4551a6
+              - b7f0d97c-3192-47b9-b440-012174c8fe7a
+              - cfd78ce2-d890-402a-9e18-d092dae0a52e
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4065cc86-2220-49b1-ae61-55bc2098eaa2
@@ -812,18 +816,18 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-              - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-              - 286793a3-84ea-40b3-b6db-03619cc3287c
-              - ce7e93b0-0e27-4812-a31d-95df13df1700
-              - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-              - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-              - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-              - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-              - adaa4541-b923-4303-ae3a-34c854cc8a73
-              - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
+              - e28800d3-3367-4440-981f-619d5c8d94ea
+              - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+              - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+              - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+              - 16105473-d44c-4100-85c0-91dc7ba57a77
+              - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+              - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+              - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+              - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+              - b68622db-5877-4778-bb9b-1a4ff98316ff
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 88088773-50d6-4128-b971-c464780579af
@@ -842,9 +846,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 8fbb80f2-7afa-4510-a884-a522a656c0de
@@ -866,9 +870,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
+              - ab339189-8bb5-4b9f-b0ec-52db1a23731c
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 4fdf1d4d-e889-4e60-92f9-07cc9bc3e6b6
@@ -888,11 +892,11 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 30220003-2712-4a70-9907-8864c37c3cd8
-              - 5f51ae09-109c-4b53-aa9a-1207c40aa9cd
-              - 254723df-ac0d-4a55-8a06-cf90207665f5
+              - a42c16a5-8958-4267-9638-2df115ad0d96
+              - 381f857a-db54-40a5-849a-6e085a6cde2f
+              - fc9855dc-ef8f-4cdb-b1b0-8293aa4551a6
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 25d483ba-c889-4739-8db0-3f82daa7f92b
@@ -913,10 +917,10 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 30220003-2712-4a70-9907-8864c37c3cd8
-              - d529e86b-e31f-425a-8892-f205d0e56555
+              - a42c16a5-8958-4267-9638-2df115ad0d96
+              - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 0c83c8fa-5109-4ccf-a139-b296a6ca070a
@@ -933,13 +937,13 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - d529e86b-e31f-425a-8892-f205d0e56555
-              - c362d456-30d4-4d91-a28a-6dc45b550b13
-              - 30220003-2712-4a70-9907-8864c37c3cd8
-              - 254723df-ac0d-4a55-8a06-cf90207665f5
-              - 33b8705f-5649-4854-9148-c949d28fc8db
+              - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+              - b3c67013-e29d-4834-8c9e-6d2a9899bb2a
+              - a42c16a5-8958-4267-9638-2df115ad0d96
+              - fc9855dc-ef8f-4cdb-b1b0-8293aa4551a6
+              - b7f0d97c-3192-47b9-b440-012174c8fe7a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 7cc8b8ef-60b6-4f1f-ba9a-4a99ed699ef0
@@ -959,9 +963,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - d4b873df-e942-4137-bd07-78377f415516
+              - a87c4e38-0e9a-46cf-ad73-3ebdb932ed17
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 0efc4edf-67c1-47ee-b72a-ba278bfbcdd2
@@ -978,10 +982,10 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 3ca3445a-b654-4e6c-b7eb-dc5cd46a363c
-              - 5f51ae09-109c-4b53-aa9a-1207c40aa9cd
+              - c81f15de-be6b-4746-9e1e-30a443dc8c2c
+              - 381f857a-db54-40a5-849a-6e085a6cde2f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 6a189d72-7ce0-4d3b-8572-3175d96c8596
@@ -1000,9 +1004,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 663cc005-598c-4e19-b117-6097775755ca
+              - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a27800d9-1106-4a98-b5f7-4af8ace80aca
@@ -1022,9 +1026,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 254723df-ac0d-4a55-8a06-cf90207665f5
+              - fc9855dc-ef8f-4cdb-b1b0-8293aa4551a6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c39dd2ae-91bf-4be3-a521-52028d5deb51
@@ -1044,12 +1048,12 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 3ca3445a-b654-4e6c-b7eb-dc5cd46a363c
-              - c362d456-30d4-4d91-a28a-6dc45b550b13
-              - 30220003-2712-4a70-9907-8864c37c3cd8
-              - 5f51ae09-109c-4b53-aa9a-1207c40aa9cd
+              - c81f15de-be6b-4746-9e1e-30a443dc8c2c
+              - b3c67013-e29d-4834-8c9e-6d2a9899bb2a
+              - a42c16a5-8958-4267-9638-2df115ad0d96
+              - 381f857a-db54-40a5-849a-6e085a6cde2f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4e54b499-2b35-457f-bcea-c691fa3e5d36
@@ -1071,9 +1075,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
+              - 5bdbb7fc-6e87-4513-9e84-b55e85336084
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 485493c3-babc-4612-8821-594a64d3d53a
@@ -1092,9 +1096,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5425fccf-8195-439c-80ee-2f063ccdfb67
@@ -1113,27 +1117,27 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - d529e86b-e31f-425a-8892-f205d0e56555
-              - a71d3551-53e9-461a-a061-d8708dbd4924
-              - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-              - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-              - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-              - 286793a3-84ea-40b3-b6db-03619cc3287c
-              - ce7e93b0-0e27-4812-a31d-95df13df1700
-              - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-              - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-              - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-              - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-              - adaa4541-b923-4303-ae3a-34c854cc8a73
-              - 74fa5821-533e-4b28-9487-2567c6d6287b
-              - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-              - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-              - fe91db41-7be4-460a-900c-958d82357a60
-              - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-              - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-              - 663cc005-598c-4e19-b117-6097775755ca
+              - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+              - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+              - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+              - e28800d3-3367-4440-981f-619d5c8d94ea
+              - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+              - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+              - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+              - 16105473-d44c-4100-85c0-91dc7ba57a77
+              - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+              - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+              - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+              - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+              - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+              - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+              - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+              - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+              - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+              - b68622db-5877-4778-bb9b-1a4ff98316ff
+              - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: bf6b22b6-7cd1-48be-bd0e-764db27b2e8f
@@ -1153,9 +1157,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+              SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
               VisualIds:
-              - 33b8705f-5649-4854-9148-c949d28fc8db
+              - b7f0d97c-3192-47b9-b440-012174c8fe7a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 26a9f5fc-8b30-4f5d-b84b-f468748c28ba
@@ -1174,9 +1178,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+              SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               VisualIds:
-              - 1b8cb135-a374-4c63-b5c7-5bea018f456d
+              - cc377b76-049a-41c6-aa05-3ceb1df50d50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5c11351e-28a7-41f2-a47f-82f4965b786e
@@ -1195,7 +1199,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 50f21b8b-a92f-42b7-a9b3-4daa88eaee75
@@ -1214,7 +1218,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 555cf386-de13-4b96-9ccf-9ecdfdef1fa2
@@ -1233,7 +1237,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 6552e21c-679d-4a5f-bb58-e7814d1deaff
@@ -1252,7 +1256,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c9090159-7fd7-4559-afad-ab695ad2669e
@@ -1271,7 +1275,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 922fd7a6-8ba1-47c0-b33b-6c2e8dac57f7
@@ -1290,7 +1294,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: f3d9dfda-7ea2-44aa-a943-94964d48f465
@@ -1309,7 +1313,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 51f535d6-7c2c-485b-a5bf-d4b916641521
@@ -1328,7 +1332,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2ac93d86-fd49-4df3-863c-59faa54d7563
@@ -1350,9 +1354,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
               VisualIds:
-              - 9614a965-b689-4401-a5cf-36cf2279942f
+              - 61b62e52-7ad7-4b06-9d2e-db8dd376fe31
         Status: DISABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 74389fb2-47f5-45aa-866b-44cf82d38693
@@ -1371,7 +1375,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 6276ae6b-a15d-4ab1-ba3a-7bd35aed6bf8
@@ -1390,7 +1394,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4ed16d28-cbd0-415a-bfc9-ebcfd2064214
@@ -1409,7 +1413,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 164138cd-07a1-4649-ab53-a1b286408ce8
@@ -1428,7 +1432,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: b2558018-8325-4e04-85bc-386d104e2005
@@ -1447,7 +1451,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c75408c3-29c1-4bd3-bfb7-a8b0adcbc9d1
@@ -1469,9 +1473,57 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
               VisualIds:
-              - cf86bd71-81d5-4442-b028-50b8d141409a
+              - 2f3906c4-23db-4cb9-a027-40a2b1c29468
+        Status: DISABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 5240e33a-cdec-4eda-a05c-ede9838d9646
+        Filters:
+        - TopBottomFilter:
+            AggregationSortConfigurations:
+            - AggregationFunction:
+                DateAggregationFunction: MAX
+              Column:
+                ColumnName: ingestion_time
+                DataSetIdentifier: health_events_view
+              SortDirection: DESC
+            Column:
+              ColumnName: event_arn
+              DataSetIdentifier: health_events_view
+            FilterId: 8daead77-c90c-43a8-8aee-232fdc42e96e
+            Limit: 1
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
+              VisualIds:
+              - 470087da-9454-4691-8c86-3800b3855e39
+        Status: DISABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: de16f502-f63a-4720-bc02-8560d12dd90e
+        Filters:
+        - TopBottomFilter:
+            AggregationSortConfigurations:
+            - AggregationFunction:
+                DateAggregationFunction: MAX
+              Column:
+                ColumnName: ingestion_time
+                DataSetIdentifier: health_events_view
+              SortDirection: DESC
+            Column:
+              ColumnName: event_arn
+              DataSetIdentifier: health_events_view
+            FilterId: b488cabf-b962-40c2-889b-87a7f291eeae
+            Limit: 1
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
+              VisualIds:
+              - edc2c593-9d8c-442d-b510-fdf1191dc247
         Status: DISABLED
       Options:
         WeekStart: SUNDAY
@@ -1594,31 +1646,31 @@ dashboards:
                 RowSpan: 1
               - ColumnIndex: 32
                 ColumnSpan: 4
-                ElementId: 9cab58fe-4a7b-441f-813c-8e270ecc415e
+                ElementId: b827bbb0-6519-4c30-8074-959620de44bd
                 ElementType: VISUAL
                 RowIndex: 0
                 RowSpan: 4
               - ColumnIndex: 18
                 ColumnSpan: 3
-                ElementId: 2d92bdc6-3a09-46a6-be5d-d8d68bde7510
+                ElementId: 4bd57cce-80db-481b-9d72-66f6c745ecff
                 ElementType: VISUAL
                 RowIndex: 1
                 RowSpan: 3
               - ColumnIndex: 21
                 ColumnSpan: 4
-                ElementId: 5a7afa1c-2f0a-41ea-a1cf-837b4974ddd5
+                ElementId: d90c8857-e046-4420-9507-184dfed6a8c8
                 ElementType: VISUAL
                 RowIndex: 1
                 RowSpan: 3
               - ColumnIndex: 25
                 ColumnSpan: 3
-                ElementId: c05d5962-9c4d-4288-b78a-f95432e7ea1e
+                ElementId: cfd78ce2-d890-402a-9e18-d092dae0a52e
                 ElementType: VISUAL
                 RowIndex: 1
                 RowSpan: 3
               - ColumnIndex: 28
                 ColumnSpan: 4
-                ElementId: a5f3de62-bb42-4ab1-9663-aa14492e8c2d
+                ElementId: f071a7da-3fc3-4268-94b2-9645aeabc71f
                 ElementType: VISUAL
                 RowIndex: 1
                 RowSpan: 3
@@ -1642,55 +1694,55 @@ dashboards:
                 RowSpan: 1
               - ColumnIndex: 0
                 ColumnSpan: 3
-                ElementId: d4b873df-e942-4137-bd07-78377f415516
+                ElementId: a87c4e38-0e9a-46cf-ad73-3ebdb932ed17
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
               - ColumnIndex: 3
                 ColumnSpan: 3
-                ElementId: 2f60ef03-8d70-44b7-8600-61ffb6fa2fcb
+                ElementId: 6002b12a-c7bb-4cda-9c33-b4bf95a2bd0f
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
               - ColumnIndex: 6
                 ColumnSpan: 3
-                ElementId: 63290c30-9460-4835-9af8-4107b9c9c8ce
+                ElementId: b51cd634-465e-46f2-8353-908f08359898
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
               - ColumnIndex: 9
                 ColumnSpan: 3
-                ElementId: 254723df-ac0d-4a55-8a06-cf90207665f5
+                ElementId: fc9855dc-ef8f-4cdb-b1b0-8293aa4551a6
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
               - ColumnIndex: 12
                 ColumnSpan: 6
-                ElementId: 33b8705f-5649-4854-9148-c949d28fc8db
+                ElementId: b7f0d97c-3192-47b9-b440-012174c8fe7a
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
               - ColumnIndex: 18
                 ColumnSpan: 3
-                ElementId: c362d456-30d4-4d91-a28a-6dc45b550b13
+                ElementId: b3c67013-e29d-4834-8c9e-6d2a9899bb2a
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
               - ColumnIndex: 21
                 ColumnSpan: 6
-                ElementId: 30220003-2712-4a70-9907-8864c37c3cd8
+                ElementId: a42c16a5-8958-4267-9638-2df115ad0d96
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
               - ColumnIndex: 27
                 ColumnSpan: 3
-                ElementId: 3ca3445a-b654-4e6c-b7eb-dc5cd46a363c
+                ElementId: c81f15de-be6b-4746-9e1e-30a443dc8c2c
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
               - ColumnIndex: 30
                 ColumnSpan: 6
-                ElementId: 5f51ae09-109c-4b53-aa9a-1207c40aa9cd
+                ElementId: 381f857a-db54-40a5-849a-6e085a6cde2f
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 3
@@ -1726,55 +1778,55 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 5
-                ElementId: 74fa5821-533e-4b28-9487-2567c6d6287b
+                ElementId: d453e4e8-23a2-4cda-bbe7-6afba37b8553
                 ElementType: VISUAL
                 RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 16
-                ElementId: d529e86b-e31f-425a-8892-f205d0e56555
+                ElementId: d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
                 ElementType: VISUAL
                 RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 21
                 ColumnSpan: 15
-                ElementId: fe91db41-7be4-460a-900c-958d82357a60
+                ElementId: 7e7c42d3-1779-401e-ba0b-2132c624a8b7
                 ElementType: VISUAL
                 RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 11
-                ElementId: 4645faaf-6ab8-4a64-8292-e49a1d91c88a
+                ElementId: 4fedfe04-9b70-4272-8c5d-4c53048c1697
                 ElementType: VISUAL
                 RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 11
                 ColumnSpan: 10
-                ElementId: 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
+                ElementId: ab339189-8bb5-4b9f-b0ec-52db1a23731c
                 ElementType: VISUAL
                 RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 21
                 ColumnSpan: 15
-                ElementId: 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
+                ElementId: 5bdbb7fc-6e87-4513-9e84-b55e85336084
                 ElementType: VISUAL
                 RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 21
-                ElementId: 663cc005-598c-4e19-b117-6097775755ca
+                ElementId: 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
                 ElementType: VISUAL
                 RowIndex: 27
                 RowSpan: 9
               - ColumnIndex: 21
                 ColumnSpan: 15
-                ElementId: 21435ffd-cafe-4c76-a488-8bc0783eddfc
+                ElementId: ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
                 ElementType: VISUAL
                 RowIndex: 27
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: a71d3551-53e9-461a-a061-d8708dbd4924
+                ElementId: 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
                 ElementType: VISUAL
                 RowIndex: 36
                 RowSpan: 10
@@ -1786,61 +1838,61 @@ dashboards:
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 13
-                ElementId: 286793a3-84ea-40b3-b6db-03619cc3287c
+                ElementId: 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
                 ElementType: VISUAL
                 RowIndex: 49
                 RowSpan: 6
               - ColumnIndex: 13
                 ColumnSpan: 10
-                ElementId: a5d89362-5535-4f1b-9ca6-eac65a7c91de
+                ElementId: e28800d3-3367-4440-981f-619d5c8d94ea
                 ElementType: VISUAL
                 RowIndex: 49
                 RowSpan: 6
               - ColumnIndex: 23
                 ColumnSpan: 13
-                ElementId: 1b7b4fb2-0223-4478-a47b-a27259ab5899
+                ElementId: 40d5f858-05f3-4639-a309-f68bc4f8a75d
                 ElementType: VISUAL
                 RowIndex: 49
                 RowSpan: 3
               - ColumnIndex: 23
                 ColumnSpan: 4
-                ElementId: eb6dec7a-737c-4ae8-a4a7-4604a70b8016
+                ElementId: 86844d15-25c7-43f3-8527-6fdeefd2ca27
                 ElementType: VISUAL
                 RowIndex: 52
                 RowSpan: 3
               - ColumnIndex: 27
                 ColumnSpan: 9
-                ElementId: ce7e93b0-0e27-4812-a31d-95df13df1700
+                ElementId: c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
                 ElementType: VISUAL
                 RowIndex: 52
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 23
-                ElementId: 04e58470-5724-4a4b-ae7c-ac2906b0f37a
+                ElementId: b68622db-5877-4778-bb9b-1a4ff98316ff
                 ElementType: VISUAL
                 RowIndex: 55
                 RowSpan: 13
               - ColumnIndex: 23
                 ColumnSpan: 4
-                ElementId: adaa4541-b923-4303-ae3a-34c854cc8a73
+                ElementId: c48b4269-ca15-41f1-a38f-dbe1658ee51a
                 ElementType: VISUAL
                 RowIndex: 55
                 RowSpan: 13
               - ColumnIndex: 27
                 ColumnSpan: 9
-                ElementId: e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
+                ElementId: 16105473-d44c-4100-85c0-91dc7ba57a77
                 ElementType: VISUAL
                 RowIndex: 55
                 RowSpan: 13
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 3d9d3bea-51f1-4956-82ec-eb09062737a5
+                ElementId: 65caef68-9bcf-48e1-a610-47aa36eb9d2a
                 ElementType: VISUAL
                 RowIndex: 68
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
+                ElementId: 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
                 ElementType: VISUAL
                 RowIndex: 79
                 RowSpan: 11
@@ -2104,7 +2156,7 @@ dashboards:
                 ElementId: 92f37959-21c8-4867-8020-81943aa17fd8
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
-        SheetId: ee110506-6d0c-4084-b414-bcd038f394f6
+        SheetId: 6ceb8dd8-5ee2-4299-88fe-98ebcf800ef5
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"32px\">\n    <b>Single event detail</b>\n\
             \  </inline>\n  <br/>\n  The tables below provide the description, affected\
@@ -2218,7 +2270,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: c05d5962-9c4d-4288-b78a-f95432e7ea1e
+            VisualId: cfd78ce2-d890-402a-9e18-d092dae0a52e
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2267,7 +2319,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 33b8705f-5649-4854-9148-c949d28fc8db
+            VisualId: b7f0d97c-3192-47b9-b440-012174c8fe7a
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2316,7 +2368,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 254723df-ac0d-4a55-8a06-cf90207665f5
+            VisualId: fc9855dc-ef8f-4cdb-b1b0-8293aa4551a6
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2365,7 +2417,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: d4b873df-e942-4137-bd07-78377f415516
+            VisualId: a87c4e38-0e9a-46cf-ad73-3ebdb932ed17
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -2376,23 +2428,23 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - a71d3551-53e9-461a-a061-d8708dbd4924
-                      - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 74fa5821-533e-4b28-9487-2567c6d6287b
-                      - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-                      - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-                      - fe91db41-7be4-460a-900c-958d82357a60
-                      - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
+                      - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+                      - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+                      - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+                      - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+                      - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+                      - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
               CustomActionId: f1c86807-4557-4a11-912c-a236a5f29f71
               Name: Action 1
               Status: ENABLED
@@ -2510,7 +2562,7 @@ dashboards:
                   \  <parameter>${StartTimeWarn}</parameter>\n  </inline>\n  <inline font-size=\"\
                   16px\">\_days</inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: d529e86b-e31f-425a-8892-f205d0e56555
+            VisualId: d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2560,7 +2612,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 3ca3445a-b654-4e6c-b7eb-dc5cd46a363c
+            VisualId: c81f15de-be6b-4746-9e1e-30a443dc8c2c
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2610,7 +2662,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: c362d456-30d4-4d91-a28a-6dc45b550b13
+            VisualId: b3c67013-e29d-4834-8c9e-6d2a9899bb2a
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2660,7 +2712,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 30220003-2712-4a70-9907-8864c37c3cd8
+            VisualId: a42c16a5-8958-4267-9638-2df115ad0d96
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2710,7 +2762,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 5f51ae09-109c-4b53-aa9a-1207c40aa9cd
+            VisualId: 381f857a-db54-40a5-849a-6e085a6cde2f
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2762,7 +2814,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: a5f3de62-bb42-4ab1-9663-aa14492e8c2d
+            VisualId: f071a7da-3fc3-4268-94b2-9645aeabc71f
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2811,7 +2863,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 2f60ef03-8d70-44b7-8600-61ffb6fa2fcb
+            VisualId: 6002b12a-c7bb-4cda-9c33-b4bf95a2bd0f
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2860,7 +2912,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 63290c30-9460-4835-9af8-4107b9c9c8ce
+            VisualId: b51cd634-465e-46f2-8353-908f08359898
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2909,7 +2961,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 2d92bdc6-3a09-46a6-be5d-d8d68bde7510
+            VisualId: 4bd57cce-80db-481b-9d72-66f6c745ecff
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -2919,23 +2971,23 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - d529e86b-e31f-425a-8892-f205d0e56555
-                      - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 74fa5821-533e-4b28-9487-2567c6d6287b
-                      - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-                      - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-                      - fe91db41-7be4-460a-900c-958d82357a60
-                      - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
+                      - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+                      - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+                      - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+                      - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+                      - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+                      - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
               CustomActionId: d10a5d07-fb97-44c6-8238-c94ee1e1ad85
               Name: Action 1
               Status: ENABLED
@@ -3113,7 +3165,7 @@ dashboards:
                     <inline font-size="16px">Event list</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: a71d3551-53e9-461a-a061-d8708dbd4924
+            VisualId: 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3123,24 +3175,24 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - d529e86b-e31f-425a-8892-f205d0e56555
-                      - a71d3551-53e9-461a-a061-d8708dbd4924
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 74fa5821-533e-4b28-9487-2567c6d6287b
-                      - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-                      - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-                      - fe91db41-7be4-460a-900c-958d82357a60
-                      - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-                      - 663cc005-598c-4e19-b117-6097775755ca
+                      - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+                      - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+                      - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+                      - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+                      - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+                      - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
+                      - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
               CustomActionId: fcb2d112-13af-4399-9114-a929169cc9b7
               Name: Action 1
               Status: ENABLED
@@ -3169,7 +3221,7 @@ dashboards:
                         ColumnName: region
                         DataSetIdentifier: health_events_view
                       FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.region.2.1716423683201
-                      HierarchyId: 0efb4e27-d070-440c-b3dc-255763353338
+                      HierarchyId: f8f40ef0-2394-42df-b4de-d912fd98ce4b
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
@@ -3226,7 +3278,7 @@ dashboards:
                 - ColumnName: Event ID
                   DataSetIdentifier: health_events_view
                 DrillDownFilters: []
-                HierarchyId: 0efb4e27-d070-440c-b3dc-255763353338
+                HierarchyId: f8f40ef0-2394-42df-b4de-d912fd98ce4b
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE</b>\n\
@@ -3241,13 +3293,13 @@ dashboards:
                     <inline font-size="16px">Services impacted (top 10 by resource impact count)</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
+            VisualId: ab339189-8bb5-4b9f-b0ec-52db1a23731c
         - TableVisual:
             Actions:
             - ActionOperations:
               - NavigationOperation:
                   LocalNavigationConfiguration:
-                    TargetSheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+                    TargetSheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
               - SetParametersOperation:
                   ParameterValueConfigurations:
                   - DestinationParameterName: EventArn
@@ -3303,7 +3355,7 @@ dashboards:
                     <inline font-size="16px">Event ARN</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: a5d89362-5535-4f1b-9ca6-eac65a7c91de
+            VisualId: e28800d3-3367-4440-981f-619d5c8d94ea
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -3314,10 +3366,10 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
               CustomActionId: 6889dcc1-a0da-4da1-8f50-e29192c7cca1
               Name: Action 1
               Status: ENABLED
@@ -3405,7 +3457,7 @@ dashboards:
                     <inline font-size="14px">Timing</inline>
                   </visual-title>
               Visibility: HIDDEN
-            VisualId: 1b7b4fb2-0223-4478-a47b-a27259ab5899
+            VisualId: 40d5f858-05f3-4639-a309-f68bc4f8a75d
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -3454,7 +3506,7 @@ dashboards:
                     <inline font-size="16px">Summary</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 286793a3-84ea-40b3-b6db-03619cc3287c
+            VisualId: 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -3496,7 +3548,7 @@ dashboards:
                     <inline font-size="16px">Impacted resources</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: ce7e93b0-0e27-4812-a31d-95df13df1700
+            VisualId: c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -3546,7 +3598,7 @@ dashboards:
                     <inline font-size="16px">Resource detail</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
+            VisualId: 16105473-d44c-4100-85c0-91dc7ba57a77
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -3584,7 +3636,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Event detail 3</visual-title>
               Visibility: HIDDEN
-            VisualId: e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
+            VisualId: 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -3622,7 +3674,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Event detail 2</visual-title>
               Visibility: HIDDEN
-            VisualId: 3d9d3bea-51f1-4956-82ec-eb09062737a5
+            VisualId: 65caef68-9bcf-48e1-a610-47aa36eb9d2a
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -3664,7 +3716,7 @@ dashboards:
                     <inline font-size="16px">Affected accounts</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: eb6dec7a-737c-4ae8-a4a7-4604a70b8016
+            VisualId: 86844d15-25c7-43f3-8527-6fdeefd2ca27
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -3674,7 +3726,7 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
               CustomActionId: aa4d69de-9272-48d9-99a8-763d42d2f829
               Name: Action 1
               Status: ENABLED
@@ -3736,7 +3788,7 @@ dashboards:
                     <inline font-size="16px">Accounts | Resources</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: adaa4541-b923-4303-ae3a-34c854cc8a73
+            VisualId: c48b4269-ca15-41f1-a38f-dbe1658ee51a
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3747,24 +3799,24 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - d529e86b-e31f-425a-8892-f205d0e56555
-                      - a71d3551-53e9-461a-a061-d8708dbd4924
-                      - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-                      - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-                      - fe91db41-7be4-460a-900c-958d82357a60
-                      - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-                      - 663cc005-598c-4e19-b117-6097775755ca
+                      - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+                      - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+                      - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+                      - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+                      - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+                      - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
+                      - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
               CustomActionId: 9e6fdaa4-d763-4e8e-b6a5-d2a5a27fc77c
               Name: Action 1
               Status: ENABLED
@@ -3888,7 +3940,7 @@ dashboards:
                     <inline font-size="16px">Event category and status</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 74fa5821-533e-4b28-9487-2567c6d6287b
+            VisualId: d453e4e8-23a2-4cda-bbe7-6afba37b8553
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3899,24 +3951,24 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - d529e86b-e31f-425a-8892-f205d0e56555
-                      - a71d3551-53e9-461a-a061-d8708dbd4924
-                      - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 74fa5821-533e-4b28-9487-2567c6d6287b
-                      - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-                      - fe91db41-7be4-460a-900c-958d82357a60
-                      - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-                      - 663cc005-598c-4e19-b117-6097775755ca
+                      - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+                      - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+                      - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+                      - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+                      - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+                      - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
+                      - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
               CustomActionId: e435aeb6-5569-41d2-bdeb-4cf4d962f713
               Name: Action 1
               Status: ENABLED
@@ -3949,7 +4001,7 @@ dashboards:
                         ColumnName: account_name
                         DataSetIdentifier: health_events_view
                       FieldId: 1bb2f045-5cc6-4823-b28a-21a475c22844.account_name.2.1716423593652
-                      HierarchyId: fe154915-930a-4c47-b0a1-e4346051d2e5
+                      HierarchyId: 3c4a180e-ff91-4589-a58e-529afc86f2e2
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
@@ -4008,7 +4060,7 @@ dashboards:
                 - ColumnName: status_code
                   DataSetIdentifier: health_events_view
                 DrillDownFilters: []
-                HierarchyId: fe154915-930a-4c47-b0a1-e4346051d2e5
+                HierarchyId: 3c4a180e-ff91-4589-a58e-529afc86f2e2
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE\_\
@@ -4023,7 +4075,7 @@ dashboards:
                     <inline font-size="16px">Deprecating version impact</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 4645faaf-6ab8-4a64-8292-e49a1d91c88a
+            VisualId: 4fedfe04-9b70-4272-8c5d-4c53048c1697
         - PieChartVisual:
             Actions:
             - ActionOperations:
@@ -4033,24 +4085,24 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - d529e86b-e31f-425a-8892-f205d0e56555
-                      - a71d3551-53e9-461a-a061-d8708dbd4924
-                      - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 74fa5821-533e-4b28-9487-2567c6d6287b
-                      - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-                      - fe91db41-7be4-460a-900c-958d82357a60
-                      - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-                      - 663cc005-598c-4e19-b117-6097775755ca
+                      - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+                      - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+                      - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+                      - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+                      - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+                      - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
+                      - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
               CustomActionId: 53287a73-7051-492f-b971-4124004dd8d7
               Name: Action 1
               Status: ENABLED
@@ -4131,7 +4183,7 @@ dashboards:
                     <inline font-size="16px">Event codes (top 10)</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
+            VisualId: 5bdbb7fc-6e87-4513-9e84-b55e85336084
         - ComboChartVisual:
             Actions:
             - ActionOperations:
@@ -4142,23 +4194,23 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - d529e86b-e31f-425a-8892-f205d0e56555
-                      - a71d3551-53e9-461a-a061-d8708dbd4924
-                      - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 74fa5821-533e-4b28-9487-2567c6d6287b
-                      - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-                      - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-                      - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
+                      - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+                      - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+                      - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+                      - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+                      - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+                      - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
               CustomActionId: 25f7b0ff-8eb6-4c56-aba3-56239ba23cc3
               Name: Action 1
               Status: ENABLED
@@ -4196,14 +4248,14 @@ dashboards:
                         DataSetIdentifier: health_events_view
                       DateGranularity: WEEK
                       FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.start_time.0.1707844363013
-                      HierarchyId: 8665c6a7-1366-46dd-b84b-d8839389859f
+                      HierarchyId: e2284d15-ea84-448f-bcf7-1b9ecff139d8
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Event ID
                         DataSetIdentifier: health_events_view
                       FieldId: be95ee21-3edb-4a9c-93d4-7cd392782e71.3.1711658988228
-                      HierarchyId: e025086e-3c01-40a6-9d9a-af9f8a102d6a
+                      HierarchyId: 9ba14d6b-d23c-4712-9e5e-e77478892586
                   LineValues: []
               Legend:
                 Title:
@@ -4250,7 +4302,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 8665c6a7-1366-46dd-b84b-d8839389859f
+                HierarchyId: e2284d15-ea84-448f-bcf7-1b9ecff139d8
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: Event ID
@@ -4258,7 +4310,7 @@ dashboards:
                 - ColumnName: event_category
                   DataSetIdentifier: health_events_view
                 DrillDownFilters: []
-                HierarchyId: e025086e-3c01-40a6-9d9a-af9f8a102d6a
+                HierarchyId: 9ba14d6b-d23c-4712-9e5e-e77478892586
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>\n  <inline font-size=\"12px\">\n    <b>USE\_\
@@ -4274,7 +4326,7 @@ dashboards:
                     <inline font-size="16px">Schedule for impacted resources</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: fe91db41-7be4-460a-900c-958d82357a60
+            VisualId: 7e7c42d3-1779-401e-ba0b-2132c624a8b7
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -4284,24 +4336,24 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - d529e86b-e31f-425a-8892-f205d0e56555
-                      - a71d3551-53e9-461a-a061-d8708dbd4924
-                      - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 74fa5821-533e-4b28-9487-2567c6d6287b
-                      - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-                      - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-                      - fe91db41-7be4-460a-900c-958d82357a60
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
-                      - 663cc005-598c-4e19-b117-6097775755ca
+                      - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+                      - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+                      - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+                      - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+                      - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+                      - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
+                      - 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
               CustomActionId: eb3d80ab-ced2-4794-b885-62fb8a0d924a
               Name: Action 1
               Status: ENABLED
@@ -4397,7 +4449,7 @@ dashboards:
                     <inline font-size="16px">Event codes</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 21435ffd-cafe-4c76-a488-8bc0783eddfc
+            VisualId: ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -4438,7 +4490,7 @@ dashboards:
                     <inline font-size="16px">Description</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 04e58470-5724-4a4b-ae7c-ac2906b0f37a
+            VisualId: b68622db-5877-4778-bb9b-1a4ff98316ff
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -4487,7 +4539,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 5a7afa1c-2f0a-41ea-a1cf-837b4974ddd5
+            VisualId: d90c8857-e046-4420-9507-184dfed6a8c8
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -4531,7 +4583,7 @@ dashboards:
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 9cab58fe-4a7b-441f-813c-8e270ecc415e
+            VisualId: b827bbb0-6519-4c30-8074-959620de44bd
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -4541,24 +4593,24 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - d529e86b-e31f-425a-8892-f205d0e56555
-                      - a71d3551-53e9-461a-a061-d8708dbd4924
-                      - 78c8d772-9ca7-4e7f-bdbe-4ea3977528f1
-                      - a5d89362-5535-4f1b-9ca6-eac65a7c91de
-                      - 1b7b4fb2-0223-4478-a47b-a27259ab5899
-                      - 286793a3-84ea-40b3-b6db-03619cc3287c
-                      - ce7e93b0-0e27-4812-a31d-95df13df1700
-                      - e6f1d9bd-e0fa-4c81-8637-b1e6c606c954
-                      - e044ae58-0bbc-4049-a5a3-e3c3bf614fa2
-                      - 3d9d3bea-51f1-4956-82ec-eb09062737a5
-                      - eb6dec7a-737c-4ae8-a4a7-4604a70b8016
-                      - adaa4541-b923-4303-ae3a-34c854cc8a73
-                      - 74fa5821-533e-4b28-9487-2567c6d6287b
-                      - 4645faaf-6ab8-4a64-8292-e49a1d91c88a
-                      - 17d1ec83-a8dc-4add-9888-6e6ea0b86bb3
-                      - fe91db41-7be4-460a-900c-958d82357a60
-                      - 21435ffd-cafe-4c76-a488-8bc0783eddfc
-                      - 04e58470-5724-4a4b-ae7c-ac2906b0f37a
+                      - d6ea0418-a2ad-4cb6-bcff-26df2dda1cbc
+                      - 6257fbcd-a781-4bc9-9aab-dfdb0436f3da
+                      - ab339189-8bb5-4b9f-b0ec-52db1a23731c
+                      - e28800d3-3367-4440-981f-619d5c8d94ea
+                      - 40d5f858-05f3-4639-a309-f68bc4f8a75d
+                      - 6be8ca48-dd3a-45fb-9a06-ce31e0a18b02
+                      - c61bbfd2-e9cd-440d-9b1f-e96c9c07eb91
+                      - 16105473-d44c-4100-85c0-91dc7ba57a77
+                      - 1ca7c1fb-cc8c-452e-ac74-8e8121a0bf90
+                      - 65caef68-9bcf-48e1-a610-47aa36eb9d2a
+                      - 86844d15-25c7-43f3-8527-6fdeefd2ca27
+                      - c48b4269-ca15-41f1-a38f-dbe1658ee51a
+                      - d453e4e8-23a2-4cda-bbe7-6afba37b8553
+                      - 4fedfe04-9b70-4272-8c5d-4c53048c1697
+                      - 5bdbb7fc-6e87-4513-9e84-b55e85336084
+                      - 7e7c42d3-1779-401e-ba0b-2132c624a8b7
+                      - ee5246ae-df0b-4e9d-93b0-5c6c2a2f2e19
+                      - b68622db-5877-4778-bb9b-1a4ff98316ff
               CustomActionId: de2d7a02-4422-4d9d-9cfa-51fbba734e99
               Name: Action 1
               Status: ENABLED
@@ -4648,7 +4700,7 @@ dashboards:
                     <inline font-size="16px">Resources impacted by multiple events</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 663cc005-598c-4e19-b117-6097775755ca
+            VisualId: 4b3bcdfa-235c-4ddb-b4cc-edfa01fde9ed
       - ContentType: INTERACTIVE
         FilterControls:
         - Dropdown:
@@ -4718,7 +4770,7 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 34
-                ElementId: 1b8cb135-a374-4c63-b5c7-5bea018f456d
+                ElementId: cc377b76-049a-41c6-aa05-3ceb1df50d50
                 ElementType: VISUAL
                 RowIndex: 6
                 RowSpan: 17
@@ -4866,7 +4918,7 @@ dashboards:
             SourceParameterName: DeprecatedVersion
             Title: Deprecation
             Type: MULTI_SELECT
-        SheetId: 938a4a3f-3af3-495b-af0e-b6b74661c587
+        SheetId: 8f06442b-64fe-42bd-bab8-d9a167d6c81b
         TextBoxes:
         - Content: |-
             <text-box>
@@ -4896,33 +4948,36 @@ dashboards:
                 - CustomLabel: Region
                   FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.region.9.1707845032542
                   Width: 111px
-                - CustomLabel: Event code
-                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_code.7.1712336116353
-                  Width: 284px
+                - FieldId: dd3891d4-7a1b-40bb-81f2-38d5d4e617df.11.1719445300009
+                  Width: 279px
                 - CustomLabel: Category
                   FieldId: c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
-                  Width: 67px
+                  Width: 49px
                 - CustomLabel: Status
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.status_code.9.1712339529632
                   Width: 75px
-                - CustomLabel: Resource
-                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.8.1712338097398
-                  Width: 316px
-                - CustomLabel: Deprecation
-                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.deprecated_versions.8.1712338656410
-                  Width: 156px
+                - FieldId: 9791a5a2-415d-4fb2-9599-33fb3e6beeb7.11.1719445460663
+                  Width: 587px
                 - CustomLabel: Status
                   FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.affected_entity_status_code.8.1709179099273
                   Width: 92px
                 - CustomLabel: Tags
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.tags.10.1712614773843
                   Width: 51px
+                - CustomLabel: Resource
+                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.8.1712338097398
+                  Width: 316px
                 - CustomLabel: Event
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.9.1712340063394
-                  Width: 54px
+                  Width: 100px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: account_id
+                        DataSetIdentifier: health_events_view
+                      FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.account_id.12.1719445497242
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Account name
@@ -4945,9 +5000,9 @@ dashboards:
                       FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.region.9.1707845032542
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: event_code
+                        ColumnName: Title
                         DataSetIdentifier: health_events_view
-                      FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_code.7.1712336116353
+                      FieldId: dd3891d4-7a1b-40bb-81f2-38d5d4e617df.11.1719445300009
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Event category
@@ -4960,17 +5015,9 @@ dashboards:
                       FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.status_code.9.1712339529632
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: affected_entity_value
+                        ColumnName: Affected resource
                         DataSetIdentifier: health_events_view
-                      FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.8.1712338097398
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: deprecated_versions
-                        DataSetIdentifier: health_events_view
-                      FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.deprecated_versions.8.1712338656410
-                      FormatConfiguration:
-                        NullValueFormatConfiguration:
-                          NullString: n/a
+                      FieldId: 9791a5a2-415d-4fb2-9599-33fb3e6beeb7.11.1719445460663
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: affected_entity_status_code
@@ -4985,6 +5032,11 @@ dashboards:
                         DataSetIdentifier: health_events_view
                       FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.tags.10.1712614773843
                       FormatConfiguration: {}
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: affected_entity_value
+                        DataSetIdentifier: health_events_view
+                      FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.8.1712338097398
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: event_arn
@@ -5018,7 +5070,7 @@ dashboards:
                     <inline font-size="16px">Impacted resources</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 1b8cb135-a374-4c63-b5c7-5bea018f456d
+            VisualId: cc377b76-049a-41c6-aa05-3ceb1df50d50
       - ContentType: INTERACTIVE
         FilterControls:
         - Dropdown:
@@ -5088,34 +5140,44 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 13
-                ElementId: a6786e51-c7b0-451e-ae12-b882fbd822e6
+                ElementId: 23fbdafe-687f-4bf4-9756-5dad3fb4c83a
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 6
               - ColumnIndex: 13
                 ColumnSpan: 12
-                ElementId: 9a770095-7b21-47a3-917d-056b06c6c611
+                ElementId: f9810724-37a5-4c2d-b8e2-b090787c4eb7
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 6
               - ColumnIndex: 25
                 ColumnSpan: 10
-                ElementId: a215ba3a-2a7d-4ad0-a849-49e6efeeec07
+                ElementId: b83428d4-1a69-4018-a297-b7936186541e
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 9614a965-b689-4401-a5cf-36cf2279942f
+                ElementId: 61b62e52-7ad7-4b06-9d2e-db8dd376fe31
                 ElementType: VISUAL
                 RowIndex: 10
                 RowSpan: 17
               - ColumnIndex: 0
                 ColumnSpan: 20
-                ElementId: cf86bd71-81d5-4442-b028-50b8d141409a
+                ElementId: 2f3906c4-23db-4cb9-a027-40a2b1c29468
                 ElementType: VISUAL
                 RowIndex: 27
                 RowSpan: 14
+              - ColumnIndex: 20
+                ColumnSpan: 15
+                ElementId: 470087da-9454-4691-8c86-3800b3855e39
+                ElementType: VISUAL
+                RowIndex: 27
+                RowSpan: 14
+              - ColumnSpan: 35
+                ElementId: edc2c593-9d8c-442d-b510-fdf1191dc247
+                ElementType: VISUAL
+                RowSpan: 17
         Name: Event explorer
         ParameterControls:
         - Dropdown:
@@ -5260,16 +5322,311 @@ dashboards:
             SourceParameterName: DeprecatedVersion
             Title: Deprecation
             Type: MULTI_SELECT
-        SheetId: b8fad374-84e7-412b-9adc-b503f397d3a5
+        SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
         TextBoxes:
         - Content: |-
             <text-box>
               <inline font-size="36px">Event explorer</inline>
               <br/>
-              This sheet is provided to explore events in a simple tabular format. The content of the table can be exported as a list of resources impacted by the specific event.
+              Verify the Timeine, Accounts and Services (click any visual to filter). Then focus on event Title and check the description and list of Affected Resources below.
             </text-box>
           SheetTextBoxId: 756d0bbc-18f8-421e-a38a-74602aead656
         Visuals:
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.11.1718207815820
+                    - c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
+                    - c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
+                    - 605dc709-ffe1-4fe7-8d1d-b8c555b3e876.11.1718626491000
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 1e1d0eeb-5d07-4574-b310-c82bf194d137
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                CollapseStateOptions:
+                - State: COLLAPSED
+                  Target:
+                    FieldId: 605dc709-ffe1-4fe7-8d1d-b8c555b3e876.11.1718626491000
+                - State: COLLAPSED
+                  Target:
+                    FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_description1.12.1718223287812
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: 605dc709-ffe1-4fe7-8d1d-b8c555b3e876.11.1718626491000
+                    FieldValue: Title
+                  Width: 378px
+                - DataPathList:
+                  - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_description1.12.1718223287812
+                    FieldValue: event_description1
+                  Width: 300px
+                - DataPathList:
+                  - FieldId: 12b76ea4-f74c-4528-801a-d97dc5cd1950.9.1718781369135
+                    FieldValue: Affected resource
+                  Width: 197px
+                - DataPathList:
+                  - FieldId: 11e7d079-a2b8-462f-96c5-de99fd156a84.10.1715216901267
+                    FieldValue: Account name
+                  Width: 126px
+                - DataPathList:
+                  - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.11.1718207815820
+                    FieldValue: start_time
+                  Width: 118px
+                - DataPathList:
+                  - FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
+                    FieldValue: service
+                  Width: 72px
+                - DataPathList:
+                  - FieldId: c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
+                    FieldValue: Event category
+                  Width: 71px
+                SelectedFieldOptions:
+                - CustomLabel: Account Name
+                  FieldId: 11e7d079-a2b8-462f-96c5-de99fd156a84.10.1715216901267
+                  Visibility: VISIBLE
+                - CustomLabel: Service
+                  FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
+                  Visibility: VISIBLE
+                - FieldId: 12b76ea4-f74c-4528-801a-d97dc5cd1950.9.1718781369135
+                  Visibility: VISIBLE
+                - CustomLabel: Category
+                  FieldId: c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
+                  Visibility: VISIBLE
+                - CustomLabel: Start time
+                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.11.1718207815820
+                  Visibility: VISIBLE
+                - FieldId: 605dc709-ffe1-4fe7-8d1d-b8c555b3e876.11.1718626491000
+                  Visibility: VISIBLE
+                - CustomLabel: Description
+                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_description1.12.1718223287812
+                  Visibility: VISIBLE
+                - CustomLabel: Status
+                  FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+                  Visibility: VISIBLE
+                - CustomLabel: Resources
+                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1718223645879
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Status
+                        DataSetIdentifier: health_events_view
+                      FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+                  Rows:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Account name
+                        DataSetIdentifier: health_events_view
+                      FieldId: 11e7d079-a2b8-462f-96c5-de99fd156a84.10.1715216901267
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: service
+                        DataSetIdentifier: health_events_view
+                      FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Affected resource
+                        DataSetIdentifier: health_events_view
+                      FieldId: 12b76ea4-f74c-4528-801a-d97dc5cd1950.9.1718781369135
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Event category
+                        DataSetIdentifier: health_events_view
+                      FieldId: c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: start_time
+                        DataSetIdentifier: health_events_view
+                      FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.11.1718207815820
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Title
+                        DataSetIdentifier: health_events_view
+                      FieldId: 605dc709-ffe1-4fe7-8d1d-b8c555b3e876.11.1718626491000
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: event_description1
+                        DataSetIdentifier: health_events_view
+                      FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_description1.12.1718223287812
+                  Values:
+                  - CategoricalMeasureField:
+                      AggregationFunction: DISTINCT_COUNT
+                      Column:
+                        ColumnName: affected_entity_value
+                        DataSetIdentifier: health_events_view
+                      FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1718223645879
+              SortConfiguration:
+                FieldSortOptions:
+                - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.11.1718207815820
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.11.1718207815820
+                - FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+                  SortBy:
+                    Field:
+                      Direction: ASC
+                      FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+              TableOptions:
+                CellStyle:
+                  Height: 30
+                ColumnHeaderStyle:
+                  BackgroundColor: '#0A2533'
+                  Height: 25
+                  TextWrap: WRAP
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle:
+                  BackgroundColor: '#0A2533'
+                  Height: 25
+                  TextWrap: WRAP
+                RowsLayout: TABULAR
+              TotalOptions:
+                ColumnTotalOptions:
+                  TotalsVisibility: HIDDEN
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: HIDDEN
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  TotalsVisibility: HIDDEN
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Cell:
+                  FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1718223645879
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    BackgroundColor:
+                      Gradient:
+                        Color:
+                          Stops:
+                          - Color: '#FFFFFF'
+                            GradientOffset: 0.0
+                          - Color: '#39ABDC'
+                            GradientOffset: 100.0
+                        Expression: DISTINCT_COUNT({affected_entity_value})
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Resources View</visual-title>
+              Visibility: VISIBLE
+            VisualId: edc2c593-9d8c-442d-b510-fdf1191dc247
+        - TableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
+                    - c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 3d6d5eb1-731a-4fc2-a619-7d7339549f3a
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                Order: []
+                SelectedFieldOptions:
+                - FieldId: 12b76ea4-f74c-4528-801a-d97dc5cd1950.9.1718781369135
+                  Width: 331px
+                - CustomLabel: Service
+                  FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
+                - CustomLabel: Region
+                  FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.region.9.1707845032542
+                - CustomLabel: Account Name
+                  FieldId: 11e7d079-a2b8-462f-96c5-de99fd156a84.10.1715216901267
+                  Width: 153px
+                - CustomLabel: Category
+                  FieldId: c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
+                  Width: 34px
+                - CustomLabel: Status
+                  FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+                  Width: 111px
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Affected resource
+                        DataSetIdentifier: health_events_view
+                      FieldId: 12b76ea4-f74c-4528-801a-d97dc5cd1950.9.1718781369135
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: service
+                        DataSetIdentifier: health_events_view
+                      FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: region
+                        DataSetIdentifier: health_events_view
+                      FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.region.9.1707845032542
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Account name
+                        DataSetIdentifier: health_events_view
+                      FieldId: 11e7d079-a2b8-462f-96c5-de99fd156a84.10.1715216901267
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Event category
+                        DataSetIdentifier: health_events_view
+                      FieldId: c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Status
+                        DataSetIdentifier: health_events_view
+                      FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+                  Values:
+                  - CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: affected_entity_value
+                        DataSetIdentifier: health_events_view
+                      FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.affected_entity_value.7.1719443175624
+              SortConfiguration: {}
+              TableOptions:
+                CellStyle:
+                  Height: 30
+                HeaderStyle:
+                  BackgroundColor: '#0A2533'
+                  Height: 25
+                  TextWrap: WRAP
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+              TotalOptions:
+                Placement: END
+                TotalsVisibility: VISIBLE
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="16px">Impacted resources</inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: 470087da-9454-4691-8c86-3800b3855e39
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -5351,7 +5708,7 @@ dashboards:
                 RichText: "<visual-title>\n  <inline font-size=\"16px\">Description\_</inline>\n\
                   </visual-title>"
               Visibility: VISIBLE
-            VisualId: cf86bd71-81d5-4442-b028-50b8d141409a
+            VisualId: 2f3906c4-23db-4cb9-a027-40a2b1c29468
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -5368,12 +5725,6 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: STACKED
-              CategoryAxis:
-                ScrollbarOptions:
-                  VisibleRange:
-                    PercentRange:
-                      From: 80.00000000000001
-                      To: 100.0
               DataLabels:
                 DataLabelTypes:
                 - DataPathLabelType:
@@ -5392,7 +5743,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status Icon
+                        ColumnName: Status
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                   Values:
@@ -5421,13 +5772,13 @@ dashboards:
                   AggregationVisibility: HIDDEN
                   TooltipFields:
                   - FieldTooltipItem:
-                      FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.affected_entity_arn.1.1718781970879
-                      Visibility: VISIBLE
-                  - FieldTooltipItem:
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                       Visibility: VISIBLE
                   - FieldTooltipItem:
                       FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.service.2.1718782883306
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.affected_entity_arn.1.1718781970879
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
@@ -5446,14 +5797,27 @@ dashboards:
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                     FieldValue: "\u23F3 soon"
+                - Color: '#DE3B00'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: PENDING
+                - Color: '#2CAD00'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: RESOLVED
+                - Color: '#AAAAAA'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
             ColumnHierarchies: []
             Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Click to focus on Service</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Affected Resources By Service</visual-title>
               Visibility: VISIBLE
-            VisualId: a215ba3a-2a7d-4ad0-a849-49e6efeeec07
+            VisualId: b83428d4-1a69-4018-a297-b7936186541e
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -5491,11 +5855,11 @@ dashboards:
                         ColumnName: start_time
                         DataSetIdentifier: health_events_view
                       FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.start_time.2.1718782486107
-                      HierarchyId: a8e62954-953a-4ad1-88c9-15a75df36114.start_time.2.1718782486107
+                      HierarchyId: 4d8be956-1445-44d8-b8c3-c04bcaa14b02
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status Icon
+                        ColumnName: Status
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                   Values:
@@ -5549,25 +5913,48 @@ dashboards:
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                     FieldValue: "\u23F3 soon"
+                - Color: '#DE3B00'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: PENDING
+                - Color: '#2CAD00'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: RESOLVED
+                - Color: '#AAAAAA'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                - Color: '#0251D3'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: UNIMPAIRED
+                - Color: '#863CFF'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: IMPAIRED
             ColumnHierarchies:
             - DateTimeHierarchy:
-                HierarchyId: a8e62954-953a-4ad1-88c9-15a75df36114.start_time.2.1718782486107
+                DrillDownFilters: []
+                HierarchyId: 4d8be956-1445-44d8-b8c3-c04bcaa14b02
             Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Click to focus on Date</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: <visual-title>Affected Resources By Start Time</visual-title>
+                RichText: <visual-title>Timeline</visual-title>
               Visibility: VISIBLE
-            VisualId: a6786e51-c7b0-451e-ae12-b882fbd822e6
+            VisualId: 23fbdafe-687f-4bf4-9756-5dad3fb4c83a
         - PivotTableVisual:
             Actions:
             - ActionOperations:
               - FilterOperation:
                   SelectedFieldsConfiguration:
                     SelectedFields:
+                    - 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.11.1718207815820
                     - c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
-                    - 605dc709-ffe1-4fe7-8d1d-b8c555b3e876.11.1718626491000
                     - c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
+                    - 605dc709-ffe1-4fe7-8d1d-b8c555b3e876.11.1718626491000
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisualOptions: ALL_VISUALS
@@ -5616,9 +6003,34 @@ dashboards:
                     FieldValue: event_description1
                   Width: 107px
                 - DataPathList:
+                  - DataPathType: {}
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+                    FieldValue: RESOLVED
+                  - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1718223645879
+                    FieldValue: affected_entity_value
+                  Width: 88px
+                - DataPathList:
+                  - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1718223645879
+                    FieldValue: affected_entity_value
+                  Width: 86px
+                - DataPathList:
+                  - DataPathType: {}
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+                    FieldValue: Total
+                  - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1718223645879
+                    FieldValue: affected_entity_value
+                  Width: 81px
+                - DataPathList:
+                  - DataPathType: {}
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
+                    FieldValue: PENDING
+                  - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1718223645879
+                    FieldValue: affected_entity_value
+                  Width: 80px
+                - DataPathList:
                   - FieldId: c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
                     FieldValue: Event category
-                  Width: 72px
+                  Width: 71px
                 SelectedFieldOptions:
                 - CustomLabel: Start time
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.11.1718207815820
@@ -5653,7 +6065,7 @@ dashboards:
                   Columns:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status Icon
+                        ColumnName: Status
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
                   Rows:
@@ -5733,7 +6145,7 @@ dashboards:
                 RowsLayout: TABULAR
               TotalOptions:
                 ColumnTotalOptions:
-                  TotalsVisibility: HIDDEN
+                  TotalsVisibility: VISIBLE
                 RowSubtotalOptions:
                   CustomLabel: <<$aws:subtotalDimension>> Subtotal
                   MetricHeaderCellStyle: {}
@@ -5767,24 +6179,17 @@ dashboards:
                 RichText: "<visual-subtitle>\n  <inline color=\"#f97d2a\" font-size=\"12px\"\
                   >\n    <b>CATEGORY KEY:</b>\n  </inline>\n  <inline color=\"#c7c7c7\"\
                   \ font-size=\"12px\">\n    <b>\_&#128293;= ISSUE   &#128276;= NOTIFICATION\
-                  \   &#128198;=SCHEDULED CHANGE   &#128269;= INVESTIGATION</b>\n  </inline>\n\
-                  \  <br/>\n  <inline color=\"#f97d2a\" font-size=\"12px\">\n    <b>STATUS\
-                  \ KEY:</b>\n  </inline>\n  <inline color=\"#c7c7c7\" font-size=\"12px\"\
-                  >\n    <b>\_</b>\n  </inline>\n  <inline color=\"#279392\">&#128680;</inline>\n\
-                  \  <inline color=\"#c7c7c7\" font-size=\"12px\">\n    <b>= OPEN\_\_\_\
-                  </b>\n  </inline>\n  <inline color=\"#279392\">\u2705</inline>\n  <inline\
-                  \ color=\"#c7c7c7\" font-size=\"12px\">\n    <b>= CLOSED\_\_\_</b>\n \
-                  \ </inline>\n  <inline color=\"#279392\">\u23F3</inline>\n  <inline color=\"\
-                  #c7c7c7\" font-size=\"12px\">\n    <b>=UPCOMING</b>\n  </inline>\n</visual-subtitle>"
+                  \   &#128198;=SCHEDULED CHANGE   &#128269;= INVESTIGATION            \
+                  \     Click on Title to filter</b>\n  </inline>\n</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Impacted resources</inline>
+                    <inline font-size="16px">Events</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 9614a965-b689-4401-a5cf-36cf2279942f
+            VisualId: 61b62e52-7ad7-4b06-9d2e-db8dd376fe31
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -5819,7 +6224,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status Icon
+                        ColumnName: Status
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                   Values:
@@ -5873,14 +6278,27 @@ dashboards:
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                     FieldValue: "\u23F3 soon"
+                - Color: '#2CAD00'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: RESOLVED
+                - Color: '#DE3B00'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: PENDING
+                - Color: '#AAAAAA'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
             ColumnHierarchies: []
             Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Click to focus on Account</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Affected Resources By Account</visual-title>
               Visibility: VISIBLE
-            VisualId: 9a770095-7b21-47a3-917d-056b06c6c611
+            VisualId: f9810724-37a5-4c2d-b8e2-b090787c4eb7
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -5892,18 +6310,18 @@ dashboards:
               Elements:
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 12c6795b-43f3-4732-98fa-89525f5328ef
+                ElementId: bae2bed8-57e9-48b5-8aab-0381121c8bed
                 ElementType: VISUAL
                 RowIndex: 0
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: da39879a-97f1-447f-b742-a521ff24704e
+                ElementId: 9d5e8de0-fa43-479e-8700-1fb4be4c2809
                 ElementType: VISUAL
                 RowIndex: 8
                 RowSpan: 12
         Name: About
-        SheetId: fc2454b3-d187-40c7-9c26-dbc95cfa16a5
+        SheetId: 94646b39-4cc2-4f52-8022-226d0ed7d3ae
         Visuals:
         - InsightVisual:
             Actions: []
@@ -5931,7 +6349,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: VISIBLE
-            VisualId: 12c6795b-43f3-4732-98fa-89525f5328ef
+            VisualId: bae2bed8-57e9-48b5-8aab-0381121c8bed
         - InsightVisual:
             Actions: []
             DataSetIdentifier: health_events_view
@@ -5942,7 +6360,7 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US\"\
                   \ target=\"_blank\">\n        <b>Heath Events Dashboard</b>\n      </a>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ font-size=\"68.8px\">\n      <b>v1.0.3</b>\n    </inline>\n  </block>\n\
+                  \ font-size=\"68.8px\">\n      <b>v1.0.4</b>\n    </inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
                   />\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"\
                   />\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"\
@@ -5964,7 +6382,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: VISIBLE
-            VisualId: da39879a-97f1-447f-b742-a521ff24704e
+            VisualId: 9d5e8de0-fa43-479e-8700-1fb4be4c2809
 datasets:
   health_events_view:
     data:
