@@ -458,6 +458,7 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-CURCreator
 
         - Sid: S3
           Action:

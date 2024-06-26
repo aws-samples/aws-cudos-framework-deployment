@@ -252,7 +252,6 @@ Conditions:
     Fn::And:
       - !Condition NeedDataBucketsKms
       - !Condition NeedCURTable
-  NeedDatasource: !Not [ !Equals [ !Ref "AWS::Region", "eu-west-3" ] ] # In eu-west-3 CFN QS Dataset resource is not available yet.
   NeedLakeFormationEnabled:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
@@ -265,14 +264,8 @@ Conditions:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
       - !Condition NeedCURTable
-  UseQuickSightDataSourceRole:
-    Fn::And:
-      - !Condition NeedDatasource
-      - !Not [!Equals [ !Ref QuickSightDataSourceRoleName, "" ]]
-  NeedQuickSightDataSourceRole:
-    Fn::And:
-      - !Condition NeedDatasource
-      - !Equals [ !Ref QuickSightDataSourceRoleName, "CidQuickSightDataSourceRole" ]
+  UseQuickSightDataSourceRole: !Not [!Equals [ !Ref QuickSightDataSourceRoleName, "" ]]
+  NeedQuickSightDataSourceRole: !Equals [ !Ref QuickSightDataSourceRoleName, "CidQuickSightDataSourceRole" ]
   NeedQuickSightDataSourceRoleAndCUR:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
@@ -1258,7 +1251,6 @@ Resources:
 
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
-    Condition: NeedDatasource
     Properties:
       AwsAccountId: !Sub '${AWS::AccountId}'
       Type: ATHENA
@@ -1634,7 +1626,7 @@ Resources:
       Dashboard:
         dashboard-id: cost_intelligence_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
@@ -1654,7 +1646,7 @@ Resources:
       Dashboard:
         dashboard-id: cudos
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
@@ -1676,7 +1668,7 @@ Resources:
       Dashboard:
         dashboard-id: cudos-v5
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
@@ -1698,7 +1690,7 @@ Resources:
       Dashboard:
         dashboard-id: kpi_dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
@@ -1723,7 +1715,7 @@ Resources:
       Dashboard:
         dashboard-id: ta-organizational-view
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
@@ -1743,7 +1735,7 @@ Resources:
       Dashboard:
         dashboard-id: compute-optimizer-dashboard
         athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog

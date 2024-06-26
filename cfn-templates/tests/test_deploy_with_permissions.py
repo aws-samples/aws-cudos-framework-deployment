@@ -65,8 +65,8 @@ def upload_to_s3(filename, path=None): # move to tools
     s3c = boto3.client('s3')
     bucket = TMP_BUCKET
     try:
-        s3c.create_bucket(Bucket=bucket)
-    except s3c.exceptions.BucketAlreadyExists:
+        s3c.create_bucket(Bucket=bucket, CreateBucketConfiguration={'LocationConstraint': region})
+    except (s3c.exceptions.BucketAlreadyExists, s3c.exceptions.BucketAlreadyOwnedByYou):
         pass
     s3c.upload_file(filename, bucket, path)
     return f'https://{bucket}.s3.amazonaws.com/{path}'
@@ -127,7 +127,14 @@ def watch_stacks(cloudformation, stacks=None): # move to tools
 def get_qs_user(): # move to tools
     """ get any valid qs user """
     qs_ = boto3.client('quicksight')
-    users = qs_.list_users(AwsAccountId=account_id, Namespace='default')['UserList']
+    try:
+        users = qs_.list_users(AwsAccountId=account_id, Namespace='default')['UserList']
+    except qs_.exceptions.AccessDeniedException as exc:
+        if 'your identity region is ' in str(exc):
+            id_region = str(exc).split('your identity region is ')[1].split('.')[0]
+            users = boto3.client('quicksight', region_name=id_region).list_users(AwsAccountId=account_id, Namespace='default')['UserList']
+        else:
+            raise
     assert users, 'No QS users, pleas create one.' # nosec B101:assert_used
     return users[0]['UserName']
 
