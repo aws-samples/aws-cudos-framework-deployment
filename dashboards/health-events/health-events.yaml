@@ -5260,7 +5260,7 @@ dashboards:
                   FieldId: 3b5b4828-456d-48c5-8d28-795fb725f8f7.12.1719483934481
                 - FieldId: 9791a5a2-415d-4fb2-9599-33fb3e6beeb7.11.1719445460663
                   Width: 355px
-                - CustomLabel: Evetn Status
+                - CustomLabel: Event Status
                   FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.status_code.12.1719483989300
                 - CustomLabel: Tags
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.tags.10.1712614773843

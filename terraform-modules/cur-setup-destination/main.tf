@@ -156,7 +156,7 @@ data "aws_iam_policy_document" "bucket_policy" {
       ]
       condition {
         test     = "StringEquals"
-        values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.region}:${data.aws_caller_identity.this.account_id}:definition/*"]
+        values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:definition/*"]
         variable = "aws:SourceArn"
       }
       condition {
@@ -183,7 +183,7 @@ data "aws_iam_policy_document" "bucket_policy" {
       ]
       condition {
         test     = "StringEquals"
-        values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.region}:${data.aws_caller_identity.this.account_id}:definition/*"]
+        values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:definition/*"]
         variable = "aws:SourceArn"
       }
       condition {
