@@ -75,6 +75,18 @@ ebs_spend_with_unit_cost AS (
 		WHEN usage_storage_gb_mo <= 150 THEN 0 
 		ELSE 125
 	END AS gp2_usage_added_throughput_gibps_mo
+   -->>SAVINGS: look at inverse from a current gp3 perspective
+	, CASE WHEN volume_api_name <> 'gp3' THEN 0 
+   		WHEN usage_storage_gb_mo*3 < 3000 THEN 3000 - 3000 
+   		WHEN usage_storage_gb_mo*3 > 16000 THEN 16000 - 3000 
+   		ELSE usage_storage_gb_mo*3 - 3000 
+   	END equiv_gp2_usage_added_iops_mo
+	, CASE 
+		WHEN volume_api_name <> 'gp3' THEN 0 
+		WHEN usage_storage_gb_mo <= 150 THEN 0 
+		ELSE 125 
+	END equiv_gp2_usage_added_throughput_gibps_mo   
+   --<<SAVINGS
 	, cost_storage_gb_mo + cost_iops_mo + cost_throughput_gibps_mo AS ebs_all_cost
 	, CASE
 		WHEN volume_api_name = 'sc1' THEN  (cost_iops_mo + cost_throughput_gibps_mo + cost_storage_gb_mo)
@@ -108,6 +120,12 @@ ebs_spend_with_unit_cost AS (
 		WHEN volume_api_name = 'gp2' THEN cost_storage_gb_mo*0.8/usage_storage_gb_mo
 		ELSE 0
 	END AS "estimated_gp3_unit_cost"
+   -->>SAVINGS: look at inverse from a current gp3 perspective
+	, CASE 
+		WHEN volume_api_name = 'gp3' THEN (cost_storage_gb_mo/0.8) / usage_storage_gb_mo
+		ELSE 0 
+	END "estimated_gp2_unit_cost"
+   --<<SAVINGS
 	FROM
 		ebs_spend
 ),
@@ -124,6 +142,10 @@ ebs_before_map AS (
 	, sum(usage_throughput_gibps_mo) AS usage_throughput_gibps_mo
 	, sum(gp2_usage_added_iops_mo) gp2_usage_added_iops_mo
 	, sum(gp2_usage_added_throughput_gibps_mo) AS gp2_usage_added_throughput_gibps_mo
+   -->>SAVINGS: look at inverse from a current gp3 perspective
+   , sum(equiv_gp2_usage_added_iops_mo) equiv_gp2_usage_added_iops_mo
+   , sum(equiv_gp2_usage_added_throughput_gibps_mo) equiv_gp2_usage_added_throughput_gibps_mo
+   --<<SAVINGS
 	, sum(ebs_all_cost) AS ebs_all_cost
 	, sum(ebs_sc1_cost) AS ebs_sc1_cost
 	, sum(ebs_st1_cost) AS ebs_st1_cost 
@@ -137,7 +159,7 @@ ebs_before_map AS (
 		- Storage always 20% cheaper
 		- Additional iops per iops-mo is 6% of the cost of 1 gp3 GB-mo
 		- Additional throughput per gibps-mo is 50% of the cost of 1 gp3 GB-mo */
-, sum(CASE 
+	, sum(CASE 
 		/*ignore non gp2' */
 		WHEN volume_api_name = 'gp2' THEN ebs_gp2_cost
 			- (cost_storage_gb_mo*0.8 
@@ -145,6 +167,16 @@ ebs_before_map AS (
 				+ estimated_gp3_unit_cost * 0.06 * gp2_usage_added_iops_mo)
 		ELSE 0
 		END) AS ebs_gp3_potential_savings
+	-->>SAVINGS: look at inverse from a current gp3 perspective
+	, sum(CASE 
+		WHEN (volume_api_name = 'gp3') THEN 
+		(
+			(cost_storage_gb_mo/0.8) + 
+			(estimated_gp2_unit_cost * 0.5 * equiv_gp2_usage_added_throughput_gibps_mo) +
+			(estimated_gp2_unit_cost * 0.06 * equiv_gp2_usage_added_iops_mo)
+		) ELSE 0 
+		END) ebs_gp2_potential_cost
+	--<<SAVINGS
 FROM 
 	ebs_spend_with_unit_cost 
 GROUP BY 1, 2, 3, 4, 5, 6)
@@ -170,6 +202,9 @@ SELECT DISTINCT
 	, ebs_gp2_cost
 	, ebs_gp3_cost
 	, ebs_gp3_potential_savings
+	-->>SAVINGS: look at inverse from a current gp3 perspective
+	, ebs_gp2_potential_cost - ebs_gp3_cost gp3_current_savings
+	--<<SAVINGS
 FROM 
 	ebs_before_map
 	LEFT JOIN map ON map.account_id = linked_account_id 
