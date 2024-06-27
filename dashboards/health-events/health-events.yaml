@@ -76,6 +76,10 @@ dashboards:
           \ {event_category} = 'investigation', '\U0001F50D',\n    '?'\n)"
         Name: Event category
       - DataSetIdentifier: health_events_view
+        Expression: '    {affected_entity_status_code}
+          '
+        Name: 'Resource Status '
+      - DataSetIdentifier: health_events_view
         Expression: left({affected_entity_status_code},1)
         Name: Resource status
       - DataSetIdentifier: health_events_view
@@ -84,10 +88,6 @@ dashboards:
       - DataSetIdentifier: health_events_view
         Expression: truncDate("WK", {start_time})
         Name: Start week
-      - DataSetIdentifier: health_events_view
-        Expression: '    {affected_entity_status_code}
-          '
-        Name: Status
       - DataSetIdentifier: health_events_view
         Expression: |-
           ifelse(
@@ -5420,7 +5420,7 @@ dashboards:
                   Columns:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status
+                        ColumnName: 'Resource Status '
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
                   Rows:
@@ -5597,7 +5597,7 @@ dashboards:
                       FieldId: c1f47839-4d9f-4cec-a47a-249ac8275d36.9.1712340284707
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status
+                        ColumnName: 'Resource Status '
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
                   Values: []
@@ -5742,7 +5742,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status
+                        ColumnName: 'Resource Status '
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                   Values:
@@ -5807,6 +5807,14 @@ dashboards:
                 - Color: '#AAAAAA'
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                - Color: '#863CFF'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: IMPAIRED
+                - Color: '#0251D3'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: UNIMPAIRED
             ColumnHierarchies: []
             Subtitle:
               FormatText:
@@ -5858,7 +5866,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status
+                        ColumnName: 'Resource Status '
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                   Values:
@@ -6057,7 +6065,7 @@ dashboards:
                   Visibility: VISIBLE
                 - FieldId: 12b76ea4-f74c-4528-801a-d97dc5cd1950.9.1718781369135
                   Visibility: VISIBLE
-                - CustomLabel: Status
+                - CustomLabel: Resource Status
                   FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
                   Visibility: VISIBLE
                 - CustomLabel: Resources
@@ -6068,7 +6076,7 @@ dashboards:
                   Columns:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status
+                        ColumnName: 'Resource Status '
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.9.1718627351474
                   Rows:
@@ -6227,7 +6235,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Status
+                        ColumnName: 'Resource Status '
                         DataSetIdentifier: health_events_view
                       FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                   Values:
@@ -6292,6 +6300,14 @@ dashboards:
                 - Color: '#AAAAAA'
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                - Color: '#0251D3'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: UNIMPAIRED
+                - Color: '#863CFF'
+                  Element:
+                    FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
+                    FieldValue: IMPAIRED
             ColumnHierarchies: []
             Subtitle:
               FormatText:
