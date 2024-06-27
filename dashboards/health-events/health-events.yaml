@@ -1812,10 +1812,8 @@ dashboards:
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
+            - Scope: ALL_VISUALS
               SheetId: 572ec12d-0bc7-44d4-b412-0607588eeda6
-              VisualIds:
-              - 23fbdafe-687f-4bf4-9756-5dad3fb4c83a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: f6450e66-eaed-429d-8c02-75d77f35eb67
@@ -5261,7 +5259,7 @@ dashboards:
                 - CustomLabel: Resource Status
                   FieldId: 3b5b4828-456d-48c5-8d28-795fb725f8f7.12.1719483934481
                 - FieldId: 9791a5a2-415d-4fb2-9599-33fb3e6beeb7.11.1719445460663
-                  Width: 530px
+                  Width: 355px
                 - CustomLabel: Evetn Status
                   FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.status_code.12.1719483989300
                 - CustomLabel: Tags
@@ -6657,7 +6655,7 @@ dashboards:
                 ScrollbarOptions:
                   VisibleRange:
                     PercentRange:
-                      From: 80.0
+                      From: 80.00000000000001
                       To: 100.0
               DataLabels:
                 DataLabelTypes:
