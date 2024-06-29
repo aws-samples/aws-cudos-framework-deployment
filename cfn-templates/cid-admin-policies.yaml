@@ -11,6 +11,7 @@ Metadata:
           default: Permissions for the Data Collection Account (where the Dashboards will be deployed)
         Parameters:
           - CloudIntelligenceDashboardsCFNManagement
+          - CloudIntelligenceDashboardsManagement
           - CURDestination
           - QuickSightManagement
           - QuickSightAdmin
@@ -41,6 +42,11 @@ Parameters:
     Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to deploy the Cloud Intelligence Dashboards via CloudFormation"
     Default: 'no'
     AllowedValues: ["yes", "no"]
+  CloudIntelligenceDashboardsManagement:
+    Type: String
+    Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to deploy Athena, Glue, QuickSight resources via CloudFormation"
+    Default: 'no'
+    AllowedValues: ["yes", "no"]
   CURDestination:
     Type: String
     Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to create an S3 bucket for replicated CUR data Data Collection Account"
@@ -55,6 +61,7 @@ Parameters:
 Conditions:
   CreateQuickSightManagementPolicy: !Equals [ !Ref QuickSightManagement, "yes" ]
   CreateCloudIntelligenceDashboardsCFNManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboardsCFNManagement, "yes" ]
+  CreateCloudIntelligenceDashboardsManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboardsManagement, "yes" ]
   CreateQuickSightAdminPolicy: !Equals [ !Ref QuickSightAdmin, "yes" ]
   CreateCURDestinationPolicy: !Equals [ !Ref CURDestination, "yes" ]
   CreateCURReplicationPolicy: !Equals [ !Ref CURReplication, "yes" ]
@@ -190,16 +197,6 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Sid: Athena
-          Action:
-          - athena:CreateWorkGroup
-          - athena:UpdateWorkGroup
-          - athena:DeleteWorkGroup
-          - athena:GetWorkGroup
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/CID
-
         - Sid: CloudFormation
           Action:
           - cloudformation:CreateStack
@@ -215,54 +212,6 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/Cloud-Intelligence-Dashboards/*
-
-        - Sid: EventBridge
-          Action:
-          - events:DeleteRule
-          - events:DescribeRule
-          - events:EnableRule
-          - events:PutRule
-          - events:PutTargets
-          - events:RemoveTargets
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/Cloud-Intelligence-Dashboards-SpiceRefreshRule-*
-
-        - Sid: GlueCrawler
-          Action:
-          - glue:CreateCrawler
-          - glue:DeleteCrawler
-          - glue:GetCrawler
-          - glue:StopCrawler
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/CidCrawler
-
-        - Sid: GlueDatabase
-          Action:
-          - glue:CreateDatabase
-          - glue:UpdateDatabase
-          - glue:DeleteDatabase
-          - glue:GetDatabase
-          - glue:GetDatabases
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur/*
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_cur/*
-
-        - Sid: GlueTable
-          Action:
-          - glue:CreateTable
-          - glue:UpdateTable
-          - glue:DeleteTable
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
 
         - Sid: IAMForCFN
           Action:
@@ -298,6 +247,7 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:Cid*
+          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics-DataExports
           # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidProcessPath-DoNotRun
           # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceProcessPath-DoNotRun
           # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceDashboard
@@ -305,6 +255,125 @@ Resources:
           # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidInitialSetup-DoNotRun #legacy
           # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidSpiceRefreshLambda
           - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:CidLambdaLayer*
+
+        - Sid: ReadLambdaLayerS3
+          Action:
+          - s3:GetObject
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:s3:::aws-managed-cost-intelligence-dashboards-${AWS::Region}/cid-resource-lambda-layer/*
+
+        - Sid: ReadOnlyCFN
+          Action:
+          - cloudformation:GetTemplate
+          - cloudformation:GetTemplateSummary
+          - cloudformation:ListStacks
+          - cloudformation:ValidateTemplate
+          Effect: Allow
+          Resource: '*' # Read only Rights needed for CFN operator
+
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W13
+            reason: "Some resources are not possible to restrict. See comments."
+          - id: W28
+            reason: "No Replacement needed"
+
+  CloudIntelligenceDashboardsManagementPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: CreateCloudIntelligenceDashboardsManagementPolicy
+    Properties:
+      ManagedPolicyName: CidCloudIntelligenceDashboardsManagementPolicy
+      Description: 'CloudIntelligenceDashboards Policy for Athena, Glue, Quicksight deployment'
+      Roles:
+        - !Ref RoleName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: Athena
+          Action:
+          - athena:CreateWorkGroup
+          - athena:UpdateWorkGroup
+          - athena:DeleteWorkGroup
+          - athena:GetWorkGroup
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/CID
+        
+        - Sid: BCMDataExports
+          Action:
+          - bcm-data-exports:CreateExport
+          - bcm-data-exports:DeleteExport
+          - bcm-data-exports:GetExport
+          - bcm-data-exports:ListExports
+          - bcm-data-exports:ListTagsForResource
+          - bcm-data-exports:UpdateExport
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:bcm-data-exports:${AWS::Region}:${AWS::AccountId}:export/*
+          - !Sub arn:aws:bcm-data-exports:${AWS::Region}:${AWS::AccountId}:table/*
+        
+        - Sid: CurDataAccess
+          Action:
+          - cur:PutReportDefinition
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:cur:${AWS::Region}:${AWS::AccountId}:*     #Required as per https://docs.aws.amazon.com/cur/latest/userguide/bcm-data-exports-access.html#bcm-data-exports-access-examples
+          
+        - Sid: EventBridge
+          Action:
+          - events:DeleteRule
+          - events:DescribeRule
+          - events:EnableRule
+          - events:PutRule
+          - events:PutTargets
+          - events:RemoveTargets
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/Cloud-Intelligence-Dashboards-SpiceRefreshRule-*
+
+        - Sid: GlueCrawler
+          Action:
+          - glue:CreateCrawler
+          - glue:DeleteCrawler
+          - glue:GetCrawler
+          - glue:StopCrawler
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/CidCrawler
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/cid-DataExport*
+
+        - Sid: GlueDatabase
+          Action:
+          - glue:CreateDatabase
+          - glue:UpdateDatabase
+          - glue:DeleteDatabase
+          - glue:GetDatabase
+          - glue:GetDatabases
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur/*
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_cur/*
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_export
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_export/*
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_data_export/*
+
+        - Sid: GlueTable
+          Action:
+          - glue:CreateTable
+          - glue:UpdateTable
+          - glue:DeleteTable
+          Effect: Allow
+          Resource:
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_export
+          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_export/*
 
         - Sid: QuickSightDashboard
           Action:
@@ -382,22 +451,6 @@ Resources:
           - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
           - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}/*
 
-        - Sid: ReadLambdaLayerS3
-          Action:
-          - s3:GetObject
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:s3:::aws-managed-cost-intelligence-dashboards-${AWS::Region}/cid-resource-lambda-layer/*
-
-        - Sid: ReadOnlyCFN
-          Action:
-          - cloudformation:GetTemplate
-          - cloudformation:GetTemplateSummary
-          - cloudformation:ListStacks
-          - cloudformation:ValidateTemplate
-          Effect: Allow
-          Resource: '*' # Read only Rights needed for CFN operator
-
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -405,7 +458,6 @@ Resources:
             reason: "Some resources are not possible to restrict. See comments."
           - id: W28
             reason: "No Replacement needed"
-
 
   CURDestinationPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -444,8 +496,8 @@ Resources:
           - iam:PassRole
           Effect: Allow
           Resource:
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-CIDLambdaAnalyticsRole-*
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-CIDLambdaCURCreatorRole-*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-*
+          - !Sub arn:aws:iam::${AWS::AccountId}:role/CID-CUR-Destination-*
 
         - Sid: Lambda
           Action:
@@ -480,6 +532,8 @@ Resources:
           Resource:
           - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared
           - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared/*
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-data-exports
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-data-exports/*
 
         - Sid: CostUsageReport
           Action:
@@ -611,6 +665,8 @@ Resources:
           Resource:
           - !Sub arn:aws:s3:::cid-${AWS::AccountId}-local
           - !Sub arn:aws:s3:::cid-${AWS::AccountId}-local/*
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-data-local
+          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-data-local/*
 
         - Sid: ReadOnly
           Action:
