@@ -63,6 +63,8 @@ class Cid():
             value = get_parameters().get(key.replace('_', '-'))
             if  value != None:
                 params[key] = value
+        if get_parameters().get('region'):
+            params['region_name'] = get_parameters().get('region') # use region as a synonym of region_name
 
         print('Checking AWS environment...')
         try:
