@@ -45,7 +45,8 @@ class Cid():
         self.qs_url = 'https://{region}.quicksight.{domain}/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
         self.verbose = kwargs.get('verbose')
-        set_parameters(kwargs, self.all_yes)
+        # save main parameters to global parameters but do not override parameters that were set from outside
+        set_parameters({key: val for key, val in kwargs.items() if key.replace('_', '-') not in get_parameters()}, self.all_yes)
         self._logger = None
         self.catalog_urls = [
             'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/dashboards/catalog.yaml',
@@ -60,8 +61,8 @@ class Cid():
             'aws_session_token': None
         }
         for key in params.keys():
-            value = get_parameters().get(key.replace('_', '-'))
-            if  value != None:
+            value = get_parameters().get(key.replace('_', '-'), '<NO VALUE>')
+            if  value != '<NO VALUE>':
                 params[key] = value
         if get_parameters().get('region'):
             params['region_name'] = get_parameters().get('region') # use region as a synonym of region_name

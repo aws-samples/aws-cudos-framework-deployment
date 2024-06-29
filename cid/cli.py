@@ -26,10 +26,12 @@ def cid_command(func):
         if len(ctx.args) % 2 != 0:
             print(f"Unknown extra argument, or an option without value {ctx.args}")
             exit(-1)
+        params = {}
         for i in range(0, len(ctx.args), 2):
-            kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
+            key = ctx.args[i][2:].replace('-', '_')
+            params[key] = ctx.args[i+1]
+        set_parameters(params, all_yes=ctx.obj.all_yes)
 
-        set_parameters(kwargs, all_yes=ctx.obj.all_yes)
         res = None
         try:
             res = func(ctx, **kwargs)
@@ -74,7 +76,6 @@ def main(ctx, **kwargs):
         os.system('color') #nosec B605, B607
 
     ctx.obj = Cid(**kwargs)
-
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
