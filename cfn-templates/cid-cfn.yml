@@ -1177,6 +1177,14 @@ Resources:
                         - !ImportValue cid-DataExports-Database
                     - !Ref 'AWS::NoValue'
                   - Fn::If:
+                    - NeedCUR2
+                    - !Join
+                      - '/'
+                      - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table
+                        - !ImportValue cid-DataExports-Database
+                        - "*"
+                    - !Ref 'AWS::NoValue'
+                  - Fn::If:
                      - NeedDatabase
                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
@@ -1214,7 +1222,7 @@ Resources:
                     - NeedCUR2
                     - !Join
                       - '/'
-                      - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database
+                      - - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database
                         - !ImportValue cid-DataExports-Database
                     - !Ref 'AWS::NoValue'
               - Effect: Allow

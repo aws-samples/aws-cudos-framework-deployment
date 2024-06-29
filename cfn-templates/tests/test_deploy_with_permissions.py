@@ -23,6 +23,13 @@ import subprocess #nosec B404
 import boto3
 import click
 
+# Configure the logger
+logging.basicConfig(
+    format='%(asctime)s %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.INFO
+)
+
 logger = logging.getLogger(__name__)
 
 # Console Colors
@@ -213,8 +220,9 @@ def create_finops_role(update):
             {"ParameterKey": 'QuickSightManagement', "ParameterValue":'no'},
             {"ParameterKey": 'QuickSightAdmin', "ParameterValue":'no'},
             {"ParameterKey": 'CloudIntelligenceDashboardsCFNManagement', "ParameterValue":'yes'},
+            {"ParameterKey": 'CloudIntelligenceDashboardsManagement', "ParameterValue":'yes'},
             {"ParameterKey": 'CURDestination', "ParameterValue":'yes'},
-            {"ParameterKey": 'CURReplication', "ParameterValue":'no'},
+            {"ParameterKey": 'CURReplication', "ParameterValue":'yes'},
         ],
         Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
     )
@@ -247,7 +255,7 @@ def create_cid_as_finops(update):
 
     logger.info('As Finops Creating CUR')
     finops_cfn = finops_session.client('cloudformation')
-    finops_cfn = admin_cfn #FIXME !!!
+    #finops_cfn = admin_cfn #FIXME !!!
     params = dict(
         StackName="CID-CUR-Destination",
         TemplateURL=upload_to_s3('cfn-templates/data-exports-aggregation.yaml'),
@@ -305,30 +313,48 @@ def test_dashboard_exists():
     logger.info("Dashboard exists with status = %s", dash['Version']['Status'])
 
 def test_crawler_results():
-    glue = boto3.client('glue')
-    logger.info('Waiting For Crawler to finish')
-    timeout_seconds = 300
-    start_time = time.time()
-    while time.time() - start_time < timeout_seconds:
-        try:
-            time.sleep(3)
-            crawler = glue.get_crawler(Name='CidCrawler')['Crawler']
-            logger.debug('Crawler state = ' + crawler['State'])
-            if crawler['State'] != 'READY':
-                continue
-            last_crawl = crawler.get('LastCrawl')
-            if last_crawl:
-                logger.debug(last_crawl)
-                if last_crawl.get('Status') != 'SUCCEEDED' or last_crawl.get('ErrorMessage'):
-                    raise AssertionError(f'Something wrong with crawler {last_crawl}')
-                logger.info('Crawler SUCCEEDED')
-                break
-        except glue.exceptions.EntityNotFoundException:
-            logger.debug('Crawler is not there yet ')
-            continue
-    else:
-        raise AssertionError('Timeout while waiting for crawler')
+    """
+    Waits for the specified Glue crawlers to complete successfully.
 
+    Raises:
+        AssertionError: If any of the crawlers fail or the timeout is reached.
+    """
+    crawler_names = ['cid-DataExportCUR2Crawler','cid-DataExportFOCUSCrawler']
+    timeout_seconds = 300
+    
+    glue = boto3.client('glue')
+    start_time = time.time()
+    completed_crawlers = set()
+
+    ## Start glue crawlers
+    for crawler_name in crawler_names:
+        glue.start_crawler(Name=crawler_name)
+        
+    while time.time() - start_time < timeout_seconds:
+        for crawler_name in crawler_names:
+            try:
+                crawler_status = glue.get_crawler(Name=crawler_name)['Crawler']
+                logger.info(f"{crawler_name} crawler state = {crawler_status['State']}")
+
+                if crawler_status['State'] != 'READY':
+                    continue
+                last_crawl = crawler_status.get('LastCrawl')
+                if last_crawl:
+                    if last_crawl.get('Status') != 'SUCCEEDED' or last_crawl.get('ErrorMessage'):
+                        raise AssertionError(f'Something wrong with crawler {last_crawl}')
+                    else:
+                        completed_crawlers.add(crawler_name) #pylint: disable=superfluous-parens
+                        logger.info(f"Crawler '{crawler_name}' has completed successfully.")
+                if len(completed_crawlers) == len(crawler_names):
+                    logger.info("All crawlers have completed successfully.")
+                    return
+            except glue.exceptions.EntityNotFoundException:
+                logger.debug('Crawler is not there yet ')
+                continue
+        time.sleep(10)
+    logger.error(f"Timeout reached while waiting for crawlers to complete.")
+    raise Exception(f"Timeout reached while waiting for crawlers to complete.")
+    
 
 def test_dataset_scheduled():
     """check that dataset and schedule exist"""
@@ -394,7 +420,7 @@ def teardown():
     logger.info('Finops Session created')
 
     finops_cfn = finops_session.client('cloudformation')
-    finops_cfn = admin_cfn #FIXME: for wip only
+    #finops_cfn = admin_cfn #FIXME: for wip only
 
     logger.info("Deleting bucket")
     delete_bucket(f'cid-{account_id}-data-exports') # Cannot be done by CFN
@@ -405,6 +431,8 @@ def teardown():
         finops_cfn.delete_stack(StackName="Cloud-Intelligence-Dashboards")
     except Exception as exc:  # pylint: disable=broad-exception-caught
         logger.info(exc)
+    ## wait for deletion of previous stack
+    watch_stacks(finops_cfn, ["Cloud-Intelligence-Dashboards"])    
     logger.info("Deleting CUR stack")
     try:
         finops_cfn.delete_stack(StackName="CID-CUR-Destination")
