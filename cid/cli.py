@@ -117,7 +117,7 @@ def csv2view(ctx, **kwargs):
 @cid_command
 def deploy(ctx, **kwargs):
     """Deploy Dashboard
-    
+
     \b
     Command options:
      --category TEXT                       The dashboards category to choose from. Not needed if dashboard-id provided directly
@@ -149,7 +149,7 @@ def deploy(ctx, **kwargs):
 @cid_command
 def export(ctx, **kwargs):
     """Export Dashboard
-    
+
     \b
     Command options:
         --analysis-name              Analysis you want to share (not needed if analysis-id is provided).
@@ -203,7 +203,6 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
     """Update Dashboard
 
     \b
-
      --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
      --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
 
@@ -272,11 +271,14 @@ def create_cur_table(ctx, **kwargs):
 @click.option('--fields', help='CUR fields', default='')
 @cid_command
 def create_cur_proxy(ctx, cur_version, fields, **kwargs):
-    """Create CUR proxy
+    """Create CUR proxy - an Athena view that transforms cur1 to cur2 or cur2 > cur1
 
     \b
-     --cur-version  (1|2)   Version of CUR
-     --fields               Comma Separated list of additional CUR fields
+     --cur-version  (1|2)        The target version of CUR
+     --fields                    Comma Separated list of additional CUR fields
+     --cur-table-name TEXT       CUR table name
+     --cur-database TEXT         Athena database of CUR
+     --athena-database TEXT      Athena database to create proxy
     """
 
     ctx.obj.create_cur_proxy(**kwargs)
@@ -289,8 +291,7 @@ def teardown(ctx, **kwargs):
     """Delete all CID assets
 
     \b
-
-    THIS IS VERY DANGEROUS. DO NOT USE IT.
+    THIS IS VERY DANGEROUS. DO NOT USE THIS COMMAND.
     """
 
     ctx.obj.teardown(**kwargs)
