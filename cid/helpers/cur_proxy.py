@@ -5,8 +5,8 @@ logger = logging.getLogger(__name__)
 
 cur1to2_mapping = {
     '''concat("year", '-' , "month")''': "billing_period",
-    'year': "split_part(billing_period, '-', 1)",
-    'month': "split_part(billing_period, '-', 2)",
+    'year': """split_part("billing_period", '-', 1)""",
+    'month': """split_part("billing_period", '-', 2)""",
     'identity_line_item_id': 'identity_line_item_id',
     'identity_time_interval': 'identity_time_interval',
     'pricing_lease_contract_length': 'pricing_lease_contract_length',
@@ -422,7 +422,7 @@ class ProxyView():
                         return cur2map
                 logger.warning(f"{field} not known field of CUR2. needs to be added in code. Please create a github issue")
             res = cur1to2_mapping.get(field, field)
-            return res.split('[')[0]
+            return self.get_field_from_sql(res)
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR1
             matches = re.findall(r"(\w+)\['(\w+)'\]", field)
             if matches:
@@ -434,7 +434,21 @@ class ProxyView():
             cur2to1_mapping = {value: key for key, value in cur1to2_mapping.items()}
             if field not in cur2to1_mapping:
                 logger.warning(f"{field} not known field of CUR1. needs to be added in code. Please create a github issue")
-            return cur2to1_mapping.get(field, field)
+            return self.get_field_from_sql(cur2to1_mapping.get(field, field))
+
+    def get_field_from_sql(self, field):
+        """ get a sql field from an expression
+        ex:
+            '''concat('name', "bill_payer_account_id")''' => "bill_payer_account_id"
+            parameters['aaa'] => parameters
+            plane_fields => plane_fields
+        """
+        if '"' in field:
+            return field.split('"')[1].split('"')[0]
+        if '[' in field:
+            return field.split('[')[0]
+        return field
+
 
 
     def get_sql_expression(self, field, field_type):
