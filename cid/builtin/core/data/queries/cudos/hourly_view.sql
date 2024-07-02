@@ -20,7 +20,7 @@ CREATE OR REPLACE VIEW hourly_view AS
   , CAST(0 AS double) "savings_plan_effective_cost"
   , "sum"("line_item_usage_amount") "usage_quantity"
   FROM
-    "${cur_table_name}"
+    "${cur1_database}"."${cur1_table_name}"
   WHERE 
     (((current_date - INTERVAL  '30' DAY) <= line_item_usage_start_date) 
     AND ((("line_item_line_item_type" = 'Usage') OR ("line_item_line_item_type" = 'SavingsPlanCoveredUsage')) OR ("line_item_line_item_type" = 'DiscountedUsage'))

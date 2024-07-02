@@ -150,7 +150,7 @@ datasets:
     dependsOn:
       cur: true
       views:
-        - ${cur_table_name}
+        - ${cur1_table_name}
   # CUDOS v5 datasets
   hourly_view:
     File: cudos/hourly_view.json
@@ -268,6 +268,8 @@ views:
     File: cid/summary_view.sql
     dependsOn:
       cur:
+        - year
+        - month
         - bill_billing_entity
         - bill_billing_period_start_date
         - bill_invoice_id
@@ -332,7 +334,7 @@ views:
   compute_savings_plan_eligible_spend:
     File: cid/compute_savings_plan_eligible_spend.sql
     dependsOn:
-      cur: true
+      cur:
         - bill_billing_period_start_date
         - bill_payer_account_id
         - line_item_line_item_type
@@ -380,9 +382,9 @@ views:
         - savings_plan_savings_plan_a_r_n
 
   hourly_view:
-    spriFile: cudos/hourly_view_sp_ri.sql
-    spFile: cudos/hourly_view_sp.sql
-    riFile: cudos/hourly_view_ri.sql
+    #spriFile: cudos/hourly_view_sp_ri.sql
+    #spFile: cudos/hourly_view_sp.sql
+    #riFile: cudos/hourly_view_ri.sql
     File: cudos/hourly_view.sql
     dependsOn:
       cur:

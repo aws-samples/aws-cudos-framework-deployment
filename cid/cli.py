@@ -9,7 +9,7 @@ from cid.utils import get_parameters, set_parameters, get_latest_tool_version
 from cid._version import __version__
 from cid.exceptions import CidCritical, CidError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('cid')
 version = f'{__version__} Beta'
 latest_version = get_latest_tool_version()
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
@@ -22,6 +22,15 @@ if __version__ != latest_version and latest_version != 'UNDEFINED':
 
 def cid_command(func):
     def wrapper(ctx, **kwargs):
+
+        def get_command_line():
+            params = get_parameters()
+            return ('cid-cmd ' + ctx.info_name
+                + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
+                + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
+                + ''.join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
+            )
+
         # Complete kwargs with other parameters
         if len(ctx.args) % 2 != 0:
             print(f"Unknown extra argument, or an option without value {ctx.args}")
@@ -33,19 +42,13 @@ def cid_command(func):
         res = None
         try:
             res = func(ctx, **kwargs)
-        except CidCritical as exc:
+        except (CidCritical, CidError) as exc:
             logger.debug(exc, exc_info=True)
-            logger.critical(exc)
-        except CidError as exc:
-            logger.debug(exc, exc_info=True)
+            logger.debug(f'When running {get_command_line()}')
             logger.error(exc)
         params = get_parameters()
         logger.info('Next time you can use following command:')
-        logger.info('   cid-cmd ' + ctx.info_name
-            + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
-            + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
-            + ''.join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
-        )
+        logger.info(get_command_line())
         return res
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
@@ -263,6 +266,21 @@ def create_cur_table(ctx, **kwargs):
     """
 
     ctx.obj.create_cur_table(**kwargs)
+
+@click.option('-v', '--verbose', count=True)
+@click.option('--cur-version', help='Cur Version (1 or 2)')
+@click.option('--fields', help='CUR fields', default='')
+@cid_command
+def create_cur_proxy(ctx, cur_version, fields, **kwargs):
+    """Create CUR proxy
+
+    \b
+     --cur-version  (1|2)   Version of CUR
+     --fields               Comma Separated list of additional CUR fields
+    """
+
+    ctx.obj.create_cur_proxy(**kwargs)
+
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)

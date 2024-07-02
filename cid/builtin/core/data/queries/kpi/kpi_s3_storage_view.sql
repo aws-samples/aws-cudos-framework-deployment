@@ -39,8 +39,7 @@
 				ELSE 0
 				END) AS s3_all_storage_cost
 			, sum(CASE WHEN (pricing_unit = 'GB-Mo' AND line_item_operation like '%Storage%') THEN line_item_usage_amount ELSE 0 END) AS s3_all_storage_usage_quantity
-			FROM 
-			"${cur_table_name}"
+			FROM "${cur1_database}"."${cur1_table_name}"
 				, inputs
 			WHERE bill_payer_account_id <> ''
 			  AND line_item_resource_id <> ''
