@@ -1323,7 +1323,7 @@ class Cid():
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
                 # TODO: get buckets from dashboard parameters
                 buckets = [
-                    f'cid-{self.base.account_id}-share',
+                    f'cid-{self.base.account_id}-shared',
                     f'cid-{self.base.account_id}-data-exports',
                     f'cid-data-{self.base.account_id}',
                     f'costoptimizationdata{self.base.account_id}',
