@@ -632,7 +632,7 @@ Resources:
     Condition: DeployAnyTable
     Properties:
       DatabaseInput:
-        Name: !Sub "${ResourcePrefix}_data_export"
+        Name: !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_' 
       CatalogId: !Sub "${AWS::AccountId}"
 
 ###########################################################################
