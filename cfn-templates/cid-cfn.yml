@@ -204,7 +204,7 @@ Parameters:
     AllowedPattern: "[a-zA-Z0-9_]*"
   SecondaryTagName:
     Type: String
-    Description: Choose a tag name for Secondary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leve as is if not sure.
+    Description: Choose a tag name for Secondary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leave as is if not sure.
     Default: "environment"
     MinLength: 1 # cid cmd do not accept empty parameters
     AllowedPattern: "[a-zA-Z0-9_]*"
