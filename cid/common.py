@@ -1806,6 +1806,7 @@ class Cid():
         cur_proxy.metadata
         cur_proxy.proxy.fields_to_expose += (fields.split(',') if fields else [])
         cur_proxy.proxy.create_or_update_view()
+        print('done')
 
     @command
     def create_cur_table(self, **kwargs):

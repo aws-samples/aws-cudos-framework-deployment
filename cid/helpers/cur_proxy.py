@@ -432,7 +432,7 @@ class ProxyView():
                 self.fields_to_expose_in_maps[map_field].add(key)
                 return f'{map_field}_{key}'
             cur2to1_mapping = {value: key for key, value in cur1to2_mapping.items()}
-            if field not in cur2to1_mapping:
+            if field not in cur2to1_mapping and field not in cur2_maps:
                 logger.warning(f"{field} not known field of CUR1. needs to be added in code. Please create a github issue")
             return self.get_field_from_sql(cur2to1_mapping.get(field, field))
 
