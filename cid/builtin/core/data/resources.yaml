@@ -380,6 +380,14 @@ views:
         - reservation_reservation_a_r_n
         - savings_plan_end_time
         - savings_plan_savings_plan_a_r_n
+        - reservation_effective_cost
+        - reservation_start_time
+        - reservation_end_time
+        - savings_plan_savings_plan_effective_cost
+        - savings_plan_start_time
+        - savings_plan_purchase_term
+        - savings_plan_offering_type
+        - savings_plan_payment_option
 
   hourly_view:
     #spriFile: cudos/hourly_view_sp_ri.sql
