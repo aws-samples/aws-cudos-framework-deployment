@@ -79,6 +79,7 @@ The following resources are used by this module:
 - [aws_s3_bucket_versioning.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) (resource)
 - [aws_caller_identity.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) (data source)
 - [aws_iam_policy_document.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) (data source)
+- [aws_partition.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) (data source)
 - [aws_region.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) (data source)
 
 ## Required Inputs
@@ -109,12 +110,20 @@ Type: `string`
 
 Default: `"cur"`
 
+### enable\_split\_cost\_allocation\_data
+
+Description: Enable split cost allocation data for ECS and EKS for this CUR report
+
+Type: `bool`
+
+Default: `false`
+
 ### kms\_key\_id
 
-Description: !!!WARNING!!! EXPERIMENTAL - Do not use unless you know what you are doing. The correct key policies and IAM permissions
+Description: !!!WARNING!!! EXPERIMENTAL - Do not use unless you know what you are doing. The correct key policies and IAM permissions  
 on the S3 replication role must be configured external to this module.
   - If create\_cur is true, the "billingreports.amazonaws.com" service must have access to encrypt S3 objects with the key ID provided
-  - See https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-config-for-kms-objects.html for information
+  - See https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-config-for-kms-objects.html for information  
     on permissions required for replicating KMS-encrypted objects
 
 Type: `string`
@@ -153,14 +162,13 @@ Default:
 }
 ```
 
-### enable\_split\_cost\_allocation\_data
+### tags
 
-Description: Activate split cost allocation data for ECS and EKS to aggregate cost and usage data for container-level resources
+Description: Map of tags to apply to module resources
 
-Type: `bool`
+Type: `map(string)`
 
-Default: `false`
-
+Default: `{}`
 
 ## Outputs
 
