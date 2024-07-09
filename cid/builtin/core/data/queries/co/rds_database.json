@@ -1,0 +1,521 @@
+{
+    "DatabaseName": "${athena_database_name}",
+    "TableInput": {
+        "Name": "${athenaTableName}",
+        "StorageDescriptor": {
+            "Location": "${s3FolderPath}",
+            "columns": [
+                {
+                    "Name": "accountId",
+                    "Type": "string"
+                },
+                {
+                    "Name": "resourceArn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "engine",
+                    "Type": "string"
+                },
+                {
+                    "Name": "engineVersion",
+                    "Type": "string"
+                },
+                {
+                    "Name": "idle",
+                    "Type": "string"
+                },
+                {
+                    "Name": "multiAZDBInstance",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentDBInstanceClass",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentStorageConfigurationStorageType",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentStorageConfigurationMaxAllocatedStorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentStorageConfigurationAllocatedStorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentStorageConfigurationIOPS",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentStorageConfigurationStorageThroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentStorageOnDemandMonthlyPrice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentInstanceOnDemandHourlyPrice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "lookbackPeriodInDays",
+                    "Type": "string"
+                },
+                {
+                    "Name": "lastRefreshTimestamp",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsCpuMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsMemoryMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsEBSVolumeStorageSpaceUtilizationMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsNetworkReceiveThroughputMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsNetworkTransmitThroughputMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsEBSVolumeReadIOPSMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsEBSVolumeWriteIOPSMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsEBSVolumeReadThroughputMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsEBSVolumeWriteThroughputMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationMetricsDatabaseConnectionsMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFinding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isCPUOverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isNetworkBandwidthOverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isEBSIOPSOverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isEBSThroughputOverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isCPUUnderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isNetworkBandwidthUnderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isEBSThroughputUnderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isNewGenerationDBInstanceClassAvailable",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceFindingReasonCodes_isNewEngineVersionAvailable",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageFinding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageFindingReasonCodes_isEBSVolumeAllocatedStorageUnderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageFindingReasonCodes_isEBSVolumeThroughputUnderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageFindingReasonCodes_isEBSVolumeIOPSOverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageFindingReasonCodes_isEBSVolumeThroughputOverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageFindingReasonCodes_isNewGenerationStorageTypeAvailable",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instance_recommendations_count",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_dbInstanceClass",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_rank",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_performanceRisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_projectedUtilizationMetricsCpuMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_instanceOnDemandHourlyPrice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_savingsOpportunityPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_estimatedMonthlySavingsCurrency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_estimatedMonthlySavingsValue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_savingsOpportunityAfterDiscountsPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_estimatedMonthlySavingsCurrencyAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_1_estimatedMonthlySavingsValueAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_dbInstanceClass",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_rank",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_performanceRisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_projectedUtilizationMetricsCpuMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_instanceOnDemandHourlyPrice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_savingsOpportunityPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_estimatedMonthlySavingsCurrency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_estimatedMonthlySavingsValue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_savingsOpportunityAfterDiscountsPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_estimatedMonthlySavingsCurrencyAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_2_estimatedMonthlySavingsValueAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_dbInstanceClass",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_rank",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_performanceRisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_projectedUtilizationMetricsCpuMaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_instanceOnDemandHourlyPrice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_savingsOpportunityPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_estimatedMonthlySavingsCurrency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_estimatedMonthlySavingsValue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_savingsOpportunityAfterDiscountsPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_estimatedMonthlySavingsCurrencyAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "instanceRecommendationOptions_3_estimatedMonthlySavingsValueAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storage_recommendations_count",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_storageType",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_allocatedStorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_maxAllocatedStorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_iops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_storageThroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_rank",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_onDemandMonthlyPrice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_savingsOpportunityPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_estimatedMonthlySavingsCurrency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_estimatedMonthlySavingsValue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_savingsOpportunityAfterDiscountsPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_estimatedMonthlySavingsCurrencyAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_1_estimatedMonthlySavingsValueAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_storageType",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_allocatedStorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_maxAllocatedStorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_iops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_storageThroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_rank",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_onDemandMonthlyPrice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_savingsOpportunityPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_estimatedMonthlySavingsCurrency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_estimatedMonthlySavingsValue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_savingsOpportunityAfterDiscountsPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_estimatedMonthlySavingsCurrencyAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_2_estimatedMonthlySavingsValueAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_storageType",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_allocatedStorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_maxAllocatedStorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_iops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_storageThroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_rank",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_onDemandMonthlyPrice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_savingsOpportunityPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_estimatedMonthlySavingsCurrency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_estimatedMonthlySavingsValue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_savingsOpportunityAfterDiscountsPercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_estimatedMonthlySavingsCurrencyAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "storageRecommendationOptions_3_estimatedMonthlySavingsValueAfterDiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiveRecommendationPreferencesCpuVendorArchitectures",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiveRecommendationPreferencesEnhancedInfrastructureMetrics",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiveRecommendationPreferencesLookBackPeriod",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiveRecommendationPreferencesSavingsEstimationModeSource",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errorCode",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errorMessage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "tags",
+                    "Type": "string"
+                }
+            ],
+            "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+            "NumberOfBuckets": -1,
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            "Parameters": {},
+            "SerdeInfo": {
+                "Parameters": {
+                    "quoteChar": "\"",
+                    "separatorChar": ",",
+                    "serialization.format": "1"
+                },
+                "SerializationLibrary": "org.apache.hadoop.hive.serde2.OpenCSVSerde"
+            }
+        },
+        "Parameters": {
+            "EXTERNAL": "TRUE",
+            "skip.header.line.count": "1"
+        },
+        "PartitionKeys": [],
+        "TableType": "EXTERNAL_TABLE"
+    }
+}
