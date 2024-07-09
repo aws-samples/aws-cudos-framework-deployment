@@ -11,6 +11,7 @@ CREATE OR REPLACE VIEW "compute_optimizer_rds_instance_options" AS
    , 'rds' recommendationsourcetype
    , instancefinding finding
    , CONCAT((CASE WHEN (instancefindingreasoncodes_iscpuoverprovisioned = 'true') THEN 'CPU-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_iscpuunderprovisioned = 'true') THEN 'CPU-Under ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsiopsoverprovisioned = 'true') THEN 'EBSIOPS-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsthroughputoverprovisioned = 'true') THEN 'EBSThroughput-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsthroughputunderprovisioned = 'true') THEN 'EBSThroughput-Under ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isnetworkbandwidthoverprovisioned = 'true') THEN 'NetworkBandwidth-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isnewengineversionavailable = 'true') THEN 'NewEngineVersion-Available ' ELSE '' END)) reason
+   --WIP completed until here
    , lookbackperiodindays lookbackperiodindays
    , '' currentperformancerisk
    , errorcode errorcode
