@@ -10,7 +10,7 @@ CREATE OR REPLACE VIEW "compute_optimizer_rds_all_options" AS
    , 'rds' module
    , 'rds' recommendationsourcetype
    , instancefinding finding
-   , CONCAT((CASE WHEN (instancefindingreasoncodes_iscpuoverprovisioned = 'true') THEN 'CPU-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_iscpuunderprovisioned = 'true') THEN 'CPU-Under ' ELSE '' END), (CASE WHEN (storagefindingreasoncodes_isebsvolumeiopsoverprovisioned = 'true') THEN 'DiskIOPS-Over ' ELSE '' END), (CASE WHEN (storagefindingreasoncodes_isebsvolumethroughputoverprovisioned = 'true') THEN 'DiskThroughput-Over ' ELSE '' END), (CASE WHEN (storagefindingreasoncodes_isebsvolumethroughputunderprovisioned = 'true') THEN 'DiskThroughput-Under ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsiopsoverprovisioned = 'true') THEN 'EBSIOPS-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsthroughputoverprovisioned = 'true') THEN 'EBSThroughput-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsthroughputunderprovisioned = 'true') THEN 'EBSThroughput-Under ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isnetworkbandwidthoverprovisioned = 'true') THEN 'NetworkBandwidth-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isnetworkbandwidthunderprovisioned = 'true') THEN 'NetworkBandwidth-Under ' ELSE '' END)) reason
+   , CONCAT((CASE WHEN (instancefindingreasoncodes_iscpuoverprovisioned = 'true') THEN 'CPU-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_iscpuunderprovisioned = 'true') THEN 'CPU-Under ' ELSE '' END), (CASE WHEN (storagefindingreasoncodes_isebsvolumeiopsoverprovisioned = 'true') THEN 'DiskIOPS-Over ' ELSE '' END), (CASE WHEN (storagefindingreasoncodes_isebsvolumethroughputoverprovisioned = 'true') THEN 'DiskThroughput-Over ' ELSE '' END), (CASE WHEN (storagefindingreasoncodes_isebsvolumethroughputunderprovisioned = 'true') THEN 'DiskThroughput-Under ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsiopsoverprovisioned = 'true') THEN 'EBSIOPS-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsthroughputoverprovisioned = 'true') THEN 'EBSThroughput-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isebsthroughputunderprovisioned = 'true') THEN 'EBSThroughput-Under ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isnetworkbandwidthoverprovisioned = 'true') THEN 'NetworkBandwidth-Over ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isnetworkbandwidthunderprovisioned = 'true') THEN 'NetworkBandwidth-Under ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isnewgenerationdbinstanceclassavailable = 'true') THEN 'NewGenDBInstanceClass-Available ' ELSE '' END), (CASE WHEN (instancefindingreasoncodes_isnewengineversionavailable = 'true') THEN 'NewEngineVersion-Available ' ELSE '' END)) reason
    , lookbackperiodindays lookbackperiodindays
    , 'none' currentperformancerisk
    , errorcode errorcode
@@ -34,7 +34,7 @@ CREATE OR REPLACE VIEW "compute_optimizer_rds_all_options" AS
      compute_optimizer_rds_instance_lines
    WHERE (resourcearn LIKE '%arn:%')
 UNION    SELECT
-     TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp
+     TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , resourcearn arn
    , TRY("split_part"(resourcearn, ':', 4)) region
@@ -67,7 +67,7 @@ UNION    SELECT
      compute_optimizer_rds_instance_lines
    WHERE (resourcearn LIKE '%arn:%')
 UNION    SELECT
-     TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp
+     TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , resourcearn arn
    , TRY("split_part"(resourcearn, ':', 4)) region
@@ -100,7 +100,7 @@ UNION    SELECT
      compute_optimizer_rds_instance_lines
    WHERE ((resourcearn LIKE '%arn:%') AND (instancerecommendationoptions_2_estimatedmonthlysavingscurrency <> ''))
 UNION    SELECT
-     TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp
+     TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , resourcearn arn
    , TRY("split_part"(resourcearn, ':', 4)) region
