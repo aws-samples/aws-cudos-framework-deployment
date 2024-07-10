@@ -69,7 +69,7 @@ def upload_to_s3(filename, path=None): # move to tools
             "Bucket": bucket,
         }
         if region !='us-east-1':
-            params['CreateBucketConfiguration']={'LocationConstraint': region}
+            params['CreateBucketConfiguration'] = {'LocationConstraint': region}
         s3c.create_bucket(**params)
     except (s3c.exceptions.BucketAlreadyExists, s3c.exceptions.BucketAlreadyOwnedByYou):
         pass
