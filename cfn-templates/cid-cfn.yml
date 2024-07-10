@@ -1219,6 +1219,7 @@ Resources:
                 Effect: Allow
                 Action: s3:ListBucket
                 Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-exports
                   - !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}
                   - !If
                       - NeedQuickSightDataSourceRoleAndCUR
@@ -1230,6 +1231,7 @@ Resources:
                   - s3:GetObject
                   - s3:GetObjectVersion
                 Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-exports
                   - !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}/*
                   - !If
                       - NeedQuickSightDataSourceRoleAndCUR
