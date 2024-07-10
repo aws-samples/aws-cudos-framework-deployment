@@ -73,8 +73,9 @@ class Athena(CidBase):
             except Exception as exc:
                 if 'AccessDeniedException' in str(exc):
                     logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existence of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
-                    return self._DatabaseName
-                raise
+                else:
+                    raise
+            return self._DatabaseName
         # Get AWS Athena databases
         athena_databases = self.list_databases()
 
