@@ -561,6 +561,8 @@ Resources:
                   else: res = (True, f"Not supported operation: {type_}")
                   set_parameters({'quicksight-user': QUICKSIGHT_USER})
                   identity_region = get_identity_region()
+              except Exception as exc:
+                  res = False, str(exc)[:1000]
               finally:
                   log_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logEvent:group={context.log_group_name};stream={context.log_stream_name}"
                   url = event.get('ResponseURL')
