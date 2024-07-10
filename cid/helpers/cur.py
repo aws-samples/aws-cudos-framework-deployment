@@ -177,6 +177,8 @@ class CUR(CidBase):
                 self._metadata = self.athena.get_table_metadata(table_name)
             except self.athena.client.exceptions.ResourceNotFoundException as exc:
                 raise CidCritical(f'Provided cur-table-name "{table_name}" is not found. Please make sure the table exists.') from exc
+            except self.athena. athena.exceptions.MetadataException as exc:
+                raise CidCritical(f'Provided cur-table-name "{table_name}" is not found in database "{self.athena.DatabaseName}". Please make sure the table exists. Also if you use LakeFormation, make sure that the user is granted with read rights.') from exc
             res, message = self.table_is_cur(table=self._metadata, return_reason=True)
             if not res:
                 raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
