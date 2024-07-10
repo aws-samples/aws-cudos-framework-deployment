@@ -65,7 +65,12 @@ def upload_to_s3(filename, path=None): # move to tools
     s3c = boto3.client('s3')
     bucket = TMP_BUCKET
     try:
-        s3c.create_bucket(Bucket=bucket, CreateBucketConfiguration={'LocationConstraint': region})
+        params = {
+            "Bucket": bucket,
+        }
+        if region !='us-east-1':
+            params['CreateBucketConfiguration']={'LocationConstraint': region}
+        s3c.create_bucket(**params)
     except (s3c.exceptions.BucketAlreadyExists, s3c.exceptions.BucketAlreadyOwnedByYou):
         pass
     s3c.upload_file(filename, bucket, path)
