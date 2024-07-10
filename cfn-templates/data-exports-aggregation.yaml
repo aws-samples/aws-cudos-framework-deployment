@@ -1093,11 +1093,11 @@ Outputs:
   DestinationBucketName:
     Description: Bucket with aggregate Data Exports
     Value: !Sub ${ResourcePrefix}-${DestinationAccountId}-data-exports
-    Export: { Name: !Sub 'cid-DataExports-Bucket'}
+    Export: { Name: 'cid-DataExports-Bucket'}
   Database:
     Description: Database for Data Exports
     Value:  !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
-    Export: { Name: !Sub 'cid-DataExports-Database'}
+    Export: { Name: 'cid-DataExports-Database'}
   LocalAccountBucket:
     Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
