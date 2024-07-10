@@ -4,6 +4,7 @@ import logging
 from typing import Dict
 
 from cid.helpers.quicksight.resource import CidQsResource
+from cid.helpers.quicksight.definition import Definition as CidQsDefinition
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.utils import cid_print, get_yesno_parameter
 from cid.helpers.quicksight.resource import CidQsResource
@@ -18,10 +19,12 @@ class Dashboard(CidQsResource):
         self.datasets: Dict[str, str] = {}
         # Deployed template
         self._deployedTemplate: CidQsTemplate = None
+        self._deployedDefinition: CidQsDefinition = None
         self._status = str()
         self.status_detail = str()
         # Source template in origin account
         self.sourceTemplate: CidQsTemplate = None
+        self.sourceDefinition: CidQsDefinition = None
         self.qs = qs
 
     @property
@@ -41,6 +44,14 @@ class Dashboard(CidQsResource):
         self._deployedTemplate = template
 
     @property
+    def deployedDefinition(self) -> CidQsTemplate:
+        return self._deployedDefinition
+
+    @deployedDefinition.setter
+    def deployedDefinition(self, definition: CidQsDefinition) -> None:
+        self._deployedDefinition = definition
+
+    @property
     def template_id(self) -> str:
         if isinstance(self.deployedTemplate, CidQsTemplate):
             return self.deployedTemplate.id
@@ -56,6 +67,8 @@ class Dashboard(CidQsResource):
     def deployed_version(self) -> int:
         if isinstance(self.deployedTemplate, CidQsTemplate):
             return self.deployedTemplate.version
+        elif isinstance(self.deployedDefinition, CidQsDefinition):
+            return self.deployedDefinition.cid_version
         else:
             return -1
 
@@ -67,12 +80,24 @@ class Dashboard(CidQsResource):
     def latest_version(self) -> int:
         if isinstance(self.sourceTemplate, CidQsTemplate):
             return self.sourceTemplate.version
+        elif isinstance(self.sourceDefinition, CidQsDefinition):
+            return self.sourceDefinition.cid_version
         else:
             return -1
 
     @property
     def health(self) -> bool:
         return self.status not in ['broken']
+    
+    @property
+    def origin_type(self) -> str:
+        if self.deployedTemplate is not None:
+            return "TEMPLATE"
+        elif self.deployedDefinition is not None:
+            return "DEFINITION"
+        else:
+            return "UNKNOWN"
+
 
     @property
     def status(self) -> str:
@@ -116,13 +141,20 @@ class Dashboard(CidQsResource):
         cid_version_latest =  "N/A"
 
         try:
-            cid_version = self.deployedTemplate.cid_version
+            if self.origin_type == "TEMPLATE":
+                cid_version = self.deployedTemplate.cid_version
+            if self.origin_type == "DEFINITION":
+                cid_version = self.deployedDefinition.cid_version
         except ValueError:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
 
         try:
-            if isinstance(self.sourceTemplate, CidQsTemplate):
+            # Replacing condition to check for instance type to check for origin type
+            if self.origin_type == "TEMPLATE":
+            # if isinstance(self.sourceTemplate, CidQsTemplate):
                 cid_version_latest = self.sourceTemplate.cid_version
+            if self.origin_type == "DEFINITION":
+                cid_version_latest = self.sourceDefinition.cid_version
         except ValueError:
             logger.debug("The latest version of the dashboard could not be retrieved")
 
