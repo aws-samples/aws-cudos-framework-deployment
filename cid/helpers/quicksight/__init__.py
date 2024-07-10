@@ -1,9 +1,11 @@
 import re
+import io
 import json
 import uuid
 import time
 import datetime
 import logging
+import yaml
 from string import Template
 from typing import Dict, List, Union
 from pkg_resources import resource_string
@@ -16,6 +18,7 @@ from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
+from cid.helpers.quicksight.definition import Definition as CidQsDefinition
 from cid.utils import get_parameter, get_parameters, exec_env, cid_print, ago, unset_parameter
 from cid.exceptions import CidCritical, CidError
 
@@ -29,6 +32,7 @@ class QuickSight(CidBase):
     _datasets: Dict[str, Dataset] = None
     _datasources: Dict[str, Datasource] = None
     _templates: Dict[str, CidQsTemplate] = dict()
+    _definitions: Dict[str, CidQsDefinition] = dict()
     _identityRegion: str = None
     _user: dict = None
     _principal_arn: dict = None
@@ -194,7 +198,7 @@ class QuickSight(CidBase):
         return result
 
 
-    def discover_dashboard(self, dashboardId: str) -> Dashboard:
+    def discover_dashboard(self, dashboardId: str, refresh: bool = False) -> Dashboard:
         """Discover a single dashboard: describe and pull downstream info (datasets, related templates and views) """
 
         def _safe_int(value, default=None):
@@ -204,7 +208,8 @@ class QuickSight(CidBase):
         dashboard = self.describe_dashboard(DashboardId=dashboardId)
         if not dashboard:
             raise CidCritical(f'Dashboard {dashboardId} was not found')
-        # Look for dashboard definition by DashboardId
+        # Look for dashboard definition by DashboardId in the catalog of supported dashboards (the currently available definitions in their latest public version)
+        # This definition can be used to determine the gap between the latest public version and the currently deployed version
         _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
         if not _definition:
             # Look for dashboard definition by templateId.
@@ -256,9 +261,24 @@ class QuickSight(CidBase):
                     logger.info(f'Unable to describe template for {dashboardId}, {exc}')
             else:
                 logger.info("Minimum template version could not be found for Dashboard {dashboardId}: {_template_arn}, deployed template could not be described")
+        
+        # TODO Define better way to identity whether a dashboard is TEMPLATE or DEFINITION based
+        if dashboard.origin_type != "TEMPLATE":
+            # TODO Resolve source definition (the latest definition publicly available)
+            data_stream = io.StringIO(_definition["data"])
+            definition_data = yaml.safe_load(data_stream)
+            dashboard.sourceDefinition = CidQsDefinition(definition_data)
 
+            # TODO Resolve deployed dashboard definition
+            params = {
+                "dashboard_id": dashboardId,
+                "refresh": refresh
+            }
+            _deployed_definition = self.describe_dashboard_definition(**params)
+            # Assign property deployedDefinition to the retrieved dashboard definition
+            dashboard.deployedDefinition = _deployed_definition
 
-        # Fetch datasets
+        # Fetch datasets (works for both TEMPLATE and DEFINITION based dashboards)
         for dataset in dashboard.version.get('DataSetArns', []):
             dataset_id = dataset.split('/')[-1]
             try:
@@ -315,7 +335,7 @@ class QuickSight(CidBase):
                 logger.debug(exc, exc_info=True)
                 logger.info("Unable to override template description")
 
-        # Fetch all views recursively
+        # Fetch all views recursively (works for both TEMPLATE and DEFINITION based dashboards)
         all_views = []
         def _recursive_add_view(view):
             all_views.append(view)
@@ -586,7 +606,7 @@ class QuickSight(CidBase):
             dashboard_id = dashboard.get('DashboardId')
             bar.set_description(f'Discovering {dashboard_name[:10]:<10}', refresh=True)
             logger.info(f'Discovering "{dashboard_name}"')
-            self.discover_dashboard(dashboard_id)
+            self.discover_dashboard(dashboard_id, refresh=refresh)
 
     def list_dashboards(self) -> list:
         parameters = {
@@ -818,6 +838,27 @@ class QuickSight(CidBase):
         except Exception as exc:
             logger.error(f'Error in describe_dashboard: {exc}')
             raise
+    
+    # Create a method to retrieve the definition for a given dashboard
+    def describe_dashboard_definition(self, dashboard_id: str, refresh: bool = False) -> CidQsDefinition:
+        """ Describes an AWS QuickSight dashboard definition """
+        if refresh or not self._definitions.get(f'{self.account_id}:{self.identityRegion}:{dashboard_id}'):
+            try:
+                parameters = {
+                    'AwsAccountId': self.account_id,
+                    'DashboardId': dashboard_id
+                }
+                result = self.client.describe_dashboard_definition(**parameters)
+                self._definitions.update({f'{self.account_id}:{self.identityRegion}:{dashboard_id}': CidQsDefinition(result.get('Definition'))})
+                logger.debug(result)
+            except self.client.exceptions.UnsupportedUserEditionException as exc:
+                raise CidCritical('AWS QuickSight Enterprise Edition is required') from exc
+            except self.client.exceptions.ResourceNotFoundException as exc:
+                raise CidError(f'Error: Definition for dashboard with ID {dashboard_id} is not available in account {self.account_id} and region {self.identityRegion}') from exc
+            except Exception as exc:
+                logger.debug(exc, exc_info=True)
+                raise CidError(f'Error: {exc} - Cannot find definition for dashboard with ID {dashboard_id} in account {self.account_id}.') from exc
+        return self._definitions.get(f'{self.account_id}:{self.identityRegion}:{dashboard_id}')
 
     def delete_dashboard(self, dashboard_id):
         """ Deletes an AWS QuickSight dashboard """
