@@ -1,7 +1,7 @@
 CREATE OR REPLACE VIEW "compute_optimizer_rds_all_options" AS 
 (
    SELECT
-     TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp
+     TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%d %H:%i:%s')) lastrefreshtimestamp_utc
    , accountid accountid
    , resourcearn arn
    , TRY("split_part"(resourcearn, ':', 4)) region
@@ -23,8 +23,6 @@ CREATE OR REPLACE VIEW "compute_optimizer_rds_all_options" AS
    , instanceRecommendationOptions_1_estimatedMonthlySavingsCurrency currency
    , TRY((CAST(currentinstanceondemandhourlyprice AS double) * 730) + CAST(currentstorageondemandmonthlyprice AS double)) monthlyprice
    , TRY(CAST(currentinstanceondemandhourlyprice AS double) + (CAST(currentstorageondemandmonthlyprice AS double) / 730)) hourlyprice
-   , TRY(CAST(currentinstanceondemandhourlyprice AS double)) rdscurrentinstanceondemandhourlyprice
-   , TRY(CAST(currentstorageondemandmonthlyprice AS double) / 730) rdscurrentstorageondemandhourlyprice
    , 0E0 estimatedmonthlysavings_value
    , 0E0 estimatedmonthly_ondemand_cost_change
    , 0E0 max_estimatedmonthlysavings_value_very_low
@@ -58,8 +56,6 @@ UNION    SELECT
    , instanceRecommendationOptions_1_estimatedMonthlySavingsCurrency currency
    , TRY((CAST(instancerecommendationoptions_1_instanceondemandhourlyprice AS double) * 730) + CAST(storagerecommendationoptions_1_ondemandmonthlyprice AS double)) monthlyprice
    , TRY(CAST(instancerecommendationoptions_1_instanceondemandhourlyprice AS double) + (CAST(storagerecommendationoptions_1_ondemandmonthlyprice AS double) / 730)) hourlyprice
-   , TRY(CAST(instancerecommendationoptions_1_instanceondemandhourlyprice AS double)) rdscurrentinstanceondemandhourlyprice
-   , TRY(CAST(storagerecommendationoptions_1_ondemandmonthlyprice AS double) / 730) rdscurrentstorageondemandhourlyprice
    , TRY(CAST(instancerecommendationoptions_1_estimatedmonthlysavingsvalue AS double) + CAST(storagerecommendationoptions_1_estimatedmonthlysavingsvalue as double)) estimatedmonthlysavings_value
    , TRY(((CAST(currentinstanceondemandhourlyprice AS double) * 730) + CAST(currentstorageondemandmonthlyprice AS double)) - ((CAST(instancerecommendationoptions_1_instanceondemandhourlyprice AS double) * 730) + CAST(storagerecommendationoptions_1_ondemandmonthlyprice AS double))) estimatedmonthly_ondemand_cost_change
    , 0E0 max_estimatedmonthlysavings_value_very_low
@@ -93,8 +89,6 @@ UNION    SELECT
    , instanceRecommendationOptions_2_estimatedMonthlySavingsCurrency currency
    , TRY((CAST(instancerecommendationoptions_2_instanceondemandhourlyprice AS double) * 730) + CAST(storagerecommendationoptions_2_ondemandmonthlyprice AS double)) monthlyprice
    , TRY(CAST(instancerecommendationoptions_2_instanceondemandhourlyprice AS double) + (CAST(storagerecommendationoptions_2_ondemandmonthlyprice AS double) / 730)) hourlyprice
-   , TRY(CAST(instancerecommendationoptions_2_instanceondemandhourlyprice AS double)) rdscurrentinstanceondemandhourlyprice
-   , TRY(CAST(storagerecommendationoptions_2_ondemandmonthlyprice AS double) / 730) rdscurrentstorageondemandhourlyprice
    , TRY(CAST(instancerecommendationoptions_2_estimatedmonthlysavingsvalue AS double) + CAST(storagerecommendationoptions_2_estimatedmonthlysavingsvalue as double)) estimatedmonthlysavings_value
    , TRY(((CAST(currentinstanceondemandhourlyprice AS double) * 730) + CAST(currentstorageondemandmonthlyprice AS double)) - ((CAST(instancerecommendationoptions_2_instanceondemandhourlyprice AS double) * 730) + CAST(storagerecommendationoptions_2_ondemandmonthlyprice AS double))) estimatedmonthly_ondemand_cost_change
    , 0E0 max_estimatedmonthlysavings_value_very_low
@@ -128,8 +122,6 @@ UNION    SELECT
    , instanceRecommendationOptions_3_estimatedMonthlySavingsCurrency currency
    , TRY((CAST(instancerecommendationoptions_3_instanceondemandhourlyprice AS double) * 730) + CAST(storagerecommendationoptions_3_ondemandmonthlyprice AS double)) monthlyprice
    , TRY(CAST(instancerecommendationoptions_3_instanceondemandhourlyprice AS double) + (CAST(storagerecommendationoptions_3_ondemandmonthlyprice AS double) / 730)) hourlyprice
-   , TRY(CAST(instancerecommendationoptions_3_instanceondemandhourlyprice AS double)) rdscurrentinstanceondemandhourlyprice
-   , TRY(CAST(storagerecommendationoptions_3_ondemandmonthlyprice AS double) / 730) rdscurrentstorageondemandhourlyprice
    , TRY(CAST(instancerecommendationoptions_3_estimatedmonthlysavingsvalue AS double) + CAST(storagerecommendationoptions_3_estimatedmonthlysavingsvalue as double)) estimatedmonthlysavings_value
    , TRY(((CAST(currentinstanceondemandhourlyprice AS double) * 730) + CAST(currentstorageondemandmonthlyprice AS double)) - ((CAST(instancerecommendationoptions_3_instanceondemandhourlyprice AS double) * 730) + CAST(storagerecommendationoptions_3_ondemandmonthlyprice AS double))) estimatedmonthly_ondemand_cost_change
    , 0E0 max_estimatedmonthlysavings_value_very_low
