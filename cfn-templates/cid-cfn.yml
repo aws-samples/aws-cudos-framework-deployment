@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v0.3.7
+Description: Deployment of Cloud Intelligence Dashboards v0.3.8
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -1611,7 +1611,7 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: 'cid-resource-lambda-layer/cid-0.3.7.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-0.3.8.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11
