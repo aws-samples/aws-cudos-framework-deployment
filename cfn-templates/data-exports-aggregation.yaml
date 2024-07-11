@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Billing Data Export Aggregation v0.0.1
+Description: AWS Billing Data Export Aggregation v0.0.2
 Metadata:
 
   AWS::CloudFormation::Interface:
@@ -632,7 +632,7 @@ Resources:
     Condition: DeployAnyTable
     Properties:
       DatabaseInput:
-        Name: !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_' 
+        Name: !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
       CatalogId: !Sub "${AWS::AccountId}"
 
 ###########################################################################
@@ -1093,6 +1093,11 @@ Outputs:
   DestinationBucketName:
     Description: Bucket with aggregate Data Exports
     Value: !Sub ${ResourcePrefix}-${DestinationAccountId}-data-exports
+    Export: { Name: 'cid-DataExports-Bucket'}
+  Database:
+    Description: Database for Data Exports
+    Value:  !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
+    Export: { Name: 'cid-DataExports-Database'}
   LocalAccountBucket:
     Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
