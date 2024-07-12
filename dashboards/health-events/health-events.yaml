@@ -2414,7 +2414,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="16px">
-                      <b>Events (unique)</b>
+                      <b>Events</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -2905,7 +2905,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="16px">
-                      <b>Events (unique)</b>
+                      <b>Events</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
