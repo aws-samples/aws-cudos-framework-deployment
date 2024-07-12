@@ -169,9 +169,6 @@ def set_parameters(parameters: dict, all_yes: bool=None) -> None:
         global _all_yes
         _all_yes = all_yes
 
-def is_unattended_mode() -> bool:
-    return _all_yes
-
 def get_parameters():
     return dict(params)
 
