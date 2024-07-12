@@ -51,3 +51,9 @@ variable "enable_split_cost_allocation_data" {
   description = "Enable split cost allocation data for ECS and EKS for this CUR report"
   default     = false
 }
+
+variable "tags" {
+  type        = map(string)
+  description = "Map of tags to apply to module resources"
+  default     = {}
+}
