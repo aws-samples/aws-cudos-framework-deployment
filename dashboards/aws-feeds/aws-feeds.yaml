@@ -106,7 +106,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: d3204367-4f96-4424-aeac-090af55b8bee
+              SheetId: 86bfd032-66cc-464c-90ed-c3160fff062e
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 0ff1bd66-5d49-4e1e-bb4f-d93ba330030e
@@ -141,7 +141,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: d3204367-4f96-4424-aeac-090af55b8bee
+              SheetId: 86bfd032-66cc-464c-90ed-c3160fff062e
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 874a1bef-e049-4e22-b953-8896150dbc8d
@@ -160,7 +160,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 549ad6ea-4a4c-4832-ab07-63b4602f1c51
+              SheetId: 262f8d75-3a13-4712-8a96-89f420e19ee2
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 349c1657-e0d7-4860-a50c-51d0793b6c65
@@ -179,7 +179,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 549ad6ea-4a4c-4832-ab07-63b4602f1c51
+              SheetId: 262f8d75-3a13-4712-8a96-89f420e19ee2
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: d407b4f2-a6da-4379-b03f-481fb97ff38b
@@ -198,7 +198,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 69680a3f-16aa-478e-995b-bbfdc5dd09ea
+              SheetId: 59c9f319-c94c-408a-ba58-5724e0892243
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: f0fa8741-984a-4e0e-a2db-883c5a36d7be
@@ -217,7 +217,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 69680a3f-16aa-478e-995b-bbfdc5dd09ea
+              SheetId: 59c9f319-c94c-408a-ba58-5724e0892243
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 39d29382-181d-46e2-ad30-85e2867d7454
@@ -316,7 +316,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 69680a3f-16aa-478e-995b-bbfdc5dd09ea
+              SheetId: 59c9f319-c94c-408a-ba58-5724e0892243
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 48df37cd-0bd8-477e-9326-6d9e2bb0105f
@@ -335,9 +335,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: d3204367-4f96-4424-aeac-090af55b8bee
+              SheetId: 86bfd032-66cc-464c-90ed-c3160fff062e
               VisualIds:
-              - b1b2f765-6316-4bdc-9250-d4a3f0dd3652
+              - c83e2e7a-d80c-4cfc-9689-ea0b83813a17
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 6f49a188-e2a5-4432-8a2d-e8aa770fd684
@@ -356,9 +356,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 549ad6ea-4a4c-4832-ab07-63b4602f1c51
+              SheetId: 262f8d75-3a13-4712-8a96-89f420e19ee2
               VisualIds:
-              - 1fe84821-fac6-48e1-8bca-248f9677924f
+              - 8a97b9f5-4536-434b-b56c-81ca359b70e9
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a5cabc71-ae84-467a-8a86-d019b39a7381
@@ -377,7 +377,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 1dafbf7e-c3bb-4a17-afe8-d9a505766e2a
+              SheetId: 05b4f2ce-535c-4728-aeca-2c0ede09c064
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2b6d028d-3785-443d-9658-42218c41513c
@@ -396,7 +396,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: df99e71b-c5f9-4dd9-b015-4511b91174ce
+              SheetId: ab1a458b-24c2-4afb-a455-43189a21c614
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 211c4bf7-dd9a-4292-8d69-f0b5094d6868
@@ -413,9 +413,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: d3204367-4f96-4424-aeac-090af55b8bee
+              SheetId: 86bfd032-66cc-464c-90ed-c3160fff062e
               VisualIds:
-              - 1dd67257-5ae9-431c-9100-6e41912fa853
+              - 11e3f62f-0673-4885-a7d4-7aa8e7ef564f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: adf2d9c0-c414-4324-9423-8a3331ca81b4
@@ -432,9 +432,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 549ad6ea-4a4c-4832-ab07-63b4602f1c51
+              SheetId: 262f8d75-3a13-4712-8a96-89f420e19ee2
               VisualIds:
-              - 985f42b2-42ad-4429-958f-78dabbc72880
+              - 7f4f854a-61e9-4f52-a4d0-486d4cf0c550
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 8f09a5d6-b69f-494e-aaf5-9db707797783
@@ -451,9 +451,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: df99e71b-c5f9-4dd9-b015-4511b91174ce
+              SheetId: ab1a458b-24c2-4afb-a455-43189a21c614
               VisualIds:
-              - c4e26467-c7ff-4942-b250-ceb09287743f
+              - 4bedb8e3-5df5-4900-ac93-358f82f342fa
         Status: ENABLED
       Options:
         WeekStart: SUNDAY
@@ -634,20 +634,26 @@ dashboards:
                 RowIndex: 0
                 RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 15
+                ColumnSpan: 10
                 ElementId: e54aeeef-6e3e-465e-924f-b488143f8fbc
                 ElementType: TEXT_BOX
                 RowIndex: 2
                 RowSpan: 3
-              - ColumnIndex: 15
-                ColumnSpan: 14
+              - ColumnIndex: 10
+                ColumnSpan: 10
+                ElementId: 94240032-fd5e-42e2-974f-99ace3169ac4
+                ElementType: TEXT_BOX
+                RowIndex: 2
+                RowSpan: 3
+              - ColumnIndex: 20
+                ColumnSpan: 9
                 ElementId: f8876593-8435-4fc3-b5c8-b827ed806f21
                 ElementType: TEXT_BOX
                 RowIndex: 2
                 RowSpan: 3
               - ColumnIndex: 29
                 ColumnSpan: 7
-                ElementId: 568b3546-f85c-416e-bd3f-5051ad52a726
+                ElementId: 107983c4-dbfb-4058-af7d-a8a666b7d417
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 5
@@ -659,25 +665,25 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 21
-                ElementId: b4c71d25-f1de-470f-9c41-462a6e1b885b
+                ElementId: cce94b53-ea55-4308-966f-63ba797f9733
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 9
               - ColumnIndex: 21
                 ColumnSpan: 15
-                ElementId: 5a142f1c-5d50-4124-a834-28007e8b9a8f
+                ElementId: 9262e355-372c-4483-a381-979a19f2a790
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 16
-                ElementId: 062f7742-558e-4672-8c99-f9e71da94578
+                ElementId: 2d7a4a7e-1264-4682-82af-27beadb80b24
                 ElementType: VISUAL
                 RowIndex: 16
                 RowSpan: 12
               - ColumnIndex: 16
                 ColumnSpan: 20
-                ElementId: ff0242d5-b5f7-4b30-b7f3-1a7f95be694f
+                ElementId: e52806f8-4bd8-4711-9b76-cc01b57ebd38
                 ElementType: VISUAL
                 RowIndex: 16
                 RowSpan: 12
@@ -764,7 +770,7 @@ dashboards:
                 ElementId: 9cc495ee-6805-45af-b90b-7277746e4a0e
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
-        SheetId: 69680a3f-16aa-478e-995b-bbfdc5dd09ea
+        SheetId: 59c9f319-c94c-408a-ba58-5724e0892243
         TextBoxes:
         - Content: |-
             <text-box>
@@ -798,6 +804,23 @@ dashboards:
               </ul>
             </text-box>
           SheetTextBoxId: f8876593-8435-4fc3-b5c8-b827ed806f21
+        - Content: |-
+            <text-box>
+              3rd Party AWS News Aggregators:
+              <br/>
+              <ul>
+                <li>
+                  <a href="https://www.lastweekinaws.com/newsletter/" target="_blank">Last week in AWS</a>
+                </li>
+                <li>
+                  <a href="https://aws-news.com/" target="_blank">AWS News Feed</a>
+                </li>
+                <li>
+                  <a href="https://awsweekly.info/ " target="_blank">AWS weekly</a>
+                </li>
+              </ul>
+            </text-box>
+          SheetTextBoxId: 94240032-fd5e-42e2-974f-99ace3169ac4
         Visuals:
         - TableVisual:
             Actions:
@@ -888,7 +911,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
-            VisualId: b4c71d25-f1de-470f-9c41-462a6e1b885b
+            VisualId: cce94b53-ea55-4308-966f-63ba797f9733
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -916,7 +939,7 @@ dashboards:
                         DataSetIdentifier: aws_feeds
                       DateGranularity: WEEK
                       FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.0.1714574319150
-                      HierarchyId: d0f1b05b-be6a-4aac-9449-d507139a946e
+                      HierarchyId: 317c1aee-4bf4-47f2-bd50-788844cf1457
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -971,12 +994,12 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: d0f1b05b-be6a-4aac-9449-d507139a946e
+                HierarchyId: 317c1aee-4bf4-47f2-bd50-788844cf1457
             Subtitle:
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
-            VisualId: 062f7742-558e-4672-8c99-f9e71da94578
+            VisualId: 2d7a4a7e-1264-4682-82af-27beadb80b24
         - WordCloudVisual:
             Actions:
             - ActionOperations:
@@ -1010,7 +1033,7 @@ dashboards:
               Visibility: HIDDEN
             Title:
               Visibility: HIDDEN
-            VisualId: 5a142f1c-5d50-4124-a834-28007e8b9a8f
+            VisualId: 9262e355-372c-4483-a381-979a19f2a790
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -1038,7 +1061,7 @@ dashboards:
                         DataSetIdentifier: aws_feeds
                       DateGranularity: WEEK
                       FieldId: 13d7470d-f377-4f2a-bfc5-cda8cb6f493a.published.1.1715238454967
-                      HierarchyId: 9febd430-a5d2-44a5-868a-947cce31d303
+                      HierarchyId: c9643178-39c9-4e60-bd0d-1e05a6b91a63
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -1093,12 +1116,12 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 9febd430-a5d2-44a5-868a-947cce31d303
+                HierarchyId: c9643178-39c9-4e60-bd0d-1e05a6b91a63
             Subtitle:
               Visibility: HIDDEN
             Title:
               Visibility: HIDDEN
-            VisualId: ff0242d5-b5f7-4b30-b7f3-1a7f95be694f
+            VisualId: e52806f8-4bd8-4711-9b76-cc01b57ebd38
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -1137,7 +1160,7 @@ dashboards:
               Visibility: HIDDEN
             Title:
               Visibility: HIDDEN
-            VisualId: 568b3546-f85c-416e-bd3f-5051ad52a726
+            VisualId: 107983c4-dbfb-4058-af7d-a8a666b7d417
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -1161,25 +1184,25 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 24
-                ElementId: b1b2f765-6316-4bdc-9250-d4a3f0dd3652
+                ElementId: c83e2e7a-d80c-4cfc-9689-ea0b83813a17
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 9
               - ColumnIndex: 24
                 ColumnSpan: 12
-                ElementId: 1dd67257-5ae9-431c-9100-6e41912fa853
+                ElementId: 11e3f62f-0673-4885-a7d4-7aa8e7ef564f
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 18
-                ElementId: a75d4b5e-587d-472f-9fcd-430feb37fefb
+                ElementId: ab9f2994-60c0-4483-a315-5ec0423b511f
                 ElementType: VISUAL
                 RowIndex: 11
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
-                ElementId: 4ab86353-d130-4c77-85ea-f781de15f208
+                ElementId: 320db2f3-fc02-4292-a078-6109c3e6d697
                 ElementType: VISUAL
                 RowIndex: 11
                 RowSpan: 12
@@ -1251,7 +1274,7 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-        SheetId: d3204367-4f96-4424-aeac-090af55b8bee
+        SheetId: 86bfd032-66cc-464c-90ed-c3160fff062e
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"32px\">AWS What's New\_</inline>\n\
             \  &#128640;\n  <br/>\n  <block align=\"right\">\n    Source:\n    <a href=\"\
@@ -1287,7 +1310,7 @@ dashboards:
                         DataSetIdentifier: aws_feeds_whats_new
                       DateGranularity: WEEK
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634655094
-                      HierarchyId: a1ffef8d-c491-46dc-b381-3e8a63047cfa
+                      HierarchyId: 763a1bc7-0cd8-44a9-89e0-38ceae1cbd7b
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -1343,14 +1366,14 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: a1ffef8d-c491-46dc-b381-3e8a63047cfa
+                HierarchyId: 763a1bc7-0cd8-44a9-89e0-38ceae1cbd7b
             Subtitle:
               Visibility: HIDDEN
             Title:
               FormatText:
                 RichText: <visual-title>Services</visual-title>
               Visibility: VISIBLE
-            VisualId: 4ab86353-d130-4c77-85ea-f781de15f208
+            VisualId: 320db2f3-fc02-4292-a078-6109c3e6d697
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -1497,7 +1520,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>AWS What's New</visual-title>
               Visibility: HIDDEN
-            VisualId: b1b2f765-6316-4bdc-9250-d4a3f0dd3652
+            VisualId: c83e2e7a-d80c-4cfc-9689-ea0b83813a17
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -1568,7 +1591,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
-            VisualId: 1dd67257-5ae9-431c-9100-6e41912fa853
+            VisualId: 11e3f62f-0673-4885-a7d4-7aa8e7ef564f
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -1601,7 +1624,7 @@ dashboards:
                         DataSetIdentifier: aws_feeds_whats_new
                       DateGranularity: WEEK
                       FieldId: b803cd8a-acba-4cc0-95cb-5c91769066a6.date.1.1714634641977
-                      HierarchyId: 9f8b71c8-ce48-44d7-b72c-90f5d7e1030b
+                      HierarchyId: cb50fe59-f610-4498-b4d8-39b27f1e8e0b
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -1657,14 +1680,14 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 9f8b71c8-ce48-44d7-b72c-90f5d7e1030b
+                HierarchyId: cb50fe59-f610-4498-b4d8-39b27f1e8e0b
             Subtitle:
               Visibility: HIDDEN
             Title:
               FormatText:
                 RichText: <visual-title>Categories</visual-title>
               Visibility: VISIBLE
-            VisualId: a75d4b5e-587d-472f-9fcd-430feb37fefb
+            VisualId: ab9f2994-60c0-4483-a315-5ec0423b511f
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -1688,25 +1711,25 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 24
-                ElementId: 1fe84821-fac6-48e1-8bca-248f9677924f
+                ElementId: 8a97b9f5-4536-434b-b56c-81ca359b70e9
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 9
               - ColumnIndex: 24
                 ColumnSpan: 12
-                ElementId: 985f42b2-42ad-4429-958f-78dabbc72880
+                ElementId: 7f4f854a-61e9-4f52-a4d0-486d4cf0c550
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 18
-                ElementId: 06742de4-1ffd-49aa-a4b3-9ba703e61008
+                ElementId: 343358e8-fa67-44f5-b630-3b93364748d9
                 ElementType: VISUAL
                 RowIndex: 11
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
-                ElementId: cc241b1a-ddd1-4872-8391-f708aaa63979
+                ElementId: 45ce6573-a74c-4131-ae13-24b377e49162
                 ElementType: VISUAL
                 RowIndex: 11
                 RowSpan: 12
@@ -1776,7 +1799,7 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-        SheetId: 549ad6ea-4a4c-4832-ab07-63b4602f1c51
+        SheetId: 262f8d75-3a13-4712-8a96-89f420e19ee2
         TextBoxes:
         - Content: |-
             <text-box>
@@ -1818,7 +1841,7 @@ dashboards:
                         DataSetIdentifier: aws_feeds_blog_post
                       DateGranularity: WEEK
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573960782
-                      HierarchyId: b3041208-2a3e-4661-a4a8-3e029ac278a3
+                      HierarchyId: ecc229fe-7b3b-4993-8ac5-265aa66f399f
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -1874,14 +1897,14 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: b3041208-2a3e-4661-a4a8-3e029ac278a3
+                HierarchyId: ecc229fe-7b3b-4993-8ac5-265aa66f399f
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Creators</visual-title>
               Visibility: VISIBLE
-            VisualId: cc241b1a-ddd1-4872-8391-f708aaa63979
+            VisualId: 45ce6573-a74c-4131-ae13-24b377e49162
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -2110,7 +2133,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>AWS Blog Posts</visual-title>
               Visibility: HIDDEN
-            VisualId: 1fe84821-fac6-48e1-8bca-248f9677924f
+            VisualId: 8a97b9f5-4536-434b-b56c-81ca359b70e9
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -2139,7 +2162,7 @@ dashboards:
                         DataSetIdentifier: aws_feeds_blog_post
                       DateGranularity: WEEK
                       FieldId: 633c14f6-0bff-4f6a-ae1b-6508d3a1781f.date.1.1714573947793
-                      HierarchyId: 384b4e9d-4624-46cb-b0d9-36412f7108c1
+                      HierarchyId: d4da29f2-0725-417b-9b71-39da84efffc9
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -2195,14 +2218,14 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 384b4e9d-4624-46cb-b0d9-36412f7108c1
+                HierarchyId: d4da29f2-0725-417b-9b71-39da84efffc9
             Subtitle:
               Visibility: HIDDEN
             Title:
               FormatText:
                 RichText: <visual-title>Categories</visual-title>
               Visibility: VISIBLE
-            VisualId: 06742de4-1ffd-49aa-a4b3-9ba703e61008
+            VisualId: 343358e8-fa67-44f5-b630-3b93364748d9
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -2253,7 +2276,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
-            VisualId: 985f42b2-42ad-4429-958f-78dabbc72880
+            VisualId: 7f4f854a-61e9-4f52-a4d0-486d4cf0c550
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -2277,19 +2300,19 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 19
-                ElementId: 1226782d-7ecc-4020-b956-5c018a25e9b2
+                ElementId: b7ce1c11-f67d-4d2a-9c97-9b95d8ef5642
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 12
               - ColumnIndex: 19
                 ColumnSpan: 17
-                ElementId: e9cbc3e4-fe3d-459a-a512-e55997337ce4
+                ElementId: b96ef4e1-3dfd-4154-a77a-7460ae9edfab
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 05fca2ba-467a-49ea-81c3-f5f4ec258345
+                ElementId: 159a08e0-8756-4cb1-868b-112db183b551
                 ElementType: VISUAL
                 RowIndex: 14
                 RowSpan: 12
@@ -2311,7 +2334,7 @@ dashboards:
         - Configuration:
             GridLayout:
               Elements: []
-        SheetId: 1dafbf7e-c3bb-4a17-afe8-d9a505766e2a
+        SheetId: 05b4f2ce-535c-4728-aeca-2c0ede09c064
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"32px\">AWS YouTube Videos\_</inline>\n\
             \  &#128250;\n  <br/>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
@@ -2391,7 +2414,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
-            VisualId: 05fca2ba-467a-49ea-81c3-f5f4ec258345
+            VisualId: 159a08e0-8756-4cb1-868b-112db183b551
         - CustomContentVisual:
             Actions: []
             ChartConfiguration:
@@ -2408,13 +2431,13 @@ dashboards:
                     <parameter>${YouTubeURL}</parameter>
                   </visual-title>
               Visibility: HIDDEN
-            VisualId: e9cbc3e4-fe3d-459a-a512-e55997337ce4
+            VisualId: b96ef4e1-3dfd-4154-a77a-7460ae9edfab
         - TableVisual:
             Actions:
             - ActionOperations:
               - NavigationOperation:
                   LocalNavigationConfiguration:
-                    TargetSheetId: 1dafbf7e-c3bb-4a17-afe8-d9a505766e2a
+                    TargetSheetId: 05b4f2ce-535c-4728-aeca-2c0ede09c064
               - SetParametersOperation:
                   ParameterValueConfigurations:
                   - DestinationParameterName: YouTubeURL
@@ -2473,7 +2496,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
-            VisualId: 1226782d-7ecc-4020-b956-5c018a25e9b2
+            VisualId: b7ce1c11-f67d-4d2a-9c97-9b95d8ef5642
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -2497,19 +2520,19 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 19
-                ElementId: b37e7204-6a96-47d4-9f78-da3ec320c982
+                ElementId: 141757cb-4396-4b1a-a958-2f3c48e7b41e
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 12
               - ColumnIndex: 19
                 ColumnSpan: 17
-                ElementId: c4e26467-c7ff-4942-b250-ceb09287743f
+                ElementId: 4bedb8e3-5df5-4900-ac93-358f82f342fa
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 1013ee5d-75f1-4902-b24e-f448826c63fb
+                ElementId: 3d66fd88-dab9-49aa-aab3-c5dc13dadfab
                 ElementType: VISUAL
                 RowIndex: 14
                 RowSpan: 12
@@ -2531,7 +2554,7 @@ dashboards:
         - Configuration:
             GridLayout:
               Elements: []
-        SheetId: df99e71b-c5f9-4dd9-b015-4511b91174ce
+        SheetId: ab1a458b-24c2-4afb-a455-43189a21c614
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"32px\">AWS Security Bulletin\_</inline>\n\
             \  &#128272;\n  <br/>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
@@ -2655,7 +2678,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
-            VisualId: b37e7204-6a96-47d4-9f78-da3ec320c982
+            VisualId: 141757cb-4396-4b1a-a958-2f3c48e7b41e
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -2706,7 +2729,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: HIDDEN
-            VisualId: c4e26467-c7ff-4942-b250-ceb09287743f
+            VisualId: 4bedb8e3-5df5-4900-ac93-358f82f342fa
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -2734,7 +2757,7 @@ dashboards:
                         DataSetIdentifier: aws_feeds_security_bulletin
                       DateGranularity: WEEK
                       FieldId: 4d92b921-93f3-4853-b5a7-189780f0b65c.published.0.1715181803517
-                      HierarchyId: 0bb8d80b-b079-4c61-ad41-1e6d4f4ace44
+                      HierarchyId: 519830df-597c-417a-8e38-6b5d9ee87709
                   Colors: []
                   Values:
                   - CategoricalMeasureField:
@@ -2779,12 +2802,12 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 0bb8d80b-b079-4c61-ad41-1e6d4f4ace44
+                HierarchyId: 519830df-597c-417a-8e38-6b5d9ee87709
             Subtitle:
               Visibility: HIDDEN
             Title:
               Visibility: HIDDEN
-            VisualId: 1013ee5d-75f1-4902-b24e-f448826c63fb
+            VisualId: 3d66fd88-dab9-49aa-aab3-c5dc13dadfab
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -2796,18 +2819,18 @@ dashboards:
               Elements:
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 27aa6384-a61c-4ede-8ec4-70431064ac91
+                ElementId: bc271d34-23cf-4b98-a75f-07d4f0139a22
                 ElementType: VISUAL
                 RowIndex: 0
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 016c6aa0-5174-400f-b91f-3af4a765263c
+                ElementId: 20547a2d-aadc-4a62-964a-a9b2532be5bd
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 11
         Name: About
-        SheetId: bc67412f-55eb-4ec1-a5aa-e38f5dd6b51f
+        SheetId: ec103200-c279-4a69-bdfe-9b3075e1e22b
         Visuals:
         - InsightVisual:
             Actions: []
@@ -2846,7 +2869,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: VISIBLE
-            VisualId: 016c6aa0-5174-400f-b91f-3af4a765263c
+            VisualId: 20547a2d-aadc-4a62-964a-a9b2532be5bd
         - InsightVisual:
             Actions: []
             DataSetIdentifier: aws_feeds_whats_new
@@ -2869,7 +2892,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: VISIBLE
-            VisualId: 27aa6384-a61c-4ede-8ec4-70431064ac91
+            VisualId: bc271d34-23cf-4b98-a75f-07d4f0139a22
 datasets:
   aws_feeds:
     data:
