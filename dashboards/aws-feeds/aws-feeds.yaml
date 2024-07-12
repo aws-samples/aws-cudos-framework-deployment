@@ -2842,7 +2842,7 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\"\
                   \ target=\"_blank\">\n        <b>\n          <u>AWS Feeds Dashboard</u>\n\
                   \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block\
-                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.0.9</b>\n\
+                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.1.0</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
                   \ font-size=\"22.4px\">\n      <b>AWS Feeds Dashboard: What's New, Blog\
                   \ Posts, Videos and Security Bulletins</b>\n    </inline>\n  </block>\n\
