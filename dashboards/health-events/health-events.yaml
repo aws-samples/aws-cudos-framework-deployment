@@ -24,6 +24,7 @@ dashboards:
       - DataSetIdentifier: health_events_view
         Expression: |-
           ifelse(
+              contains(Description, 'that includes the primary domain '),  split(split(Description, 'that includes the primary domain ', 2), ' ', 1),  //get domain
               left({affected_entity_value}, 4) <> "arn:", {affected_entity_value},
               strlen(split({affected_entity_value}, ":", 7)) > 0, split({affected_entity_value}, ":", 7),
               strlen(split({affected_entity_value}, ":", 6)) > 0, split({affected_entity_value}, ":", 6),
