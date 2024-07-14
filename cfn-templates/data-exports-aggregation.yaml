@@ -1109,20 +1109,27 @@ Resources:
               - glue:GetTables
             Resource:
               - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
-              - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
-              - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+              - Fn::Join:
+                - ''
+                - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/
+                  - !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
+                  - '/*'
+              - Fn::Join:
+                - ''
+                - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/
+                  - !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
           - Sid: AllowListBucket
             Effect: Allow
             Action: s3:ListBucket
             Resource:
-              - !Sub arn:${AWS::Partition}:s3::: ${ResourcePrefix}-${DestinationAccountId}-data-exports
+              - !Sub arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports
           - Sid: AllowReadBucket
             Effect: Allow
             Action:
               - s3:GetObject
               - s3:GetObjectVersion
             Resource:
-              - !Sub arn:${AWS::Partition}:s3::: ${ResourcePrefix}-${DestinationAccountId}-data-exports/*
+              - !Sub arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/*
 
 Outputs:
   DestinationBucketName:
@@ -1140,5 +1147,5 @@ Outputs:
   QuickSightPolicyARN:
     Condition: DeployAnyTable
     Description: Policy for QuickSight to allow DataExports access. Attach it to QuickSight role.
-    Value: !GetAtt  QuickSightManagementPolicy.Arn
+    Value: !Ref  QuickSightManagementPolicy
     Export: { Name: 'cid-DataExports-QuickSightPolicyARN'}
