@@ -1089,6 +1089,41 @@ Resources:
         - !If [IsDestinationAccount,  "cid-dataexport-destination", !Ref 'AWS::NoValue']
         - !If [IsSourceAccount,       "cid-dataexport-source",      !Ref 'AWS::NoValue']
 
+  QuickSightManagementPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: DeployAnyTable
+    Properties:
+      ManagedPolicyName: CidAllowDataExportsAccessFromQuickSight
+      Description: 'Policy for QuickSight to allow DataExports access'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowGlue
+            Effect: Allow
+            Action:
+              - glue:GetPartition
+              - glue:GetPartitions
+              - glue:GetDatabase
+              - glue:GetDatabases
+              - glue:GetTable
+              - glue:GetTables
+            Resource:
+              - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
+              - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
+              - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+          - Sid: AllowListBucket
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource:
+              - !Sub arn:${AWS::Partition}:s3::: ${ResourcePrefix}-${DestinationAccountId}-data-exports
+          - Sid: AllowReadBucket
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource:
+              - !Sub arn:${AWS::Partition}:s3::: ${ResourcePrefix}-${DestinationAccountId}-data-exports/*
+
 Outputs:
   DestinationBucketName:
     Description: Bucket with aggregate Data Exports
@@ -1102,3 +1137,8 @@ Outputs:
     Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
     Value: !Sub ${ResourcePrefix}-${AWS::AccountId}-data-local
+  QuickSightPolicyARN:
+    Condition: DeployAnyTable
+    Description: Policy for QuickSight to allow DataExports access. Attach it to QuickSight role.
+    Value: !GetAtt  QuickSightManagementPolicy.Arn
+    Export: { Name: 'cid-DataExports-QuickSightPolicyARN'}
