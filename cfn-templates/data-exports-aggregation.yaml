@@ -1089,11 +1089,11 @@ Resources:
         - !If [IsDestinationAccount,  "cid-dataexport-destination", !Ref 'AWS::NoValue']
         - !If [IsSourceAccount,       "cid-dataexport-source",      !Ref 'AWS::NoValue']
 
-  QuickSightManagementPolicy:
+  DataExportsReadAccess:
     Type: AWS::IAM::ManagedPolicy
     Condition: DeployAnyTable
     Properties:
-      ManagedPolicyName: CidAllowDataExportsAccessFromQuickSight
+      ManagedPolicyName: !Sub ${ResourcePrefix}DataExportsReadAccess
       Description: 'Policy for QuickSight to allow DataExports access'
       PolicyDocument:
         Version: '2012-10-17'
@@ -1144,8 +1144,8 @@ Outputs:
     Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
     Value: !Sub ${ResourcePrefix}-${AWS::AccountId}-data-local
-  QuickSightPolicyARN:
+  ReadAccessPolicyARN:
     Condition: DeployAnyTable
-    Description: Policy for QuickSight to allow DataExports access. Attach it to QuickSight role.
-    Value: !Ref  QuickSightManagementPolicy
-    Export: { Name: 'cid-DataExports-QuickSightPolicyARN'}
+    Description: Policy to allow read access DataExports in S3 and Athena. Attach it to QuickSight role.
+    Value: !Ref  DataExportsReadAccess
+    Export: { Name: 'cid-DataExports-ReadAccessPolicyARN'}
