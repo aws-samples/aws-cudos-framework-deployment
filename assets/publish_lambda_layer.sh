@@ -34,19 +34,12 @@ rm -vf ./$layer
 # Publish cfn (only works for the release)
 if aws s3 ls "s3://aws-managed-cost-intelligence-dashboards" >/dev/null 2>&1; then
   echo "Updating cid-cfn.yml"
-  aws s3api put-object \
-        --bucket "aws-managed-cost-intelligence-dashboards" \
-        --key cfn/cid-cfn.yml \
-        --body ./cfn-templates/cid-cfn.yml
-else
-  echo "Not a main account. Skipping update of cid-cfn.yml"
-fi
+  aws s3 sync ./cfn-templates/ s3://aws-managed-cost-intelligence-dashboards/cfn/
 
-if aws s3 ls "s3://aws-managed-cost-intelligence-dashboards" >/dev/null 2>&1; then
-  echo "syncing dashboards"
+  echo "Syncing dashboards"
   aws s3 sync ./dashboards s3://aws-managed-cost-intelligence-dashboards/hub/
 else
-  echo "Not a main account. Skipping update of dashboards folder"
+  echo "Not the main account. Skipping"
 fi
 
 echo 'Done'

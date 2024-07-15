@@ -73,29 +73,28 @@ class Athena(CidBase):
             except Exception as exc:
                 if 'AccessDeniedException' in str(exc):
                     logger.warning(f'{type(exc)} - Missing athena:GetDatabase permission. Cannot verify existence of {self._DatabaseName} in {self.CatalogName}. Hope you have it there.')
-                    return self._DatabaseName
-                raise
+                else:
+                    raise
+            return self._DatabaseName
         # Get AWS Athena databases
         athena_databases = self.list_databases()
 
-        # Select default database if present
+        # check if we have a default database
         default_databases = [database for database in athena_databases if database['Name'] == self.defaults.get('DatabaseName')]
-        if len(default_databases):
-            # Silently choose an existing default database
-            self._DatabaseName = default_databases.pop().get('Name')
-        else:
-            # Ask user
-            choices = [d['Name'] for d in athena_databases]
-            if self.defaults.get('DatabaseName') not in choices:
-                choices.append(self.defaults.get('DatabaseName') + ' (CREATE NEW)')
-            self._DatabaseName = get_parameter(
-                param_name='athena-database',
-                message="Select AWS Athena database to use",
-                choices=choices,
-            )
-            if self._DatabaseName.endswith( ' (CREATE NEW)'):
-                self._DatabaseName = self.defaults.get('DatabaseName')
-                self.query(f'CREATE DATABASE {self._DatabaseName}')
+
+        # Ask user
+        choices = [d['Name'] for d in athena_databases]
+        if self.defaults.get('DatabaseName') not in choices:
+            choices.append(self.defaults.get('DatabaseName') + ' (CREATE NEW)')
+        self._DatabaseName = get_parameter(
+            param_name='athena-database',
+            message="Select AWS Athena database to use",
+            choices=choices,
+            default=default_databases[0]['Name'] if default_databases else None,
+        )
+        if self._DatabaseName.endswith( ' (CREATE NEW)'):
+            self._DatabaseName = self.defaults.get('DatabaseName')
+            self.query(f'CREATE DATABASE {self._DatabaseName}')
         logger.info(f'Using Athena database: {self._DatabaseName}')
         return self._DatabaseName
 

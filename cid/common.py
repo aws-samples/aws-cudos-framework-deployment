@@ -1326,7 +1326,7 @@ class Cid():
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
                 # TODO: get buckets from dashboard parameters
                 buckets = [
-                    f'cid-{self.base.account_id}-share',
+                    f'cid-{self.base.account_id}-shared',
                     f'cid-{self.base.account_id}-data-exports',
                     f'cid-data-{self.base.account_id}',
                     f'costoptimizationdata{self.base.account_id}',
@@ -1335,9 +1335,15 @@ class Cid():
                 if additional_buckets:
                     buckets += [bucket.strip().replace('{account_id}', self.base.account_id) for bucket in additional_buckets.split(',')]
 
+                databases = set([
+                    "optimization_data",
+                    "cid_data_collection",
+                    "cid_data_export", # prefix for data-exports hardcoded here
+                    self.athena.DatabaseName,
+                ])
                 role_name = self.iam.ensure_data_source_role_exists(
                     role_name=cid_role_name,
-                    database=self.athena.DatabaseName,
+                    databases=databases,
                     workgroup=self.athena.WorkGroup,
                     buckets=buckets,
                     output_location_bucket = self.athena.workgroup_output_location().split('/')[2],

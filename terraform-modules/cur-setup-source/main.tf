@@ -9,6 +9,8 @@ resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV2_AWS_62:Due to dependencies, S3 event notifications must be configured external to the module
   bucket        = "${var.resource_prefix}-${data.aws_caller_identity.this.account_id}-local"
   force_destroy = true
+
+  tags = var.tags
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
@@ -124,7 +126,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     condition {
       test     = "StringEquals"
-      values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:definition/*"]
+      values   = ["arn:${data.aws_partition.this.partition}:cur:*:${data.aws_caller_identity.this.account_id}:definition/*"]
       variable = "aws:SourceArn"
     }
     condition {
@@ -148,7 +150,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     condition {
       test     = "StringLike"
-      values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:definition/*"]
+      values   = ["arn:${data.aws_partition.this.partition}:cur:*:${data.aws_caller_identity.this.account_id}:definition/*"]
       variable = "aws:SourceArn"
     }
     condition {
