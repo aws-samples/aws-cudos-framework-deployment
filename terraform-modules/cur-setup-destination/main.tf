@@ -184,7 +184,7 @@ data "aws_iam_policy_document" "bucket_policy" {
         "${aws_s3_bucket.this.arn}/*",
       ]
       condition {
-        test     = "StringEquals"
+        test     = "StringLike"
         values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:definition/*"]
         variable = "aws:SourceArn"
       }
