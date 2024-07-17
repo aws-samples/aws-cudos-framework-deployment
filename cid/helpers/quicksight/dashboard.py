@@ -168,11 +168,9 @@ class Dashboard(CidQsResource):
 
         if self.latest:
             cid_print(f"  <BOLD>Version:<END>   <GREEN>{cid_version}<END> (latest)")
-            cid_print(f"  <BOLD>VersionId:<END> <GREEN>{self.deployed_version}<END> (latest)")
         else:
             logger.debug("An update is available")
             cid_print(f"  <BOLD>Version:<END>   <YELLOW>{str(cid_version): <8} --> {str(cid_version_latest): <8}<END>")
-            cid_print(f"  <BOLD>VersionId:<END> <YELLOW>{str(self.deployed_version): <8} --> {str(self.latest_version): <8}<END>")
 
         cid_print('  <BOLD>Owners:<END>')
         try:
