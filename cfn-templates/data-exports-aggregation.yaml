@@ -533,7 +533,7 @@ Resources:
             COST_OPTIMIZATION_RECOMMENDATIONS:
               FILTER: '{}'
               INCLUDE_ALL_RECOMMENDATIONS: 'TRUE'
-        Description: "COH export for aggregation in CID"
+        Description: "Cost Optimization Hub Recommendations export for aggregation in CID"
         DestinationConfigurations:
           S3Destination:
             S3Bucket: !Ref SourceS3
@@ -562,7 +562,7 @@ Resources:
             COST_OPTIMIZATION_RECOMMENDATIONS:
               FILTER: '{}'
               INCLUDE_ALL_RECOMMENDATIONS: 'TRUE'
-        Description: "FOCUS export for aggregation in CID"
+        Description: "Cost Optimization Hub Recommendations export for aggregation in CID"
         DestinationConfigurations:
           S3Destination:
             S3Bucket: !Ref SourceS3
