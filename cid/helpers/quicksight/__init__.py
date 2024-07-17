@@ -262,14 +262,13 @@ class QuickSight(CidBase):
             else:
                 logger.info("Minimum template version could not be found for Dashboard {dashboardId}: {_template_arn}, deployed template could not be described")
         
-        # TODO Define better way to identity whether a dashboard is TEMPLATE or DEFINITION based
-        if dashboard.origin_type != "TEMPLATE":
-            # TODO Resolve source definition (the latest definition publicly available)
+        if _template_arn is None:
+            # Resolve source definition (the latest definition publicly available)
             data_stream = io.StringIO(_definition["data"])
             definition_data = yaml.safe_load(data_stream)
             dashboard.sourceDefinition = CidQsDefinition(definition_data)
 
-            # TODO Resolve deployed dashboard definition
+            # Resolve deployed dashboard definition
             params = {
                 "dashboard_id": dashboardId,
                 "refresh": refresh
