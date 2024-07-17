@@ -1,3 +1,8 @@
+import re
+import logging
+
+logger = logging.getLogger(__name__)
+
 class CidVersion:
     
     def __init__(self, version):

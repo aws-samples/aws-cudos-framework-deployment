@@ -97,6 +97,24 @@ class Dashboard(CidQsResource):
             return "DEFINITION"
         else:
             return "UNKNOWN"
+    
+    @property
+    def cid_version(self) -> int:
+        if self.origin_type == "TEMPLATE":
+            return self.deployedTemplate.cid_version
+        elif self.origin_type == "DEFINITION":
+            return self.deployedDefinition.cid_version
+        else:
+            return None
+    
+    @property
+    def cid_version_latest(self) -> int:
+        if self.origin_type == "TEMPLATE":
+            return self.sourceTemplate.cid_version
+        elif self.origin_type == "DEFINITION":
+            return self.sourceDefinition.cid_version
+        else:
+            return None
 
 
     @property
@@ -140,22 +158,12 @@ class Dashboard(CidQsResource):
         cid_version = "N/A"
         cid_version_latest =  "N/A"
 
-        try:
-            if self.origin_type == "TEMPLATE":
-                cid_version = self.deployedTemplate.cid_version
-            if self.origin_type == "DEFINITION":
-                cid_version = self.deployedDefinition.cid_version
-        except ValueError:
+        cid_version = self.cid_version
+        if cid_version is None:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
 
-        try:
-            # Replacing condition to check for instance type to check for origin type
-            if self.origin_type == "TEMPLATE":
-            # if isinstance(self.sourceTemplate, CidQsTemplate):
-                cid_version_latest = self.sourceTemplate.cid_version
-            if self.origin_type == "DEFINITION":
-                cid_version_latest = self.sourceDefinition.cid_version
-        except ValueError:
+        cid_version_latest = self.cid_version_latest
+        if cid_version_latest is None:
             logger.debug("The latest version of the dashboard could not be retrieved")
 
         if self.latest:
