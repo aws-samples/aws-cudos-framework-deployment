@@ -690,7 +690,7 @@ class Cid():
                         logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
-                        # TODO Consider making refresh specific to a single dashboard
+                        
                         refresh_overrides = {
                             dashboard.id: True
                         }
