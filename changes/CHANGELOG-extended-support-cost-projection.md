@@ -1,5 +1,19 @@
 # What's new in Extended Support Cost Projection
 
+## Extended Support Cost Projection - v2.0.0
+
+**Important:** Update to this version requires a forced and recursive update. If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.
+
+To update run these commands in your CloudShell (recommended) or other terminal:
+
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id extended-support-cost-projection --force --recursive
+```
+
+- Added Kubernetes version 1.30 to the calendar data in the EKS view definition.
+
 ## Extended Support Cost Projection - v1.2.0
 
 **Important:** Update to this version requires a forced and recursive update. If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.
