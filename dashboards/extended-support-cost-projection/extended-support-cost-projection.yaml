@@ -3523,6 +3523,7 @@ views:
             , ROW ('1.27', CAST('2024-07-25' AS timestamp), CAST('2025-07-24' AS timestamp))
             , ROW ('1.28', CAST('2024-11-27' AS timestamp), CAST('2025-11-26' AS timestamp))
             , ROW ('1.29', CAST('2025-03-24' AS timestamp), CAST('2026-03-23' AS timestamp))
+            , ROW ('1.30', CAST('2025-07-24' AS timestamp), CAST('2026-07-23' AS timestamp))
          )
       )
       , preprocessed_eks_clusters_inventory (payer_id, accountid, region, cluster_arn, cluster_name, k8s_version, collection_date, max_collection_date) AS (
