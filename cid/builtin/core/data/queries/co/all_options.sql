@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW compute_optimizer_all_options AS
+CREATE OR REPLACE VIEW "compute_optimizer_all_options" AS 
 (
    SELECT *
    FROM
@@ -12,4 +12,10 @@ UNION    SELECT *
 UNION    SELECT *
    FROM
      compute_optimizer_lambda_options
+UNION    SELECT *
+   FROM
+     compute_optimizer_rds_instance_options
+UNION    SELECT *
+   FROM
+     compute_optimizer_rds_storage_options
 )
