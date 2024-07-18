@@ -136,6 +136,8 @@ class Dashboard(CidQsResource):
             # Source Template has changed
             elif self.deployedTemplate and self.sourceTemplate and self.deployedTemplate.arn and self.sourceTemplate.arn and not self.deployedTemplate.arn.startswith(self.sourceTemplate.arn):
                 self._status = 'legacy'
+            elif self.latest_version is None or self.deployed_version is None:
+                self._status = 'undetermined'
             else:
                 if self.latest_version > self.deployed_version:
                     self._status = f'update available {self.deployed_version}->{self.latest_version}'
