@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A Plugin for Cloud Intelligence Dashboards
+
+Parameters:
+  DashboardId:
+    Type: String
+    Description:  'Dashboard id'
+    Default: ''
+    AllowedPattern: "^[a-zA-Z0-9_-]*$"
+  ResourcesUrl:
+    Type: String
+    Description:  'Resources File URL. Keep it empty if not sure.'
+    Default: ''
+  CidMainStackPrefix:
+    Type: String
+    Description:  'Please enter exactly the same prefix as you have in your main CID stack. Keep it default if not sure.'
+    Default: 'cid'
+
+Conditions:
+  ResourcesUrlIsEmpty: !Equals [!Ref ResourcesUrl, '']
+
+Resources:
+  Dashboard:
+    Type: Custom::CidDashboard
+    Properties:
+      Name: !Ref DashboardId
+      ServiceToken: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-CidExecArn" }
+      Dashboard:
+        dashboard-id: !Ref DashboardId
+        account-map-source: 'dummy'
+        data-collection-database-name: 'optimization_data'
+        athena-workgroup: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-AthenaWorkgroup" }
+        quicksight-datasource-id: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-QuickSightDatasourceId" }
+        quicksight-datasource-role-arn: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-QuickSightDatasourceRoleArn" }
+        athena-database: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-AthenaDatabase" }
+        glue-data-catalog: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-GlueCatalog" }
+        cur-table-name: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-CurTableName" }
+        quicksight-user: {Fn::ImportValue: !Sub "${CidMainStackPrefix}-QuickSightUser" }
+        share-with-account: 'yes'
+        resources: !If [ResourcesUrlIsEmpty, !Ref 'AWS::NoValue', !Ref ResourcesUrl ]
+
+Outputs:
+  DashboardURL:
+    Description: "URL of Dashboard"
+    Value: !GetAtt Dashboard.DashboardURL
