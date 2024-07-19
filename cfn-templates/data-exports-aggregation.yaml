@@ -305,6 +305,12 @@ Resources:
             Id: ReplicateFOCUSData
             Prefix: !Sub "focus/${AWS::AccountId}/${ResourcePrefix}-focus/data/" # Hardcoded export name
             Status: Enabled
+          - Destination:
+              Bucket: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
+              StorageClass: STANDARD
+            Id: ReplicateCOHData
+            Prefix: !Sub "coh/${AWS::AccountId}/${ResourcePrefix}-focus/data/" # Hardcoded export name
+            Status: Enabled
       LifecycleConfiguration:
         Rules:
           - Id: Object&Version Expiration
@@ -974,6 +980,111 @@ Resources:
             }
           }
         }
+
+###########################################################################
+# COH
+###########################################################################
+
+  COHTable:  # Initial creation of table. it will be updated by crawler later
+    Type: AWS::Glue::Table
+    Condition: DeployCOHTable
+    Properties:
+      CatalogId: !Sub "${AWS::AccountId}"
+      DatabaseName: !Ref CIDDatabase
+      TableInput:
+        Name: coh
+        Owner: owner
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          compressionType: none
+          classification: parquet
+          UPDATED_BY_CRAWLER: !Ref COHCrawler
+        StorageDescriptor:
+          BucketColumns: []
+          Compressed: false
+          Location: !Sub "s3://${DestinationS3}/coh/"
+          NumberOfBuckets: -1
+          InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
+          SerdeInfo:
+            Parameters:
+              serialization.format: '1'
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
+          StoredAsSubDirectories: false
+          Columns: # All fields required for CID
+            - {"Name": "account_id", "Type": "string"}
+            - {"Name": "action_type", "Type": "string"}
+            - {"Name": "currency_code", "Type": "string"}
+            - {"Name": "current_resource_details", "Type": "string"}
+            - {"Name": "current_resource_summary", "Type": "string"}
+            - {"Name": "current_resource_type", "Type": "string"}
+            - {"Name": "estimated_monthly_cost_after_discount", "Type": "double"}
+            - {"Name": "estimated_monthly_cost_before_discount", "Type": "double"}
+            - {"Name": "estimated_monthly_savings_after_discount", "Type": "double"}
+            - {"Name": "estimated_monthly_savings_before_discount", "Type": "double"}
+            - {"Name": "estimated_savings_percentage_after_discount", "Type": "double"}
+            - {"Name": "estimated_savings_percentage_before_discount", "Type": "double"}
+            - {"Name": "implementation_effort", "Type": "string"}
+            - {"Name": "last_refresh_timestamp", "Type": "string"}
+            - {"Name": "recommendation_id", "Type": "string"}
+            - {"Name": "recommendation_lookback_period_in_days", "Type": "int"}
+            - {"Name": "recommendation_source", "Type": "string"}
+            - {"Name": "recommended_resource_details", "Type": "string"}
+            - {"Name": "recommended_resource_summary", "Type": "string"}
+            - {"Name": "recommended_resource_type", "Type": "string"}
+            - {"Name": "region", "Type": "string"}
+            - {"Name": "resource_arn", "Type": "string"}
+            - {"Name": "restart_needed", "Type": "boolean"}
+            - {"Name": "rollback_possible", "Type": "boolean"}
+            - {"Name": "tags", "Type": "map<string,string>"}
+        PartitionKeys:
+          - {"Name": "source_account_id", "Type": "string" }
+          - {"Name": "report_name", "Type": "string" }
+          - {"Name": "data", "Type": "string" }
+          - {"Name": "date", "Type": "string" }
+
+
+  COHCrawler:
+    Type: AWS::Glue::Crawler
+    Condition: DeployCOHTable
+    Properties:
+      Name:  !Sub "${ResourcePrefix}-DataExportCOHCrawler"
+      Description: A recurring crawler that keeps your COH table in Athena up-to-date.
+      Role: !GetAtt CidDataExportCrawlerRole.Arn
+      DatabaseName: !Ref CIDDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://${DestinationS3}/coh/"
+            Exclusions:
+              - '**.json'
+              - '**.yml'
+              - '**.sql'
+              - '**.csv'
+              - '**.csv.metadata'
+              - '**.gz'
+              - '**.zip'
+              - '**/cost_and_usage_data_status/*'
+              - 'aws-programmatic-access-test-object'
+      SchemaChangePolicy:
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      Schedule:
+        ScheduleExpression: cron(0 2 * * ? *)
+      Configuration: |
+        {
+          "Version":1.0,
+          "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+          },
+          "CrawlerOutput":{
+            "Tables":{
+              "AddOrUpdateBehavior":"MergeNewColumns"
+            }
+          }
+        }
+
 
 ###########################################################################
 # Generic Resources
