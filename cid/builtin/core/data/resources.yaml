@@ -231,10 +231,7 @@ datasets:
     schedules:
       - default
   monthly-bill-by-account:
-    spriFile: trends/monthly_bill_by_account_sp_ri.json
-    spFile: trends/monthly_bill_by_account_sp.json
-    riFile: trends/monthly_bill_by_account_ri.json
-    File: trends/monthly_bill_by_account.json
+    File: trends/monthly_bill_by_account_sp_ri.json
     dependsOn:
       views:
         - monthly_bill_by_account
@@ -262,10 +259,7 @@ datasets:
 views:
   # CID Shared Views
   summary_view:
-    spriFile: cid/summary_view_sp_ri.sql
-    spFile: cid/summary_view_sp.sql
-    riFile: cid/summary_view_ri.sql
-    File: cid/summary_view.sql
+    File: cid/summary_view_sp_ri.sql
     dependsOn:
       cur:
         - year
@@ -312,10 +306,7 @@ views:
         - savings_plan_used_commitment
 
   ec2_running_cost:
-    spriFile: cid/ec2_running_cost_sp_ri.sql
-    spFile: cid/ec2_running_cost_sp.sql
-    riFile: cid/ec2_running_cost_ri.sql
-    File: cid/ec2_running_cost.sql
+    File: cid/ec2_running_cost_sp_ri.sql
     dependsOn:
       cur:
         - bill_billing_period_start_date
@@ -365,10 +356,7 @@ views:
         - product_region
 
   ri_sp_mapping:
-    spriFile: cid/ri_sp_mapping_sp_ri.sql
-    spFile: cid/ri_sp_mapping_sp.sql
-    riFile: cid/ri_sp_mapping_ri.sql
-    File: cid/ri_sp_mapping.sql
+    File: cid/ri_sp_mapping_sp_ri.sql
     dependsOn:
       cur:
         - bill_billing_period_start_date
@@ -390,10 +378,7 @@ views:
         - savings_plan_payment_option
 
   hourly_view:
-    #spriFile: cudos/hourly_view_sp_ri.sql
-    #spFile: cudos/hourly_view_sp.sql
-    #riFile: cudos/hourly_view_ri.sql
-    File: cudos/hourly_view.sql
+    File: cudos/hourly_view_sp_ri.sql
     dependsOn:
       cur:
         - bill_billing_period_start_date
@@ -417,10 +402,7 @@ views:
         - savings_plan_savings_plan_effective_cost
 
   resource_view:
-    spriFile: cudos/resource_view_sp_ri.sql
-    spFile: cudos/resource_view_sp.sql
-    riFile: cudos/resource_view_ri.sql
-    File: cudos/resource_view.sql
+    File: cudos/resource_view_sp_ri.sql
     dependsOn:
       cur:
         - bill_billing_entity
@@ -471,10 +453,7 @@ views:
       views:
         - aws_accounts
   monthly_bill_by_account:
-    riFile: trends/monthly_bill_by_account_ri.sql
-    spriFile: trends/monthly_bill_by_account_sp_ri.sql
-    spFile: trends/monthly_bill_by_account_sp.sql
-    File: trends/monthly_bill_by_account.sql
+    File: trends/monthly_bill_by_account_sp_ri.sql
     dependsOn:
       cur: true
       views:
@@ -502,10 +481,7 @@ views:
         - account_map
 
   kpi_instance_all:
-    spriFile: kpi/kpi_instance_all_view.sql
-    spFile: kpi/kpi_instance_all_view_noRI.sql
-    riFile: kpi/kpi_instance_all_view_noSP.sql
-    File: kpi/kpi_instance_all_view_noRISP.sql
+    File: kpi/kpi_instance_all_view.sql
     dependsOn:
       cur: true
       views:
