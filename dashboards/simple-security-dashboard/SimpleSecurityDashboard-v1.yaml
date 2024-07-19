@@ -1,0 +1,15 @@
+dashboards:
+  SIMPLESECURITYDASHBOARD V1:
+    dependsOn:
+      datasets:
+      - summary_view
+    name: SimpleSecurityDashboard v1
+    dashboardId: simplesecuritydashboard-v1
+    category: Custom
+    theme: MIDNIGHT
+    templateId: simplesecuritydashboard-v1
+    sourceAccountId: '036141531150'
+    region: us-east-1
+datasets: {}
+crawlers: {}
+views: {}
