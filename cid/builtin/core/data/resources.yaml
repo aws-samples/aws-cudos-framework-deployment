@@ -238,7 +238,7 @@ datasets:
     schedules:
       - default
 
-  # Compute Optimiser (CO)
+  # Compute Optimizer (CO)
   compute_optimizer_all_options:
     File: co/dataset.json
     dependsOn:
