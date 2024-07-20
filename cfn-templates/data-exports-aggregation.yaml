@@ -309,7 +309,7 @@ Resources:
               Bucket: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
               StorageClass: STANDARD
             Id: ReplicateCOHData
-            Prefix: !Sub "coh/${AWS::AccountId}/${ResourcePrefix}-focus/data/" # Hardcoded export name
+            Prefix: !Sub "coh/${AWS::AccountId}/${ResourcePrefix}-coh/data/" # Hardcoded export name
             Status: Enabled
       LifecycleConfiguration:
         Rules:
