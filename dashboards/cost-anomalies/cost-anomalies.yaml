@@ -1437,6 +1437,8 @@ views:
       WHERE ("date_parse"("concat"("year", "month", "day"), '%Y%m%d') >= (current_timestamp - INTERVAL  '3' MONTH))
     parameters:
         data_collection_database_name:
+          type: athena
+          query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'cost_anomaly_data'
           default: optimization_data
           description: "Enter the name of the data collection database"
           global: True
