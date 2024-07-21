@@ -6660,7 +6660,7 @@ views:
          , "event_arn"
          , substr(to_base64(md5(CAST(event_arn AS varbinary))), 1, 12) "event_arn_hash"
          FROM
-           "${data_collection_database_name}"."${table_name}"
+           "${data_collection_database_name}"."health_events_detail_data"
       )
       , "hed_latest" AS (
          SELECT "core".*
@@ -6708,10 +6708,8 @@ views:
 
     parameters:
       data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'health_events_detail_data'
         default: optimization_data
         description: "Enter the name of the data collection database"
-        global: True
-      table_name:
-        default: health_events_detail_data
-        description: "Enter the name of the health events table (do not alter)"
         global: True

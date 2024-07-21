@@ -348,16 +348,26 @@ class Cid():
                     choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
             elif isinstance(value, dict) and value.get('type') == 'athena':
-                if 'query' not in value:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: paramter with type ahena must have query value.')
-                query = value['query']
-                try:
-                    res = self.athena.query(query)[0]
-                except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
-                if not res:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty result')
-                params[key] = res[0]
+                if get_parameters().get(prefix + key): # priority to user input
+                    params[key] = get_parameters().get(prefix + key)
+                else:
+                    if 'query' not in value:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: parameter with type Athena must have query value.')
+                    query = value['query']
+                    try:
+                        res_list = self.athena.query(query)
+                    except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
+                    if not res_list:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results')
+                    elif len(res_list) == 1:
+                        params[key] = '-'.join(res_list[0])
+                    else:
+                        params[key] = get_parameter(
+                            param_name=prefix + key,
+                            message=f"Required parameter: {key} ({value.get('description')})",
+                            choices=['-'.join(res) for res in res_list],
+                        )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
                 while params[key] is None:
