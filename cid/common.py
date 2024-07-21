@@ -363,10 +363,13 @@ class Cid():
                     elif len(res_list) == 1:
                         params[key] = '-'.join(res_list[0])
                     else:
+                        options = ['-'.join(res) for res in res_list]
+                        default = value.get('default')
                         params[key] = get_parameter(
                             param_name=prefix + key,
                             message=f"Required parameter: {key} ({value.get('description')})",
-                            choices=['-'.join(res) for res in res_list],
+                            choices=options,
+                            default=default if default in options else None,
                         )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
