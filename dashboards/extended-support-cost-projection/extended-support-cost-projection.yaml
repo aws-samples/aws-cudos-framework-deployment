@@ -3277,7 +3277,7 @@ dashboards:
             center\">\n    <inline color=\"#61d1d6\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/rds-extended-support-cost-projection\"\
             \ target=\"_blank\">\n        <b>\n          <u>RDS Extended Support Cost Projection</u>\n\
             \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"\
-            center\">\n    <b>v1.2.0</b>\n  </block>\n  <br/>\n  <block align=\"right\"\
+            center\">\n    <b>v2.0.0</b>\n  </block>\n  <br/>\n  <block align=\"right\"\
             />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
             />\n  <br/>\n  <block align=\"right\">Built by: Julio Chaves, Yuriy Prykhodko,\
             \ Iakov Gan, Eric Christensen</block>\n  <br/>\n  <block align=\"right\">\n\
@@ -3523,6 +3523,7 @@ views:
             , ROW ('1.27', CAST('2024-07-25' AS timestamp), CAST('2025-07-24' AS timestamp))
             , ROW ('1.28', CAST('2024-11-27' AS timestamp), CAST('2025-11-26' AS timestamp))
             , ROW ('1.29', CAST('2025-03-24' AS timestamp), CAST('2026-03-23' AS timestamp))
+            , ROW ('1.30', CAST('2025-07-24' AS timestamp), CAST('2026-07-23' AS timestamp))
          )
       )
       , preprocessed_eks_clusters_inventory (payer_id, accountid, region, cluster_arn, cluster_name, k8s_version, collection_date, max_collection_date) AS (

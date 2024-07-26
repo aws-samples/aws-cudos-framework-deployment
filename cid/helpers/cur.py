@@ -315,6 +315,7 @@ class ProxyCUR(AbstractCUR):
         except self.athena.client.exceptions.MetadataException: # if no table - create it
             self.proxy.create_or_update_view()
             self._metadata = self.athena.get_table_metadata(self.proxy.name)
+
         return self._metadata
 
     def ensure_columns(self, columns):

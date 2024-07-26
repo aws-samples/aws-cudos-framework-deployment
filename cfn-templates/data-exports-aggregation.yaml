@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Billing Data Export Aggregation v0.0.1
+Description: AWS Billing Data Export Aggregation v0.0.3
 Metadata:
 
   AWS::CloudFormation::Interface:
@@ -632,7 +632,7 @@ Resources:
     Condition: DeployAnyTable
     Properties:
       DatabaseInput:
-        Name: !Sub "${ResourcePrefix}_data_export"
+        Name: !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
       CatalogId: !Sub "${AWS::AccountId}"
 
 ###########################################################################
@@ -1090,17 +1090,63 @@ Resources:
         - !If [IsDestinationAccount,  "cid-dataexport-destination", !Ref 'AWS::NoValue']
         - !If [IsSourceAccount,       "cid-dataexport-source",      !Ref 'AWS::NoValue']
 
+  DataExportsReadAccess:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: DeployAnyTable
+    Properties:
+      ManagedPolicyName: !Sub ${ResourcePrefix}DataExportsReadAccess
+      Description: 'Policy for QuickSight to allow DataExports access'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowGlue
+            Effect: Allow
+            Action:
+              - glue:GetPartition
+              - glue:GetPartitions
+              - glue:GetDatabase
+              - glue:GetDatabases
+              - glue:GetTable
+              - glue:GetTables
+            Resource:
+              - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
+              - Fn::Join:
+                - ''
+                - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/
+                  - !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
+                  - '/*'
+              - Fn::Join:
+                - ''
+                - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/
+                  - !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
+          - Sid: AllowListBucket
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource:
+              - !Sub arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports
+          - Sid: AllowReadBucket
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource:
+              - !Sub arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/*
+
 Outputs:
   AggregateBucketName:
     Description: Bucket with aggregate Data Exports
     Value: !Sub ${ResourcePrefix}-${DestinationAccountId}-data-exports
-    Export: {Name: !Sub '${ResourcePrefix}-DataExports-AggregateBucketName'}
-  LocalBucket:
+    Export: { Name: 'cid-DataExports-Bucket'}
+  Database:
+    Description: Database for Data Exports
+    Value:  !Join [ '_', !Split [ '-', !Sub '${ResourcePrefix}_data_export' ] ] # replace '-' to '_'
+    Export: { Name: 'cid-DataExports-Database'}
+  LocalAccountBucket:
     Condition: DeployDataExport
     Description: Local Bucket Name which replicate objects to centralized bucket
     Value: !Sub ${ResourcePrefix}-${AWS::AccountId}-data-local
-  Database:
+  ReadAccessPolicyARN:
     Condition: DeployAnyTable
-    Description: Database
-    Value: !Sub "${ResourcePrefix}_data_export"
-    Export: {Name: !Sub '${ResourcePrefix}-DataExports-Database'}
+    Description: Policy to allow read access DataExports in S3 and Athena. Attach it to QuickSight role.
+    Value: !Ref  DataExportsReadAccess
+    Export: { Name: 'cid-DataExports-ReadAccessPolicyARN'}
