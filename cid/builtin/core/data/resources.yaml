@@ -465,8 +465,6 @@ views:
     File: cid/summary_view.sql
     dependsOn:
       cur2:
-        - year
-        - month
         - bill_billing_entity
         - bill_billing_period_start_date
         - bill_invoice_id
@@ -485,18 +483,18 @@ views:
         - line_item_usage_type
         - pricing_public_on_demand_cost
         - pricing_unit
-        - product_current_generation
-        - product_database_engine
+        - product['current_generation']
+        - product['database_engine']
         - product_from_location
-        - product_group
-        - product_operating_system
-        - product_physical_processor
-        - product_processor_features
+        - product['group']
+        - product['operating_system']
+        - product['physical_processor']
+        - product['processor_features']
         - product_product_family
-        - product_product_name
-        - product_region
+        - product['product_name']
+        - product['region']
         - product_servicecode
-        - product_tenancy
+        - product['tenancy']
         - product_to_location
         - reservation_effective_cost
         - reservation_reservation_a_r_n
@@ -556,7 +554,7 @@ views:
         - line_item_usage_start_date
         - pricing_public_on_demand_cost
         - pricing_unit
-        - product_region
+        - product['region']
 
   ri_sp_mapping:
     File: cid/ri_sp_mapping.sql
@@ -597,7 +595,7 @@ views:
         - line_item_usage_type
         - pricing_term
         - pricing_unit
-        - product_region
+        - product['region']
         - product_servicecode
         - reservation_effective_cost
         - reservation_reservation_a_r_n
@@ -623,20 +621,20 @@ views:
         - line_item_usage_type
         - pricing_term
         - pricing_unit
-        - product_database_engine
-        - product_deployment_option
+        - product['database_engine']
+        - product['deployment_option']
         - product_from_location
-        - product_group
+        - product['group']
         - product_instance_type
-        - product_instance_type_family
-        - product_operating_system
+        - product['instance_type_family']
+        - product['operating_system']
         - product_product_family
-        - product_product_name
-        - product_region
+        - product['product_name']
+        - product['region']
         - product_servicecode
-        - product_storage
+        - product['storage']
         - product_to_location
-        - product_volume_api_name
+        - product['volume_api_name']
         - reservation_effective_cost
         - reservation_reservation_a_r_n
         - savings_plan_savings_plan_a_r_n
@@ -725,14 +723,14 @@ views:
       views:
         - ta_organizational_view_reports
 
-  # Compute Optimiser (CO)
+  # Compute Optimizer (CO)
   compute_optimizer_ec2_instance_lines:
     type: Glue_Table
     File: co/ec2_instance.json
     parameters:
       s3FolderPath:
         default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_ec2_instance'
-        description: Compute Optimiser EC2 report S3 path
+        description: Compute Optimizer EC2 report S3 path
 
   compute_optimizer_auto_scale_lines:
     type: Glue_Table
@@ -740,7 +738,7 @@ views:
     parameters:
       s3FolderPath:
         default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_auto_scale'
-        description: Compute Optimiser auto_scale report S3 path
+        description: Compute Optimizer auto_scale report S3 path
 
   compute_optimizer_ebs_volume_lines:
     type: Glue_Table
@@ -748,7 +746,7 @@ views:
     parameters:
       s3FolderPath:
         default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_ebs_volume'
-        description: Compute Optimiser EBS report S3 path
+        description: Compute Optimizer EBS report S3 path
 
   compute_optimizer_lambda_lines:
     type: Glue_Table
@@ -756,7 +754,7 @@ views:
     parameters:
       s3FolderPath:
         default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_lambda'
-        description: Compute Optimiser Lambda report S3 path
+        description: Compute Optimizer Lambda report S3 path
 
   compute_optimizer_ec2_instance_options:
     File: co/ec2_instance_options.sql
