@@ -81,17 +81,18 @@ class Athena(CidBase):
         athena_databases = self.list_databases()
 
         # check if we have a default database
-        default_databases = [database for database in athena_databases if database['Name'] == self.defaults.get('DatabaseName')]
+        print(athena_databases)
+        default_databases = [database for database in athena_databases if database == self.defaults.get('DatabaseName')]
 
         # Ask user
-        choices = [d['Name'] for d in athena_databases]
+        choices = list(athena_databases)
         if self.defaults.get('DatabaseName') not in choices:
             choices.append(self.defaults.get('DatabaseName') + ' (CREATE NEW)')
         self._DatabaseName = get_parameter(
             param_name='athena-database',
             message="Select AWS Athena database to use",
             choices=choices,
-            default=default_databases[0]['Name'] if default_databases else None,
+            default=default_databases[0] if default_databases else None,
         )
         if self._DatabaseName.endswith( ' (CREATE NEW)'):
             self._DatabaseName = self.defaults.get('DatabaseName')

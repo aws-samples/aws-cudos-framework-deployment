@@ -30,6 +30,7 @@ from cid.commands import InitQsCommand
 
 logger = logging.getLogger(__name__)
 
+print('hi')
 class Cid():
 
     def __init__(self, **kwargs) -> None:
