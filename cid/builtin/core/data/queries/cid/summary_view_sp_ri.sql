@@ -1,10 +1,13 @@
   CREATE OR REPLACE VIEW summary_view AS
   SELECT
-   split_part("billing_period", '-', 1) "year"
-  ,  split_part("billing_period", '-', 2) "month"
-  ,  "bill_billing_period_start_date" "billing_period"
-  ,  CASE
-        WHEN ("date_trunc"('month',"line_item_usage_start_date")) >= ("date_trunc"('month', current_timestamp) - INTERVAL  '3' MONTH) THEN "date_trunc"('day', "line_item_usage_start_date") ELSE "date_trunc"('month', "line_item_usage_start_date") END  "usage_date"
+    split_part("billing_period", '-', 1) "year"
+  , split_part("billing_period", '-', 2) "month"
+  , "bill_billing_period_start_date" "billing_period"
+  , CASE
+        WHEN ("date_trunc"('month',"line_item_usage_start_date")) >= ("date_trunc"('month', current_timestamp) - INTERVAL  '3' MONTH)
+        THEN "date_trunc"('day', "line_item_usage_start_date")
+        ELSE "date_trunc"('month', "line_item_usage_start_date")
+    END  "usage_date"
   , "bill_payer_account_id" "payer_account_id"
   , "line_item_usage_account_id" "linked_account_id"
   , "bill_invoice_id" "invoice_id"
@@ -12,15 +15,20 @@
   , CASE
       WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN 'Running_Usage'
       WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN 'Running_Usage'
-      WHEN ("line_item_line_item_type" = 'Usage') THEN 'Running_Usage' ELSE 'non_usage' END "charge_category"
+      WHEN ("line_item_line_item_type" = 'Usage') THEN 'Running_Usage'
+      ELSE 'non_usage'
+    END "charge_category"
   , CASE
       WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN 'SavingsPlan'
       WHEN ("reservation_reservation_a_r_n" <> '') THEN 'Reserved'
       WHEN ("line_item_usage_type" LIKE '%Spot%') THEN 'Spot'
-      ELSE 'OnDemand' END "purchase_option"
+      ELSE 'OnDemand'
+    END "purchase_option"
   , CASE
       WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_savings_plan_a_r_n"
-      WHEN ("reservation_reservation_a_r_n" <> '') THEN "reservation_reservation_a_r_n" ELSE CAST('' AS varchar) END "ri_sp_arn"
+      WHEN ("reservation_reservation_a_r_n" <> '') THEN "reservation_reservation_a_r_n"
+      ELSE CAST('' AS varchar)
+    END "ri_sp_arn"
   , "line_item_product_code" "product_code"
   , product['product_name'] "product_name"
   , CASE
@@ -51,7 +59,7 @@
   , "line_item_legal_entity" "legal_entity"
   , "bill_billing_entity" "billing_entity"
   , "pricing_unit" "pricing_unit"
-  , approx_distinct("Line_item_resource_id") "resource_id_count"
+  , approx_distinct("line_item_resource_id") "resource_id_count"
   , sum(CASE
   WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "line_item_usage_amount"
   WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "line_item_usage_amount"
@@ -64,13 +72,19 @@
       WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN 0
       WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "reservation_effective_cost"
       WHEN ("line_item_line_item_type" = 'RIFee') THEN ("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee")
-      WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE "line_item_unblended_cost" END) "amortized_cost"
+      WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0
+      ELSE "line_item_unblended_cost"
+    END) "amortized_cost"
   , sum(CASE
       WHEN ("line_item_line_item_type" = 'SavingsPlanRecurringFee') THEN (-"savings_plan_amortized_upfront_commitment_for_billing_period")
-      WHEN ("line_item_line_item_type" = 'RIFee') THEN (-"reservation_amortized_upfront_fee_for_billing_period") ELSE 0 END) "ri_sp_trueup"
+      WHEN ("line_item_line_item_type" = 'RIFee') THEN (-"reservation_amortized_upfront_fee_for_billing_period")
+      ELSE 0
+    END) "ri_sp_trueup"
   , sum(CASE
       WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN "line_item_unblended_cost"
-      WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN "line_item_unblended_cost"ELSE 0 END) "ri_sp_upfront_fees"
+      WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN "line_item_unblended_cost"
+      ELSE 0
+    END) "ri_sp_upfront_fees"
   , sum(CASE
       WHEN ("line_item_line_item_type" <> 'SavingsPlanNegation') THEN "pricing_public_on_demand_cost" ELSE 0 END) "public_cost"
   FROM
