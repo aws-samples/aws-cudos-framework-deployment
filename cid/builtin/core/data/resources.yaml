@@ -462,7 +462,7 @@ views:
         - product['volume_type']
 
   summary_view:
-    File: cid/summary_view_sp_ri.sql
+    File: cid/summary_view.sql
     dependsOn:
       cur2:
         - year
@@ -509,7 +509,7 @@ views:
         - savings_plan_used_commitment
 
   ec2_running_cost:
-    File: cid/ec2_running_cost_sp_ri.sql
+    File: cid/ec2_running_cost.sql
     dependsOn:
       cur2:
         - bill_billing_period_start_date
@@ -559,7 +559,7 @@ views:
         - product_region
 
   ri_sp_mapping:
-    File: cid/ri_sp_mapping_sp_ri.sql
+    File: cid/ri_sp_mapping.sql
     dependsOn:
       cur2:
         - bill_billing_period_start_date
@@ -581,7 +581,7 @@ views:
         - savings_plan_payment_option
 
   hourly_view:
-    File: cudos/hourly_view_sp_ri.sql
+    File: cudos/hourly_view.sql
     dependsOn:
       cur2:
         - bill_billing_period_start_date
@@ -605,7 +605,7 @@ views:
         - savings_plan_savings_plan_effective_cost
 
   resource_view:
-    File: cudos/resource_view_sp_ri.sql
+    File: cudos/resource_view.sql
     dependsOn:
       cur2:
         - bill_billing_entity
@@ -656,7 +656,7 @@ views:
       views:
         - aws_accounts
   monthly_bill_by_account:
-    File: trends/monthly_bill_by_account_sp_ri.sql
+    File: trends/monthly_bill_by_account.sql
     dependsOn:
       cur2: true
       views:
