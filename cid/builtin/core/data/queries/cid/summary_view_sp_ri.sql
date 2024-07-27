@@ -24,8 +24,10 @@
   , "line_item_product_code" "product_code"
   , product['product_name'] "product_name"
   , CASE
-      WHEN ("bill_billing_entity" = 'AWS Marketplace' AND "line_item_line_item_type" NOT LIKE '%Discount%') THEN "Product_Product_Name"
-      WHEN ("product_servicecode" = '') THEN "line_item_product_code" ELSE "product_servicecode" END "service"
+      WHEN ("bill_billing_entity" = 'AWS Marketplace' AND "line_item_line_item_type" NOT LIKE '%Discount%') THEN product['product_name']
+      WHEN ("product_servicecode" = '') THEN "line_item_product_code"
+      ELSE "product_servicecode"
+    END "service"
   , "product_product_family" "product_family"
   , "line_item_usage_type" "usage_type"
   , "line_item_operation" "operation"
