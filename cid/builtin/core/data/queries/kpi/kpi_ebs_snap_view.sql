@@ -20,7 +20,7 @@ CREATE OR REPLACE VIEW kpi_ebs_snap AS
 		   , line_item_unblended_cost
 		   , pricing_public_on_demand_cost
 		   FROM
-			 "${cur1_database}"."${cur1_table_name}"
+			 "${cur2_database}"."${cur2_table_name}"
 		   WHERE (((((bill_payer_account_id <> '') AND (line_item_resource_id <> '')) AND (line_item_line_item_type LIKE '%Usage%')) AND (line_item_product_code = 'AmazonEC2')) AND (line_item_usage_type LIKE '%EBS:Snapshot%'))
 
 		),	

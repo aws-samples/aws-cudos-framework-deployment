@@ -12,8 +12,8 @@
 				
 		-- Step 3: Filter CUR to return all usage data		
 		  cur_all AS (SELECT DISTINCT
-			 "year"
-		   , "month"
+			 split_part("billing_period", '-', 1) "year"
+		   , split_part("billing_period", '-', 2) "month"
 		   , "bill_billing_period_start_date" "billing_period"
 		   , "date_trunc"('month', "line_item_usage_start_date") "usage_date"
 		   , "bill_payer_account_id" "payer_account_id"
@@ -37,10 +37,10 @@
 		   , line_item_usage_type "usage_type"
 		   , CASE WHEN ("line_item_product_code" in ('AmazonRDS','AmazonElastiCache')) THEN "lower"("split_part"("product_instance_type", '.', 2)) ELSE "lower"("split_part"("product_instance_type", '.', 1)) END "instance_type_family"
 		   , "product_instance_type" "instance_type"
-		   , "product_operating_system"  "platform"
-		   , "product_tenancy" "tenancy"
-		   , "product_physical_processor" "processor"
-		   , (CASE WHEN (("line_item_line_item_type" LIKE '%Usage%') AND ("product_physical_processor" LIKE '%Graviton%')) THEN 'Graviton' WHEN (("line_item_line_item_type" LIKE '%Usage%') AND ("product_physical_processor" LIKE '%AMD%')) THEN 'AMD' 
+		   , product['operating_system']  "platform"
+		   , product['tenancy'] "tenancy"
+		   , product['physical_processor'] "processor"
+		   , (CASE WHEN (("line_item_line_item_type" LIKE '%Usage%') AND (product['physical_processor'] LIKE '%Graviton%')) THEN 'Graviton' WHEN (("line_item_line_item_type" LIKE '%Usage%') AND (product['physical_processor'] LIKE '%AMD%')) THEN 'AMD' 
 			WHEN line_item_product_code IN ('AmazonES','AmazonElastiCache') AND (product_instance_type LIKE '%6g%' OR product_instance_type LIKE '%7g%' OR product_instance_type LIKE '%4g%') THEN 'Graviton'
 			WHEN line_item_product_code IN ('AWSLambda') AND line_item_usage_type LIKE '%ARM%' THEN 'Graviton'		
 			WHEN line_item_usage_type LIKE '%Fargate%' AND line_item_usage_type LIKE '%ARM%' THEN 'Graviton'
@@ -67,9 +67,9 @@
 			  WHEN ("line_item_line_item_type" = 'RIFee') THEN ("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee")
 			  WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE ("line_item_unblended_cost" ) END)) "adjusted_amortized_cost"
 		   , "sum"("pricing_public_on_demand_cost") "public_cost"
-		   FROM "${cur1_database}"."${cur1_table_name}"
+		   FROM "${cur2_database}"."${cur2_table_name}"
 		   WHERE
-			(CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '3' MONTH)
+			(CAST("concat"("billing_period", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '3' MONTH)
 		   AND ("bill_payer_account_id" <>'') 
 		   AND ("line_item_resource_id" <>'') 
 		   AND ("product_servicecode" <> 'AWSDataTransfer') 

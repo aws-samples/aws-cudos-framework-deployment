@@ -7,7 +7,7 @@ CREATE OR REPLACE VIEW hourly_view AS
     , "line_item_usage_type" "usage_type"
     , "line_item_line_item_description" "item_description"
     , "pricing_unit" "pricing_unit"
-    , "product_region" "region"
+    , product['region'] "region"
     , "pricing_term" "pricing_term"
     , "bill_billing_period_start_date" "billing_period"
     , "line_item_usage_start_date" "usage_date"
@@ -20,9 +20,9 @@ CREATE OR REPLACE VIEW hourly_view AS
     , "sum"("savings_plan_savings_plan_effective_cost") "savings_plan_effective_cost"
     , "sum"("line_item_usage_amount") "usage_quantity"
     FROM
-      "${cur1_database}"."${cur1_table_name}"
-    WHERE 
-        (((current_date - INTERVAL  '30' DAY) <= line_item_usage_start_date) 
+      "${cur2_database}"."${cur2_table_name}"
+    WHERE
+        (((current_date - INTERVAL  '30' DAY) <= line_item_usage_start_date)
         AND ((("line_item_line_item_type" = 'Usage') OR ("line_item_line_item_type" = 'SavingsPlanCoveredUsage')) OR ("line_item_line_item_type" = 'DiscountedUsage'))
-        AND "line_item_operation" NOT IN ('EKSPod-EC2','ECSTask-EC2'))    
+        AND "line_item_operation" NOT IN ('EKSPod-EC2','ECSTask-EC2'))
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15

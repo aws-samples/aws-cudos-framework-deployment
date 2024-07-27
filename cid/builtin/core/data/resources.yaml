@@ -148,9 +148,9 @@ datasets:
   customer_all:
     File: shared/customer_all.json
     dependsOn:
-      cur: true
+      cur2: true
       views:
-        - ${cur1_table_name}
+        - customer_all
   # CUDOS v5 datasets
   hourly_view:
     File: cudos/hourly_view.json
@@ -258,10 +258,213 @@ datasets:
 # Athena views definitions
 views:
   # CID Shared Views
+  customer_all:
+    File: shared/customer_all_unlimited.sql
+    dependsOn:
+      cur2:
+        - "bill_bill_type"
+        - "bill_billing_entity"
+        - "bill_billing_period_end_date"
+        - "bill_billing_period_start_date"
+        - "bill_invoice_id"
+        - "bill_payer_account_id"
+        - "identity_line_item_id"
+        - "identity_time_interval"
+        - "line_item_availability_zone"
+        - "line_item_blended_cost"
+        - "line_item_blended_rate"
+        - "line_item_currency_code"
+        - "line_item_legal_entity"
+        - "line_item_line_item_description"
+        - "line_item_line_item_type"
+        - "line_item_normalization_factor"
+        - "line_item_normalized_usage_amount"
+        - "line_item_operation"
+        - "line_item_product_code"
+        - "line_item_resource_id"
+        - "line_item_tax_type"
+        - "line_item_unblended_cost"
+        - "line_item_unblended_rate"
+        - "line_item_usage_account_id"
+        - "line_item_usage_amount"
+        - "line_item_usage_end_date"
+        - "line_item_usage_start_date"
+        - "line_item_usage_type"
+        - "pricing_currency"
+        - "pricing_lease_contract_length"
+        - "pricing_offering_class"
+        - "pricing_public_on_demand_cost"
+        - "pricing_public_on_demand_rate"
+        - "pricing_purchase_option"
+        - "pricing_rate_id"
+        - "pricing_term"
+        - "pricing_unit"
+        - "product_broker_engine"
+        - "product_bundle_description"
+        - "product_bundle_group"
+        - "product_bundle"
+        - "product_client_location"
+        - "product_component"
+        - "product_compute_family"
+        - "product_compute_type"
+        - "product_content_type"
+        - "product_cputype"
+        - "product_datatransferout"
+        - "product_describes"
+        - "product_directory_size"
+        - "product_directory_type_description"
+        - "product_directory_type"
+        - "product_dominantnondominant"
+        - "product_endpoint_type"
+        - "product_enhanced_networking_support"
+        - "product_fee_code"
+        - "product_fee_description"
+        - "product_free_trial"
+        - "product_free_usage_included"
+        - "product_from_location_type"
+        - "product_from_location"
+        - "product_gets"
+        - "product_gpu"
+        - "product_granularity"
+        - "product_input_mode"
+        - "product_insightstype"
+        - "product_instance_family"
+        - "product_instance_name"
+        - "product_instance_type"
+        - "product_instance"
+        - "product_instances"
+        - "product_license"
+        - "product_location_type"
+        - "product_location"
+        - "product_maximum_extended_storage"
+        - "product_maximum_storage_volume"
+        - "product_minimum_storage_volume"
+        - "product_operation"
+        - "product_ops_items"
+        - "product_origin"
+        - "product_output_mode"
+        - "product_physical_cpu"
+        - "product_physical_gpu"
+        - "product_pricing_unit"
+        - "product_product_family"
+        - "product_provisioned"
+        - "product_ratetype"
+        - "product_recipient"
+        - "product_request_description"
+        - "product_resource_type"
+        - "product_rootvolume"
+        - "product_routing_target"
+        - "product_routing_type"
+        - "product_running_mode"
+        - "product_servicecode"
+        - "product_sku"
+        - "product_software_included"
+        - "product_standard_storage_retention_included"
+        - "product_steps"
+        - "product_storage_type"
+        - "product_to_location_type"
+        - "product_to_location"
+        - "product_traffic_direction"
+        - "product_updates"
+        - "product_usagetype"
+        - "product_uservolume"
+        - "reservation_amortized_upfront_cost_for_usage"
+        - "reservation_amortized_upfront_fee_for_billing_period"
+        - "reservation_effective_cost"
+        - "reservation_end_time"
+        - "reservation_modification_status"
+        - "reservation_normalized_units_per_reservation"
+        - "reservation_number_of_reservations"
+        - "reservation_recurring_fee_for_usage"
+        - "reservation_reservation_a_r_n"
+        - "reservation_start_time"
+        - "reservation_subscription_id"
+        - "reservation_total_reserved_normalized_units"
+        - "reservation_total_reserved_units"
+        - "reservation_units_per_reservation"
+        - "reservation_unused_amortized_upfront_fee_for_billing_period"
+        - "reservation_unused_normalized_unit_quantity"
+        - "reservation_unused_quantity"
+        - "reservation_unused_recurring_fee"
+        - "reservation_upfront_value"
+        - "savings_plan_amortized_upfront_commitment_for_billing_period"
+        - "savings_plan_recurring_commitment_for_billing_period"
+        - "savings_plan_savings_plan_a_r_n"
+        - "savings_plan_savings_plan_effective_cost"
+        - "savings_plan_savings_plan_rate"
+        - "savings_plan_total_commitment_to_date"
+        - "savings_plan_used_commitment"
+        - product['alarm_type']
+        - product['availability_zone']
+        - product['availability']
+        - product['cache_engine']
+        - product['capacitystatus']
+        - product['category']
+        - product['clock_speed']
+        - product['current_generation']
+        - product['database_engine']
+        - product['dedicated_ebs_throughput']
+        - product['deployment_option']
+        - product['description']
+        - product['durability']
+        - product['ecu']
+        - product['edition']
+        - product['engine_code']
+        - product['enhanced_networking_supported']
+        - product['event_type']
+        - product['finding_group']
+        - product['finding_source']
+        - product['finding_storage']
+        - product['free_query_types']
+        - product['gpu_memory']
+        - product['group_description']
+        - product['group']
+        - product['instance_type_family']
+        - product['intel_avx_available']
+        - product['intel_avx2_available']
+        - product['intel_turbo_available']
+        - product['license_model']
+        - product['logs_destination']
+        - product['max_iops_burst_performance']
+        - product['max_iopsvolume']
+        - product['max_throughputvolume']
+        - product['max_volume_size']
+        - product['memory_gib']
+        - product['memory']
+        - product['memorytype']
+        - product['message_delivery_frequency']
+        - product['message_delivery_order']
+        - product['min_volume_size']
+        - product['network_performance']
+        - product['normalization_size_factor']
+        - product['operating_system']
+        - product['physical_processor']
+        - product['pre_installed_sw']
+        - product['processor_architecture']
+        - product['processor_features']
+        - product['product_name']
+        - product['queue_type']
+        - product['region']
+        - product['request_type']
+        - product['servicename']
+        - product['standard_group']
+        - product['standard_storage']
+        - product['storage_class']
+        - product['storage_media']
+        - product['storage']
+        - product['subscription_type']
+        - product['tenancy']
+        - product['transfer_type']
+        - product['type']
+        - product['vcpu']
+        - product['version']
+        - product['volume_api_name']
+        - product['volume_type']
+
   summary_view:
     File: cid/summary_view_sp_ri.sql
     dependsOn:
-      cur:
+      cur2:
         - year
         - month
         - bill_billing_entity
@@ -308,7 +511,7 @@ views:
   ec2_running_cost:
     File: cid/ec2_running_cost_sp_ri.sql
     dependsOn:
-      cur:
+      cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
         - line_item_line_item_type
@@ -325,7 +528,7 @@ views:
   compute_savings_plan_eligible_spend:
     File: cid/compute_savings_plan_eligible_spend.sql
     dependsOn:
-      cur:
+      cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
         - line_item_line_item_type
@@ -340,7 +543,7 @@ views:
   s3_view:
     File: cid/s3.sql
     dependsOn:
-      cur:
+      cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
         - line_item_line_item_type
@@ -358,7 +561,7 @@ views:
   ri_sp_mapping:
     File: cid/ri_sp_mapping_sp_ri.sql
     dependsOn:
-      cur:
+      cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
         - line_item_line_item_type
@@ -380,7 +583,7 @@ views:
   hourly_view:
     File: cudos/hourly_view_sp_ri.sql
     dependsOn:
-      cur:
+      cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
         - line_item_line_item_description
@@ -404,7 +607,7 @@ views:
   resource_view:
     File: cudos/resource_view_sp_ri.sql
     dependsOn:
-      cur:
+      cur2:
         - bill_billing_entity
         - bill_payer_account_id
         - line_item_legal_entity
@@ -443,19 +646,19 @@ views:
   daily_anomaly_detection:
     File: trends/daily_anomaly_detection.sql
     dependsOn:
-      cur: true
+      cur2: true
       views:
         - aws_accounts
   monthly_anomaly_detection:
     File: trends/monthly_anomaly_detection.sql
     dependsOn:
-      cur: true
+      cur2: true
       views:
         - aws_accounts
   monthly_bill_by_account:
     File: trends/monthly_bill_by_account_sp_ri.sql
     dependsOn:
-      cur: true
+      cur2: true
       views:
         - aws_accounts
         - aws_regions
@@ -469,21 +672,21 @@ views:
   kpi_ebs_snap:
     File: kpi/kpi_ebs_snap_view.sql
     dependsOn:
-      cur: true
+      cur2: true
       views:
         - account_map
 
   kpi_ebs_storage_all:
     File: kpi/kpi_ebs_storage_view.sql
     dependsOn:
-      cur: true
+      cur2: true
       views:
         - account_map
 
   kpi_instance_all:
     File: kpi/kpi_instance_all_view.sql
     dependsOn:
-      cur: true
+      cur2: true
       views:
         - account_map
         - kpi_instance_mapping
@@ -597,7 +800,7 @@ views:
   aws_accounts:
     File: shared/aws_accounts.sql
     dependsOn:
-      cur: true
+      cur2: true
   aws_regions:
     File: shared/aws_regions.sql
   aws_service_category_map:
