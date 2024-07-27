@@ -231,7 +231,7 @@ datasets:
     schedules:
       - default
   monthly-bill-by-account:
-    File: trends/monthly_bill_by_account_sp_ri.json
+    File: trends/monthly_bill_by_account.json
     dependsOn:
       views:
         - monthly_bill_by_account
