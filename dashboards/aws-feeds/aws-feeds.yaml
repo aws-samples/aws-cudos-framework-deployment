@@ -2939,6 +2939,7 @@ datasets:
       - aws_feeds
     schedules:
     - default
+
   aws_feeds_blog_post:
     data:
       DataSetId: 173bf994-4763-4044-a96d-1cb6cce591f4
@@ -2948,7 +2949,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: aws_feeds_blog_post
             InputColumns:
             - Name: title
@@ -2996,6 +2997,14 @@ datasets:
       - aws_feeds_blog_post
     schedules:
     - default
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'aws_feeds_youtube'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
+
   aws_feeds_security_bulletin:
     data:
       DataSetId: cd5b5e17-fdde-4563-a944-1c5fc3b27684
@@ -3047,6 +3056,14 @@ datasets:
       - aws_feeds_security_bulletin
     schedules:
     - default
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'aws_feeds_youtube'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
+
   aws_feeds_whats_new:
     data:
       DataSetId: 00e4f86c-96b8-49b7-b68f-8b540e4fa6b7
@@ -3056,7 +3073,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: aws_feeds_whats_new
             InputColumns:
             - Name: link
@@ -3104,6 +3121,14 @@ datasets:
       - aws_feeds_whats_new
     schedules:
     - default
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'aws_feeds_youtube'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
+
   aws_feeds_youtube:
     data:
       DataSetId: 5258b9ee-48d0-48f3-9ec4-baa4acd1d006
@@ -3181,7 +3206,7 @@ crawlers: {}
 views:
   aws_feeds:
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.aws_feeds AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".aws_feeds AS
       SELECT
         date published
       , 'blog_post' feed_type
@@ -3216,6 +3241,8 @@ views:
         "${data_collection_database_name}"."aws_feeds_youtube"
     parameters:
       data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'aws_feeds_youtube'
         default: optimization_data
         description: "Enter the name of the data collection database"
         global: True
