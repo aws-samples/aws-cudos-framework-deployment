@@ -6,7 +6,7 @@ dashboards:
       - rds_extended_support_view
     name: Extended Support Cost Projection
     dashboardId: extended-support-cost-projection
-    category: Test
+    category: Advanced
     data: |-
       AnalysisDefaults:
         DefaultNewSheetConfiguration:
