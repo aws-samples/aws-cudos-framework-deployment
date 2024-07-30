@@ -6,7 +6,7 @@ dashboards:
       - rds_extended_support_view
     name: Extended Support Cost Projection
     dashboardId: extended-support-cost-projection
-    category: Advanced
+    category: Test
     data: |-
       AnalysisDefaults:
         DefaultNewSheetConfiguration:
@@ -1463,7 +1463,7 @@ dashboards:
                 - CustomLabel: Account Name
                   FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.account_name.17.1715261849310
                 - CustomLabel: DB Instance ID
-                  FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.dbinstanceidentifier.16.1707820559498
+                  FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.dbresourceidentifier.16.1707820559498
                   Width: 417px
                 - CustomLabel: Instance Type
                   FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.instance_type.2.1707158882036
@@ -1519,9 +1519,9 @@ dashboards:
                       FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.account_name.17.1715261849310
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: dbinstanceidentifier
+                        ColumnName: dbresourceidentifier
                         DataSetIdentifier: rds_extended_support_view
-                      FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.dbinstanceidentifier.16.1707820559498
+                      FieldId: ba51b0b7-2118-49f3-85f2-399ae50255b4.dbresourceidentifier.16.1707820559498
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: instance_type
@@ -3419,7 +3419,7 @@ datasets:
               Type: STRING
             - Name: item_description
               Type: STRING
-            - Name: dbinstanceidentifier
+            - Name: dbresourceidentifier
               Type: STRING
             - Name: resource_id
               Type: STRING
@@ -3478,7 +3478,7 @@ datasets:
               - instance_type_family
               - instance_type
               - item_description
-              - dbinstanceidentifier
+              - dbresourceidentifier
               - resource_id
               - vcpus
               - usage_unit
@@ -3743,7 +3743,51 @@ views:
          FROM preprocessed_rds_instances
          WHERE collection_date = max_collection_date
       )
-      , rds_instances (billing_period, usage_date, payer_account_id, linked_account_id, account_name, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbinstanceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
+      , preprocessed_rds_clusters (payer_id, accountid, region, dbclusteridentifier, engine, engineversion, collection_date, max_collection_date) AS (
+         SELECT DISTINCT
+           payer_id
+         , accountid
+         , region
+         , dbclusteridentifier
+         , engine
+         , (CASE WHEN (engine = 'aurora-mysql') THEN split(engineversion, 'mysql_aurora.')[2] ELSE engineversion END)
+         , CAST("concat"("year", '-', "month", '-', "day") AS date)
+         , max(CAST("concat"("year", '-', "month", '-', "day") AS date)) OVER (ORDER BY dbclusteridentifier ASC)
+         FROM
+           ${data_collection_database_name}.inventory_rds_db_clusters_data
+         WHERE (CAST("concat"("year", '-', "month", '-', "day") AS date) >= ("date_trunc"('day', current_date) - INTERVAL  '15' DAY))
+           AND enginemode = 'serverless'
+      )
+      , sanitised_rds_clusters (payer_id, accountid, region, dbclusteridentifier, engine, engineversion) AS (
+         SELECT DISTINCT
+           payer_id
+         , accountid
+         , region
+         , dbclusteridentifier
+         , engine
+         , (CASE WHEN ((engine = 'aurora-mysql') AND starts_with(engineversion, '2')) THEN substr(engineversion, 1, (strpos(engineversion, '.', 2) - 1)) WHEN ((engine = 'aurora-mysql') AND starts_with(engineversion, '3')) THEN substr(engineversion, 1, (strpos(engineversion, '.', 1) - 1)) WHEN ((engine = 'aurora-postgresql') AND (NOT starts_with(engineversion, '11'))) THEN substr(engineversion, 1, (strpos(engineversion, '.', 1) - 1)) WHEN (engine = 'mysql') THEN substr(engineversion, 1, (strpos(engineversion, '.', 2) - 1)) WHEN ((engine = 'postgres') AND (NOT starts_with(engineversion, '11'))) THEN substr(engineversion, 1, (strpos(engineversion, '.', 1) - 1)) ELSE engineversion END)
+         FROM
+           preprocessed_rds_clusters
+         WHERE (collection_date = max_collection_date)
+      )
+      , all_sanitised_rds_resources (payer_id, accountid, region, dbresourceidentifier, engine, engineversion) as (
+         SELECT payer_id
+             , accountid
+             , region
+             , dbinstanceidentifier
+             , engine
+             , engineversion
+           FROM sanitised_rds_instances
+          UNION
+         SELECT payer_id
+             , accountid
+             , region
+             , dbclusteridentifier
+             , engine
+             , engineversion
+           FROM sanitised_rds_clusters
+      )
+      , rds_resources (billing_period, usage_date, payer_account_id, linked_account_id, account_name, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbresourceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
          SELECT
            c.bill_billing_period_start_date
          , date_trunc('day', c.line_item_usage_start_date)
@@ -3752,14 +3796,14 @@ views:
          , accmap.account_name
          , c.product_region
          , (CASE WHEN (c.product_database_engine LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
-         , (CASE WHEN (c.line_item_usage_type LIKE '%InstanceUsage%') THEN 'SINGLE-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN 'MULTI-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZClusterUsage%') THEN 'MULTI-AZ-CLUSTER' WHEN ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type = 'Aurora:ServerlessUsage')) THEN 'SERVERLESS' ELSE 'UNDEFINED (Check the usage type)' END)
+         , (CASE WHEN (c.line_item_usage_type LIKE '%InstanceUsage%') THEN 'SINGLE-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN 'MULTI-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZClusterUsage%') THEN 'MULTI-AZ-CLUSTER' WHEN ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 'SERVERLESS' WHEN ((c.product_product_family = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'SERVERLESSV2' ELSE 'UNDEFINED (Check the usage type)' END)
          , (CASE WHEN (rdsu.engine IS NOT NULL) THEN rdsu.engine ELSE c.product_database_engine END)
          , (CASE WHEN ((rdsu.engine IS NOT NULL) AND (rdsu.engineversion IS NOT NULL)) THEN CONCAT(rdsu.engine, rdsu.engineversion) ELSE 'engine-1.-1.-1' END)
          , c.product_instance_type_family
          , c.product_instance_type
          , c.line_item_line_item_description
-         , (CASE WHEN ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type = 'Aurora:ServerlessUsage')) THEN 0 ELSE CAST(c.product_vcpu AS int) END)
-         , (CASE WHEN ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type = 'Aurora:ServerlessUsage')) THEN 'acu-hour' ELSE 'vcpu-hour' END)
+         , (CASE WHEN ((c.product_product_family like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 0 ELSE CAST(c.product_vcpu AS int) END)
+         , (CASE WHEN ((c.product_product_family = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'acu-hour' ELSE 'vcpu-hour' END)
          , split_part(c.line_item_resource_id, ':', 7)
          , c.line_item_resource_id
          , c.product_deployment_option
@@ -3767,34 +3811,34 @@ views:
          , sum(c.line_item_usage_amount)
          , sum((CASE WHEN (c.pricing_unit = 'ACU-Hr') THEN c.line_item_usage_amount ELSE (CAST(c.product_vcpu AS int) * c.line_item_usage_amount) END))
          FROM
-           (${cur_database_name}.${cur_table_name} c
-         INNER JOIN sanitised_rds_instances rdsu ON ((c.bill_payer_account_id = rdsu.payer_id) AND (c.line_item_usage_account_id = rdsu.accountid) AND (c.product_region = rdsu.region) AND (split_part(c.line_item_resource_id, ':', 7) = rdsu.dbinstanceidentifier)))
-         INNER JOIN account_map accmap on c.line_item_usage_account_id = accmap.account_id
-         WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.year, '-', c.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonRDS') AND (c.line_item_line_item_type IN ('DiscountedUsage', 'Usage')) AND ((c.product_product_family = 'Database Instance') OR ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type = 'Aurora:ServerlessUsage'))))
+           ((customer_cur_data.customer_all c
+         INNER JOIN all_sanitised_rds_resources rdsu ON ((c.bill_payer_account_id = rdsu.payer_id) AND (c.line_item_usage_account_id = rdsu.accountid) AND (c.product_region = rdsu.region) AND (split_part(c.line_item_resource_id, ':', 7) = rdsu.dbresourceidentifier)))
+         INNER JOIN account_map accmap ON (c.line_item_usage_account_id = accmap.account_id))
+         WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.year, '-', c.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonRDS') AND (c.line_item_line_item_type IN ('DiscountedUsage', 'Usage')) AND ((c.product_product_family = 'Database Instance') OR ((c.product_product_family like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage'))))
          GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
-      )
+      ) 
       SELECT
-        rdsi.billing_period
-      , rdsi.usage_date
-      , rdsi.payer_account_id
-      , rdsi.linked_account_id
-      , rdsi.account_name
-      , rdsi.region_code
-      , rdsi.rds_type
-      , rdsi.deployment_option
-      , rdsi.original_deployment_option
-      , rdsi.original_usage_type
-      , rdsi.engine
-      , rdsi.engineversion
-      , rdsi.instance_type_family
-      , rdsi.instance_type
-      , rdsi.item_description
-      , rdsi.dbinstanceidentifier
-      , rdsi.resource_id
-      , rdsi.vcpus
-      , rdsi.usage_unit
-      , rdsi.usage_amount
-      , rdsi.vcpu_acu_hours
+        rdsr.billing_period
+      , rdsr.usage_date
+      , rdsr.payer_account_id
+      , rdsr.linked_account_id
+      , rdsr.account_name
+      , rdsr.region_code
+      , rdsr.rds_type
+      , rdsr.deployment_option
+      , rdsr.original_deployment_option
+      , rdsr.original_usage_type
+      , rdsr.engine
+      , rdsr.engineversion
+      , rdsr.instance_type_family
+      , rdsr.instance_type
+      , rdsr.item_description
+      , rdsr.dbresourceidentifier
+      , rdsr.resource_id
+      , rdsr.vcpus
+      , rdsr.usage_unit
+      , rdsr.usage_amount
+      , rdsr.vcpu_acu_hours
       , erc.year_1_start
       , (CASE WHEN ((current_timestamp >= erc.year_1_start) AND (current_timestamp < erc.year_3_start)) THEN 'Y' ELSE 'N' END) is_year_1_2
       , erc.year_3_start
@@ -3802,14 +3846,14 @@ views:
       , erc.end_of_extended_support
       , (CASE WHEN (current_timestamp >= erc.end_of_extended_support) THEN 'Y' ELSE 'N' END) is_unsupported
       , rp.year_1_2_pricing
-      , (CASE WHEN ((current_timestamp >= erc.year_1_start) AND (current_timestamp < erc.year_3_start)) THEN (rdsi.vcpu_acu_hours * rp.year_1_2_pricing) ELSE 0 END) year_1_2_cost
+      , (CASE WHEN ((current_timestamp >= erc.year_1_start) AND (current_timestamp < erc.year_3_start)) THEN (rdsr.vcpu_acu_hours * rp.year_1_2_pricing) ELSE 0 END) year_1_2_cost
       , rp.year_3_pricing
-      , (CASE WHEN ((current_timestamp >= erc.year_3_start) AND (current_timestamp < erc.end_of_extended_support)) THEN (rdsi.vcpu_acu_hours * rp.year_3_pricing) ELSE 0 END) year_3_cost
+      , (CASE WHEN ((current_timestamp >= erc.year_3_start) AND (current_timestamp < erc.end_of_extended_support)) THEN (rdsr.vcpu_acu_hours * rp.year_3_pricing) ELSE 0 END) year_3_cost
       FROM
-        ((rds_instances rdsi
-      INNER JOIN regions_pricing rp ON (rdsi.region_code = rp.region_code))
-      INNER JOIN engine_release_calendar erc ON (rdsi.engineversion = erc.engineversion))
-      WHERE (rdsi.rds_type = rp.rds_type)
+        ((rds_resources rdsr
+      INNER JOIN regions_pricing rp ON (rdsr.region_code = rp.region_code))
+      INNER JOIN engine_release_calendar erc ON (rdsr.engineversion = erc.engineversion))
+      WHERE (rdsr.rds_type = rp.rds_type)
     parameters:
         cur_database_name:
           default: cid_cur
