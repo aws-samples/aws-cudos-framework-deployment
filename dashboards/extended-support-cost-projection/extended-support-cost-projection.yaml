@@ -3277,7 +3277,7 @@ dashboards:
             center\">\n    <inline color=\"#61d1d6\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/rds-extended-support-cost-projection\"\
             \ target=\"_blank\">\n        <b>\n          <u>RDS Extended Support Cost Projection</u>\n\
             \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"\
-            center\">\n    <b>v2.1.0</b>\n  </block>\n  <br/>\n  <block align=\"right\"\
+            center\">\n    <b>v3.0.0</b>\n  </block>\n  <br/>\n  <block align=\"right\"\
             />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
             />\n  <br/>\n  <block align=\"right\">Built by: Julio Chaves, Yuriy Prykhodko,\
             \ Iakov Gan, Eric Christensen</block>\n  <br/>\n  <block align=\"right\">\n\
