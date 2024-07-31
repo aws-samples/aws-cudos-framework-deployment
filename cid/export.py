@@ -198,8 +198,8 @@ def export_analysis(qs, athena, glue):
             datasets[dataset_name]['dependsOn']['cur2'] = True
 
     all_databases = list(set(all_databases))
-    if len(all_databases) > 1:
-        raise CidCritical(f'CID only supports one database. Multiple used: {all_databases}')
+    #if len(all_databases) > 1:
+    #    raise CidCritical(f'CID only supports one database. Multiple used: {all_databases}')
 
     if all_databases:
         athena.DatabaseName = all_databases[0]
