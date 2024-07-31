@@ -554,7 +554,7 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  ## Deploy COH natively via CFN resource if we are regions that support native CFN
+  ## Deploy COH via lambda due to missing CFN resource definition
   LocalCOHviaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployCOHViaLambda
