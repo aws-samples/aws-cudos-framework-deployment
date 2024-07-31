@@ -411,7 +411,9 @@ Resources:
                   - s3:ReplicateTags
                 Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/*/${AWS::AccountId}/*"
 
-  ## Deploy CUR2 natively via CFN resource if we are regions that support native CFN
+  # CUR2
+
+  ## Deploy Data Export natively via CFN resource in regions that support native CFN
   LocalCUR2viaCFN:
     Type: AWS::BCMDataExports::Export
     Condition: DeployCUR2ViaCFN
@@ -442,8 +444,7 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  # Deploy CUR2 via lambda due to missing cfn resource definition
-  # AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
+  # Deploy Data Export via Lambda due to missing CFN resource definition AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
   LocalCUR2viaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployCUR2ViaLambda
@@ -474,8 +475,9 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
+  # FOCUS
 
-  ## Deploy FOCUS natively via CFN resource if we are regions that support native CFN
+  ## Deploy Data Export natively via CFN resource if we are regions that support native CFN
   LocalFOCUSviaCFN:
     Type: AWS::BCMDataExports::Export
     Condition: DeployFOCUSViaCFN
@@ -500,7 +502,7 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  ## Deploy FOCUS natively via CFN resource if we are regions that support native CFN
+  # Deploy Data Export via Lambda due to missing CFN resource definition AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
   LocalFOCUSviaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployFOCUSViaLambda
@@ -525,7 +527,9 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  ## Deploy COH natively via CFN resource in the regions that support native CFN  
+  # FOCUS
+
+  ## Deploy Data Export natively via CFN resource if we are regions that support native CFN
   LocalCOHviaCFN:
     Type: AWS::BCMDataExports::Export
     Condition: DeployCOHViaCFN
@@ -554,7 +558,7 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  ## Deploy COH via lambda due to missing CFN resource definition
+  # Deploy Data Export via Lambda due to missing CFN resource definition AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
   LocalCOHviaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployCOHViaLambda
