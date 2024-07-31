@@ -525,7 +525,7 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  ## Deploy COH natively via CFN resource if we are regions that support native CFN
+  ## Deploy COH natively via CFN resource in the regions that support native CFN  
   LocalCOHviaCFN:
     Type: AWS::BCMDataExports::Export
     Condition: DeployCOHViaCFN
