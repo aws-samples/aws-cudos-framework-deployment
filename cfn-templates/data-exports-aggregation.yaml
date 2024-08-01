@@ -527,7 +527,7 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  # FOCUS
+  # COH
 
   ## Deploy Data Export natively via CFN resource if we are regions that support native CFN
   LocalCOHviaCFN:
