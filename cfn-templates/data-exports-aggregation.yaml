@@ -477,7 +477,7 @@ Resources:
 
   # FOCUS
 
-  ## Deploy Data Export natively via CFN resource if we are regions that support native CFN
+  ## Deploy Data Export natively via CFN resource in regions that support native CFN
   LocalFOCUSviaCFN:
     Type: AWS::BCMDataExports::Export
     Condition: DeployFOCUSViaCFN
