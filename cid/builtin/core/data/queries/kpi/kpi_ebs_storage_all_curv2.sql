@@ -1,4 +1,3 @@
-/*Replace customer_all in row 22 with your CUR table name */
 CREATE OR REPLACE VIEW kpi_ebs_storage_all AS 
 WITH 
 -- Step 1: Add mapping view

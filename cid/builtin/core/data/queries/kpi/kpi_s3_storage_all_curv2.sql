@@ -1,4 +1,3 @@
-/*Replace customer_all in row 42 with your CUR table name */
 		CREATE OR REPLACE VIEW kpi_s3_storage_all AS 
 		-- Step 1: Enter S3 standard savings savings assumption. Default is set to 0.3 for 30% savings 
 		WITH inputs AS (

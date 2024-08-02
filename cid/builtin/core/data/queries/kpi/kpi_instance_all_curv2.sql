@@ -1,4 +1,3 @@
-/*Replace customer_all in row 71 with your CUR table name */
 	CREATE OR REPLACE VIEW kpi_instance_all AS 
 		WITH 
 		-- Step 1: Add mapping view
