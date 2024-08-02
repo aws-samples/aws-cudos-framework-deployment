@@ -12,6 +12,7 @@ Metadata:
           - ResourcePrefix
           - ManageCUR2
           - ManageFOCUS
+          - ManageCOH
       -
         Label:
           default: "Parameters needed in Destination (Data Collection) Account only"
@@ -25,6 +26,8 @@ Metadata:
           - RolePath
 
     ParameterLabels:
+      ManageCOH:
+        default: "Create Cost Optimization Recommendations DataExport"
       ManageCUR2:
         default: "Create CUR 2.0 DataExport"
       ManageFOCUS:
@@ -60,6 +63,11 @@ Parameters:
     AllowedValues: ['yes', 'no']
     Default: "yes"
   ManageFOCUS:
+    Type: String
+    Description: Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
+    AllowedValues: ['yes', 'no']
+    Default: "yes"
+  ManageCOH:
     Type: String
     Description: Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
     AllowedValues: ['yes', 'no']
@@ -102,19 +110,24 @@ Conditions:
       - !Equals [!Ref 'AWS::Region', 'cn-northwest-1']
   ManageCUR2: !Equals [!Ref ManageCUR2, 'yes']
   ManageFOCUS: !Equals [!Ref ManageFOCUS, 'yes']
+  ManageCOH: !Equals [!Ref ManageCOH, 'yes']
   EnableSCAD: !Equals [!Ref EnableSCAD, 'yes']
   DeployDataExport:
     Fn::Or:
       - !Condition ManageCUR2
       - !Condition ManageFOCUS
+      - !Condition ManageCOH
   DeployCUR2ViaCFN:      !And [!Condition IsSourceAccount, !Condition ManageCUR2,        !Condition RegionSupportsDataExportsViaCFN]
   DeployFOCUSViaCFN:     !And [!Condition IsSourceAccount, !Condition ManageFOCUS,       !Condition RegionSupportsDataExportsViaCFN]
+  DeployCOHViaCFN:       !And [!Condition IsSourceAccount, !Condition ManageCOH,         !Condition RegionSupportsDataExportsViaCFN]
   DeployCUR2ViaLambda:   !And [!Condition IsSourceAccount, !Condition ManageCUR2,  !Not [!Condition RegionSupportsDataExportsViaCFN]]
   DeployFOCUSViaLambda:  !And [!Condition IsSourceAccount, !Condition ManageFOCUS, !Not [!Condition RegionSupportsDataExportsViaCFN]]
+  DeployCOHViaLambda:   !And [!Condition IsSourceAccount, !Condition ManageCOH,    !Not [!Condition RegionSupportsDataExportsViaCFN]]
   DeployCUR2Table:       !And [!Condition IsDestinationAccount, !Condition ManageCUR2]
   DeployFOCUSTable:      !And [!Condition IsDestinationAccount, !Condition ManageFOCUS]
-  DeployAnyExportViaLambda: !Or [!Condition DeployCUR2ViaLambda, !Condition DeployFOCUSViaLambda]
-  DeployAnyTable: !Or [!Condition DeployFOCUSTable, !Condition DeployCUR2Table]
+  DeployCOHTable:        !And [!Condition IsDestinationAccount, !Condition ManageCOH]
+  DeployAnyExportViaLambda: !Or [!Condition DeployCUR2ViaLambda, !Condition DeployFOCUSViaLambda, !Condition DeployCOHViaLambda]
+  DeployAnyTable: !Or [!Condition DeployFOCUSTable, !Condition DeployCUR2Table, !Condition DeployCOHTable]
 
 Mappings:
   DataExports:
@@ -130,6 +143,10 @@ Mappings:
       DefaultQuery: >-
         SELECT AvailabilityZone, BilledCost, BillingAccountId, BillingAccountName, BillingCurrency, BillingPeriodEnd, BillingPeriodStart, ChargeCategory, ChargeClass, ChargeDescription, ChargeFrequency, ChargePeriodEnd, ChargePeriodStart, CommitmentDiscountCategory, CommitmentDiscountId, CommitmentDiscountName, CommitmentDiscountType, CommitmentDiscountStatus, ConsumedQuantity, ConsumedUnit, ContractedCost, ContractedUnitPrice, EffectiveCost, InvoiceIssuerName, ListCost, ListUnitPrice, PricingCategory, PricingQuantity, PricingUnit, ProviderName, PublisherName, RegionId, RegionName, ResourceId, ResourceName, ResourceType, ServiceCategory, ServiceName, SkuId, SkuPriceId, SubAccountId, SubAccountName, Tags, x_CostCategories, x_Discounts, x_Operation, x_ServiceCode, x_UsageType
         FROM FOCUS_1_0_AWS_PREVIEW
+    COH:
+      DefaultQuery: >-
+        SELECT account_id, action_type, currency_code, current_resource_details, current_resource_summary, current_resource_type, estimated_monthly_cost_after_discount, estimated_monthly_cost_before_discount, estimated_monthly_savings_after_discount, estimated_monthly_savings_before_discount, estimated_savings_percentage_after_discount, estimated_savings_percentage_before_discount, implementation_effort, last_refresh_timestamp, recommendation_id, recommendation_lookback_period_in_days, recommendation_source, recommended_resource_details, recommended_resource_summary, recommended_resource_type, region, resource_arn, restart_needed, rollback_possible, tags
+        FROM COST_OPTIMIZATION_RECOMMENDATIONS
 
 Resources:
 
@@ -288,6 +305,12 @@ Resources:
             Id: ReplicateFOCUSData
             Prefix: !Sub "focus/${AWS::AccountId}/${ResourcePrefix}-focus/data/" # Hardcoded export name
             Status: Enabled
+          - Destination:
+              Bucket: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports"
+              StorageClass: STANDARD
+            Id: ReplicateCOHData
+            Prefix: !Sub "coh/${AWS::AccountId}/${ResourcePrefix}-coh/data/" # Hardcoded export name
+            Status: Enabled
       LifecycleConfiguration:
         Rules:
           - Id: Object&Version Expiration
@@ -388,7 +411,9 @@ Resources:
                   - s3:ReplicateTags
                 Resource: !Sub "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/*/${AWS::AccountId}/*"
 
-  ## Deploy CUR2 natively via CFN resource if we are regions that support native CFN
+  # CUR2
+
+  ## Deploy Data Export natively via CFN resource in regions that support native CFN
   LocalCUR2viaCFN:
     Type: AWS::BCMDataExports::Export
     Condition: DeployCUR2ViaCFN
@@ -419,8 +444,7 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  # Deploy CUR2 via lambda due to missing cfn resource definition
-  # AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
+  # Deploy Data Export via Lambda due to missing CFN resource definition AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
   LocalCUR2viaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployCUR2ViaLambda
@@ -451,8 +475,9 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
+  # FOCUS
 
-  ## Deploy FOCUS natively via CFN resource if we are regions that support native CFN
+  ## Deploy Data Export natively via CFN resource in regions that support native CFN
   LocalFOCUSviaCFN:
     Type: AWS::BCMDataExports::Export
     Condition: DeployFOCUSViaCFN
@@ -477,7 +502,7 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
-  ## Deploy FOCUS natively via CFN resource if we are regions that support native CFN
+  # Deploy Data Export via Lambda due to missing CFN resource definition AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
   LocalFOCUSviaCustomResource:
     Type: Custom::CUR2Creator
     Condition: DeployFOCUSViaLambda
@@ -502,6 +527,65 @@ Resources:
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
 
+  # COH
+
+  ## Deploy Data Export natively via CFN resource in regions that support native CFN
+  LocalCOHviaCFN:
+    Type: AWS::BCMDataExports::Export
+    Condition: DeployCOHViaCFN
+    DependsOn:
+      - SourceS3BucketPolicy
+    Properties:
+      Export:
+        DataQuery:
+          QueryStatement: !FindInMap [DataExports, COH, DefaultQuery]
+          TableConfigurations:
+            COST_OPTIMIZATION_RECOMMENDATIONS:
+              FILTER: '{}'
+              INCLUDE_ALL_RECOMMENDATIONS: 'TRUE'
+        Description: "Cost Optimization Hub Recommendations export for aggregation in CID"
+        DestinationConfigurations:
+          S3Destination:
+            S3Bucket: !Ref SourceS3
+            S3Prefix: !Sub "coh/${AWS::AccountId}" # Explicitly hardcode name of folder (it will be the same as table name)
+            S3Region: !Ref AWS::Region
+            S3OutputConfigurations:
+              Overwrite: "OVERWRITE_REPORT"
+              Format: "PARQUET"
+              Compression: "PARQUET"
+              OutputType: "CUSTOM"
+        Name: !Sub '${ResourcePrefix}-coh'
+        RefreshCadence:
+          Frequency: "SYNCHRONOUS"
+
+  # Deploy Data Export via Lambda due to missing CFN resource definition AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
+  LocalCOHviaCustomResource:
+    Type: Custom::CUR2Creator
+    Condition: DeployCOHViaLambda
+    Properties:
+      ServiceToken: !GetAtt CidDataExportCreatorLambda.Arn
+      BucketPolicyWait: !Ref SourceS3BucketPolicy
+      Export:
+        DataQuery:
+          QueryStatement: !FindInMap [DataExports, COH, DefaultQuery]
+          TableConfigurations:
+            COST_OPTIMIZATION_RECOMMENDATIONS:
+              FILTER: '{}'
+              INCLUDE_ALL_RECOMMENDATIONS: 'TRUE'
+        Description: "Cost Optimization Hub Recommendations export for aggregation in CID"
+        DestinationConfigurations:
+          S3Destination:
+            S3Bucket: !Ref SourceS3
+            S3Prefix: !Sub "coh/${AWS::AccountId}" # Explicitly hardcode name of folder (it will be the same as table name)
+            S3Region: !Ref AWS::Region
+            S3OutputConfigurations:
+              Overwrite: "OVERWRITE_REPORT"
+              Format: "PARQUET"
+              Compression: "PARQUET"
+              OutputType: "CUSTOM"
+        Name: !Sub '${ResourcePrefix}-coh'
+        RefreshCadence:
+          Frequency: "SYNCHRONOUS"
 
 ###########################################################################
 # Lambda DataExport Creator: used to create DataExport from outside us-east-1 or cn-northwest-1
@@ -900,6 +984,111 @@ Resources:
             }
           }
         }
+
+###########################################################################
+# COH
+###########################################################################
+
+  COHTable:  # Initial creation of table. it will be updated by crawler later
+    Type: AWS::Glue::Table
+    Condition: DeployCOHTable
+    Properties:
+      CatalogId: !Sub "${AWS::AccountId}"
+      DatabaseName: !Ref CIDDatabase
+      TableInput:
+        Name: coh
+        Owner: owner
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          compressionType: none
+          classification: parquet
+          UPDATED_BY_CRAWLER: !Ref COHCrawler
+        StorageDescriptor:
+          BucketColumns: []
+          Compressed: false
+          Location: !Sub "s3://${DestinationS3}/coh/"
+          NumberOfBuckets: -1
+          InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
+          SerdeInfo:
+            Parameters:
+              serialization.format: '1'
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
+          StoredAsSubDirectories: false
+          Columns: # All fields required for CID
+            - {"Name": "account_id", "Type": "string"}
+            - {"Name": "action_type", "Type": "string"}
+            - {"Name": "currency_code", "Type": "string"}
+            - {"Name": "current_resource_details", "Type": "string"}
+            - {"Name": "current_resource_summary", "Type": "string"}
+            - {"Name": "current_resource_type", "Type": "string"}
+            - {"Name": "estimated_monthly_cost_after_discount", "Type": "double"}
+            - {"Name": "estimated_monthly_cost_before_discount", "Type": "double"}
+            - {"Name": "estimated_monthly_savings_after_discount", "Type": "double"}
+            - {"Name": "estimated_monthly_savings_before_discount", "Type": "double"}
+            - {"Name": "estimated_savings_percentage_after_discount", "Type": "double"}
+            - {"Name": "estimated_savings_percentage_before_discount", "Type": "double"}
+            - {"Name": "implementation_effort", "Type": "string"}
+            - {"Name": "last_refresh_timestamp", "Type": "string"}
+            - {"Name": "recommendation_id", "Type": "string"}
+            - {"Name": "recommendation_lookback_period_in_days", "Type": "int"}
+            - {"Name": "recommendation_source", "Type": "string"}
+            - {"Name": "recommended_resource_details", "Type": "string"}
+            - {"Name": "recommended_resource_summary", "Type": "string"}
+            - {"Name": "recommended_resource_type", "Type": "string"}
+            - {"Name": "region", "Type": "string"}
+            - {"Name": "resource_arn", "Type": "string"}
+            - {"Name": "restart_needed", "Type": "boolean"}
+            - {"Name": "rollback_possible", "Type": "boolean"}
+            - {"Name": "tags", "Type": "map<string,string>"}
+        PartitionKeys:
+          - {"Name": "source_account_id", "Type": "string" }
+          - {"Name": "report_name", "Type": "string" }
+          - {"Name": "data", "Type": "string" }
+          - {"Name": "date", "Type": "string" }
+
+
+  COHCrawler:
+    Type: AWS::Glue::Crawler
+    Condition: DeployCOHTable
+    Properties:
+      Name:  !Sub "${ResourcePrefix}-DataExportCOHCrawler"
+      Description: A recurring crawler that keeps your COH table in Athena up-to-date.
+      Role: !GetAtt CidDataExportCrawlerRole.Arn
+      DatabaseName: !Ref CIDDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://${DestinationS3}/coh/"
+            Exclusions:
+              - '**.json'
+              - '**.yml'
+              - '**.sql'
+              - '**.csv'
+              - '**.csv.metadata'
+              - '**.gz'
+              - '**.zip'
+              - '**/cost_and_usage_data_status/*'
+              - 'aws-programmatic-access-test-object'
+      SchemaChangePolicy:
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      Schedule:
+        ScheduleExpression: cron(0 2 * * ? *)
+      Configuration: |
+        {
+          "Version":1.0,
+          "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+          },
+          "CrawlerOutput":{
+            "Tables":{
+              "AddOrUpdateBehavior":"MergeNewColumns"
+            }
+          }
+        }
+
 
 ###########################################################################
 # Generic Resources
