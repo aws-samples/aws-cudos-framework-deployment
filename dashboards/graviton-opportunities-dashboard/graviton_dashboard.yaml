@@ -12149,7 +12149,7 @@ views:
          , "concat"("split_part"(dbinstanceclass, '.', 1), '.', "split_part"(dbinstanceclass, '.', 2)) instance_family
          , availabilityzone
          , "rtrim"(availabilityzone, 'abcdef') region
-         , (CASE WHEN (CAST(true AS VARCHAR) = 'false') THEN 'Single-AZ'
+         , (CASE WHEN (CAST(multiaz AS VARCHAR) = 'false') THEN 'Single-AZ'
                  WHEN (CAST(true AS VARCHAR) = 'true') THEN 'Multi-AZ'
                  ELSE 'Error check deployment option'
             END) "deployment option"
