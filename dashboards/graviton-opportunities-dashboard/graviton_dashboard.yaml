@@ -12150,7 +12150,7 @@ views:
          , availabilityzone
          , "rtrim"(availabilityzone, 'abcdef') region
          , (CASE WHEN (CAST(multiaz AS VARCHAR) = 'false') THEN 'Single-AZ'
-                 WHEN (CAST(true AS VARCHAR) = 'true') THEN 'Multi-AZ'
+                 WHEN (CAST(multiaz AS VARCHAR) = 'true') THEN 'Multi-AZ'
                  ELSE 'Error check deployment option'
             END) "deployment option"
          , (CASE WHEN (engine LIKE 'aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
