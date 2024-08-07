@@ -8,6 +8,10 @@ accounts, the module can create a new Cost and Usage Report local to the aggrega
 
 ## Example Usage
 
+> [!Note]
+> For complete usage documentation of using this module together with the cur-setup-source
+module, refer to the main Terraform [Deployment Instructions](../README.md#deployment-instructions).
+
 ```hcl
 provider "aws" {
   region = "us-west-2"
@@ -19,7 +23,7 @@ provider "aws" {
 }
 
 module "cur_destination" {
-  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination
+  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination"
 
   source_account_ids = ["1234567890"]
   create_cur         = false # Set to true to create an additional CUR in the aggregation account
@@ -79,6 +83,7 @@ The following resources are used by this module:
 - [aws_s3_bucket_versioning.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) (resource)
 - [aws_caller_identity.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) (data source)
 - [aws_iam_policy_document.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) (data source)
+- [aws_partition.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) (data source)
 - [aws_region.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) (data source)
 
 ## Required Inputs
@@ -108,6 +113,14 @@ Description: Suffix used to name the local CUR report if create\_cur is `true`
 Type: `string`
 
 Default: `"cur"`
+
+### enable\_split\_cost\_allocation\_data
+
+Description: Enable split cost allocation data for ECS and EKS for this CUR report
+
+Type: `bool`
+
+Default: `false`
 
 ### kms\_key\_id
 
@@ -153,14 +166,13 @@ Default:
 }
 ```
 
-### enable\_split\_cost\_allocation\_data
+### tags
 
-Description: Activate split cost allocation data for ECS and EKS to aggregate cost and usage data for container-level resources
+Description: Map of tags to apply to module resources
 
-Type: `bool`
+Type: `map(string)`
 
-Default: `false`
-
+Default: `{}`
 
 ## Outputs
 

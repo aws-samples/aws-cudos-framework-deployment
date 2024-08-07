@@ -26,10 +26,12 @@ def cid_command(func):
         if len(ctx.args) % 2 != 0:
             print(f"Unknown extra argument, or an option without value {ctx.args}")
             exit(-1)
+        params = {}
         for i in range(0, len(ctx.args), 2):
-            kwargs[ctx.args[i][2:].replace('-', '_')] = ctx.args[i+1]
+            key = ctx.args[i][2:].replace('-', '_')
+            params[key] = ctx.args[i+1]
+        set_parameters(params, all_yes=ctx.obj.all_yes)
 
-        set_parameters(kwargs, all_yes=ctx.obj.all_yes)
         res = None
         try:
             res = func(ctx, **kwargs)
@@ -59,7 +61,7 @@ def cid_command(func):
 
 @click.group()
 @click.option('--profile_name', '--profile', help='AWS Profile name to use', default=None)
-@click.option('--region_name', help="AWS Region (default:'us-east-1')", default=None)
+@click.option('--region_name', help="AWS Region", default=None)
 @click.option('--aws_access_key_id', help='', default=None)
 @click.option('--aws_secret_access_key', help='', default=None)
 @click.option('--aws_session_token', help='', default=None)
@@ -74,7 +76,6 @@ def main(ctx, **kwargs):
         os.system('color') #nosec B605, B607
 
     ctx.obj = Cid(**kwargs)
-
 
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
@@ -125,6 +126,7 @@ def deploy(ctx, **kwargs):
      --cur-table-name TEXT                 CUR table name
      --quicksight-datasource-id TEXT       QuickSight Datasource ARN (if not found one with provided Athena workgroup)
      --quicksight-datasource-role-arn TEXT IAM Role used for DataSource Creation (if not provided, will use the default QS Role). Must have access to Athena and S3 buckets.
+     --allow-buckets                       Comma separated list of buckets names to add to the default Cid QuickSight role
      --quicksight-user TEXT                QuickSight user
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
@@ -135,6 +137,7 @@ def deploy(ctx, **kwargs):
      --resources TEXT                      CID resources yaml file or url
      --category TEXT                       Comma separated list of categories of dashboards (ex: foundational,advanced )
      --catalog TEXT                        Comma separated list of catalog files or urls (ex: foundational,advanced )
+     --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
     """
     ctx.obj.deploy(**kwargs)
 
@@ -200,6 +203,7 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
     \b
 
      --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
+     --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
 
     """
     ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)

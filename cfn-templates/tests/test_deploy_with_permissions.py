@@ -65,8 +65,13 @@ def upload_to_s3(filename, path=None): # move to tools
     s3c = boto3.client('s3')
     bucket = TMP_BUCKET
     try:
-        s3c.create_bucket(Bucket=bucket)
-    except s3c.exceptions.BucketAlreadyExists:
+        params = {
+            "Bucket": bucket,
+        }
+        if region !='us-east-1':
+            params['CreateBucketConfiguration'] = {'LocationConstraint': region}
+        s3c.create_bucket(**params)
+    except (s3c.exceptions.BucketAlreadyExists, s3c.exceptions.BucketAlreadyOwnedByYou):
         pass
     s3c.upload_file(filename, bucket, path)
     return f'https://{bucket}.s3.amazonaws.com/{path}'
@@ -127,7 +132,14 @@ def watch_stacks(cloudformation, stacks=None): # move to tools
 def get_qs_user(): # move to tools
     """ get any valid qs user """
     qs_ = boto3.client('quicksight')
-    users = qs_.list_users(AwsAccountId=account_id, Namespace='default')['UserList']
+    try:
+        users = qs_.list_users(AwsAccountId=account_id, Namespace='default')['UserList']
+    except qs_.exceptions.AccessDeniedException as exc:
+        if 'your identity region is ' in str(exc):
+            id_region = str(exc).split('your identity region is ')[1].split('.')[0]
+            users = boto3.client('quicksight', region_name=id_region).list_users(AwsAccountId=account_id, Namespace='default')['UserList']
+        else:
+            raise
     assert users, 'No QS users, pleas create one.' # nosec B101:assert_used
     return users[0]['UserName']
 
@@ -295,6 +307,31 @@ def test_dashboard_exists():
     )['Dashboard']
     logger.info("Dashboard exists with status = %s", dash['Version']['Status'])
 
+def test_crawler_results():
+    glue = boto3.client('glue')
+    logger.info('Waiting For Crawler to finish')
+    timeout_seconds = 300
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        try:
+            time.sleep(3)
+            crawler = glue.get_crawler(Name='CidCrawler')['Crawler']
+            logger.debug('Crawler state = ' + crawler['State'])
+            if crawler['State'] != 'READY':
+                continue
+            last_crawl = crawler.get('LastCrawl')
+            if last_crawl:
+                logger.debug(last_crawl)
+                if last_crawl.get('Status') != 'SUCCEEDED' or last_crawl.get('ErrorMessage'):
+                    raise AssertionError(f'Something wrong with crawler {last_crawl}')
+                logger.info('Crawler SUCCEEDED')
+                break
+        except glue.exceptions.EntityNotFoundException:
+            logger.debug('Crawler is not there yet ')
+            continue
+    else:
+        raise AssertionError('Timeout while waiting for crawler')
+
 
 def test_dataset_scheduled():
     """check that dataset and schedule exist"""
@@ -414,6 +451,7 @@ def main(update, keep):
         test_dashboard_exists()
         test_dataset_scheduled()
         test_ingestion_successful()
+        test_crawler_results()
     except Exception as exc:
         logger.error(exc)
         raise

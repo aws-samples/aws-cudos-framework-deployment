@@ -12149,7 +12149,10 @@ views:
          , "concat"("split_part"(dbinstanceclass, '.', 1), '.', "split_part"(dbinstanceclass, '.', 2)) instance_family
          , availabilityzone
          , "rtrim"(availabilityzone, 'abcdef') region
-         , (CASE WHEN (multiaz = false) THEN 'Single-AZ' WHEN (multiaz = true) THEN 'Multi-AZ' ELSE 'Error check deploymen toption' END) "deployment option"
+         , (CASE WHEN (CAST(multiaz AS VARCHAR) = 'false') THEN 'Single-AZ'
+                 WHEN (CAST(multiaz AS VARCHAR) = 'true') THEN 'Multi-AZ'
+                 ELSE 'Error check deployment option'
+            END) "deployment option"
          , (CASE WHEN (engine LIKE 'aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
          , engine
          , (CASE WHEN (engine LIKE '%postgres%') THEN 'PostgreSQL' WHEN (engine LIKE '%mysql%') THEN 'MySQL' WHEN (engine LIKE '%mariadb%') THEN 'MariaDB' WHEN (engine LIKE '%oracle%') THEN 'Oracle' WHEN (engine LIKE '%docdb%') THEN 'DocDB' WHEN (engine LIKE '%sqlserver%') THEN 'SQL Server' WHEN (engine LIKE 'aurora 5.6.10a') THEN 'aurora 5.6.10a' WHEN (engine LIKE '%neptune%') THEN 'Neptune' ELSE 'Check DB Engine' END) db_engine

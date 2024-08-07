@@ -45,7 +45,8 @@ class Cid():
         self.qs_url = 'https://{region}.quicksight.{domain}/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
         self.verbose = kwargs.get('verbose')
-        set_parameters(kwargs, self.all_yes)
+        # save main parameters to global parameters but do not override parameters that were set from outside
+        set_parameters({key: val for key, val in kwargs.items() if key.replace('_', '-') not in get_parameters()}, self.all_yes)
         self._logger = None
         self.catalog_urls = [
             'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/dashboards/catalog.yaml',
@@ -60,9 +61,11 @@ class Cid():
             'aws_session_token': None
         }
         for key in params.keys():
-            value = get_parameters().get(key.replace('_', '-'))
-            if  value != None:
+            value = get_parameters().get(key.replace('_', '-'), '<NO VALUE>')
+            if  value != '<NO VALUE>':
                 params[key] = value
+        if get_parameters().get('region'):
+            params['region_name'] = get_parameters().get('region') # use region as a synonym of region_name
 
         print('Checking AWS environment...')
         try:
@@ -130,7 +133,9 @@ class Cid():
                     cid_print('\n')
                     self._clients['cur'] = _cur
                     break
-                except CidCritical as exc:
+                except CidCritical:
+                    if not utils.isatty():
+                        raise # do not allow CUR creation in lambda
                     cid_print(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
                     self.create_cur_table()
         return self._clients['cur']
@@ -1300,11 +1305,11 @@ class Cid():
         if not role_arn:
             role_name = get_parameters().get('quicksight-datasource-role')
             if role_name:
-                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
+                role_arn = self.iam.get_role_arn(role_name)
 
         if not role_arn:
             quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].RoleName"))
-            #quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
+            quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')] # filter out irrelevant roles
             # TODO: filter only roles with Athena and S3 policies
             cid_role_name = 'CidCmdQuickSightDataSourceRole'
             choices = quicksight_trusted_roles
@@ -1321,25 +1326,36 @@ class Cid():
                 default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
-                # TODO: allow customer add buckets
+                # TODO: get buckets from dashboard parameters
                 buckets = [
-                    f'cid-{self.base.account_id}-share',
+                    f'cid-{self.base.account_id}-shared',
+                    f'cid-{self.base.account_id}-data-exports',
                     f'cid-data-{self.base.account_id}',
                     f'costoptimizationdata{self.base.account_id}',
                 ]
+                additional_buckets = get_parameters().get('allow-buckets')
+                if additional_buckets:
+                    buckets += [bucket.strip().replace('{account_id}', self.base.account_id) for bucket in additional_buckets.split(',')]
+
+                databases = set([
+                    "optimization_data",
+                    "cid_data_collection",
+                    "cid_data_export", # prefix for data-exports hardcoded here
+                    self.athena.DatabaseName,
+                ])
                 role_name = self.iam.ensure_data_source_role_exists(
                     role_name=cid_role_name,
-                    database=self.athena.DatabaseName,
+                    databases=databases,
                     workgroup=self.athena.WorkGroup,
                     buckets=buckets,
                     output_location_bucket = self.athena.workgroup_output_location().split('/')[2],
                 )
                 cid_print(f'Role {role_name} was updated. https://console.aws.amazon.com/iam/home?#/roles/details/{role_name}')
-                role_arn = f'arn:aws:iam::{self.base.account_id}:role/{role_name}'
-            elif 'USE DEFAULT QuickSight ROLE' in choice:
+                role_arn = self.iam.get_role_arn(role_name)
+            elif 'USE DEFAULT QuickSight ROLE' in choice or choice == 'default':
                 role_arn = None
             else:
-                role_arn = choice
+                role_arn = self.iam.get_role_arn(choice)
 
         athena_datasource = self.qs.create_data_source(
             athena_workgroup=self.athena.WorkGroup,
@@ -1677,8 +1693,8 @@ class Cid():
                     pass
             else:
                 self.athena.execute_query(view_query)
-                assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
-                logger.info(f'View "{view_name}" created')
+            assert self.athena.wait_for_view(view_name), f"Failed to create a view {view_name}"
+            logger.info(f'View "{view_name}" created')
 
         if 'crawler' in view_definition:
             if not ('CREATE EXTERNAL TABLE' in view_query.upper() or view_definition.get('type') == 'Glue_Table'):
@@ -1710,7 +1726,7 @@ class Cid():
             )
 
         if not crawler_role.startswith('arn:'):
-            crawler_role_arn = f"arn:aws:iam::{self.base.account_id}:role/{crawler_role}"
+            crawler_role_arn = f"arn:{self.base.partition}:iam::{self.base.account_id}:role/{crawler_role}"
         else:
             crawler_role_arn = crawler_role
         params = {
