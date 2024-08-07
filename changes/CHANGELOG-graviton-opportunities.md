@@ -1,5 +1,9 @@
 # What's new in the Graviton Opportunities Dashboard
 
+## Graviton Opportunities Dashboard v1.0.3:
+* Updated modernization mapping to include r8g
+* Moved EC2 usage type filters from dashboard into SQL
+
 ## Graviton Opportunities Dashboard v1.0.2:
 **Important:** If attempting to update the dashboard, please update cid-cmd first. To update run these commands in your CloudShell (recommended) or other terminal:
 
