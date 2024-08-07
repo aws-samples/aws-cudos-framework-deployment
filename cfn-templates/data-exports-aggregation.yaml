@@ -27,11 +27,11 @@ Metadata:
 
     ParameterLabels:
       ManageCOH:
-        default: "Create Cost Optimization Recommendations DataExport"
+        default: "Cost Optimization Recommendations"
       ManageCUR2:
-        default: "Create CUR 2.0 DataExport"
+        default: "CUR 2.0"
       ManageFOCUS:
-        default: "Create FOCUS DataExport"
+        default: "FOCUS"
       DestinationAccountId:
         default: "Destination (Data Collection) Account Id"
       ResourcePrefix:
@@ -59,19 +59,19 @@ Parameters:
     AllowedPattern: "^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   ManageCUR2:
     Type: String
-    Description: Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
+    Description: ""
     AllowedValues: ['yes', 'no']
-    Default: "yes"
+    Default: "no"
   ManageFOCUS:
     Type: String
-    Description: Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
+    Description: "NOTE: you can have only one export of this type"
     AllowedValues: ['yes', 'no']
-    Default: "yes"
+    Default: "no"
   ManageCOH:
     Type: String
-    Description: Set this to 'yes' in your Management (Payer) Account or other account that will be a Source.
+    Description:  "PREREQUISITE: Make sure you have AWSServiceRoleForBCMDataExports. Run in CloudShell: aws iam create-service-linked-role --aws-service-name bcm-data-exports.amazonaws.com"
     AllowedValues: ['yes', 'no']
-    Default: "yes"
+    Default: "no"
 
   ##
   # Destination specific params
@@ -80,7 +80,7 @@ Parameters:
     Type: String
     AllowedPattern: "^((\\d{12})\\,?)*$"
     Default: ''
-    Description: "Ex:  12345678912,98745612312,.... In a rare case if you need Destination Account to produce Data Exports please put Destination Account Id first in the list. "
+    Description: "Ex:  12345678912,98745612312,.... If you install all in the same account (Source=Destination) please put Destination Account Id first in the list. "
 
   ##
   # Technical params
@@ -153,6 +153,7 @@ Resources:
 ###########################################################################
 # Destination Account Resources
 ###########################################################################
+
 
   DestinationS3:
     Type: AWS::S3::Bucket
@@ -633,6 +634,11 @@ Resources:
               Action:
               - cur:PutReportDefinition  #need this permission for bcm-data-exports to work
               Resource: !Sub "arn:${AWS::Partition}:cur:*:${AWS::AccountId}:*"
+            - Effect: Allow
+              Action:
+              - cost-optimization-hub:GetRecommendation  #need this permission for bcm-data-exports to work
+              - cost-optimization-hub:ListRecommendations
+              Resource: "arn:aws:cost-optimization-hub:*"
 
   CidDataExportCreatorLambda:
     Type: AWS::Lambda::Function
@@ -699,7 +705,7 @@ Resources:
                 physicalResourceId = event.get('ResourceProperties',{}).get('Export').get('Name', None) or str(uuid.uuid1())
                 if reason:
                     print("FAILURE")
-                    cfnresponse.send(event, context, cfnresponse.FAILED, {"Data": reason }, physicalResourceId)
+                    cfnresponse.send(event, context, cfnresponse.FAILED, {"Data": {'Reason': reason}  }, physicalResourceId)
                 else:
                     print("SUCCESS")
                     cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, physicalResourceId)
@@ -1319,6 +1325,11 @@ Resources:
               - s3:GetObjectVersion
             Resource:
               - !Sub arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-data-exports/*
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W28'
+            reason: "Need an explicit name for reference"
 
 Outputs:
   DestinationBucketName:
