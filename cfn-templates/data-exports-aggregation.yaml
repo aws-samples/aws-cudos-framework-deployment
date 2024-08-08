@@ -69,7 +69,7 @@ Parameters:
     Default: "no"
   ManageCOH:
     Type: String
-    Description:  "PREREQUISITE: Make sure you have AWSServiceRoleForBCMDataExports. Run in CloudShell: aws iam create-service-linked-role --aws-service-name bcm-data-exports.amazonaws.com"
+    Description:  ""
     AllowedValues: ['yes', 'no']
     Default: "no"
 
@@ -117,6 +117,7 @@ Conditions:
       - !Condition ManageCUR2
       - !Condition ManageFOCUS
       - !Condition ManageCOH
+  DeployCOHServiceRole:  !And [!Condition IsSourceAccount, !Condition ManageCOH]
   DeployCUR2ViaCFN:      !And [!Condition IsSourceAccount, !Condition ManageCUR2,        !Condition RegionSupportsDataExportsViaCFN]
   DeployFOCUSViaCFN:     !And [!Condition IsSourceAccount, !Condition ManageFOCUS,       !Condition RegionSupportsDataExportsViaCFN]
   DeployCOHViaCFN:       !And [!Condition IsSourceAccount, !Condition ManageCOH,         !Condition RegionSupportsDataExportsViaCFN]
@@ -536,6 +537,7 @@ Resources:
     Condition: DeployCOHViaCFN
     DependsOn:
       - SourceS3BucketPolicy
+      - CreateServiceLinkedRoleCustomResource
     Properties:
       Export:
         DataQuery:
@@ -562,6 +564,8 @@ Resources:
   # Deploy Data Export via Lambda due to missing CFN resource definition AWS::BCMDataExports::Export outside us-east-1 or cn-northwest-1
   LocalCOHviaCustomResource:
     Type: Custom::CUR2Creator
+    DependsOn:
+      - CreateServiceLinkedRoleCustomResource
     Condition: DeployCOHViaLambda
     Properties:
       ServiceToken: !GetAtt CidDataExportCreatorLambda.Arn
@@ -587,6 +591,87 @@ Resources:
         Name: !Sub '${ResourcePrefix}-coh'
         RefreshCadence:
           Frequency: "SYNCHRONOUS"
+
+  # COH export requires a service linked role to be created BUT this role can be already created. Thus we need to create it via custom resource
+  LambdaServiceLinkedRoleExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Condition: DeployCOHServiceRole
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaExecutionRole"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-LambdaPolicy"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CreateServiceLinkedRoleFunction"
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CreateServiceLinkedRoleFunction:*"
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CreateServiceLinkedRoleFunction:*:*"
+              - Effect: Allow
+                Action:
+                  - iam:CreateServiceLinkedRole
+                  - iam:DeleteServiceLinkedRole
+                  - iam:GetServiceLinkedRoleDeletionStatus
+                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/bcm-data-exports.amazonaws.com/AWSServiceRoleForBCMDataExports'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W28'
+            reason: "Need an explicit name for reference"
+
+  CreateServiceLinkedRoleFunction:
+    Type: 'AWS::Lambda::Function'
+    Condition: DeployCOHServiceRole
+    Properties:
+      FunctionName: !Sub "${ResourcePrefix}-CreateServiceLinkedRoleFunction"
+      Handler: index.handler
+      Runtime: python3.12
+      Role: !GetAtt LambdaServiceLinkedRoleExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+
+          def handler(event, context):
+              client = boto3.client('iam')
+              try:
+                  if event['RequestType'] == 'Create':
+                      response = client.create_service_linked_role(
+                          AWSServiceName='bcm-data-exports.amazonaws.com',
+                          Description='Service-linked role for bcm-data-exports.amazonaws.com'
+                      )
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+              except Exception as e:
+                  if 'has been taken in this account' in str(e): # already there
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                  print(e)
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W89'
+            reason: "This Lambda does not require VPC"
+          - id: 'W92'
+            reason: "One Time execution. No need for ReservedConcurrentExecutions"
+
+  CreateServiceLinkedRoleCustomResource:
+    Condition: DeployCOHServiceRole
+    Type: 'AWS::CloudFormation::CustomResource'
+    Properties:
+      ServiceToken: !GetAtt CreateServiceLinkedRoleFunction.Arn
 
 ###########################################################################
 # Lambda DataExport Creator: used to create DataExport from outside us-east-1 or cn-northwest-1
