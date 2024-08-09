@@ -24,7 +24,17 @@ class Definition:
         return None
     
     def resolve_version(self, raw: dict):
-        about_content = [text_content["Content"] for sheet in raw["Sheets"] for text_content in sheet["TextBoxes"] if sheet["Name"] == "About"]
+        about_content = []
+
+        sheets = raw.get("Sheets", [])
+        
+        if sheets:
+            text_boxes_content = self._extract_sheet_textboxes_content(sheets)
+            about_content += text_boxes_content
+            
+            insight_visuals_content = self._extract_sheet_visuals_content(sheets)
+            about_content += insight_visuals_content
+
         if about_content:
             all_about_content = " | ".join(about_content)
             # find first string that looks like vx.y.z using a regular expression where x, y and z are numbers
@@ -37,5 +47,22 @@ class Definition:
                     return f"{version_matches[0]}.0"
 
         return None
-        
+    
+    def _extract_sheet_visuals_content(self, sheets: list):
+        insight_visuals_content = []
+        visuals = (visual for sheet in sheets for visual in sheet.get("Visuals", []) if sheet.get("Name", None) == "About")
+        insight_visuals_content = [
+            visual["InsightVisual"]["InsightConfiguration"]["CustomNarrative"].get("Narrative", "")
+            for visual in visuals
+            if "InsightVisual" in visual
+            and "InsightConfiguration" in visual["InsightVisual"]
+            and "CustomNarrative" in visual["InsightVisual"]["InsightConfiguration"]
+        ]
+        return insight_visuals_content
 
+    def _extract_sheet_textboxes_content(self, sheets: list):
+        text_boxes = (text_boxes for sheet in sheets for text_boxes in sheet.get("TextBoxes", []) if sheet.get("Name", None) == "About")
+        text_boxes_content = [
+            text_content.get("Content", "") for text_content in text_boxes
+        ]
+        return text_boxes_content
