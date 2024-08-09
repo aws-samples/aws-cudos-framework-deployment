@@ -622,15 +622,24 @@ Resources:
                   - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CreateServiceLinkedRoleFunction:*:*"
               - Effect: Allow
                 Action:
+                  - iam:GetRole
                   - iam:CreateServiceLinkedRole
                   - iam:DeleteServiceLinkedRole
                   - iam:GetServiceLinkedRoleDeletionStatus
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/bcm-data-exports.amazonaws.com/AWSServiceRoleForBCMDataExports'
+              - Effect: Allow
+                Action:
+                  - cost-optimization-hub:GetPreferences
+                Resource: '*' # Cannot restrict this
+
     Metadata:
       cfn_nag:
         rules_to_suppress:
           - id: 'W28'
             reason: "Need an explicit name for reference"
+          - id: 'W11'
+            reason: "Some COH resources cannot be restricted"
+
 
   CreateServiceLinkedRoleFunction:
     Type: 'AWS::Lambda::Function'
@@ -638,27 +647,59 @@ Resources:
     Properties:
       FunctionName: !Sub "${ResourcePrefix}-CreateServiceLinkedRoleFunction"
       Handler: index.handler
+      MemorySize: 128
       Runtime: python3.12
+      Timeout: 15
       Role: !GetAtt LambdaServiceLinkedRoleExecutionRole.Arn
       Code:
         ZipFile: |
+          import json
+          import time
           import boto3
           import cfnresponse
 
           def handler(event, context):
-              client = boto3.client('iam')
+              print(json.dumps(event))
+              coh = boto3.client('cost-optimization-hub', region_name='us-east-1')
+              iam = boto3.client('iam')
               try:
-                  if event['RequestType'] == 'Create':
-                      response = client.create_service_linked_role(
+                  if event['RequestType'] in ['Create', 'Update']:
+
+                      print("Make sure CO hub is activated")
+                      try:
+                          coh.get_preferences()
+                      except Exception as e:
+                          if 'AWS account is not enrolled for recommendations' in str(e):
+                              raise Exception('AWS account is not enrolled for recommendations. Please activate Cost Optimization Hub.')
+                          raise
+
+                      print("Creating service linked role")
+                      iam.create_service_linked_role(
                           AWSServiceName='bcm-data-exports.amazonaws.com',
                           Description='Service-linked role for bcm-data-exports.amazonaws.com'
                       )
+
+                      print("Waiting for the role to be created")
+                      for i in range(60):
+                          try:
+                              iam.get_role(RoleName='AWSServiceRoleForBCMDataExports')
+                              print("Role is created")
+                              break
+                          except iam.exceptions.NoSuchEntityException:
+                              time.sleep(1)
+
+                      print("Additional wait to make sure the role is available")
+                      time.sleep(30)
+
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+
               except Exception as e:
-                  if 'has been taken in this account' in str(e): # already there
+                  if 'has been taken in this account' in str(e):
+                      print('the role AWSServiceRoleForBCMDataExports already exist')
                       cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
-                  print(e)
-                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+                  else:
+                      print(e)
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {}, reason=str(e))
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -787,10 +828,10 @@ Resources:
                 reason = str(e)
                 print(e)
             finally:
-                physicalResourceId = event.get('ResourceProperties',{}).get('Export').get('Name', None) or str(uuid.uuid1())
+                physicalResourceId = event.get('ResourceProperties',{}).get('Export', {}).get('Name', None) or str(uuid.uuid1())
                 if reason:
                     print("FAILURE")
-                    cfnresponse.send(event, context, cfnresponse.FAILED, {"Data": {'Reason': reason}  }, physicalResourceId)
+                    cfnresponse.send(event, context, cfnresponse.FAILED, {}, physicalResourceId, reason=reason)
                 else:
                     print("SUCCESS")
                     cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, physicalResourceId)
@@ -1275,9 +1316,9 @@ Resources:
               - logs:PutLogEvents
               - logs:CreateLogGroup
               Resource:
-              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics"
-              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics:*"
-              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics:*:*"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics-DataExports"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics-DataExports:*"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourcePrefix}-CID-Analytics-DataExports:*:*"
 
   CidLambdaAnalytics:
     Type: AWS::Lambda::Function
@@ -1293,66 +1334,54 @@ Resources:
           API_ENDPOINT: https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/
       Code:
         ZipFile: |
-          import json
-          import boto3
           import os
-          import cfnresponse
-          import urllib3
+          import json
           import uuid
+          import urllib3
+
+          import boto3
+          import cfnresponse
 
           http = urllib3.PoolManager()
-          endpoint=os.environ["API_ENDPOINT"]
-          account_id=boto3.client("sts").get_caller_identity()["Account"]
+          endpoint = os.environ["API_ENDPOINT"]
+          account_id = boto3.client("sts").get_caller_identity()["Account"]
 
-          def execute_request(action,dashboard_id,via_key):
+          def execute_request(action, product_id, via_key):
               try:
-                  message=None
-                  payload={'dashboard_id': dashboard_id, 'account_id': account_id, via_key: 'CFN'}
+                  payload = {'dashboard_id': product_id, 'account_id': account_id, via_key: 'CFN'}
                   encoded_data = json.dumps(payload).encode('utf-8')
-                  r = http.request(action,endpoint,body=encoded_data,headers={'Content-Type': 'application/json'})
-                  if r.status!=200:
-                      message=f"This will not fail the deployment. There has been an issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, server did not respond with a 200 response,actual  status: {r.status}, response data {r.data.decode('utf-8')}. This issue will be ignored"
+                  r = http.request(action, endpoint, body=encoded_data, headers={'Content-Type': 'application/json'})
+                  if r.status != 200:
+                      return f"This will not fail the deployment. There has been an issue logging action {action} for product {product_id} and account {account_id}, server did not respond with a 200 response, status: {r.status}, response data {r.data.decode('utf-8')}. This issue will be ignored"
               except urllib3.exceptions.HTTPError as e:
-                message=f"Issue logging action {action}  for dashboard {dashboard_id} and account {account_id}, due to a urllib3 exception {str(e)} . This issue will be ignored"
-              return message
+                  return f"Issue logging action {action} for product {product_id} and account {account_id}, due to a urllib3 exception {str(e)}. This issue will be ignored"
+              return None
 
-
-          def register_deployment(action,dashboards):
-              message=f"Successfully logged  {action} for {dashboards}"
-              for dashboard_id in dashboards:
-                  if action == 'CREATE':
-                      message=execute_request('PUT',dashboard_id,'created_via')
-                  elif action == 'UPDATE':
-                      message=execute_request('PATCH',dashboard_id,'updated_via')
-                  elif action == 'DELETE':
-                      message=execute_request('DELETE',dashboard_id,'deleted_via')
-                  if message is None:
-                      message=f"Successfully logged  {action} for {dashboards} "
+          def register_deployment(action, products):
+              message = f"Successfully logged  {action} for {products}"
+              for product_id in products:
+                  if action == 'Create':
+                      message = execute_request('PUT', product_id, 'created_via')
+                  elif action == 'Update':
+                      message = execute_request('PATCH', product_id, 'updated_via')
+                  elif action == 'Delete':
+                      message = execute_request('DELETE', product_id, 'deleted_via')
+                  if not message:
+                      message = f"Successfully logged {action} for {products} "
               #Do not stop deployment if we're not able to successfully record this deployment, still return true
-              return ("True",message)
-
+              return (True, message)
 
           def lambda_handler(event, context):
-              if event['RequestType'] == 'Create':
-                  res, reason = register_deployment('CREATE',event['ResourceProperties']['DeploymentType'])
-              elif event['RequestType'] == 'Update':
-                  res, reason = register_deployment('UPDATE',event['ResourceProperties']['DeploymentType'])
-              elif event['RequestType'] == 'Delete':
-                  res, reason = register_deployment('DELETE',event['ResourceProperties']['DeploymentType'])
+              if event['RequestType'] in ['Create', 'Update', 'Delete']:
+                  res, reason = register_deployment(event['RequestType'], event['ResourceProperties']['DeploymentType'])
               else:
-                  res = False
-                  reason = "Unknown operation: " + event['RequestType']
+                  res, reason = False, "Unknown operation: " + event['RequestType']
 
-              response_data = {'Reason': reason}
-              print(response_data)
-              if 'PhysicalResourceId' in event.keys() and event['PhysicalResourceId'] is not None:
-                  physicalResourceId=event['PhysicalResourceId']
-              else:
-                  physicalResourceId=str(uuid.uuid1())
+              physicalResourceId = event.get('ResourceProperties', {}).get('Export', {}).get('Name') or str(uuid.uuid1())
               if res:
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data, physicalResourceId )
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, physicalResourceId )
               else:
-                  cfnresponse.send(event, context, cfnresponse.FAILED, response_data, physicalResourceId )
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {}, physicalResourceId, reason=reason)
     Metadata:
       cfn_nag:
         rules_to_suppress:
