@@ -24,11 +24,13 @@ class CidVersion:
         
         if not results:
             logger.debug(f'Could not find version pattern in provided string: {str_version}')
-            raise ValueError(f'Could not find version pattern in provided string:{str_version}')
-        
-        major = int(results.group("major"))
-        minor = int(results.group("minor"))
-        build = int(results.group("build"))
+            major = 1
+            minor = 0
+            build = 0
+        else:
+            major = int(results.group("major"))
+            minor = int(results.group("minor"))
+            build = int(results.group("build"))
 
         return major, minor, build
     
