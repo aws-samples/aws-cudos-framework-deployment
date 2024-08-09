@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Billing Data Export Aggregation v0.0.3
+Description: AWS Billing Data Export Aggregation v0.1.0
 Metadata:
 
   AWS::CloudFormation::Interface:
@@ -69,7 +69,7 @@ Parameters:
     Default: "no"
   ManageCOH:
     Type: String
-    Description:  ""
+    Description:  "NOTE: you must have Cost Optimization Hub Enabled"
     AllowedValues: ['yes', 'no']
     Default: "no"
 
