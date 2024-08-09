@@ -133,7 +133,9 @@ class Cid():
                     cid_print('\n')
                     self._clients['cur'] = _cur
                     break
-                except CidCritical as exc:
+                except CidCritical:
+                    if not utils.isatty():
+                        raise # do not allow CUR creation in lambda
                     cid_print(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
                     self.create_cur_table()
         return self._clients['cur']

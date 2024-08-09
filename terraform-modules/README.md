@@ -151,7 +151,7 @@ module "cur_payer" {
 
 After enabling CUR with Terraform as describe above, a few steps are necessary
 to prepare for dashboard deployment:
-  1. Complete prerequisites in [Before You Start](../README.md#before-you-start) including Quicksight setup
+  1. Complete prerequisites for each dashboard you are deploying and the Quicksight setup as described in [Before You Start](../README.md#before-you-start). There is no need to complete the Athena workgroup setup unless you are using a custom workgroup. A workgroup and query destination setup will be created for you automatically.
   2. Create an S3 bucket to upload the CloudFormation template
 
 ### Step 3: Dashboard Setup
