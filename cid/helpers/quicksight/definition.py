@@ -21,7 +21,7 @@ class Definition:
         except TypeError as e:
             logger.debug(f"Could not resolve CID version. Raw version value '{self._raw_version}' does not conform to CID version format vmajor.minor.build e.g. v.1.0.1")
         
-        return None
+        return CidVersion("v1.0.0")
     
     def resolve_version(self, raw: dict):
         about_content = []
