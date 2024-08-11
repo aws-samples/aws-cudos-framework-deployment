@@ -27,8 +27,8 @@ class CidVersion:
         results = version_pattern.match(str_version)
 
         if not results:
-            logger.debug(f'Could not find version pattern in provided string: {str_version}')
-            major,minor,build = default
+            logger.debug(f'Could not find version pattern in provided string: {str_version} will use default ({default})')
+            major, minor, build = default
         else:
             major = int(results.group("major"))
             minor = int(results.group("minor") or 0)
@@ -71,3 +71,11 @@ def test_versions():
     assert CidVersion('v1.3.3') >= CidVersion('v1.3.3')
     assert CidVersion(CidVersion('v1.2')).as_tuple() == (1, 2, 0)
     assert str(CidVersion('v1.2')) == 'v1.2.0'
+
+
+def test_version_raises():
+    """ test exception cases
+    """
+    import pytest
+    with pytest.raises(TypeError):
+         CidVersion(1)
