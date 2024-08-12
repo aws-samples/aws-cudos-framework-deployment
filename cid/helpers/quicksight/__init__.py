@@ -590,17 +590,17 @@ class QuickSight(CidBase):
         except Exception as exc:
             logger.debug(exc, exc_info=True)
     
-    def discover_dashboards(self, refresh_overrides: Dict[str, bool]={}, refresh: bool = False) -> None:
+    def discover_dashboards(self, refresh_overrides: List[str]=[], refresh: bool = False) -> None:
         """ Discover deployed dashboards
         
-        :param refresh_overrides: a dictionary of dashboard ids to force refresh
+        :param refresh_overrides: a list of dashboard ids to refresh
         :param refresh: force refresh all dashboards
         """
         
         if refresh or self._dashboards is None:
             self._dashboards = {}
         else:
-            for dashboard_id, _ in refresh_overrides.items():
+            for dashboard_id in refresh_overrides:
                 if dashboard_id in self._dashboards:
                     del self._dashboards[dashboard_id]
         
@@ -616,7 +616,7 @@ class QuickSight(CidBase):
             bar.set_description(f'Discovering {dashboard_name[:10]:<10}', refresh=True)
             logger.info(f'Discovering "{dashboard_name}"')
             
-            refresh = refresh_overrides.get(dashboard_id, False)
+            refresh = dashboard_id in refresh_overrides
             
             self.discover_dashboard(dashboard_id, refresh=refresh)
 

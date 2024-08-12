@@ -693,9 +693,9 @@ class Cid():
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
                         
-                        refresh_overrides = {
-                            dashboard.id: True
-                        }
+                        refresh_overrides = [
+                            dashboard.id
+                        ]
                         self.qs.discover_dashboards(refresh_overrides = refresh_overrides)
                 self.qs.clear_dashboard_selection()
                 dashboard_id = None
