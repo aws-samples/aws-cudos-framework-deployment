@@ -85,9 +85,9 @@ Metadata:
       DataBucketsKmsKeysArns:
         default: "KMS Key ARNs"
       PrimaryTagName:
-        Default: "Primary Tag for Compute Optimizer dashboard"
+        default: "Primary Tag for Compute Optimizer dashboard"
       SecondaryTagName:
-        Default: "Secondary Tag for Compute Optimizer dashboard"
+        default: "Secondary Tag for Compute Optimizer dashboard"
   cfn-lint:
     config:
       ignore_checks:
