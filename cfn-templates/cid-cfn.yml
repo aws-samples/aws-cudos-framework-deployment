@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v0.3.8
+Description: Deployment of Cloud Intelligence Dashboards v0.3.9
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -85,9 +85,9 @@ Metadata:
       DataBucketsKmsKeysArns:
         default: "KMS Key ARNs"
       PrimaryTagName:
-        Default: "Primary Tag for Compute Optimizer dashboard"
+        default: "Primary Tag for Compute Optimizer dashboard"
       SecondaryTagName:
-        Default: "Secondary Tag for Compute Optimizer dashboard"
+        default: "Secondary Tag for Compute Optimizer dashboard"
   cfn-lint:
     config:
       ignore_checks:
@@ -1611,7 +1611,7 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: 'cid-resource-lambda-layer/cid-0.3.8.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-0.3.9.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11
