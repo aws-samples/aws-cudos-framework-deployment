@@ -91,6 +91,18 @@ dashboards:
           \U0001F7E5\U0001F7E5', /*\U0001F7E5*/\n    {implementation_effort}\n)"
         Name: Effort
       - DataSetIdentifier: coh
+        Expression: |-
+          // add one of following to your cost allocation tags
+          ifelse(
+              contains(Tags, 'finopsexception=' ), split(split(Tags, 'finopsexception=',  2), ',', 1),
+              contains(Tags, 'FINOPSEXCEPTION=' ), split(split(Tags, 'FINOPSEXCEPTION=',  2), ',', 1),
+              contains(Tags, 'FinopsException=' ), split(split(Tags, 'FinopsException=',  2), ',', 1),
+              contains(Tags, 'finops-exception='), split(split(Tags, 'finops-exception=', 2), ',', 1),
+              contains(Tags, 'finops_exception='), split(split(Tags, 'finops_exception=', 2), ',', 1),
+              NULL
+          )
+        Name: FinopsException
+      - DataSetIdentifier: coh
         Expression: ifelse(Date = {Max Date}, TRUE, FALSE)
         Name: Is the last by date
       - DataSetIdentifier: coh
@@ -117,6 +129,13 @@ dashboards:
         Expression: 'maxOver({Savings Estimate, Monthly}, [SuperARN, date, {source_account_id}],
           PRE_AGG) '
         Name: Max Savings Per Resource
+      - DataSetIdentifier: coh
+        Expression: |-
+          ifelse(contains(Tags, 'Name='),
+              split(split(Tags,'Name=',2), ',', 1),
+              NULL
+          )
+        Name: Name
       - DataSetIdentifier: coh
         Expression: split(split({recommended_resource_summary}, 'in AWS account ', 2),'
           (',1)
@@ -274,18 +293,6 @@ dashboards:
         Expression: |-
           split(
               split(
-                  split(tags, 'Name=',2),
-                  ',',
-                  1
-              ),
-              '}',
-              1
-          )
-        Name: Tag Name
-      - DataSetIdentifier: coh
-        Expression: |-
-          split(
-              split(
                   split(tags, concat(${Tag1Name},'='),2),
                   ',',
                   1
@@ -314,6 +321,25 @@ dashboards:
           )
         Name: Top Saving (Binary)
       ColumnConfigurations:
+      - Column:
+          ColumnName: Saving Size
+          DataSetIdentifier: coh
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
       - ColorsConfiguration:
           CustomColors:
           - Color: '#8A50B3'
@@ -331,6 +357,13 @@ dashboards:
         Column:
           ColumnName: Action Type
           DataSetIdentifier: coh
+      - Column:
+          ColumnName: Name
+          DataSetIdentifier: coh
+        FormatConfiguration:
+          StringFormatConfiguration:
+            NullValueFormatConfiguration:
+              NullString: '-'
       - Column:
           ColumnName: Max Savings By RI Options
           DataSetIdentifier: coh
@@ -383,6 +416,17 @@ dashboards:
                     Symbol: SPACE
                     Visibility: VISIBLE
                 Symbol: USD
+      - ColorsConfiguration:
+          CustomColors:
+          - Color: '#8A50B3'
+            FieldValue: OpenSearch
+          - Color: '#7FD4B9'
+            FieldValue: RDS
+          - Color: '#0A87AF'
+            FieldValue: ElasticCache
+        Column:
+          ColumnName: RI Serivice
+          DataSetIdentifier: coh
       - Column:
           ColumnName: Resource
           DataSetIdentifier: coh
@@ -394,6 +438,29 @@ dashboards:
           ColumnName: Max Savings Per Resource
           DataSetIdentifier: coh
         Role: DIMENSION
+      - ColorsConfiguration:
+          CustomColors:
+          - Color: '#E673C9'
+            FieldValue: Rightsize RDSStorage
+          - Color: '#0A87AF'
+            FieldValue: Rightsize RDS
+          - Color: '#8A50B3'
+            FieldValue: Rightsize Lambda
+          - Color: '#7FD4B9'
+            FieldValue: Rightsize ECS Service
+          - Color: '#F65D6A'
+            FieldValue: Rightsize EC2 AutoScalingGroup
+          - Color: '#3D993D'
+            FieldValue: Rightsize EBS
+          - Color: '#FC850D'
+            FieldValue: Rightsize EC2
+          - Color: '#4263A6'
+            FieldValue: Upgrade EC2
+          - Color: '#8B5011'
+            FieldValue: Upgrade EBS
+        Column:
+          ColumnName: Action And Resource
+          DataSetIdentifier: coh
       - ColorsConfiguration:
           CustomColors:
           - Color: '#8A50B3'
@@ -504,10 +571,11 @@ dashboards:
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
-                - ElasticCache
                 - OpenSearch
                 - RDS
                 - Redshift
+                - ElasticCache
+                - EC2
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: 7701abdc-1125-4c33-95f4-f6c1234ed25c
@@ -651,8 +719,8 @@ dashboards:
                 - "\U0001F7E5  High"
                 - "\U0001F7E7  Medium"
                 - "\U0001F7E9  Very Low"
-                - "\U0001F7EA  Very High"
                 - "\U0001F7E8  Low"
+                - "\U0001F7EA  Very High"
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: f86472e7-2d9d-40e8-af20-203b0adf8337
@@ -816,6 +884,8 @@ dashboards:
               CustomFilterListConfiguration:
                 CategoryValues:
                 - NoUpfront
+                - AllUpfront
+                - PartialUpfront
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: 4cbfdeff-c149-4845-9852-7c2727677f1d
@@ -1023,6 +1093,7 @@ dashboards:
               - e951c174-830b-453d-bd14-8afdc8c2364a
               - 0dc009bf-4992-47c7-b7ae-b81bf8b0940f
               - 446f38a4-726c-4ac2-8027-f0e38cbad14b
+              - 740f90f2-5042-4260-ad47-7bf8f0f5ae3f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5ddb871c-98d1-4f92-a905-6117d9871756
@@ -1088,6 +1159,7 @@ dashboards:
               - e6debfac-cbc3-4a9a-a6d6-a68b6be8417c
               - e951c174-830b-453d-bd14-8afdc8c2364a
               - a36dde12-dbaa-49b7-ba4e-8db27c119a73
+              - 740f90f2-5042-4260-ad47-7bf8f0f5ae3f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: dc5082b3-2414-4fd1-aab0-83cce0e068c7
@@ -1100,7 +1172,6 @@ dashboards:
               CustomFilterListConfiguration:
                 CategoryValues:
                 - 3y
-                - 1y
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: e1dffda7-b611-4c21-8183-66c8af898f33
@@ -1267,8 +1338,8 @@ dashboards:
               CustomFilterListConfiguration:
                 CategoryValues:
                 - PartialUpfront
-                - NoUpfront
                 - AllUpfront
+                - NoUpfront
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: 23378910-577a-48c8-b18f-b8306a5cf2df
@@ -1336,23 +1407,161 @@ dashboards:
               SheetId: cd1f828e-cd03-4cfb-909f-b1421bd92a0e
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 8f5043c3-7695-4a64-8f97-0347bac1e368
+        FilterGroupId: c12ea559-573f-4270-85f4-167a263730cb
         Filters:
         - CategoryFilter:
             Column:
-              ColumnName: Tags
+              ColumnName: action_type
+              DataSetIdentifier: coh
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Rightsize
+                - Stop
+                - Upgrade
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: f03a24b5-7b56-4e7c-843d-9758f0e1aedc
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: a8e3c036-54a2-4012-9cd0-7d7783151de9
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 8152741e-8136-44ed-b5b2-f97186ef2d10
+        Filters:
+        - NumericEqualityFilter:
+            Column:
+              ColumnName: The Last One
+              DataSetIdentifier: coh
+            FilterId: 3a2c4a43-6d0a-451b-bbb8-3f199fd3292e
+            MatchOperator: EQUALS
+            NullOption: ALL_VALUES
+            Value: 1.0
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: a8e3c036-54a2-4012-9cd0-7d7783151de9
+              VisualIds:
+              - 74d893c7-fd54-440d-a620-9f7691ba484d
+              - 69bf7d8d-8c87-480a-9d93-78e583919add
+              - e7d94b59-b2b1-45fd-8f0a-6c82b8c9a15d
+              - d69510e9-a1b0-49f3-9203-8c2cb550f5a7
+              - 36b1cda0-1366-45c2-a5e7-557fa9abef22
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 7c5d4c45-8216-49ae-9bfc-5d57fa81f1db
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: Resource Type
               DataSetIdentifier: coh
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
                 SelectAllOptions: FILTER_ALL_VALUES
-            FilterId: bcd92d9a-5749-4d94-b1ed-38c0837b2361
+            FilterId: 71ebf5a9-4fdf-4f3b-a36f-8b3201499473
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
+            - Scope: SELECTED_VISUALS
               SheetId: fcbb9302-e094-4049-b344-831c8e36007d
+              VisualIds:
+              - c453d888-be0c-4fc1-bb1d-38bc07eec7ed
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 66793db5-7177-44d7-b1d8-d6387cc1c4a6
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: current_resource_summary
+              DataSetIdentifier: coh
+            Configuration:
+              CustomFilterConfiguration:
+                CategoryValue: ''
+                MatchOperator: DOES_NOT_EQUAL
+                NullOption: NON_NULLS_ONLY
+            FilterId: f22c4e71-8d9d-403c-8dbf-b962a553138a
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: fcbb9302-e094-4049-b344-831c8e36007d
+              VisualIds:
+              - fe528491-d8cd-4f58-a2ce-f0a6bba330e1
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 7c85f204-dd15-46a7-9ceb-a56c6f54d2cc
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: FinopsException
+              DataSetIdentifier: coh
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            DefaultFilterControlConfiguration:
+              ControlOptions:
+                DefaultDropdownOptions:
+                  DisplayOptions:
+                    InfoIconLabelOptions:
+                      InfoIconText: You must have FinopsException as Cost Allocation Tag
+                      Visibility: VISIBLE
+                    SelectAllOptions:
+                      Visibility: VISIBLE
+                    TitleOptions:
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
+                      Visibility: VISIBLE
+                  Type: MULTI_SELECT
+              Title: FinopsException Tag
+            FilterId: 6c775da6-35fc-4731-9efe-0f09440f5cf7
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: ae2e21af-d240-4729-a3c9-229accab3f28
+        Filters:
+        - NumericEqualityFilter:
+            Column:
+              ColumnName: Top Saving (Binary)
+              DataSetIdentifier: coh
+            FilterId: 4fc1146e-4803-4640-8568-80fd2e4ecc5e
+            MatchOperator: EQUALS
+            NullOption: ALL_VALUES
+            Value: 1.0
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: a8e3c036-54a2-4012-9cd0-7d7783151de9
+              VisualIds:
+              - d69510e9-a1b0-49f3-9203-8c2cb550f5a7
+              - e08e40e4-f72e-48e2-8fc7-a2789c0d7782
+              - 74d893c7-fd54-440d-a620-9f7691ba484d
+              - e7d94b59-b2b1-45fd-8f0a-6c82b8c9a15d
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 1abbd527-e04b-4051-bf67-b7cf1263ed4d
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: Tags
+              DataSetIdentifier: coh
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: TagSearchInclude
+            FilterId: 007cc065-38ce-4942-b7dc-874af9250946
+        ScopeConfiguration:
+          AllSheets: {}
         Status: ENABLED
       Options:
         WeekStart: MONDAY
@@ -1389,12 +1598,22 @@ dashboards:
           ParameterValueType: SINGLE_VALUED
           ValueWhenUnset:
             ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: TagSearchInclude
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
       Sheets:
       - ContentType: INTERACTIVE
         FilterControls:
         - CrossSheet:
             FilterControlId: 477c61f5-17a8-4af1-9550-bd08311d363a
             SourceFilterId: 6b9aa884-43e3-446e-8fc8-ce83bf450544
+        - CrossSheet:
+            FilterControlId: 07d358cb-9c91-4a09-8a16-991bd03b6c1c
+            SourceFilterId: 6c775da6-35fc-4731-9efe-0f09440f5cf7
         - List:
             DisplayOptions:
               InfoIconLabelOptions:
@@ -1516,8 +1735,7 @@ dashboards:
         - Dropdown:
             DisplayOptions:
               InfoIconLabelOptions:
-                InfoIconText: Use Tag=Value syntax
-                Visibility: VISIBLE
+                Visibility: HIDDEN
               SelectAllOptions:
                 Visibility: VISIBLE
               TitleOptions:
@@ -1525,9 +1743,9 @@ dashboards:
                   FontSize:
                     Relative: MEDIUM
                 Visibility: VISIBLE
-            FilterControlId: 7ab113c8-885f-43d8-9f6c-f6402dde26c0
-            SourceFilterId: bcd92d9a-5749-4d94-b1ed-38c0837b2361
-            Title: Tags
+            FilterControlId: 5bddc540-b508-4348-8345-03bb14c00ad8
+            SourceFilterId: 71ebf5a9-4fdf-4f3b-a36f-8b3201499473
+            Title: Resource Type
             Type: MULTI_SELECT
         Layouts:
         - Configuration:
@@ -1538,11 +1756,23 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 30
+                ColumnSpan: 13
                 ElementId: c11a9de6-dd3c-4994-9a1e-b86bfc1ce458
                 ElementType: TEXT_BOX
                 RowIndex: 0
                 RowSpan: 2
+              - ColumnIndex: 13
+                ColumnSpan: 13
+                ElementId: 2bb35924-202f-4467-a958-4feb38e7eff3
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 26
+                ColumnSpan: 4
+                ElementId: 69842579-478e-4be1-9cc3-c808325d8210
+                ElementType: FILTER_CONTROL
+                RowIndex: 0
+                RowSpan: 5
               - ColumnIndex: 30
                 ColumnSpan: 5
                 ElementId: 4c850985-1036-40b8-9a0e-35940095787c
@@ -1567,20 +1797,14 @@ dashboards:
                 ElementType: FILTER_CONTROL
                 RowIndex: 2
                 RowSpan: 3
-              - ColumnIndex: 14
-                ColumnSpan: 4
-                ElementId: 69842579-478e-4be1-9cc3-c808325d8210
-                ElementType: FILTER_CONTROL
-                RowIndex: 2
-                RowSpan: 3
-              - ColumnIndex: 18
+              - ColumnIndex: 13
                 ColumnSpan: 7
                 ElementId: 7ff78aa1-6064-4f2c-be77-7dc986181032
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 2
                 RowSpan: 3
-              - ColumnIndex: 25
-                ColumnSpan: 5
+              - ColumnIndex: 20
+                ColumnSpan: 6
                 ElementId: 793cbbfa-75a2-4ad0-8383-f6a41b46b360
                 ElementType: VISUAL
                 RowIndex: 2
@@ -1622,53 +1846,53 @@ dashboards:
                 RowIndex: 20
                 RowSpan: 12
               - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: 1a5e9b89-f55b-4ed5-82f7-1b8ffd1e02f1
+                ElementType: TEXT_BOX
+                RowIndex: 32
+                RowSpan: 3
+              - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: 5a4d413a-602e-46b8-a481-0a1c2ad65695
                 ElementType: VISUAL
-                RowIndex: 32
+                RowIndex: 35
                 RowSpan: 19
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: a621183c-6ebc-4cb6-b149-671e761d0d83
                 ElementType: VISUAL
-                RowIndex: 51
+                RowIndex: 54
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: fe528491-d8cd-4f58-a2ce-f0a6bba330e1
                 ElementType: VISUAL
-                RowIndex: 59
+                RowIndex: 62
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: 6875b81e-dfef-4d8b-836c-e6b55dac6143
                 ElementType: VISUAL
-                RowIndex: 71
+                RowIndex: 74
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 30
                 ElementId: 1531c453-a35b-4c63-aaee-62fd91ec588e
                 ElementType: TEXT_BOX
-                RowIndex: 74
+                RowIndex: 77
                 RowSpan: 3
               - ColumnIndex: 30
                 ColumnSpan: 5
                 ElementId: ec211b8d-5230-4d89-ab63-9b0996df195e
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 74
+                RowIndex: 77
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: d89da078-b63c-4291-80c8-e96067bf3735
                 ElementType: VISUAL
-                RowIndex: 77
+                RowIndex: 80
                 RowSpan: 18
-              - ColumnIndex: 0
-                ColumnSpan: 12
-                ElementId: 1a5e9b89-f55b-4ed5-82f7-1b8ffd1e02f1
-                ElementType: TEXT_BOX
-                RowIndex: 95
-                RowSpan: 3
         Name: Recommended Actions
         ParameterControls:
         - List:
@@ -1731,6 +1955,21 @@ dashboards:
             SourceParameterName: SavingsTheshold
             StepSize: 100.0
             Title: Savings Theshold
+        - TextField:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                InfoIconText: Enter a String Tag=Value
+                Visibility: VISIBLE
+              PlaceholderOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 354bcc22-7d7d-467d-aeab-1e85019cd498
+            SourceParameterName: TagSearchInclude
+            Title: Tag Search
         SheetControlLayouts:
         - Configuration:
             GridLayout:
@@ -1753,23 +1992,34 @@ dashboards:
                 ElementType: FILTER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 6
+              - ColumnIndex: 8
                 ColumnSpan: 2
-                ElementId: 7ab113c8-885f-43d8-9f6c-f6402dde26c0
+                ElementId: 5bddc540-b508-4348-8345-03bb14c00ad8
                 ElementType: FILTER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 8
+              - ColumnIndex: 10
                 ColumnSpan: 2
                 ElementId: eb9d8dbe-2508-42d6-9def-1994d976efd8
                 ElementType: FILTER_CONTROL
                 RowIndex: 0
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 07d358cb-9c91-4a09-8a16-991bd03b6c1c
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 354bcc22-7d7d-467d-aeab-1e85019cd498
+                ElementType: PARAMETER_CONTROL
                 RowSpan: 1
         SheetId: fcbb9302-e094-4049-b344-831c8e36007d
         TextBoxes:
         - Content: |-
             <text-box>
               <inline font-size="40px">Recommendations Table</inline>
+              <br/>
+              <inline font-size="14px">Use this table for Excel export</inline>
+              <br/>
             </text-box>
           SheetTextBoxId: 1531c453-a35b-4c63-aaee-62fd91ec588e
         - Content: "<text-box>\n  <inline font-size=\"40px\">Summary\_</inline>\n</text-box>"
@@ -1781,6 +2031,13 @@ dashboards:
               <inline font-size="40px">Scatter Plot</inline>
             </text-box>
           SheetTextBoxId: 1a5e9b89-f55b-4ed5-82f7-1b8ffd1e02f1
+        - Content: |-
+            <text-box>
+              One resource can contain several recommendations
+              <br/>
+              We recommend reviewing rightsizing first and then proceed with commitments.
+            </text-box>
+          SheetTextBoxId: 2bb35924-202f-4467-a958-4feb38e7eff3
         Visuals:
         - KPIVisual:
             Actions:
@@ -1809,6 +2066,10 @@ dashboards:
                 Comparison:
                   ComparisonMethod: PERCENT_DIFFERENCE
                 PrimaryValueDisplayType: ACTUAL
+                PrimaryValueFontConfiguration:
+                  FontColor: '#DFE3E4'
+                  FontSize:
+                    Relative: LARGE
                 SecondaryValueFontConfiguration:
                   FontSize:
                     Relative: EXTRA_LARGE
@@ -1845,7 +2106,7 @@ dashboards:
               DataLabels:
                 LabelFontConfiguration:
                   FontSize:
-                    Relative: SMALL
+                    Relative: LARGE
                 Overlap: ENABLE_OVERLAP
                 Position: LEFT
               FieldWells:
@@ -1937,11 +2198,37 @@ dashboards:
                   NumericAxisOptions:
                     Scale:
                       Logarithmic: {}
+                TickLabelOptions:
+                  LabelOptions:
+                    FontConfiguration:
+                      FontSize:
+                        Relative: LARGE
+              XAxisLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: Resource
+                      DataSetIdentifier: coh
+                    FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.4.1722854034023
+                  CustomLabel: Resource Count (Logarithmic Scale)
               YAxisDisplayOptions:
                 DataOptions:
                   NumericAxisOptions:
                     Scale:
                       Logarithmic: {}
+                TickLabelOptions:
+                  LabelOptions:
+                    FontConfiguration:
+                      FontSize:
+                        Relative: LARGE
+              YAxisLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: Savings Estimate, Monthly
+                      DataSetIdentifier: coh
+                    FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721897134031
+                  CustomLabel: Estimated Savings (Logarithmic Scale)
             ColumnHierarchies: []
             Subtitle:
               FormatText:
@@ -2021,7 +2308,7 @@ dashboards:
                   PositiveColor: '#2CAD00'
               TableOptions:
                 CellStyle:
-                  Height: 22
+                  Height: 19
                 HeaderStyle:
                   Height: 25
                   TextWrap: WRAP
@@ -2383,65 +2670,6 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               FieldOptions:
-                CollapseStateOptions:
-                - State: COLLAPSED
-                  Target:
-                    FieldId: 0b2f1f8f-ad5a-4ac2-bb78-daabd88d124a.12.1721975059276
-                - State: EXPANDED
-                  Target:
-                    FieldDataPathValues:
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                      FieldValue: Ec2ReservedInstances
-                    - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
-                      FieldValue: Root Billing
-                    - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.13.1721595297347
-                      FieldValue: Reserved Instance
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
-                      FieldValue: ___NULL_GROUP_ID_86750241-b9a3-44a7-a2bd-903c2488f910
-                    - FieldId: 8437224f-ade6-4aeb-ad4c-c9c1703a89fb.15.1721891209715
-                      FieldValue: "\u2B50 Top Action"
-                    - FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
-                      FieldValue: "\u2B50 PurchaseReservedInstances"
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
-                      FieldValue: 1 c5a.4xlarge Windows with SQL Server Standard in eu-central-1
-                        with three years term (AllUpfront) in AWS account 426242714894 (Payer
-                        account level)
-                    - FieldId: 2eec5241-288a-42cd-bd94-433877919e03.14.1721893752969
-                      FieldValue: "\U0001F7E9  Very Low"
-                    - FieldId: 216d6812-0a44-49d0-8ccd-716659758d84.11.1721975041360
-                      FieldValue: "\u2705 No Restart"
-                    - FieldId: 0b2f1f8f-ad5a-4ac2-bb78-daabd88d124a.12.1721975059276
-                      FieldValue: "\u2705 Rollback Possible"
-                - State: EXPANDED
-                  Target:
-                    FieldDataPathValues:
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                      FieldValue: Ec2ReservedInstances
-                    - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
-                      FieldValue: Root Billing
-                    - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.13.1721595297347
-                      FieldValue: Reserved Instance
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
-                      FieldValue: ___NULL_GROUP_ID_86750241-b9a3-44a7-a2bd-903c2488f910
-                    - FieldId: 8437224f-ade6-4aeb-ad4c-c9c1703a89fb.15.1721891209715
-                      FieldValue: "\u26AB Alternative"
-                    - FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
-                      FieldValue: "\u26AB PurchaseReservedInstances"
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
-                      FieldValue: 1 c5a.4xlarge Windows with SQL Server Standard in eu-central-1
-                        with three years term (AllUpfront) in AWS account 426242714894 (Payer
-                        account level)
-                    - FieldId: 2eec5241-288a-42cd-bd94-433877919e03.14.1721893752969
-                      FieldValue: "\U0001F7E9  Very Low"
-                    - FieldId: 216d6812-0a44-49d0-8ccd-716659758d84.11.1721975041360
-                      FieldValue: "\u2705 No Restart"
-                    - FieldId: 0b2f1f8f-ad5a-4ac2-bb78-daabd88d124a.12.1721975059276
-                      FieldValue: "\u26A0\uFE0F No Rollback"
-                - State: COLLAPSED
-                  Target:
-                    FieldDataPathValues:
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                      FieldValue: EbsVolume
                 DataPathOptions:
                 - DataPathList:
                   - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.13.1721595297347
@@ -2450,11 +2678,15 @@ dashboards:
                 - DataPathList:
                   - FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
                     FieldValue: Action Summary
-                  Width: 262px
+                  Width: 212px
                 - DataPathList:
                   - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
                     FieldValue: recommended_resource_summary
                   Width: 199px
+                - DataPathList:
+                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.tags.12.1721584769930
+                    FieldValue: tags
+                  Width: 179px
                 - DataPathList:
                   - FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
                     FieldValue: Savings, %
@@ -2484,10 +2716,6 @@ dashboards:
                     FieldValue: Rollback
                   Width: 56px
                 - DataPathList:
-                  - FieldId: 8437224f-ade6-4aeb-ad4c-c9c1703a89fb.15.1721891209715
-                    FieldValue: Top
-                  Width: 56px
-                - DataPathList:
                   - FieldId: 216d6812-0a44-49d0-8ccd-716659758d84.11.1721975041360
                     FieldValue: Restart
                   Width: 55px
@@ -2502,8 +2730,6 @@ dashboards:
                 - CustomLabel: Current
                   FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
                   Visibility: VISIBLE
-                - FieldId: 8437224f-ade6-4aeb-ad4c-c9c1703a89fb.15.1721891209715
-                  Visibility: HIDDEN
                 - FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
                   Visibility: VISIBLE
                 - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
@@ -2517,8 +2743,6 @@ dashboards:
                   Visibility: VISIBLE
                 - CustomLabel: Tags
                   FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.tags.12.1721584769930
-                  Visibility: VISIBLE
-                - FieldId: d967b42b-c96e-4794-a507-58fbee29d373.13.1722332571025
                   Visibility: VISIBLE
                 - FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
                   Visibility: VISIBLE
@@ -2552,11 +2776,6 @@ dashboards:
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Top
-                        DataSetIdentifier: coh
-                      FieldId: 8437224f-ade6-4aeb-ad4c-c9c1703a89fb.15.1721891209715
-                  - CategoricalDimensionField:
-                      Column:
                         ColumnName: Action Summary
                         DataSetIdentifier: coh
                       FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
@@ -2586,13 +2805,6 @@ dashboards:
                         DataSetIdentifier: coh
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.tags.12.1721584769930
                   Values:
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: AVERAGE
-                      Column:
-                        ColumnName: Max Savings Per Resource
-                        DataSetIdentifier: coh
-                      FieldId: d967b42b-c96e-4794-a507-58fbee29d373.13.1722332571025
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
@@ -2626,7 +2838,57 @@ dashboards:
                                 Visibility: VISIBLE
                             Suffix: '%'
               SortConfiguration:
-                FieldSortOptions: []
+                FieldSortOptions:
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.13.1721595297347
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 2eec5241-288a-42cd-bd94-433877919e03.14.1721893752969
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 216d6812-0a44-49d0-8ccd-716659758d84.11.1721975041360
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 0b2f1f8f-ad5a-4ac2-bb78-daabd88d124a.12.1721975059276
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.tags.12.1721584769930
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.tags.12.1721584769930
               TableOptions:
                 CellStyle:
                   Height: 25
@@ -2695,9 +2957,6 @@ dashboards:
                 ScrollbarOptions:
                   Visibility: HIDDEN
               DataLabels:
-                DataLabelTypes:
-                - DataPathLabelType:
-                    Visibility: VISIBLE
                 Overlap: DISABLE_OVERLAP
                 TotalsVisibility: VISIBLE
                 Visibility: VISIBLE
@@ -2740,6 +2999,10 @@ dashboards:
                     FieldId: 6ef47644-91f9-4a04-872b-5f1f889e12c2.2.1721892263314
                 ColorItemsLimit:
                   OtherCategories: INCLUDE
+                ColorSort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722635069586
                 SmallMultiplesLimitConfiguration:
                   OtherCategories: INCLUDE
               Tooltip:
@@ -2776,7 +3039,8 @@ dashboards:
                 HierarchyId: 96787e52-2600-44df-bbbf-6f3dc53c80bc
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click to Filter on Day</visual-subtitle>
+                RichText: "<visual-subtitle>Click to Filter on Day. Use arrow to change\
+                  \ Drilldown.\_</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -2802,19 +3066,16 @@ dashboards:
                 CollapseStateOptions:
                 - State: COLLAPSED
                   Target:
-                    FieldDataPathValues:
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                      FieldValue: ComputeSavingsPlans
+                    FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
                 - State: COLLAPSED
                   Target:
-                    FieldDataPathValues:
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                      FieldValue: EbsVolume
+                    FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.9.1721976550011
                 - State: COLLAPSED
                   Target:
-                    FieldDataPathValues:
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                      FieldValue: Ec2AutoScalingGroup
+                    FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.9.1721910864629
+                - State: COLLAPSED
+                  Target:
+                    FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
                 DataPathOptions:
                 - DataPathList:
                   - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.9.1721910864629
@@ -2852,11 +3113,11 @@ dashboards:
                 - CustomLabel: Type
                   FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
                   Visibility: VISIBLE
-                - CustomLabel: Action
-                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
-                  Visibility: VISIBLE
                 - CustomLabel: Effort
                   FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
+                  Visibility: VISIBLE
+                - CustomLabel: Action
+                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
                   Visibility: VISIBLE
                 - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.9.1721976550011
                   Visibility: VISIBLE
@@ -2887,14 +3148,14 @@ dashboards:
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: action_type
-                        DataSetIdentifier: coh
-                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
-                  - CategoricalDimensionField:
-                      Column:
                         ColumnName: Effort
                         DataSetIdentifier: coh
                       FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: action_type
+                        DataSetIdentifier: coh
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Account
@@ -2955,7 +3216,37 @@ dashboards:
                                 Visibility: VISIBLE
                             Suffix: '%'
               SortConfiguration:
-                FieldSortOptions: []
+                FieldSortOptions:
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.9.1721910864629
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: ce0aebe2-20ac-4c1f-8985-0cae5fbd9809.10.1722789011931
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
               TableOptions:
                 CellStyle: {}
                 CollapsedRowDimensionsVisibility: HIDDEN
@@ -3008,12 +3299,6 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: STACKED
-              CategoryAxis:
-                ScrollbarOptions:
-                  VisibleRange:
-                    PercentRange:
-                      From: 72.0
-                      To: 92.0
               DataLabels:
                 DataLabelTypes:
                 - DataPathLabelType:
@@ -3045,6 +3330,21 @@ dashboards:
                         ColumnName: Savings Estimate, Monthly
                         DataSetIdentifier: coh
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721594656933
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 2
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
               Legend:
                 Position: RIGHT
                 Title:
@@ -3221,6 +3521,760 @@ dashboards:
                 RichText: "<visual-title>Top Potential Savings Structure\_</visual-title>"
               Visibility: VISIBLE
             VisualId: c7e4653b-ab69-40b9-be64-230bd057edcd
+      - ContentType: INTERACTIVE
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 17
+                ElementId: 256981d3-38c8-49eb-8ace-166fc0ec61e0
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 3
+              - ColumnIndex: 17
+                ColumnSpan: 18
+                ElementId: d85839b7-5c5c-48ed-86cc-6ee53ccae5f7
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 3
+              - ColumnIndex: 0
+                ColumnSpan: 12
+                ElementId: e7d94b59-b2b1-45fd-8f0a-6c82b8c9a15d
+                ElementType: VISUAL
+                RowIndex: 3
+                RowSpan: 8
+              - ColumnIndex: 12
+                ColumnSpan: 12
+                ElementId: 74d893c7-fd54-440d-a620-9f7691ba484d
+                ElementType: VISUAL
+                RowIndex: 3
+                RowSpan: 8
+              - ColumnIndex: 24
+                ColumnSpan: 11
+                ElementId: d69510e9-a1b0-49f3-9203-8c2cb550f5a7
+                ElementType: VISUAL
+                RowIndex: 3
+                RowSpan: 8
+              - ColumnIndex: 0
+                ColumnSpan: 35
+                ElementId: e08e40e4-f72e-48e2-8fc7-a2789c0d7782
+                ElementType: VISUAL
+                RowIndex: 11
+                RowSpan: 8
+              - ColumnIndex: 0
+                ColumnSpan: 35
+                ElementId: 36b1cda0-1366-45c2-a5e7-557fa9abef22
+                ElementType: VISUAL
+                RowIndex: 19
+                RowSpan: 10
+              - ColumnIndex: 0
+                ColumnSpan: 35
+                ElementId: 69bf7d8d-8c87-480a-9d93-78e583919add
+                ElementType: VISUAL
+                RowIndex: 29
+                RowSpan: 10
+        Name: Rightsizing Upgrade and Stop
+        SheetId: a8e3c036-54a2-4012-9cd0-7d7783151de9
+        TextBoxes:
+        - Content: |-
+            <text-box>
+              Recommendations:
+              <br/>
+              <ul>
+                <li>Add a special Cost Allocation Tag 'FinopsException' and use it to exclude from this analysis</li>
+                <li>Use Cost Allocation Tag Name to get resource Names</li>
+              </ul>
+            </text-box>
+          SheetTextBoxId: d85839b7-5c5c-48ed-86cc-6ee53ccae5f7
+        - Content: |-
+            <text-box>
+              <inline font-size="40px">Rightsizing</inline>
+              <br/>
+            </text-box>
+          SheetTextBoxId: 256981d3-38c8-49eb-8ace-166fc0ec61e0
+        Visuals:
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 75119945-b807-41d1-b73a-c4c982c76918
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                CollapseStateOptions:
+                - State: COLLAPSED
+                  Target:
+                    FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.3.1723397724318
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.3.1723397724318
+                    FieldValue: Account
+                  Width: 213px
+                SelectedFieldOptions:
+                - FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.3.1723397724318
+                  Visibility: VISIBLE
+                - CustomLabel: Action
+                  FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                  Visibility: VISIBLE
+                - FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Action And Resource
+                        DataSetIdentifier: coh
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                  Rows:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Account
+                        DataSetIdentifier: coh
+                      FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.3.1723397724318
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Saving Size
+                        DataSetIdentifier: coh
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              SortConfiguration:
+                FieldSortOptions:
+                - FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.3.1723397724318
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                - FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              TableOptions:
+                CellStyle: {}
+                CollapsedRowDimensionsVisibility: HIDDEN
+                ColumnHeaderStyle: {}
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle: {}
+                RowsLayout: TABULAR
+              TotalOptions:
+                ColumnTotalOptions:
+                  Placement: END
+                  TotalsVisibility: VISIBLE
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: HIDDEN
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  Placement: AUTO
+                  TotalsVisibility: VISIBLE
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Cell:
+                  FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    BackgroundColor:
+                      Gradient:
+                        Color:
+                          Stops:
+                          - Color: '#2A5D78'
+                            GradientOffset: 0.0
+                          - Color: '#EEEEEE'
+                            GradientOffset: 100.0
+                        Expression: SUM({Saving Size})
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Resources</visual-title>
+              Visibility: VISIBLE
+            VisualId: 36b1cda0-1366-45c2-a5e7-557fa9abef22
+        - PieChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedColumns:
+                    - ColumnName: region
+                      DataSetIdentifier: coh
+                    - ColumnName: Action And Resource
+                      DataSetIdentifier: coh
+                    SelectedFields:
+                    - ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: e9252d8a-ee7e-4da3-a5af-f21f6f7a3a40
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              DonutOptions:
+                ArcOptions:
+                  ArcThickness: MEDIUM
+              FieldWells:
+                PieChartAggregatedFieldWells:
+                  Category:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Action And Resource
+                        DataSetIdentifier: coh
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                      HierarchyId: 65789c57-11b4-4466-ab83-29512cbf0ba3
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Saving Size
+                        DataSetIdentifier: coh
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: Action And Resource
+                  DataSetIdentifier: coh
+                - ColumnName: region
+                  DataSetIdentifier: coh
+                DrillDownFilters: []
+                HierarchyId: 65789c57-11b4-4466-ab83-29512cbf0ba3
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>By Resource</visual-title>
+              Visibility: VISIBLE
+            VisualId: d69510e9-a1b0-49f3-9203-8c2cb550f5a7
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 27682eda-04ed-4cde-8e1c-e50c6135d586
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              DataLabels:
+                DataLabelTypes:
+                - DataPathLabelType:
+                    Visibility: VISIBLE
+                Overlap: DISABLE_OVERLAP
+                TotalsVisibility: VISIBLE
+                Visibility: HIDDEN
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: Date
+                        DataSetIdentifier: coh
+                      FieldId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
+                      HierarchyId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Action And Resource
+                        DataSetIdentifier: coh
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.2.1723399967970
+                      HierarchyId: 17c530b9-a053-4109-8f14-f47f52513b6a
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Saving Size
+                        DataSetIdentifier: coh
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              Legend:
+                Width: 154px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.2.1723399967970
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: Action And Resource
+                  DataSetIdentifier: coh
+                - ColumnName: region
+                  DataSetIdentifier: coh
+                DrillDownFilters: []
+                HierarchyId: 17c530b9-a053-4109-8f14-f47f52513b6a
+            - DateTimeHierarchy:
+                HierarchyId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Timeline</visual-title>
+              Visibility: VISIBLE
+            VisualId: e08e40e4-f72e-48e2-8fc7-a2789c0d7782
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedColumns:
+                    - ColumnName: region
+                      DataSetIdentifier: coh
+                    SelectedFields:
+                    - bcc39a68-ca29-41c3-8d98-aa6a3010b04a.2.1723398157401
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 9633769d-167f-4368-a258-d3954f824e1f
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              CategoryAxis:
+                ScrollbarOptions:
+                  VisibleRange:
+                    PercentRange:
+                      From: 80.0
+                      To: 100.0
+              DataLabels:
+                DataLabelTypes:
+                - DataPathLabelType:
+                    Visibility: VISIBLE
+                Overlap: DISABLE_OVERLAP
+                TotalsVisibility: VISIBLE
+                Visibility: VISIBLE
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Account
+                        DataSetIdentifier: coh
+                      FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.2.1723398157401
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Action And Resource
+                        DataSetIdentifier: coh
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                      HierarchyId: 2f888752-4f63-428b-97a1-6382542d6502
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Saving Size
+                        DataSetIdentifier: coh
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              Orientation: HORIZONTAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: EXCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                ColorItemsLimit:
+                  OtherCategories: EXCLUDE
+                ColorSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: EXCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.2.1723398157401
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: Action And Resource
+                  DataSetIdentifier: coh
+                - ColumnName: region
+                  DataSetIdentifier: coh
+                DrillDownFilters: []
+                HierarchyId: 2f888752-4f63-428b-97a1-6382542d6502
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>By Account</visual-title>
+              Visibility: VISIBLE
+            VisualId: 74d893c7-fd54-440d-a620-9f7691ba484d
+        - PivotTableVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldOptions:
+                CollapseStateOptions:
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                      FieldValue: Rightsize EC2
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                      FieldValue: Rightsize EBS
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.7.1723842665827
+                    FieldValue: Tags
+                  Width: 258px
+                - DataPathList:
+                  - FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.2.1723397718096
+                    FieldValue: Resource
+                  Width: 234px
+                - DataPathList:
+                  - FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                    FieldValue: Action And Resource
+                  Width: 157px
+                - DataPathList:
+                  - FieldId: 3d228fce-a6e5-47e5-8d1a-71f6b10e5812.8.1723843025261
+                    FieldValue: Name
+                  Width: 153px
+                - DataPathList:
+                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.6.1723400446501
+                    FieldValue: account_id
+                  Width: 132px
+                - DataPathList:
+                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.5.1723397878714
+                    FieldValue: current_resource_summary
+                  Width: 131px
+                - DataPathList:
+                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.4.1723397866337
+                    FieldValue: recommended_resource_summary
+                  Width: 125px
+                - DataPathList:
+                  - FieldId: 2afb073d-be52-4523-9d2b-94c1101678d7.9.1723877246436
+                    FieldValue: Effort
+                  Width: 56px
+                SelectedFieldOptions:
+                - FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.3.1723397724318
+                  Visibility: VISIBLE
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.6.1723400446501
+                  Visibility: VISIBLE
+                - FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.2.1723397718096
+                  Visibility: VISIBLE
+                - CustomLabel: Action
+                  FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                  Visibility: VISIBLE
+                - FieldId: 3d228fce-a6e5-47e5-8d1a-71f6b10e5812.8.1723843025261
+                  Visibility: VISIBLE
+                - FieldId: 2afb073d-be52-4523-9d2b-94c1101678d7.9.1723877246436
+                  Visibility: VISIBLE
+                - CustomLabel: Current
+                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.5.1723397878714
+                  Visibility: VISIBLE
+                - CustomLabel: Recommended
+                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.4.1723397866337
+                  Visibility: VISIBLE
+                - FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.7.1723842665827
+                  Visibility: VISIBLE
+                - FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns: []
+                  Rows:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Account
+                        DataSetIdentifier: coh
+                      FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.3.1723397724318
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: account_id
+                        DataSetIdentifier: coh
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.6.1723400446501
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Resource
+                        DataSetIdentifier: coh
+                      FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.2.1723397718096
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Action And Resource
+                        DataSetIdentifier: coh
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Name
+                        DataSetIdentifier: coh
+                      FieldId: 3d228fce-a6e5-47e5-8d1a-71f6b10e5812.8.1723843025261
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Effort
+                        DataSetIdentifier: coh
+                      FieldId: 2afb073d-be52-4523-9d2b-94c1101678d7.9.1723877246436
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: current_resource_summary
+                        DataSetIdentifier: coh
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.5.1723397878714
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: recommended_resource_summary
+                        DataSetIdentifier: coh
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.4.1723397866337
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Tags
+                        DataSetIdentifier: coh
+                      FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.7.1723842665827
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Saving Size
+                        DataSetIdentifier: coh
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              SortConfiguration:
+                FieldSortOptions:
+                - FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.3.1723397724318
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.6.1723400446501
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                - FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.2.1723397718096
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                - FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.5.1723397878714
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.4.1723397866337
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              TableOptions:
+                CellStyle: {}
+                CollapsedRowDimensionsVisibility: HIDDEN
+                ColumnHeaderStyle: {}
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle: {}
+                RowsLayout: TABULAR
+              TotalOptions:
+                ColumnTotalOptions:
+                  Placement: END
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: HIDDEN
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  Placement: AUTO
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Resources</visual-title>
+              Visibility: VISIBLE
+            VisualId: 69bf7d8d-8c87-480a-9d93-78e583919add
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedColumns:
+                    - ColumnName: Resource Type
+                      DataSetIdentifier: coh
+                    SelectedFields:
+                    - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 9b43cb00-cfb3-4f4d-ac42-3ad06efb6181
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Resource Type
+                        DataSetIdentifier: coh
+                      FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
+                      HierarchyId: fb32764d-6cbd-42b1-85af-11da67ff9b54
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Action And Resource
+                        DataSetIdentifier: coh
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.2.1723876149329
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Saving Size
+                        DataSetIdentifier: coh
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              Orientation: HORIZONTAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.2.1723876149329
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: Top
+                  DataSetIdentifier: coh
+                - ColumnName: Resource Type
+                  DataSetIdentifier: coh
+                DrillDownFilters: []
+                HierarchyId: fb32764d-6cbd-42b1-85af-11da67ff9b54
+            Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Click To Focus on Resource Type</visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>By Resource And Action</visual-title>
+              Visibility: VISIBLE
+            VisualId: e7d94b59-b2b1-45fd-8f0a-6c82b8c9a15d
       - ContentType: INTERACTIVE
         FilterControls:
         - List:
@@ -3406,7 +4460,14 @@ dashboards:
             Actions:
             - ActionOperations:
               - FilterOperation:
-                  SelectedFieldsConfiguration: {}
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722331318534
+                    - 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
+                    - e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                    - bd9029fa-a45e-4485-8063-08ab7e14e0d7.11.1722331300494
+                    - b79aa059-0f12-4d02-93d5-1b499be75abe.12.1722190821253
+                    - 28663381-0078-4963-82cf-f03f0d673f19.12.1722190713951
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisualOptions: ALL_VISUALS
@@ -3416,14 +4477,6 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               FieldOptions:
-                CollapseStateOptions:
-                - State: COLLAPSED
-                  Target:
-                    FieldDataPathValues:
-                    - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
-                      FieldValue: Root Billing
-                    - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                      FieldValue: Ec2InstanceSavingsPlans
                 DataPathOptions:
                 - DataPathList:
                   - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
@@ -3520,6 +4573,21 @@ dashboards:
                         ColumnName: Savings Estimate, Monthly
                         DataSetIdentifier: coh
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 2
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
               SortConfiguration:
                 FieldSortOptions:
                 - FieldId: b79aa059-0f12-4d02-93d5-1b499be75abe.12.1722190821253
@@ -3568,7 +4636,29 @@ dashboards:
                           - Color: '#39ABDC'
                             GradientOffset: 100.0
                         Expression: SUM({Savings Estimate, Monthly})
+              - Cell:
+                  FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Expression: AVG({Top Saving (Binary)}) > 0
+                        IconOptions:
+                          UnicodeIcon: "\u2B50"
+              - Cell:
+                  FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Expression: AVG({Top Saving (Binary)}) < "MID_50_PERCENT"
+                        IconOptions:
+                          UnicodeIcon: "\u2800"
             Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Click a Cell To Filter</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3727,6 +4817,21 @@ dashboards:
                         ColumnName: Savings Estimate, Monthly
                         DataSetIdentifier: coh
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 2
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
                   - NumericalMeasureField:
                       Column:
                         ColumnName: Savings, %
@@ -3774,15 +4879,6 @@ dashboards:
                   Placement: AUTO
             ConditionalFormatting:
               ConditionalFormattingOptions:
-              - Cell:
-                  FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
-                  Scopes:
-                  - Role: FIELD
-                  TextFormat:
-                    TextColor:
-                      Solid:
-                        Color: '#2A5D78'
-                        Expression: SUM({Curent Monthly Cost}) > 0
               - Cell:
                   FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
                   Scopes:
@@ -3926,6 +5022,18 @@ dashboards:
                 ElementType: TEXT_BOX
                 RowIndex: 0
                 RowSpan: 3
+              - ColumnIndex: 17
+                ColumnSpan: 15
+                ElementId: 94e091ed-e24d-4c77-81c7-8aa2659c604d
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 2
+              - ColumnIndex: 17
+                ColumnSpan: 13
+                ElementId: 740f90f2-5042-4260-ad47-7bf8f0f5ae3f
+                ElementType: VISUAL
+                RowIndex: 2
+                RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 3
                 ElementId: 2de92b96-5f28-49f3-81d5-2930d0c75c53
@@ -3945,7 +5053,7 @@ dashboards:
                 RowIndex: 3
                 RowSpan: 4
               - ColumnIndex: 12
-                ColumnSpan: 16
+                ColumnSpan: 5
                 ElementId: 0ffc3e4c-b901-49c0-8a78-622c594f515c
                 ElementType: FILTER_CONTROL
                 RowIndex: 3
@@ -4002,7 +5110,159 @@ dashboards:
               <inline font-size="12px">This page provides information about RI options</inline>
             </text-box>
           SheetTextBoxId: 0b4cef1a-eecd-4c27-a19b-352a974fb0e4
+        - SheetTextBoxId: 94e091ed-e24d-4c77-81c7-8aa2659c604d
         Visuals:
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 13720ddc-65a1-4d74-9541-eabfc132c924
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                CollapseStateOptions:
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                      FieldValue: OpenSearch
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                      FieldValue: Redshift
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                      FieldValue: ElasticCache
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                      FieldValue: EC2
+                - State: COLLAPSED
+                  Target:
+                    FieldDataPathValues:
+                    - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                      FieldValue: RDS
+                SelectedFieldOptions:
+                - CustomLabel: Service
+                  FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                  Visibility: VISIBLE
+                - CustomLabel: Product
+                  FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
+                  Visibility: VISIBLE
+                - CustomLabel: Savings
+                  FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                  Visibility: VISIBLE
+                - CustomLabel: Actions
+                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommendation_id.5.1723844935010
+                  Visibility: VISIBLE
+                - CustomLabel: Regions
+                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.3.1723844835993
+                  Visibility: VISIBLE
+                - CustomLabel: Accounts
+                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.4.1723844849330
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns: []
+                  Rows:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: RI Serivice
+                        DataSetIdentifier: coh
+                      FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: RI Product
+                        DataSetIdentifier: coh
+                      FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
+                      FormatConfiguration:
+                        NullValueFormatConfiguration:
+                          NullString: 'null'
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Savings Estimate, Monthly
+                        DataSetIdentifier: coh
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                  - CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: recommendation_id
+                        DataSetIdentifier: coh
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommendation_id.5.1723844935010
+                  - CategoricalMeasureField:
+                      AggregationFunction: DISTINCT_COUNT
+                      Column:
+                        ColumnName: region
+                        DataSetIdentifier: coh
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.3.1723844835993
+                  - CategoricalMeasureField:
+                      AggregationFunction: DISTINCT_COUNT
+                      Column:
+                        ColumnName: account_id
+                        DataSetIdentifier: coh
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.4.1723844849330
+              SortConfiguration:
+                FieldSortOptions:
+                - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                - FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+              TableOptions:
+                CellStyle: {}
+                CollapsedRowDimensionsVisibility: HIDDEN
+                ColumnHeaderStyle: {}
+                ColumnNamesVisibility: VISIBLE
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle: {}
+                RowsLayout: TABULAR
+              TotalOptions:
+                ColumnSubtotalOptions:
+                  TotalsVisibility: HIDDEN
+                ColumnTotalOptions:
+                  Placement: END
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: HIDDEN
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  Placement: AUTO
+                  TotalsVisibility: VISIBLE
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Top Potential RI Savings by Service</visual-title>
+              Visibility: VISIBLE
+            VisualId: 740f90f2-5042-4260-ad47-7bf8f0f5ae3f
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -4219,6 +5479,12 @@ dashboards:
             Actions: []
             ChartConfiguration:
               BarsArrangement: STACKED
+              CategoryAxis:
+                ScrollbarOptions:
+                  VisibleRange:
+                    PercentRange:
+                      From: 9.090909090909093
+                      To: 100.0
               DataLabels:
                 DataLabelTypes:
                 - DataPathLabelType:
@@ -4295,7 +5561,22 @@ dashboards:
               Visibility: VISIBLE
             VisualId: e951c174-830b-453d-bd14-8afdc8c2364a
         - BarChartVisual:
-            Actions: []
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedColumns:
+                    - ColumnName: Account
+                      DataSetIdentifier: coh
+                    SelectedFields:
+                    - bcc39a68-ca29-41c3-8d98-aa6a3010b04a.2.1722374916991
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 588a89e7-dc23-4471-8841-e973c027e853
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: STACKED
               DataLabels:
@@ -4310,7 +5591,7 @@ dashboards:
                   Category:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: RI Beneft Account
+                        ColumnName: Account
                         DataSetIdentifier: coh
                       FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.2.1722374916991
                       HierarchyId: 61983809-7301-49a8-a6e4-4b8961b4ae3b
@@ -4486,25 +5767,30 @@ dashboards:
               Visibility: VISIBLE
             VisualId: 446f38a4-726c-4ac2-8027-f0e38cbad14b
         - PivotTableVisual:
-            Actions: []
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 5ced7874-0d34-4c19-ae9f-341ab36eebea
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               FieldOptions:
                 CollapseStateOptions:
                 - State: COLLAPSED
                   Target:
-                    FieldDataPathValues:
-                    - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
-                      FieldValue: Ec2
+                    FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.6.1722345153591
                 - State: COLLAPSED
                   Target:
-                    FieldDataPathValues:
-                    - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
-                      FieldValue: ElastiCache
+                    FieldId: cdad1728-dfa7-4dc3-8fc6-ad609b184779.8.1722374172914
                 - State: COLLAPSED
                   Target:
-                    FieldDataPathValues:
-                    - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
-                      FieldValue: OpenSearch
+                    FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.6.1722345069871
                 DataPathOptions:
                 - DataPathList:
                   - FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.6.1722345153591
@@ -4604,13 +5890,49 @@ dashboards:
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
               SortConfiguration:
                 FieldSortOptions:
+                - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                - FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.5.1722344992614
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                - FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.6.1722345153591
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                - FieldId: cdad1728-dfa7-4dc3-8fc6-ad609b184779.8.1722374172914
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.6.1722345069871
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                - FieldId: 4475723f-2fdd-4adf-a931-85cb282a19e2.9.1722374183483
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
                 - FieldId: 647318b5-38d8-4a43-87ea-2a4c4752da32.5.1722345051775
                   SortBy:
                     Field:
                       Direction: DESC
-                      FieldId: 647318b5-38d8-4a43-87ea-2a4c4752da32.5.1722345051775
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
+                - FieldId: 038b42b1-34c5-423f-a5b1-5bb7c7afc2ae.7.1722345227414
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
               TableOptions:
-                CellStyle: {}
+                CellStyle:
+                  Height: 25
                 CollapsedRowDimensionsVisibility: HIDDEN
                 ColumnHeaderStyle: {}
                 RowAlternateColorOptions:
@@ -4730,7 +6052,7 @@ dashboards:
             \    <inline font-size=\"24px\">ecommended\_</inline>\n    <inline font-size=\"\
             24px\">\n      <b>A</b>\n    </inline>\n    <inline font-size=\"24px\">ctions</inline>\n\
             \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
-            >v0.0.1</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
+            >v0.0.2</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built by: Iakov\
             \ Gan</block>\n  <br/>\n  <block align=\"right\">\n    Learn more\n    <a href=\"\
             https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\" target=\"\
