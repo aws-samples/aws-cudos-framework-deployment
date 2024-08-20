@@ -6228,6 +6228,6 @@ datasets:
     - default
     parameters:
       data_exports_database_name:
-        default: cid_data_exports
+        default: cid_data_export
         description: database of cid data exports
         global: True
