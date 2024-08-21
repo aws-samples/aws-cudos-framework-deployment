@@ -367,14 +367,15 @@ class ProxyView():
         """ read the current state from athena. read all fields and their types from existing SQL view and also for each MAP read existing keys
         """
         # Read fields from the current view
-        exposed_fields_and_types = dict(self.athena.query(f'''
-            SELECT column_name, data_type
-            FROM information_schema.columns
-            WHERE table_schema = '{self.athena.DatabaseName}'
-            AND table_name = '{self.name}';
-        '''))
-        self.exposed_fields = list(exposed_fields_and_types.keys())
-        logger.debug(f'exposed fields: {self.exposed_fields}')
+        if not self.exposed_fields:
+            exposed_fields_and_types = dict(self.athena.query(f'''
+                SELECT column_name, data_type
+                FROM information_schema.columns
+                WHERE table_schema = '{self.athena.DatabaseName}'
+                AND table_name = '{self.name}';
+            '''))
+            self.exposed_fields = list(exposed_fields_and_types.keys())
+            logger.debug(f'exposed fields: {self.exposed_fields}')
         if not self.exposed_fields:
             return
 
@@ -390,8 +391,8 @@ class ProxyView():
             return {key.strip(): value.strip() for key, value in zip(keys, values)}
 
         _current_sql = '\n'.join([line[0] for line in self.athena.query(f'SHOW CREATE VIEW {self.name}')])
-        for field, field_type in exposed_fields_and_types.items():
-            if field_type.startswith('map('):
+        for field in self.exposed_fields:
+            if field in cur2_maps:
                 if field not in self.exposed_maps:
                     self.exposed_maps[field] = set()
                 maps = re.findall(f'MAP\(ARRAY\[.+?\], ARRAY\[.+?\]\) {field}', _current_sql)
@@ -524,6 +525,8 @@ class ProxyView():
         ''')
         res = self.athena.create_or_update_view(self.name, query)
         logging.debug(res)
+
+        self.exposed_fields = all_target_fields
 
     def get_table_metadata(self):
         return self.athena.get_table_metadata(self.name)

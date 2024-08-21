@@ -692,7 +692,7 @@ views:
   kpi_s3_storage_all:
       File: kpi/kpi_s3_storage_view.sql
       dependsOn:
-        cur: true
+        cur2: true
         views:
           - account_map
 
@@ -700,7 +700,7 @@ views:
   kpi_tracker:
       File: kpi/last_kpi_tracker_view.sql
       dependsOn:
-        cur: true
+        cur2: true
         views:
           - account_map
           - kpi_ebs_snap

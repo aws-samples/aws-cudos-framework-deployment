@@ -1107,21 +1107,6 @@ class Cid():
         else:
             print('Unable to determine dashboard source.')
 
-        if dashboard.status == 'legacy':
-            if get_parameter(
-                param_name=f'confirm-update',
-                message=f'Dashboard template changed, update it anyway?',
-                choices=['yes', 'no'],
-                default='yes') != 'yes':
-                return
-        elif dashboard.latest:
-            if get_parameter(
-                param_name=f'confirm-update',
-                message=f'No updates available, should I update it anyway?',
-                choices=['yes', 'no'],
-                default='yes') != 'yes':
-                return
-
         # Update dashboard
         print(f'\nUpdating {dashboard_id}')
         logger.debug(f"Updating {dashboard_id}")
