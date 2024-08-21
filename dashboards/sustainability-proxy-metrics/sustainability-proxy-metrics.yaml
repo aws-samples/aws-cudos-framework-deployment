@@ -1,5 +1,6 @@
 dashboards:
-  SUSTAINABILITY-PROXY-METRICS-V2:
+  SUS-DASH:
+    category: 'Additional'
     dependsOn:
       datasets:
       - carbon_emissions_aggregate_longform
@@ -13,8 +14,8 @@ dashboards:
       - sus_network
       - sus_s3_storage_all
       - sus_storage_athena
-    name: sustainability-proxy-metrics-v2
-    dashboardId: sustainability-proxy-metrics3
+    name: sustainability-proxy-metrics
+    dashboardId: sustainability-proxy-metrics
     category: Custom
     theme: MIDNIGHT
     templateId: sustainability-proxy-metrics
