@@ -8,57 +8,29 @@ one instance of this module for each payer account.
 
 ## Example Usage
 
+> [!Note]
+> For complete usage documentation of using this module together with the cur-setup-destination
+module, refer to the main Terraform [Deployment Instructions](../README.md#deployment-instructions).
+
 ```hcl
 provider "aws" {
-  profile = "src"
-  region  = "us-west-2"
-  alias   = "src"
+  region = "us-west-2"
 }
 
 provider "aws" {
-  profile = "src"
-  region  = "us-east-1"
-  alias   = "src_useast1"
-}
-
-provider "aws" {
-  profile = "dst"
-  region  = "us-west-2"
-  alias   = "dst"
-}
-
-provider "aws" {
-  profile = "dst"
-  region  = "us-east-1"
-  alias   = "dst_useast1"
-}
-
-# Configure exactly one destination account
-module "cur_destination" {
-  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-destination"
-
-  source_account_ids = ["1234567890"]
-  create_cur         = false # Set to true to create an additional CUR in the aggregation account
-
-  # Provider alias for us-east-1 must be passed explicitly (required for CUR setup)
-  # Optionally, you may pass the default aws provider explicitly as well
-  providers = {
-    aws         = aws.dst
-    aws.useast1 = aws.dst_useast1
-  }
+  region = "us-east-1"
+  alias  = "useast1"
 }
 
 # Configure one or more source (payer) accounts
 module "cur_source" {
   source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-source"
 
-  destination_bucket_arn = module.cur_destination.cur_bucket_arn
+  destination_bucket_arn = "UPDATEME"
 
   # Provider alias for us-east-1 must be passed explicitly (required for CUR setup)
-  # Optionally, you may pass the default aws provider explicitly as well
   providers = {
-    aws         = aws.src
-    aws.useast1 = aws.src_useast1
+    aws.useast1 = aws.useast1
   }
 }
 ```
@@ -115,6 +87,7 @@ The following resources are used by this module:
 - [aws_iam_policy_document.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) (data source)
 - [aws_iam_policy_document.replication](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) (data source)
 - [aws_iam_policy_document.s3_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) (data source)
+- [aws_partition.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) (data source)
 - [aws_region.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) (data source)
 
 ## Required Inputs
@@ -139,12 +112,20 @@ Type: `string`
 
 Default: `"cur"`
 
+### enable\_split\_cost\_allocation\_data
+
+Description: Enable split cost allocation data for ECS and EKS for this CUR report
+
+Type: `bool`
+
+Default: `false`
+
 ### kms\_key\_id
 
-Description: !!!WARNING!!! EXPERIMENTAL - Do not use unless you know what you are doing. The correct key policies and IAM permissions
+Description: !!!WARNING!!! EXPERIMENTAL - Do not use unless you know what you are doing. The correct key policies and IAM permissions  
 on the S3 replication role must be configured external to this module.
   - The "billingreports.amazonaws.com" service must have access to encrypt objects with the key ID provided
-  - See https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-config-for-kms-objects.html for information
+  - See https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-config-for-kms-objects.html for information  
     on permissions required for replicating KMS-encrypted objects
 
 Type: `string`
@@ -183,13 +164,13 @@ Default:
 }
 ```
 
-### enable\_split\_cost\_allocation\_data
+### tags
 
-Description: Activate split cost allocation data for ECS and EKS to aggregate cost and usage data for container-level resources
+Description: Map of tags to apply to module resources
 
-Type: `bool`
+Type: `map(string)`
 
-Default: `false`
+Default: `{}`
 
 ## Outputs
 

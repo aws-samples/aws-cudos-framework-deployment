@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v0.3.6
+Description: Deployment of Cloud Intelligence Dashboards v0.3.9
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -9,6 +9,7 @@ Metadata:
           - PrerequisitesQuickSight
           - PrerequisitesQuickSightPermissions
           - QuickSightUser
+          - LakeFormationEnabled
       - Label:
           default: CUDOS, Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually (Dashboard data will appear within 24h after CUR creation).
         Parameters:
@@ -27,7 +28,6 @@ Metadata:
       - Label:
           default: 'Technical Parameters. Please do not change.'
         Parameters:
-          - LakeFormationEnabled
           - AthenaWorkgroup
           - AthenaQueryResultsBucket
           - DatabaseName
@@ -45,11 +45,11 @@ Metadata:
       PrerequisitesQuickSightPermissions:
         default: "I understand that I need to manually give Permission to QuickSight to access CUR bucket and Query results bucket. Then manually refresh datasets after deploying this CFN."
       LakeFormationEnabled:
-        default: "I have LakeFormation permission model in place for this account & my cfn deployment credentials have administrative rights on LakeFormation"
+        default: "I have LakeFormation permission model in place for this account & my CFN deployment credentials have administrative rights on LakeFormation"
       QuickSightUser:
         default: "User name of QuickSight user (as displayed in QuickSight admin panel). Dashboards created by this template will be owned by this user."
       CURBucketPath:
-        default: "Path to Cost and Usage report"
+        default: "Path to Cost and Usage Report"
       DeployCUDOSDashboard:
         default: "CUDOS Dashboard v4 - Deprecated [set 'no' to delete]"
       DeployCUDOSv5:
@@ -75,19 +75,19 @@ Metadata:
       Suffix:
         default: "Suffix - Please do not change"
       QuickSightDataSourceRoleName:
-        default: "IAM Role Name to be used on QuickSight Datasource Creation (if not provided, the default QuickSight Role will be used)."
+        default: "IAM Role Name for QuickSight Datasource"
       QuickSightDataSetRefreshSchedule:
-        default: "QuickSight DataSet Refresh Schedule. Must be a valid cron or empty. If empty refresh will be disabled."
+        default: "QuickSight DataSet Refresh Schedule [DEPRECATED]"
       LambdaLayerBucketPrefix:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
         default: "Existing Glue Data Catalog"
       DataBucketsKmsKeysArns:
-        default: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
+        default: "KMS Key ARNs"
       PrimaryTagName:
-        Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
+        default: "Primary Tag for Compute Optimizer dashboard"
       SecondaryTagName:
-        Default: "Choose a tag name. Currently used only in Compute Optimizer dashboard."
+        default: "Secondary Tag for Compute Optimizer dashboard"
   cfn-lint:
     config:
       ignore_checks:
@@ -189,22 +189,22 @@ Parameters:
     Default: "AwsDataCatalog"
   DataBucketsKmsKeysArns:
     Type: String
-    Description: "ARNs of KMS Keys for data bucket (comma separated, no spaces). Keep empty if data Buckets are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
+    Description: "ARNs of KMS Keys for data buckets and/or Glue Catalog. Comma separated list, no spaces. Keep empty if data Buckets and Glue Catalog are not Encrypted with KMS. You can also set it to '*' to grant decrypt permission for all the keys."
     Default: ""
   LakeFormationEnabled:
     Type: String
-    Description: Choose 'yes' if Lake Formation permission model is in place for the account
+    Description: Choose 'yes' if Lake Formation permission model is in place for the account. If you are not sure, leave it as 'no'.
     Default: "no"
     AllowedValues: ["yes", "no"]
   PrimaryTagName:
     Type: String
-    Description: Choose a tag name for Primary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leave as is if not sure.
+    Description: Choose a tag name for Primary Tag. Can be any Tag name (Owner, Environment, Finops_Exception). Currently used only in Compute Optimizer dashboard. Leave as is if not sure. This is a Tag, not CostAllocationTag (MyTag not resource_tags_my_tag).
     Default: "owner"
     MinLength: 1 # cid cmd do not accept empty parameters
     AllowedPattern: "[a-zA-Z0-9_]*"
   SecondaryTagName:
     Type: String
-    Description: Choose a tag name for Secondary Tag. Can be any Tag name (owner, environment, finops_exception). Currently used only in Compute Optimizer dashboard. Leve as is if not sure.
+    Description: Choose a tag name for Secondary Tag. Can be any Tag name (Owner, Environment, Finops_Exception). Currently used only in Compute Optimizer dashboard. Leave as is if not sure. This is a Tag, not CostAllocationTag (MyTag not resource_tags_my_tag).
     Default: "environment"
     MinLength: 1 # cid cmd do not accept empty parameters
     AllowedPattern: "[a-zA-Z0-9_]*"
@@ -561,6 +561,8 @@ Resources:
                   else: res = (True, f"Not supported operation: {type_}")
                   set_parameters({'quicksight-user': QUICKSIGHT_USER})
                   identity_region = get_identity_region()
+              except Exception as exc:
+                  res = False, str(exc)[:1000]
               finally:
                   log_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logEvent:group={context.log_group_name};stream={context.log_stream_name}"
                   url = event.get('ResponseURL')
@@ -1173,6 +1175,8 @@ Resources:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/optimization_data
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_collection/*
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_collection
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_export/* # prefix for data-exports hardcoded here
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_export # prefix for data-exports hardcoded here
               - Sid: AllowAthena
                 Effect: Allow
                 Action:
@@ -1187,10 +1191,6 @@ Resources:
                   - athena:GetTableMetadata
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/${GlueDataCatalog}'
-                  - Fn::If:
-                      - NeedDatabase
-                      - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
-                      - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
                   - Fn::If:
                      - NeedAthenaWorkgroup
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
@@ -1217,6 +1217,7 @@ Resources:
                 Effect: Allow
                 Action: s3:ListBucket
                 Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-exports # prefix for data-exports hardcoded here
                   - !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}
                   - !If
                       - NeedQuickSightDataSourceRoleAndCUR
@@ -1228,6 +1229,7 @@ Resources:
                   - s3:GetObject
                   - s3:GetObjectVersion
                 Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-exports/*  # prefix for data-exports hardcoded here
                   - !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}/*
                   - !If
                       - NeedQuickSightDataSourceRoleAndCUR
@@ -1609,7 +1611,7 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
-        S3Key: 'cid-resource-lambda-layer/cid-0.3.6.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-0.3.9.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11
