@@ -2,8 +2,9 @@ dashboards:
   SUSTAINABILITY-PROXY-METRICS-V2:
     dependsOn:
       datasets:
+      - carbon_emissions_aggregate_longform
+      - carbon_emissions_longform
       - sus_carbon_emissions
-      - sus_carbon_emissions_longform
       - sus_compute_ec2
       - sus_compute_split
       - sus_geo_region_athena
@@ -13,55 +14,13 @@ dashboards:
       - sus_s3_storage_all
       - sus_storage_athena
     name: sustainability-proxy-metrics-v2
-    dashboardId: sustainability-proxy-metrics-v2
+    dashboardId: sustainability-proxy-metrics3
     category: Custom
     theme: MIDNIGHT
-    templateId: sustainability-proxy-metrics-v2
+    templateId: sustainability-proxy-metrics
     sourceAccountId: '554422808410'
     region: eu-central-1
 datasets:
-  sus_carbon_emissions_longform:
-    data:
-      DataSetId: 21350a01-7791-422b-9a6a-ad8a4743ca2e
-      Name: sus_carbon_emissions_longform
-      PhysicalTableMap:
-        b672ac63-b60c-45fc-9dc9-c4b25d6bfee4:
-          RelationalTable:
-            DataSourceArn: ${athena_datasource_arn}
-            Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
-            Name: sus_carbon_emissions_longform
-            InputColumns:
-            - Name: metric
-              Type: STRING
-            - Name: value
-              Type: DECIMAL
-              SubType: FIXED
-            - Name: accountid
-              Type: STRING
-            - Name: querydate
-              Type: DATETIME
-            - Name: startdate
-              Type: DATETIME
-      LogicalTableMap:
-        467bbe38-8e6b-41f1-9bdb-327bcba01e6e:
-          Alias: sus_carbon_emissions_longform
-          DataTransforms:
-          - ProjectOperation:
-              ProjectedColumns:
-              - metric
-              - value
-              - accountid
-              - querydate
-              - startdate
-          Source:
-            PhysicalTableId: b672ac63-b60c-45fc-9dc9-c4b25d6bfee4
-      ImportMode: SPICE
-    dependsOn:
-      views:
-      - sus_carbon_emissions_longform
-    schedules:
-    - default
   sus_s3_storage_all:
     data:
       DataSetId: 411db3d5-6368-4359-a4a6-29dbb64c9e33
@@ -112,16 +71,39 @@ datasets:
               Type: INTEGER
             - Name: usage_quantity
               Type: DECIMAL
-              SubType: FIXED
+              SubType: FLOAT
             - Name: unblended_cost
               Type: DECIMAL
-              SubType: FIXED
+              SubType: FLOAT
             - Name: public_cost
               Type: DECIMAL
-              SubType: FIXED
+              SubType: FLOAT
+        fe1b70ec-a568-4341-9265-db2fe41e6a13:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
       LogicalTableMap:
         79a028a3-aae7-4f70-8f72-e654a6bf1464:
           Alias: sus_s3_storage_all
+          Source:
+            PhysicalTableId: 2ca2f9db-d270-4f8f-8e0d-cce6f039328f
+        e0e5acc2-6064-4bbe-9221-f60dd0357017:
+          Alias: account_map
+          Source:
+            PhysicalTableId: fe1b70ec-a568-4341-9265-db2fe41e6a13
+        e1c4d02c-a385-4759-9fdb-99624e7d1c1d:
+          Alias: Intermediate Table
           DataTransforms:
           - ProjectOperation:
               ProjectedColumns:
@@ -146,12 +128,118 @@ datasets:
               - usage_quantity
               - unblended_cost
               - public_cost
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
           Source:
-            PhysicalTableId: 2ca2f9db-d270-4f8f-8e0d-cce6f039328f
+            JoinInstruction:
+              LeftOperand: 79a028a3-aae7-4f70-8f72-e654a6bf1464
+              RightOperand: e0e5acc2-6064-4bbe-9221-f60dd0357017
+              Type: LEFT
+              OnClause: '{linked_account_id} = {account_id}'
       ImportMode: SPICE
     dependsOn:
       views:
       - sus_s3_storage_all
+      - account_map
+    schedules:
+    - default
+  sus_idle_elb:
+    data:
+      DataSetId: 2794b73a-4469-4b9c-ba4e-d1de93460b8b
+      Name: sus_idle_elb
+      PhysicalTableMap:
+        8d1ead4d-1a2e-4641-947a-d8ffb40d653e:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
+        961a6efd-2ed4-4d1c-8f5a-e7ff676393c8:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: sus_idle_elb
+            InputColumns:
+            - Name: bill_payer_account_id
+              Type: STRING
+            - Name: bill_billing_period_start_date
+              Type: DATETIME
+            - Name: line_item_usage_account_id
+              Type: STRING
+            - Name: split_line_item_resource_id
+              Type: STRING
+            - Name: product_region
+              Type: STRING
+            - Name: pricing_unit
+              Type: STRING
+            - Name: sum_line_item_usage_amount
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: resource_tags_user_application
+              Type: STRING
+            - Name: tagbuskpi
+              Type: INTEGER
+            - Name: accbuskpi
+              Type: INTEGER
+            - Name: sum_line_item_unblended_cost
+              Type: DECIMAL
+              SubType: FIXED
+      LogicalTableMap:
+        16f9dbb4-1845-488b-9382-dba4fe06a027:
+          Alias: sus_idle_elb
+          Source:
+            PhysicalTableId: 961a6efd-2ed4-4d1c-8f5a-e7ff676393c8
+        338c012f-691e-4a8b-b163-b0d03d16da30:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 8d1ead4d-1a2e-4641-947a-d8ffb40d653e
+        83c9024c-38bf-4e67-9802-523dbeea187f:
+          Alias: Intermediate Table
+          DataTransforms:
+          - TagColumnOperation:
+              ColumnName: product_region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - bill_payer_account_id
+              - bill_billing_period_start_date
+              - line_item_usage_account_id
+              - split_line_item_resource_id
+              - product_region
+              - pricing_unit
+              - sum_line_item_usage_amount
+              - resource_tags_user_application
+              - tagbuskpi
+              - accbuskpi
+              - sum_line_item_unblended_cost
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: 16f9dbb4-1845-488b-9382-dba4fe06a027
+              RightOperand: 338c012f-691e-4a8b-b163-b0d03d16da30
+              Type: LEFT
+              OnClause: '{line_item_usage_account_id} = {account_id}'
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - sus_idle_elb
     schedules:
     - default
   sus_compute_ec2:
@@ -187,9 +275,24 @@ datasets:
               Type: INTEGER
             - Name: account_business_metric
               Type: INTEGER
+        937e5fa9-bb37-4b63-a607-f8c1d0a7ca9b:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
       LogicalTableMap:
-        ab737a73-894c-4495-b12d-bf17cfb6b935:
-          Alias: sus_compute_ec2
+        49d5b0fd-0993-4374-a034-a87d662add3f:
+          Alias: Intermediate Table
           DataTransforms:
           - ProjectOperation:
               ProjectedColumns:
@@ -203,77 +306,29 @@ datasets:
               - vcpu_hours
               - tag_business_metric
               - account_business_metric
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: ab737a73-894c-4495-b12d-bf17cfb6b935
+              RightOperand: 4d22feb2-2623-4113-a230-ee69aa825fd3
+              Type: LEFT
+              OnClause: '{line_item_usage_account_id} = {account_id}'
+        4d22feb2-2623-4113-a230-ee69aa825fd3:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 937e5fa9-bb37-4b63-a607-f8c1d0a7ca9b
+        ab737a73-894c-4495-b12d-bf17cfb6b935:
+          Alias: sus_compute_ec2
           Source:
             PhysicalTableId: 862dc931-5aeb-45bd-aa09-0560920c43f0
       ImportMode: SPICE
     dependsOn:
       views:
       - sus_compute_ec2
-    schedules:
-    - default
-  sus_idle_elb:
-    data:
-      DataSetId: 2794b73a-4469-4b9c-ba4e-d1de93460b8b
-      Name: sus_idle_elb
-      PhysicalTableMap:
-        961a6efd-2ed4-4d1c-8f5a-e7ff676393c8:
-          RelationalTable:
-            DataSourceArn: ${athena_datasource_arn}
-            Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
-            Name: sus_idle_elb
-            InputColumns:
-            - Name: bill_payer_account_id
-              Type: STRING
-            - Name: bill_billing_period_start_date
-              Type: DATETIME
-            - Name: line_item_usage_account_id
-              Type: STRING
-            - Name: split_line_item_resource_id
-              Type: STRING
-            - Name: product_region
-              Type: STRING
-            - Name: pricing_unit
-              Type: STRING
-            - Name: sum_line_item_usage_amount
-              Type: DECIMAL
-              SubType: FIXED
-            - Name: resource_tags_user_application
-              Type: STRING
-            - Name: tagbuskpi
-              Type: INTEGER
-            - Name: accbuskpi
-              Type: INTEGER
-            - Name: sum_line_item_unblended_cost
-              Type: DECIMAL
-              SubType: FIXED
-      LogicalTableMap:
-        16f9dbb4-1845-488b-9382-dba4fe06a027:
-          Alias: sus_idle_elb
-          DataTransforms:
-          - TagColumnOperation:
-              ColumnName: product_region
-              Tags:
-              - ColumnGeographicRole: STATE
-          - ProjectOperation:
-              ProjectedColumns:
-              - bill_payer_account_id
-              - bill_billing_period_start_date
-              - line_item_usage_account_id
-              - split_line_item_resource_id
-              - product_region
-              - pricing_unit
-              - sum_line_item_usage_amount
-              - resource_tags_user_application
-              - tagbuskpi
-              - accbuskpi
-              - sum_line_item_unblended_cost
-          Source:
-            PhysicalTableId: 961a6efd-2ed4-4d1c-8f5a-e7ff676393c8
-      ImportMode: SPICE
-    dependsOn:
-      views:
-      - sus_idle_elb
+      - account_map
     schedules:
     - default
   sus_carbon_emissions:
@@ -301,9 +356,28 @@ datasets:
               Type: STRING
             - Name: regioncode
               Type: STRING
+        4e57d6b4-c367-411e-a44b-7870baa54c39:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
       LogicalTableMap:
-        a76d55cc-a67b-4ff3-8097-745706bf40fe:
-          Alias: sus_carbon_emissions_view
+        485c1f21-5a4c-46bb-9abb-5e721c34ee9a:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 4e57d6b4-c367-411e-a44b-7870baa54c39
+        81a5d7b4-3f4e-4083-8cdd-06268e2b5a7b:
+          Alias: Intermediate Table
           DataTransforms:
           - ProjectOperation:
               ProjectedColumns:
@@ -313,12 +387,99 @@ datasets:
               - mbmcarbon
               - paceproductcode
               - regioncode
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: a76d55cc-a67b-4ff3-8097-745706bf40fe
+              RightOperand: 485c1f21-5a4c-46bb-9abb-5e721c34ee9a
+              Type: LEFT
+              OnClause: '{accountid} = {account_id}'
+        a76d55cc-a67b-4ff3-8097-745706bf40fe:
+          Alias: sus_carbon_emissions_view
           Source:
             PhysicalTableId: 1dc4c009-196c-489a-970b-561bf4acef6b
       ImportMode: SPICE
     dependsOn:
       views:
       - sus_carbon_emissions_view
+      - account_map
+    schedules:
+    - default
+  carbon_emissions_aggregate_longform:
+    data:
+      DataSetId: 814f2ac6-3205-43b8-ac8b-bab4dc1c864a
+      Name: carbon_emissions_aggregate_longform
+      PhysicalTableMap:
+        c58a049b-ecf8-4884-8916-2b8ec86bd941:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
+        d0ea6867-d523-452c-b6a3-7431979da256:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: sus_carbon_emissions_longform
+            InputColumns:
+            - Name: metric
+              Type: STRING
+            - Name: value
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: accountid
+              Type: STRING
+            - Name: querydate
+              Type: DATETIME
+            - Name: startdate
+              Type: DATETIME
+      LogicalTableMap:
+        1c4e087c-344e-4ad0-b986-aa01476f6091:
+          Alias: sus_carbon_emissions_longform
+          Source:
+            PhysicalTableId: d0ea6867-d523-452c-b6a3-7431979da256
+        5dc3e114-3a3d-43ff-87af-eae4d8d4cf8c:
+          Alias: account_map
+          Source:
+            PhysicalTableId: c58a049b-ecf8-4884-8916-2b8ec86bd941
+        67d16571-dce6-4ca0-a4d3-8e2cdc60bc05:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - metric
+              - value
+              - accountid
+              - querydate
+              - startdate
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: 1c4e087c-344e-4ad0-b986-aa01476f6091
+              RightOperand: 5dc3e114-3a3d-43ff-87af-eae4d8d4cf8c
+              Type: LEFT
+              OnClause: '{accountid} = {account_id}'
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - sus_carbon_emissions_longform
     schedules:
     - default
   sus_storage_athena:
@@ -345,14 +506,37 @@ datasets:
               Type: DATETIME
             - Name: usage
               Type: DECIMAL
-              SubType: FIXED
+              SubType: FLOAT
             - Name: tagbuskpi
               Type: INTEGER
             - Name: accbuskpi
               Type: INTEGER
+        e7b46e3d-87cf-473e-908b-7870ffa90a32:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
       LogicalTableMap:
+        13ed66ff-e221-4acf-9e83-87145cf336c5:
+          Alias: account_map
+          Source:
+            PhysicalTableId: e7b46e3d-87cf-473e-908b-7870ffa90a32
         3bf588fa-4b55-4746-b422-1799d4cb51ff:
           Alias: sus_storage_athena
+          Source:
+            PhysicalTableId: d88e946b-50c5-4131-af7f-a20c19b5f44d
+        b85579e2-a38d-41ea-a583-7055af4d54d1:
+          Alias: Intermediate Table
           DataTransforms:
           - ProjectOperation:
               ProjectedColumns:
@@ -364,12 +548,21 @@ datasets:
               - usage
               - tagbuskpi
               - accbuskpi
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
           Source:
-            PhysicalTableId: d88e946b-50c5-4131-af7f-a20c19b5f44d
+            JoinInstruction:
+              LeftOperand: 3bf588fa-4b55-4746-b422-1799d4cb51ff
+              RightOperand: 13ed66ff-e221-4acf-9e83-87145cf336c5
+              Type: LEFT
+              OnClause: '{line_item_usage_account_id} = {account_id}'
       ImportMode: SPICE
     dependsOn:
       views:
       - sus_storage_athena
+      - account_map
     schedules:
     - default
   sus_geo_region_athena:
@@ -445,6 +638,21 @@ datasets:
       DataSetId: 656e7432-12cf-4b1c-a48f-24e4f4b48843
       Name: sus_network
       PhysicalTableMap:
+        4f66d90f-5d4a-4e8e-bcdf-2e83d73d37a8:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
         b4b4e384-904f-42b3-9108-3dff4ad53b30:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -480,17 +688,21 @@ datasets:
               Type: STRING
             - Name: usage_amount_in_tb
               Type: DECIMAL
-              SubType: FIXED
+              SubType: FLOAT
             - Name: cost
               Type: DECIMAL
-              SubType: FIXED
+              SubType: FLOAT
             - Name: tagbuskpi
               Type: INTEGER
             - Name: accbuskpi
               Type: INTEGER
       LogicalTableMap:
-        d8a05f09-6cb3-40e0-b9c8-482512b1727a:
-          Alias: sus_network
+        9d386b3d-9b75-4e72-b307-56678a6e8f96:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 4f66d90f-5d4a-4e8e-bcdf-2e83d73d37a8
+        a74b2b69-a10d-4b60-8c4c-68529a0707d9:
+          Alias: Intermediate Table
           DataTransforms:
           - TagColumnOperation:
               ColumnName: product_region
@@ -515,12 +727,188 @@ datasets:
               - cost
               - tagbuskpi
               - accbuskpi
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: d8a05f09-6cb3-40e0-b9c8-482512b1727a
+              RightOperand: 9d386b3d-9b75-4e72-b307-56678a6e8f96
+              Type: LEFT
+              OnClause: '{line_item_usage_account_id} = {account_id}'
+        d8a05f09-6cb3-40e0-b9c8-482512b1727a:
+          Alias: sus_network
           Source:
             PhysicalTableId: b4b4e384-904f-42b3-9108-3dff4ad53b30
       ImportMode: SPICE
     dependsOn:
       views:
+      - account_map
       - sus_network
+    schedules:
+    - default
+  carbon_emissions_longform:
+    data:
+      DataSetId: 9b09c912-f963-40f5-b2f8-2e585199440a
+      Name: carbon_emissions_longform
+      PhysicalTableMap:
+        77d4254f-81cb-49a1-b9ea-228e2e26a255:
+          CustomSql:
+            DataSourceArn: ${athena_datasource_arn}
+            Name: New custom SQL
+            SqlQuery: |-
+              WITH
+                aggregated_data AS (
+                 SELECT
+                   accountid
+                 , querydate
+                 , startdate
+                 , 'mbmcarbon' metric
+                 , mbmcarbon value
+                 FROM
+                  ${athena_database_name}.${athena_database_name}_aggregate_view
+              UNION ALL    SELECT
+                   accountid
+                 , querydate
+                 , startdate
+                 , 'gridmixinefficiency' metric
+                 , gridmixinefficiency value
+                 FROM
+                   ${athena_database_name}.${athena_database_name}_aggregate_view
+              )
+              SELECT
+                metric
+              , value
+              , accountid
+              , querydate
+              , startdate
+              FROM
+                aggregated_data
+            Columns:
+            - Name: metric
+              Type: STRING
+            - Name: value
+              Type: DECIMAL
+            - Name: accountid
+              Type: STRING
+            - Name: querydate
+              Type: DATETIME
+            - Name: startdate
+              Type: DATETIME
+      LogicalTableMap:
+        07036e0a-4475-49bf-859d-14b075905f94:
+          Alias: New custom SQL
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - metric
+              - value
+              - accountid
+              - querydate
+              - startdate
+          Source:
+            PhysicalTableId: 77d4254f-81cb-49a1-b9ea-228e2e26a255
+      ImportMode: DIRECT_QUERY
+    dependsOn:
+      views: []
+    schedules:
+    - default
+  sus_idle_natgw:
+    data:
+      DataSetId: c8a8cb07-8d9d-4b90-9862-e2a7e1370908
+      Name: sus_idle_natgw
+      PhysicalTableMap:
+        0766af2c-5154-4b8a-a5df-8d9a2d37efb4:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
+        30332fbc-ad6f-47ec-b5d2-c6bd31f5efc4:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: sus_idle_natgw
+            InputColumns:
+            - Name: bill_payer_account_id
+              Type: STRING
+            - Name: line_item_usage_account_id
+              Type: STRING
+            - Name: bill_billing_period_start_date
+              Type: DATETIME
+            - Name: split_line_item_resource_id
+              Type: STRING
+            - Name: product_region
+              Type: STRING
+            - Name: pricing_unit
+              Type: STRING
+            - Name: sum_line_item_usage_amount
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: resource_tags_user_application
+              Type: STRING
+            - Name: sum_line_item_unblended_cost
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: tagbuskpi
+              Type: INTEGER
+            - Name: accbuskpi
+              Type: INTEGER
+      LogicalTableMap:
+        6663e8a1-6723-49ae-9312-b51275135aec:
+          Alias: sus_idle_natgw
+          Source:
+            PhysicalTableId: 30332fbc-ad6f-47ec-b5d2-c6bd31f5efc4
+        d1e76cc3-b08d-42bc-a7f3-8edf0b5e73df:
+          Alias: Intermediate Table
+          DataTransforms:
+          - TagColumnOperation:
+              ColumnName: product_region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - bill_payer_account_id
+              - line_item_usage_account_id
+              - bill_billing_period_start_date
+              - split_line_item_resource_id
+              - product_region
+              - pricing_unit
+              - sum_line_item_usage_amount
+              - resource_tags_user_application
+              - sum_line_item_unblended_cost
+              - tagbuskpi
+              - accbuskpi
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: 6663e8a1-6723-49ae-9312-b51275135aec
+              RightOperand: ea340ec0-1f14-40d4-becc-4b992b546138
+              Type: LEFT
+              OnClause: '{line_item_usage_account_id} = {account_id}'
+        ea340ec0-1f14-40d4-becc-4b992b546138:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 0766af2c-5154-4b8a-a5df-8d9a2d37efb4
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - sus_idle_natgw
     schedules:
     - default
   sus_compute_split:
@@ -552,9 +940,24 @@ datasets:
               Type: INTEGER
             - Name: account_business_metric
               Type: INTEGER
+        7c5b80e9-7ba4-42bd-b626-4f8500c0ef00:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
       LogicalTableMap:
-        3af7087e-542f-439f-b88c-822cc9cacd3c:
-          Alias: sus_compute_split
+        38318059-ada4-43cd-84e7-465c830634d4:
+          Alias: Intermediate Table
           DataTransforms:
           - ProjectOperation:
               ProjectedColumns:
@@ -566,91 +969,33 @@ datasets:
               - vcpu_hours
               - tag_business_metric
               - account_business_metric
+              - account_id
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: 3af7087e-542f-439f-b88c-822cc9cacd3c
+              RightOperand: 3b98fdf2-4730-401d-b095-59581cce1db9
+              Type: LEFT
+              OnClause: '{line_item_usage_account_id} = {account_id}'
+        3af7087e-542f-439f-b88c-822cc9cacd3c:
+          Alias: sus_compute_split
           Source:
             PhysicalTableId: 3dd3174f-61ea-420e-8ea9-d7fb30a929ef
+        3b98fdf2-4730-401d-b095-59581cce1db9:
+          Alias: account_map
+          Source:
+            PhysicalTableId: 7c5b80e9-7ba4-42bd-b626-4f8500c0ef00
       ImportMode: SPICE
     dependsOn:
       views:
       - sus_compute_split
-    schedules:
-    - default
-  sus_idle_natgw:
-    data:
-      DataSetId: c8a8cb07-8d9d-4b90-9862-e2a7e1370908
-      Name: sus_idle_natgw
-      PhysicalTableMap:
-        30332fbc-ad6f-47ec-b5d2-c6bd31f5efc4:
-          RelationalTable:
-            DataSourceArn: ${athena_datasource_arn}
-            Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
-            Name: sus_idle_natgw
-            InputColumns:
-            - Name: bill_payer_account_id
-              Type: STRING
-            - Name: line_item_usage_account_id
-              Type: STRING
-            - Name: bill_billing_period_start_date
-              Type: DATETIME
-            - Name: split_line_item_resource_id
-              Type: STRING
-            - Name: product_region
-              Type: STRING
-            - Name: pricing_unit
-              Type: STRING
-            - Name: sum_line_item_usage_amount
-              Type: DECIMAL
-              SubType: FIXED
-            - Name: resource_tags_user_application
-              Type: STRING
-            - Name: sum_line_item_unblended_cost
-              Type: DECIMAL
-              SubType: FIXED
-            - Name: tagbuskpi
-              Type: INTEGER
-            - Name: accbuskpi
-              Type: INTEGER
-      LogicalTableMap:
-        6663e8a1-6723-49ae-9312-b51275135aec:
-          Alias: sus_idle_natgw
-          DataTransforms:
-          - TagColumnOperation:
-              ColumnName: product_region
-              Tags:
-              - ColumnGeographicRole: STATE
-          - ProjectOperation:
-              ProjectedColumns:
-              - bill_payer_account_id
-              - line_item_usage_account_id
-              - bill_billing_period_start_date
-              - split_line_item_resource_id
-              - product_region
-              - pricing_unit
-              - sum_line_item_usage_amount
-              - resource_tags_user_application
-              - sum_line_item_unblended_cost
-              - tagbuskpi
-              - accbuskpi
-          Source:
-            PhysicalTableId: 30332fbc-ad6f-47ec-b5d2-c6bd31f5efc4
-      ImportMode: SPICE
-    dependsOn:
-      views:
-      - sus_idle_natgw
+      - account_map
     schedules:
     - default
 crawlers: {}
 views:
-  sus_carbon_emissions_longform:
-    data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_carbon_emissions_longform AS
-      SELECT
-        'gridmixinefficiency' metric
-      , 0E0 value
-      , '123456789789' accountid
-      , '2024-03-07' querydate
-      , '2020-12-01' startdate
-      WHERE (1 = 0)
   sus_s3_storage_all:
     dependsOn:
       views:
@@ -730,55 +1075,19 @@ views:
       FROM
         ${athena_database_name}.${cur_table_name} cur
       GROUP BY line_item_usage_start_date, line_item_usage_account_id, 1
-  sus_compute_ec2:
+  account_map:
     dependsOn:
       cur: true
-      views:
-      - sus_buss_kpi
-    parameters:
-      tag:
-        type: 'cur.tag_and_cost_category_fields'
-        default: resource_tags_user_application
-        description: "Enter tag name that is used to categorize workloads"
-        global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_compute_ec2 AS
-      WITH
-        tag_business_metrics AS (
-         SELECT
-           line_item_usage_start_date
-         , tagvalue
-         , SUM(buss) business_metric
-         FROM
-           ${athena_database_name}.sus_buss_kpi
-         GROUP BY line_item_usage_start_date, tagvalue
-      )
-      , acc_business_metrics AS (
-         SELECT
-           line_item_usage_start_date
-         , linkedaccountvalue
-         , SUM(buss) business_metric
-         FROM
-           ${athena_database_name}.sus_buss_kpi
-         GROUP BY line_item_usage_start_date, linkedaccountvalue
-      )
-      SELECT
-        cur.bill_payer_account_id
-      , cur.line_item_usage_account_id
-      , cur.line_item_usage_start_date
-      , ${tag} resource_tags_user_application
-      , cur.line_item_product_code
-      , (CASE WHEN ((product_instance_type_family IS NULL) OR (product_instance_type_family = '')) THEN split(product_instance_type, '.')[1] ELSE product_instance_type_family END) product_instance_type_family
-      , cur.product_physical_processor
-      , SUM((cur.line_item_usage_amount * CAST(cur.product_vcpu AS double))) vcpu_hours
-      , SUM(susTag.business_metric) tag_business_metric
-      , SUM(susAcc.business_metric) account_business_metric
+      CREATE OR REPLACE VIEW ${athena_database_name}.account_map AS
+      SELECT DISTINCT
+        line_item_usage_account_id account_id
+      , MAX_BY(bill_payer_account_id, line_item_usage_start_date) parent_account_id
+      , MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_name
+      , MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_email_id
       FROM
-        ((${athena_database_name}.${cur_table_name} cur
-      LEFT JOIN tag_business_metrics susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
-      LEFT JOIN acc_business_metrics susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
-      WHERE ((((cur.product_product_family = 'Compute Instance') OR (cur.product_product_family = 'Dedicated Host')) AND (cur.line_item_product_code = 'AmazonEC2') AND (cur.line_item_operation LIKE 'RunInstances%') AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage', 'DiscountedUsage'))) AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '17' MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '17' MONTH))))
-      GROUP BY 1, 2, 3, 4, 5, 6, 7
+        "${cur_table_name}"
+      GROUP BY line_item_usage_account_id
   sus_idle_elb:
     dependsOn:
       views:
@@ -847,6 +1156,55 @@ views:
          GROUP BY line_item_resource_id, bill_billing_period_start_date, product_region, pricing_unit, line_item_usage_account_id, bill_payer_account_id, 7
       )
       WHERE ((usage_per_resource_and_pricing_unit > 336) AND (pricing_unit_per_resource = 1))
+  sus_compute_ec2:
+    parameters:
+      tag:
+        type: 'cur.tag_and_cost_category_fields'
+        default: resource_tags_user_application
+        description: "Enter tag name that is used to categorize workloads"
+        global: True
+    dependsOn:
+      views:
+      - sus_buss_kpi
+      cur: true
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.sus_compute_ec2 AS
+      WITH
+        tag_business_metrics AS (
+         SELECT
+           line_item_usage_start_date
+         , tagvalue
+         , SUM(buss) business_metric
+         FROM
+           ${athena_database_name}.sus_buss_kpi
+         GROUP BY line_item_usage_start_date, tagvalue
+      )
+      , acc_business_metrics AS (
+         SELECT
+           line_item_usage_start_date
+         , linkedaccountvalue
+         , SUM(buss) business_metric
+         FROM
+           ${athena_database_name}.sus_buss_kpi
+         GROUP BY line_item_usage_start_date, linkedaccountvalue
+      )
+      SELECT
+        cur.bill_payer_account_id
+      , cur.line_item_usage_account_id
+      , cur.line_item_usage_start_date
+      , ${tag} resource_tags_user_application
+      , cur.line_item_product_code
+      , (CASE WHEN ((product_instance_type_family IS NULL) OR (product_instance_type_family = '')) THEN split(product_instance_type, '.')[1] ELSE product_instance_type_family END) product_instance_type_family
+      , cur.product_physical_processor
+      , SUM((cur.line_item_usage_amount * CAST(cur.product_vcpu AS double))) vcpu_hours
+      , SUM(susTag.business_metric) tag_business_metric
+      , SUM(susAcc.business_metric) account_business_metric
+      FROM
+        ((${cur_table_name} cur
+      LEFT JOIN tag_business_metrics susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
+      LEFT JOIN acc_business_metrics susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
+      WHERE ((((cur.product_product_family = 'Compute Instance') OR (cur.product_product_family = 'Dedicated Host')) AND (cur.line_item_product_code = 'AmazonEC2') AND (cur.line_item_operation LIKE 'RunInstances%') AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage', 'DiscountedUsage'))) AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '17' MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '17' MONTH))))
+      GROUP BY 1, 2, 3, 4, 5, 6, 7
   sus_carbon_emissions_view:
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.sus_carbon_emissions_view AS
@@ -857,6 +1215,16 @@ views:
       , 0E0 mbmcarbon
       , 'no-data' paceproductcode
       , 'no-data' regioncode
+      WHERE (1 = 0)
+  sus_carbon_emissions_longform:
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.sus_carbon_emissions_longform AS
+      SELECT
+        'gridmixinefficiency' metric
+      , 0E0 value
+      , '123456789789' accountid
+      , '2024-03-07' querydate
+      , '2020-12-01' startdate
       WHERE (1 = 0)
   sus_storage_athena:
     dependsOn:
@@ -1121,10 +1489,77 @@ views:
          GROUP BY line_item_resource_id, bill_billing_period_start_date, product_region, pricing_unit, line_item_usage_account_id, bill_payer_account_id, 7
       )
       WHERE ((usage_per_resource_and_pricing_unit > 336) AND (pricing_unit_per_resource = 1))
-schedules:
-  default:
-    ScheduleId: cid
-    ScheduleFrequency:
-      Interval: DAILY
-      TimeOfTheDay: '02:00-05:00'
-    RefreshType: FULL_REFRESH
+  sus_compute_split:
+    dependsOn:
+      views:
+      - sus_buss_kpi
+      - sus_compute_ec2
+      cur: true
+      parameters:
+       tag:
+        type: 'cur.tag_and_cost_category_fields'
+        default: resource_tags_user_application
+        description: "Enter tag name that is used to categorize workloads"
+        global: True
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.sus_compute_split AS
+      WITH
+        tag_business_metrics AS (
+         SELECT
+           line_item_usage_start_date
+         , tagvalue
+         , SUM(buss) business_metric
+         FROM
+           ${athena_database_name}.sus_buss_kpi
+         GROUP BY line_item_usage_start_date, tagvalue
+      )
+      , acc_business_metrics AS (
+         SELECT
+           line_item_usage_start_date
+         , linkedaccountvalue
+         , SUM(buss) business_metric
+         FROM
+           ${athena_database_name}.sus_buss_kpi
+         GROUP BY line_item_usage_start_date, linkedaccountvalue
+      )
+      SELECT
+        cur.bill_payer_account_id
+      , cur.line_item_usage_account_id
+      , cur.line_item_usage_start_date
+      , ${tag} resource_tags_user_application
+      , cur.line_item_product_code
+      , SUM(cur.line_item_usage_amount) vcpu_hours
+      , SUM(susTag.business_metric) tag_business_metric
+      , SUM(susAcc.business_metric) account_business_metric
+      FROM
+        ((${athena_database_name}.${cur_table_name} cur
+      LEFT JOIN tag_business_metrics susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
+      LEFT JOIN acc_business_metrics susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
+      WHERE (((cur.line_item_usage_type LIKE '%Fargate-vCPU-Hours:perCPU') AND (cur.line_item_product_code IN ('AmazonEKS', 'AmazonECS')) AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage'))) AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '17' MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '17' MONTH))))
+      GROUP BY 1, 2, 3, 4, 5
+      UNION ALL SELECT
+        cur.bill_payer_account_id
+      , cur.line_item_usage_account_id
+      , cur.line_item_usage_start_date
+      , ${tag} resource_tags_user_application
+      , cur.line_item_product_code
+      , SUM(((cur.line_item_usage_amount / 1769) / 3600)) vcpu_hours
+      , SUM(susTag.buss) tag_business_metric
+      , SUM(susAcc.buss) account_business_metric
+      FROM
+        ((${athena_database_name}.${cur_table_name} cur
+      LEFT JOIN ${athena_database_name}.sus_buss_kpi susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
+      LEFT JOIN ${athena_database_name}.sus_buss_kpi susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
+      WHERE (((cur.line_item_product_code = 'AWSLambda') AND (cur.line_item_usage_type LIKE '%Lambda-GB-Second') AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage'))) AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '7' MONTH))))
+      GROUP BY 1, 2, 3, 4, 5
+      UNION ALL SELECT
+        ec2.bill_payer_account_id
+      , ec2.line_item_usage_account_id
+      , ec2.line_item_usage_start_date
+      , ec2.resource_tags_user_application
+      , ec2.line_item_product_code
+      , ec2.vcpu_hours
+      , ec2.tag_business_metric
+      , ec2.account_business_metric
+      FROM
+        ${athena_database_name}.sus_compute_ec2 ec2
