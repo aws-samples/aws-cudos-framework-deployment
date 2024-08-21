@@ -1,16 +1,16 @@
 /*Replace customer_all in row 71 with your CUR table name */
-	CREATE OR REPLACE VIEW kpi_instance_all AS 
-		WITH 
+	CREATE OR REPLACE VIEW kpi_instance_all AS
+		WITH
 		-- Step 1: Add mapping view
 		map AS(SELECT *
 		FROM account_map),
-		
-		-- Step 2: Add instance mapping data		
+
+		-- Step 2: Add instance mapping data
 		instance_map AS (SELECT *
 			  FROM
 				kpi_instance_mapping),
-				
-		-- Step 3: Filter CUR to return all usage data		
+
+		-- Step 3: Filter CUR to return all usage data
 		  cur_all AS (SELECT DISTINCT
 			 split_part("billing_period", '-', 1) "year"
 		   , split_part("billing_period", '-', 2) "month"
@@ -22,7 +22,7 @@
 		   , "line_item_line_item_type" "charge_type"
 		   , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN 'SavingsPlan' WHEN ("reservation_reservation_a_r_n" <> '') THEN 'Reserved' WHEN ("line_item_usage_type" LIKE '%Spot%') THEN 'Spot' ELSE 'OnDemand' END) "purchase_option"
 		   , "line_item_product_code" "product_code"
-		   , CASE 
+		   , CASE
 				WHEN ("line_item_product_code" in ('AmazonSageMaker','MachineLearningSavingsPlans')) THEN 'Machine Learning'
 				WHEN ("line_item_product_code" in ('AmazonEC2','AmazonECS','AmazonEKS','AWSLambda','ComputeSavingsPlans')) THEN 'Compute'
 				WHEN (("line_item_product_code" = 'AmazonElastiCache')) THEN 'ElastiCache'
@@ -30,9 +30,9 @@
 				WHEN (("line_item_product_code" = 'AmazonRDS')) THEN 'RDS'
 				WHEN (("line_item_product_code" = 'AmazonRedshift')) THEN 'Redshift'
 				WHEN (("line_item_product_code" = 'AmazonDynamoDB') AND (line_item_operation = 'CommittedThroughput')) THEN 'DynamoDB'
-				ELSE 'Other' END "commit_service_group"		
-			, savings_plan_offering_type "savings_plan_offering_type"		
-		   , product_region "region"
+				ELSE 'Other' END "commit_service_group"
+			, savings_plan_offering_type "savings_plan_offering_type"
+		   , product['region'] "region"
 		   , line_item_operation "operation"
 		   , line_item_usage_type "usage_type"
 		   , CASE WHEN ("line_item_product_code" in ('AmazonRDS','AmazonElastiCache')) THEN "lower"("split_part"("product_instance_type", '.', 2)) ELSE "lower"("split_part"("product_instance_type", '.', 1)) END "instance_type_family"
@@ -42,36 +42,36 @@
 		   , product['physical_processor'] "processor"
 		   , (CASE WHEN (("line_item_line_item_type" LIKE '%Usage%') AND (product['physical_processor'] LIKE '%Graviton%')) THEN 'Graviton' WHEN (("line_item_line_item_type" LIKE '%Usage%') AND (product['physical_processor'] LIKE '%AMD%')) THEN 'AMD' 
 			WHEN line_item_product_code IN ('AmazonES','AmazonElastiCache') AND (product_instance_type LIKE '%6g%' OR product_instance_type LIKE '%7g%' OR product_instance_type LIKE '%4g%') THEN 'Graviton'
-			WHEN line_item_product_code IN ('AWSLambda') AND line_item_usage_type LIKE '%ARM%' THEN 'Graviton'		
+			WHEN line_item_product_code IN ('AWSLambda') AND line_item_usage_type LIKE '%ARM%' THEN 'Graviton'
 			WHEN line_item_usage_type LIKE '%Fargate%' AND line_item_usage_type LIKE '%ARM%' THEN 'Graviton'
 		   ELSE 'Other' END) "adjusted_processor"
-		   , product_database_engine "database_engine"
-		   , product_deployment_option "deployment_option" 
-		   , product_license_model "license_model"
-		   , product_cache_engine "cache_engine"
+		   , product['database_engine'] "database_engine"
+		   , product['deployment_option'] "deployment_option"
+		   , product['license_model'] "license_model"
+		   , product['cache_engine'] "cache_engine"
 		   , "sum"("line_item_usage_amount") "usage_quantity"
-		   , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN ("savings_plan_savings_plan_effective_cost") 
-			  WHEN ("line_item_line_item_type" = 'SavingsPlanRecurringFee') THEN (("savings_plan_total_commitment_to_date" - "savings_plan_used_commitment")) 
+		   , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN ("savings_plan_savings_plan_effective_cost")
+			  WHEN ("line_item_line_item_type" = 'SavingsPlanRecurringFee') THEN (("savings_plan_total_commitment_to_date" - "savings_plan_used_commitment"))
 			  WHEN ("line_item_line_item_type" = 'SavingsPlanNegation') THEN 0
 			  WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN 0
-			  WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN ("reservation_effective_cost")  
+			  WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN ("reservation_effective_cost")
 			  WHEN ("line_item_line_item_type" = 'RIFee') THEN (("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee"))
 			  WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE ("line_item_unblended_cost" ) END)) "amortized_cost"
-		   , "sum"((CASE 
-				WHEN ("line_item_usage_type" LIKE '%Spot%' AND "pricing_public_on_demand_cost" > 0) THEN "pricing_public_on_demand_cost" 
- 				WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN ("pricing_public_on_demand_cost") 
-			  WHEN ("line_item_line_item_type" = 'SavingsPlanRecurringFee') THEN ("savings_plan_total_commitment_to_date" - "savings_plan_used_commitment") 
+		   , "sum"((CASE
+				WHEN ("line_item_usage_type" LIKE '%Spot%' AND "pricing_public_on_demand_cost" > 0) THEN "pricing_public_on_demand_cost"
+ 				WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN ("pricing_public_on_demand_cost")
+			  WHEN ("line_item_line_item_type" = 'SavingsPlanRecurringFee') THEN ("savings_plan_total_commitment_to_date" - "savings_plan_used_commitment")
 			  WHEN ("line_item_line_item_type" = 'SavingsPlanNegation') THEN 0
 			  WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN 0
-			  WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN ("pricing_public_on_demand_cost")  
+			  WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN ("pricing_public_on_demand_cost")
 			  WHEN ("line_item_line_item_type" = 'RIFee') THEN ("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee")
 			  WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE ("line_item_unblended_cost" ) END)) "adjusted_amortized_cost"
 		   , "sum"("pricing_public_on_demand_cost") "public_cost"
 		   FROM "${cur2_database}"."${cur2_table_name}"
 		   WHERE
 			(CAST("concat"("billing_period", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '3' MONTH)
-		   AND ("bill_payer_account_id" <>'') 
-		   AND ("line_item_resource_id" <>'') 
+		   AND ("bill_payer_account_id" <>'')
+		   AND ("line_item_resource_id" <>'')
 		   AND ("product_servicecode" <> 'AWSDataTransfer') 
 		   AND ("line_item_usage_type" NOT LIKE '%DataXfer%')
 		   AND (("line_item_line_item_type" LIKE '%Usage%') OR ("line_item_line_item_type" = 'RIFee') OR ("line_item_line_item_type" = 'SavingsPlanRecurringFee')) 
@@ -168,7 +168,7 @@
 				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (lower(platform) NOT LIKE '%window%') AND (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_graviton <> '') AND adjusted_processor = 'AMD') THEN (amortized_cost * 1E-1) ELSE 0 END "ec2_graviton_potential_savings"  /*Uses 20% savings estimate for intel and 10% for AMD*/ 				
 		   , CASE 
 				WHEN ("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonEC2') AND ("instance_type" <> '') AND ("operation" LIKE '%RunInstances%') AND (((purchase_option = 'OnDemand') OR (savings_plan_offering_type = 'ComputeSavingsPlans')) AND (adjusted_processor <> 'Graviton') AND (latest_amd <> '') AND adjusted_processor <> 'AMD') THEN (amortized_cost * 1E-1) ELSE 0 END "ec2_amd_potential_savings"  /*Uses 10% savings estimate for intel and 0% for Graviton*/
-/*RDS*/			
+/*RDS*/
 		   , CASE 
 				WHEN (("charge_type" LIKE '%Usage%') AND ("product_code" = 'AmazonRDS') AND ("instance_type" <> '')) THEN adjusted_amortized_cost ELSE 0 END "rds_all_cost"	 
 		   , CASE 
