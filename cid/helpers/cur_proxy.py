@@ -398,7 +398,7 @@ class ProxyView():
             if field in cur2_maps:
                 if field not in self.exposed_maps:
                     self.exposed_maps[field] = set()
-                maps = re.findall(f'MAP\(ARRAY\[.+?\], ARRAY\[.+?\]\) {field}', _current_sql)
+                maps = re.findall(fr'MAP\(ARRAY\[.+?\], ARRAY\[.+?\]\) {field}', _current_sql)
                 if not maps:
                     logger.warning(f'Cannot find map {field} definition in the view {self.name}. It must be defined as MAP.')
                     continue

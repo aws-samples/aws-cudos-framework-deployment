@@ -258,9 +258,10 @@ class CUR(AbstractCUR):
     def ensure_column(self, column: str, column_type: str=None):
         """ Ensure column is in the cur. If it is not there - add column """
         column = column.lower()
+        column = column.split('[')[0]
         if self.column_exists(column):
             return
-
+        logger.trace(f'trying to add to CUR following column: {column}')
         table_can_be_updated = False
         # Check Crawler Behavior - if it has a Configuration/CrawlerOutput/TablesAddOrUpdateBehavior != MergeNewColumns, it will override columns
         crawler_name = self.metadata.get('Parameters', {}).get('UPDATED_BY_CRAWLER')
@@ -331,6 +332,7 @@ class ProxyCUR(AbstractCUR):
             if self.cur.metadata.get('TableType') == 'EXTERNAL_TABLE':
                 try:
                     equivalent_columns = [self.proxy.source_column_equivalent(col) for col in columns]
+                    logger.trace(equivalent_columns = '{equivalent_columns}')
                     self.cur.ensure_columns(list(set(equivalent_columns)))
                     # add field from underlying cur to the proxy
                     for item in self.cur._metadata.get('Columns', []):
