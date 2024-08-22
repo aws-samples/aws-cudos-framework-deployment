@@ -357,6 +357,10 @@ class ProxyView():
         self.current_cur_version = self.cur.version
         logger.debug(f'CUR proxy from {self.current_cur_version } to {self.target_cur_version }')
         self.fields_to_expose = list(set(default_columns[self.target_cur_version]))
+        # add tags in cur2 proxy
+        if cur.version.startswith('1') and target_cur_version.startswith('2') :
+            for field in cur.tag_and_cost_category_fields:
+                self.fields_to_expose.append(re.sub("(resource_tags|cost_category)_(.+)", r"\1['\2']", field))
         self.athena = self.cur.athena
         self.name = f'cur{self.target_cur_version}_proxy'
         self.exposed_fields = []
@@ -378,7 +382,6 @@ class ProxyView():
             logger.debug(f'exposed fields: {self.exposed_fields}')
         if not self.exposed_fields:
             return
-
         # If we have existing fields, we need to read also all map definitions from the SQL of the existing view
         def _parse_mapping_string(mapping_string):
             ''' read keys and values from definition
@@ -450,8 +453,6 @@ class ProxyView():
             return field.split('[')[0]
         return field
 
-
-
     def get_sql_expression(self, field, field_type):
         """ Given a field of cur return an SQL representation of the field in the target cur system. Takes into account existence of fields in the current cur.
         field: target CUR field
@@ -465,7 +466,7 @@ class ProxyView():
             return field
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR1 to CUR2
             if field_type.lower().startswith('map'):
-                self.source_column_equivalent(field) # Do not remove this
+                self.source_column_equivalent(field) # Do not remove this. needed to populate self.fields_to_expose_in_maps
                 map_field = field.split('[')[0]
                 map_mapping = {}
                 keys_set = set(self.exposed_maps.get(field, set()))
@@ -507,10 +508,13 @@ class ProxyView():
             target_field = field.split('[')[0] # take a first part only
             field_type = self.cur.get_type_of_column(target_field)
             mapped_expression = self.get_sql_expression(field, field_type)
+            logging.critical(f'mapped_expression({field}) = {mapped_expression}')
             requirement = mapped_expression.split('[')[0]
-            if field_type.lower().startswith('map') or (not re.match(r'^[a-zA-Z0-9_]+$', requirement) or self.cur.column_exists(requirement)):
-                expression = mapped_expression
-            else:
+            if (field_type.lower().startswith('map')                # - a field is a map
+                or not re.match(r'^[a-zA-Z0-9_]+$', requirement)    # - a result field is not a regular field but is an expression
+                or self.cur.column_exists(requirement)):            # - a result exists in the source cur
+                expression = mapped_expression                      # then take resulting expression as is
+            else:                                                   # the filed is NOT in the source CUR so we set it to a placeholder 
                 if field_type not in empty:
                     raise RuntimeError(f'{field_type} not in empty list')
                 expression = empty.get(field_type, 'null')

@@ -177,7 +177,12 @@ class AbstractCUR(CidBase):
     @property
     def tag_and_cost_category_fields(self) -> list:
         """ Returns all tags and cost category fields. """
-        return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
+        if self.version == '1':
+            return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
+        elif self.version == '2':
+            raise NotImplemented('Need to run a query to get all fields of resource_tags')
+        else:
+            raise NotImplemented('cur version not known')
 
 
 class CUR(AbstractCUR):
@@ -286,6 +291,7 @@ class CUR(AbstractCUR):
 
         # if a required column is not there and not ri/sp -> stop
         logger.warning(f"Column '{column}' is not in CUR ({self.table_name}).")
+
 
 
 class ProxyCUR(AbstractCUR):
