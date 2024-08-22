@@ -508,13 +508,13 @@ class ProxyView():
             target_field = field.split('[')[0] # take a first part only
             field_type = self.cur.get_type_of_column(target_field)
             mapped_expression = self.get_sql_expression(field, field_type)
-            logging.critical(f'mapped_expression({field}) = {mapped_expression}')
+            #logging.debug(f'cur_proxy: mapped_expression({field}) = {mapped_expression}')
             requirement = mapped_expression.split('[')[0]
             if (field_type.lower().startswith('map')                # - a field is a map
                 or not re.match(r'^[a-zA-Z0-9_]+$', requirement)    # - a result field is not a regular field but is an expression
                 or self.cur.column_exists(requirement)):            # - a result exists in the source cur
                 expression = mapped_expression                      # then take resulting expression as is
-            else:                                                   # the filed is NOT in the source CUR so we set it to a placeholder 
+            else:                                                   # the filed is NOT in the source CUR so we set it to a placeholder
                 if field_type not in empty:
                     raise RuntimeError(f'{field_type} not in empty list')
                 expression = empty.get(field_type, 'null')
