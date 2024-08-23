@@ -19,10 +19,10 @@ cur1to2_mapping = {
     'savings_plan_end_time': r'''TRY(DATE_FORMAT("savings_plan_end_time", '%Y-%m-%dT%H:%i:%s.000Z'))''',
     'reservation_start_time': r'''TRY(DATE_FORMAT("reservation_start_time", '%Y-%m-%dT%H:%i:%s.000Z'))''',
     'reservation_end_time': r'''TRY(DATE_FORMAT("reservation_end_time", '%Y-%m-%dT%H:%i:%s.000Z'))''',
-    'TRY(from_iso8601_timestamp("savings_plan_start_time"))': "savings_plan_start_time",
-    'TRY(from_iso8601_timestamp("savings_plan_end_time"))': "savings_plan_end_time",
-    'TRY(from_iso8601_timestamp("reservation_start_time"))': "reservation_start_time",
-    'TRY(from_iso8601_timestamp("reservation_end_time"))': "reservation_end_time",
+    'TRY(CAST(from_iso8601_timestamp("savings_plan_start_time") as timestamp))': "savings_plan_start_time",
+    'TRY(CAST(from_iso8601_timestamp("savings_plan_end_time") as timestamp))': "savings_plan_end_time",
+    'TRY(CAST(from_iso8601_timestamp("reservation_start_time") as timestamp))': "reservation_start_time",
+    'TRY(CAST(from_iso8601_timestamp("reservation_end_time") as timestamp))': "reservation_end_time",
     'bill_payer_account_id': 'bill_payer_account_id',
     'bill_billing_period_start_date': 'bill_billing_period_start_date',
     'bill_billing_period_end_date': 'bill_billing_period_end_date',
@@ -75,12 +75,10 @@ cur1to2_mapping = {
     'reservation_amortized_upfront_cost_for_usage': 'reservation_amortized_upfront_cost_for_usage',
     'reservation_amortized_upfront_fee_for_billing_period': 'reservation_amortized_upfront_fee_for_billing_period',
     'reservation_effective_cost': 'reservation_effective_cost',
-    'reservation_end_time': 'reservation_end_time',
     'reservation_modification_status': 'reservation_modification_status',
     'reservation_normalized_units_per_reservation': 'reservation_normalized_units_per_reservation',
     'reservation_number_of_reservations': 'reservation_number_of_reservations',
     'reservation_recurring_fee_for_usage': 'reservation_recurring_fee_for_usage',
-    'reservation_start_time': 'reservation_start_time',
     'reservation_subscription_id': 'reservation_subscription_id',
     'reservation_total_reserved_normalized_units': 'reservation_total_reserved_normalized_units',
     'reservation_total_reserved_units': 'reservation_total_reserved_units',
@@ -464,7 +462,7 @@ class ProxyView():
         field: target CUR field
         returns: CUR field SQL representation. Can be NULL
         """
-        if field in self.cur.fields: # Same field name is more then common case so try it first
+        if field in self.cur.fields and not field.endswith('_time'): # Same field name is more then common case so try it first _date have different fields
             return field
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR2
             return field.split('[')[0]
@@ -493,9 +491,9 @@ class ProxyView():
                 '''
             cur2to1_mapping = {value: key for key, value in cur1to2_mapping.items()}
             if field in cur2to1_mapping:
-                return f'{cur2to1_mapping.get(field, field)}'
+                return cur2to1_mapping[field]
             else:
-                raise NotImplementedError(f'WARNING: {field} has not known equivalent')
+                raise NotImplementedError(f'CUR1 field {field} has no known equivalent')
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('1'):
             if field.startswith('resource_tags_'):
                 return f"resource_tags['{field[len('resource_tags_'):]}']"
@@ -514,7 +512,7 @@ class ProxyView():
             target_field = field.split('[')[0] # take a first part only
             field_type = self.cur.get_type_of_column(target_field)
             mapped_expression = self.get_sql_expression(field, field_type)
-            #logging.debug(f'cur_proxy: mapped_expression({field}) = {mapped_expression}')
+            logger.trace(f'cur_proxy: mapped_expression({field}) = {mapped_expression}')
             requirement = mapped_expression.split('[')[0]
             if (field_type.lower().startswith('map')                # - a field is a map
                 or not re.match(r'^[a-zA-Z0-9_]+$', requirement)    # - a result field is not a regular field but is an expression

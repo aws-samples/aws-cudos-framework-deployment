@@ -332,7 +332,7 @@ class ProxyCUR(AbstractCUR):
             if self.cur.metadata.get('TableType') == 'EXTERNAL_TABLE':
                 try:
                     equivalent_columns = [self.proxy.source_column_equivalent(col) for col in columns]
-                    logger.trace(equivalent_columns = '{equivalent_columns}')
+                    logger.trace(f'equivalent_columns = {dict(zip(columns,equivalent_columns))}')
                     self.cur.ensure_columns(list(set(equivalent_columns)))
                     # add field from underlying cur to the proxy
                     for item in self.cur._metadata.get('Columns', []):
