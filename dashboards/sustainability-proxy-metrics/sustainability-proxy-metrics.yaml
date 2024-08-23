@@ -1274,9 +1274,53 @@ views:
       LEFT JOIN ACC_KPI_PER_DAY susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((line_item_operation LIKE 'CreateVolume%') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
       GROUP BY bill_payer_account_id, 2, line_item_usage_account_id, month, year, cur.line_item_usage_start_date, line_item_operation
+  sus_aws_regions:
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.sus_aws_regions AS
+       SELECT *
+      FROM
+        (
+       VALUES
+           ROW ('ap-northeast-1', 'Japan', 'Tokyo', '35.64', '139.76', 1)
+         , ROW ('ap-south-1', 'India', 'Mumbai', '19.08', '72.88', 1)
+         , ROW ('cn-northwest-1', 'China', 'Ningxia', '38.47', '106.26', 1)
+         , ROW ('eu-central-1', 'Germany', 'Frankfurt', '50.11', '8.68', 1)
+         , ROW ('eu-north-1', 'Sweden', 'Stockholm', '59.33', '18.07', 1)
+         , ROW ('eu-west-1', 'Ireland', 'Dublin', '53.28', '-7.71', 1)
+         , ROW ('us-east-2', 'USA', 'Ohio', '40.36', '-82.91', 1)
+         , ROW ('us-gov-west-1', 'USA', 'Oregon', '39.53', '-119.88', 1)
+         , ROW ('us-west-1', 'USA', 'N. California', '36.55', '-119.89', 1)
+         , ROW ('us-west-2', 'USA', 'Oregon', '43.82', '-120.33', 1)
+         , ROW ('ap-east-1', 'Hong Kong', 'Hong Kong', '22.28', '114.15', 0)
+         , ROW ('ap-northeast-2', 'South Korea', 'Seoul', '37.72', '126.04', 0)
+         , ROW ('ap-northeast-3', 'Japan', 'Osaka', '34.69', '135.5', 1)
+         , ROW ('ap-southeast-2', 'Australia', 'Sydney', '-33.88', '151.23', 0)
+         , ROW ('ca-central-1', 'Canada', 'Montreal', '44.08', '-77.42', 1)
+         , ROW ('cn-north-1', 'China', 'Beijing', '39.91', '116.41', 1)
+         , ROW ('eu-west-3', 'France', 'Paris', '48.85', '2.35', 1)
+         , ROW ('me-south-1', 'Bahrain', 'Bahrain', '26.11', '50.50', 0)
+         , ROW ('sa-east-1', 'Brazil', 'Sao Paulo', '-23.37', '-46.63', 0)
+         , ROW ('us-gov-east-1', 'USA', 'Ohio', '40.4897', '-81.45', 1)
+         , ROW ('ap-southeast-1', 'Singapore', 'Singapore', '1.35', '103.86', 0)
+         , ROW ('eu-west-2', 'UK', 'London', '51.53', '0.12', 1)
+         , ROW ('us-east-1', 'USA', 'Washington DC', '38.80', '-77.11', 1)
+         , ROW ('eu-south-1', 'Italy', 'Milan', '45.46', '9.18', 1)
+         , ROW ('af-south-1', 'Africa', 'Cape Town', '-33.91', '18.42', 0)
+         , ROW ('ap-south-2', 'India', 'Hyderabad', '17.39', '78.49', 1)
+         , ROW ('eu-central-2', 'Switzerland', 'Zurich', '47.37', '8.54', 1)
+         , ROW ('eu-south-2', 'Spain', 'Madrid', '40.41', '-3.70',1)
+         , ROW ('ap-southeast-3', 'Indonesia', 'Jakarta', '-6.175110', '106.865036',0)
+        , ROW ('ap-southeast-5', 'Malaysia', 'Kuala Lumpur', '3.139003', '101.686852',0)
+        , ROW ('ap-southeast-4', 'Australia', 'Melbourne', '-37.813629', '144.963058',0)
+        , ROW ('ca-west-1', 'Canada', 'Calgary', '51.048615', '-114.070847',0)
+        , ROW ('il-central-1', 'Israel', 'Tel Aviv', '32.085300', '34.781769',0)
+        , ROW ('il-central-1', 'Middle East' , 'UAE', '25.276987', '55.296249',0)
+      )  ignored_table_name (region_name, region_country, region_city, region_latitude, region_longitude, is95PercentRenewable)
   sus_geo_region_athena:
     dependsOn:
       cur: true
+      views:
+      - sus_aws_regions
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.sus_geo_region_athena AS
       SELECT
