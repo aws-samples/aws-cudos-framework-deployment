@@ -282,7 +282,7 @@ def create_cur_proxy(ctx, cur_version, fields, **kwargs):
      --athena-database TEXT      Athena database to create proxy
     """
 
-    ctx.obj.create_cur_proxy(**kwargs)
+    ctx.obj.create_cur_proxy(cur_version=cur_version, fields=fields, **kwargs)
 
 
 @click.option('-v', '--verbose', count=True)

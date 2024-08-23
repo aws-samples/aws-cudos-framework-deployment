@@ -16,7 +16,7 @@ FROM
    , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_end_time"           WHEN ("reservation_reservation_a_r_n" <> '') THEN "reservation_end_time"          ELSE null END) "ri_sp_end_date"
    , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_purchase_term"      WHEN ("reservation_reservation_a_r_n" <> '') THEN "pricing_lease_contract_length" ELSE ''   END) "ri_sp_term"
    , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_offering_type"      WHEN ("reservation_reservation_a_r_n" <> '') THEN "pricing_offering_class"        ELSE ''   END) "ri_sp_offering"
-   , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_payment_option"     WHEN ("reservation_reservation_a_r_n" <> '') THEN "pricing_purchase_option"       ELSE ''   END) "ri_sp_Payment"
+   , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_payment_option"     WHEN ("reservation_reservation_a_r_n" <> '') THEN "pricing_purchase_option"       ELSE ''   END) "ri_sp_payment"
    FROM
      "${cur2_database}"."${cur2_table_name}"
    WHERE (("line_item_line_item_type" = 'RIFee') OR ("line_item_line_item_type" = 'SavingsPlanRecurringFee'))
@@ -28,7 +28,7 @@ LEFT JOIN (
    , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_savings_plan_a_r_n" WHEN ("reservation_reservation_a_r_n" <> '') THEN "reservation_reservation_a_r_n" ELSE '' END) "ri_sp_arn_mapping"
    , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_purchase_term"      WHEN ("reservation_reservation_a_r_n" <> '') THEN "pricing_lease_contract_length" ELSE '' END) "ri_sp_term"
    , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_offering_type"      WHEN ("reservation_reservation_a_r_n" <> '') THEN "pricing_offering_class"        ELSE '' END) "ri_sp_offering"
-   , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_payment_option"     WHEN ("reservation_reservation_a_r_n" <> '') THEN "pricing_purchase_option"       ELSE '' END) "ri_sp_Payment"
+   , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN "savings_plan_payment_option"     WHEN ("reservation_reservation_a_r_n" <> '') THEN "pricing_purchase_option"       ELSE '' END) "ri_sp_payment"
    FROM
      "${cur2_database}"."${cur2_table_name}"
    WHERE (("line_item_line_item_type" = 'DiscountedUsage') OR ("line_item_line_item_type" = 'SavingsPlanCoveredUsage'))

@@ -337,10 +337,10 @@ default_columns = {
 
 # various types require various empty
 empty = {
-    'STRING': 'cast (null as varchar)',
-    'varchar': 'cast (null as varchar)',
-    'DOUBLE': 'cast (null as double)',
-    'TIMESTAMP': 'cast (null as timestamp)',
+    'string': 'cast(null as varchar)',
+    'varchar': 'cast(null as varchar)',
+    'double': 'cast(null as double)',
+    'timestamp': 'cast(null as timestamp)',
 }
 
 cur2_maps = {
@@ -411,40 +411,52 @@ class ProxyView():
                 self.exposed_maps[field].update([key[0] for key in current_map])
         logger.debug(f'{self.exposed_maps}')
 
-    def source_column_equivalent(self, field):
+    def source_column_equivalents(self, field):
         """ Given a field of cur return an equivalent field in the target cur system. This one does not care if field actually exists
         field: target CUR field
         returns: source CUR SQL
+
+        there can be more then one field
         """
-        if field in self.cur.fields: # Same field name is more then common case so try it first
-            return field
+        logger.trace(f'source_column_equivalents {field}')
+        if field in self.cur.fields and not field.endswith('_time'): # Same field name is more then common case so try it first
+            return [field]
 
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR2
-            return field # all the same
+            return [field] # all the same
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('1'): # field from CUR1 to CUR1
-            return field # all the same
+            return [field] # all the same
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('1'): # field from CUR1 to CUR2
             if field not in cur1to2_mapping: #check if this field is in mapping
                 for cur2map in cur2_maps:
                     if field.startswith(cur2map + '_'):
-                        return cur2map
+                        return [cur2map]
                 logger.warning(f"{field} not known field of CUR2. needs to be added in code. Please create a github issue")
             res = cur1to2_mapping.get(field, field)
-            return self.get_field_from_sql(res)
+            return self.get_fields_from_sql(res)
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR1
+            if field.lower() in cur2_maps:
+                return [] # field mapping itself without indication to concrete component
             matches = re.findall(r"(\w+)\['(\w+)'\]", field)
             if matches:
                 map_field, key = matches[0]
                 if map_field not in self.fields_to_expose_in_maps:
                     self.fields_to_expose_in_maps[map_field] = set()
                 self.fields_to_expose_in_maps[map_field].add(key)
-                return f'{map_field}_{key}'
+                logger.trace(f"ret {map_field}_{key}")
+                return [f'{map_field}_{key}']
+
+            #if field.endswith('_time'): # can be
+            #    return self.get_fields_from_sql(field)
+
             cur2to1_mapping = {value: key for key, value in cur1to2_mapping.items()}
             if field not in cur2to1_mapping and field not in cur2_maps:
-                logger.warning(f"{field} not known field of CUR1. needs to be added in code. Please create a github issue")
-            return self.get_field_from_sql(cur2to1_mapping.get(field, field))
+                logger.warning(f"The field '{field}' is not known field of CUR1. needs to be added in code. Please create a github issue")
+            ret =  self.get_fields_from_sql(cur2to1_mapping.get(field, field)) 
+            logger.trace(f"ret {ret}")
+            return ret
 
-    def get_field_from_sql(self, field):
+    def get_fields_from_sql(self, field):
         """ get a sql field from an expression
         ex:
             '''concat('name', "bill_payer_account_id")''' => "bill_payer_account_id"
@@ -452,16 +464,27 @@ class ProxyView():
             plane_fields => plane_fields
         """
         if '"' in field:
-            return field.split('"')[1].split('"')[0]
+            matches = re.findall(r'"(.+_time)"', field)
+            return matches
         if '[' in field:
-            return field.split('[')[0]
-        return field
+            return [field.split('[')[0]]
+        return [field]
 
     def get_sql_expression(self, field, field_type):
         """ Given a field of cur return an SQL representation of the field in the target cur system. Takes into account existence of fields in the current cur.
         field: target CUR field
         returns: CUR field SQL representation. Can be NULL
         """
+        equivalents = self.source_column_equivalents(field) # Do not remove this. needed to populate self.fields_to_expose_in_maps
+        missing_requirements = []
+        for requirement in equivalents:
+            if not self.cur.column_exists(requirement):
+                missing_requirements.append(requirement)
+
+        if missing_requirements:
+            logger.trace(f'field {field} cannot be present as prereqs are missing in source cur: {missing_requirements}')
+            return empty[field_type.lower()]
+
         if field in self.cur.fields and not field.endswith('_time'): # Same field name is more then common case so try it first _date have different fields
             return field
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('2'): # field from CUR2 to CUR2
@@ -470,7 +493,6 @@ class ProxyView():
             return field
         if self.current_cur_version.startswith('1') and self.target_cur_version.startswith('2'): # field from CUR1 to CUR2
             if field_type.lower().startswith('map'):
-                self.source_column_equivalent(field) # Do not remove this. needed to populate self.fields_to_expose_in_maps
                 map_field = field.split('[')[0]
                 map_mapping = {}
                 keys_set = set(self.exposed_maps.get(field, set()))
@@ -509,19 +531,20 @@ class ProxyView():
         logger.trace(f'all_target_fields = {all_target_fields}')
         lines = {}
         for field in all_target_fields:
-            target_field = field.split('[')[0] # take a first part only
-            field_type = self.cur.get_type_of_column(target_field)
-            mapped_expression = self.get_sql_expression(field, field_type)
+            target_field = self.get_fields_from_sql(field)[0]
+            target_field_type = self.cur.get_type_of_column(target_field, self.target_cur_version)
+            logger.trace(f'get_sql_expression {field} {target_field_type}')
+            mapped_expression = self.get_sql_expression(field, target_field_type) #
             logger.trace(f'cur_proxy: mapped_expression({field}) = {mapped_expression}')
-            requirement = mapped_expression.split('[')[0]
-            if (field_type.lower().startswith('map')                # - a field is a map
-                or not re.match(r'^[a-zA-Z0-9_]+$', requirement)    # - a result field is not a regular field but is an expression
-                or self.cur.column_exists(requirement)):            # - a result exists in the source cur
+            requirements = self.source_column_equivalents(target_field)
+            missing_regs = [r for r in requirements if not self.cur.column_exists(r)]
+            if not missing_regs:
                 expression = mapped_expression                      # then take resulting expression as is
             else:                                                   # the filed is NOT in the source CUR so we set it to a placeholder
-                if field_type not in empty:
-                    raise RuntimeError(f'{field_type} not in empty list')
-                expression = empty.get(field_type, 'null')
+                logger.warning(f'missing requirements for field {field}: {missing_regs}. Setting as empty')
+                if target_field_type.lower() not in empty:
+                    raise RuntimeError(f'{target_field_type} not in empty list')
+                expression = empty.get(target_field_type.lower(), 'null')
             lines[target_field] = expression # for map we will take the latest
         select_block = '\n                ,'.join([f'{expression} {field}' for field, expression in sorted(lines.items())])
         query = (f'''
@@ -538,3 +561,16 @@ class ProxyView():
 
     def get_table_metadata(self):
         return self.athena.get_table_metadata(self.name)
+
+
+def _experiment():
+    ''' if you want to play with Proxy CUR you can run following code
+    '''
+    import boto3
+    from cid.helpers.cur import ProxyCUR
+    from cid.helpers import Athena,Glue
+    from cid.helpers.cur import CUR
+    cur = CUR(athena=Athena(session=boto3.session.Session()),glue=Glue(session=boto3.session.Session()))
+    proxy = ProxyCUR(cur=cur, target_cur_version='2')
+
+    

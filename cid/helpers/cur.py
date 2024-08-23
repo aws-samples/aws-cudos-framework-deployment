@@ -101,7 +101,7 @@ class AbstractCUR(CidBase):
         """ Return version of CUR """
         return '2' if 'bill_payer_account_name' in self.fields else '1'
 
-    def get_type_of_column(self, column: str):
+    def get_type_of_column(self, column: str, version=None):
         """ Return an Athena type of a given non existent CUR column """
         if column.startswith('cost_category_') or column.startswith('resource_tags_'):
             return 'STRING'
@@ -109,6 +109,8 @@ class AbstractCUR(CidBase):
             if column.endswith(ending):
                 return 'DOUBLE'
         if column.endswith('_date') and not column.endswith('_to_date'):
+            return 'TIMESTAMP'
+        if column.endswith('_time') and (version or self.version) == '2':
             return 'TIMESTAMP'
         special_cases = {
             "cost_category": "MAP",
@@ -331,7 +333,7 @@ class ProxyCUR(AbstractCUR):
         if isinstance(columns, list):
             if self.cur.metadata.get('TableType') == 'EXTERNAL_TABLE':
                 try:
-                    equivalent_columns = [self.proxy.source_column_equivalent(col) for col in columns]
+                    equivalent_columns = sum([self.proxy.source_column_equivalents(col) for col in columns], [])
                     logger.trace(f'equivalent_columns = {dict(zip(columns,equivalent_columns))}')
                     self.cur.ensure_columns(list(set(equivalent_columns)))
                     # add field from underlying cur to the proxy
