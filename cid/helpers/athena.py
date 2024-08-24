@@ -534,6 +534,7 @@ class Athena(CidBase):
         update_view = None
         # first understand if view exists
         self.discover_views([view_name])
+        logger.trace(str(list(self._metadata.keys())))
         if view_name not in self._metadata:
             update_view = True
         else: # view exists

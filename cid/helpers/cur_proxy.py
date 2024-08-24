@@ -15,14 +15,14 @@ cur1to2_mapping = {
     'bill_billing_entity': 'bill_billing_entity',
     'pricing_offering_class': 'pricing_offering_class',
     'bill_bill_type': 'bill_bill_type',
-    'savings_plan_start_time': r'''TRY(DATE_FORMAT("savings_plan_start_time", '%Y-%m-%dT%H:%i:%s.000Z'))''',
-    'savings_plan_end_time': r'''TRY(DATE_FORMAT("savings_plan_end_time", '%Y-%m-%dT%H:%i:%s.000Z'))''',
-    'reservation_start_time': r'''TRY(DATE_FORMAT("reservation_start_time", '%Y-%m-%dT%H:%i:%s.000Z'))''',
-    'reservation_end_time': r'''TRY(DATE_FORMAT("reservation_end_time", '%Y-%m-%dT%H:%i:%s.000Z'))''',
-    'TRY(CAST(from_iso8601_timestamp("savings_plan_start_time") as timestamp))': "savings_plan_start_time",
-    'TRY(CAST(from_iso8601_timestamp("savings_plan_end_time") as timestamp))': "savings_plan_end_time",
-    'TRY(CAST(from_iso8601_timestamp("reservation_start_time") as timestamp))': "reservation_start_time",
-    'TRY(CAST(from_iso8601_timestamp("reservation_end_time") as timestamp))': "reservation_end_time",
+    'savings_plan_start_time': r'''DATE_FORMAT("savings_plan_start_time", '%Y-%m-%dT%H:%i:%s.000Z')''',
+    'savings_plan_end_time': r'''DATE_FORMAT("savings_plan_end_time", '%Y-%m-%dT%H:%i:%s.000Z')''',
+    'reservation_start_time': r'''DATE_FORMAT("reservation_start_time", '%Y-%m-%dT%H:%i:%s.000Z')''',
+    'reservation_end_time': r'''DATE_FORMAT("reservation_end_time", '%Y-%m-%dT%H:%i:%s.000Z')''',
+    'CAST(TRY(from_iso8601_timestamp("savings_plan_start_time")) as timestamp)': "savings_plan_start_time",
+    'CAST(TRY(from_iso8601_timestamp("savings_plan_end_time")) as timestamp)': "savings_plan_end_time",
+    'CAST(TRY(from_iso8601_timestamp("reservation_start_time")) as timestamp)': "reservation_start_time",
+    'CAST(TRY(from_iso8601_timestamp("reservation_end_time")) as timestamp)': "reservation_end_time",
     'bill_payer_account_id': 'bill_payer_account_id',
     'bill_billing_period_start_date': 'bill_billing_period_start_date',
     'bill_billing_period_end_date': 'bill_billing_period_end_date',
@@ -370,6 +370,8 @@ class ProxyView():
         self.exposed_fields = []
         self.exposed_maps = {}
         self.fields_to_expose_in_maps = {}
+        self.fields_with_missing_requirements = [] # keep the list to show warning just once
+        self.updated_once = False
 
     def read_from_athena(self):
         """ read the current state from athena. read all fields and their types from existing SQL view and also for each MAP read existing keys
@@ -523,27 +525,48 @@ class ProxyView():
                 return f"cost_category['{field[len('cost_category_'):]}']"
             return cur1to2_mapping.get(field, field)
 
+
+    def column_surely_exist(self, field_to_expose):
+        if not self.updated_once:
+            return False
+        target_field = self.get_fields_from_sql(field_to_expose)[0]
+        if target_field not in self.exposed_fields:
+            return False
+        if '[' in  field_to_expose:
+            key = field_to_expose.split('[')[1].split(']')[0].replace("'",'')
+            if key not in self.exposed_maps.get(target_field.lower(),{}):
+                return False
+        return True
+
     def create_or_update_view(self):
         """ Create or update view
         """
+        if all([self.column_surely_exist(field_to_expose) for field_to_expose in self.fields_to_expose]):
+            logger.debug('no need for proxy change. skip.')
+            return
+
         self.read_from_athena()
         all_target_fields  = sorted(list(set(self.exposed_fields + self.fields_to_expose)))
         logger.trace(f'all_target_fields = {all_target_fields}')
         lines = {}
         for field in all_target_fields:
             target_field = self.get_fields_from_sql(field)[0]
+            if target_field not in self.exposed_fields:
+                something_changed = True
             target_field_type = self.cur.get_type_of_column(target_field, self.target_cur_version)
             logger.trace(f'get_sql_expression {field} {target_field_type}')
             mapped_expression = self.get_sql_expression(field, target_field_type) #
             logger.trace(f'cur_proxy: mapped_expression({field}) = {mapped_expression}')
             requirements = self.source_column_equivalents(target_field)
-            missing_regs = [r for r in requirements if not self.cur.column_exists(r)]
-            if not missing_regs:
+            missing_requirements = [r for r in requirements if not self.cur.column_exists(r)]
+            if not missing_requirements:
                 expression = mapped_expression                      # then take resulting expression as is
-            else:                                                   # the filed is NOT in the source CUR so we set it to a placeholder
-                logger.warning(f'missing requirements for field {field}: {missing_regs}. Setting as empty')
+            else:
+                if field not in self.fields_with_missing_requirements:
+                    self.fields_with_missing_requirements.append(field)
+                    logger.warning(f"Missing requirement for field {field}: {', '.join(missing_requirements)}. Setting as empty.")
                 if target_field_type.lower() not in empty:
-                    raise RuntimeError(f'{target_field_type} not in empty list')
+                    raise RuntimeError(f'{target_field_type} not in empty list for field {field}. Raise a github issue.')
                 expression = empty.get(target_field_type.lower(), 'null')
             lines[target_field] = expression # for map we will take the latest
         select_block = '\n                ,'.join([f'{expression} {field}' for field, expression in sorted(lines.items())])
@@ -554,7 +577,7 @@ class ProxyView():
             FROM
                 "{self.cur.database}"."{self.cur.table_name}"
         ''')
-        res = self.athena.create_or_update_view(self.name, query)
+        res = self.athena.create_or_update_view(self.name, query) # this cost 3 athena calls
         logging.debug(res)
 
         self.exposed_fields = all_target_fields

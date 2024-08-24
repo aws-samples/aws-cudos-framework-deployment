@@ -9,7 +9,7 @@ CREATE OR REPLACE VIEW kpi_ebs_snap AS
 		snapshot_usage_all_time AS (
 		   SELECT
 			 split_part(billing_period, '/', 1) year
-		   , split_part(billing_period, '/', 1) month
+		   , split_part(billing_period, '/', 2) month
 		   , bill_billing_period_start_date billing_period
 		   , line_item_usage_start_date usage_start_date
 		   , bill_payer_account_id payer_account_id

@@ -1587,7 +1587,10 @@ class Cid():
 
     def create_or_update_view(self, view_name: str, recursive: bool=True, update: bool=False) -> None:
         # Avoid checking a views multiple times in one cid session
+        update = update or get_parameters().get('update')
+        logger.trace(f'create_or_update_view({view_name}, recursive={recursive}, update={update})')
         if view_name in self._visited_views:
+            logger.trace(f'{view_name} is in _visited_views.skipping')
             return
         self._visited_views.append(view_name)
         logger.info(f'Processing view: {view_name}')

@@ -331,6 +331,8 @@ class ProxyCUR(AbstractCUR):
         if not self.metadata:# To make sure metadata exists
             raise RuntimeError('No metadata')
         if isinstance(columns, list):
+            if all(self.proxy.column_surely_exist(col) for col in columns):
+                return
             if self.cur.metadata.get('TableType') == 'EXTERNAL_TABLE':
                 try:
                     equivalent_columns = sum([self.proxy.source_column_equivalents(col) for col in columns], [])
@@ -347,4 +349,4 @@ class ProxyCUR(AbstractCUR):
                     logger.exception(exc)
             for column in columns:
                 self.proxy.fields_to_expose.append(column)
-        self.proxy.create_or_update_view()
+            self.proxy.create_or_update_view()
