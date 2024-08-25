@@ -65,6 +65,7 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
 
 @test "Delete runs" {
   run cid-cmd -vv --yes delete \
+    --athena-database $database_name\
     --dashboard-id cudos-v5
 
   [ "$status" -eq 0 ]
