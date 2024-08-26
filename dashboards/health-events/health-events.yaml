@@ -8574,11 +8574,7 @@ datasets:
             InputColumns:
             - Name: account_id
               Type: STRING
-            - Name: parent_account_id
-              Type: STRING
             - Name: account_name
-              Type: STRING
-            - Name: account_email_id
               Type: STRING
         f4dcb024-0054-4fbc-a82b-13cabd459f66:
           RelationalTable:
@@ -8716,20 +8712,6 @@ datasets:
     schedules:
     - default
 crawlers: {}
-views:
-  account_map:
-    dependsOn:
-      cur: true
-    data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.account_map AS
-      SELECT DISTINCT
-        line_item_usage_account_id account_id
-      , MAX_BY(bill_payer_account_id, line_item_usage_start_date) parent_account_id
-      , MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_name
-      , MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_email_id
-      FROM
-        "${cur_table_name}"
-      GROUP BY line_item_usage_account_id
   health_events_view:
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.health_events_view AS
