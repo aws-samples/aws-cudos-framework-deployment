@@ -5,7 +5,7 @@ dashboards:
       - cora_view
     name: CORA - Cost Optimization Recommended Actions
     dashboardId: cora
-    category: Custom
+    category: Additional
     theme: MIDNIGHT
     data: |-
       AnalysisDefaults:
