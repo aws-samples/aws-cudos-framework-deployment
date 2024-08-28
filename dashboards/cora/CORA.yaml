@@ -1,5 +1,5 @@
 dashboards:
-  CORA - COST OPTIMIZATION RECOMMENDED ACTIONS:
+  CORA:
     dependsOn:
       datasets:
       - cora_view
