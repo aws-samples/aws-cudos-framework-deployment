@@ -2,7 +2,7 @@ dashboards:
   CORA - COST OPTIMIZATION RECOMMENDED ACTIONS:
     dependsOn:
       datasets:
-      - cost_optimization_hub_recommendations
+      - cora_view
     name: CORA - Cost Optimization Recommended Actions
     dashboardId: cora
     category: Custom
@@ -18,10 +18,13 @@ dashboards:
                   ResizeOption: FIXED
           SheetContentType: INTERACTIVE
       CalculatedFields:
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: ifelse({account_name} <> '', {account_name}, {account_id})
         Name: Account
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
+        Expression: '{account_id}'
+        Name: Account Id
+      - DataSetIdentifier: cora_view
         Expression: |-
           replace(
           replace(
@@ -40,13 +43,13 @@ dashboards:
           ,' Instance','')
           ,' Function','')
         Name: Action And Resource
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(Resource = 'Reserved Instance',    concat({Action Summary}, ' on ', {recommended_resource_summary}),
               concat({Action Summary}, ' on ', Resource)
           )
         Name: Action On Resource
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               {action_type} = 'Upgrade', concat(substring(Top, 1, 1),' Upgrade to ', {recommended_resource_summary}),
@@ -55,7 +58,7 @@ dashboards:
               concat(substring(Top, 1, 1), ' ', {action_type})
           )
         Name: Action Summary
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           // Prettify
           ifelse(
@@ -68,14 +71,14 @@ dashboards:
               {action_type}
           )
         Name: Action Type
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: ifelse(${ShowCost} = 'After Discount', {estimated_monthly_cost_after_discount},
           {estimated_monthly_cost_before_discount})
-        Name: Curent Monthly Cost
-      - DataSetIdentifier: coh
+        Name: Current Monthly Cost
+      - DataSetIdentifier: cora_view
         Expression: parseDate(date)
         Name: Date
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: "ifelse(\n    {implementation_effort} =  'VeryLow',  '\U0001F7E9  Very\
           \ Low',\n    {implementation_effort} =  'Low',      '\U0001F7E8  Low',\n    {implementation_effort}\
           \ =  'Medium',   '\U0001F7E7  Medium',\n    {implementation_effort} =  'High',\
@@ -90,7 +93,7 @@ dashboards:
           \U0001F7E7',//\n    {implementation_effort} =  'VeryHigh', '\U0001F7E5\U0001F7E5\
           \U0001F7E5\U0001F7E5', /*\U0001F7E5*/\n    {implementation_effort}\n)"
         Name: Effort
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           // add one of following to your cost allocation tags
           ifelse(
@@ -102,24 +105,55 @@ dashboards:
               NULL
           )
         Name: FinopsException
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               ${GroupBy} = 'Account Name', {account_name},
               ${GroupBy} = 'Account Id', {account_id},
+              ${GroupBy} = 'Management Account Id', {source_account_id},
               ${GroupBy} = 'Source Account Id', {source_account_id},
               ${GroupBy} = 'Tag', Tag1,
               ${GroupBy} = 'Business Unit', 'N/A',
               'N/A'
           )
         Name: Group By
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
+        Expression: |-
+          //Impact of MigrateToGraviton
+          ifelse({action_type} = 'MigrateToGraviton', 0-{Saving Size},0)
+        Name: Impact of MigrateToGraviton
+      - DataSetIdentifier: cora_view
+        Expression: |-
+          //Impact of RI
+          ifelse({action_type} = 'PurchaseReservedInstances', 0-{Saving Size},0)
+        Name: Impact of RI
+      - DataSetIdentifier: cora_view
+        Expression: |-
+          //Impact of Rightsize
+          ifelse({action_type} = 'Rightsize', 0-{Saving Size},0)
+        Name: Impact of Rightsize
+      - DataSetIdentifier: cora_view
+        Expression: |-
+          //Impact of SP
+          ifelse({action_type} = 'PurchaseSavingsPlans', 0-{Saving Size},0)
+        Name: Impact of SP
+      - DataSetIdentifier: cora_view
+        Expression: |-
+          //Impact of Stop
+          ifelse({action_type} = 'Stop', 0-{Saving Size},0)
+        Name: 'Impact of Stop '
+      - DataSetIdentifier: cora_view
+        Expression: |-
+          //Impact of Upgrade
+          ifelse({action_type} = 'Upgrade', 0-{Saving Size},0)
+        Name: Impact of Upgrade
+      - DataSetIdentifier: cora_view
         Expression: ifelse(Date = {Max Date}, TRUE, FALSE)
         Name: Is the last by date
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: maxOver(Date, [{source_account_id}], PRE_AGG)
         Name: Max Date
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           maxOver(
               {Savings Estimate, Monthly},
@@ -136,26 +170,26 @@ dashboards:
           Best RI
           */
         Name: Max Savings By RI Options
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: 'maxOver({Savings Estimate, Monthly}, [SuperARN, date, {source_account_id}],
           PRE_AGG) '
         Name: Max Savings Per Resource
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(contains(Tags, 'Name='),
               split(split(Tags,'Name=',2), ',', 1),
               NULL
           )
         Name: Name
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: split(split({recommended_resource_summary}, 'in AWS account ', 2),'
           (',1)
         Name: RI Beneft Account
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: 'split({recommended_resource_summary}, '' '', 2)
           '
         Name: RI Instance Type
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               split(split({recommended_resource_summary}, ' in ', 1), ' ', 3) <> '',
@@ -169,14 +203,14 @@ dashboards:
               {recommended_resource_type}
           )
         Name: RI Product
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: 'split({recommended_resource_summary}, '' '', 1)
           '
         Name: RI Quantaty
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: concat(split({recommended_resource_summary},'/',1),'/hour')
         Name: RI SP Commitment
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               contains({Action On Resource}, 'Linked'), 'Linked',
@@ -184,7 +218,7 @@ dashboards:
               ''
           )
         Name: RI SP Level
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               contains({recommended_resource_summary}, 'three years'), '3y',
@@ -192,7 +226,7 @@ dashboards:
               ''
           )
         Name: RI SP Term
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               contains({recommended_resource_type}, 'ReservedInstances') OR contains({recommended_resource_type}, 'SavingsPlan'),
@@ -205,7 +239,7 @@ dashboards:
               'NA'
           )
         Name: RI SP Upfront
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               contains({current_resource_type}, 'Ec2'), 'EC2',
@@ -215,7 +249,7 @@ dashboards:
               replace({current_resource_type}, 'ReservedInstances', '')
           )
         Name: RI Serivice
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               {action_type} = 'PurchaseReservedInstances', 'Reserved Instance',
@@ -224,7 +258,7 @@ dashboards:
               split({resource_arn},':',6)
           )
         Name: Resource
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           //Friendly Name
           ifelse(
@@ -246,15 +280,15 @@ dashboards:
               {current_resource_type}
           )
         Name: Resource Type
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: "ifelse({restart_needed} = 1, '\U0001F6D1 Restart Needed', '\u2705 No\
           \ Restart') /*\U0001F50C*/"
         Name: Restart
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: "ifelse({rollback_possible} = 1, '\u2705 Rollback Possible', '\u26A0\
           \uFE0F No Rollback') /*\u23E9*/"
         Name: Rollback
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               contains({recommended_resource_summary}, '/hour') AND contains({recommended_resource_summary}, ' for '), split(split({recommended_resource_summary},' for ',2), ' in ',1),
@@ -262,20 +296,20 @@ dashboards:
               NULL
           )
         Name: SP Instance Type
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: '{Savings Estimate, Monthly}'
         Name: Saving Size
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: ifelse(${ShowCost} = 'After Discount', {estimated_monthly_savings_after_discount},
           {estimated_monthly_savings_before_discount})
         Name: Savings Estimate, Monthly
-      - DataSetIdentifier: coh
-        Expression: sum({Savings Estimate, Monthly})/sum({Curent Monthly Cost})
+      - DataSetIdentifier: cora_view
+        Expression: sum({Savings Estimate, Monthly})/sum({Current Monthly Cost})
         Name: Savings, %
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: split({resource_arn}, ':', 3)
         Name: Service
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           // CO does not provide ARNs for RI and SP recommnedations. This represents an artificial ARN allowing to unduplicate savings.
           ifelse(
@@ -300,7 +334,7 @@ dashboards:
               'NA'
           )
         Name: SuperARN
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           split(
               split(
@@ -312,18 +346,18 @@ dashboards:
               1
           )
         Name: Tag1
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: substring(tags, 2, strlen(tags) - 2)
         Name: Tags
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: ifelse(date = formatDate({Max Date}, 'yyyy-MM-dd'), TRUE, FALSE)
         Name: The Last One
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: "\nifelse(\n    {Savings Estimate, Monthly} = {Max Savings Per Resource},\n\
           \    '\u2B50 Top Action',\n    '\u26AB Alternative'\n)\n/*'\u2800'\u26AB\u26AA\
           \ */"
         Name: Top
-      - DataSetIdentifier: coh
+      - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
               {Savings Estimate, Monthly} = {Max Savings Per Resource},
@@ -334,7 +368,7 @@ dashboards:
       ColumnConfigurations:
       - Column:
           ColumnName: Saving Size
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
         FormatConfiguration:
           NumberFormatConfiguration:
             FormatConfiguration:
@@ -367,21 +401,21 @@ dashboards:
             FieldValue: Upgrade
         Column:
           ColumnName: Action Type
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
       - Column:
           ColumnName: Name
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
         FormatConfiguration:
           StringFormatConfiguration:
             NullValueFormatConfiguration:
               NullString: '-'
       - Column:
           ColumnName: Max Savings By RI Options
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
         Role: DIMENSION
       - Column:
-          ColumnName: Curent Monthly Cost
-          DataSetIdentifier: coh
+          ColumnName: Current Monthly Cost
+          DataSetIdentifier: cora_view
         FormatConfiguration:
           NumberFormatConfiguration:
             FormatConfiguration:
@@ -406,10 +440,10 @@ dashboards:
             FieldValue: RDS Reserved Instances
         Column:
           ColumnName: Resource Type
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
       - Column:
           ColumnName: Savings Estimate, Monthly
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
         FormatConfiguration:
           NumberFormatConfiguration:
             FormatConfiguration:
@@ -437,17 +471,17 @@ dashboards:
             FieldValue: ElasticCache
         Column:
           ColumnName: RI Serivice
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
       - Column:
           ColumnName: Resource
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
         FormatConfiguration:
           StringFormatConfiguration:
             NullValueFormatConfiguration:
               NullString: n/a
       - Column:
           ColumnName: Max Savings Per Resource
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
         Role: DIMENSION
       - ColorsConfiguration:
           CustomColors:
@@ -469,9 +503,11 @@ dashboards:
             FieldValue: Upgrade EC2
           - Color: '#8B5011'
             FieldValue: Upgrade EBS
+          - Color: '#8A50B3'
+            FieldValue: Migrate To Graviton EC2
         Column:
           ColumnName: Action And Resource
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
       - ColorsConfiguration:
           CustomColors:
           - Color: '#8A50B3'
@@ -488,10 +524,10 @@ dashboards:
             FieldValue: PurchaseReservedInstances
         Column:
           ColumnName: action_type
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
       - Column:
           ColumnName: current_resource_summary
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
         FormatConfiguration:
           StringFormatConfiguration:
             NullValueFormatConfiguration:
@@ -508,10 +544,10 @@ dashboards:
             FieldValue: EbsVolume
         Column:
           ColumnName: current_resource_type
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
       - Column:
           ColumnName: date
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
         Role: DIMENSION
       - ColorsConfiguration:
           CustomColors:
@@ -525,10 +561,10 @@ dashboards:
             FieldValue: OpenSearchReservedInstances
         Column:
           ColumnName: recommended_resource_type
-          DataSetIdentifier: coh
+          DataSetIdentifier: cora_view
       DataSetIdentifierDeclarations:
       - DataSetArn: arn:aws:quicksight:::dataset/f3e97e44-d115-4f0a-b38a-fa039038deeb
-        Identifier: coh
+        Identifier: cora_view
       FilterGroups:
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 23b33ab5-d68b-484b-a1f8-e84152848e47
@@ -536,7 +572,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Resource
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterConfiguration:
                 CategoryValue: Savings Plan
@@ -557,7 +593,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: implementation_effort
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -578,7 +614,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI Serivice
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -601,7 +637,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Action Type
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -620,7 +656,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Resource
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -641,7 +677,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI SP Level
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -661,7 +697,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Restart
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -682,7 +718,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Resource
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -711,7 +747,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: action_type
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -732,7 +768,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Effort
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -756,7 +792,7 @@ dashboards:
         - NumericEqualityFilter:
             Column:
               ColumnName: The Last One
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             FilterId: 2f8dc419-6754-480a-9c1b-b408264ac832
             MatchOperator: EQUALS
             NullOption: ALL_VALUES
@@ -785,7 +821,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Rollback
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -816,7 +852,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: region
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -837,7 +873,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI SP Level
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -857,7 +893,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Effort
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -878,7 +914,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: current_resource_type
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -899,7 +935,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI SP Upfront
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -921,7 +957,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Top
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: EQUALS
@@ -937,7 +973,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Restart
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -958,7 +994,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: source_account_id
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -987,7 +1023,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: implementation_effort
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1008,7 +1044,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Restart
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1027,7 +1063,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI SP Level
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterConfiguration:
                 CategoryValue: Linked
@@ -1046,7 +1082,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: implementation_effort
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1067,7 +1103,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI SP Upfront
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -1089,7 +1125,7 @@ dashboards:
         - NumericEqualityFilter:
             Column:
               ColumnName: Top Saving (Binary)
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             FilterId: 22583ef4-c066-48da-a901-695f9987d107
             MatchOperator: EQUALS
             NullOption: ALL_VALUES
@@ -1112,7 +1148,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: account_id
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1141,7 +1177,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Top
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -1164,7 +1200,7 @@ dashboards:
         - NumericEqualityFilter:
             Column:
               ColumnName: The Last One
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             FilterId: 949759e2-2f4c-4e90-af7f-9d14c16e39a4
             MatchOperator: EQUALS
             NullOption: ALL_VALUES
@@ -1188,7 +1224,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI SP Term
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -1209,7 +1245,7 @@ dashboards:
         - NumericRangeFilter:
             Column:
               ColumnName: Savings Estimate, Monthly
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             FilterId: f24b4f46-6242-4108-8cca-1c2d8e43aa43
             IncludeMaximum: false
             IncludeMinimum: false
@@ -1225,7 +1261,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: action_type
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1244,7 +1280,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Top
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterConfiguration:
                 CategoryValue: Top
@@ -1271,7 +1307,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: region
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1292,7 +1328,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI SP Term
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -1313,7 +1349,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: account_id
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1334,7 +1370,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: region
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1363,7 +1399,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: RI SP Upfront
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
                 CategoryValues:
@@ -1385,7 +1421,7 @@ dashboards:
         - NumericEqualityFilter:
             Column:
               ColumnName: The Last One
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             FilterId: d5b4da78-f9ec-4d8b-bdff-675877e6f98a
             MatchOperator: EQUALS
             NullOption: ALL_VALUES
@@ -1402,7 +1438,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: current_resource_type
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterConfiguration:
                 CategoryValue: ReservedInstances
@@ -1423,7 +1459,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: current_resource_type
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterConfiguration:
                 CategoryValue: ReservedInstances
@@ -1442,13 +1478,14 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: action_type
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 CategoryValues:
                 - Rightsize
                 - Stop
                 - Upgrade
+                - MigrateToGraviton
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: f03a24b5-7b56-4e7c-843d-9758f0e1aedc
@@ -1464,7 +1501,7 @@ dashboards:
         - NumericEqualityFilter:
             Column:
               ColumnName: The Last One
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             FilterId: 3a2c4a43-6d0a-451b-bbb8-3f199fd3292e
             MatchOperator: EQUALS
             NullOption: ALL_VALUES
@@ -1478,8 +1515,8 @@ dashboards:
               - 74d893c7-fd54-440d-a620-9f7691ba484d
               - 69bf7d8d-8c87-480a-9d93-78e583919add
               - e7d94b59-b2b1-45fd-8f0a-6c82b8c9a15d
-              - d69510e9-a1b0-49f3-9203-8c2cb550f5a7
               - 36b1cda0-1366-45c2-a5e7-557fa9abef22
+              - 969d2a01-5cad-44a8-ae48-72f9c38b0cba
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 7c5d4c45-8216-49ae-9bfc-5d57fa81f1db
@@ -1487,7 +1524,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Resource Type
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1516,7 +1553,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: current_resource_summary
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterConfiguration:
                 CategoryValue: ''
@@ -1537,7 +1574,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: FinopsException
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1569,7 +1606,7 @@ dashboards:
         - NumericEqualityFilter:
             Column:
               ColumnName: Top Saving (Binary)
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             FilterId: 4fc1146e-4803-4640-8568-80fd2e4ecc5e
             MatchOperator: EQUALS
             NullOption: ALL_VALUES
@@ -1580,10 +1617,10 @@ dashboards:
             - Scope: SELECTED_VISUALS
               SheetId: a8e3c036-54a2-4012-9cd0-7d7783151de9
               VisualIds:
-              - d69510e9-a1b0-49f3-9203-8c2cb550f5a7
               - e08e40e4-f72e-48e2-8fc7-a2789c0d7782
               - 74d893c7-fd54-440d-a620-9f7691ba484d
               - e7d94b59-b2b1-45fd-8f0a-6c82b8c9a15d
+              - 969d2a01-5cad-44a8-ae48-72f9c38b0cba
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 1abbd527-e04b-4051-bf67-b7cf1263ed4d
@@ -1591,7 +1628,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: Tags
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               CustomFilterConfiguration:
                 MatchOperator: CONTAINS
@@ -1607,7 +1644,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: account_name
-              DataSetIdentifier: coh
+              DataSetIdentifier: cora_view
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -1629,6 +1666,29 @@ dashboards:
             FilterId: 48cc55cd-0600-4129-9355-785298fef358
         ScopeConfiguration:
           AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: fa10041c-d304-4608-89cd-8ec43a6a2740
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: Action Type
+              DataSetIdentifier: cora_view
+            Configuration:
+              CustomFilterListConfiguration:
+                CategoryValues:
+                - Rightsize
+                - Stop
+                - Upgrade
+                - Migrate To Graviton
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: a0c40a43-55b5-46ab-a5f3-a78dceb95f06
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: a8e3c036-54a2-4012-9cd0-7d7783151de9
         Status: ENABLED
       Options:
         WeekStart: MONDAY
@@ -1727,7 +1787,9 @@ dashboards:
         - List:
             DisplayOptions:
               InfoIconLabelOptions:
-                Visibility: HIDDEN
+                InfoIconText: (Effort in case of rightsizing depend on current and recommended
+                  instance family)
+                Visibility: VISIBLE
               SearchOptions:
                 Visibility: HIDDEN
               SelectAllOptions:
@@ -1803,20 +1865,20 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 2
                 RowSpan: 3
-              - ColumnIndex: 5
+              - ColumnIndex: 4
                 ColumnSpan: 4
                 ElementId: 8ef3bab5-fe6c-4b92-bd73-b28d547e5571
                 ElementType: FILTER_CONTROL
                 RowIndex: 2
                 RowSpan: 3
-              - ColumnIndex: 9
+              - ColumnIndex: 8
                 ColumnSpan: 4
                 ElementId: 477c61f5-17a8-4af1-9550-bd08311d363a
                 ElementType: FILTER_CONTROL
                 RowIndex: 2
                 RowSpan: 3
-              - ColumnIndex: 13
-                ColumnSpan: 9
+              - ColumnIndex: 12
+                ColumnSpan: 10
                 ElementId: 7ff78aa1-6064-4f2c-be77-7dc986181032
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 2
@@ -1864,52 +1926,52 @@ dashboards:
                 RowIndex: 20
                 RowSpan: 12
               - ColumnIndex: 0
-                ColumnSpan: 18
-                ElementId: 1a5e9b89-f55b-4ed5-82f7-1b8ffd1e02f1
-                ElementType: TEXT_BOX
-                RowIndex: 32
-                RowSpan: 3
-              - ColumnIndex: 0
-                ColumnSpan: 35
-                ElementId: 5a4d413a-602e-46b8-a481-0a1c2ad65695
-                ElementType: VISUAL
-                RowIndex: 35
-                RowSpan: 19
-              - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: a621183c-6ebc-4cb6-b149-671e761d0d83
                 ElementType: VISUAL
-                RowIndex: 54
+                RowIndex: 32
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: fe528491-d8cd-4f58-a2ce-f0a6bba330e1
                 ElementType: VISUAL
-                RowIndex: 62
+                RowIndex: 40
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: 6875b81e-dfef-4d8b-836c-e6b55dac6143
                 ElementType: VISUAL
-                RowIndex: 74
+                RowIndex: 52
                 RowSpan: 3
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: 1a5e9b89-f55b-4ed5-82f7-1b8ffd1e02f1
+                ElementType: TEXT_BOX
+                RowIndex: 55
+                RowSpan: 3
+              - ColumnIndex: 0
+                ColumnSpan: 35
+                ElementId: 5a4d413a-602e-46b8-a481-0a1c2ad65695
+                ElementType: VISUAL
+                RowIndex: 58
+                RowSpan: 16
               - ColumnIndex: 0
                 ColumnSpan: 30
                 ElementId: 1531c453-a35b-4c63-aaee-62fd91ec588e
                 ElementType: TEXT_BOX
-                RowIndex: 77
+                RowIndex: 74
                 RowSpan: 3
               - ColumnIndex: 30
                 ColumnSpan: 5
                 ElementId: ec211b8d-5230-4d89-ab63-9b0996df195e
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 77
+                RowIndex: 74
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: d89da078-b63c-4291-80c8-e96067bf3735
                 ElementType: VISUAL
-                RowIndex: 80
+                RowIndex: 77
                 RowSpan: 18
         Name: Summary
         ParameterControls:
@@ -1976,7 +2038,7 @@ dashboards:
               - Account Id
               - Account Name
               - Business Unit
-              - Source Account Id
+              - Management Account Id
               - Tag
             SourceParameterName: GroupBy
             Title: Group By
@@ -2012,6 +2074,18 @@ dashboards:
             ParameterControlId: 354bcc22-7d7d-467d-aeab-1e85019cd498
             SourceParameterName: TagSearchInclude
             Title: Tag Search
+        - TextField:
+            DisplayOptions:
+              PlaceholderOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 638831ee-272a-4273-bb57-1af1cf3b5ee5
+            SourceParameterName: Tag1Name
+            Title: Tag Name
         SheetControlLayouts:
         - Configuration:
             GridLayout:
@@ -2068,6 +2142,10 @@ dashboards:
                 ElementId: 3d11854b-bd24-4d13-b098-13e59ff32b42
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 638831ee-272a-4273-bb57-1af1cf3b5ee5
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
         SheetId: fcbb9302-e094-4049-b344-831c8e36007d
         TextBoxes:
         - Content: |-
@@ -2117,7 +2195,7 @@ dashboards:
                     AggregationFunction: COUNT
                     Column:
                       ColumnName: resource_arn
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.resource_arn.0.1722851707775
               KPIOptions:
                 Comparison:
@@ -2126,7 +2204,7 @@ dashboards:
                 PrimaryValueFontConfiguration:
                   FontColor: '#DFE3E4'
                   FontSize:
-                    Relative: LARGE
+                    Relative: MEDIUM
                 SecondaryValueFontConfiguration:
                   FontSize:
                     Relative: EXTRA_LARGE
@@ -2143,7 +2221,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: <visual-title>Resources</visual-title>
+                RichText: <visual-title>Number of Resources</visual-title>
               Visibility: VISIBLE
             VisualId: 793cbbfa-75a2-4ad0-8383-f6a41b46b360
         - ScatterPlotVisual:
@@ -2172,13 +2250,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: implementation_effort
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2afb073d-be52-4523-9d2b-94c1101678d7.3.1722755102958
                   Label:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action And Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.3.1722755042983
                   Size:
                   - NumericalMeasureField:
@@ -2186,14 +2264,14 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Saving Size
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.4.1722756150181
                   XAxis:
                   - CategoricalMeasureField:
                       AggregationFunction: COUNT
                       Column:
                         ColumnName: Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.4.1722854034023
                   YAxis:
                   - NumericalMeasureField:
@@ -2201,9 +2279,10 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721897134031
               Legend:
+                Position: BOTTOM
                 Width: 235px
               SortConfiguration:
                 ScatterPlotLimitConfiguration:
@@ -2265,7 +2344,7 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: Resource
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.4.1722854034023
                   CustomLabel: Resource Count (Logarithmic Scale)
               YAxisDisplayOptions:
@@ -2283,7 +2362,7 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: Savings Estimate, Monthly
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721897134031
                   CustomLabel: Estimated Savings (Logarithmic Scale)
             ColumnHierarchies: []
@@ -2327,17 +2406,17 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1722453027319
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722453239033
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Effort
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2afb073d-be52-4523-9d2b-94c1101678d7.3.1722453460631
                   Values:
                   - NumericalMeasureField:
@@ -2345,13 +2424,13 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721897134031
                   - CategoricalMeasureField:
                       AggregationFunction: COUNT
                       Column:
                         ColumnName: recommendation_id
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommendation_id.4.1722754304589
               SortConfiguration:
                 RowSort:
@@ -2423,7 +2502,8 @@ dashboards:
                 - CustomLabel: Reconmmended
                   FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.9.1721465617571
                   Width: 123px
-                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722457627708
+                - CustomLabel: Region
+                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722457627708
                   Width: 83px
                 - FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.11.1722454281106
                   Width: 98px
@@ -2439,67 +2519,67 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: date
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.date.15.1722494880600
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Account
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.9.1721976550011
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.9.1722452650161
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.9.1721910864629
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Top
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2428ccf1-e3d7-4838-be59-464c34c09343.10.1722452824555
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.10.1722453992588
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Effort
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: current_resource_summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: recommended_resource_summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.9.1721465617571
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: region
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722457627708
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Tags
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.11.1722454281106
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: recommendation_source
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommendation_source.13.1722457846103
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: last_refresh_timestamp
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.last_refresh_timestamp.14.1722462384659
                   Values:
                   - NumericalMeasureField:
@@ -2507,19 +2587,19 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: Curent Monthly Cost
-                        DataSetIdentifier: coh
+                        ColumnName: Current Monthly Cost
+                        DataSetIdentifier: cora_view
                       FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
                   - NumericalMeasureField:
                       Column:
                         ColumnName: Savings, %
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
                       FormatConfiguration:
                         FormatConfiguration:
@@ -2571,7 +2651,6 @@ dashboards:
               - FilterOperation:
                   SelectedFieldsConfiguration:
                     SelectedFields:
-                    - 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722634735555
                     - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1722634742422
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
@@ -2590,13 +2669,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1722634742422
                   Source:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722634735555
                   Weight:
                   - NumericalMeasureField:
@@ -2604,7 +2683,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.2.1722145935381
               SortConfiguration:
                 WeightSort:
@@ -2652,13 +2731,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722634717852
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1722634753024
                   Values:
                   - NumericalMeasureField:
@@ -2666,7 +2745,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721897134031
               Legend:
                 Title:
@@ -2731,27 +2810,19 @@ dashboards:
                 - DataPathList:
                   - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.13.1721595297347
                     FieldValue: Resource
-                  Width: 267px
+                  Width: 260px
                 - DataPathList:
                   - FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
                     FieldValue: Action Summary
-                  Width: 212px
+                  Width: 202px
                 - DataPathList:
                   - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
                     FieldValue: recommended_resource_summary
-                  Width: 199px
-                - DataPathList:
-                  - FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
-                    FieldValue: Savings, %
-                  Width: 160px
+                  Width: 163px
                 - DataPathList:
                   - FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
-                    FieldValue: Curent Monthly Cost
-                  Width: 148px
-                - DataPathList:
-                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                    FieldValue: current_resource_type
-                  Width: 138px
+                    FieldValue: Current Monthly Cost
+                  Width: 125px
                 - DataPathList:
                   - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
                     FieldValue: current_resource_summary
@@ -2759,7 +2830,15 @@ dashboards:
                 - DataPathList:
                   - FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
                     FieldValue: Savings Estimate, Monthly
-                  Width: 122px
+                  Width: 111px
+                - DataPathList:
+                  - FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.12.1724614980872
+                    FieldValue: Tags
+                  Width: 111px
+                - DataPathList:
+                  - FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
+                    FieldValue: Savings, %
+                  Width: 83px
                 - DataPathList:
                   - FieldId: 2eec5241-288a-42cd-bd94-433877919e03.14.1721893752969
                     FieldValue: Effort
@@ -2773,10 +2852,11 @@ dashboards:
                     FieldValue: Restart
                   Width: 55px
                 SelectedFieldOptions:
-                - CustomLabel: Type
-                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                - FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.12.1724871277079
                   Visibility: VISIBLE
-                - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
+                - FieldId: 29971723-7263-42db-aa01-ab04a04146c6.12.1724871907861
+                  Visibility: VISIBLE
+                - FieldId: fcb76992-d040-44c0-adc3-344e578d5667.13.1724871914878
                   Visibility: VISIBLE
                 - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.13.1721595297347
                   Visibility: VISIBLE
@@ -2785,7 +2865,8 @@ dashboards:
                   Visibility: VISIBLE
                 - FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
                   Visibility: VISIBLE
-                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
+                - CustomLabel: Recommended
+                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
                   Visibility: VISIBLE
                 - CustomLabel: Effort
                   FieldId: 2eec5241-288a-42cd-bd94-433877919e03.14.1721893752969
@@ -2796,9 +2877,9 @@ dashboards:
                   Visibility: VISIBLE
                 - FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.12.1724614980872
                   Visibility: VISIBLE
-                - FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
-                  Visibility: VISIBLE
                 - FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                  Visibility: VISIBLE
+                - FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
                   Visibility: VISIBLE
                 - FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
                   Visibility: VISIBLE
@@ -2808,73 +2889,93 @@ dashboards:
                   Rows:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: current_resource_type
-                        DataSetIdentifier: coh
-                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                        ColumnName: Resource Type
+                        DataSetIdentifier: cora_view
+                      FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.12.1724871277079
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Account
-                        DataSetIdentifier: coh
-                      FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
+                        ColumnName: Group By
+                        DataSetIdentifier: cora_view
+                      FieldId: 29971723-7263-42db-aa01-ab04a04146c6.12.1724871907861
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Account Id
+                        DataSetIdentifier: cora_view
+                      FieldId: fcb76992-d040-44c0-adc3-344e578d5667.13.1724871914878
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.13.1721595297347
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: current_resource_summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: recommended_resource_summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.14.1722332624087
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Effort
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2eec5241-288a-42cd-bd94-433877919e03.14.1721893752969
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Restart
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 216d6812-0a44-49d0-8ccd-716659758d84.11.1721975041360
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Rollback
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 0b2f1f8f-ad5a-4ac2-bb78-daabd88d124a.12.1721975059276
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Tags
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.12.1724614980872
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: Curent Monthly Cost
-                        DataSetIdentifier: coh
-                      FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
+                        ColumnName: Savings Estimate, Monthly
+                        DataSetIdentifier: cora_view
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 2
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
-                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                        ColumnName: Current Monthly Cost
+                        DataSetIdentifier: cora_view
+                      FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
                   - NumericalMeasureField:
                       Column:
                         ColumnName: Savings, %
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
                       FormatConfiguration:
                         FormatConfiguration:
@@ -2891,12 +2992,7 @@ dashboards:
                             Suffix: '%'
               SortConfiguration:
                 FieldSortOptions:
-                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                  SortBy:
-                    Field:
-                      Direction: DESC
-                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
-                - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
+                - FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.12.1724871277079
                   SortBy:
                     Field:
                       Direction: DESC
@@ -2971,7 +3067,7 @@ dashboards:
                     TextColor:
                       Solid:
                         Color: '#2A5D78'
-                        Expression: SUM({Curent Monthly Cost}) > 0
+                        Expression: SUM({Current Monthly Cost}) > 0
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Click on Action Summary to Filter</visual-subtitle>
@@ -3013,14 +3109,14 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: Date
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 6ef47644-91f9-4a04-872b-5f1f889e12c2.2.1721892263314
                       HierarchyId: 11fbd18b-e2bc-479b-9e86-51cdc4ab91d9
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722635069586
                       HierarchyId: 96787e52-2600-44df-bbbf-6f3dc53c80bc
                   Values:
@@ -3029,7 +3125,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721594656933
               Legend:
                 Position: RIGHT
@@ -3039,19 +3135,19 @@ dashboards:
               Orientation: VERTICAL
               SortConfiguration:
                 CategoryItemsLimit:
-                  OtherCategories: INCLUDE
+                  OtherCategories: EXCLUDE
                 CategorySort:
                 - FieldSort:
                     Direction: ASC
                     FieldId: 6ef47644-91f9-4a04-872b-5f1f889e12c2.2.1721892263314
                 ColorItemsLimit:
-                  OtherCategories: INCLUDE
+                  OtherCategories: EXCLUDE
                 ColorSort:
                 - FieldSort:
                     Direction: ASC
                     FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722635069586
                 SmallMultiplesLimitConfiguration:
-                  OtherCategories: INCLUDE
+                  OtherCategories: EXCLUDE
               Tooltip:
                 FieldBasedTooltip:
                   AggregationVisibility: HIDDEN
@@ -3075,15 +3171,15 @@ dashboards:
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: Action Type
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: Resource Type
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: Group By
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: Account
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: source_account_id
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 DrillDownFilters: []
                 HierarchyId: 96787e52-2600-44df-bbbf-6f3dc53c80bc
             Subtitle:
@@ -3115,10 +3211,13 @@ dashboards:
                 CollapseStateOptions:
                 - State: COLLAPSED
                   Target:
-                    FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
+                    FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
                 - State: COLLAPSED
                   Target:
-                    FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.9.1721976550011
+                    FieldId: 29971723-7263-42db-aa01-ab04a04146c6.11.1724871750367
+                - State: COLLAPSED
+                  Target:
+                    FieldId: fcb76992-d040-44c0-adc3-344e578d5667.11.1724871743534
                 - State: COLLAPSED
                   Target:
                     FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.9.1721910864629
@@ -3131,21 +3230,17 @@ dashboards:
                     FieldValue: Resource
                   Width: 256px
                 - DataPathList:
+                  - FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.10.1724870904279
+                    FieldValue: Action Type
+                  Width: 217px
+                - DataPathList:
                   - FieldId: ce0aebe2-20ac-4c1f-8985-0cae5fbd9809.10.1722789011931
                     FieldValue: Action Summary
                   Width: 194px
                 - DataPathList:
-                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
-                    FieldValue: current_resource_type
-                  Width: 184px
-                - DataPathList:
-                  - FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
-                    FieldValue: Curent Monthly Cost
-                  Width: 176px
-                - DataPathList:
-                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
-                    FieldValue: action_type
-                  Width: 169px
+                  - FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.10.1724870839026
+                    FieldValue: Resource Type
+                  Width: 178px
                 - DataPathList:
                   - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
                     FieldValue: current_resource_summary
@@ -3155,20 +3250,24 @@ dashboards:
                     FieldValue: Effort
                   Width: 128px
                 - DataPathList:
+                  - FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
+                    FieldValue: Current Monthly Cost
+                  Width: 126px
+                - DataPathList:
                   - FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
                     FieldValue: Savings Estimate, Monthly
                   Width: 122px
                 SelectedFieldOptions:
-                - CustomLabel: Type
-                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                - FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.10.1724870839026
+                  Visibility: VISIBLE
+                - FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.10.1724870904279
                   Visibility: VISIBLE
                 - CustomLabel: Effort
                   FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
                   Visibility: VISIBLE
-                - CustomLabel: Action
-                  FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
+                - FieldId: 29971723-7263-42db-aa01-ab04a04146c6.11.1724871750367
                   Visibility: VISIBLE
-                - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.9.1721976550011
+                - FieldId: fcb76992-d040-44c0-adc3-344e578d5667.11.1724871743534
                   Visibility: VISIBLE
                 - FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.9.1721910864629
                   Visibility: VISIBLE
@@ -3192,64 +3291,84 @@ dashboards:
                   Rows:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: current_resource_type
-                        DataSetIdentifier: coh
-                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                        ColumnName: Resource Type
+                        DataSetIdentifier: cora_view
+                      FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.10.1724870839026
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Action Type
+                        DataSetIdentifier: cora_view
+                      FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.10.1724870904279
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Effort
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: action_type
-                        DataSetIdentifier: coh
-                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
+                        ColumnName: Group By
+                        DataSetIdentifier: cora_view
+                      FieldId: 29971723-7263-42db-aa01-ab04a04146c6.11.1724871750367
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Account
-                        DataSetIdentifier: coh
-                      FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.9.1721976550011
+                        ColumnName: Account Id
+                        DataSetIdentifier: cora_view
+                      FieldId: fcb76992-d040-44c0-adc3-344e578d5667.11.1724871743534
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: f0c836aa-b4cc-45d4-84a2-f84e0ae3f08a.9.1721910864629
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: current_resource_summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.6.1721464202000
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: ce0aebe2-20ac-4c1f-8985-0cae5fbd9809.10.1722789011931
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: COUNT
                       Column:
                         ColumnName: recommendation_id
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommendation_id.10.1722154401961
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: Curent Monthly Cost
-                        DataSetIdentifier: coh
+                        ColumnName: Current Monthly Cost
+                        DataSetIdentifier: cora_view
                       FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 0
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
                   - NumericalMeasureField:
                       Column:
                         ColumnName: Savings, %
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
                       FormatConfiguration:
                         FormatConfiguration:
@@ -3266,7 +3385,12 @@ dashboards:
                             Suffix: '%'
               SortConfiguration:
                 FieldSortOptions:
-                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                - FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.10.1724870839026
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.10.1724870904279
                   SortBy:
                     Field:
                       Direction: DESC
@@ -3275,8 +3399,13 @@ dashboards:
                   SortBy:
                     Field:
                       Direction: DESC
-                      FieldId: 2eec5241-288a-42cd-bd94-433877919e03.9.1721910883755
-                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.action_type.5.1721464160473
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 29971723-7263-42db-aa01-ab04a04146c6.11.1724871750367
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: fcb76992-d040-44c0-adc3-344e578d5667.11.1724871743534
                   SortBy:
                     Field:
                       Direction: DESC
@@ -3322,7 +3451,8 @@ dashboards:
                   Placement: AUTO
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Click Resource To Filter</visual-subtitle>
+                RichText: <visual-subtitle>Unroll Ation up to Resource Level. Click Resource
+                  To Filter.</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3356,13 +3486,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Group By
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 29971723-7263-42db-aa01-ab04a04146c6.2.1724615690282
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722635633864
                       HierarchyId: cb40966a-3566-4738-9273-9f26ca04a5ea
                   Values:
@@ -3371,7 +3501,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721594656933
                       FormatConfiguration:
                         FormatConfiguration:
@@ -3425,9 +3555,9 @@ dashboards:
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: Resource Type
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: Action Type
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 DrillDownFilters: []
                 HierarchyId: cb40966a-3566-4738-9273-9f26ca04a5ea
             Subtitle:
@@ -3461,12 +3591,12 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: current_resource_details
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_details.0.1721896756643
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: recommended_resource_details
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_details.1.1721896759025
                   Values: []
               SortConfiguration: {}
@@ -3510,7 +3640,7 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.1.1722634694245
                   Values:
                   - NumericalMeasureField:
@@ -3518,7 +3648,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.0.1721897134031
               Legend:
                 Title:
@@ -3581,6 +3711,29 @@ dashboards:
         - CrossSheet:
             FilterControlId: 53d735e4-673d-4d4e-bed1-997a82886de5
             SourceFilterId: 6c775da6-35fc-4731-9efe-0f09440f5cf7
+        - List:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SearchOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: HIDDEN
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            FilterControlId: 2330a0e5-5624-461e-a0ce-9b76f17793a7
+            SelectableValues:
+              Values:
+              - Migrate To Graviton
+              - Rightsize
+              - Stop
+              - Upgrade
+            SourceFilterId: a0c40a43-55b5-46ab-a5f3-a78dceb95f06
+            Title: Usage Optimization Type
+            Type: MULTI_SELECT
         Layouts:
         - Configuration:
             GridLayout:
@@ -3590,54 +3743,83 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 17
+                ColumnSpan: 13
                 ElementId: 256981d3-38c8-49eb-8ace-166fc0ec61e0
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 3
-              - ColumnIndex: 17
-                ColumnSpan: 18
+                RowSpan: 4
+              - ColumnIndex: 13
+                ColumnSpan: 17
                 ElementId: d85839b7-5c5c-48ed-86cc-6ee53ccae5f7
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 3
+                RowSpan: 4
+              - ColumnIndex: 30
+                ColumnSpan: 5
+                ElementId: 2330a0e5-5624-461e-a0ce-9b76f17793a7
+                ElementType: FILTER_CONTROL
+                RowIndex: 0
+                RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 12
                 ElementId: e7d94b59-b2b1-45fd-8f0a-6c82b8c9a15d
                 ElementType: VISUAL
-                RowIndex: 3
+                RowIndex: 4
                 RowSpan: 8
               - ColumnIndex: 12
                 ColumnSpan: 12
                 ElementId: 74d893c7-fd54-440d-a620-9f7691ba484d
                 ElementType: VISUAL
-                RowIndex: 3
+                RowIndex: 4
                 RowSpan: 8
               - ColumnIndex: 24
                 ColumnSpan: 11
-                ElementId: d69510e9-a1b0-49f3-9203-8c2cb550f5a7
+                ElementId: 969d2a01-5cad-44a8-ae48-72f9c38b0cba
                 ElementType: VISUAL
-                RowIndex: 3
+                RowIndex: 4
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: e08e40e4-f72e-48e2-8fc7-a2789c0d7782
                 ElementType: VISUAL
-                RowIndex: 11
-                RowSpan: 8
+                RowIndex: 12
+                RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: 36b1cda0-1366-45c2-a5e7-557fa9abef22
                 ElementType: VISUAL
-                RowIndex: 19
+                RowIndex: 23
                 RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 35
                 ElementId: 69bf7d8d-8c87-480a-9d93-78e583919add
                 ElementType: VISUAL
-                RowIndex: 29
-                RowSpan: 10
-        Name: Rightsizing Upgrade and Stop
+                RowIndex: 33
+                RowSpan: 18
+        Name: Usage Optimization
+        ParameterControls:
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: ea8782d9-3580-435b-96cb-a0cd5c3c575b
+            SelectableValues:
+              Values:
+              - Account Id
+              - Account Name
+              - Business Unit
+              - Management Account Id
+              - Tag
+            SourceParameterName: GroupBy
+            Title: Group By
+            Type: SINGLE_SELECT
         SheetControlLayouts:
         - Configuration:
             GridLayout:
@@ -3678,6 +3860,10 @@ dashboards:
                 ElementType: FILTER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: ea8782d9-3580-435b-96cb-a0cd5c3c575b
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
         SheetId: a8e3c036-54a2-4012-9cd0-7d7783151de9
         TextBoxes:
         - Content: |-
@@ -3690,13 +3876,79 @@ dashboards:
               </ul>
             </text-box>
           SheetTextBoxId: d85839b7-5c5c-48ed-86cc-6ee53ccae5f7
-        - Content: |-
-            <text-box>
-              <inline font-size="40px">Rightsizing</inline>
-              <br/>
-            </text-box>
+        - Content: "<text-box>\n  <inline font-size=\"40px\">Usage Optimization\_</inline>\n\
+            \  <br/>\n  <inline font-size=\"20px\">Risghtsizing, Stop, Update and Migrate\
+            \ to Graviton</inline>\n</text-box>"
           SheetTextBoxId: 256981d3-38c8-49eb-8ace-166fc0ec61e0
         Visuals:
+        - PieChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: ae122d40-0768-47df-86bb-ac5a771bdafd
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              DonutOptions:
+                ArcOptions:
+                  ArcThickness: MEDIUM
+              FieldWells:
+                PieChartAggregatedFieldWells:
+                  Category:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Action Type
+                        DataSetIdentifier: cora_view
+                      FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.1.1724662814162
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Saving Size
+                        DataSetIdentifier: cora_view
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.1.1724662814162
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies: []
+            Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Click to Filter</visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>By Resource and Action</visual-title>
+              Visibility: VISIBLE
+            VisualId: 969d2a01-5cad-44a8-ae48-72f9c38b0cba
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -3731,13 +3983,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action And Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
                   Rows:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Group By
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 29971723-7263-42db-aa01-ab04a04146c6.2.1724616250645
                   Values:
                   - NumericalMeasureField:
@@ -3745,7 +3997,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Saving Size
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
               SortConfiguration:
                 FieldSortOptions:
@@ -3814,87 +4066,6 @@ dashboards:
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 36b1cda0-1366-45c2-a5e7-557fa9abef22
-        - PieChartVisual:
-            Actions:
-            - ActionOperations:
-              - FilterOperation:
-                  SelectedFieldsConfiguration:
-                    SelectedColumns:
-                    - ColumnName: region
-                      DataSetIdentifier: coh
-                    - ColumnName: Action And Resource
-                      DataSetIdentifier: coh
-                    SelectedFields:
-                    - ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
-                  TargetVisualsConfiguration:
-                    SameSheetTargetVisualConfiguration:
-                      TargetVisualOptions: ALL_VISUALS
-              CustomActionId: e9252d8a-ee7e-4da3-a5af-f21f6f7a3a40
-              Name: Action 1
-              Status: ENABLED
-              Trigger: DATA_POINT_CLICK
-            ChartConfiguration:
-              DataLabels:
-                Overlap: DISABLE_OVERLAP
-                Visibility: VISIBLE
-              DonutOptions:
-                ArcOptions:
-                  ArcThickness: MEDIUM
-              FieldWells:
-                PieChartAggregatedFieldWells:
-                  Category:
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: Action And Resource
-                        DataSetIdentifier: coh
-                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
-                      HierarchyId: 65789c57-11b4-4466-ab83-29512cbf0ba3
-                  Values:
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
-                        ColumnName: Saving Size
-                        DataSetIdentifier: coh
-                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
-              SortConfiguration:
-                CategoryItemsLimit:
-                  OtherCategories: INCLUDE
-                CategorySort:
-                - FieldSort:
-                    Direction: DESC
-                    FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
-                SmallMultiplesLimitConfiguration:
-                  OtherCategories: INCLUDE
-              Tooltip:
-                FieldBasedTooltip:
-                  AggregationVisibility: HIDDEN
-                  TooltipFields:
-                  - FieldTooltipItem:
-                      FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
-                      Visibility: VISIBLE
-                  - FieldTooltipItem:
-                      FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
-                      Visibility: VISIBLE
-                  TooltipTitleType: PRIMARY_VALUE
-                SelectedTooltipType: DETAILED
-                TooltipVisibility: VISIBLE
-            ColumnHierarchies:
-            - ExplicitHierarchy:
-                Columns:
-                - ColumnName: Action And Resource
-                  DataSetIdentifier: coh
-                - ColumnName: region
-                  DataSetIdentifier: coh
-                DrillDownFilters: []
-                HierarchyId: 65789c57-11b4-4466-ab83-29512cbf0ba3
-            Subtitle:
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: <visual-title>By Resource and Action</visual-title>
-              Visibility: VISIBLE
-            VisualId: d69510e9-a1b0-49f3-9203-8c2cb550f5a7
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3911,6 +4082,10 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: STACKED
+              CategoryAxis:
+                DataOptions:
+                  DateAxisOptions:
+                    MissingDateVisibility: HIDDEN
               DataLabels:
                 DataLabelTypes:
                 - DataPathLabelType:
@@ -3924,14 +4099,14 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: Date
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
                       HierarchyId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action And Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.2.1723399967970
                       HierarchyId: 17c530b9-a053-4109-8f14-f47f52513b6a
                   Values:
@@ -3940,22 +4115,24 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Saving Size
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
               Legend:
-                Width: 154px
+                Title:
+                  Visibility: VISIBLE
+                Width: 188px
               Orientation: VERTICAL
               SortConfiguration:
                 CategoryItemsLimit:
-                  OtherCategories: INCLUDE
+                  OtherCategories: EXCLUDE
                 CategorySort:
                 - FieldSort:
                     Direction: ASC
                     FieldId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
                 ColorItemsLimit:
-                  OtherCategories: INCLUDE
+                  OtherCategories: EXCLUDE
                 SmallMultiplesLimitConfiguration:
-                  OtherCategories: INCLUDE
+                  OtherCategories: EXCLUDE
               Tooltip:
                 FieldBasedTooltip:
                   AggregationVisibility: HIDDEN
@@ -3972,15 +4149,25 @@ dashboards:
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
+              ValueLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: Saving Size
+                      DataSetIdentifier: cora_view
+                    FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+                  CustomLabel: Potential Monthly Saving
+                SortIconVisibility: HIDDEN
+                Visibility: VISIBLE
             ColumnHierarchies:
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: Action And Resource
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: region
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: Group By
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 DrillDownFilters: []
                 HierarchyId: 17c530b9-a053-4109-8f14-f47f52513b6a
             - DateTimeHierarchy:
@@ -4001,7 +4188,7 @@ dashboards:
                   SelectedFieldsConfiguration:
                     SelectedColumns:
                     - ColumnName: region
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     SelectedFields:
                     - 29971723-7263-42db-aa01-ab04a04146c6.2.1724616220062
                   TargetVisualsConfiguration:
@@ -4026,13 +4213,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Group By
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 29971723-7263-42db-aa01-ab04a04146c6.2.1724616220062
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action And Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
                       HierarchyId: 2f888752-4f63-428b-97a1-6382542d6502
                   Values:
@@ -4041,8 +4228,10 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Saving Size
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
+              Legend:
+                Width: 111px
               Orientation: HORIZONTAL
               SortConfiguration:
                 CategoryItemsLimit:
@@ -4079,12 +4268,14 @@ dashboards:
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: Action And Resource
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: region
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 DrillDownFilters: []
                 HierarchyId: 2f888752-4f63-428b-97a1-6382542d6502
             Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Click to Filter</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -4126,7 +4317,7 @@ dashboards:
                 - DataPathList:
                   - FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.2.1723397718096
                     FieldValue: Resource
-                  Width: 234px
+                  Width: 225px
                 - DataPathList:
                   - FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.7.1723842665827
                     FieldValue: Tags
@@ -4136,25 +4327,25 @@ dashboards:
                     FieldValue: Saving Size
                   Width: 169px
                 - DataPathList:
-                  - FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
-                    FieldValue: Action And Resource
-                  Width: 157px
-                - DataPathList:
                   - FieldId: 3d228fce-a6e5-47e5-8d1a-71f6b10e5812.8.1723843025261
                     FieldValue: Name
-                  Width: 153px
+                  Width: 161px
                 - DataPathList:
                   - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.6.1723400446501
                     FieldValue: account_id
                   Width: 132px
                 - DataPathList:
-                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.5.1723397878714
-                    FieldValue: current_resource_summary
-                  Width: 131px
+                  - FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
+                    FieldValue: Action And Resource
+                  Width: 129px
                 - DataPathList:
                   - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.4.1723397866337
                     FieldValue: recommended_resource_summary
                   Width: 125px
+                - DataPathList:
+                  - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.5.1723397878714
+                    FieldValue: current_resource_summary
+                  Width: 120px
                 - DataPathList:
                   - FieldId: 2afb073d-be52-4523-9d2b-94c1101678d7.9.1723877246436
                     FieldValue: Effort
@@ -4192,47 +4383,47 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Group By
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 29971723-7263-42db-aa01-ab04a04146c6.9.1724616315708
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: account_id
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.6.1723400446501
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: c453eaaa-4cbc-4b25-865e-9af12cc253b6.2.1723397718096
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action And Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Name
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 3d228fce-a6e5-47e5-8d1a-71f6b10e5812.8.1723843025261
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Effort
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2afb073d-be52-4523-9d2b-94c1101678d7.9.1723877246436
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: current_resource_summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_summary.5.1723397878714
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: recommended_resource_summary
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommended_resource_summary.4.1723397866337
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Tags
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.7.1723842665827
                   Values:
                   - NumericalMeasureField:
@@ -4240,7 +4431,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Saving Size
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
               SortConfiguration:
                 FieldSortOptions:
@@ -4314,7 +4505,7 @@ dashboards:
                   SelectedFieldsConfiguration:
                     SelectedColumns:
                     - ColumnName: Resource Type
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     SelectedFields:
                     - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
                   TargetVisualsConfiguration:
@@ -4335,14 +4526,14 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Resource Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
                       HierarchyId: fb32764d-6cbd-42b1-85af-11da67ff9b54
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action And Resource
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.2.1723876149329
                   Values:
                   - NumericalMeasureField:
@@ -4350,7 +4541,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Saving Size
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 186c3243-1a0e-4c70-bd1f-647919048724.1.1723397522842
               Orientation: HORIZONTAL
               SortConfiguration:
@@ -4384,9 +4575,9 @@ dashboards:
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: Top
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: Resource Type
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 DrillDownFilters: []
                 HierarchyId: fb32764d-6cbd-42b1-85af-11da67ff9b54
             Subtitle:
@@ -4566,7 +4757,32 @@ dashboards:
                 ElementType: VISUAL
                 RowIndex: 18
                 RowSpan: 12
-        Name: Saving Plans
+        Name: Rate Optimization - Saving Plans
+        ParameterControls:
+        - List:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SearchOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: HIDDEN
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 9cd490a9-4403-4898-bcc8-e9ae04a82529
+            SelectableValues:
+              Values:
+              - Account Id
+              - Account Name
+              - Business Unit
+              - Management Account Id
+              - Tag
+            SourceParameterName: GroupBy
+            Title: Group By
+            Type: SINGLE_SELECT
         SheetControlLayouts:
         - Configuration:
             GridLayout:
@@ -4607,19 +4823,30 @@ dashboards:
                 ElementType: FILTER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 9cd490a9-4403-4898-bcc8-e9ae04a82529
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
         SheetId: 6a66e111-7f3e-439a-904c-fdb54067d1ea
         TextBoxes:
         - Content: |-
             <text-box>
-              <inline font-size="40px">Savings Plans</inline>
+              <inline font-size="40px">Rate Optimization - Saving Plans</inline>
               <br/>
-              <inline font-size="12px">This page provides information about SP options</inline>
+              <inline font-size="12px">This page provides information about Savings Plan options</inline>
             </text-box>
           SheetTextBoxId: 4ca9647b-0978-4e23-92d0-265b37120ef7
-        - Content: "<text-box>\n  How to use:\n  <br/>\n  <ul>\n    <li>Select Level, Terms\
-            \  and Upfront options</li>\n    <li>Define the right commitment</li>\n    <li>Trake\
-            \ into acccount your rightsizing plan and how much it can reduce the commitment\
-            \ plan.\_</li>\n  </ul>\n</text-box>"
+        - Content: |-
+            <text-box>
+              How to use:
+              <br/>
+              <ul>
+                <li>Select Level, Terms  and Upfront options</li>
+                <li>Define the right commitment</li>
+                <li>Trake into acccount your rightsizing plan and how much it can reduce the commitment volume</li>
+              </ul>
+              <br/>
+            </text-box>
           SheetTextBoxId: d657418e-3869-4ae7-a4ad-b16fd34b8e05
         - Content: "<text-box>\n  Recommendations:\n  <br/>\n  <ul>\n    <li>\n      Avoid\
             \ purcaising SP after 20th of the month. There is a\n      <a href=\"https://docs.aws.amazon.com/savingsplans/latest/userguide/sp-purchase.html#return-sp\"\
@@ -4714,33 +4941,33 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI SP Term
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: b79aa059-0f12-4d02-93d5-1b499be75abe.12.1722190821253
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI SP Upfront
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 28663381-0078-4963-82cf-f03f0d673f19.12.1722190713951
                   Rows:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Group By
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 29971723-7263-42db-aa01-ab04a04146c6.6.1724616974530
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: current_resource_type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: region
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722331318534
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: SP Instance Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: bd9029fa-a45e-4485-8063-08ab7e14e0d7.11.1722331300494
                   Values:
                   - NumericalMeasureField:
@@ -4748,7 +4975,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
                       FormatConfiguration:
                         FormatConfiguration:
@@ -4851,9 +5078,7 @@ dashboards:
             Actions:
             - ActionOperations:
               - FilterOperation:
-                  SelectedFieldsConfiguration:
-                    SelectedFields:
-                    - 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
+                  SelectedFieldsConfiguration: {}
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisualOptions: ALL_VISUALS
@@ -4864,10 +5089,6 @@ dashboards:
             ChartConfiguration:
               FieldOptions:
                 DataPathOptions:
-                - DataPathList:
-                  - FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
-                    FieldValue: Action Summary
-                  Width: 253px
                 - DataPathList:
                   - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
                     FieldValue: current_resource_type
@@ -4890,7 +5111,7 @@ dashboards:
                   Width: 101px
                 - DataPathList:
                   - FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
-                    FieldValue: Curent Monthly Cost
+                    FieldValue: Current Monthly Cost
                   Width: 91px
                 - DataPathList:
                   - FieldId: b79aa059-0f12-4d02-93d5-1b499be75abe.12.1722190821253
@@ -4901,7 +5122,7 @@ dashboards:
                     FieldValue: Top
                   Width: 33px
                 SelectedFieldOptions:
-                - FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
+                - FieldId: 29971723-7263-42db-aa01-ab04a04146c6.11.1724618225660
                   Visibility: VISIBLE
                 - CustomLabel: Type
                   FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
@@ -4918,9 +5139,6 @@ dashboards:
                 - CustomLabel: Region
                   FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722331318534
                   Visibility: VISIBLE
-                - CustomLabel: Summary
-                  FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
-                  Visibility: HIDDEN
                 - CustomLabel: Commitment
                   FieldId: 50becd0b-beee-44a5-9680-8ebd2940b636.10.1722326043788
                   Visibility: VISIBLE
@@ -4941,63 +5159,58 @@ dashboards:
                   Rows:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Account
-                        DataSetIdentifier: coh
-                      FieldId: 45367fea-6875-4ad3-9828-cd8785c01f10.12.1721976565906
+                        ColumnName: Group By
+                        DataSetIdentifier: cora_view
+                      FieldId: 29971723-7263-42db-aa01-ab04a04146c6.11.1724618225660
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: current_resource_type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI SP Upfront
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 28663381-0078-4963-82cf-f03f0d673f19.12.1722190713951
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI SP Term
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: b79aa059-0f12-4d02-93d5-1b499be75abe.12.1722190821253
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: SP Instance Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: bd9029fa-a45e-4485-8063-08ab7e14e0d7.11.1722331300494
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: region
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722331318534
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Action Summary
-                        DataSetIdentifier: coh
-                      FieldId: 4b1ce749-907d-4c7f-a320-a8f9f275cfef.12.1721896188753
-                  - CategoricalDimensionField:
-                      Column:
                         ColumnName: RI SP Commitment
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 50becd0b-beee-44a5-9680-8ebd2940b636.10.1722326043788
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Top
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 8437224f-ade6-4aeb-ad4c-c9c1703a89fb.15.1721891209715
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: Curent Monthly Cost
-                        DataSetIdentifier: coh
+                        ColumnName: Current Monthly Cost
+                        DataSetIdentifier: cora_view
                       FieldId: 07f7745e-89b5-4d42-a8d3-f940c6c1017a.2.1721463967017
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
                       FormatConfiguration:
                         FormatConfiguration:
@@ -5017,7 +5230,7 @@ dashboards:
                   - NumericalMeasureField:
                       Column:
                         ColumnName: Savings, %
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
                       FormatConfiguration:
                         FormatConfiguration:
@@ -5033,7 +5246,47 @@ dashboards:
                                 Visibility: VISIBLE
                             Suffix: '%'
               SortConfiguration:
-                FieldSortOptions: []
+                FieldSortOptions:
+                - FieldId: 29971723-7263-42db-aa01-ab04a04146c6.11.1724618225660
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.current_resource_type.1.1721463685420
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 28663381-0078-4963-82cf-f03f0d673f19.12.1722190713951
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: b79aa059-0f12-4d02-93d5-1b499be75abe.12.1722190821253
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: bd9029fa-a45e-4485-8063-08ab7e14e0d7.11.1722331300494
+                  SortBy:
+                    Field:
+                      Direction: ASC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722331318534
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.12.1722331318534
+                - FieldId: 50becd0b-beee-44a5-9680-8ebd2940b636.10.1722326043788
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                - FieldId: 8437224f-ade6-4aeb-ad4c-c9c1703a89fb.15.1721891209715
+                  SortBy:
+                    Field:
+                      Direction: DESC
+                      FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
               TableOptions:
                 CellStyle:
                   Height: 25
@@ -5300,7 +5553,32 @@ dashboards:
                 ElementType: FILTER_CONTROL
                 RowIndex: 35
                 RowSpan: 3
-        Name: Reserved Instances
+        Name: Rate Optimization - Reserved Instances
+        ParameterControls:
+        - List:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SearchOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 35711965-687a-4ce7-b167-aea88c7c5f0d
+            SelectableValues:
+              Values:
+              - Account Id
+              - Account Name
+              - Business Unit
+              - Management Account Id
+              - Tag
+            SourceParameterName: GroupBy
+            Title: Group By
+            Type: SINGLE_SELECT
         SheetControlLayouts:
         - Configuration:
             GridLayout:
@@ -5341,11 +5619,15 @@ dashboards:
                 ElementType: FILTER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 35711965-687a-4ce7-b167-aea88c7c5f0d
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
         SheetId: cd1f828e-cd03-4cfb-909f-b1421bd92a0e
         TextBoxes:
         - Content: |-
             <text-box>
-              <inline font-size="40px">Reserved Instances</inline>
+              <inline font-size="40px">Rate Optimization - Reserved Instances</inline>
               <br/>
               <inline font-size="12px">This page provides information about RI options</inline>
             </text-box>
@@ -5424,12 +5706,12 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Serivice
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Product
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
                       FormatConfiguration:
                         NullValueFormatConfiguration:
@@ -5440,25 +5722,25 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
                   - CategoricalMeasureField:
                       AggregationFunction: COUNT
                       Column:
                         ColumnName: recommendation_id
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.recommendation_id.5.1723844935010
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
                       Column:
                         ColumnName: region
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.3.1723844835993
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
                       Column:
                         ColumnName: account_id
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.account_id.4.1723844849330
               SortConfiguration:
                 FieldSortOptions:
@@ -5515,8 +5797,6 @@ dashboards:
                 SelectedFieldOptions:
                 - CustomLabel: Service
                   FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
-                - CustomLabel: Account
-                  FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.5.1722344992614
                 - CustomLabel: Product
                   FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.6.1722345153591
                   Width: 203px
@@ -5540,47 +5820,47 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Serivice
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Account
-                        DataSetIdentifier: coh
-                      FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.5.1722344992614
+                        ColumnName: Group By
+                        DataSetIdentifier: cora_view
+                      FieldId: 29971723-7263-42db-aa01-ab04a04146c6.9.1724703652308
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Product
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.6.1722345153591
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Instance Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: cdad1728-dfa7-4dc3-8fc6-ad609b184779.8.1722374172914
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: region
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.6.1722345069871
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Quantaty
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 4475723f-2fdd-4adf-a931-85cb282a19e2.9.1722374183483
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI SP Term
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 647318b5-38d8-4a43-87ea-2a4c4752da32.5.1722345051775
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI SP Upfront
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 038b42b1-34c5-423f-a5b1-5bb7c7afc2ae.7.1722345227414
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Top
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2428ccf1-e3d7-4838-be59-464c34c09343.10.1722452927967
                   Values:
                   - NumericalMeasureField:
@@ -5588,7 +5868,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
               SortConfiguration:
                 RowSort:
@@ -5623,7 +5903,7 @@ dashboards:
                   SelectedFieldsConfiguration:
                     SelectedColumns:
                     - ColumnName: RI Serivice
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     SelectedFields:
                     - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
                   TargetVisualsConfiguration:
@@ -5648,13 +5928,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: date
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.date.2.1722375505193
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Serivice
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
                       HierarchyId: 5b705766-78c3-498d-83e6-19d938f47f59
                   Values:
@@ -5663,7 +5943,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
               Orientation: VERTICAL
               SortConfiguration:
@@ -5698,18 +5978,18 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: Savings Estimate, Monthly
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
                   CustomLabel: Savings
             ColumnHierarchies:
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: RI Serivice
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: RI Product
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: Account
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 DrillDownFilters: []
                 HierarchyId: 5b705766-78c3-498d-83e6-19d938f47f59
             Subtitle:
@@ -5754,13 +6034,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: region
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.2.1722375218312
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Serivice
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722375011114
                   Values:
                   - NumericalMeasureField:
@@ -5768,7 +6048,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
               Legend:
                 Width: 74px
@@ -5805,7 +6085,7 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: Savings Estimate, Monthly
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
                   CustomLabel: Savings
             ColumnHierarchies: []
@@ -5843,13 +6123,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Group By
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 29971723-7263-42db-aa01-ab04a04146c6.2.1724617029977
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Serivice
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722375011114
                   Values:
                   - NumericalMeasureField:
@@ -5857,7 +6137,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
               Legend:
                 Width: 78px
@@ -5890,7 +6170,7 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: Savings Estimate, Monthly
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
                   CustomLabel: Savings
             ColumnHierarchies: []
@@ -5934,13 +6214,13 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Serivice
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Product
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
                       FormatConfiguration:
                         NullValueFormatConfiguration:
@@ -5952,7 +6232,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
               Legend:
                 Width: 66px
@@ -5989,16 +6269,16 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: Savings Estimate, Monthly
-                      DataSetIdentifier: coh
+                      DataSetIdentifier: cora_view
                     FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
                   CustomLabel: Savings
             ColumnHierarchies:
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: RI Product
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 - ColumnName: Account
-                  DataSetIdentifier: coh
+                  DataSetIdentifier: cora_view
                 DrillDownFilters: []
                 HierarchyId: 78f67442-6737-4840-943e-ed256f58405a
             Subtitle:
@@ -6039,10 +6319,6 @@ dashboards:
                     FieldValue: RI Product
                   Width: 255px
                 - DataPathList:
-                  - FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.5.1722344992614
-                    FieldValue: Account
-                  Width: 156px
-                - DataPathList:
                   - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
                     FieldValue: RI Serivice
                   Width: 135px
@@ -6054,8 +6330,7 @@ dashboards:
                 - CustomLabel: Service
                   FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
                   Visibility: VISIBLE
-                - CustomLabel: Account
-                  FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.5.1722344992614
+                - FieldId: 29971723-7263-42db-aa01-ab04a04146c6.8.1724619229348
                   Visibility: VISIBLE
                 - CustomLabel: Product
                   FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.6.1722345153591
@@ -6084,43 +6359,43 @@ dashboards:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI SP Term
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 647318b5-38d8-4a43-87ea-2a4c4752da32.5.1722345051775
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI SP Upfront
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 038b42b1-34c5-423f-a5b1-5bb7c7afc2ae.7.1722345227414
                   Rows:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Serivice
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Account
-                        DataSetIdentifier: coh
-                      FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.5.1722344992614
+                        ColumnName: Group By
+                        DataSetIdentifier: cora_view
+                      FieldId: 29971723-7263-42db-aa01-ab04a04146c6.8.1724619229348
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Product
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.6.1722345153591
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Instance Type
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: cdad1728-dfa7-4dc3-8fc6-ad609b184779.8.1722374172914
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: region
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: e5febe5d-d4f1-40a7-a305-78afc5a50b0e.region.6.1722345069871
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: RI Quantaty
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 4475723f-2fdd-4adf-a931-85cb282a19e2.9.1722374183483
                   Values:
                   - NumericalMeasureField:
@@ -6128,7 +6403,7 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: Savings Estimate, Monthly
-                        DataSetIdentifier: coh
+                        DataSetIdentifier: cora_view
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
               SortConfiguration:
                 FieldSortOptions:
@@ -6137,7 +6412,7 @@ dashboards:
                     Field:
                       Direction: DESC
                       FieldId: 8b6c9bff-3382-4acf-ac07-396a5b836ed9.1.1722344537363
-                - FieldId: bcc39a68-ca29-41c3-8d98-aa6a3010b04a.5.1722344992614
+                - FieldId: 29971723-7263-42db-aa01-ab04a04146c6.8.1724619229348
                   SortBy:
                     Field:
                       Direction: DESC
@@ -6298,7 +6573,7 @@ dashboards:
             \    <inline font-size=\"24px\">ecommended\_</inline>\n    <inline font-size=\"\
             24px\">\n      <b>A</b>\n    </inline>\n    <inline font-size=\"24px\">ctions</inline>\n\
             \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
-            >v0.0.3</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
+            >v0.0.4</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"24px\">\n      <a href=\"\
             https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
             \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
@@ -6328,10 +6603,10 @@ dashboards:
           SheetTextBoxId: e1a97ad7-dff0-43a7-b2fc-8f7077dc2520
         Visuals: []
 datasets:
-  cost_optimization_hub_recommendations:
+  cora_view:
     data:
       DataSetId: f3e97e44-d115-4f0a-b38a-fa039038deeb
-      Name: cost_optimization_hub_recommendations
+      Name: cora_view
       PhysicalTableMap:
         3803f554-6ebc-4256-96e7-ec0661db164b:
           RelationalTable:
@@ -6348,8 +6623,8 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${data_exports_database_name}
-            Name: coh
+            Schema: ${athena_database_name}
+            Name: cora_view
             InputColumns:
             - Name: account_id
               Type: STRING
@@ -6471,16 +6746,53 @@ datasets:
           Source:
             PhysicalTableId: 3803f554-6ebc-4256-96e7-ec0661db164b
         e5febe5d-d4f1-40a7-a305-78afc5a50b0e:
-          Alias: coh
+          Alias: cora_view
           Source:
             PhysicalTableId: 50abacdb-9086-41a9-a217-a2adf45e448c
       ImportMode: SPICE
     dependsOn:
       views:
       - account_map
-      - coh
+      - cora_view
     schedules:
     - default
+views:
+  cora_view:
+    data: |-
+      CREATE OR REPLACE VIEW "${athena_database_name}"."cora_view" AS
+      SELECT
+        "account_id"
+      , "action_type"
+      , "currency_code"
+      , "current_resource_details"
+      , "current_resource_summary"
+      , "current_resource_type"
+      , "estimated_monthly_cost_after_discount"
+      , "estimated_monthly_cost_before_discount"
+      , "estimated_monthly_savings_after_discount"
+      , "estimated_monthly_savings_before_discount"
+      , "estimated_savings_percentage_after_discount"
+      , "estimated_savings_percentage_before_discount"
+      , "implementation_effort"
+      , "last_refresh_timestamp"
+      , "recommendation_id"
+      , "recommendation_lookback_period_in_days"
+      , "recommendation_source"
+      , "recommended_resource_details"
+      , "recommended_resource_summary"
+      , "recommended_resource_type"
+      , "region"
+      , "resource_arn"
+      , "restart_needed"
+      , "rollback_possible"
+      , "tags"
+      , "source_account_id"
+      , "report_name"
+      , "data"
+      , "date"
+      FROM
+        "${data_exports_database_name}".coh
+      WHERE (CAST("date" AS date) >= ("date_trunc"('month', current_timestamp) - INTERVAL  '6' MONTH))
     parameters:
       data_exports_database_name:
         default: cid_data_export
