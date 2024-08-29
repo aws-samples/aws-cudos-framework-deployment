@@ -2167,9 +2167,9 @@ dashboards:
             </text-box>
           SheetTextBoxId: 1a5e9b89-f55b-4ed5-82f7-1b8ffd1e02f1
         - Content: "<text-box>\n  <ul>\n    <li>\n      We recommend reviewing rightsizing\
-            \ first and then proceed with commitments. See&nbsp;\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
+            \ first and then proceed with commitments. See\_\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
             \ target=\"_blank\">more</a>\n      .\n    </li>\n    <li>\n      Please note\
-            \ that there might be a&nbsp;\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#difference-with-ui\"\
+            \ that there might be a\_\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#difference-with-ui\"\
             \ target=\"_blank\">difference</a>\n      \_with data presented here and on\
             \ the Console Donut.\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 2bb35924-202f-4467-a958-4feb38e7eff3
@@ -4855,7 +4855,7 @@ dashboards:
             \ CUDOS dashboard for more analysis of your current spend and SP Commitment\
             \ potential.</li>\n    <li>You can buy small SP ammounts incermentally increasing\
             \ the coverage to avoid expiration at the same day.</li>\n    <li>\n      See\n\
-            \ &nbsp;     <a href=\"https://catalog.workshops.aws/awscff/en-US/playbooks/compute/ec2/7-commitment-plans\"\
+            \ \_     <a href=\"https://catalog.workshops.aws/awscff/en-US/playbooks/compute/ec2/7-commitment-plans\"\
             \ target=\"_blank\">more recommendations</a>\n      .\n    </li>\n  </ul>\n\
             \  <br/>\n</text-box>"
           SheetTextBoxId: 3a20ff63-199d-4ec7-af5b-ddb8d5c953a4
