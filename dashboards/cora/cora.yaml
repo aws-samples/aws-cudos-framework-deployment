@@ -4849,7 +4849,7 @@ dashboards:
             </text-box>
           SheetTextBoxId: d657418e-3869-4ae7-a4ad-b16fd34b8e05
         - Content: "<text-box>\n  Recommendations:\n  <br/>\n  <ul>\n    <li>\n      Avoid\
-            \ purcaising SP after 20th of the month. There is a\n      <a href=\"https://docs.aws.amazon.com/savingsplans/latest/userguide/sp-purchase.html#return-sp\"\
+            \ purchasing SP after 20th of the month. There is a\n      <a href=\"https://docs.aws.amazon.com/savingsplans/latest/userguide/sp-purchase.html#return-sp\"\
             \ target=\"_blank\">7 days return policy</a>\n      \_for some Savings Plans\
             \ and it only works within the same calendar month.\n    </li>\n    <li>Check\
             \ CUDOS dashboard for more analysis of your current spend and SP Commitment\
