@@ -3451,7 +3451,7 @@ dashboards:
                   Placement: AUTO
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>Unroll Ation up to Resource Level. Click Resource
+                RichText: <visual-subtitle>Unroll Action up to Resource Level. Click Resource
                   To Filter.</visual-subtitle>
               Visibility: VISIBLE
             Title:
