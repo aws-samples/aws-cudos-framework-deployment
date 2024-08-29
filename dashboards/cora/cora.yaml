@@ -2169,7 +2169,7 @@ dashboards:
         - Content: "<text-box>\n  <ul>\n    <li>\n      We recommend reviewing rightsizing\
             \ first and then proceed with commitments. See\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
             \ target=\"_blank\">more</a>\n      .\n    </li>\n    <li>\n      Please note\
-            \ that there migt be a\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#difference-with-ui\"\
+            \ that there might be a&nbsp;\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#difference-with-ui\"\
             \ target=\"_blank\">difference</a>\n      \_with data presented here and on\
             \ the Console Donut.\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 2bb35924-202f-4467-a958-4feb38e7eff3
