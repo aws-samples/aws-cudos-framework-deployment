@@ -4855,7 +4855,7 @@ dashboards:
             \ CUDOS dashboard for more analysis of your current spend and SP Commitment\
             \ potential.</li>\n    <li>You can buy small SP ammounts incermentally increasing\
             \ the coverage to avoid expiration at the same day.</li>\n    <li>\n      See\n\
-            \      <a href=\"https://catalog.workshops.aws/awscff/en-US/playbooks/compute/ec2/7-commitment-plans\"\
+            \ &nbsp;     <a href=\"https://catalog.workshops.aws/awscff/en-US/playbooks/compute/ec2/7-commitment-plans\"\
             \ target=\"_blank\">more recommendations</a>\n      .\n    </li>\n  </ul>\n\
             \  <br/>\n</text-box>"
           SheetTextBoxId: 3a20ff63-199d-4ec7-af5b-ddb8d5c953a4
