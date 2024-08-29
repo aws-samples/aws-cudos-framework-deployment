@@ -3684,7 +3684,7 @@ dashboards:
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>Note: The 'Total' here does not take into account\
-                  \ deduction of commtment savings after rightsizing actions.\_</visual-subtitle>"
+                  \ deduction of commitment savings after rightsizing actions.\_</visual-subtitle>"
               Visibility: VISIBLE
             Title:
               FormatText:
