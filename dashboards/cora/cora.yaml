@@ -2786,7 +2786,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: <visual-title>Top Potentail Savings Per Action Type</visual-title>
+                RichText: <visual-title>Top Potential Savings Per Action Type</visual-title>
               Visibility: VISIBLE
             VisualId: bd6a4854-6438-4450-968c-396186f2b69d
         - PivotTableVisual:
