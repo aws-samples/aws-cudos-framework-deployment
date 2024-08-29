@@ -2167,7 +2167,7 @@ dashboards:
             </text-box>
           SheetTextBoxId: 1a5e9b89-f55b-4ed5-82f7-1b8ffd1e02f1
         - Content: "<text-box>\n  <ul>\n    <li>\n      We recommend reviewing rightsizing\
-            \ first and then proceed with commitments. See\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
+            \ first and then proceed with commitments. See&nbsp;\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
             \ target=\"_blank\">more</a>\n      .\n    </li>\n    <li>\n      Please note\
             \ that there might be a&nbsp;\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#difference-with-ui\"\
             \ target=\"_blank\">difference</a>\n      \_with data presented here and on\
