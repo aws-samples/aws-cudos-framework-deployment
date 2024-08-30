@@ -3621,7 +3621,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    Top Potential Savings Per
+                    Top Potential Savings Per GroupBy=
                     <parameter>${GroupBy}</parameter>
                   </visual-title>
               Visibility: VISIBLE
@@ -3960,12 +3960,12 @@ dashboards:
         - Content: "<text-box>\n  Recommendations:\n  <br/>\n  <ul>\n    <li>Add a special\
             \ Cost Allocation Tag 'FinopsException' and use it to exclude from this analysis</li>\n\
             \    <li>Use Cost Allocation Tag Name to get resource Names</li>\n    <li>Review\
-            \ also Compute Optimizer data as they show also performance reccomendations\
+            \ also Compute Optimizer data as they show also performance recommendations\
             \ for Under Provisioned resources that can be at risk in terms of Performance\_\
             </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: d85839b7-5c5c-48ed-86cc-6ee53ccae5f7
         - Content: "<text-box>\n  <inline font-size=\"40px\">Usage Optimization\_</inline>\n\
-            \  <br/>\n  <inline font-size=\"20px\">Risghtsizing, Stop, Update and Migrate\
+            \  <br/>\n  <inline font-size=\"20px\">Rightsizing, Stop, Update and Migrate\
             \ to Graviton</inline>\n</text-box>"
           SheetTextBoxId: 256981d3-38c8-49eb-8ace-166fc0ec61e0
         Visuals:
@@ -4149,7 +4149,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    Savings by Action and
+                    Savings by Action and GroupBy=
                     <parameter>${GroupBy}</parameter>
                   </visual-title>
               Visibility: VISIBLE
@@ -4371,7 +4371,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    Top Actions By
+                    Top Actions By GroupBy=
                     <parameter>${GroupBy}</parameter>
                   </visual-title>
               Visibility: VISIBLE
@@ -6276,7 +6276,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    Top Potential Savings by
+                    Top Potential Savings by GroupBy=
                     <parameter>${GroupBy}</parameter>
                   </visual-title>
               Visibility: VISIBLE
