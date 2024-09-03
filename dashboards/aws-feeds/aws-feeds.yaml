@@ -3181,7 +3181,7 @@ crawlers: {}
 views:
   aws_feeds:
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.aws_feeds AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".aws_feeds AS
       SELECT
         date published
       , 'blog_post' feed_type
