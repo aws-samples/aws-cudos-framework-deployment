@@ -560,7 +560,7 @@ views:
         description: "Enter tag name that is used to categorize workloads"
         global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_s3_storage_all AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_s3_storage_all AS
       WITH
         TAG_KPI_PER_DAY AS (
          SELECT
@@ -568,7 +568,7 @@ views:
          , tagvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY line_item_usage_start_date, tagvalue
       )
       , ACC_KPI_PER_DAY AS (
@@ -577,7 +577,7 @@ views:
          , linkedaccountvalue linkedaccountvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY line_item_usage_start_date, linkedaccountvalue
       )
       SELECT DISTINCT
@@ -603,7 +603,7 @@ views:
       , "sum"("line_item_unblended_cost") "unblended_cost"
       , "sum"("pricing_public_on_demand_cost") "public_cost"
       FROM
-        ((${athena_database_name}.${cur_table_name} cur
+        (("${athena_database_name}"."${cur_table_name}" cur
       LEFT JOIN TAG_KPI_PER_DAY susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
       LEFT JOIN ACC_KPI_PER_DAY susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((("line_item_operation" LIKE '%Storage%')) AND (("line_item_product_code" LIKE '%AmazonGlacier%') OR ("line_item_product_code" LIKE '%AmazonS3%')))
@@ -619,18 +619,18 @@ views:
         description: "Enter tag name that is used to categorize workloads"
         global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_buss_kpi AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_buss_kpi AS
       SELECT
         ${tag} tagValue
       , line_item_usage_account_id linkedAccountValue
       , line_item_usage_start_date
       , CAST(("random"() * 1000) AS int) buss
       FROM
-        ${athena_database_name}.${cur_table_name} cur
+        "${athena_database_name}"."${cur_table_name}" cur
       GROUP BY line_item_usage_start_date, line_item_usage_account_id, 1
   sus_aws_regions:
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_aws_regions AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_aws_regions AS
       SELECT *
       FROM
         (
@@ -676,14 +676,14 @@ views:
         description: "Enter tag name that is used to categorize workloads"
         global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_compute_ec2 AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_compute_ec2 AS
       WITH tag_business_metrics AS (
         SELECT
           line_item_usage_start_date,
           tagvalue,
           SUM(buss) business_metric
         FROM
-          ${athena_database_name}.sus_buss_kpi
+          "${athena_database_name}".sus_buss_kpi
         GROUP BY
           line_item_usage_start_date,
           tagvalue
@@ -694,7 +694,7 @@ views:
           linkedaccountvalue,
           SUM(buss) business_metric
         FROM
-          ${athena_database_name}.sus_buss_kpi
+          "${athena_database_name}".sus_buss_kpi
         GROUP BY
           line_item_usage_start_date,
           linkedaccountvalue
@@ -711,7 +711,7 @@ views:
       , SUM(susTag.business_metric) tag_business_metric
       , SUM(susAcc.business_metric) account_business_metric
       FROM
-        ((${athena_database_name}.${cur_table_name} cur
+        (("${athena_database_name}"."${cur_table_name}" cur
       LEFT JOIN tag_business_metrics susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
       LEFT JOIN acc_business_metrics susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((cur.product_product_family = 'Compute Instance') AND (cur.line_item_product_code = 'AmazonEC2') AND (cur.line_item_operation LIKE 'RunInstances%') AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage', 'DiscountedUsage')))
@@ -729,7 +729,7 @@ views:
         description: "Enter tag name that is used to categorize workloads"
         global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_idle_elb AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_idle_elb AS
       WITH
         TAG_KPI_PER_DAY AS (
          SELECT
@@ -737,7 +737,7 @@ views:
          , tagvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY line_item_usage_start_date, tagvalue
       )
       , ACC_KPI_PER_DAY AS (
@@ -746,7 +746,7 @@ views:
          , linkedaccountvalue linkedaccountvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY line_item_usage_start_date, linkedaccountvalue
       )
       SELECT
@@ -778,7 +778,7 @@ views:
          , "sum"(susAcc.busKpi) AccBusKpi
          , "count"(pricing_unit) OVER (PARTITION BY line_item_resource_id, bill_billing_period_start_date) pricing_unit_per_resource
          FROM
-           ((${athena_database_name}.${cur_table_name} cur
+           (("${athena_database_name}"."${cur_table_name}" cur
          LEFT JOIN TAG_KPI_PER_DAY susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
          LEFT JOIN ACC_KPI_PER_DAY susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
          WHERE (((line_item_product_code = 'AWSELB') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH)))) AND (line_item_line_item_type = 'Usage'))
@@ -797,7 +797,7 @@ views:
         description: "Enter tag name that is used to categorize workloads"
         global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_storage_athena AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_storage_athena AS
       WITH
         TAG_KPI_PER_DAY AS (
          SELECT
@@ -805,7 +805,7 @@ views:
          , tagvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY (line_item_usage_start_date), tagvalue
       )
       , ACC_KPI_PER_DAY AS (
@@ -814,7 +814,7 @@ views:
          , linkedaccountvalue linkedaccountvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY (line_item_usage_start_date), linkedaccountvalue
       )
       SELECT
@@ -827,7 +827,7 @@ views:
       , "sum"(susTag.busKpi) TagBusKpi
       , "sum"(susAcc.busKpi) AccBusKpi
       FROM
-        ((${athena_database_name}.${cur_table_name} cur
+        (("${athena_database_name}"."${cur_table_name}" cur
       LEFT JOIN TAG_KPI_PER_DAY susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
       LEFT JOIN ACC_KPI_PER_DAY susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((line_item_operation LIKE 'CreateVolume%') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
@@ -838,7 +838,7 @@ views:
       views:
       - sus_aws_regions
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_geo_region_athena AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_geo_region_athena AS
       SELECT
         bill_payer_account_id
       , line_item_usage_start_date "usage_date"
@@ -848,8 +848,8 @@ views:
       , is95PercentRenewable
       , "sum"(line_item_blended_cost) cost
       FROM
-        (${athena_database_name}.${cur_table_name} cur
-      INNER JOIN ${athena_database_name}.sus_aws_regions ON ("product_region" = sus_aws_regions.region_name))
+        ("${athena_database_name}"."${cur_table_name}" cur
+      INNER JOIN "${athena_database_name}".sus_aws_regions ON ("product_region" = sus_aws_regions.region_name))
       WHERE (((product_region <> '') AND (product_region <> 'global')) AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '7' MONTH))))
       GROUP BY bill_payer_account_id, line_item_usage_start_date, product_region, region_city, region_latitude, is95PercentRenewable, region_longitude
   sus_network:
@@ -864,7 +864,7 @@ views:
         description: "Enter tag name that is used to categorize workloads"
         global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_network AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_network AS
       WITH
         TAG_KPI_PER_DAY AS (
          SELECT
@@ -872,7 +872,7 @@ views:
          , tagvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY (line_item_usage_start_date), tagvalue
       )
       , ACC_KPI_PER_DAY AS (
@@ -881,7 +881,7 @@ views:
          , linkedaccountvalue linkedaccountvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY (line_item_usage_start_date), linkedaccountvalue
       )
       SELECT
@@ -903,7 +903,7 @@ views:
       , "sum"(susTag.busKpi) TagBusKpi
       , "sum"(susAcc.busKpi) AccBusKpi
       FROM
-        ((${athena_database_name}.${cur_table_name} cur
+        (("${athena_database_name}"."${cur_table_name}" cur
       LEFT JOIN TAG_KPI_PER_DAY susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
       LEFT JOIN ACC_KPI_PER_DAY susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((((line_item_line_item_type = 'Usage')) AND (NOT (line_item_usage_amount = 0))) AND (((line_item_usage_type LIKE '%Bytes') AND ((((line_item_usage_type LIKE '%In%') OR (line_item_usage_type LIKE '%Out%')) OR (line_item_usage_type LIKE 'Nat%')) OR (line_item_usage_type LIKE '%Regional%'))) AND ((product_from_location = '') OR (product_from_location LIKE '%(%'))))
@@ -922,14 +922,14 @@ views:
         description: "Enter tag name that is used to categorize workloads"
         global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_compute_split AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_compute_split AS
       WITH tag_business_metrics AS (
         SELECT
           line_item_usage_start_date,
           tagvalue,
           SUM(buss) business_metric
         FROM
-          ${athena_database_name}.sus_buss_kpi
+          "${athena_database_name}".sus_buss_kpi
         GROUP BY
           line_item_usage_start_date,
           tagvalue
@@ -940,7 +940,7 @@ views:
           linkedaccountvalue,
           SUM(buss) business_metric
         FROM
-          ${athena_database_name}.sus_buss_kpi
+          "${athena_database_name}".sus_buss_kpi
         GROUP BY
           line_item_usage_start_date,
           linkedaccountvalue
@@ -955,7 +955,7 @@ views:
       , SUM(susTag.business_metric) tag_business_metric
       , SUM(susAcc.business_metric) account_business_metric
       FROM
-        ((${athena_database_name}.${cur_table_name} cur
+        (("${athena_database_name}"."${cur_table_name}" cur
       LEFT JOIN tag_business_metrics susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
       LEFT JOIN acc_business_metrics susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((cur.line_item_usage_type LIKE '%Fargate-vCPU-Hours:perCPU') AND (cur.line_item_product_code IN ('AmazonEKS', 'AmazonECS')) AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage')))
@@ -971,9 +971,9 @@ views:
       , SUM(susTag.buss) tag_business_metric
       , SUM(susAcc.buss) account_business_metric
       FROM
-        ((${athena_database_name}.${cur_table_name} cur
-      LEFT JOIN ${athena_database_name}.sus_buss_kpi susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
-      LEFT JOIN ${athena_database_name}.sus_buss_kpi susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
+        (("${athena_database_name}"."${cur_table_name}" cur
+      LEFT JOIN "${athena_database_name}".sus_buss_kpi susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
+      LEFT JOIN "${athena_database_name}".sus_buss_kpi susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
       WHERE ((cur.line_item_product_code = 'AWSLambda') AND (cur.line_item_usage_type LIKE '%Lambda-GB-Second') AND (cur.line_item_line_item_type IN ('Usage', 'SavingsPlanCoveredUsage')))
       AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '7' MONTH)))
       GROUP BY 1, 2, 3, 4, 5
@@ -987,7 +987,7 @@ views:
       , ec2.tag_business_metric
       , ec2.account_business_metric
       FROM
-        ${athena_database_name}.sus_compute_ec2 ec2
+        "${athena_database_name}".sus_compute_ec2 ec2
   sus_idle_natgw:
     dependsOn:
       views:
@@ -1000,7 +1000,7 @@ views:
         description: "Enter tag name that is used to categorize workloads"
         global: True
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.sus_idle_natgw AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_idle_natgw AS
       WITH
         TAG_KPI_PER_DAY AS (
          SELECT
@@ -1008,7 +1008,7 @@ views:
          , tagvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY (line_item_usage_start_date), tagvalue
       )
       , ACC_KPI_PER_DAY AS (
@@ -1017,7 +1017,7 @@ views:
          , linkedaccountvalue linkedaccountvalue
          , "sum"(buss) busKpi
          FROM
-           ${athena_database_name}.sus_buss_kpi
+           "${athena_database_name}".sus_buss_kpi
          GROUP BY (line_item_usage_start_date), linkedaccountvalue
       )
       SELECT
@@ -1049,7 +1049,7 @@ views:
          , "sum"("sum"(line_item_usage_amount)) OVER (PARTITION BY line_item_resource_id, pricing_unit) usage_per_resource_and_pricing_unit
          , "count"(pricing_unit) OVER (PARTITION BY line_item_resource_id, bill_billing_period_start_date) pricing_unit_per_resource
          FROM
-           ((${athena_database_name}.${cur_table_name} cur
+           (("${athena_database_name}"."${cur_table_name}" cur
          LEFT JOIN TAG_KPI_PER_DAY susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
          LEFT JOIN ACC_KPI_PER_DAY susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
          WHERE ((((line_item_product_code = 'AmazonEC2') AND (line_item_usage_type LIKE '%Nat%')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH)))) AND (line_item_line_item_type = 'Usage'))
