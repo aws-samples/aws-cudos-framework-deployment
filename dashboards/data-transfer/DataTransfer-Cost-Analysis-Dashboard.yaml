@@ -9,7 +9,6 @@ dashboards:
       templateId: data-transfer-aga-est-cost-analysis-template-enhanced-v5
       sourceAccountId: '869004330191'
       region: us-east-1
-      versionSystem: skip
 datasets:
   data_transfer_view:
     data:
