@@ -3507,7 +3507,7 @@ views:
     dependsOn:
       cur: true
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.eks_extended_support_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".eks_extended_support_view AS
       WITH
         eks_k8s_release_calendar (k8s_version, start_of_extended_support, end_of_extended_support) AS (
          SELECT *
@@ -3566,7 +3566,7 @@ views:
          , c.line_item_usage_type
          , sum(c.line_item_usage_amount)
          FROM
-           (${athena_database_name}.${cur_table_name} c
+           "(${athena_database_name}"."${cur_table_name}" c
          INNER JOIN eks_clusters_inventory eksinv ON ((c.bill_payer_account_id = eksinv.payer_id) AND (c.line_item_usage_account_id = eksinv.accountid) AND (c.product_region = eksinv.region) AND (c.line_item_resource_id = eksinv.cluster_arn)))
          INNER JOIN account_map accmap on c.line_item_usage_account_id = accmap.account_id
          WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.year, '-', c.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonEKS') AND (c.line_item_line_item_type IN ('Usage')) AND ((c.product_product_family = 'Compute') AND (c.line_item_usage_type LIKE '%AmazonEKS-Hours:perCluster')))
@@ -3610,7 +3610,7 @@ views:
     dependsOn:
       cur: true
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.rds_extended_support_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".rds_extended_support_view AS
       WITH
         engine_release_calendar (engineversion, year_1_start, year_3_start, end_of_extended_support) AS (
          SELECT *

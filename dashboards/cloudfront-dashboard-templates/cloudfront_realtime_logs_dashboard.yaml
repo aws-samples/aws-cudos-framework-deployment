@@ -203,7 +203,7 @@ views:
       views:
       - cloudfront_realtime_logs_table
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.cloudfront_realtime_logs AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".cloudfront_realtime_logs AS
       SELECT *
       FROM
         "cloudfront_realtime_logs_table"
