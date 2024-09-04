@@ -1786,7 +1786,7 @@ Outputs:
     Export: { Name: !Sub 'cid${Suffix}-AthenaWorkgroup'}
   QuickSightDatasourceId:
     Description: Technical Value - QuickSightDatasourceId
-    Value: !If [ NeedDatasource, !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]], 'CID-Athena-1']
+    Value: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
     Export: { Name: !Sub 'cid${Suffix}-QuickSightDatasourceId'}
   QuickSightDatasourceRoleArn:
     Description: Technical Value - QuickSightDatasourceRoleArn
