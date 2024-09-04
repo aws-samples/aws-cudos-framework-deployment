@@ -705,7 +705,11 @@ class Cid():
                         logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
-                        self.qs.discover_dashboards()
+                        
+                        refresh_overrides = [
+                            dashboard.id
+                        ]
+                        self.qs.discover_dashboards(refresh_overrides = refresh_overrides)
                 self.qs.clear_dashboard_selection()
                 dashboard_id = None
             else:
@@ -1335,7 +1339,7 @@ class Cid():
             choice = get_parameter(
                 'quicksight-datasource-role',
                 message='Please choose a QuickSight role. It must have access to Athena',
-                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight Security and Permissions management and configure S3 and Athena access there)>'] + choices,
+                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight (https://quicksight.aws.amazon.com/sn/admin#aws) and configure S3 and Athena access there)>'] + choices,
                 default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role

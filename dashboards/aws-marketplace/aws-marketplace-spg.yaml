@@ -139,7 +139,7 @@ views:
     dependsOn:
       cur: true
     data: |-
-      CREATE OR REPLACE VIEW marketplace_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".marketplace_view AS
       SELECT
         "year" "year"
       , "month" "month"
