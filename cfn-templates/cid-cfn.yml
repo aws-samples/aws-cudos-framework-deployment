@@ -23,6 +23,7 @@ Metadata:
           - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
           - DeployComputeOptimizerDashboard
+          - DeploySCADContainersCostAllocationDashboard
           - PrimaryTagName
           - SecondaryTagName
       - Label:
@@ -64,6 +65,8 @@ Metadata:
         default: "Deploy TAO Dashboard"
       DeployComputeOptimizerDashboard:
         default: "Deploy Compute Optimizer Dashboard"
+      DeploySCADContainersCostAllocationDashboard:
+        default: "Deploy SCAD Containers Cost Allocation Dashboard"
       AthenaWorkgroup:
         default: "Athena Workgroup - Please do not change"
       AthenaQueryResultsBucket:
@@ -174,6 +177,11 @@ Parameters:
     Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://catalog.workshops.aws/awscid/en-US/data-collection/
     Default: "no"
     AllowedValues: ["yes", "no"]
+  DeploySCADContainersCostAllocationDashboard:
+    Type: String
+    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://catalog.workshops.aws/awscid/en-US/data-collection/
+    Default: "no"
+    AllowedValues: ["yes", "no"]
   OptimizationDataCollectionBucketPath:
     Type: String
     Description: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /trusted-advisor and/or /compute-optimizer folders. You can leave the variable {account_id} in place, it will be replaced by current account ID automatically.
@@ -224,12 +232,14 @@ Conditions:
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
   NeedComputeOptimizerDashboard: !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
+  NeedSCADContainersCostAllocationDashboard: !Equals [ !Ref DeploySCADContainersCostAllocationDashboard, "yes" ]
   NeedCUR:
     Fn::Or:
       - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
       - !Equals [ !Ref DeployCUDOSv5, "yes" ]
       - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
       - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+      - !Equals [ !Ref DeploySCADContainersCostAllocationDashboard, "yes" ]
   NeedDataCollectionLab:
     Fn::Or:
       - !Equals [ !Ref DeployTAODashboard, "yes" ]
@@ -1751,6 +1761,25 @@ Resources:
         dataset-compute-optimizer-all-options-primary-tag-name: !Sub '${PrimaryTagName}'
         dataset-compute-optimizer-all-options-secondary-tag-name: !Sub '${SecondaryTagName}'
 
+  SCADContainersCostAllocationDashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedSCADContainersCostAllocationDashboard
+    DependsOn:
+      - Setup
+    Properties:
+      Name: !Sub 'SCADContainersCostAllocationDashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: scad-containers-cost-allocation
+        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
+        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+        glue-data-catalog: !Ref GlueDataCatalog
+        cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+        quicksight-user: !Ref QuickSightUser
+        share-with-account: 'yes'
+
 Outputs:
   CostIntelligenceDashboardURL:
     Description: "URL of CostIntelligenceDashboard"
@@ -1776,3 +1805,7 @@ Outputs:
     Description: "URL of ComputeOptimizerDashboard"
     Condition: NeedComputeOptimizerDashboard
     Value: !GetAtt ComputeOptimizerDashboard.DashboardURL
+  SCADContainersCostAllocationDashboard:
+    Description: "URL of SCADContainersCostAllocationDashboard"
+    Condition: NeedSCADContainersCostAllocationDashboard
+    Value: !GetAtt SCADContainersCostAllocationDashboard.DashboardURL
