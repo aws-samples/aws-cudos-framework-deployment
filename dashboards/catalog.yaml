@@ -8,3 +8,4 @@ Resources:
   - Url: health-events/health-events.yaml
   - Url: scad-containers-cost-allocation/scad-containers-cost-allocation.yaml
   - Url: aws-feeds/aws-feeds.yaml
+  - Url: focus/focus.yaml

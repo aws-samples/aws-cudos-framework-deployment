@@ -1,4 +1,5 @@
 data "aws_caller_identity" "this" {}
+data "aws_partition" "this" {}
 data "aws_region" "this" {}
 
 ###
@@ -9,6 +10,8 @@ resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV_AWS_144:CUR data can be backfilled on demand. Cross-region replication is not needed.
   bucket        = "${var.resource_prefix}-${data.aws_caller_identity.this.account_id}-shared"
   force_destroy = true
+
+  tags = var.tags
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
@@ -153,6 +156,16 @@ data "aws_iam_policy_document" "bucket_policy" {
         aws_s3_bucket.this.arn,
         "${aws_s3_bucket.this.arn}/*",
       ]
+      condition {
+        test     = "StringLike"
+        values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:definition/*"]
+        variable = "aws:SourceArn"
+      }
+      condition {
+        test     = "StringEquals"
+        values   = [data.aws_caller_identity.this.account_id]
+        variable = "aws:SourceAccount"
+      }
     }
   }
   dynamic "statement" {
@@ -170,6 +183,16 @@ data "aws_iam_policy_document" "bucket_policy" {
       resources = [
         "${aws_s3_bucket.this.arn}/*",
       ]
+      condition {
+        test     = "StringLike"
+        values   = ["arn:${data.aws_partition.this.partition}:cur:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:definition/*"]
+        variable = "aws:SourceArn"
+      }
+      condition {
+        test     = "StringEquals"
+        values   = [data.aws_caller_identity.this.account_id]
+        variable = "aws:SourceAccount"
+      }
     }
   }
 }

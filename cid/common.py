@@ -45,7 +45,8 @@ class Cid():
         self.qs_url = 'https://{region}.quicksight.{domain}/sn/dashboards/{dashboard_id}'
         self.all_yes = kwargs.get('yes')
         self.verbose = kwargs.get('verbose')
-        set_parameters(kwargs, self.all_yes)
+        # save main parameters to global parameters but do not override parameters that were set from outside
+        set_parameters({key: val for key, val in kwargs.items() if key.replace('_', '-') not in get_parameters()}, self.all_yes)
         self._logger = None
         self.catalog_urls = [
             'https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/main/dashboards/catalog.yaml',
@@ -60,9 +61,11 @@ class Cid():
             'aws_session_token': None
         }
         for key in params.keys():
-            value = get_parameters().get(key.replace('_', '-'))
-            if  value != None:
+            value = get_parameters().get(key.replace('_', '-'), '<NO VALUE>')
+            if  value != '<NO VALUE>':
                 params[key] = value
+        if get_parameters().get('region'):
+            params['region_name'] = get_parameters().get('region') # use region as a synonym of region_name
 
         print('Checking AWS environment...')
         try:
@@ -130,7 +133,9 @@ class Cid():
                     cid_print('\n')
                     self._clients['cur'] = _cur
                     break
-                except CidCritical as exc:
+                except CidCritical:
+                    if not utils.isatty():
+                        raise # do not allow CUR creation in lambda
                     cid_print(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
                     self.create_cur_table()
         return self._clients['cur']
@@ -687,7 +692,11 @@ class Cid():
                         logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
-                        self.qs.discover_dashboards()
+                        
+                        refresh_overrides = [
+                            dashboard.id
+                        ]
+                        self.qs.discover_dashboards(refresh_overrides = refresh_overrides)
                 self.qs.clear_dashboard_selection()
                 dashboard_id = None
             else:
@@ -1317,13 +1326,13 @@ class Cid():
             choice = get_parameter(
                 'quicksight-datasource-role',
                 message='Please choose a QuickSight role. It must have access to Athena',
-                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight Security and Permissions management and configure S3 and Athena access there)>'] + choices,
+                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight (https://quicksight.aws.amazon.com/sn/admin#aws) and configure S3 and Athena access there)>'] + choices,
                 default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
                 # TODO: get buckets from dashboard parameters
                 buckets = [
-                    f'cid-{self.base.account_id}-share',
+                    f'cid-{self.base.account_id}-shared',
                     f'cid-{self.base.account_id}-data-exports',
                     f'cid-data-{self.base.account_id}',
                     f'costoptimizationdata{self.base.account_id}',
@@ -1332,9 +1341,15 @@ class Cid():
                 if additional_buckets:
                     buckets += [bucket.strip().replace('{account_id}', self.base.account_id) for bucket in additional_buckets.split(',')]
 
+                databases = set([
+                    "optimization_data",
+                    "cid_data_collection",
+                    "cid_data_export", # prefix for data-exports hardcoded here
+                    self.athena.DatabaseName,
+                ])
                 role_name = self.iam.ensure_data_source_role_exists(
                     role_name=cid_role_name,
-                    database=self.athena.DatabaseName,
+                    databases=databases,
                     workgroup=self.athena.WorkGroup,
                     buckets=buckets,
                     output_location_bucket = self.athena.workgroup_output_location().split('/')[2],
