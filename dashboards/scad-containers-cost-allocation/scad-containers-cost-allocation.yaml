@@ -502,7 +502,7 @@ views:
         resource_tags_aws_eks_workload_name: string
         resource_tags_aws_eks_workload_type: string
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.scad_cca_summary_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".scad_cca_summary_view AS
       SELECT
         (CASE WHEN (DATE_TRUNC('month', "t_scad_eks"."line_item_usage_start_date") >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '3' MONTH)) THEN DATE_TRUNC('day', "t_scad_eks"."line_item_usage_start_date") ELSE DATE_TRUNC('month', "t_scad_eks"."line_item_usage_start_date") END) "usage_date"
       , "t_scad_eks"."split_line_item_parent_resource_id" "node_instance_id"
@@ -605,7 +605,7 @@ views:
         resource_tags_aws_eks_workload_name: string
         resource_tags_aws_eks_workload_type: string
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.scad_cca_hourly_resource_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".scad_cca_hourly_resource_view AS
       SELECT
         "t_scad_eks"."line_item_usage_start_date" "usage_date"
       , "t_ec2_compute_instances"."purchase_option" "node_purchase_option"

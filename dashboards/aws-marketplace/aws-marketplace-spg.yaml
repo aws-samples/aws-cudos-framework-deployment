@@ -139,7 +139,7 @@ views:
     dependsOn:
       cur2: true
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.marketplace_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".marketplace_view AS
       SELECT
         split_part("billing_period", '-', 1) AS year
       , split_part("billing_period", '-', 2) AS month

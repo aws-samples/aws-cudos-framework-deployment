@@ -891,7 +891,7 @@ Resources:
             - {"Name": "bill_payer_account_id", "Type": "string" }
             - {"Name": "bill_payer_account_name", "Type": "string" }
             - {"Name": "cost_category", "Type": "map<string,string>" }
-            - {"Name": "discount", "Type": "map<string,string>" }
+            - {"Name": "discount", "Type": "map<string,double>" }
             - {"Name": "identity_line_item_id", "Type": "string" }
             - {"Name": "identity_time_interval", "Type": "string" }
             - {"Name": "line_item_availability_zone", "Type": "string" }
