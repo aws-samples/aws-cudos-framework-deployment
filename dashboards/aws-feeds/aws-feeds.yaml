@@ -2948,7 +2948,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: aws_feeds_blog_post
             InputColumns:
             - Name: title
@@ -3005,7 +3005,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: aws_feeds_security_bulletin
             InputColumns:
             - Name: link
@@ -3056,7 +3056,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: aws_feeds_whats_new
             InputColumns:
             - Name: link
@@ -3113,7 +3113,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: aws_feeds_youtube
             InputColumns:
             - Name: video_url
