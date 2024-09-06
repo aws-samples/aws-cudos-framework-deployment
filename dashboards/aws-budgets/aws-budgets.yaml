@@ -1948,7 +1948,7 @@ crawlers: {}
 views:
   budgets_view:
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.budgets_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".budgets_view AS
       SELECT
         budgetname budget_name
       , CAST(budgetlimit.amount AS decimal) budget_amount
