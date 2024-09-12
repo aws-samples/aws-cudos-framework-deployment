@@ -148,7 +148,7 @@ views:
       views:
       - cloudfront_standard_logs_table
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.cloudfront_standard_logs AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".cloudfront_standard_logs AS
       SELECT *
       FROM
         "cloudfront_standard_logs_table"

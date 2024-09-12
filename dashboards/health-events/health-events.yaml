@@ -7590,7 +7590,7 @@ views:
       GROUP BY line_item_usage_account_id
   health_events_view:
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.health_events_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".health_events_view AS
       WITH
         "core" AS (
          SELECT
