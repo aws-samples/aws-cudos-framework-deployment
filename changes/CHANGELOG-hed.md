@@ -1,5 +1,7 @@
 # What's new in Health Events Dashboard (HED)
-
+## v2.0.0
+* Reorganized Summary tab for better flow and creating targeted inventory reports of impacted resources
+* Requires update to base Athena query
 
 ## v1.0.5
 * Added icons and styling for status
