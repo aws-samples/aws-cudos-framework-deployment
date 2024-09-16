@@ -3870,7 +3870,7 @@ views:
           global: True
         data_collection_database_name:
           type: athena
-          query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'inventory_eks_data'
+          query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'inventory_rds_db_instances_data'
           default: optimization_data
           description: "Enter the name of the data collection database"
           global: True
