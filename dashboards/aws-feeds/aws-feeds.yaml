@@ -3014,7 +3014,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: aws_feeds_security_bulletin
             InputColumns:
             - Name: link
@@ -3138,7 +3138,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: aws_feeds_youtube
             InputColumns:
             - Name: video_url
@@ -3202,6 +3202,11 @@ datasets:
       - aws_feeds_youtube
     schedules:
     - default
+    parameters:
+      data_collection_database_name:
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
 crawlers: {}
 views:
   aws_feeds:
