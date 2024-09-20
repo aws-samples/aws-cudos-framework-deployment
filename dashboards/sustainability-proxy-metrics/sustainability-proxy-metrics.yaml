@@ -13,13 +13,11 @@ dashboards:
       - sus_network
       - sus_s3_storage_all
       - sus_storage_athena
-    name: sustainability-proxy-metrics
+    name: Sustainability Proxy Metrics And CCFT
     dashboardId: sustainability-proxy-metrics
     category: Custom
     theme: MIDNIGHT
     templateId: sustainability-proxy-metrics
-    sourceAccountId: '554422808410'
-    region: eu-central-1
 datasets:
   sus_s3_storage_all:
     data:
