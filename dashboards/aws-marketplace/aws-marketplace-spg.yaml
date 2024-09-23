@@ -158,7 +158,10 @@ views:
       , CAST(from_iso8601_timestamp(split_part(identity_time_interval, '/', 2)) AS timestamp) AS subscription_end_date
       , line_item_line_item_description AS item_description
       , line_item_availability_zone AS availability_zone
-      , product['region'] AS region                                                                                        , line_item_legal_entity AS legal_entity                                                                             , bill_billing_entity AS billing_entity                                                                              , pricing_unit AS pricing_unit
+      , product['region'] AS region
+      , line_item_legal_entity AS legal_entity
+      , bill_billing_entity AS billing_entity
+      , pricing_unit AS pricing_unit
       , sum((CASE WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) AS usage_quantity
       , sum(line_item_unblended_cost) AS unblended_cost
       FROM "${cur2_database}"."${cur2_table_name}"
