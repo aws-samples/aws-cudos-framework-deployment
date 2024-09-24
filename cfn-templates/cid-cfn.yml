@@ -556,6 +556,7 @@ Resources:
           WORKGROUP = os.environ['WORKGROUP']
           CRAWLER = os.environ['CRAWLER']
           QUICKSIGHT_USER = os.environ['QUICKSIGHT_USER']
+          QUICKSIGHT_ROLE = os.environ.get('QUICKSIGHT_ROLE')
 
           def lambda_handler(event, context):
               print(event)
@@ -647,6 +648,22 @@ Resources:
                           log.append(f'ERROR: WorkGroup {WORKGROUP} - {errcode}')
                   except Exception as exc:
                       log.append(f'ERROR: WorkGroup {WORKGROUP} Error: {exc}')
+
+              if QUICKSIGHT_ROLE:
+                  try:
+                      role_name = QUICKSIGHT_ROLE.split('/')[-1]
+                      iam = boto3.client('iam')
+                      attached_policies = iam.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
+                      for policy in attached_policies:
+                          iam.detach_role_policy(
+                              RoleName=role_name,
+                              PolicyArn=policy['PolicyArn']
+                          )
+                          print(f"DEBUG: Detached managed policy: {policy['PolicyName']}")
+                          log.append(f"DEBUG: Detached managed policy: {policy['PolicyName']}")
+                  except Exception as exc:
+                      log.append(f'ERROR: managed policy Error: {exc}')
+
               print('\n'.join(log))
               return (True, '\n'.join(log))
       Layers:
@@ -657,6 +674,7 @@ Resources:
           WORKGROUP: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
           CRAWLER: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
           QUICKSIGHT_USER: !Ref QuickSightUser
+          QUICKSIGHT_ROLE: !If [ NeedQuickSightDataSourceRole, !Ref QuickSightDataSourceRole, !Ref AWS::NoValue ]
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -693,6 +711,15 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Cid*'
+              - !If
+                - NeedQuickSightDataSourceRole
+                - Effect: Allow
+                  Action:
+                    - iam:GetRole
+                    - iam:ListAttachedRolePolicies
+                    - iam:DetachRolePolicy
+                  Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}"
+                - !Ref 'AWS::NoValue'
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
   InitLambdaExecutionRoleWorkGroupPolicy:
@@ -1253,13 +1280,7 @@ Resources:
                       - NeedQuickSightDataSourceRoleAndCUR
                       - !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}
                       - !Ref "AWS::NoValue"
-                  - Fn::If:
-                    - NeedCUR2
-                    - !Join
-                      - ''
-                      - - !Sub 'arn:${AWS::Partition}:s3:::'
-                        - !ImportValue cid-DataExports-AggregateBucketName
-                    - !Ref 'AWS::NoValue'
+                  # FOR CUR2 there will be attached policy no need to add it here
               - Sid: AllowReadBucket
                 Effect: Allow
                 Action:
@@ -1272,14 +1293,7 @@ Resources:
                       - NeedQuickSightDataSourceRoleAndCUR
                       - !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}/*
                       - !Ref "AWS::NoValue"
-                  - Fn::If:
-                    - NeedCUR2
-                    - !Join
-                      - ''
-                      - - !Sub 'arn:${AWS::Partition}:s3:::'
-                        - !ImportValue cid-DataExports-AggregateBucketName
-                        - '/*'
-                    - !Ref 'AWS::NoValue'
+                  # FOR CUR2 there will be attached policy no need to add it here
               - !If
                   - NeedQuickSightDataSourceKMS
                   - Sid: AllowKmsDecrypt
@@ -1332,6 +1346,7 @@ Resources:
             Action:
               - sts:AssumeRole
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      ManagedPolicyArns: !If [NeedCUR2,  [ !ImportValue cid-DataExports-ReadAccessPolicyARN ]  , !Ref AWS::NoValue]
       Policies:
         - PolicyName: CidExecPolicy
           PolicyDocument:
@@ -1356,7 +1371,16 @@ Resources:
                   - glue:GetTables
                   - glue:GetPartitions
                   - glue:CreateTable
+                  - glue:GetCrawler
                 Resource: "*" # This is needed to allow Autodetect in CID-CMD
+              - Effect: Allow
+                Action:
+                  - glue:DeleteTable
+                Resource:
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
               - Effect: Allow
                 Action:
                   - s3:CreateBucket
@@ -1376,13 +1400,6 @@ Resources:
                     - NeedAthenaQueryResultsBucket
                     - !Sub 'arn:${AWS::Partition}:s3:::${MyAthenaQueryResultsBucket}/*'
                     - !Sub 'arn:${AWS::Partition}:s3:::${AthenaQueryResultsBucket}/*'
-                  - Fn::If:
-                    - NeedCUR2
-                    - !Join
-                      - '/'
-                      - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database
-                        - !ImportValue cid-DataExports-Database
-                    - !Ref 'AWS::NoValue'
               - Effect: Allow
                 Action:
                   - quicksight:DescribeDataSource
@@ -1434,6 +1451,22 @@ Resources:
                   - athena:ListWorkGroups
                   - athena:GetDatabase
                 Resource: '*'  # This is needed to allow Autodetect in CID-CMD
+              - !If
+                - NeedQuickSightDataSourceRole
+                - Effect: Allow
+                  Action:
+                    - cloudformation:ListExports
+                  Resource: '*'  # Not possible to limit listExports
+                - !Ref 'AWS::NoValue'
+              - !If
+                - NeedQuickSightDataSourceRole
+                - Effect: Allow
+                  Action:
+                    - iam:GetRole
+                    - iam:ListAttachedRolePolicies
+                    - iam:AttachRolePolicy
+                  Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}"
+                - !Ref 'AWS::NoValue'
               - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
@@ -1448,6 +1481,8 @@ Resources:
             reason: "Lambda can install various QS and Athena resources. Cannot restrict."
           - id: 'W28'
             reason: "Need explicit name to give permissions"
+
+
 
   DataLakeSettingsCidExecRolePerm:
     Type: AWS::LakeFormation::Permissions

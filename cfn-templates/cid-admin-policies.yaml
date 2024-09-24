@@ -115,18 +115,27 @@ Resources:
           - ds:UnauthorizeApplication
           Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
 
-        - Sid: IAM
+        - Sid: IAMRole
           Action:
           - iam:AttachRolePolicy
-          - iam:CreatePolicy
-          - iam:CreatePolicyVersion
+          - iam:DetachRolePolicy
           - iam:CreateRole
           - iam:PassRole
-          - iam:DeletePolicyVersion
-          - iam:DetachRolePolicy
           Effect: Allow
           Resource:
             - !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/aws-quicksight-service-role-v0
+            - !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/CidQuickSightDataSourceRole
+
+        - Sid: IAMPolicy
+          Action:
+          - iam:CreatePolicy
+          - iam:DeletePolicy
+          - iam:CreatePolicyVersion
+          - iam:DeletePolicyVersion
+          Effect: Allow
+          Resource:
+            - !Sub arn:aws:iam::${AWS::AccountId}:policy/cid*
+            - !Sub arn:aws:iam::${AWS::AccountId}:policy/CID*
 
         - Sid: QuickSight
           Action:
@@ -213,6 +222,13 @@ Resources:
           Resource:
           - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/Cloud-Intelligence-Dashboards/*
 
+        - Sid: CloudFormationListExports
+          Action:
+          - cloudformation:ListExports
+          Effect: Allow
+          Resource:
+          - "*" # Cannot restrict this
+
         - Sid: IAMForCFN
           Action:
           - iam:AttachRolePolicy
@@ -230,6 +246,17 @@ Resources:
           - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-* #Roles created by CFN stack. Name is hardcoded here
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidQuickSightDataSourceRole
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CidExecRole
+
+        - Sid: IAMPolicy
+          Action:
+          - iam:CreatePolicy
+          - iam:DeletePolicy
+          - iam:CreatePolicyVersion
+          - iam:DeletePolicyVersion
+          Effect: Allow
+          Resource:
+            - !Sub arn:aws:iam::${AWS::AccountId}:policy/cid*
+            - !Sub arn:aws:iam::${AWS::AccountId}:policy/CID*
 
         - Sid: LambdaForCFN
           Action:
@@ -300,7 +327,7 @@ Resources:
           Effect: Allow
           Resource:
           - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/CID
-        
+
         - Sid: BCMDataExports
           Action:
           - bcm-data-exports:CreateExport
@@ -313,14 +340,14 @@ Resources:
           Resource:
           - !Sub arn:aws:bcm-data-exports:${AWS::Region}:${AWS::AccountId}:export/*
           - !Sub arn:aws:bcm-data-exports:${AWS::Region}:${AWS::AccountId}:table/*
-        
+
         - Sid: CurDataAccess
           Action:
           - cur:PutReportDefinition
           Effect: Allow
           Resource:
           - !Sub arn:aws:cur:${AWS::Region}:${AWS::AccountId}:*     #Required as per https://docs.aws.amazon.com/cur/latest/userguide/bcm-data-exports-access.html#bcm-data-exports-access-examples
-          
+
         - Sid: EventBridge
           Action:
           - events:DeleteRule
@@ -493,11 +520,16 @@ Resources:
           - iam:GetRole
           - iam:GetRolePolicy
           - iam:PutRolePolicy
+          - iam:GetPolicy
+          - iam:DeletePolicy
+          - iam:ListPolicyVersions
+          - iam:DeletePolicyVersion
           - iam:PassRole
           Effect: Allow
           Resource:
           - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-*
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CID-CUR-Destination-*
+          - !Sub arn:aws:iam::${AWS::AccountId}:policy/cidDataExportsReadAccess # hardcoded prefix
 
         - Sid: Lambda
           Action:
@@ -560,6 +592,7 @@ Resources:
           - s3:ListAllMyBuckets #?
           Effect: Allow
           Resource: '*' # ReadOnly Policy for CFN
+
 
     Metadata:
       cfn_nag:

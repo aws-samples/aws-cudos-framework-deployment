@@ -275,11 +275,11 @@ class CUR(AbstractCUR):
                 if add_or_update == 'MergeNewColumns':
                     table_can_be_updated = True
             except self.glue.client.exceptions.ClientError as exc:
-                logger.debug('Failed to get crawler info')
+                logger.debug(f'Failed to get crawler info: {exc}')
         if table_can_be_updated:
             column_type = column_type or self.get_type_of_column(column)
             try:
-                self.athena.query(f'ALTER TABLE {self.table_name} ADD COLUMNS ({column} {column_type})')
+                self.athena.query(f'ALTER TABLE {self.table_name} ADD COLUMNS ({column} {column_type})', database=self.database)
             except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
                 raise CidCritical(f'Column {column} is not found in CUR and we were unable to add it. Please check FAQ.') from exc
             # table takes time to update so just adding column to cached data

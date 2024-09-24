@@ -8,6 +8,7 @@ from cid.helpers.quicksight import QuickSight, Dashboard, Dataset, Datasource, T
 from cid.helpers.csv2view import csv2view
 from cid.helpers.organizations import Organizations
 from cid.helpers.cur_proxy import ProxyView
+from cid.helpers.cloudformation import CFN
 
 __all__ = [
     "Athena",
@@ -25,4 +26,5 @@ __all__ = [
     "csv2view",
     "Organizations",
     "ProxyView",
+    "CFN",
 ]

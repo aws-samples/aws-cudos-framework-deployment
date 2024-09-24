@@ -20,7 +20,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects, IsolatedParameters
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, S3, IAM, CUR, ProxyCUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
+from cid.helpers import Athena, S3, IAM, CUR, ProxyCUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations, CFN
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
@@ -30,7 +30,6 @@ from cid.commands import InitQsCommand
 
 logger = logging.getLogger(__name__)
 
-print('hi')
 class Cid():
 
     def __init__(self, **kwargs) -> None:
@@ -103,6 +102,10 @@ class Cid():
     @cached_property
     def iam(self) -> IAM:
         return IAM(self.base.session)
+
+    @cached_property
+    def cfn(self) -> CFN:
+        return CFN(self.base.session)
 
     @cached_property
     def organizations(self) -> Organizations:
@@ -1476,6 +1479,12 @@ class Cid():
                 self.athena.WorkGroup = athena_datasource.AthenaParameters.get('WorkGroup')
             else:
                 logger.debug('Athena_datasource is not defined. Will only create views')
+
+        # attach roles
+        if isinstance(athena_datasource, Datasource) and athena_datasource.role_name:
+            data_providers = dataset_definition.get('dependsOn', {}).get('dataProviders', [])
+            policies_arns = [self.cfn.get_read_access_policy_for_module(provider) for provider in data_providers]
+            self.iam.ensure_managed_policies_attached (role_name=athena_datasource.role_name, policies_arns=policies_arns)
 
         # Check for required views
         _views = dataset_definition.get('dependsOn', {}).get('views', [])
