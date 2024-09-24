@@ -213,7 +213,8 @@ dashboards:
           ifelse(
               {Event Status} = "Impending", 1,
               {Event Status} = "Future", 2,
-              0
+              {Event Status} = "Current", 0,
+              -1
           )
         Name: event_status_numeric
       - DataSetIdentifier: health_events_view
@@ -2516,13 +2517,13 @@ dashboards:
                 RowIndex: 22
                 RowSpan: 7
               - ColumnIndex: 4
-                ColumnSpan: 17
+                ColumnSpan: 16
                 ElementId: cac4df37-6414-4372-bfd3-b4ec434256f9
                 ElementType: VISUAL
                 RowIndex: 22
                 RowSpan: 7
-              - ColumnIndex: 21
-                ColumnSpan: 15
+              - ColumnIndex: 20
+                ColumnSpan: 16
                 ElementId: 15055ee5-a062-4759-8682-23e344d78b2f
                 ElementType: VISUAL
                 RowIndex: 22
@@ -4582,18 +4583,22 @@ dashboards:
                 - 02cfb3b6-9cc6-48a7-8848-72b03cec3519.service.5.1718220405471
                 - ea8ae792-ef1b-4563-b7f8-938487bfe843.6.1720633973934
                 - 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1712335457484
+                - 2e0668d4-20f6-4138-8e95-5afca2811c62.event_arn.5.1727201220999
                 SelectedFieldOptions:
                 - CustomLabel: Days out
                   FieldId: 68936dbc-a510-4b2c-ae7c-03b1ce6d0169.4.1724199726270
-                  Width: 72px
+                  Width: 70px
                 - CustomLabel: Service
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.service.5.1718220405471
-                  Width: 137px
+                  Width: 128px
                 - FieldId: ea8ae792-ef1b-4563-b7f8-938487bfe843.6.1720633973934
-                  Width: 247px
+                  Width: 228px
                 - CustomLabel: Resources
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1712335457484
-                  Width: 83px
+                  Width: 78px
+                - CustomLabel: Events
+                  FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.event_arn.5.1727201220999
+                  Width: 66px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -4624,6 +4629,12 @@ dashboards:
                         ColumnName: affected_entity_value
                         DataSetIdentifier: health_events_view
                       FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1712335457484
+                  - CategoricalMeasureField:
+                      AggregationFunction: DISTINCT_COUNT
+                      Column:
+                        ColumnName: event_arn
+                        DataSetIdentifier: health_events_view
+                      FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.event_arn.5.1727201220999
               SortConfiguration:
                 PaginationConfiguration:
                   PageNumber: 1
@@ -4637,6 +4648,10 @@ dashboards:
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.10.1712335457484
                   NegativeColor: '#DE3B00'
                   PositiveColor: '#FF8700'
+              - DataBars:
+                  FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.event_arn.5.1727201220999
+                  NegativeColor: '#DE3B00'
+                  PositiveColor: '#ED90C7'
               TableOptions:
                 CellStyle:
                   FontConfiguration:
@@ -4655,21 +4670,21 @@ dashboards:
                     BackgroundColor:
                       Solid:
                         Color: '#D13D25'
-                        Expression: '{days_out} <= 0'
+                        Expression: MAX({event_status_numeric}) = 0
               - Cell:
                   FieldId: 68936dbc-a510-4b2c-ae7c-03b1ce6d0169.4.1724199726270
                   TextFormat:
                     BackgroundColor:
                       Solid:
-                        Color: '#FFB500'
-                        Expression: '{days_out} <= 60'
+                        Color: '#F97D2A'
+                        Expression: MAX({event_status_numeric}) = 1
               - Cell:
                   FieldId: 68936dbc-a510-4b2c-ae7c-03b1ce6d0169.4.1724199726270
                   TextFormat:
                     BackgroundColor:
                       Solid:
                         Color: '#F7E65A'
-                        Expression: '{days_out} > 60'
+                        Expression: MAX({event_status_numeric}) = 2
             Subtitle:
               FormatText:
                 RichText: |-
@@ -5961,7 +5976,8 @@ dashboards:
                     Value:
                       CustomValuesConfiguration:
                         CustomValues:
-                          StringValues: [""]
+                          StringValues:
+                          - ' '
                         IncludeNullValue: false
                   - DestinationParameterName: EventArn
                     Value:
