@@ -270,7 +270,7 @@ def create_cid_as_finops(update):
             {"ParameterKey": 'ManageCUR2', "ParameterValue": 'yes'},
             {"ParameterKey": 'SourceAccountIds', "ParameterValue": account_id},
         ],
-        Capabilities=['CAPABILITY_IAM'],
+        Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
     )
     try:
         finops_cfn.create_stack(**params)

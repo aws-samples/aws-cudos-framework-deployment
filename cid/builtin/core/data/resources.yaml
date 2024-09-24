@@ -7,7 +7,6 @@ dashboards:
     templateId: cudos_dashboard_v3
     dashboardId: cudos
     deprecationNotice: "This version of the CUDOS deprecated. Deploy CUDOS Dashboard v5 instead"
-    localConfigs: ["update-dashboard.json"]
     dependsOn:
       datasets:
         - summary_view
@@ -112,6 +111,8 @@ datasets:
   summary_view:
     File: cid/summary_view.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - account_map
         - summary_view
@@ -122,6 +123,8 @@ datasets:
   ec2_running_cost:
     File: cid/ec2_running_cost.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - ec2_running_cost
     schedules:
@@ -130,6 +133,8 @@ datasets:
   compute_savings_plan_eligible_spend:
     File: cid/compute.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - compute_savings_plan_eligible_spend
     schedules:
@@ -138,6 +143,8 @@ datasets:
   s3_view:
     File: cid/s3_view.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - s3_view
         - account_map
@@ -148,6 +155,8 @@ datasets:
   customer_all:
     File: shared/customer_all.json
     dependsOn:
+      dataProviders:
+        - DataExports
       cur2: true
       views:
         - customer_all
@@ -155,6 +164,8 @@ datasets:
   hourly_view:
     File: cudos/hourly_view.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - hourly_view
         - account_map
@@ -163,6 +174,8 @@ datasets:
   resource_view:
     File: cudos/resource_view.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - resource_view
         - account_map
@@ -172,6 +185,8 @@ datasets:
   kpi_ebs_snap:
     File: kpi/kpi_ebs_snap.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - kpi_ebs_snap
     schedules:
@@ -179,6 +194,8 @@ datasets:
   kpi_ebs_storage_all:
     File: kpi/kpi_ebs_storage_all.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
        - kpi_ebs_storage_all
     schedules:
@@ -186,6 +203,8 @@ datasets:
   kpi_instance_all:
     File: kpi/kpi_instance_all.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - kpi_instance_all
     schedules:
@@ -193,6 +212,8 @@ datasets:
   kpi_s3_storage_all:
     File: kpi/kpi_s3_storage_all.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - kpi_s3_storage_all
     schedules:
@@ -200,6 +221,8 @@ datasets:
   kpi_tracker:
     File: kpi/kpi_tracker.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - kpi_tracker
         - summary_view
@@ -211,6 +234,8 @@ datasets:
   ta-organizational-view:
     File: tao/dataset.json
     dependsOn:
+      dataProviders:
+        - DataCollection
       views:
         - ta_org_view
     schedules:
@@ -220,6 +245,8 @@ datasets:
   daily-anomaly-detection:
     File: trends/daily_anomaly_detection.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - daily_anomaly_detection
     schedules:
@@ -227,6 +254,8 @@ datasets:
   monthly-anomaly-detection:
     File: trends/monthly_anomaly_detection.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - monthly_anomaly_detection
     schedules:
@@ -234,6 +263,8 @@ datasets:
   monthly-bill-by-account:
     File: trends/monthly_bill_by_account.json
     dependsOn:
+      dataProviders:
+        - DataExports
       views:
         - monthly_bill_by_account
     schedules:
@@ -243,6 +274,8 @@ datasets:
   compute_optimizer_all_options:
     File: co/dataset.json
     dependsOn:
+      dataProviders:
+        - DataCollection
       views:
         - compute_optimizer_all_options
         - business_units_map
