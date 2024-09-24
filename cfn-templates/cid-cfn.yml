@@ -651,11 +651,12 @@ Resources:
 
               if QUICKSIGHT_ROLE:
                   try:
+                      role_name = QUICKSIGHT_ROLE.split('/')[-1]
                       iam = boto3.client('iam')
                       attached_policies = iam.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
                       for policy in attached_policies:
                           iam.detach_role_policy(
-                              RoleName=QUICKSIGHT_ROLE.split('/')[-1],
+                              RoleName=role_name,
                               PolicyArn=policy['PolicyArn']
                           )
                           print(f"DEBUG: Detached managed policy: {policy['PolicyName']}")
@@ -710,6 +711,15 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Cid*'
+              - !If
+                - NeedQuickSightDataSourceRole
+                - Effect: Allow
+                  Action:
+                    - iam:GetRole
+                    - iam:ListAttachedRolePolicies
+                    - iam:DetachRolePolicy
+                  Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}"
+                - !Ref 'AWS::NoValue'
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
   InitLambdaExecutionRoleWorkGroupPolicy:

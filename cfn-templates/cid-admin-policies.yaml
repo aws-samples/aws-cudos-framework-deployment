@@ -520,13 +520,16 @@ Resources:
           - iam:GetRole
           - iam:GetRolePolicy
           - iam:PutRolePolicy
+          - iam:GetPolicy
           - iam:DeletePolicy
+          - iam:ListPolicyVersions
+          - iam:DeletePolicyVersion
           - iam:PassRole
           Effect: Allow
           Resource:
           - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-*
           - !Sub arn:aws:iam::${AWS::AccountId}:role/CID-CUR-Destination-*
-          - !Sub arn:aws:iam::${AWS::AccountId}:policy/*DataExportsReadAccess
+          - !Sub arn:aws:iam::${AWS::AccountId}:policy/cidDataExportsReadAccess # hardcoded prefix
 
         - Sid: Lambda
           Action:

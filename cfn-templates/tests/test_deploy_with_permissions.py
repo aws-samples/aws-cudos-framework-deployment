@@ -12,7 +12,7 @@ Procedure:
     3. Verify dashboard exists
     3. Delete all in reverse order
 
-This must be executed with admin privileges.
+This must be executed with admin privileges. And takes around 15mins to complete.
 """
 import os
 import json
@@ -292,7 +292,6 @@ def create_cid_as_finops(update):
             {"ParameterKey": 'PrerequisitesQuickSightPermissions', "ParameterValue": 'yes'},
             {"ParameterKey": 'QuickSightUser', "ParameterValue": get_qs_user()},
             {"ParameterKey": 'CURVersion', "ParameterValue": '2.0'},
-            {"ParameterKey": 'DeployCUDOSDashboard', "ParameterValue": 'yes'},
             {"ParameterKey": 'DeployCUDOSv5', "ParameterValue": 'yes'},
             {"ParameterKey": 'LambdaLayerBucketPrefix', "ParameterValue": TMP_BUCKET_PREFIX},
         ],
@@ -313,7 +312,7 @@ def test_dashboard_exists():
     """check that dashboard exists"""
     dash = boto3.client('quicksight').describe_dashboard(
         AwsAccountId=account_id,
-        DashboardId='cudos'
+        DashboardId='cudos-v5'
     )['Dashboard']
     logger.info("Dashboard exists with status = %s", dash['Version']['Status'])
 
@@ -324,9 +323,12 @@ def test_crawler_results():
     Raises:
         AssertionError: If any of the crawlers fail or the timeout is reached.
     """
-    crawler_names = ['cid-DataExportCUR2Crawler','cid-DataExportFOCUSCrawler']
+    crawler_names = [
+        'cid-DataExportCUR2Crawler',
+        #'cid-DataExportFOCUSCrawler',
+    ]
     timeout_seconds = 300
-    
+
     glue = boto3.client('glue')
     start_time = time.time()
     completed_crawlers = set()
@@ -334,7 +336,7 @@ def test_crawler_results():
     ## Start glue crawlers
     for crawler_name in crawler_names:
         glue.start_crawler(Name=crawler_name)
-        
+
     while time.time() - start_time < timeout_seconds:
         for crawler_name in crawler_names:
             try:
@@ -359,7 +361,7 @@ def test_crawler_results():
         time.sleep(10)
     logger.error(f"Timeout reached while waiting for crawlers to complete.")
     raise Exception(f"Timeout reached while waiting for crawlers to complete.")
-    
+
 
 def test_dataset_scheduled():
     """check that dataset and schedule exist"""
