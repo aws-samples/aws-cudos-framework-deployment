@@ -1,5 +1,8 @@
 # What's new in the Graviton Opportunities Dashboard
 
+## Graviton Opportunities Dashboard v1.1.1:
+* Fix broken hyperlinks under Additional Resources
+
 ## Graviton Opportunities Dashboard v1.1.0:
 **Important:** If attempting to update the dashboard, please update cid-cmd first. To update run these commands in your CloudShell (recommended) or other terminal:
 
