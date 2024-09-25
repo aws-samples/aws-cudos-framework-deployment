@@ -348,16 +348,29 @@ class Cid():
                     choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
             elif isinstance(value, dict) and value.get('type') == 'athena':
-                if 'query' not in value:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: paramter with type ahena must have query value.')
-                query = value['query']
-                try:
-                    res = self.athena.query(query)[0]
-                except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
-                if not res:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty result')
-                params[key] = res[0]
+                if get_parameters().get(prefix + key): # priority to user input
+                    params[key] = get_parameters().get(prefix + key)
+                else:
+                    if 'query' not in value:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: parameter with type Athena must have query value.')
+                    query = value['query']
+                    try:
+                        res_list = self.athena.query(query)
+                    except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
+                    if not res_list:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results')
+                    elif len(res_list) == 1:
+                        params[key] = '-'.join(res_list[0])
+                    else:
+                        options = ['-'.join(res) for res in res_list]
+                        default = value.get('default')
+                        params[key] = get_parameter(
+                            param_name=prefix + key,
+                            message=f"Required parameter: {key} ({value.get('description')})",
+                            choices=options,
+                            default=default if default in options else None,
+                        )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
                 while params[key] is None:
@@ -1326,7 +1339,7 @@ class Cid():
             choice = get_parameter(
                 'quicksight-datasource-role',
                 message='Please choose a QuickSight role. It must have access to Athena',
-                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight Security and Permissions management and configure S3 and Athena access there)>'] + choices,
+                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight (https://quicksight.aws.amazon.com/sn/admin#aws) and configure S3 and Athena access there)>'] + choices,
                 default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
