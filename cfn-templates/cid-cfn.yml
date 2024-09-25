@@ -283,6 +283,31 @@ Conditions:
       - !Condition NeedQuickSightDataSourceRole
       - !Condition NeedDataBucketsKms
   NeedPermissionsBoundary: !Not [!Equals [ !Ref PermissionsBoundary, "" ]]
+  LambdaLayerBucketPrefixIsManaged: !Equals [!Ref LambdaLayerBucketPrefix, 'aws-managed-cost-intelligence-dashboards']
+
+Mappings:
+  RegionMap: # CID has AWS managed buckets for deploy. Region must support QuickSight ( curl https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonQuickSight/current/region_index.json -s | jq '.regions | keys' )
+    ap-northeast-1: {BucketName: aws-managed-cost-intelligence-dashboards-ap-northeast-1}
+    ap-northeast-2: {BucketName: aws-managed-cost-intelligence-dashboards-ap-northeast-2}
+    ap-south-1:     {BucketName: aws-managed-cost-intelligence-dashboards-ap-south-1}
+    ap-southeast-1: {BucketName: aws-managed-cost-intelligence-dashboards-ap-southeast-1}
+    ap-southeast-2: {BucketName: aws-managed-cost-intelligence-dashboards-ap-southeast-2}
+    ca-central-1:   {BucketName: aws-managed-cost-intelligence-dashboards-ca-central-1}
+    eu-central-1:   {BucketName: aws-managed-cost-intelligence-dashboards-eu-central-1}
+    eu-north-1:     {BucketName: aws-managed-cost-intelligence-dashboards-eu-north-1}
+    eu-west-1:      {BucketName: aws-managed-cost-intelligence-dashboards-eu-west-1}
+    eu-west-2:      {BucketName: aws-managed-cost-intelligence-dashboards-eu-west-2}
+    eu-west-3:      {BucketName: aws-managed-cost-intelligence-dashboards-eu-west-3}
+    sa-east-1:      {BucketName: aws-managed-cost-intelligence-dashboards-sa-east-1}
+    us-east-1:      {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
+    us-east-2:      {BucketName: aws-managed-cost-intelligence-dashboards-us-east-2}
+    us-west-1:      {BucketName: aws-managed-cost-intelligence-dashboards-us-west-1}
+    us-west-2:      {BucketName: aws-managed-cost-intelligence-dashboards-us-west-2}
+    #todo: add af-south-1
+    #todo: add ap-southeast-3
+    #todo: add eu-south-1
+    #todo: add eu-central-2
+
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets not used by default
@@ -1697,7 +1722,10 @@ Resources:
       LayerName: !Sub 'CidLambdaLayer${Suffix}'
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
-        S3Bucket: !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}'
+        S3Bucket: !If
+          - LambdaLayerBucketPrefixIsManaged
+          - !FindInMap [RegionMap, !Ref 'AWS::Region', BucketName]
+          - !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}' # Region added for backward compatibility
         S3Key: 'cid-resource-lambda-layer/cid-4.0.0.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
