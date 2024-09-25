@@ -15,7 +15,6 @@ dashboards:
       - sus_storage_athena
     name: Sustainability Proxy Metrics And CCFT
     dashboardId: sustainability-proxy-metrics
-    category: Custom
     theme: MIDNIGHT
     data: |-
       AnalysisDefaults:
