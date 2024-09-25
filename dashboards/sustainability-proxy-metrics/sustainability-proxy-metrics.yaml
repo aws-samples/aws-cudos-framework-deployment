@@ -5160,7 +5160,7 @@ views:
         "${athena_database_name}".sus_compute_ec2 ec2
     parameters:
       tag:
-      type: 'cur.tag_and_cost_category_fields'
-      default: resource_tags_user_application
-      description: "Enter tag name that is used to categorize workloads"
-      global: True
+        type: 'cur.tag_and_cost_category_fields'
+        default: resource_tags_user_application
+        description: "Enter tag name that is used to categorize workloads"
+        global: True
