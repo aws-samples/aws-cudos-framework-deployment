@@ -50,7 +50,7 @@ Metadata:
       QuickSightUser:
         default: "User name of QuickSight user (as displayed in QuickSight admin panel). Dashboards created by this template will be owned by this user."
       CURBucketPath:
-        default: "Path to Cost and Usage Report"
+        default: "Path to Legacy Cost and Usage Report (only if Legacy CUR used)"
       DeployCUDOSDashboard:
         default: "CUDOS Dashboard v4 - Deprecated [set 'no' to delete]"
       DeployCUDOSv5:
