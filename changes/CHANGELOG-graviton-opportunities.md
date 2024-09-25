@@ -1,6 +1,11 @@
 # What's new in the Graviton Opportunities Dashboard
 
 ## Graviton Opportunities Dashboard v1.1.1:
+```
+cid-cmd update --dashboard-id graviton-opportunities
+Choose 'Yes' for the following prompt
+[confirm-update] No updates available, should I update it anyway? 
+```
 * Fix broken hyperlinks under Additional Resources
 
 ## Graviton Opportunities Dashboard v1.1.0:
