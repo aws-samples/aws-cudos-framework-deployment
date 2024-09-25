@@ -4769,19 +4769,19 @@ views:
         '123456789789' accountid
       , '2024-01-01' querydate
       , '2024-01-01' startdate
-      , 0E0 mbmcarbon
+      , 0 mbmcarbon
       , 'no-data' paceproductcode
       , 'no-data' regioncode
       WHERE (1 = 0)
   sus_carbon_emissions_longform:
     data: |-
-      CREATE OR REPLACE VIEW  AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_carbon_emissions_longform AS 
       SELECT
         'gridmixinefficiency' metric
-      , 0E0 
-      , '123456789789' 
-      , '2024-03-07' 
-      , '2020-12-01' 
+      , 0 value
+      , '123456789789' accountid
+      , '2024-03-07' querydate
+      , '2020-12-01' startdate
       WHERE (1 = 0)
   sus_storage_athena:
     dependsOn:
