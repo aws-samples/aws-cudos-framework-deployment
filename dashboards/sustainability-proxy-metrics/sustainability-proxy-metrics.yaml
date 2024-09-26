@@ -4617,7 +4617,7 @@ views:
         (("${athena_database_name}"."${cur_table_name}" cur
       LEFT JOIN TAG_KPI_PER_DAY susTag ON ((cur.line_item_usage_start_date = susTag.line_item_usage_start_date) AND (${tag} = susTag.tagValue)))
       LEFT JOIN ACC_KPI_PER_DAY susAcc ON ((cur.line_item_usage_start_date = susAcc.line_item_usage_start_date) AND (cur.line_item_usage_account_id = susAcc.linkedaccountvalue)))
-      WHERE ((("line_item_operation" LIKE '%Storage%') AND (("line_item_product_code" LIKE '%AmazonGlacier%') OR ("line_item_product_code" LIKE '%AmazonS3%'))) AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  
+      WHERE ((("line_item_operation" LIKE '%Storage%') AND (("line_item_product_code" LIKE '%AmazonGlacier%') OR ("line_item_product_code" LIKE '%AmazonS3%'))) AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL '7' 
       MONTH)) AND (CAST(CONCAT(cur.year, '-', cur.month, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '7' MONTH))))
       GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
     parameters:
