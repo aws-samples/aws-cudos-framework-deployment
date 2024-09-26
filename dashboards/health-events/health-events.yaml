@@ -103,7 +103,7 @@ dashboards:
         Name: Description 5
       - DataSetIdentifier: health_events_view
         Expression: substring(Description, 1, 300)
-        Name: Description Short
+        Name: Description Brief
       - DataSetIdentifier: health_events_view
         Expression: |-
           //issue | accountNotification | scheduledChange | investigation
@@ -201,6 +201,14 @@ dashboards:
       - DataSetIdentifier: health_events_view
         Expression: ${DescriptionPage}
         Name: description_page_number
+      - DataSetIdentifier: health_events_view
+        Expression: |-
+          ifelse(
+              ${ReportSummaryDescriptionFormat} = "Brief", {Description Brief},
+              ${ReportSummaryDescriptionFormat} = "Full", Description,
+              {Description 1}
+          )
+        Name: description_summary_report
       - DataSetIdentifier: health_events_view
         Expression: left({event_category_icon}, 1)
         Name: event_category_icon_only
@@ -2233,7 +2241,7 @@ dashboards:
       - StringParameterDeclaration:
           DefaultValues:
             StaticValues:
-            - Service Deprecation
+            - Service & Title
           Name: ChartAggregation
           ParameterValueType: SINGLE_VALUED
           ValueWhenUnset:
@@ -2280,6 +2288,14 @@ dashboards:
             StaticValues:
             - Service, Event Title, and Start Time
           Name: EventGroupFormat
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues:
+            - Brief
+          Name: ReportSummaryDescriptionFormat
           ParameterValueType: SINGLE_VALUED
           ValueWhenUnset:
             ValueWhenUnsetOption: RECOMMENDED_VALUE
@@ -2753,6 +2769,30 @@ dashboards:
             SourceParameterName: ChartGrouping
             Title: Group by
             Type: SINGLE_SELECT
+        - List:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                InfoIconText: Page 1 only lor full may impact number of uniques rows. Brief
+                  is 300 chars, Page 1 only is 2048.
+                Visibility: VISIBLE
+              SearchOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: d64296a1-ed3a-4aa8-b6c6-5727f8ae103d
+            SelectableValues:
+              Values:
+              - Brief
+              - Full
+              - Page 1 only
+            SourceParameterName: ReportSummaryDescriptionFormat
+            Title: Report Summary Description Format
+            Type: SINGLE_SELECT
         - Dropdown:
             CascadingControlConfiguration:
               SourceControls:
@@ -3195,9 +3235,17 @@ dashboards:
         - Configuration:
             GridLayout:
               Elements:
-              - ColumnSpan: 3
+              - ColumnIndex: 0
+                ColumnSpan: 3
                 ElementId: 31b7727c-45ad-4552-b956-294b3ddf5dbf
                 ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 3
+                ColumnSpan: 3
+                ElementId: d64296a1-ed3a-4aa8-b6c6-5727f8ae103d
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
                 RowSpan: 1
         SheetId: 7df9865b-fdcd-4aa4-af55-b29fe714f382
         TextBoxes:
@@ -3211,14 +3259,14 @@ dashboards:
             \          </i>\n        </b>\n      </inline>\n      <inline font-size=\"16px\"\
             >\n        <b>\n          <i>\_</i>\n        </b>\n      </inline>\n    </li>\n\
             \    <li>\n      <inline font-size=\"16px\">\n        <b>Unique Event IDs are\
-            \ specific to a region. There may be multiple unique Event IDs of the same targeted\
-            \ service and date when you have impacted resources across regions.</b>\n  \
-            \    </inline>\n    </li>\n    <li>\n      <inline font-size=\"16px\">\n   \
-            \     <b>Use filters and chart-specific focus drill downs from above to narrow\
-            \ the scope to a single event or group of related events.</b>\n      </inline>\n\
-            \    </li>\n    <li>\n      <inline font-size=\"16px\">\n        <b>Some events\
-            \ have long descriptions; use the Desription Page slider to paginate; the first\
-            \ page is a summary.</b>\n      </inline>\n    </li>\n  </ul>\n</text-box>"
+            \ specific to a region. There may be multiple unique Event IDs of the same service\
+            \ and date when you have impacted resources across regions.</b>\n      </inline>\n\
+            \    </li>\n    <li>\n      <inline font-size=\"16px\">\n        <b>Use filters\
+            \ and chart-specific focus drill downs from above to narrow the scope to a single\
+            \ event or group of related events.</b>\n      </inline>\n    </li>\n    <li>\n\
+            \      <inline font-size=\"16px\">\n        <b>Some events have long descriptions;\
+            \ use the Desription Page slider to paginate; the first page is a summary.</b>\n\
+            \      </inline>\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 71b90d22-ab7f-4fde-9ce4-15a51505e885
         - Content: "<text-box>\n  <inline font-size=\"40px\">AWS Health Events Dashboard</inline>\n\
             \  <br/>\n  <br/>\n  <inline font-size=\"18px\">The Summary tab provides high\
@@ -3237,10 +3285,10 @@ dashboards:
         - Content: "<text-box>\n  <br/>\n  <inline color=\"PrimaryForeground\" font-size=\"\
             28px\">\n    <b>IMPACT DISCOVERY</b>\n  </inline>\n  <br/>\n  <inline color=\"\
             #889dde\" font-size=\"20px\">\n    <b>These visuals offer different perspectives,\
-            \ dimensions and groupings. You can further refine focus to reveal event details\
-            \ and derive resource lists for reporting.\_</b>\n  </inline>\n  <br/>\n  <br/>\n\
-            \  <ul>\n    <li>\n      <inline font-size=\"16px\">\n        <b>Use filters\
-            \ above and click on metrics within the charts below to narrow the focus.</b>\n\
+            \ dimensions and groupings. You can further refine the focus to reveal event\
+            \ details and derive resource lists for reporting.\_</b>\n  </inline>\n  <br/>\n\
+            \  <br/>\n  <ul>\n    <li>\n      <inline font-size=\"16px\">\n        <b>Use\
+            \ filters above and click on metrics within the charts below to narrow the focus.</b>\n\
             \      </inline>\n    </li>\n    <li>\n      <inline font-size=\"16px\">\n \
             \       <b>Some charts can convey different relationships; use the radio buttons\
             \ below to adjust the primary dimension and grouping field to see different\
@@ -3740,7 +3788,7 @@ dashboards:
                   Width: 289px
                 - CustomLabel: Region
                   FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.region.9.1707845032542
-                  Width: 119px
+                  Width: 86px
                 - CustomLabel: Start
                   FieldId: 7f436235-9e39-4fcc-a667-9cdec37d0e69.8.1725397740308
                 - CustomLabel: End
@@ -3752,12 +3800,9 @@ dashboards:
                   Visibility: HIDDEN
                 - FieldId: 7ebbc27c-8a6e-4563-b4a4-2929a70e4842.14.1725980779781
                   Visibility: HIDDEN
-                - CustomLabel: Description
-                  FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.event_description1.11.1725397872502
-                  Width: 349px
                 - CustomLabel: Resource short name
                   FieldId: 9791a5a2-415d-4fb2-9599-33fb3e6beeb7.11.1719445460663
-                  Width: 247px
+                  Width: 184px
                 - CustomLabel: Resource ARN
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.affected_entity_value.16.1726853302265
                   Width: 244px
@@ -3830,11 +3875,6 @@ dashboards:
                       FieldId: 7ebbc27c-8a6e-4563-b4a4-2929a70e4842.14.1725980779781
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: event_description1
-                        DataSetIdentifier: health_events_view
-                      FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.event_description1.11.1725397872502
-                  - CategoricalDimensionField:
-                      Column:
                         ColumnName: Affected resource
                         DataSetIdentifier: health_events_view
                       FieldId: 9791a5a2-415d-4fb2-9599-33fb3e6beeb7.11.1719445460663
@@ -3853,11 +3893,6 @@ dashboards:
                         ColumnName: console_link
                         DataSetIdentifier: health_events_view
                       FieldId: f6138813-ba26-4ad0-8806-aa333a7c2a69.13.1725398249764
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: event_group
-                        DataSetIdentifier: health_events_view
-                      FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.event_group.16.1726853527897
                   Values: []
               SortConfiguration:
                 RowSort:
@@ -3918,10 +3953,9 @@ dashboards:
                   FieldId: c7507e70-92ed-4104-96d8-735cdaa999c6.service.3.1707842078781
                   Width: 128px
                 - FieldId: dd3891d4-7a1b-40bb-81f2-38d5d4e617df.11.1719445300009
-                  Width: 317px
-                - CustomLabel: Description
-                  FieldId: 8380af6b-ae4b-412f-93d4-c7a2a353d86c.11.1725397163553
-                  Width: 458px
+                  Width: 305px
+                - FieldId: 9402710b-4a95-4c26-97ba-e3d074cc7b12.8.1727378595776
+                  Width: 550px
                 - CustomLabel: Accounts
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.account_id.9.1725409620763
                   Width: 85px
@@ -3959,9 +3993,9 @@ dashboards:
                       FieldId: dd3891d4-7a1b-40bb-81f2-38d5d4e617df.11.1719445300009
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: Description Short
+                        ColumnName: description_summary_report
                         DataSetIdentifier: health_events_view
-                      FieldId: 8380af6b-ae4b-412f-93d4-c7a2a353d86c.11.1725397163553
+                      FieldId: 9402710b-4a95-4c26-97ba-e3d074cc7b12.8.1727378595776
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
@@ -4035,7 +4069,8 @@ dashboards:
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>USE CONTROLS FROM THE TOP RIGHT OF THE VISUAL
-                  TO EXPORT AS CSV OR EXCEL</visual-subtitle>
+                  TO EXPORT AS CSV OR EXCEL. CONTROL THE CONTENT LENGTH OF THE DESCRIPTION
+                  VIA THE REPORTING FORMAT OPTION AT THE TOP.</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -5953,7 +5988,7 @@ dashboards:
                       CustomValuesConfiguration:
                         CustomValues:
                           StringValues:
-                          - Service Deprecation
+                          - Service & Title
                         IncludeNullValue: false
                   - DestinationParameterName: ChartGrouping
                     Value:
