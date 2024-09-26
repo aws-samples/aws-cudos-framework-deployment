@@ -1126,16 +1126,16 @@ dashboards:
               Computations: []
               CustomNarrative:
                 Narrative: "<narrative>\n  To achieve our goal of powering our operations\
-                  \ with 100% renewable energy by\n  <inline color=\"#ffb91e\">2025</inline>\n\
+                  \ with 100% renewable energy by \n  <inline color=\"#ffb91e\">2025</inline>\n\
                   \  \u2014five years ahead of our original 2030 target\u2014Amazon contracts\
                   \ for renewable power from utility scale wind and solar projects that\
                   \ add clean energy to the grid. These new renewable projects support hundreds\
                   \ of jobs while providing hundreds of millions of dollars of investment\
                   \ in local communities. We also may choose to support these grids through\
                   \ the purchase of environmental attributes, like Renewable Energy Certificates\
-                  \ and Guarantees of Origin, in line with our\n  <a href=\"https://sustainability.aboutamazon.com/renewable-energy-methodology.pdf\"\
+                  \ and Guarantees of Origin, in line with our \n  <a href=\"https://sustainability.aboutamazon.com/renewable-energy-methodology.pdf\"\
                   \ target=\"_self\">Renewable Energy Methodology</a>\n  .\n  <br/>\n  As\
-                  \ a result, in\n  <inline color=\"#e2ff18\">2023</inline>\n  , the electricity\
+                  \ a result, in \n  <inline color=\"#e2ff18\">2023</inline>\n  , the electricity\
                   \ consumed in the following 22 AWS Regions was attributable to 100% renewable\
                   \ energy:\n  <br/>\n  <br/>\n  <ul>\n    <li>U.S. East (Northern Virginia)</li>\n\
                   \    <li>GovCloud (U.S. East)</li>\n    <li>U.S. East (Ohio)</li>\n  \
