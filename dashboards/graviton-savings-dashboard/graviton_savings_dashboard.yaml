@@ -6,8 +6,8 @@ dashboards:
         - graviton_elasticache_view
         - graviton_opensearch_view
         - graviton_rds_view
-    name: Graviton Opportunities Dashboard
-    dashboardId: graviton-opportunities
+    name: Graviton Savings Dashboard
+    dashboardId: graviton-savings
     category: Advanced
     theme: MIDNIGHT
     data: |-
