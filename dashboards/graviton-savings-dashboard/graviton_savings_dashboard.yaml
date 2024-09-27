@@ -1,5 +1,5 @@
 dashboards:
-  GRAVITON_DASHBOARD:
+  GRAVITON_SAVINGS_DASHBOARD:
     dependsOn:
       datasets:
         - graviton_ec2_view
