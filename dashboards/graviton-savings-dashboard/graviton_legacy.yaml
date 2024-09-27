@@ -7,7 +7,7 @@ dashboards:
         - graviton_opensearch_view
         - graviton_rds_view
     name: Graviton Opportunities Dashboard
-    deprecationNotice: "This version is deprecated. Delete it and install 'graviton-savings' instead."
+    deprecationNotice: "Graviton Opportunities Dashboard has changed it's name to Graviton Savings Dashboard. Please deploy Graviton Savings Dashboard by running 'cid-cmd deploy --dashboard-id graviton-savings'. After that you can delete existing one with 'cid-cmd delete --dashboard-id graviton-opportunities'"
     dashboardId: graviton-opportunities
     category: Advanced
     theme: MIDNIGHT
