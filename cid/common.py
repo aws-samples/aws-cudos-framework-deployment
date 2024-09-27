@@ -323,7 +323,12 @@ class Cid():
         ''' load additional resources from catalog
         '''
         try:
-            catalog = yaml.safe_load(self.get_page(catalog_url).text)
+            if 'https://' in catalog_url:
+                text = self.get_page(catalog_url).text
+            else:
+                with open(catalog_url, encoding='utf-8') as catalog_file:
+                    text = catalog_file.read()
+            catalog = yaml.safe_load(text)
         except (requests.exceptions.RequestException, yaml.error.MarkedYAMLError) as exc:
             logger.warning(f'Failed to load a catalog url: {exc}')
             logger.debug(exc, exc_info=True)
