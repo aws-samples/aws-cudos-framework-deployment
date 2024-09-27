@@ -5983,6 +5983,9 @@ dashboards:
                     TargetSheetId: 7df9865b-fdcd-4aa4-af55-b29fe714f382
               - SetParametersOperation:
                   ParameterValueConfigurations:
+                  - DestinationParameterName: AccountName
+                    Value:
+                      SelectAllValueOptions: ALL_VALUES
                   - DestinationParameterName: ChartAggregation
                     Value:
                       CustomValuesConfiguration:
