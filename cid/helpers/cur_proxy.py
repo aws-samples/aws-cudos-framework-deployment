@@ -1,6 +1,15 @@
 import re
 import logging
 
+try:
+    from itertools import batched #python3.12+
+except ImportError:
+    from itertools import islice
+    def batched(iterable, n):
+        iterator = iter(iterable)
+        while batch := tuple(islice(iterator, n)):
+            yield batch
+
 logger = logging.getLogger(__name__)
 
 cur1to2_mapping = {
@@ -396,6 +405,9 @@ class ProxyView():
             return {key.strip(): value.strip() for key, value in zip(keys, values)}
 
         _current_sql = '\n'.join([line[0] for line in self.athena.query(f'SHOW CREATE VIEW {self.name}')])
+
+        # transform: concat(ARRAY[a,b,c], ARRAY[d,e,f], ARRAY[e,g,h]) >> ARRAY[a,b,c,d,e,f,e,g,h]
+        _current_sql = re.sub(r'concat\((.+?)\)', lambda match: match.group(1).replace('], ARRAY[', ','), _current_sql)
         for field in self.exposed_fields:
             if field in cur2_maps:
                 if field not in self.exposed_maps:
@@ -503,12 +515,17 @@ class ProxyView():
                 if not map_mapping:
                     return 'cast(NULL AS MAP<VARCHAR, VARCHAR>)'
                 map_mapping = dict(sorted(map_mapping.items())) # ordered dict
+
+                chunk_size = 254 # https://github.com/prestodb/presto/issues/9073
+                key_arrays =   [f"""ARRAY[{', '.join(["'" + key + "'" for key in chunk])}]""" for chunk in batched(map_mapping.keys(), chunk_size)]
+                value_arrays = [f"""ARRAY[{', '.join(chunk                             )}]""" for chunk in batched(map_mapping.values(), chunk_size)]
                 return f'''
                     MAP(
-                        ARRAY[{', '.join(["'" + key + "'" for key in map_mapping.keys()])}],
-                        ARRAY[{', '.join([cur1_field for cur1_field in map_mapping.values()])}]
+                        {' || '.join(key_arrays)},
+                        {' || '.join(value_arrays)}
                     )
                 '''
+
             cur2to1_mapping = {value: key for key, value in cur1to2_mapping.items()}
             if field in cur2to1_mapping:
                 return cur2to1_mapping[field]
