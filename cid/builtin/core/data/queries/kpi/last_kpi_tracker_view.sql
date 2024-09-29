@@ -4,7 +4,7 @@ spend_all.billing_period
 , spend_all.payer_account_id
 , spend_all.linked_account_id
 , account_map.*
-, spend_all.spend_all_cost			
+, spend_all.spend_all_cost
 , instance_all.ec2_all_cost
 , instance_all.ec2_spot_cost
 , instance_all.ec2_spot_potential_savings

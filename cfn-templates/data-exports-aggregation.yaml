@@ -1447,7 +1447,7 @@ Resources:
             reason: "Need an explicit name for reference"
 
 Outputs:
-  DestinationBucketName:
+  AggregateBucketName:
     Description: Bucket with aggregate Data Exports
     Value: !Sub ${ResourcePrefix}-${DestinationAccountId}-data-exports
     Export: { Name: 'cid-DataExports-Bucket'}

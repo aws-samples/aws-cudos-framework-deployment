@@ -22,8 +22,8 @@
     "b163ad4b-f459-4b01-b2f3-54a168088640": {
       "RelationalTable": {
         "DataSourceArn": "${athena_datasource_arn}",
-        "Schema": "${athena_database_name}",
-        "Name": "${cur_table_name}",
+        "Schema": "${cur1_database}",
+        "Name": "${cur1_table_name}",
         "InputColumns": [
           {
             "Name": "product_updates",
@@ -837,7 +837,7 @@
       }
     },
     "2f69dc70-9487-4f34-9120-e5f40660b257": {
-      "Alias": "${cur_table_name}",
+      "Alias": "${cur1_table_name}",
       "Source": {
         "PhysicalTableId": "b163ad4b-f459-4b01-b2f3-54a168088640"
       }
