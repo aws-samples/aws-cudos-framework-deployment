@@ -43,14 +43,14 @@ class CFN(CidBase):
                 raise
         return  res
 
-
+    @lru_cache(1000)
     def get_read_access_policy(self, key):
         ''' return a list of read access policies provided by other stacks
         key: cfn export name
         '''
         return  self.get_read_access_policies().get(key)
 
-
+    @lru_cache(1000)
     def get_read_access_policy_for_module(self, module):
         ''' return a list of read access policies provided by other stacks
         module: module name (DataCollection DataExports or SecurityHub)

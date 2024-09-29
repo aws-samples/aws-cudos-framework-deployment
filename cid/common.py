@@ -1484,11 +1484,10 @@ class Cid():
         if isinstance(athena_datasource, Datasource) and athena_datasource.role_name:
             data_providers = dataset_definition.get('dependsOn', {}).get('dataProviders', [])
             policies_arns = [self.cfn.get_read_access_policy_for_module(provider) for provider in data_providers]
-            self.iam.ensure_managed_policies_attached (role_name=athena_datasource.role_name, policies_arns=policies_arns)
+            self.iam.ensure_managed_policies_attached (role_name=athena_datasource.role_name, policies_arns=','.join(policies_arns))
 
         # Check for required views
         _views = dataset_definition.get('dependsOn', {}).get('views', [])
-        #FIXME: delete this : required_views = [(self.cur.table_name if cur_required and name =='${cur_table_name}' else name) for name in _views]
         required_views = _views
 
         self.athena.discover_views(required_views)
@@ -1540,7 +1539,7 @@ class Cid():
         try:
             compiled_dataset = json.loads(compiled_dataset_text)
         except json.JSONDecodeError as exc:
-            logger.error('The json of dataset is not correct. Please check parameters of the dasbhoard.')
+            logger.error('The json of dataset is not correct. Please check parameters of the dashboard.')
             logger.debug(compiled_dataset_text)
             raise
         if dataset_id:
