@@ -39,7 +39,7 @@ Metadata:
           - LambdaLayerBucketPrefix
           - DeployCUDOSDashboard
           - DataBucketsKmsKeysArns
-          - ShareWithAccount
+          - ShareDashboard
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -79,7 +79,7 @@ Metadata:
         default: "IAM Role Name for QuickSight Datasource"
       QuickSightDataSetRefreshSchedule:
         default: "QuickSight DataSet Refresh Schedule [DEPRECATED]"
-      ShareWithAccount:
+      ShareDashboard:
         default: "Share Dashboards"
       LambdaLayerBucketPrefix:
         default: "LambdaLayerBucketPrefix - Please do not change"
