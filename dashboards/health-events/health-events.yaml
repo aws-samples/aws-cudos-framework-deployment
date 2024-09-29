@@ -288,7 +288,7 @@ dashboards:
         Expression: '{start_time} < addDateTime(${StartTimeWarn}, "DD", now())'
         Name: warn_days_within
       DataSetIdentifierDeclarations:
-      - DataSetArn: arn:aws:quicksight:::dataset/72a1d503-439a-4193-b4d0-92d6199b1867
+      - DataSetArn: arn:aws:quicksight:::dataset/046a43c0-16fb-4633-9039-980052ff237e
         Identifier: health_events_view
       FilterGroups:
       - CrossDataset: SINGLE_DATASET
@@ -3342,8 +3342,8 @@ dashboards:
             </b>\n  </inline>\n  <inline font-size=\"16px\">controls to adjust the scope.</inline>\n\
             \  <br/>\n  <inline font-size=\"16px\">\_2. Click metrics on\_</inline>\n  <inline\
             \ color=\"#f1591f\" font-size=\"16px\">\n    <b>IMPACT DISCOVERY</b>\n  </inline>\n\
-            \  <inline font-size=\"16px\">\_charts to filter other visuals.</inline>\n \
-            \ <br/>\n  <inline font-size=\"16px\">\_3. Reveal\_</inline>\n  <inline color=\"\
+            \  <inline font-size=\"16px\">\_charts to focus and filter other visuals.</inline>\n\
+            \  <br/>\n  <inline font-size=\"16px\">\_3. Reveal\_</inline>\n  <inline color=\"\
             #f1591f\" font-size=\"16px\">\n    <b>EVENT DETAILS</b>\n  </inline>\n  <inline\
             \ font-size=\"16px\">\_by filtering to a single or group of related events.</inline>\n\
             \  <br/>\n  <inline font-size=\"16px\">\_4. Use the\_</inline>\n  <inline color=\"\
@@ -3352,7 +3352,7 @@ dashboards:
             \ <br/>\n  <inline color=\"#dbdbdb\" font-size=\"14px\">\n    <b>NOTE:</b>\n\
             \  </inline>\n  <inline color=\"#dbdbdb\" font-size=\"14px\">\_</inline>\n \
             \ <inline color=\"#dbdbdb\" font-size=\"14px\">\n    <i>Multiple events may\
-            \ be related but differentiated by region and any event can reference multiple\
+            \ be related but differentiated by region. Any event can reference multiple\
             \ resources and accounts. Visuals aggregate distinct events or resources using\
             \ various grouping dimensions such that impacted resource count numbers may\
             \ vary between charts.</i>\n  </inline>\n</text-box>"
@@ -3915,7 +3915,8 @@ dashboards:
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>USE CONTROLS FROM THE TOP RIGHT OF THE VISUAL
-                  TO EXPORT AS CSV OR EXCEL</visual-subtitle>
+                  TO EXPORT AS CSV OR EXCEL. CONSOLE LINK IS VALID IN PAYER OR DELEGATED
+                  HEALTH EVENTS ACCOUNT.</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -3954,7 +3955,8 @@ dashboards:
                   Width: 128px
                 - FieldId: dd3891d4-7a1b-40bb-81f2-38d5d4e617df.11.1719445300009
                   Width: 305px
-                - FieldId: 9402710b-4a95-4c26-97ba-e3d074cc7b12.8.1727378595776
+                - CustomLabel: Description
+                  FieldId: 9402710b-4a95-4c26-97ba-e3d074cc7b12.8.1727378595776
                   Width: 550px
                 - CustomLabel: Accounts
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.account_id.9.1725409620763
@@ -5706,7 +5708,7 @@ dashboards:
                   Width: 114px
                 - CustomLabel: Related Events
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.4.1712628646208
-                  Width: 119px
+                  Width: 112px
                 - CustomLabel: Regions
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.region.7.1724175144276
                   Width: 91px
@@ -5917,10 +5919,10 @@ dashboards:
                   Width: 53px
                 - CustomLabel: Description
                   FieldId: a70ed509-1466-4731-8da1-8a22deb042be.0.1724900021552
-                  Width: 797px
+                  Width: 827px
                 - CustomLabel: Region
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.region.1.1724900502304
-                  Width: 112px
+                  Width: 88px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -5965,8 +5967,8 @@ dashboards:
                   UsePrimaryBackgroundColor: ENABLED
             Subtitle:
               FormatText:
-                RichText: <visual-subtitle>LONG DESCRIPTIONS ARE PAGINATED. USE THE SLIDER
-                  CONTROL ABOVE TO MOVE BETWEEN PAGES.</visual-subtitle>
+                RichText: <visual-subtitle>DESCRIPTIONS ARE PAGINATED. USE THE SLIDER CONTROL
+                  ABOVE TO MOVE BETWEEN PAGES. PAGE 1 IS A SUMMARY.</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
@@ -7800,21 +7802,10 @@ dashboards:
 datasets:
   health_events_view:
     data:
-      DataSetId: 72a1d503-439a-4193-b4d0-92d6199b1867
+      DataSetId: 046a43c0-16fb-4633-9039-980052ff237e
       Name: health_events_view
       PhysicalTableMap:
-        9cff45b2-68b2-4045-8499-0665680da01d:
-          RelationalTable:
-            DataSourceArn: ${athena_datasource_arn}
-            Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
-            Name: account_map
-            InputColumns:
-            - Name: account_id
-              Type: STRING
-            - Name: account_name
-              Type: STRING
-        c2182ba0-1709-4cff-9423-1f8eda23dc0a:
+        202403ba-9171-4955-9cb0-cf4e04248026:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
@@ -7863,8 +7854,6 @@ datasets:
               Type: STRING
             - Name: deprecated_versions
               Type: STRING
-            - Name: deprecated_versions_friendly
-              Type: STRING
             - Name: tags
               Type: STRING
             - Name: start_time
@@ -7885,32 +7874,99 @@ datasets:
               Type: STRING
             - Name: event_code_common
               Type: STRING
-            - Name: event_group_code_service
-              Type: STRING
-            - Name: event_group_title_service
-              Type: STRING
-            - Name: event_group
-              Type: STRING
-            - Name: event_title
-              Type: STRING
-            - Name: resource_status_icon
-              Type: STRING
-            - Name: event_status_icon
-              Type: STRING
-            - Name: event_category_icon
-              Type: STRING
             - Name: duration_hours
               Type: INTEGER
             - Name: qs_refresh
               Type: DATETIME
+        9b7b0647-8914-4dc2-a88d-e59b8eaab55b:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
       LogicalTableMap:
-        32b264e7-ad5f-4ef9-8d53-b08d71ea6874:
+        2298e52c-99d2-4f14-be43-5bcbe698e230:
           Alias: health_events_view
           Source:
-            PhysicalTableId: c2182ba0-1709-4cff-9423-1f8eda23dc0a
-        53863e8e-dfba-49e1-bee2-fc33d0081e6c:
+            PhysicalTableId: 202403ba-9171-4955-9cb0-cf4e04248026
+        37610f4d-fdc1-4402-ac3b-378218c0fb19:
+          Alias: account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: 9b7b0647-8914-4dc2-a88d-e59b8eaab55b
+        d09c2dc5-af09-4901-bbb1-c60dff908890:
           Alias: Intermediate Table
           DataTransforms:
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: deprecated_versions_friendly
+                ColumnId: bfb0a728-0167-4141-aa44-66a7c7931d61
+                Expression: |-
+                  ifelse(
+                      strlen(deprecated_versions) > 0, concat("Deprecation: ", replace(replace(deprecated_versions, "Deprecation of ", ""), " deprecation", "")),
+                      ""
+                  )
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: event_group_code_service
+                ColumnId: 51aaca91-344e-4ed7-8996-6a1cf2cd0065
+                Expression: 'concat(service, '' : '', event_code_common)'
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: event_group_title_service
+                ColumnId: bc6ae5a8-55dc-4d8b-950c-06c3eeaf4080
+                Expression: 'concat(service, " : ", ifelse(strlen(deprecated_versions_friendly)
+                  > 0, deprecated_versions_friendly, event_code_common))'
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: event_group
+                ColumnId: 8ab9aea1-d6af-45dd-a96d-cb7e92b8844f
+                Expression: 'concat(service, " : ", event_code_common, " : ", (formatDate(start_time,
+                  "%Y-%m-%d")))'
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: event_title
+                ColumnId: 10dff21f-8b92-4cc5-9b5d-410e11a2443e
+                Expression: ifelse(strlen(deprecated_versions_friendly) > 0, deprecated_versions_friendly,
+                  event_code_common)
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: resource_status_icon
+                ColumnId: fb278e11-caf6-4a47-8d22-946a5907185d
+                Expression: "ifelse(\n    {affected_entity_status_code} = \"IMPAIRED\"\
+                  , \"\U0001F7EA Impaired\",\n    {affected_entity_status_code} =\
+                  \ \"UNIMPAIRED\", \"\U0001F7E6 Unimpaired\",\n    {affected_entity_status_code}\
+                  \ = \"UNKNOWN\", \"\U0001F7E8 Unknown\",\n    {affected_entity_status_code}\
+                  \ = \"PENDING\", \"\U0001F7E5 Pending\",\n    {affected_entity_status_code}\
+                  \ = \"RESOLVED\", \"\U0001F7E9 Resolved\",\n    \"\u2B1C No status\"\
+                  \n)"
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: event_status_icon
+                ColumnId: daced9b2-0c83-4c02-8648-ef42ba805c2b
+                Expression: "ifelse(\n    {status_code} = \"upcoming\" AND dateDiff(now(),\
+                  \ start_time, \"DD\") < 60, \"\U0001F7E0 Impending\",\n    {status_code}\
+                  \ = \"upcoming\" AND dateDiff(now(), start_time, \"DD\") >= 60,\
+                  \ \"\U0001F7E1 Future\",\n    {status_code} = \"open\", \"\U0001F534\
+                  \ Open\",\n    {status_code} = \"closed\", \"\U0001F7E2 Closed\"\
+                  ,\n    {status_code}\n)"
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: event_category_icon
+                ColumnId: e6f5e0b0-bad0-48b8-8235-44292efa9c35
+                Expression: "ifelse(\n    {event_category} = \"issue\", \"\U0001F525\
+                  \ Issue\",\n    {event_category} = \"accountNotification\", \"\U0001F514\
+                  \ Account Notification\",\n    {event_category} = \"scheduledChange\"\
+                  , \"\U0001F4C6 Scheduled Change\",\n    {event_category} = \"investigation\"\
+                  , \"\U0001F50D Investigation\",\n    {event_category}\n)"
           - ProjectOperation:
               ProjectedColumns:
               - payer_account_id
@@ -7934,7 +7990,6 @@ datasets:
               - affected_entity_url
               - availability_zone
               - deprecated_versions
-              - deprecated_versions_friendly
               - tags
               - start_time
               - end_time
@@ -7945,6 +8000,10 @@ datasets:
               - event_arn
               - event_arn_hash
               - event_code_common
+              - duration_hours
+              - qs_refresh
+              - account_name
+              - deprecated_versions_friendly
               - event_group_code_service
               - event_group_title_service
               - event_group
@@ -7952,44 +8011,21 @@ datasets:
               - resource_status_icon
               - event_status_icon
               - event_category_icon
-              - duration_hours
-              - qs_refresh
-              - account_id[account_map]
-              - account_name
           Source:
             JoinInstruction:
-              LeftOperand: 32b264e7-ad5f-4ef9-8d53-b08d71ea6874
-              RightOperand: fedd1776-2a47-4374-876f-7d4a40f15656
+              LeftOperand: 2298e52c-99d2-4f14-be43-5bcbe698e230
+              RightOperand: 37610f4d-fdc1-4402-ac3b-378218c0fb19
               Type: LEFT
               OnClause: '{account_id} = {account_id[account_map]}'
-        fedd1776-2a47-4374-876f-7d4a40f15656:
-          Alias: account_map
-          DataTransforms:
-          - RenameColumnOperation:
-              ColumnName: account_id
-              NewColumnName: account_id[account_map]
-          Source:
-            PhysicalTableId: 9cff45b2-68b2-4045-8499-0665680da01d
       ImportMode: SPICE
     dependsOn:
       views:
-      - account_map
       - health_events_view
+      - account_map
     schedules:
     - default
 crawlers: {}
 views:
-  account_map:
-    dependsOn:
-      cur: true
-    data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.account_map AS
-      SELECT DISTINCT
-        line_item_usage_account_id account_id
-      , MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_name
-      FROM
-        "${cur_table_name}"
-      GROUP BY line_item_usage_account_id
   health_events_view:
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.health_events_view AS
@@ -8016,8 +8052,7 @@ views:
          , TRY(CAST(from_iso8601_timestamp("affected_entity_last_update") AS timestamp)) "affected_entity_last_update"
          , "affected_entity_url"
          , "availability_zone"
-         , COALESCE("deprecated_versions", '') "deprecated_versions"
-         , (CASE WHEN (length(COALESCE("deprecated_versions", '')) = 0) THEN '' ELSE concat('Deprecation: ', replace(replace("deprecated_versions", 'Deprecation of ', ''), ' deprecation', '')) END) "deprecated_versions_friendly"
+         , trim(BOTH FROM COALESCE("deprecated_versions", '')) "deprecated_versions"
          , "tags"
          , TRY(CAST(from_iso8601_timestamp("start_time") AS timestamp)) "start_time"
          , TRY(CAST(from_iso8601_timestamp("end_time") AS timestamp)) "end_time"
@@ -8026,8 +8061,8 @@ views:
          , "event_metadata"
          , "event_source"
          , "event_arn"
-         , substr(to_base64(md5(CAST(event_arn AS varbinary))), 1, 12) "event_arn_hash"
-         , array_join(transform(split(replace(event_code, concat('AWS_', service, '_'), ''), '_'), (x) -> concat(upper(substr(x, 1, 1)), lower(substr(x, 2, length(x))))), ' ', '') "event_code_common"
+         , substr(to_base64(md5(CAST("event_arn" AS varbinary))), 1, 12) "event_arn_hash"
+         , array_join(transform(split(replace("event_code", concat('AWS_', service, '_'), ''), '_'), (x) -> concat(upper(substr(x, 1, 1)), lower(substr(x, 2, length(x))))), ' ', '') "event_code_common"
          FROM
            "${data_collection_database_name}"."${table_name}"
       )
@@ -8045,44 +8080,24 @@ views:
             GROUP BY 1, 2
          )  "latest" ON (("core"."payer_account_id" = "latest"."payer_account_id") AND ("core"."event_arn" = "latest"."event_arn") AND ("core"."ingestion_time" = "latest"."ingestion_time")))
       )
-      , "icon_mapping" AS (
-         SELECT *
-         FROM
-           (
-       VALUES
-              ROW ('resource_status', 'IMPAIRED', U&'\+01F7EA Impaired')
-            , ROW ('resource_status', 'UNIMPAIRED', U&'\+01F7E6 Unimpaired')
-            , ROW ('resource_status', 'UNKNOWN', U&'\+01F7E8 Unknown')
-            , ROW ('resource_status', 'PENDING', U&'\+01F7E5 Pending')
-            , ROW ('resource_status', 'RESOLVED', U&'\+01F7E9 Resolved')
-            , ROW ('resource_status', '', U&'\2B1C No status')
-            , ROW ('event_status', 'upcomingfalse', U&'\+01F7E0 Impending')
-            , ROW ('event_status', 'upcomingtrue', U&'\+01F7E1 Future')
-            , ROW ('event_status', 'open', U&'\+01F534 Open')
-            , ROW ('event_status', 'closed', U&'\+01F7E2 Closed')
-            , ROW ('event_category', 'issue', U&'\+01F525 Issue')
-            , ROW ('event_category', 'accountNotification', U&'\+01F514 Account Notification')
-            , ROW ('event_category', 'scheduledChange', U&'\+01F4C6 Scheduled Change')
-            , ROW ('event_category', 'investigation', U&'\+01F50D Investigation')
-         )  ignored_table_name ("map_type", "source_value", "mapping")
-      )
       SELECT
-        "hed".*
-      , concat(service, ' : ', "event_code_common") "event_group_code_service"
-      , (CASE WHEN (length("deprecated_versions_friendly") > 0) THEN concat(service, ' : ', "deprecated_versions_friendly") ELSE concat(service, ' : ', "event_code_common") END) "event_group_title_service"
-      , concat(service, ' : ', "event_code_common", ' : ', date_format("start_time", '%Y-%m-%d')) "event_group"
-      , (CASE WHEN (length("deprecated_versions_friendly") > 0) THEN "deprecated_versions_friendly" ELSE "event_code_common" END) "event_title"
-      , COALESCE("rs_map"."mapping", "affected_entity_status_code") "resource_status_icon"
-      , COALESCE("es_map"."mapping", "status_code") "event_status_icon"
-      , COALESCE("ec_map"."mapping", "event_category") "event_category_icon"
+        "hed_latest".*
       , date_diff('hour', "start_time", "end_time") "duration_hours"
       , CAST(current_timestamp AS timestamp) "qs_refresh"
       FROM
-        ((("hed_latest" "hed"
-      LEFT JOIN "icon_mapping" "rs_map" ON ((COALESCE("hed"."affected_entity_status_code", '') = "rs_map"."source_value") AND ("rs_map"."map_type" = 'resource_status')))
-      LEFT JOIN "icon_mapping" "es_map" ON (((CASE WHEN ("status_code" = 'upcoming') THEN concat('upcoming', CAST(("start_time" > date_add('Day', 60, now())) AS varchar)) ELSE "status_code" END) = "es_map"."source_value") AND ("es_map"."map_type" = 'event_status')))
-      LEFT JOIN "icon_mapping" "ec_map" ON (("hed"."event_category" = "ec_map"."source_value") AND ("ec_map"."map_type" = 'event_category')))
-      WHERE ("hed"."ingestion_time" >= ("date_trunc"('day', current_timestamp) - INTERVAL  '90' DAY))
+        "hed_latest"
+      WHERE ("ingestion_time" >= ("date_trunc"('day', current_timestamp) - INTERVAL  '90' DAY))
+  account_map:
+    dependsOn:
+      cur: true
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.account_map AS
+      SELECT DISTINCT
+        line_item_usage_account_id account_id
+      , MAX_BY(line_item_usage_account_id, line_item_usage_start_date) account_name
+      FROM
+        "${cur_table_name}"
+      GROUP BY line_item_usage_account_id
 
     parameters:
       data_collection_database_name:
@@ -8093,5 +8108,3 @@ views:
         default: health_events_detail_data
         description: "Enter the name of the health events table (do not alter)"
         global: True
-
-
