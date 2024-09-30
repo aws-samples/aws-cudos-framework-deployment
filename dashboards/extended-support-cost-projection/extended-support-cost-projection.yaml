@@ -3603,6 +3603,8 @@ views:
           description: "Enter the name of the CUR table"
           global: True
         data_collection_database_name:
+          type: athena
+          query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'inventory_eks_data'
           default: optimization_data
           description: "Enter the name of the data collection database"
           global: True
@@ -3811,7 +3813,7 @@ views:
          , sum(c.line_item_usage_amount)
          , sum((CASE WHEN (c.pricing_unit = 'ACU-Hr') THEN c.line_item_usage_amount WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN (CAST(c.product_vcpu AS int) * c.line_item_usage_amount * 2) ELSE (CAST(c.product_vcpu AS int) * c.line_item_usage_amount) END))
          FROM
-           ((${cur_database_name}.${cur_table_name} c
+           (("${cur_database_name}"."${cur_table_name}" c
          INNER JOIN all_sanitised_rds_resources rdsu ON ((c.bill_payer_account_id = rdsu.payer_id) AND (c.line_item_usage_account_id = rdsu.accountid) AND (c.product_region = rdsu.region) AND (split_part(c.line_item_resource_id, ':', 7) = rdsu.dbresourceidentifier)))
          INNER JOIN account_map accmap ON (c.line_item_usage_account_id = accmap.account_id))
          WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.year, '-', c.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonRDS') AND (c.line_item_line_item_type IN ('DiscountedUsage', 'Usage')) AND ((c.product_product_family = 'Database Instance') OR ((c.product_product_family like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage'))))
@@ -3867,6 +3869,8 @@ views:
           description: "Enter the name of the CUR table"
           global: True
         data_collection_database_name:
+          type: athena
+          query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'inventory_rds_db_instances_data'
           default: optimization_data
           description: "Enter the name of the data collection database"
           global: True

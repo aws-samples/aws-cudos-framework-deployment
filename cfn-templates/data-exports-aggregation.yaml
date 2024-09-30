@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Billing Data Export Aggregation v0.1.0
+Description: AWS Billing Data Export Aggregation v0.1.4
 Metadata:
 
   AWS::CloudFormation::Interface:
@@ -903,6 +903,7 @@ Resources:
             - {"Name": "line_item_resource_id", "Type": "string" }
             - {"Name": "line_item_unblended_cost", "Type": "double" }
             - {"Name": "line_item_usage_account_id", "Type": "string" }
+            - {"Name": "line_item_usage_account_name", "Type": "string" }
             - {"Name": "line_item_usage_amount", "Type": "double" }
             - {"Name": "line_item_usage_end_date", "Type": "timestamp" }
             - {"Name": "line_item_usage_start_date", "Type": "timestamp" }
@@ -921,20 +922,20 @@ Resources:
             - {"Name": "product_to_location", "Type": "string" }
             - {"Name": "reservation_amortized_upfront_fee_for_billing_period", "Type": "double" }
             - {"Name": "reservation_effective_cost", "Type": "double" }
-            - {"Name": "reservation_end_time", "Type": "timestamp" }
+            - {"Name": "reservation_end_time", "Type": "string" }
             - {"Name": "reservation_reservation_a_r_n", "Type": "string" }
-            - {"Name": "reservation_start_time", "Type": "timestamp" }
+            - {"Name": "reservation_start_time", "Type": "string" }
             - {"Name": "reservation_unused_amortized_upfront_fee_for_billing_period", "Type": "double" }
             - {"Name": "reservation_unused_recurring_fee", "Type": "double" }
             - {"Name": "resource_tags", "Type": "map<string,string>" }
             - {"Name": "savings_plan_amortized_upfront_commitment_for_billing_period", "Type": "double" }
-            - {"Name": "savings_plan_end_time", "Type": "timestamp" }
+            - {"Name": "savings_plan_end_time", "Type": "string" }
             - {"Name": "savings_plan_offering_type", "Type": "string" }
             - {"Name": "savings_plan_payment_option", "Type": "string" }
             - {"Name": "savings_plan_purchase_term", "Type": "string" }
             - {"Name": "savings_plan_savings_plan_a_r_n", "Type": "string" }
             - {"Name": "savings_plan_savings_plan_effective_cost", "Type": "double" }
-            - {"Name": "savings_plan_start_time", "Type": "timestamp" }
+            - {"Name": "savings_plan_start_time", "Type": "string" }
             - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
             - {"Name": "split_line_item_parent_resource_id", "Type": "string" }
