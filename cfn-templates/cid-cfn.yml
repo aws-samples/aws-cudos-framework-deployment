@@ -39,6 +39,7 @@ Metadata:
           - LambdaLayerBucketPrefix
           - DeployCUDOSDashboard
           - DataBucketsKmsKeysArns
+          - ShareDashboard
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -78,6 +79,8 @@ Metadata:
         default: "IAM Role Name for QuickSight Datasource"
       QuickSightDataSetRefreshSchedule:
         default: "QuickSight DataSet Refresh Schedule [DEPRECATED]"
+      ShareDashboard:
+        default: "Share Dashboards"
       LambdaLayerBucketPrefix:
         default: "LambdaLayerBucketPrefix - Please do not change"
       GlueDataCatalog:
@@ -118,6 +121,11 @@ Parameters:
     Type: String
     Default: 'CidQuickSightDataSourceRole'
     Description: "IAM Role Name to be used on QuickSight Datasource Creation. If empty - then the Default QuickSight Role will be used; if provided other existing role, will use that Role; if name equal to 'CidQuickSightDataSourceRole', then a role will be created by this CloudFromation)."
+  ShareDashboard:
+    Type: String
+    Default: 'yes'
+    Description: "Make Dashboards visible by all users who access this QuickSight account."
+    AllowedValues: ["yes", "no"]
   CURBucketPath:
     Type: String
     MinLength: 3
@@ -1635,7 +1643,7 @@ Resources:
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
-        share-with-account: 'yes'
+        share-with-account: !Ref ShareDashboard
 
   CUDOSDashboard:
     Type: Custom::CidDashboard
@@ -1655,7 +1663,7 @@ Resources:
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
-        share-with-account: 'yes'
+        share-with-account: !Ref ShareDashboard
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
@@ -1677,7 +1685,7 @@ Resources:
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
-        share-with-account: 'yes'
+        share-with-account: !Ref ShareDashboard
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
@@ -1699,7 +1707,7 @@ Resources:
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
-        share-with-account: 'yes'
+        share-with-account: !Ref ShareDashboard
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
@@ -1723,7 +1731,7 @@ Resources:
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
-        share-with-account: 'yes'
+        share-with-account: !Ref ShareDashboard
         view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/trusted-advisor/trusted-advisor-data'
 
   ComputeOptimizerDashboard:
@@ -1743,7 +1751,7 @@ Resources:
         glue-data-catalog: !Ref GlueDataCatalog
         cur-table-name: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
         quicksight-user: !Ref QuickSightUser
-        share-with-account: 'yes'
+        share-with-account: !Ref ShareDashboard
         view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_lambda'
         view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
         view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
