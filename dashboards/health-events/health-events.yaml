@@ -3290,8 +3290,8 @@ dashboards:
             \  <br/>\n  <ul>\n    <li>\n      <inline font-size=\"16px\">\n        <b>Use\
             \ filters above and click on metrics within the charts below to narrow the focus.</b>\n\
             \      </inline>\n    </li>\n    <li>\n      <inline font-size=\"16px\">\n \
-            \       <b>Some charts can convey different relationships; use the radio buttons\
-            \ below to adjust the primary dimension and grouping field to see different\
+            \       <b>Some charts can convey multiple relationships; use the radio buttons\
+            \ below to adjust the Primary Aggregation and Group By fields to analyze different\
             \ combinations.</b>\n      </inline>\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: f334b94b-89cf-4056-9cb3-4f295a7e6b72
         - Content: |-
@@ -5856,7 +5856,7 @@ dashboards:
                 RichText: |-
                   <visual-subtitle>
                     <inline font-size="12px">
-                      <b>RELATED EVENTS ARE GROUPED BY SERVICE, CODE/TITLE, CATEGORY, AND START TIME; CLICK TO FOCUS THE EVENT DETAIL SECTION. UNRESOLVED RESOURCES ARE IN IMPAIRED OR PENDING STATUS.</b>
+                      <b>RELATED EVENTS ARE GROUPED BY SERVICE, TITLE, AND START TIME; CLICK TO FOCUS THE EVENT DETAIL SECTION. UNRESOLVED RESOURCES ARE IN IMPAIRED OR PENDING STATUS.</b>
                     </inline>
                   </visual-subtitle>
               Visibility: VISIBLE
@@ -7067,13 +7067,13 @@ dashboards:
                   AggregationVisibility: HIDDEN
                   TooltipFields:
                   - FieldTooltipItem:
-                      FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
-                      Visibility: VISIBLE
-                  - FieldTooltipItem:
                       FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.service.2.1718782883306
                       Visibility: VISIBLE
                   - FieldTooltipItem:
                       FieldId: a8e62954-953a-4ad1-88c9-15a75df36114.affected_entity_arn.1.1718781970879
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
@@ -7115,7 +7115,7 @@ dashboards:
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                     FieldValue: NO STATUS
-                - Color: '#464343'
+                - Color: '#EEEEEE'
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                     FieldValue: No status
@@ -7143,8 +7143,6 @@ dashboards:
                 - ColumnName: Deprecation
                   DataSetIdentifier: health_events_view
                 - ColumnName: Account
-                  DataSetIdentifier: health_events_view
-                - ColumnName: e6c7b23f-2c38-4b86-8b8d-eb019c7295e2
                   DataSetIdentifier: health_events_view
                 DrillDownFilters: []
                 HierarchyId: 9215cf0f-d470-4ff3-a5dc-b600312bbc02
@@ -7629,10 +7627,6 @@ dashboards:
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: EXCLUDE
-                CategorySort:
-                - FieldSort:
-                    Direction: DESC
-                    FieldId: 41eef918-50d8-4716-bb98-686fa62951d4.2.1725416527245
                 ColorItemsLimit:
                   OtherCategories: EXCLUDE
                 SmallMultiplesLimitConfiguration:
@@ -7653,13 +7647,15 @@ dashboards:
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
+              ValueAxis:
+                AxisOffset: 140px
               VisualPalette:
                 ColorMap:
                 - Color: '#8A50B3'
                   Element:
                     FieldId: f00c3a85-ce29-4b88-951f-5c432bb12d73.2.1725469341803
                     FieldValue: Impaired
-                - Color: '#4C3A2F'
+                - Color: '#EEEEEE'
                   Element:
                     FieldId: f00c3a85-ce29-4b88-951f-5c432bb12d73.2.1725469341803
                     FieldValue: No status
@@ -7682,7 +7678,7 @@ dashboards:
                   DataSetIdentifier: health_events_view
                 - ColumnName: Deprecation
                   DataSetIdentifier: health_events_view
-                - ColumnName: e6c7b23f-2c38-4b86-8b8d-eb019c7295e2
+                - ColumnName: service
                   DataSetIdentifier: health_events_view
                 DrillDownFilters: []
                 HierarchyId: c07dc829-00a9-431b-af1a-d7a580d90b52
@@ -7766,7 +7762,7 @@ dashboards:
                 Narrative: "<narrative>\n  <block align=\"center\">\n    <inline color=\"\
                   Accent\" font-size=\"68.8px\">\n      <b>Heath Events Dashboard</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ color=\"#dbdbdb\" font-size=\"54.88px\">\n      <b>v2.0.0</b>\n    </inline>\n\
+                  \ color=\"#dbdbdb\" font-size=\"54.88px\">\n      <b>v2.0.1</b>\n    </inline>\n\
                   \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"\
                   22.4px\">\_\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"\
                   >\n    <inline font-size=\"22.4px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/health-events\"\
@@ -7902,7 +7898,7 @@ datasets:
               NewColumnName: account_id[account_map]
           Source:
             PhysicalTableId: 9b7b0647-8914-4dc2-a88d-e59b8eaab55b
-        d09c2dc5-af09-4901-bbb1-c60dff908890:
+        ef7e43d1-205f-45f7-b47e-ddd178ebf3f1:
           Alias: Intermediate Table
           DataTransforms:
           - CreateColumnsOperation:
@@ -7930,7 +7926,7 @@ datasets:
               - ColumnName: event_group
                 ColumnId: 8ab9aea1-d6af-45dd-a96d-cb7e92b8844f
                 Expression: 'concat(service, " : ", event_code_common, " : ", (formatDate(start_time,
-                  "%Y-%m-%d")))'
+                  "yyyy-MM-dd")))'
           - CreateColumnsOperation:
               Columns:
               - ColumnName: event_title
