@@ -1,3 +1,9 @@
+variable "cur_bucket_name" {
+  type        = string
+  description = "S3 Bucket name for CUR(optional)"
+  default     = null
+}
+
 variable "destination_bucket_arn" {
   type        = string
   description = "Destination Bucket ARN"

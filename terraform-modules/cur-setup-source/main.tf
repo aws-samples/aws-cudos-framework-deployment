@@ -2,12 +2,16 @@ data "aws_caller_identity" "this" {}
 data "aws_partition" "this" {}
 data "aws_region" "this" {}
 
+locals {
+  cur_bucket_name = var.cur_bucket_name != null ? var.cur_bucket_name : "${var.resource_prefix}-${data.aws_caller_identity.this.account_id}-local"
+}
+
 ###
 # CUR S3 Bucket
 ###
 resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV2_AWS_62:Due to dependencies, S3 event notifications must be configured external to the module
-  bucket        = "${var.resource_prefix}-${data.aws_caller_identity.this.account_id}-local"
+  bucket        = local.cur_bucket_name
   force_destroy = true
 
   tags = var.tags
