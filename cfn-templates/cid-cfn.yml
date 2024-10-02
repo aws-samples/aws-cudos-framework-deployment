@@ -61,6 +61,8 @@ Metadata:
         default: "Deploy KPI Dashboard"
       OptimizationDataCollectionBucketPath:
         default: "Path to Optimization Data Collection S3 bucket"
+      MonthsLookback:
+        default: "Number of months to lookback in summary_view"
       DeployTAODashboard:
         default: "Deploy TAO Dashboard"
       DeployComputeOptimizerDashboard:
@@ -187,6 +189,11 @@ Parameters:
     Description: The S3 path to the bucket created by the Cost Optimization Data Collection Lab. The path will need point to a folder containing /trusted-advisor and/or /compute-optimizer folders. You can leave the variable {account_id} in place, it will be replaced by current account ID automatically.
     Default: "s3://cid-data-{account_id}"
     AllowedPattern: '^s3://[a-zA-Z0-9-_{}/]*$'
+  MonthsLookback:
+    Type: String
+    Description: Number of months of data to capture in summary_view (used on most visuals). Valid range 7 to 24. Default=7 (6 past + 1 current). More months will require more Spice capacity in QuickSight.
+    Default: "7"
+    AllowedPattern: '\b(0?[7-9]|1[0-9]|2[0-4])\b'
   LambdaLayerBucketPrefix:
     Type: String
     Description: An S3 bucket with a Lambda layer
@@ -1644,6 +1651,7 @@ Resources:
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
+        view-summary-view-monthsLookback: !Sub '${MonthsLookback}'
 
   CUDOSDashboard:
     Type: Custom::CidDashboard
@@ -1664,6 +1672,7 @@ Resources:
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
+        view-summary-view-monthsLookback: !Sub '${MonthsLookback}'
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
@@ -1686,6 +1695,7 @@ Resources:
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
+        view-summary-view-monthsLookback: !Sub '${MonthsLookback}'
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
@@ -1708,6 +1718,7 @@ Resources:
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
+        view-summary-view-monthsLookback: !Sub '${MonthsLookback}'
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']

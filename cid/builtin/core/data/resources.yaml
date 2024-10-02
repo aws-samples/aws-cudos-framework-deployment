@@ -308,6 +308,10 @@ views:
         - savings_plan_savings_plan_effective_cost
         - savings_plan_total_commitment_to_date
         - savings_plan_used_commitment
+    parameters:
+      monthsLookback:
+        default: '7'
+        description: Number of months of data to capture in summary_view (used on most visuals). Valid range 7 to 24. Default=7 (6 past + 1 current). More months will require more Spice capacity in QuickSight.
 
   ec2_running_cost:
     spriFile: cid/ec2_running_cost_sp_ri.sql
