@@ -5,7 +5,7 @@ dashboards:
       - support_cases_communications_view
     name: AWS Support Cases Radar
     dashboardId: support-cases-radar
-    category: Custom
+    category: Advanced
     theme: MIDNIGHT
     data: |-
       AnalysisDefaults:
