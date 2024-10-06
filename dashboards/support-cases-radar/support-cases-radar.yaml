@@ -1636,7 +1636,7 @@ views:
       - support_cases_communications
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".support_cases_communications_view AS
-      WITH communications AS (
+      WITH communication AS (
         SELECT
             caseid case_id
           , body
@@ -1646,10 +1646,10 @@ views:
           "${data_collection_database_name}".support_cases_communications
       )
       SELECT
-        communications.case_id
-      , communications.body
-      , communications.submitted_by
-      , communications.communication_time
+        communication.case_id
+      , communication.body
+      , communication.submitted_by
+      , communication.communication_time
       , case.payer_id
       , case.account_id
       , case.displayid display_id
@@ -1665,19 +1665,19 @@ views:
       , case.summary
       , DATE_DIFF(
           'minute',
-          LAG(communications.communication_time, 1) OVER (
-            PARTITION BY communications.case_id
-            ORDER BY communications.communication_time ASC
+          LAG(communication.communication_time, 1) OVER (
+            PARTITION BY communication.case_id
+            ORDER BY communication.communication_time ASC
           ),
-          communications.communication_time
+          communication.communication_time
         ) communication_lag
       , RANK() OVER (
-          PARTITION BY communications.case_id
-          ORDER BY communications.communication_time ASC
+          PARTITION BY communication.case_id
+          ORDER BY communication.communication_time ASC
         ) communication_sequence
       FROM
         (communications
-      LEFT JOIN "${data_collection_database_name}".support_cases_data case ON (communications.case_id = case.caseid))
+      LEFT JOIN "${data_collection_database_name}".support_cases_data case ON (communication.case_id = case.caseid))
     parameters:
       data_collection_database_name:
         type: athena
