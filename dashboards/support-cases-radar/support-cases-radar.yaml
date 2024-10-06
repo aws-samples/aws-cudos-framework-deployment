@@ -27,16 +27,16 @@ dashboards:
       - DataSetIdentifier: support_cases_communications_view
         Expression: |-
           concat(
-          'Created: ', formatDate({case_created_time}),"
-          By:       ", {case_submitted_by},"
-          Subject:  ", subject
+          'Created: ', formatDate({case_created_time})," By: ", {case_submitted_by},"
+          Subject: ", subject, "
+          Service: ", {service_code}, "
+          Category:", {category_code}
           )
         Name: Case Info
       - DataSetIdentifier: support_cases_communications_view
         Expression: |-
-          concat('#', toString({communication_sequence}),'
-          Date: ',  formatDate({communication_time}),"
-          By:   ", submitted_by,"
+          concat('Date: ',  formatDate({communication_time}),"
+          By:   ", {submitted_by},"
           ", ifelse({communication_sequence} = 1, "", concat("Since Previous:   ",{Human Readable Time Since Previous Communication}))
           )
         Name: Communcation Info
@@ -44,8 +44,7 @@ dashboards:
         Expression: '{communication_time}'
         Name: Communication Time
       - DataSetIdentifier: support_cases_communications_view
-        Expression: 'dateDiff({Last Communication}, now(), ''DD'')
-          '
+        Expression: 'dateDiff({Last Communication}, now(), ''DD'') '
         Name: Days Since Last Communication
       - DataSetIdentifier: support_cases_communications_view
         Expression: |-
@@ -53,7 +52,7 @@ dashboards:
               ${GroupBy},
               'Status', status,
               'Severity', {Severity Code},
-              'Service', service_code,
+              'Service', {service_code},
               'Management Account', {payer_id},
               'Account', Account,
               'Created By', {case_submitted_by},
@@ -61,7 +60,7 @@ dashboards:
           )
         Name: Group By
       - DataSetIdentifier: support_cases_communications_view
-        Expression: |2-
+        Expression: |-
           ifelse(
               {Minutes Since Case Started} < 1, 'less than a minute',
               {Minutes Since Case Started} < 60, concat(
@@ -94,7 +93,7 @@ dashboards:
           )
         Name: Human Readable Time Since Case Started
       - DataSetIdentifier: support_cases_communications_view
-        Expression: |2-
+        Expression: |-
           ifelse(
               {Minutes Since Previous Communication} < 1, 'less than a minute',
               {Minutes Since Previous Communication} < 60, concat(
@@ -127,7 +126,7 @@ dashboards:
           )
         Name: Human Readable Time Since Previous Communication
       - DataSetIdentifier: support_cases_communications_view
-        Expression: maxOver({Communication Time}, [case_id, subject, display_id], PRE_AGG)
+        Expression: maxOver({Communication Time}, [{case_id}, subject, {display_id}], PRE_AGG)
         Name: Last Communication
       - DataSetIdentifier: support_cases_communications_view
         Expression: dateDiff({Case Created}, {Communication Time}, 'MI')
@@ -140,10 +139,10 @@ dashboards:
           {Case Info}), ${Search}), TRUE) '
         Name: Search Matches
       - DataSetIdentifier: support_cases_communications_view
-        Expression: "switch (\n    severity_code,\n    'low',      '\U0001F7E2 General guidance',\n\
-          \    'normal',   '\U0001F7E1 System impaired',\n    'high',     '\U0001F7E0 Production\
-          \ system impaired',\n    'urgent',   '\U0001F535 Production system down',\n  \
-          \  'critical', '\U0001F534 Business-critical system down',\n    severity_code\n\
+        Expression: "switch (\n    {severity_code},\n    'low',      '\U0001F7E2 General\
+          \ guidance',\n    'normal',   '\U0001F7E1 System impaired',\n    'high',     '\U0001F7E0\
+          \ Production system impaired',\n    'urgent',   '\U0001F535 Production system\
+          \ down',\n    'critical', '\U0001F534 Business-critical system down',\n    {severity_code}\n\
           )"
         Name: Severity Code
       - DataSetIdentifier: support_cases_communications_view
@@ -154,7 +153,7 @@ dashboards:
           \    'work-in-progress',  'work-in-progress',\n    status\n)"
         Name: Status Icon
       - DataSetIdentifier: support_cases_communications_view
-        Expression: distinctCountOver(display_id, [], PRE_AGG)
+        Expression: distinctCountOver({display_id}, [], PRE_AGG)
         Name: distinct display_id count
       ColumnConfigurations:
       - ColorsConfiguration:
@@ -199,7 +198,7 @@ dashboards:
           ColumnName: status
           DataSetIdentifier: support_cases_communications_view
       DataSetIdentifierDeclarations:
-      - DataSetArn: arn:aws:quicksight:::dataset/e1de2dd9-29c8-4d46-9d11-5d34356c217b
+      - DataSetArn: arn:aws:quicksight:::dataset/support_cases_communications_view
         Identifier: support_cases_communications_view
       FilterGroups:
       - CrossDataset: SINGLE_DATASET
@@ -219,7 +218,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: b14a6ebd-24d7-4eba-8121-89922829ba2f
+              SheetId: fe406ce0-ad29-4178-86a4-fedadfefc5d0
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 77d64cf0-6fdb-469b-9f40-74c1cc11c3aa
@@ -267,9 +266,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: b14a6ebd-24d7-4eba-8121-89922829ba2f
+              SheetId: fe406ce0-ad29-4178-86a4-fedadfefc5d0
               VisualIds:
-              - 938ea9ac-a0aa-4b0c-a6f4-0eb631db8228
+              - 12e705e9-633c-4de2-b133-415b6381f3bc
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: d7a1422e-767d-4445-af75-d910ce405ede
@@ -286,11 +285,11 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: b14a6ebd-24d7-4eba-8121-89922829ba2f
+              SheetId: fe406ce0-ad29-4178-86a4-fedadfefc5d0
               VisualIds:
-              - 048093cc-1277-4798-aaf5-cbb8a4685c82
-              - b3748951-c0ad-45cd-b84e-059f7eab21f8
-              - 37f7b3a9-965c-4782-9a88-fcb1ef46ecd7
+              - bf94be2f-fc2f-411a-9e64-a456789e7f10
+              - bdd04bd9-dc7e-44bf-9e84-73e054a0820d
+              - ee344612-534e-4f47-9d1e-b23b565a6dc4
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5757f8b2-86a2-4d0a-a19b-d5f88f24a54a
@@ -349,11 +348,17 @@ dashboards:
                 DefaultRelativeDateTimeOptions:
                   DisplayOptions:
                     TitleOptions:
-                      FontConfiguration: {}
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
                       Visibility: VISIBLE
               Title: Case Created
             FilterId: 799c57f4-13db-4970-b575-56c62a56ef52
+            MinimumGranularity: DAY
             NullOption: NON_NULLS_ONLY
+            RelativeDateType: LAST
+            RelativeDateValue: 12
+            TimeGranularity: MONTH
         ScopeConfiguration:
           AllSheets: {}
         Status: ENABLED
@@ -473,25 +478,6 @@ dashboards:
         ScopeConfiguration:
           AllSheets: {}
         Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: bf7ce747-bf17-4ddb-bbc9-23c8b73738ee
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: Case Created
-              DataSetIdentifier: support_cases_communications_view
-            FilterId: 2fcc1ca6-1a9b-4e99-90f9-aaac2a03574c
-            NullOption: NON_NULLS_ONLY
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: b14a6ebd-24d7-4eba-8121-89922829ba2f
-              VisualIds:
-              - 938ea9ac-a0aa-4b0c-a6f4-0eb631db8228
-        Status: DISABLED
       Options:
         WeekStart: SUNDAY
       ParameterDeclarations:
@@ -571,19 +557,19 @@ dashboards:
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 13
-                ElementId: 938ea9ac-a0aa-4b0c-a6f4-0eb631db8228
+                ElementId: 12e705e9-633c-4de2-b133-415b6381f3bc
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 6
               - ColumnIndex: 13
                 ColumnSpan: 12
-                ElementId: d096d1f7-023c-4ba8-82dd-07a191f296a4
+                ElementId: 8a9ffc2a-e623-4c66-a93f-b0b072f45509
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 6
               - ColumnIndex: 25
                 ColumnSpan: 10
-                ElementId: 2e62ec3a-8909-4306-9e0f-e8892b6ee9dc
+                ElementId: 3e2f81e2-3b44-4978-8bd8-c04068dec36b
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 6
@@ -595,7 +581,7 @@ dashboards:
                 RowSpan: 5
               - ColumnIndex: 5
                 ColumnSpan: 30
-                ElementId: 4a893d22-6c9c-436c-a88f-5f47dc485aad
+                ElementId: 8e6c0928-2c93-4dcb-9585-a461cd506697
                 ElementType: VISUAL
                 RowIndex: 9
                 RowSpan: 7
@@ -649,25 +635,25 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 85e4f38f-1025-4e8b-a4db-782b5981fdb5
+                ElementId: 8bb8b3f7-86de-4b5f-99ff-6e785ffa4caa
                 ElementType: VISUAL
                 RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 26
-                ElementId: 048093cc-1277-4798-aaf5-cbb8a4685c82
+                ElementId: bf94be2f-fc2f-411a-9e64-a456789e7f10
                 ElementType: VISUAL
                 RowIndex: 27
                 RowSpan: 4
               - ColumnIndex: 26
                 ColumnSpan: 9
-                ElementId: 37f7b3a9-965c-4782-9a88-fcb1ef46ecd7
+                ElementId: ee344612-534e-4f47-9d1e-b23b565a6dc4
                 ElementType: VISUAL
                 RowIndex: 27
                 RowSpan: 4
               - ColumnIndex: 0
-                ColumnSpan: 27
-                ElementId: b3748951-c0ad-45cd-b84e-059f7eab21f8
+                ColumnSpan: 26
+                ElementId: bdd04bd9-dc7e-44bf-9e84-73e054a0820d
                 ElementType: VISUAL
                 RowIndex: 31
                 RowSpan: 12
@@ -717,7 +703,7 @@ dashboards:
         - Configuration:
             GridLayout:
               Elements: []
-        SheetId: b14a6ebd-24d7-4eba-8121-89922829ba2f
+        SheetId: fe406ce0-ad29-4178-86a4-fedadfefc5d0
         TextBoxes:
         - Content: |-
             <text-box>
@@ -776,9 +762,13 @@ dashboards:
                     FieldValue: Case Created
                   Width: 113px
                 - DataPathList:
+                  - FieldId: e8676d0a-ffe0-4679-9b01-378e0fed89dc.9.1728236942613
+                    FieldValue: Status Icon
+                  Width: 53px
+                - DataPathList:
                   - FieldId: 1afef0f7-f494-4f74-a6ba-f4b96e51371f.6.1727855457741
                     FieldValue: Severity Code
-                  Width: 68px
+                  Width: 53px
                 SelectedFieldOptions:
                 - CustomLabel: Case Id
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.3.1727812113706
@@ -788,15 +778,20 @@ dashboards:
                 - CustomLabel: Severity
                   FieldId: 1afef0f7-f494-4f74-a6ba-f4b96e51371f.6.1727855457741
                   Visibility: VISIBLE
-                - FieldId: 86d8e8fd-9c46-4ba9-a6dc-790df441d408.3.1727813911340
+                - CustomLabel: Account
+                  FieldId: 86d8e8fd-9c46-4ba9-a6dc-790df441d408.3.1727813911340
                   Visibility: VISIBLE
                 - CustomLabel: Service
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.service_code.7.1727865825419
                   Visibility: VISIBLE
-                - FieldId: 787a8c5a-5104-4c47-9224-ed11626f8850.8.1728059621962
+                - CustomLabel: Status
+                  FieldId: e8676d0a-ffe0-4679-9b01-378e0fed89dc.9.1728236942613
                   Visibility: VISIBLE
                 - CustomLabel: Subject
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.subject.3.1727791391482
+                  Visibility: VISIBLE
+                - CustomLabel: Summary
+                  FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.summary.10.1728237002001
                   Visibility: VISIBLE
                 - CustomLabel: Days Since Last Communication
                   FieldId: 2bd3f82d-7f46-47fa-825c-84d76122e80d.9.1727865394222
@@ -838,12 +833,17 @@ dashboards:
                       Column:
                         ColumnName: Status Icon
                         DataSetIdentifier: support_cases_communications_view
-                      FieldId: 787a8c5a-5104-4c47-9224-ed11626f8850.8.1728059621962
+                      FieldId: e8676d0a-ffe0-4679-9b01-378e0fed89dc.9.1728236942613
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: subject
                         DataSetIdentifier: support_cases_communications_view
                       FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.subject.3.1727791391482
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: summary
+                        DataSetIdentifier: support_cases_communications_view
+                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.summary.10.1728237002001
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -864,7 +864,7 @@ dashboards:
                   SortBy:
                     Column:
                       AggregationFunction:
-                        CategoricalAggregationFunction: COUNT
+                        DateAggregationFunction: COUNT
                       Direction: ASC
                       SortBy:
                         ColumnName: case_created_time
@@ -877,12 +877,14 @@ dashboards:
                 ColumnHeaderStyle:
                   BackgroundColor: '#0A87AF'
                   Height: 45
+                  TextWrap: NONE
                 RowAlternateColorOptions:
                   Status: DISABLED
                   UsePrimaryBackgroundColor: ENABLED
                 RowFieldNamesStyle:
                   BackgroundColor: '#0A87AF'
                   Height: 45
+                  TextWrap: NONE
                 RowsLayout: TABULAR
               TotalOptions:
                 ColumnTotalOptions:
@@ -908,7 +910,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>List of Cases</visual-title>
               Visibility: VISIBLE
-            VisualId: 85e4f38f-1025-4e8b-a4db-782b5981fdb5
+            VisualId: 8bb8b3f7-86de-4b5f-99ff-6e785ffa4caa
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -919,7 +921,7 @@ dashboards:
                   Width: 450px
                 - CustomLabel: Bedrock Summary
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.summary.2.1727813444430
-                  Width: 522px
+                  Width: 660px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -950,14 +952,12 @@ dashboards:
                   Status: DISABLED
                   UsePrimaryBackgroundColor: ENABLED
             Subtitle:
-              FormatText:
-                RichText: <visual-subtitle>Select ONE case above</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: <visual-title>Summary</visual-title>
+                RichText: <visual-title>The Case Summary (Select the Case Above)</visual-title>
               Visibility: VISIBLE
-            VisualId: 048093cc-1277-4798-aaf5-cbb8a4685c82
+            VisualId: bf94be2f-fc2f-411a-9e64-a456789e7f10
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -1040,7 +1040,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Cases by Service</visual-title>
               Visibility: VISIBLE
-            VisualId: 938ea9ac-a0aa-4b0c-a6f4-0eb631db8228
+            VisualId: 12e705e9-633c-4de2-b133-415b6381f3bc
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -1053,7 +1053,7 @@ dashboards:
                   Width: 319px
                 - CustomLabel: Communication
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.body.2.1727791486437
-                  Width: 837px
+                  Width: 792px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -1110,14 +1110,12 @@ dashboards:
                         Expression: locate({Communcation Info}, "Amazon Web Services") >
                           0
             Subtitle:
-              FormatText:
-                RichText: <visual-subtitle>Select ONE case above</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: <visual-title>Communications</visual-title>
+                RichText: <visual-title>Case Communications</visual-title>
               Visibility: VISIBLE
-            VisualId: b3748951-c0ad-45cd-b84e-059f7eab21f8
+            VisualId: bdd04bd9-dc7e-44bf-9e84-73e054a0820d
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -1194,7 +1192,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Cases by Account</visual-title>
               Visibility: VISIBLE
-            VisualId: d096d1f7-023c-4ba8-82dd-07a191f296a4
+            VisualId: 8a9ffc2a-e623-4c66-a93f-b0b072f45509
         - PieChartVisual:
             Actions:
             - ActionOperations:
@@ -1224,7 +1222,7 @@ dashboards:
                         ColumnName: status
                         DataSetIdentifier: support_cases_communications_view
                       FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.status.1.1727791185968
-                      HierarchyId: 718ba801-3c14-4a1f-a6f2-f514ac35544f
+                      HierarchyId: 158da3b7-d7ca-4d5c-88fe-b3d69d5feb6c
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
@@ -1262,14 +1260,14 @@ dashboards:
                 - ColumnName: severity_code
                   DataSetIdentifier: support_cases_communications_view
                 DrillDownFilters: []
-                HierarchyId: 718ba801-3c14-4a1f-a6f2-f514ac35544f
+                HierarchyId: 158da3b7-d7ca-4d5c-88fe-b3d69d5feb6c
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Cases by Status</visual-title>
               Visibility: VISIBLE
-            VisualId: 2e62ec3a-8909-4306-9e0f-e8892b6ee9dc
+            VisualId: 3e2f81e2-3b44-4978-8bd8-c04068dec36b
         - ComboChartVisual:
             Actions:
             - ActionOperations:
@@ -1309,7 +1307,7 @@ dashboards:
                         DateTimeFormat: MMM D, YYYY
                         NullValueFormatConfiguration:
                           NullString: 'null'
-                      HierarchyId: 9993aba1-56cb-4d4a-9465-70f890f7a5b3
+                      HierarchyId: 1ade68ab-9613-4c94-b6d1-a29dd689c2b2
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -1321,6 +1319,8 @@ dashboards:
                 Title:
                   CustomLabel: <<$GroupBy>>
                 Width: 173px
+              LineDataLabels:
+                Overlap: DISABLE_OVERLAP
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
@@ -1352,14 +1352,14 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 9993aba1-56cb-4d4a-9465-70f890f7a5b3
+                HierarchyId: 1ade68ab-9613-4c94-b6d1-a29dd689c2b2
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Ceses by Create Time</visual-title>
               Visibility: VISIBLE
-            VisualId: 4a893d22-6c9c-436c-a88f-5f47dc485aad
+            VisualId: 8e6c0928-2c93-4dcb-9585-a461cd506697
         - ScatterPlotVisual:
             Actions: []
             ChartConfiguration:
@@ -1447,9 +1447,9 @@ dashboards:
               Visibility: HIDDEN
             Title:
               FormatText:
-                RichText: <visual-title>Timeline in Minutes</visual-title>
+                RichText: <visual-title>Case Timeline in Minutes</visual-title>
               Visibility: VISIBLE
-            VisualId: 37f7b3a9-965c-4782-9a88-fcb1ef46ecd7
+            VisualId: ee344612-534e-4f47-9d1e-b23b565a6dc4
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -1476,7 +1476,7 @@ dashboards:
         - Configuration:
             GridLayout:
               Elements: []
-        SheetId: e33acd7f-7013-4dda-8778-fa29b48377fc
+        SheetId: 53e274fa-5739-49b4-ac2a-6018a5be88a9
         TextBoxes:
         - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
             center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"64px\"\
@@ -1517,7 +1517,7 @@ dashboards:
 datasets:
   support_cases_communications_view:
     data:
-      DataSetId: e1de2dd9-29c8-4d46-9d11-5d34356c217b
+      DataSetId: support_cases_communications_view
       Name: support_cases_communications_view
       PhysicalTableMap:
         bb496e3a-0c1b-4711-a115-f63cb9cdc045:
@@ -1658,7 +1658,7 @@ views:
       , cases.servicecode service_code
       , cases.categorycode category_code
       , cases.severitycode severity_code
-      , cases.submitted_by case_submitted_by
+      , cases.submittedby case_submitted_by
       , TRY(CAST(from_iso8601_timestamp(cases.timecreated) AS timestamp)) case_created_time
       , TRY(ARRAY_JOIN(cases.ccemailaddresses, ',')) cc_email_addresses
       , cases.language
