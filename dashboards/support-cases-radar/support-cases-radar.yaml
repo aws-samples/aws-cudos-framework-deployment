@@ -1636,7 +1636,7 @@ views:
       - support_cases_communications
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".support_cases_communications_view AS
-      WITH communication AS (
+      WITH communications AS (
         SELECT
             caseid case_id
           , body
@@ -1646,38 +1646,38 @@ views:
           "${data_collection_database_name}".support_cases_communications
       )
       SELECT
-        communication.case_id
-      , communication.body
-      , communication.submitted_by
-      , communication.communication_time
-      , case.payer_id
-      , case.account_id
-      , case.displayid display_id
-      , case.subject
-      , case.status
-      , case.servicecode service_code
-      , case.categorycode category_code
-      , case.severitycode severity_code
-      , case.submitted_by case_submitted_by
-      , TRY(CAST(from_iso8601_timestamp(case.timecreated) AS timestamp)) case_created_time
-      , TRY(ARRAY_JOIN(case.ccemailaddresses, ',')) cc_email_addresses
-      , case.language
-      , case.summary
+        communications.case_id
+      , communications.body
+      , communications.submitted_by
+      , communications.communication_time
+      , cases.payer_id
+      , cases.account_id
+      , cases.displayid display_id
+      , cases.subject
+      , cases.status
+      , cases.servicecode service_code
+      , cases.categorycode category_code
+      , cases.severitycode severity_code
+      , cases.submitted_by case_submitted_by
+      , TRY(CAST(from_iso8601_timestamp(cases.timecreated) AS timestamp)) case_created_time
+      , TRY(ARRAY_JOIN(cases.ccemailaddresses, ',')) cc_email_addresses
+      , cases.language
+      , cases.summary
       , DATE_DIFF(
           'minute',
-          LAG(communication.communication_time, 1) OVER (
-            PARTITION BY communication.case_id
-            ORDER BY communication.communication_time ASC
+          LAG(communications.communication_time, 1) OVER (
+            PARTITION BY communications.case_id
+            ORDER BY communications.communication_time ASC
           ),
-          communication.communication_time
+          communications.communication_time
         ) communication_lag
       , RANK() OVER (
-          PARTITION BY communication.case_id
-          ORDER BY communication.communication_time ASC
+          PARTITION BY communications.case_id
+          ORDER BY communications.communication_time ASC
         ) communication_sequence
       FROM
         (communications
-      LEFT JOIN "${data_collection_database_name}".support_cases_data case ON (communication.case_id = case.caseid))
+      LEFT JOIN "${data_collection_database_name}".support_cases_data cases ON (communications.case_id = cases.caseid))
     parameters:
       data_collection_database_name:
         type: athena
