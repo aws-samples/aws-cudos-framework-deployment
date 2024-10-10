@@ -9,7 +9,6 @@ dashboards:
     category: Custom
     theme: MIDNIGHT
     templateId: aws-marketplace
-    sourceAccountId: '412381751852'
     region: us-east-1
 datasets:
   marketplace_licenses_grants_view:
@@ -168,32 +167,27 @@ crawlers: {}
 views:
   marketplace_licenses_grants_view:
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.marketplace_licenses_grants_view AS
-      SELECT DISTINCT
-        lt.payer_id management_account_id
-      , SPLIT_PART(lt.beneficiary, ':', 5) "subscribed_account_id"
-      , SPLIT_PART(gt.granteeprincipalarn, ':', 5) "grantee_account_id"
-      , FROM_UNIXTIME(CAST(lt.createtime AS DOUBLE)) "license_create_time"
-      , date_parse(substr(lt.validity.begin, 1, 10), '%Y-%m-%d') "license_start_date"
-      , date_parse(substr(lt.validity."end", 1, 10), '%Y-%m-%d') "license_end_date"
-      , SPLIT_PART(lt.licensearn, ':', 7) "license_id"
-      , lt.productname
-      , data.value "seller"
-      , SPLIT_PART(agreement.value, ':', 7) "agreement_id"
-      , lt.status "license_status"
-      , lt.productsku
-      , lt.issuer.NAME "license_issuer"
-      , lt.homeregion
-      , lt."version" "license_version"
-      , gt.grantname "grant_name"
-      , SPLIT_PART(gt.grantarn, ':', 7) "grant_id"
-      , gt.grantstatus "grant_status"
-      , gt.version "grant_version"
-      , ARRAY_JOIN(gt.grantedoperations, ',') "granted_operations"
-      , gt.options.activationoverridebehavior "activation_override_behavior"
-      FROM
-        optimization_data.license_manager_licenses lt
-      , optimization_data.license_manager_grants gt
-      , UNNEST(licensemetadata) t ("data")
-      , UNNEST(licensemetadata) s (agreement)
-      WHERE ((lt.licensearn = gt.licensearn) AND (t."data".NAME = 'sellerOfRecord'))
+      CREATE OR REPLACE VIEW marketplace_licenses_grants_view AS
+      SELECT
+      CAST(NULL AS varchar) AS management_account_id,
+      CAST(NULL AS varchar) AS subscribed_account_id,
+      CAST(NULL AS varchar) AS grantee_account_id,
+      CAST(NULL AS timestamp) AS license_create_time,
+      CAST(NULL AS varchar) AS license_id,
+      CAST(NULL AS varchar) AS productname,
+      CAST(NULL AS varchar) AS seller,
+      CAST(NULL AS varchar) AS agreement_id,
+      CAST(NULL AS varchar) AS license_status,
+      CAST(NULL AS timestamp) AS license_start_date,
+      CAST(NULL AS timestamp) AS license_end_date,
+      CAST(NULL AS varchar) AS productsku,
+      CAST(NULL AS varchar) AS license_issuer,
+      CAST(NULL AS varchar) AS homeregion,
+      CAST(NULL AS varchar) AS license_version,
+      CAST(NULL AS varchar) AS grant_name,
+      CAST(NULL AS varchar) AS grant_id,
+      CAST(NULL AS varchar) AS grant_status,
+      CAST(NULL AS varchar) AS grant_version,
+      CAST(NULL AS varchar) AS granted_operations,
+      CAST(NULL AS varchar) AS activation_override_behavior
+      WHERE 1 = 0
