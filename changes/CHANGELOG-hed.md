@@ -1,7 +1,10 @@
 # What's new in Health Events Dashboard (HED)
+## v2.0.1
+* Minor text and visual tweaks
+
 ## v2.0.0
 * Reorganized Summary tab for better flow and easy creation of targeted inventory reports of impacted resources
-* Requires update with cid-cli parameters: --force --recursive
+* _Requires update with cid-cmd parameters: --force --recursive_
 
 ## v1.0.5
 * Added icons and styling for status
