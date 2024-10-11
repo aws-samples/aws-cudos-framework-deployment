@@ -168,7 +168,7 @@ class Athena(CidBase):
         if name == 'primary': # QuickSight manages primary wg differently, relying exclusively on bucket with a predefined name
             bucket_name = f'{self.partition}-athena-query-results-{self.region}-{self.account_id}'
         else:
-            bucket_name = f'{self.partition}-athena-query-results-cid-{self.account_id}-{self.region}'
+            bucket_name = f'{self.partition}-athena-query-results-cidcmd-{self.account_id}-{self.region}'
 
         try:
             workgroup = self.client.get_work_group(WorkGroup=name)

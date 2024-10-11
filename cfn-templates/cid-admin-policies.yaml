@@ -165,8 +165,12 @@ Resources:
           Resource:
           - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-shared
           - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
-          - !Sub arn:${AWS::Partition}:s3:::athena-query-result-${AWS::AccountId}
-
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cidcmd-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:${AWS::Partition}:s3:::athena-query-result-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-shared/*
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}/*
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cidcmd-${AWS::AccountId}-${AWS::Region}/*
+          - !Sub arn:${AWS::Partition}:s3:::athena-query-result-${AWS::AccountId}-${AWS::Region}/*
         - Sid: ReadOnly
           Action:
           - ds:CheckAlias
@@ -477,6 +481,8 @@ Resources:
           Resource:
           - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
           - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}/*
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cidcmd-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cidcmd-${AWS::AccountId}-${AWS::Region}/*
 
     Metadata:
       cfn_nag:
