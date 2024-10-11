@@ -11,6 +11,7 @@ Metadata:
           default: Permissions for the Data Collection Account (where the Dashboards will be deployed)
         Parameters:
           - CloudIntelligenceDashboardsCFNManagement
+          - CloudIntelligenceDashboardsManagement
           - CURDestination
           - QuickSightManagement
           - QuickSightAdmin
@@ -41,6 +42,11 @@ Parameters:
     Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to deploy the Cloud Intelligence Dashboards via CloudFormation"
     Default: 'no'
     AllowedValues: ["yes", "no"]
+  CloudIntelligenceDashboardsManagement:
+    Type: String
+    Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to deploy Athena, Glue, QuickSight resources via CloudFormation"
+    Default: 'no'
+    AllowedValues: ["yes", "no"]
   CURDestination:
     Type: String
     Description: "Choose Yes only when deploying this stack in the account where your Dashboards will be deployed. This grants the specified role above rights to create an S3 bucket for replicated CUR data Data Collection Account"
@@ -55,6 +61,7 @@ Parameters:
 Conditions:
   CreateQuickSightManagementPolicy: !Equals [ !Ref QuickSightManagement, "yes" ]
   CreateCloudIntelligenceDashboardsCFNManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboardsCFNManagement, "yes" ]
+  CreateCloudIntelligenceDashboardsManagementPolicy: !Equals [ !Ref CloudIntelligenceDashboardsManagement, "yes" ]
   CreateQuickSightAdminPolicy: !Equals [ !Ref QuickSightAdmin, "yes" ]
   CreateCURDestinationPolicy: !Equals [ !Ref CURDestination, "yes" ]
   CreateCURReplicationPolicy: !Equals [ !Ref CURReplication, "yes" ]
@@ -108,18 +115,27 @@ Resources:
           - ds:UnauthorizeApplication
           Resource: '*' # as per doc https://docs.aws.amazon.com/quicksight/latest/user/iam-policy-examples.html#security_iam_id-based-policy-examples-all-access-enterprise-edition
 
-        - Sid: IAM
+        - Sid: IAMRole
           Action:
           - iam:AttachRolePolicy
-          - iam:CreatePolicy
-          - iam:CreatePolicyVersion
+          - iam:DetachRolePolicy
           - iam:CreateRole
           - iam:PassRole
-          - iam:DeletePolicyVersion
-          - iam:DetachRolePolicy
           Effect: Allow
           Resource:
-            - !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/aws-quicksight-service-role-v0
+            - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/aws-quicksight-service-role-v0
+            - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/CidQuickSightDataSourceRole
+
+        - Sid: IAMPolicy
+          Action:
+          - iam:CreatePolicy
+          - iam:DeletePolicy
+          - iam:CreatePolicyVersion
+          - iam:DeletePolicyVersion
+          Effect: Allow
+          Resource:
+            - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/cid*
+            - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/CID*
 
         - Sid: QuickSight
           Action:
@@ -147,10 +163,14 @@ Resources:
           - s3:ListMultipartUploadParts
           Effect: Allow
           Resource:
-          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared
-          - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
-          - !Sub arn:aws:s3:::athena-query-result-${AWS::AccountId}
-
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-shared
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cidcmd-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:${AWS::Partition}:s3:::athena-query-result-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-shared/*
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}/*
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cidcmd-${AWS::AccountId}-${AWS::Region}/*
+          - !Sub arn:${AWS::Partition}:s3:::athena-query-result-${AWS::AccountId}-${AWS::Region}/*
         - Sid: ReadOnly
           Action:
           - ds:CheckAlias
@@ -190,16 +210,6 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Sid: Athena
-          Action:
-          - athena:CreateWorkGroup
-          - athena:UpdateWorkGroup
-          - athena:DeleteWorkGroup
-          - athena:GetWorkGroup
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/CID
-
         - Sid: CloudFormation
           Action:
           - cloudformation:CreateStack
@@ -214,55 +224,14 @@ Resources:
           - cloudformation:UpdateStack
           Effect: Allow
           Resource:
-          - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/Cloud-Intelligence-Dashboards/*
+          - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/Cloud-Intelligence-Dashboards/*
 
-        - Sid: EventBridge
+        - Sid: CloudFormationListExports
           Action:
-          - events:DeleteRule
-          - events:DescribeRule
-          - events:EnableRule
-          - events:PutRule
-          - events:PutTargets
-          - events:RemoveTargets
+          - cloudformation:ListExports
           Effect: Allow
           Resource:
-          - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/Cloud-Intelligence-Dashboards-SpiceRefreshRule-*
-
-        - Sid: GlueCrawler
-          Action:
-          - glue:CreateCrawler
-          - glue:DeleteCrawler
-          - glue:GetCrawler
-          - glue:StopCrawler
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/CidCrawler
-
-        - Sid: GlueDatabase
-          Action:
-          - glue:CreateDatabase
-          - glue:UpdateDatabase
-          - glue:DeleteDatabase
-          - glue:GetDatabase
-          - glue:GetDatabases
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur/*
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_cur/*
-
-        - Sid: GlueTable
-          Action:
-          - glue:CreateTable
-          - glue:UpdateTable
-          - glue:DeleteTable
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
-          - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+          - "*" # Cannot restrict this
 
         - Sid: IAMForCFN
           Action:
@@ -277,10 +246,21 @@ Resources:
           - iam:PutRolePolicy
           Effect: Allow
           Resource:
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/CidSpiceRefreshExecutionRole
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-* #Roles created by CFN stack. Name is hardcoded here
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/CidQuickSightDataSourceRole
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/CidExecRole
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/CidSpiceRefreshExecutionRole
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/Cloud-Intelligence-*-* #Roles created by CFN stack. Name is hardcoded here
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/CidQuickSightDataSourceRole
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/CidExecRole
+
+        - Sid: IAMPolicy
+          Action:
+          - iam:CreatePolicy
+          - iam:DeletePolicy
+          - iam:CreatePolicyVersion
+          - iam:DeletePolicyVersion
+          Effect: Allow
+          Resource:
+            - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/cid*
+            - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/CID*
 
         - Sid: LambdaForCFN
           Action:
@@ -297,97 +277,22 @@ Resources:
           - lambda:DeleteLayerVersion
           Effect: Allow
           Resource:
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:Cid*
-          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidProcessPath-DoNotRun
-          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceProcessPath-DoNotRun
-          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceDashboard
-          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceFunctionInit-DoNotRun
-          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidInitialSetup-DoNotRun #legacy
-          # - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CidSpiceRefreshLambda
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:CidLambdaLayer*
-
-        - Sid: QuickSightDashboard
-          Action:
-          - quicksight:CreateDashboard
-          - quicksight:DeleteDashboard
-          - quicksight:UpdateDashboard
-          - quicksight:DescribeDashboard
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cudos*
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cost_intelligence_dashboard
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/kpi_dashboard
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/ta-organizational-view
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/trends-dashboard
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/compute-optimizer-dashboard
-
-        - Sid: QuickSightCreateDataSource
-          Action:
-          - quicksight:CreateDataSource
-          - quicksight:PassDataSource
-          - quicksight:UpdateDataSource
-          - quicksight:DeleteDataSource
-          - quicksight:DescribeDataSource
-          - quicksight:ListTagsForResource
-          - quicksight:DescribeDataSourcePermissions
-          - quicksight:UpdateDataSourcePermissions
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:datasource/CID-*
-
-        - Sid: QuickSightDataSet
-          Action:
-          - quicksight:CreateDataSet
-          - quicksight:DeleteDataSet
-          - quicksight:PassDataSet
-          - quicksight:DescribeDataSet
-          - quicksight:DescribeDataSetPermissions
-          - quicksight:UpdateDataSetPermissions
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic
-
-        - Sid: QuickSightDataSetSchedule
-          Action:
-          - quicksight:CreateRefreshSchedule
-          - quicksight:UpdateRefreshSchedule
-          - quicksight:DeleteRefreshSchedule
-          - quicksight:DescribeRefreshSchedule
-          - quicksight:ListRefreshSchedules
-          - quicksight:CreateDataSetRefreshProperties
-          - quicksight:DescribeDataSetRefreshProperties
-          - quicksight:UpdateDataSetRefreshProperties
-          - quicksight:DeleteDataSetRefreshProperties
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/refresh-schedule/* # DataSetIDs are dynamic as well as schedule ids
-
-        - Sid: CreateQueryResultsBucketS3
-          Action:
-          - s3:CreateBucket
-          - s3:DeleteBucket
-          - s3:GetBucketLocation
-          - s3:GetObject
-          - s3:ListBucket
-          - s3:PutBucketAcl
-          - s3:PutBucketOwnershipControls
-          - s3:PutBucketPolicy
-          - s3:PutBucketPublicAccessBlock
-          - s3:PutBucketVersioning
-          - s3:PutEncryptionConfiguration
-          - s3:PutLifecycleConfiguration
-          - s3:PutObject
-          Effect: Allow
-          Resource:
-          - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
-          - !Sub arn:aws:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}/*
+          - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:Cid*
+          - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics-DataExports
+          # - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:CidProcessPath-DoNotRun
+          # - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceProcessPath-DoNotRun
+          # - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceDashboard
+          # - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:CidCustomResourceFunctionInit-DoNotRun
+          # - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:CidInitialSetup-DoNotRun #legacy
+          # - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:CidSpiceRefreshLambda
+          - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:layer:CidLambdaLayer*
 
         - Sid: ReadLambdaLayerS3
           Action:
           - s3:GetObject
           Effect: Allow
           Resource:
-          - !Sub arn:aws:s3:::aws-managed-cost-intelligence-dashboards-${AWS::Region}/cid-resource-lambda-layer/*
+          - !Sub arn:${AWS::Partition}:s3:::aws-managed-cost-intelligence-dashboards-${AWS::Region}/cid-resource-lambda-layer/*
 
         - Sid: ReadOnlyCFN
           Action:
@@ -406,6 +311,186 @@ Resources:
           - id: W28
             reason: "No Replacement needed"
 
+  CloudIntelligenceDashboardsManagementPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: CreateCloudIntelligenceDashboardsManagementPolicy
+    Properties:
+      ManagedPolicyName: CidCloudIntelligenceDashboardsManagementPolicy
+      Description: 'CloudIntelligenceDashboards Policy for Athena, Glue, Quicksight deployment'
+      Roles:
+        - !Ref RoleName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: Athena
+          Action:
+          - athena:CreateWorkGroup
+          - athena:UpdateWorkGroup
+          - athena:DeleteWorkGroup
+          - athena:GetWorkGroup
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/CID
+
+        - Sid: BCMDataExports
+          Action:
+          - bcm-data-exports:CreateExport
+          - bcm-data-exports:DeleteExport
+          - bcm-data-exports:GetExport
+          - bcm-data-exports:ListExports
+          - bcm-data-exports:ListTagsForResource
+          - bcm-data-exports:UpdateExport
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:bcm-data-exports:${AWS::Region}:${AWS::AccountId}:export/*
+          - !Sub arn:${AWS::Partition}:bcm-data-exports:${AWS::Region}:${AWS::AccountId}:table/*
+
+        - Sid: CurDataAccess
+          Action:
+          - cur:PutReportDefinition
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:cur:${AWS::Region}:${AWS::AccountId}:*     #Required as per https://docs.aws.amazon.com/cur/latest/userguide/bcm-data-exports-access.html#bcm-data-exports-access-examples
+
+        - Sid: EventBridge
+          Action:
+          - events:DeleteRule
+          - events:DescribeRule
+          - events:EnableRule
+          - events:PutRule
+          - events:PutTargets
+          - events:RemoveTargets
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/Cloud-Intelligence-Dashboards-SpiceRefreshRule-*
+
+        - Sid: GlueCrawler
+          Action:
+          - glue:CreateCrawler
+          - glue:DeleteCrawler
+          - glue:GetCrawler
+          - glue:StopCrawler
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:crawler/CidCrawler
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:crawler/cid-DataExport*
+
+        - Sid: GlueDatabase
+          Action:
+          - glue:CreateDatabase
+          - glue:UpdateDatabase
+          - glue:DeleteDatabase
+          - glue:GetDatabase
+          - glue:GetDatabases
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur/*
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_cur/*
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_export
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_export/*
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/cid_data_export/*
+
+        - Sid: GlueTable
+          Action:
+          - glue:CreateTable
+          - glue:UpdateTable
+          - glue:DeleteTable
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_cur
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_cur/*
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/cid_data_export
+          - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/cid_data_export/*
+
+        - Sid: QuickSightDashboard
+          Action:
+          - quicksight:CreateDashboard
+          - quicksight:DeleteDashboard
+          - quicksight:UpdateDashboard
+          - quicksight:DescribeDashboard
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cudos*
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/cost_intelligence_dashboard
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/kpi_dashboard
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/ta-organizational-view
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/trends-dashboard
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/compute-optimizer-dashboard
+
+        - Sid: QuickSightCreateDataSource
+          Action:
+          - quicksight:CreateDataSource
+          - quicksight:PassDataSource
+          - quicksight:UpdateDataSource
+          - quicksight:DeleteDataSource
+          - quicksight:DescribeDataSource
+          - quicksight:ListTagsForResource
+          - quicksight:DescribeDataSourcePermissions
+          - quicksight:UpdateDataSourcePermissions
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:datasource/CID-*
+
+        - Sid: QuickSightDataSet
+          Action:
+          - quicksight:CreateDataSet
+          - quicksight:DeleteDataSet
+          - quicksight:PassDataSet
+          - quicksight:DescribeDataSet
+          - quicksight:DescribeDataSetPermissions
+          - quicksight:UpdateDataSetPermissions
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/* # DataSetIDs are dynamic
+
+        - Sid: QuickSightDataSetSchedule
+          Action:
+          - quicksight:CreateRefreshSchedule
+          - quicksight:UpdateRefreshSchedule
+          - quicksight:DeleteRefreshSchedule
+          - quicksight:DescribeRefreshSchedule
+          - quicksight:ListRefreshSchedules
+          - quicksight:CreateDataSetRefreshProperties
+          - quicksight:DescribeDataSetRefreshProperties
+          - quicksight:UpdateDataSetRefreshProperties
+          - quicksight:DeleteDataSetRefreshProperties
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:dataset/*/refresh-schedule/* # DataSetIDs are dynamic as well as schedule ids
+
+        - Sid: CreateQueryResultsBucketS3
+          Action:
+          - s3:CreateBucket
+          - s3:DeleteBucket
+          - s3:GetBucketLocation
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:PutBucketAcl
+          - s3:PutBucketOwnershipControls
+          - s3:PutBucketPolicy
+          - s3:PutBucketPublicAccessBlock
+          - s3:PutBucketVersioning
+          - s3:PutEncryptionConfiguration
+          - s3:PutLifecycleConfiguration
+          - s3:PutObject
+          Effect: Allow
+          Resource:
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cid-${AWS::AccountId}-${AWS::Region}/*
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cidcmd-${AWS::AccountId}-${AWS::Region}
+          - !Sub arn:${AWS::Partition}:s3:::aws-athena-query-results-cidcmd-${AWS::AccountId}-${AWS::Region}/*
+
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W13
+            reason: "Some resources are not possible to restrict. See comments."
+          - id: W28
+            reason: "No Replacement needed"
 
   CURDestinationPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -431,7 +516,7 @@ Resources:
           - cloudformation:UpdateStack
           Effect: Allow
           Resource:
-          - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CID-CUR-Destination/*
+          - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CID-CUR-Destination/*
 
         - Sid: IAMForCFN
           Action:
@@ -441,11 +526,16 @@ Resources:
           - iam:GetRole
           - iam:GetRolePolicy
           - iam:PutRolePolicy
+          - iam:GetPolicy
+          - iam:DeletePolicy
+          - iam:ListPolicyVersions
+          - iam:DeletePolicyVersion
           - iam:PassRole
           Effect: Allow
           Resource:
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-CIDLambdaAnalyticsRole-*
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-CIDLambdaCURCreatorRole-*
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cid/CID-CUR-Destination-*
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/CID-CUR-Destination-*
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/cidDataExportsReadAccess # hardcoded prefix
 
         - Sid: Lambda
           Action:
@@ -457,8 +547,8 @@ Resources:
           - lambda:UpdateFunctionCode
           Effect: Allow
           Resource:
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-CURCreator
+          - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
+          - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-CURCreator
 
         - Sid: S3
           Action:
@@ -479,8 +569,10 @@ Resources:
           - s3:PutObject
           Effect: Allow
           Resource:
-          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared
-          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-shared/*
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-shared
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-shared/*
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-exports
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-exports/*
 
         - Sid: CostUsageReport
           Action:
@@ -489,14 +581,14 @@ Resources:
           - cur:PutReportDefinition
           Effect: Allow
           Resource:
-          - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/cid
+          - !Sub arn:${AWS::Partition}:cur:*:${AWS::AccountId}:definition/cid
 
         - Sid: CostUsageReportForDelete
           Action:
           - cur:DescribeReportDefinitions
           Effect: Allow
           Resource:
-          - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/
+          - !Sub arn:${AWS::Partition}:cur:*:${AWS::AccountId}:definition/
 
         - Sid: ReadOnly
           Action:
@@ -506,6 +598,7 @@ Resources:
           - s3:ListAllMyBuckets #?
           Effect: Allow
           Resource: '*' # ReadOnly Policy for CFN
+
 
     Metadata:
       cfn_nag:
@@ -540,7 +633,7 @@ Resources:
           - cloudformation:UpdateStack
           Effect: Allow
           Resource:
-          - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CID-CUR-Replication/*
+          - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CID-CUR-Replication/*
 
         - Sid: CostUsageReport
           Action:
@@ -549,14 +642,14 @@ Resources:
           - cur:PutReportDefinition
           Effect: Allow
           Resource:
-          - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/cid
+          - !Sub arn:${AWS::Partition}:cur:*:${AWS::AccountId}:definition/cid
 
         - Sid: CostUsageReportForDelete
           Action:
           - cur:DescribeReportDefinitions
           Effect: Allow
           Resource:
-          - !Sub arn:aws:cur:*:${AWS::AccountId}:definition/
+          - !Sub arn:${AWS::Partition}:cur:*:${AWS::AccountId}:definition/
 
         - Sid: IAMForCFN
           Action:
@@ -570,7 +663,7 @@ Resources:
           - iam:PutRolePolicy
           Effect: Allow
           Resource:
-          - !Sub arn:aws:iam::${AWS::AccountId}:role/cid/CID-CUR-Replication-*
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cid/CID-CUR-Replication-*
 
         - Sid: LambdaForCFN
           Action:
@@ -584,8 +677,8 @@ Resources:
           - lambda:UpdateFunctionCode
           Effect: Allow
           Resource:
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
-          - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-CURCreator
+          - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-Analytics
+          - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:cid-CID-CURCreator
 
         - Sid: S3
           Action:
@@ -610,8 +703,10 @@ Resources:
           - s3:PutReplicationConfiguration
           Effect: Allow
           Resource:
-          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-local
-          - !Sub arn:aws:s3:::cid-${AWS::AccountId}-local/*
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-local
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-local/*
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-local
+          - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-local/*
 
         - Sid: ReadOnly
           Action:
