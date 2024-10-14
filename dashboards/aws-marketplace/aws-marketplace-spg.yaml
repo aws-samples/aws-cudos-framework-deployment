@@ -9,7 +9,6 @@ dashboards:
     category: Additional
     templateId: aws-marketplace
     theme: MIDNIGHT
-    templateId: aws-marketplace
 datasets:
   marketplace_view:
     data:
