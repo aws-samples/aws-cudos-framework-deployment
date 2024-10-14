@@ -10,7 +10,6 @@ dashboards:
     templateId: aws-marketplace
     theme: MIDNIGHT
     templateId: aws-marketplace
-    sourceAccountId: '412381751852'
     region: us-east-1
 datasets:
   marketplace_view:
