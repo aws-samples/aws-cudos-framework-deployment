@@ -2058,9 +2058,6 @@ datasets:
 crawlers: {}
 views:
   budgets_view:
-    dependsOn:
-      views:
-      - budgets_data
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.budgets_view AS
       SELECT
@@ -2084,9 +2081,10 @@ views:
       CROSS JOIN UNNEST(${data_collection_database_name}.budgets_data.tags) t (tag))
       WHERE ((budgettype = 'COST') AND (costfilters.filter[1] = 'None'))
       GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
-
     parameters:
       data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'budgets_data'
         default: optimization_data
         description: "Enter the name of the data collection database"
         global: True
