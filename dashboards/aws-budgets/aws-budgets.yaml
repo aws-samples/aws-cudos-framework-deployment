@@ -3,7 +3,7 @@ dashboards:
     dependsOn:
       datasets:
       - budgets_view
-    name: aws-budgets
+    name: AWS Budgets
     dashboardId: aws-budgets
     category: Advanced
     data: |-
