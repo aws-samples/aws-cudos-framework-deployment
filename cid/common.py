@@ -323,7 +323,12 @@ class Cid():
         ''' load additional resources from catalog
         '''
         try:
-            catalog = yaml.safe_load(self.get_page(catalog_url).text)
+            if 'https://' in catalog_url:
+                text = self.get_page(catalog_url).text
+            else:
+                with open(catalog_url, encoding='utf-8') as catalog_file:
+                    text = catalog_file.read()
+            catalog = yaml.safe_load(text)
         except (requests.exceptions.RequestException, yaml.error.MarkedYAMLError) as exc:
             logger.warning(f'Failed to load a catalog url: {exc}')
             logger.debug(exc, exc_info=True)
@@ -348,16 +353,29 @@ class Cid():
                     choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
             elif isinstance(value, dict) and value.get('type') == 'athena':
-                if 'query' not in value:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: paramter with type ahena must have query value.')
-                query = value['query']
-                try:
-                    res = self.athena.query(query)[0]
-                except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
-                if not res:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty result')
-                params[key] = res[0]
+                if get_parameters().get(prefix + key): # priority to user input
+                    params[key] = get_parameters().get(prefix + key)
+                else:
+                    if 'query' not in value:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: parameter with type Athena must have query value.')
+                    query = value['query']
+                    try:
+                        res_list = self.athena.query(query)
+                    except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
+                    if not res_list:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results')
+                    elif len(res_list) == 1:
+                        params[key] = '-'.join(res_list[0])
+                    else:
+                        options = ['-'.join(res) for res in res_list]
+                        default = value.get('default')
+                        params[key] = get_parameter(
+                            param_name=prefix + key,
+                            message=f"Required parameter: {key} ({value.get('description')})",
+                            choices=options,
+                            default=default if default in options else None,
+                        )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
                 while params[key] is None:
