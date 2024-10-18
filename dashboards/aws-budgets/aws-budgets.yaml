@@ -1959,10 +1959,6 @@ datasets:
               Type: STRING
             - Name: account_name
               Type: STRING
-            - Name: parent_account_id
-              Type: STRING
-            - Name: account_email
-              Type: STRING
         92380c13-4243-40f6-849c-2fefa127e241:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -2040,8 +2036,6 @@ datasets:
               - budget_level
               - account_id[account_map]
               - account_name
-              - parent_account_id
-              - account_email
           Source:
             JoinInstruction:
               LeftOperand: 1b7430f1-ee1a-4599-aecc-33998b283691
