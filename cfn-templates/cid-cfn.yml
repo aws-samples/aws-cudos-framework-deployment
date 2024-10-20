@@ -31,7 +31,6 @@ Metadata:
           - AthenaWorkgroup
           - AthenaQueryResultsBucket
           - DatabaseName
-          - CURTableName
           - GlueDataCatalog
           - Suffix
           - QuickSightDataSourceRoleName
@@ -40,7 +39,12 @@ Metadata:
           - DeployCUDOSDashboard
           - DataBucketsKmsKeysArns
           - ShareDashboard
+      - Label:
+          default: 'Legacy'
+        Parameters:
+          - KeepLegacyCURTable
           - CURBucketPath
+          - CURTableName
     ParameterLabels:
       PrerequisitesQuickSight:
         default: "I have enabled QuickSight Enterprise Edition AND I have a SPICE capacity in the current region."
@@ -92,6 +96,8 @@ Metadata:
         default: "Primary Tag for Compute Optimizer dashboard"
       SecondaryTagName:
         default: "Secondary Tag for Compute Optimizer dashboard"
+      KeepLegacyCURTable:
+        default: "Keep Legacy CUR Table"
   cfn-lint:
     config:
       ignore_checks:
@@ -230,6 +236,11 @@ Parameters:
     Type: String
     Default: '/'
     Description: Path for roles where PermissionBoundaries can limit location
+  KeepLegacyCURTable:
+    Type: String
+    Description: Choose 'yes' if you want to keep the Legacy CUR table
+    Default: "no"
+    AllowedValues: ["yes", "no"]
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -237,19 +248,11 @@ Conditions:
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
-  NeedLegacyCUR: !Equals [ !Ref CURVersion, "1.0" ]
+  NeedLegacyCUR: !Equals [!Ref KeepLegacyCURTable, "yes"]
   NeedComputeOptimizerDashboard: !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
-  NeedCUR:
+  UseCUR2:
     Fn::And:
-      - !Condition NeedLegacyCUR
-      - Fn::Or:
-        - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
-        - !Equals [ !Ref DeployCUDOSv5, "yes" ]
-        - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
-        - !Equals [ !Ref DeployKPIDashboard, "yes" ]
-  NeedCUR2:
-    Fn::And:
-      - !Not [!Condition NeedLegacyCUR]
+      - !Equals [!Ref CURVersion, '2.0']
       - Fn::Or:
         - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
         - !Equals [ !Ref DeployCUDOSv5, "yes" ]
@@ -261,7 +264,7 @@ Conditions:
   NeedCURTable:
     Fn::And:
       - !Equals [ !Ref CURTableName, "" ]
-      - !Condition NeedCUR
+      - !Condition NeedLegacyCUR
   NeedRefreshDatasets:  !Not [ !Equals  [ !Ref QuickSightDataSetRefreshSchedule, ""] ]
   NeedDataBucketsKms: !Not [ !Equals [ !Ref DataBucketsKmsKeysArns, "" ] ]
   NeedDataBucketsKmsAndNeedCURTable:
@@ -282,10 +285,10 @@ Conditions:
       - !Condition NeedCURTable
   UseQuickSightDataSourceRole: !Not [!Equals [ !Ref QuickSightDataSourceRoleName, "" ]]
   NeedQuickSightDataSourceRole: !Equals [ !Ref QuickSightDataSourceRoleName, "CidQuickSightDataSourceRole" ]
-  NeedQuickSightDataSourceRoleAndCUR:
+  NeedQuickSightDataSourceRoleAndLegacyCUR:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
-      - !Condition NeedCUR
+      - !Condition NeedLegacyCUR
   NeedQuickSightDataSourceKMS:
     Fn::And:
       - !Condition NeedQuickSightDataSourceRole
@@ -950,7 +953,7 @@ Resources:
 
   CURPath:
     Type: Custom::CustomResourceProcessPath
-    Condition: NeedCUR
+    Condition: NeedLegacyCUR
     Properties:
       ServiceToken: !GetAtt CustomResourceProcessPath.Arn
       s3path: !Ref CURBucketPath
@@ -1232,14 +1235,14 @@ Resources:
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
                   - Fn::If:
-                    - NeedCUR2
+                    - UseCUR2
                     - !Join
                       - '/'
                       - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database
                         - !ImportValue cid-DataExports-Database
                     - !Ref 'AWS::NoValue'
                   - Fn::If:
-                    - NeedCUR2
+                    - UseCUR2
                     - !Join
                       - '/'
                       - - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table
@@ -1279,7 +1282,7 @@ Resources:
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
                      - !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkgroup}'
                   - Fn::If:
-                    - NeedCUR2
+                    - UseCUR2
                     - !Join
                       - '/'
                       - - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:database
@@ -1310,7 +1313,7 @@ Resources:
                   - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-exports # prefix for data-exports hardcoded here
                   - !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}
                   - !If
-                      - NeedQuickSightDataSourceRoleAndCUR
+                      - NeedQuickSightDataSourceRoleAndLegacyCUR
                       - !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}
                       - !Ref "AWS::NoValue"
                   # FOR CUR2 there will be attached policy no need to add it here
@@ -1323,7 +1326,7 @@ Resources:
                   - !Sub arn:${AWS::Partition}:s3:::cid-${AWS::AccountId}-data-exports/*  # prefix for data-exports hardcoded here
                   - !Sub arn:${AWS::Partition}:s3:::${ODCPath.Bucket}/*
                   - !If
-                      - NeedQuickSightDataSourceRoleAndCUR
+                      - NeedQuickSightDataSourceRoleAndLegacyCUR
                       - !Sub arn:${AWS::Partition}:s3:::${CURPath.Bucket}/*
                       - !Ref "AWS::NoValue"
                   # FOR CUR2 there will be attached policy no need to add it here
@@ -1379,7 +1382,7 @@ Resources:
             Action:
               - sts:AssumeRole
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-      ManagedPolicyArns: !If [NeedCUR2,  [ !ImportValue cid-DataExports-ReadAccessPolicyARN ]  , !Ref AWS::NoValue]
+      ManagedPolicyArns: !If [UseCUR2,  [ !ImportValue cid-DataExports-ReadAccessPolicyARN ]  , !Ref AWS::NoValue]
       Policies:
         - PolicyName: CidExecPolicy
           PolicyDocument:
@@ -1755,8 +1758,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
@@ -1776,8 +1779,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
@@ -1799,8 +1802,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
@@ -1822,8 +1825,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
@@ -1848,8 +1851,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: !Ref ShareDashboard
         view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/trusted-advisor/trusted-advisor-data'
@@ -1869,8 +1872,8 @@ Resources:
         quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
         athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
         glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ NeedCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ NeedCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
         quicksight-user: !Ref QuickSightUser
         share-with-account: !Ref ShareDashboard
         view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_lambda'
