@@ -428,6 +428,8 @@ def export_analysis(qs, athena, glue):
             AnalysisId=analysis_id,
         )['Definition']
 
+        definition.pop('QueryExecutionMode', None) # QueryExecutionMode is supported for export but not for create or update as of 2024-10-17
+
         for dataset in definition.get('DataSetIdentifierDeclarations', []):
             # Hide region and account number of the source account
             dataset["DataSetArn"] = f'arn:{qs.partition}:quicksight:::dataset/' + dataset["DataSetArn"].split('/')[-1]
