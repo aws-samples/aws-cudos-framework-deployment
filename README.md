@@ -55,7 +55,7 @@ See more dashboards on the [workshop page](https://catalog.workshops.aws/awscid/
     pip3 install --upgrade cid-cmd
     ```
 
-#### Dasbhoard Deployment
+#### Dashboard Deployment
 
 ```bash
 cid-cmd deploy
@@ -71,6 +71,7 @@ Update dashboard and all dependencies (Datasets and Athena View). WARNING: this 
 ```bash
 cid-cmd update --force --recursive
 ```
+
 #### Show Dashboard Status
 Show dashboards status
 
@@ -78,8 +79,6 @@ Show dashboards status
 cid-cmd status
 ```
 [<img width="558" alt="status" src="https://github.com/aws-samples/aws-cudos-framework-deployment/assets/82834333/cae2015f-0f81-4593-80b3-c67ec1200fcd">](https://www.youtube.com/watch?v=ivr1MoGaApM)
-
-
 
 
 ####  Share QuickSight resources
@@ -95,17 +94,42 @@ cid-cmd init-qs
 ```
 
 #### Initialize CUR
-One time action to initialize Athena table and Crawler from s3 with CUR data.
+One time action to initialize Athena table and Crawler from s3 with CUR data. Currently only CUR1 supported.
 
 ```bash
 cid-cmd init-cur
 ```
+
+#### Create CUR proxy
+There are 2 CUR formats that `cid-cmd` supports. CUR1 and CUR2 have slightly different fields structure. Each dashboard can be developed using CUR2 or CUR1, but on installation `cid-cmd` will deploy a special Athena View "CUR proxy". This View will play a role of compatibility layer between the CUR version used by Dashboard and available CUR. This View can be extended as new dashboard request CUR fields.
+
+Please note that Cost Allocation Tags and Cost Categories are not present in CUR Proxy by default. You will need to add these fields by modifying CUR Proxy in Athena or using `cid-cmd` tool:
+
+For CUR2 proxy (using CUR1 data as source)
+```bash
+cid-cmd create-cur-proxy -vv \
+   --cur-version '2' \
+   --cur-table-name 'mycur1' \
+   --athena-workgroup 'primary' \
+   --fields "resource_tags['user_cost_center'],resource_tags['user_owner']"
+```
+
+For CUR1 proxy (using CUR2 data as source)
+```bash
+cid-cmd create-cur-proxy -vv \
+   --cur-version '1' \
+   --cur-table-name 'mycur2' \
+   --athena-workgroup 'primary' \
+   --fields "resource_tags_user_cost_center,resource_tags_user_owner"
+```
+
 
 #### Delete Dashboard and all dependencies unused by other
 Delete Dashboards and all dependencies unused by other CID-managed dashboards.(including QuickSight datasets, Athena views and tables)
 ```bash
 cid-cmd delete
 ```
+
 
 #### Delete Command Options:
 ```

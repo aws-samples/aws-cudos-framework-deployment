@@ -1,19 +1,23 @@
 /*Replace customer_all in row 42 with your CUR table name */
-		CREATE OR REPLACE VIEW kpi_s3_storage_all AS 
-		-- Step 1: Enter S3 standard savings savings assumption. Default is set to 0.3 for 30% savings 
+		CREATE OR REPLACE VIEW kpi_s3_storage_all AS
+		-- Step 1: Enter S3 standard savings savings assumption. Default is set to 0.3 for 30% savings
 		WITH inputs AS (
-			SELECT * FROM (VALUES (0.3)) t(s3_standard_savings)),
-			
+			SELECT * FROM (
+				VALUES (0.3)
+			) t(s3_standard_savings)
+		),
+
 		-- Step: 2  Add mapping view
-		map AS(SELECT 
-		* 
-		FROM account_map),
+		map AS(
+			SELECT *
+			FROM account_map
+		),
 
 		-- Step 3: Filter CUR to return all storage usage data
 		s3_usage_all_time AS (
 			SELECT
-			  year
-			, month
+			  split_part("billing_period", '-', 1) "year"
+		    , split_part("billing_period", '-', 2) "month"
 			, bill_billing_period_start_date AS billing_period
 			, line_item_usage_start_date AS usage_start_date
 			, bill_payer_account_id AS payer_account_id
@@ -22,25 +26,23 @@
 			, s3_standard_savings
 			, line_item_operation AS operation
 			, line_item_usage_type AS usage_type
-			, CASE 
-				WHEN line_item_usage_type LIKE '%EarlyDelete%' THEN 'EarlyDelete' ELSE line_item_operation END "early_delete_adjusted_operation" 
+			, CASE
+				WHEN line_item_usage_type LIKE '%EarlyDelete%' THEN 'EarlyDelete' ELSE line_item_operation END "early_delete_adjusted_operation"
 			, CASE
 				  WHEN line_item_product_code = 'AmazonGlacier' AND line_item_operation = 'Storage' THEN 'Amazon Glacier'
-				 				  
-				  WHEN line_item_product_code = 'AmazonS3' AND product_volume_type LIKE '%Intelligent%' AND line_item_operation LIKE '%IntelligentTiering%' THEN 'Intelligent-Tiering'			  
-				  ELSE product_volume_type
+				  WHEN line_item_product_code = 'AmazonS3' AND product['volume_type'] LIKE '%Intelligent%' AND line_item_operation LIKE '%IntelligentTiering%' THEN 'Intelligent-Tiering'
+				  ELSE product['volume_type']
 			  END AS storage_class_type
-			, pricing_unit  
+			, pricing_unit
 			, sum(line_item_usage_amount) AS usage_quantity
 			, sum(line_item_unblended_cost) unblended_cost
 			, sum(CASE
-				WHEN (pricing_unit = 'GB-Mo' AND line_item_operation like '%Storage%' AND product_volume_type LIKE '%Glacier Deep Archive%') THEN line_item_unblended_cost
+				WHEN (pricing_unit = 'GB-Mo' AND line_item_operation like '%Storage%' AND product['volume_type'] LIKE '%Glacier Deep Archive%') THEN line_item_unblended_cost
 				WHEN (pricing_unit = 'GB-Mo' AND line_item_operation like '%Storage%') THEN line_item_unblended_cost 
 				ELSE 0
 				END) AS s3_all_storage_cost
 			, sum(CASE WHEN (pricing_unit = 'GB-Mo' AND line_item_operation like '%Storage%') THEN line_item_usage_amount ELSE 0 END) AS s3_all_storage_usage_quantity
-			FROM 
-			"${cur_table_name}"
+			FROM "${cur2_database}"."${cur2_table_name}"
 				, inputs
 			WHERE bill_payer_account_id <> ''
 			  AND line_item_resource_id <> ''
