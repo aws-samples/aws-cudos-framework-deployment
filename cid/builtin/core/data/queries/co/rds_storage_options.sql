@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW "compute_optimizer_rds_storage_options" AS 
+CREATE OR REPLACE VIEW "compute_optimizer_rds_storage_options" AS
 (
    SELECT
      TRY("date_parse"(lastrefreshtimestamp, '%Y-%m-%dT%H:%i:%s.%fZ')) lastrefreshtimestamp_utc
@@ -132,4 +132,4 @@ UNION    SELECT
    FROM
      compute_optimizer_rds_instance_lines
    WHERE ((resourcearn LIKE '%arn:%') AND (storagerecommendationoptions_3_estimatedmonthlysavingscurrency <> ''))
-) 
+)

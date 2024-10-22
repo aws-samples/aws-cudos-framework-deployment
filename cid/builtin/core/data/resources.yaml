@@ -609,6 +609,8 @@ views:
         - compute_optimizer_auto_scale_options
         - compute_optimizer_ebs_volume_options
         - compute_optimizer_lambda_options
+        - compute_optimizer_rds_instance_options
+        - compute_optimizer_rds_storage_options
 
 
   # Shared views
