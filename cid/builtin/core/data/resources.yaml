@@ -550,7 +550,7 @@ views:
     File: co/rds_database.json
     parameters:
       s3FolderPath:
-        default: 's3://costoptimizationdata{account_id}/compute_optimizer/compute_optimizer_rds_database'
+        default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_rds_database'
         description: Compute Optimiser RDS report S3 path
 
   compute_optimizer_auto_scale_lines:
