@@ -8,6 +8,10 @@ accounts, the module can create a new Cost and Usage Report local to the aggrega
 
 ## Example Usage
 
+> [!Note]
+> For complete usage documentation of using this module together with the cur-setup-source
+module, refer to the main Terraform [Deployment Instructions](../README.md#deployment-instructions).
+
 ```hcl
 provider "aws" {
   region = "us-west-2"

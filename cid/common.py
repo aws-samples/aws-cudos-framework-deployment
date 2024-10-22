@@ -133,7 +133,9 @@ class Cid():
                     cid_print('\n')
                     self._clients['cur'] = _cur
                     break
-                except CidCritical as exc:
+                except CidCritical:
+                    if not utils.isatty():
+                        raise # do not allow CUR creation in lambda
                     cid_print(f'CUR not found in {self.athena.DatabaseName}. If you have S3 bucket with CUR in this account you can create a CUR table with Crawler.')
                     self.create_cur_table()
         return self._clients['cur']
@@ -321,7 +323,12 @@ class Cid():
         ''' load additional resources from catalog
         '''
         try:
-            catalog = yaml.safe_load(self.get_page(catalog_url).text)
+            if 'https://' in catalog_url:
+                text = self.get_page(catalog_url).text
+            else:
+                with open(catalog_url, encoding='utf-8') as catalog_file:
+                    text = catalog_file.read()
+            catalog = yaml.safe_load(text)
         except (requests.exceptions.RequestException, yaml.error.MarkedYAMLError) as exc:
             logger.warning(f'Failed to load a catalog url: {exc}')
             logger.debug(exc, exc_info=True)
@@ -346,16 +353,29 @@ class Cid():
                     choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
             elif isinstance(value, dict) and value.get('type') == 'athena':
-                if 'query' not in value:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: paramter with type ahena must have query value.')
-                query = value['query']
-                try:
-                    res = self.athena.query(query)[0]
-                except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
-                if not res:
-                    raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty result')
-                params[key] = res[0]
+                if get_parameters().get(prefix + key): # priority to user input
+                    params[key] = get_parameters().get(prefix + key)
+                else:
+                    if 'query' not in value:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: parameter with type Athena must have query value.')
+                    query = value['query']
+                    try:
+                        res_list = self.athena.query(query)
+                    except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
+                    if not res_list:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results')
+                    elif len(res_list) == 1:
+                        params[key] = '-'.join(res_list[0])
+                    else:
+                        options = ['-'.join(res) for res in res_list]
+                        default = value.get('default')
+                        params[key] = get_parameter(
+                            param_name=prefix + key,
+                            message=f"Required parameter: {key} ({value.get('description')})",
+                            choices=options,
+                            default=default if default in options else None,
+                        )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
                 while params[key] is None:
@@ -690,7 +710,11 @@ class Cid():
                         logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
-                        self.qs.discover_dashboards()
+                        
+                        refresh_overrides = [
+                            dashboard.id
+                        ]
+                        self.qs.discover_dashboards(refresh_overrides = refresh_overrides)
                 self.qs.clear_dashboard_selection()
                 dashboard_id = None
             else:
@@ -1320,7 +1344,7 @@ class Cid():
             choice = get_parameter(
                 'quicksight-datasource-role',
                 message='Please choose a QuickSight role. It must have access to Athena',
-                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight Security and Permissions management and configure S3 and Athena access there)>'] + choices,
+                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight (https://quicksight.aws.amazon.com/sn/admin#aws) and configure S3 and Athena access there)>'] + choices,
                 default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name: # Create or update role
