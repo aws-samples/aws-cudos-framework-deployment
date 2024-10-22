@@ -1,0 +1,2084 @@
+dashboards:
+  AWS-BUDGETS:
+    dependsOn:
+      datasets:
+      - budgets_view
+    name: AWS Budgets
+    dashboardId: aws-budgets
+    category: Advanced
+    data: |-
+      AnalysisDefaults:
+        DefaultNewSheetConfiguration:
+          InteractiveLayoutConfiguration:
+            Grid:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+          SheetContentType: INTERACTIVE
+      CalculatedFields:
+      - DataSetIdentifier: budgets_view
+        Expression: actualspend
+        Name: Actual Cost
+      - DataSetIdentifier: budgets_view
+        Expression: '{budget_date}'
+        Name: Budget Date
+      - DataSetIdentifier: budgets_view
+        Expression: |2-
+          ifelse(
+          in("All Budgets",${BudgetStatus}),1,
+          in("Healthy Budgets",${BudgetStatus}),{Healthy Budget},
+          in("Unhealthy Budgets",${BudgetStatus}),{Unhealthy Budget},
+          in("Forecasted Unhealthy Budgets",${BudgetStatus}),{Forecasted Unhealthy Budget},
+          0
+          )
+        Name: Budget Filter
+      - DataSetIdentifier: budgets_view
+        Expression: '{budget_name}'
+        Name: Budget Name
+      - DataSetIdentifier: budgets_view
+        Expression: |-
+          ifelse(
+              {Healthy Budget} = 1, "Healthy Budget",
+              {Unhealthy Budget} = 1, "Unhealthy Budget",
+              {Forecasted Unhealthy Budget} = 1, "Forecasted Unhealthy Budget",
+              "All Budgets"
+          )
+        Name: BudgetStatus
+      - DataSetIdentifier: budgets_view
+        Expression: '{budget_amount}'
+        Name: Budgeted Cost
+      - DataSetIdentifier: budgets_view
+        Expression: forecastedspend
+        Name: Forecasted Cost
+      - DataSetIdentifier: budgets_view
+        Expression: 'ifelse({Forecasted Cost} > {Budgeted Cost} and {Actual Cost} < {Budgeted
+          Cost}, 1, 0)
+          '
+        Name: Forecasted Unhealthy Budget
+      - DataSetIdentifier: budgets_view
+        Expression: |-
+          ifelse(${GroupBy} = 'Account Name', {account_name},
+          ${GroupBy} = 'Budget Name', {budget_name},
+          'N/A' )
+        Name: GroupBy
+      - DataSetIdentifier: budgets_view
+        Expression: ifelse({Actual Cost} < {Budgeted Cost}, 1, 0)
+        Name: Healthy Budget
+      - DataSetIdentifier: budgets_view
+        Expression: ifelse({Actual Cost} > {Budgeted Cost}, 1, 0)
+        Name: Unhealthy Budget
+      ColumnConfigurations:
+      - Column:
+          ColumnName: Actual Cost
+          DataSetIdentifier: budgets_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - Column:
+          ColumnName: Budgeted Cost
+          DataSetIdentifier: budgets_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - Column:
+          ColumnName: Forecasted Cost
+          DataSetIdentifier: budgets_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - Column:
+          ColumnName: percentage_actuals_vs_budgeted
+          DataSetIdentifier: budgets_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              PercentageDisplayFormatConfiguration:
+                NegativeValueConfiguration:
+                  DisplayMode: NEGATIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Suffix: '%'
+      DataSetIdentifierDeclarations:
+      - DataSetArn: arn:aws:quicksight:::dataset/8ac5a222-9776-47bc-97aa-aa3af065ad19
+        Identifier: budgets_view
+      FilterGroups:
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 0817f2b0-17c9-4aba-992e-6d440c06f53e
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: budget_level
+              DataSetIdentifier: budgets_view
+            Configuration:
+              CustomFilterConfiguration:
+                MatchOperator: EQUALS
+                NullOption: NON_NULLS_ONLY
+                ParameterName: BudgetLevel
+            FilterId: d71a8506-aa60-4cd3-901f-41c5bc72502d
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: ALL_VISUALS
+              SheetId: 87a065ca-297b-4293-ad29-1c4b43bbe11c
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 3384c715-a578-41e7-9415-a81fcabc929a
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: budget_date
+              DataSetIdentifier: budgets_view
+            ExcludePeriodConfiguration:
+              Amount: 1
+              Granularity: MONTH
+              Status: DISABLED
+            FilterId: 87a85f5e-f781-4c0d-b0db-89aae6330f70
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: THIS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 87a065ca-297b-4293-ad29-1c4b43bbe11c
+              VisualIds:
+              - 4d02b812-27f2-4db3-a683-9cfe4333552d
+              - 2f6162e8-ab25-4326-b9b8-0e0705bf3b7e
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 15f23bc6-62fa-49b1-b782-99b452698283
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: budget_date
+              DataSetIdentifier: budgets_view
+            FilterId: 78a5c893-e9ec-4557-93a5-f3353cde8582
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: THIS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 87a065ca-297b-4293-ad29-1c4b43bbe11c
+              VisualIds:
+              - ccb38ee7-ad72-43b8-a29f-83e882f4ed55
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 9b8264ec-2829-4ccc-abd2-1dcae4037f03
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: budget_date
+              DataSetIdentifier: budgets_view
+            FilterId: 538edf2f-03b6-4b90-aeec-35eeceaf809a
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: THIS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 87a065ca-297b-4293-ad29-1c4b43bbe11c
+              VisualIds:
+              - 9e97f73c-c85d-429d-8840-fbc75e7b7418
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: e6533c08-6d3c-477f-b3b1-ce2e4ecc7689
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: budget_name
+              DataSetIdentifier: budgets_view
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            DefaultFilterControlConfiguration:
+              ControlOptions:
+                DefaultDropdownOptions:
+                  DisplayOptions:
+                    SelectAllOptions:
+                      Visibility: VISIBLE
+                    TitleOptions:
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
+                      Visibility: VISIBLE
+                  Type: MULTI_SELECT
+              Title: Budget Name
+            FilterId: 6c5d66e5-efca-41fc-a80f-bb5ceca8d4de
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: fcf989f5-c95d-49c1-b86d-29de61ef01c9
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: BudgetStatus
+              DataSetIdentifier: budgets_view
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            FilterId: b811623e-3636-4561-b518-35b5da4ee0c2
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 87a065ca-297b-4293-ad29-1c4b43bbe11c
+              VisualIds:
+              - e5bf0811-1402-4368-87d2-32a45117ffed
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 61df826f-3f3d-4670-94e1-c18c4fd0df8c
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: budget_date
+              DataSetIdentifier: budgets_view
+            FilterId: 92d8199f-c097-48e1-84db-e4d7bb1322c9
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: THIS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 87a065ca-297b-4293-ad29-1c4b43bbe11c
+              VisualIds:
+              - 2187aeae-6a45-4781-b9db-70f079750987
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 9624f158-509d-453a-81c6-72cb489824b9
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: account_id
+              DataSetIdentifier: budgets_view
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            FilterId: 70937a86-f317-4cc3-ba6c-046b308e3fbe
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 87a065ca-297b-4293-ad29-1c4b43bbe11c
+              VisualIds:
+              - 6985b6c1-fbe7-403e-a1d5-dc985cf40583
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: d8aea13f-559f-4ef1-9198-dae17db2263a
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: account_name
+              DataSetIdentifier: budgets_view
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            DefaultFilterControlConfiguration:
+              ControlOptions:
+                DefaultDropdownOptions:
+                  DisplayOptions:
+                    SelectAllOptions:
+                      Visibility: VISIBLE
+                    TitleOptions:
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
+                      Visibility: VISIBLE
+                  Type: MULTI_SELECT
+              Title: Account Name
+            FilterId: e6bcd82f-e003-4dc2-8ee7-f05596dece82
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      Options:
+        WeekStart: SUNDAY
+      ParameterDeclarations:
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues: []
+          Name: BudgetLevel
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues:
+            - All Budgets
+            - Forecasted Unhealthy Budgets
+            - Healthy Budgets
+            - Unhealthy Budgets
+          Name: BudgetStatus
+          ParameterValueType: MULTI_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues:
+            - Budget Name
+          Name: GroupBy
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      # Options:
+      #   QueryExecutionMode: AUTO
+      Sheets:
+      - ContentType: INTERACTIVE
+        FilterControls:
+        - CrossSheet:
+            FilterControlId: 88a53ada-8d25-415a-a5b9-be2fc6f46bdf
+            SourceFilterId: 6c5d66e5-efca-41fc-a80f-bb5ceca8d4de
+        - CrossSheet:
+            FilterControlId: 2276e3ac-66b0-4b1f-a557-8b9874d3ba01
+            SourceFilterId: e6bcd82f-e003-4dc2-8ee7-f05596dece82
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            FilterControlId: cc6d465a-5b7a-40f3-b628-c4279e4e9b10
+            SourceFilterId: b811623e-3636-4561-b518-35b5da4ee0c2
+            Title: Budget Status
+            Type: MULTI_SELECT
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            FilterControlId: 268483e1-4845-4c17-a8b2-49b47c8d6370
+            SourceFilterId: 70937a86-f317-4cc3-ba6c-046b308e3fbe
+            Title: Account ID
+            Type: MULTI_SELECT
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: d870cb24-eab9-4cc9-9bdb-1c6673bf7705
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 4
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: 6985b6c1-fbe7-403e-a1d5-dc985cf40583
+                ElementType: VISUAL
+                RowIndex: 4
+                RowSpan: 4
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: 2187aeae-6a45-4781-b9db-70f079750987
+                ElementType: VISUAL
+                RowIndex: 4
+                RowSpan: 4
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: b14f98ef-558f-467f-aa68-7f95209cf718
+                ElementType: TEXT_BOX
+                RowIndex: 8
+                RowSpan: 2
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: 96f1bf9d-afa9-498a-bf87-6a1f9568a240
+                ElementType: TEXT_BOX
+                RowIndex: 8
+                RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: e5bf0811-1402-4368-87d2-32a45117ffed
+                ElementType: VISUAL
+                RowIndex: 10
+                RowSpan: 12
+              - ColumnIndex: 18
+                ColumnSpan: 9
+                ElementId: 6820c113-5565-45d5-8ae9-ad3223adaf22
+                ElementType: VISUAL
+                RowIndex: 10
+                RowSpan: 6
+              - ColumnIndex: 27
+                ColumnSpan: 9
+                ElementId: cbec3be1-4f0f-4617-9de4-808d5850deca
+                ElementType: VISUAL
+                RowIndex: 10
+                RowSpan: 6
+              - ColumnIndex: 18
+                ColumnSpan: 9
+                ElementId: 2f6162e8-ab25-4326-b9b8-0e0705bf3b7e
+                ElementType: VISUAL
+                RowIndex: 16
+                RowSpan: 6
+              - ColumnIndex: 27
+                ColumnSpan: 9
+                ElementId: 4d02b812-27f2-4db3-a683-9cfe4333552d
+                ElementType: VISUAL
+                RowIndex: 16
+                RowSpan: 6
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: ccb38ee7-ad72-43b8-a29f-83e882f4ed55
+                ElementType: VISUAL
+                RowIndex: 22
+                RowSpan: 12
+              - ColumnIndex: 18
+                ColumnSpan: 13
+                ElementId: 52d9a7d1-3c41-4da6-a648-b98f4e72a4b3
+                ElementType: VISUAL
+                RowIndex: 22
+                RowSpan: 12
+              - ColumnIndex: 31
+                ColumnSpan: 5
+                ElementId: 97d93498-d84b-464d-8a91-60b5b36b9a64
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 22
+                RowSpan: 6
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: 9e97f73c-c85d-429d-8840-fbc75e7b7418
+                ElementType: VISUAL
+                RowIndex: 34
+                RowSpan: 12
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: e772caff-fdf5-4ccb-8dde-25859830be63
+                ElementType: VISUAL
+                RowIndex: 34
+                RowSpan: 12
+        Name: Budget Summary
+        ParameterControls:
+        - List:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SearchOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: HIDDEN
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 97d93498-d84b-464d-8a91-60b5b36b9a64
+            SelectableValues:
+              Values:
+              - Account Name
+              - Budget Name
+            SourceParameterName: GroupBy
+            Title: Group By
+            Type: SINGLE_SELECT
+        - Dropdown:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                InfoIconText: Budget Level represent the level in your budget hierarchy.
+                Visibility: VISIBLE
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: a636325e-3843-43e0-9afd-5117bd93fb5c
+            SelectableValues:
+              LinkToDataSetColumn:
+                ColumnName: budget_level
+                DataSetIdentifier: budgets_view
+            SourceParameterName: BudgetLevel
+            Title: Budget Level
+            Type: SINGLE_SELECT
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnSpan: 2
+                ElementId: a636325e-3843-43e0-9afd-5117bd93fb5c
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 88a53ada-8d25-415a-a5b9-be2fc6f46bdf
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: cc6d465a-5b7a-40f3-b628-c4279e4e9b10
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 268483e1-4845-4c17-a8b2-49b47c8d6370
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 2276e3ac-66b0-4b1f-a557-8b9874d3ba01
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+        SheetId: 87a065ca-297b-4293-ad29-1c4b43bbe11c
+        TextBoxes:
+        - Content: |-
+            <text-box>
+              <inline font-size="30px">Budgets Health</inline>
+            </text-box>
+          SheetTextBoxId: 96f1bf9d-afa9-498a-bf87-6a1f9568a240
+        - Content: |-
+            <text-box>
+              <inline font-size="30px">Budgets History</inline>
+            </text-box>
+          SheetTextBoxId: b14f98ef-558f-467f-aa68-7f95209cf718
+        - Content: "<text-box>\n  <inline font-size=\"30px\">AWS Budgets Dashboard</inline>\n\
+            \  <br/>\n  <br/>\n  <inline font-size=\"16px\">This dashboard implements a\
+            \ hierarchical budget management solution across multiple AWS accounts by leveraging\
+            \ tagging. You can apply a 'cid:budget-level' tag to their Budgets, with values\
+            \ representing different organizational levels, such as Departments, Business\
+            \ Units, Projects, or Applications. The tagging-based structure provides scalable,\
+            \ granular budget visibility, consolidated across accounts.\_</inline>\n  <inline\
+            \ font-size=\"16px\">\n    <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/aws-budgets\"\
+            \ target=\"_blank\">Click here</a>\n  </inline>\n  <inline font-size=\"16px\"\
+            >\_to learn more about AWS Budgets Dashboard.</inline>\n</text-box>"
+          SheetTextBoxId: d870cb24-eab9-4cc9-9bdb-1c6673bf7705
+        Visuals:
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisuals:
+                      - 4d02b812-27f2-4db3-a683-9cfe4333552d
+                      - 2f6162e8-ab25-4326-b9b8-0e0705bf3b7e
+                      - cbec3be1-4f0f-4617-9de4-808d5850deca
+                      - ccb38ee7-ad72-43b8-a29f-83e882f4ed55
+                      - 6820c113-5565-45d5-8ae9-ad3223adaf22
+                      - 9e97f73c-c85d-429d-8840-fbc75e7b7418
+                      - e5bf0811-1402-4368-87d2-32a45117ffed
+                      - 52d9a7d1-3c41-4da6-a648-b98f4e72a4b3
+                      - 6985b6c1-fbe7-403e-a1d5-dc985cf40583
+              CustomActionId: 331321bb-cbe5-4d72-bcd5-92b4ee737e77
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                DataPathOptions:
+                - DataPathList:
+                  - DataPathType:
+                      PivotTableDataPathType: HIERARCHY_ROWS_LAYOUT_COLUMN
+                  Width: 124px
+                - DataPathList:
+                  - DataPathType: {}
+                    FieldId: 2355e4ef-c30b-4d0e-b458-96c242c664a0.6.1729007437101
+                    FieldValue: '2024-01-01 00:00:00.000'
+                  - FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283432863
+                    FieldValue: Actual Cost
+                  Width: 100px
+                SelectedFieldOptions:
+                - FieldId: 907f21d6-f0d5-468c-a96f-8fd6b55b7c47.6.1727708575656
+                  Visibility: VISIBLE
+                - FieldId: 2355e4ef-c30b-4d0e-b458-96c242c664a0.6.1729007437101
+                  Visibility: VISIBLE
+                - FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283432863
+                  Visibility: VISIBLE
+                - FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.2.1718283433940
+                  Visibility: VISIBLE
+                - FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.3.1718283435010
+                  Visibility: VISIBLE
+                - CustomLabel: '% Actual vs Budget'
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                  Visibility: VISIBLE
+                - CustomLabel: '% Forecast vs Budget'
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: Budget Date
+                        DataSetIdentifier: budgets_view
+                      DateGranularity: MONTH
+                      FieldId: 2355e4ef-c30b-4d0e-b458-96c242c664a0.6.1729007437101
+                  Rows:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: GroupBy
+                        DataSetIdentifier: budgets_view
+                      FieldId: 907f21d6-f0d5-468c-a96f-8fd6b55b7c47.6.1727708575656
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Actual Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283432863
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Budgeted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.2.1718283433940
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Forecasted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.3.1718283435010
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: percentage_actuals_vs_budgeted
+                        DataSetIdentifier: budgets_view
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          PercentageDisplayFormatConfiguration:
+                            NegativeValueConfiguration:
+                              DisplayMode: NEGATIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Suffix: '%'
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: percentage_forecast_vs_budgeted
+                        DataSetIdentifier: budgets_view
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          PercentageDisplayFormatConfiguration:
+                            NegativeValueConfiguration:
+                              DisplayMode: NEGATIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Suffix: '%'
+              SortConfiguration:
+                FieldSortOptions: []
+              TableOptions:
+                CellStyle:
+                  Height: 25
+                CollapsedRowDimensionsVisibility: HIDDEN
+                ColumnHeaderStyle: {}
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle: {}
+                RowsLayout: HIERARCHY
+              TotalOptions:
+                ColumnTotalOptions:
+                  Placement: END
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: VISIBLE
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  Placement: AUTO
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#2CAD00'
+                        Expression: SUM({percentage_actuals_vs_budgeted}) <= 0.7
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#F6AA54'
+                        Expression: (SUM({percentage_actuals_vs_budgeted}) >= 0.7) AND (SUM({percentage_actuals_vs_budgeted})
+                          <= 0.89)
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#DE3B00'
+                        Expression: SUM({percentage_actuals_vs_budgeted}) >= 0.9
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#2CAD00'
+                        Expression: SUM({percentage_forecast_vs_budgeted}) <= 0.7
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#F6AA54'
+                        Expression: (SUM({percentage_forecast_vs_budgeted}) >= 0.7) AND
+                          (SUM({percentage_forecast_vs_budgeted}) <= 0.89)
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#DE3B00'
+                        Expression: SUM({percentage_forecast_vs_budgeted}) >= 0.9
+                        IconOptions:
+                          Icon: FLAG
+            Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Select a row to filter!</visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Budget Summary</visual-title>
+              Visibility: VISIBLE
+            VisualId: e772caff-fdf5-4ccb-8dde-25859830be63
+        - GaugeChartVisual:
+            Actions: []
+            ChartConfiguration:
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                TargetValues:
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: SUM
+                    Column:
+                      ColumnName: Budgeted Cost
+                      DataSetIdentifier: budgets_view
+                    FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.1.1718283247803
+                Values:
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: SUM
+                    Column:
+                      ColumnName: Forecasted Cost
+                      DataSetIdentifier: budgets_view
+                    FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.1.1718283243237
+              TooltipOptions:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.1.1718283243237
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.1.1718283247803
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#2CAD00'
+                      Expression: (SUM({Forecasted Cost})-SUM({Budgeted Cost}) >= 0) AND
+                        (SUM({Forecasted Cost})-SUM({Budgeted Cost}) <= 69)
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#FF8700'
+                      Expression: (SUM({Forecasted Cost})-SUM({Budgeted Cost}) >= 70) AND
+                        (SUM({Forecasted Cost})-SUM({Budgeted Cost}) <= 89)
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#DE3B00'
+                      Expression: SUM({Forecasted Cost})-SUM({Budgeted Cost}) >= 90
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Forecast VS Budget This Month</visual-title>
+              Visibility: VISIBLE
+            VisualId: 4d02b812-27f2-4db3-a683-9cfe4333552d
+        - GaugeChartVisual:
+            Actions: []
+            ChartConfiguration:
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                TargetValues:
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: SUM
+                    Column:
+                      ColumnName: Budgeted Cost
+                      DataSetIdentifier: budgets_view
+                    FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.1.1718283238253
+                Values:
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: SUM
+                    Column:
+                      ColumnName: Actual Cost
+                      DataSetIdentifier: budgets_view
+                    FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283235054
+              TooltipOptions:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283235054
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.1.1718283238253
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#2CAD00'
+                      Expression: (SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) >=
+                        0.0) AND (SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) <= 69.0)
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#FF8700'
+                      Expression: (SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) >=
+                        70.0) AND (SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) <=
+                        89.0)
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#DE3B00'
+                      Expression: SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) >= 90.0
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Actual VS Budget This Month</visual-title>
+              Visibility: VISIBLE
+            VisualId: 2f6162e8-ab25-4326-b9b8-0e0705bf3b7e
+        - GaugeChartVisual:
+            Actions: []
+            ChartConfiguration:
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                TargetValues:
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: SUM
+                    Column:
+                      ColumnName: Budgeted Cost
+                      DataSetIdentifier: budgets_view
+                    FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.1.1718283227869
+                Values:
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: SUM
+                    Column:
+                      ColumnName: Forecasted Cost
+                      DataSetIdentifier: budgets_view
+                    FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.1.1718283223952
+              TooltipOptions:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.1.1718283223952
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.1.1718283227869
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#2CAD00'
+                      Expression: (SUM({Forecasted Cost})/nullIf(SUM({Budgeted Cost}),0)
+                        >= 0.0) AND (SUM({Forecasted Cost})/nullIf(SUM({Budgeted Cost}),0)
+                        <= 69.0)
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#FF8700'
+                      Expression: (SUM({Forecasted Cost})/nullIf(SUM({Budgeted Cost}),0)
+                        >= 70.0) AND (SUM({Forecasted Cost})/nullIf(SUM({Budgeted Cost}),0)
+                        <= 89.0)
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#DE3B00'
+                      Expression: SUM({Forecasted Cost})/nullIf(SUM({Budgeted Cost}),0)
+                        >= 90.0
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Forecast VS Budget</visual-title>
+              Visibility: VISIBLE
+            VisualId: cbec3be1-4f0f-4617-9de4-808d5850deca
+        - BarChartVisual:
+            Actions: []
+            ChartConfiguration:
+              BarsArrangement: CLUSTERED
+              CategoryAxis:
+                TickLabelOptions:
+                  LabelOptions:
+                    Visibility: VISIBLE
+              CategoryLabelOptions:
+                SortIconVisibility: VISIBLE
+                Visibility: HIDDEN
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: HIDDEN
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: GroupBy
+                        DataSetIdentifier: budgets_view
+                      FieldId: 907f21d6-f0d5-468c-a96f-8fd6b55b7c47.4.1727708547448
+                  Colors: []
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Budgeted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.3.1718282848105
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Forecasted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.3.1718282850819
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Actual Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.4.1721863215411
+              Orientation: HORIZONTAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - ColumnSort:
+                    AggregationFunction:
+                      NumericalAggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                    Direction: DESC
+                    SortBy:
+                      ColumnName: Forecasted Cost
+                      DataSetIdentifier: budgets_view
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.3.1718282848105
+                      Visibility: VISIBLE
+                  - ColumnTooltipItem:
+                      Aggregation:
+                        AttributeAggregationFunction:
+                          SimpleAttributeAggregation: UNIQUE_VALUE
+                      Column:
+                        ColumnName: 2824a059-8ce2-349f-8fd2-352ac43cbfb8-e402a84b-a370-47f6-89f7-a65e351c7d52.account_name
+                        DataSetIdentifier: budgets_view
+                      Label: Account Name
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.4.1721863215411
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 907f21d6-f0d5-468c-a96f-8fd6b55b7c47.4.1727708547448
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies: []
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: "<visual-title>\n  Budget Summary by\n  <parameter>${GroupBy}</parameter>\n\
+                  \  \_This Month\n</visual-title>"
+              Visibility: VISIBLE
+            VisualId: ccb38ee7-ad72-43b8-a29f-83e882f4ed55
+        - GaugeChartVisual:
+            Actions: []
+            ChartConfiguration:
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                TargetValues:
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: SUM
+                    Column:
+                      ColumnName: Budgeted Cost
+                      DataSetIdentifier: budgets_view
+                    FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.1.1718283217903
+                Values:
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: SUM
+                    Column:
+                      ColumnName: Actual Cost
+                      DataSetIdentifier: budgets_view
+                    FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283213987
+              TooltipOptions:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283213987
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.1.1718283217903
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#2CAD00'
+                      Expression: (SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) >=
+                        0.0) AND (SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) <= 69.0)
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#DE3B00'
+                      Expression: SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) >= 90.0
+              - Arc:
+                  ForegroundColor:
+                    Solid:
+                      Color: '#FF8700'
+                      Expression: (SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) >=
+                        70.0) AND (SUM({Actual Cost})/nullIf(SUM({Budgeted Cost}),0) <=
+                        89.0)
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Actual VS Budget</visual-title>
+              Visibility: VISIBLE
+            VisualId: 6820c113-5565-45d5-8ae9-ad3223adaf22
+        - PivotTableVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: bee12900-dad1-40d5-a3a8-e8b3a53b5a78
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              FieldOptions:
+                DataPathOptions:
+                - DataPathList:
+                  - FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                    FieldValue: percentage_forecast_vs_budgeted
+                  Width: 165px
+                - DataPathList:
+                  - FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                    FieldValue: percentage_actuals_vs_budgeted
+                  Width: 149px
+                - DataPathList:
+                  - DataPathType:
+                      PivotTableDataPathType: HIERARCHY_ROWS_LAYOUT_COLUMN
+                  Width: 142px
+                - DataPathList:
+                  - FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.2.1718283433940
+                    FieldValue: Budgeted Cost
+                  Width: 138px
+                - DataPathList:
+                  - FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.3.1718283435010
+                    FieldValue: Forecasted Cost
+                  Width: 137px
+                - DataPathList:
+                  - FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283432863
+                    FieldValue: Actual Cost
+                  Width: 107px
+                SelectedFieldOptions:
+                - FieldId: 907f21d6-f0d5-468c-a96f-8fd6b55b7c47.5.1727708571498
+                  Visibility: VISIBLE
+                - FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283432863
+                  Visibility: VISIBLE
+                - FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.2.1718283433940
+                  Visibility: VISIBLE
+                - FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.3.1718283435010
+                  Visibility: VISIBLE
+                - CustomLabel: '% Actual vs Budget'
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                  Visibility: VISIBLE
+                - CustomLabel: '% Forecast vs Budget'
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                  Visibility: VISIBLE
+              FieldWells:
+                PivotTableAggregatedFieldWells:
+                  Columns: []
+                  Rows:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: GroupBy
+                        DataSetIdentifier: budgets_view
+                      FieldId: 907f21d6-f0d5-468c-a96f-8fd6b55b7c47.5.1727708571498
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Actual Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283432863
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Budgeted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.2.1718283433940
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Forecasted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.3.1718283435010
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: percentage_actuals_vs_budgeted
+                        DataSetIdentifier: budgets_view
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          PercentageDisplayFormatConfiguration:
+                            NegativeValueConfiguration:
+                              DisplayMode: NEGATIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Suffix: '%'
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: percentage_forecast_vs_budgeted
+                        DataSetIdentifier: budgets_view
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          PercentageDisplayFormatConfiguration:
+                            NegativeValueConfiguration:
+                              DisplayMode: NEGATIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Suffix: '%'
+              SortConfiguration:
+                FieldSortOptions: []
+              TableOptions:
+                CellStyle:
+                  Height: 25
+                CollapsedRowDimensionsVisibility: HIDDEN
+                ColumnHeaderStyle: {}
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+                RowFieldNamesStyle: {}
+                RowsLayout: HIERARCHY
+              TotalOptions:
+                ColumnTotalOptions:
+                  Placement: END
+                RowSubtotalOptions:
+                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
+                  MetricHeaderCellStyle: {}
+                  StyleTargets:
+                  - CellType: VALUE
+                  - CellType: TOTAL
+                  - CellType: METRIC_HEADER
+                  TotalCellStyle: {}
+                  TotalsVisibility: VISIBLE
+                  ValueCellStyle: {}
+                RowTotalOptions:
+                  Placement: AUTO
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#2CAD00'
+                        Expression: SUM({percentage_actuals_vs_budgeted}) <= 0.7
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#F6AA54'
+                        Expression: (SUM({percentage_actuals_vs_budgeted}) >= 0.7) AND (SUM({percentage_actuals_vs_budgeted})
+                          <= 0.89)
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_actuals_vs_budgeted.4.1718283446212
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#DE3B00'
+                        Expression: SUM({percentage_actuals_vs_budgeted}) >= 0.9
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#2CAD00'
+                        Expression: SUM({percentage_forecast_vs_budgeted}) <= 0.7
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#F6AA54'
+                        Expression: (SUM({percentage_forecast_vs_budgeted}) >= 0.7) AND
+                          (SUM({percentage_forecast_vs_budgeted}) <= 0.89)
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.percentage_forecast_vs_budgeted.5.1718283446900
+                  Scopes:
+                  - Role: FIELD
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#DE3B00'
+                        Expression: SUM({percentage_forecast_vs_budgeted}) >= 0.9
+                        IconOptions:
+                          Icon: FLAG
+            Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <inline font-size="14px">Select a row to filter!</inline>
+                  </visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: "<visual-title>\n  Budget Summary by\n  <parameter>${GroupBy}</parameter>\n\
+                  \  \_This Month\n</visual-title>"
+              Visibility: VISIBLE
+            VisualId: 9e97f73c-c85d-429d-8840-fbc75e7b7418
+        - ComboChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisuals:
+                      - e772caff-fdf5-4ccb-8dde-25859830be63
+                      - cbec3be1-4f0f-4617-9de4-808d5850deca
+                      - 6820c113-5565-45d5-8ae9-ad3223adaf22
+                      - 52d9a7d1-3c41-4da6-a648-b98f4e72a4b3
+                      - 6985b6c1-fbe7-403e-a1d5-dc985cf40583
+                      - 2187aeae-6a45-4781-b9db-70f079750987
+              CustomActionId: ee9aebaf-db5c-4161-9b6a-07388d7f4231
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarDataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: HIDDEN
+              BarsArrangement: CLUSTERED
+              FieldWells:
+                ComboChartAggregatedFieldWells:
+                  BarValues:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Actual Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283024920
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: Budget Date
+                        DataSetIdentifier: budgets_view
+                      DateGranularity: MONTH
+                      FieldId: 2355e4ef-c30b-4d0e-b458-96c242c664a0.3.1729007419597
+                      HierarchyId: 2355e4ef-c30b-4d0e-b458-96c242c664a0.3.1729007419597
+                  Colors: []
+                  LineValues:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Budgeted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.2.1718283030719
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Forecasted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.4.1718283069337
+              PrimaryYAxisDisplayOptions:
+                AxisOffset: 58px
+              SingleAxisOptions:
+                YAxisOptions:
+                  YAxis: PRIMARY_Y_AXIS
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 2355e4ef-c30b-4d0e-b458-96c242c664a0.3.1729007419597
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.1.1718283024920
+                      TooltipTarget: BAR
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.2.1718283030719
+                      TooltipTarget: LINE
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.4.1718283069337
+                      TooltipTarget: LINE
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 2355e4ef-c30b-4d0e-b458-96c242c664a0.3.1729007419597
+                      TooltipTarget: BOTH
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                HierarchyId: 2355e4ef-c30b-4d0e-b458-96c242c664a0.3.1729007419597
+            Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <inline font-size="14px">This is the sum of every budget created. Select a budget level or a specific budget.</inline>
+                  </visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Budget History</visual-title>
+              Visibility: VISIBLE
+            VisualId: e5bf0811-1402-4368-87d2-32a45117ffed
+        - SankeyDiagramVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 021896b9-bb07-434f-b9ab-259d3b8c3a9a
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                SankeyDiagramAggregatedFieldWells:
+                  Destination:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: budget_level
+                        DataSetIdentifier: budgets_view
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.budget_level.1.1718284092705
+                  Source:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: GroupBy
+                        DataSetIdentifier: budgets_view
+                      FieldId: 907f21d6-f0d5-468c-a96f-8fd6b55b7c47.2.1727708522174
+                  Weight:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: budget_amount
+                        DataSetIdentifier: budgets_view
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.budget_amount.2.1718284096239
+              SortConfiguration:
+                WeightSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.budget_amount.2.1718284096239
+            Subtitle:
+              FormatText:
+                RichText: |-
+                  <visual-subtitle>
+                    <inline font-size="16px">Budget Levels defined by 'cid:budget-level' tag values</inline>
+                  </visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: "<visual-title>\n  Budget Distribution from\n  <parameter>${GroupBy}</parameter>\n\
+                  \  \_to Budget Level\n</visual-title>"
+              Visibility: VISIBLE
+            VisualId: 52d9a7d1-3c41-4da6-a648-b98f4e72a4b3
+        - InsightVisual:
+            Actions: []
+            DataSetIdentifier: budgets_view
+            InsightConfiguration:
+              Computations:
+              - TopBottomRanked:
+                  Category:
+                    CategoricalDimensionField:
+                      Column:
+                        ColumnName: Budget Name
+                        DataSetIdentifier: budgets_view
+                      FieldId: ae8e6006-8453-444e-b6ba-0192598b083a.3.1720013815064
+                  ComputationId: 3a355ff4-d381-4e08-bd10-e6c1dd3717aa
+                  Name: Top
+                  ResultSize: 3
+                  Type: TOP
+                  Value:
+                    CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: Budget Name
+                        DataSetIdentifier: budgets_view
+                      FieldId: ae8e6006-8453-444e-b6ba-0192598b083a.8.1720017746792
+              - TotalAggregation:
+                  ComputationId: 1fbb21db-1e62-4ade-8d4e-ab7949973543
+                  Name: TotalBudgeted
+                  Value:
+                    CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: Budget Name
+                        DataSetIdentifier: budgets_view
+                      FieldId: ae8e6006-8453-444e-b6ba-0192598b083a.8.1720017746792
+              - PeriodOverPeriod:
+                  ComputationId: c12ba90e-afba-4ab0-b0d7-d43e70b1de31
+                  Name: BudgetPeriodOverPeriod
+                  Time:
+                    DateDimensionField:
+                      Column:
+                        ColumnName: budget_date
+                        DataSetIdentifier: budgets_view
+                      DateGranularity: MONTH
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.budget_date.2.1719441147290
+                  Value:
+                    NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Budgeted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 14f875c1-978c-4393-950a-82a7b935f33d.9.1720017761859
+              - PeriodOverPeriod:
+                  ComputationId: a1084abf-6424-4ab2-b47d-a9634194b8bf
+                  Name: ActualPeriodOverPeriod
+                  Time:
+                    DateDimensionField:
+                      Column:
+                        ColumnName: budget_date
+                        DataSetIdentifier: budgets_view
+                      DateGranularity: MONTH
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.budget_date.2.1719441147290
+                  Value:
+                    NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Actual Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: 82b57ef0-b61a-4682-a98c-322dc6b2a2ba.5.1720014389701
+              - PeriodOverPeriod:
+                  ComputationId: d38ccdd3-d39a-4089-a3fe-355e50de4416
+                  Name: ForecastPeriodOverPeriod
+                  Time:
+                    DateDimensionField:
+                      Column:
+                        ColumnName: budget_date
+                        DataSetIdentifier: budgets_view
+                      DateGranularity: MONTH
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.budget_date.2.1719441147290
+                  Value:
+                    NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Forecasted Cost
+                        DataSetIdentifier: budgets_view
+                      FieldId: e02cffce-7fb1-435f-a9a9-83b4f042d914.1.1719441088295
+              - TotalAggregation:
+                  ComputationId: be5b2b3e-2c84-462d-b0ce-74c5e6d785bc
+                  Name: UnhealthyTotalAggregate
+                  Value:
+                    NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Unhealthy Budget
+                        DataSetIdentifier: budgets_view
+                      FieldId: c1ad2f87-e00e-42d5-a49b-0ddc46eb53ab.3.1720013782847
+              - TotalAggregation:
+                  ComputationId: 3eba519b-4c6f-4817-ad31-c7ba49b8455f
+                  Name: HealthyTotalAggregate
+                  Value:
+                    NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Healthy Budget
+                        DataSetIdentifier: budgets_view
+                      FieldId: a59db40c-c98e-4293-b8d6-7a6c323f3fad.7.1720017732217
+              - TotalAggregation:
+                  ComputationId: 5517433f-7d7b-443c-8233-df531a8fbf40
+                  Name: ForecastUnhealthyTotalAggregate
+                  Value:
+                    NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Forecasted Unhealthy Budget
+                        DataSetIdentifier: budgets_view
+                      FieldId: 86d312f1-44a4-4852-a3d4-9c8c2c80140b.4.1720013856047
+              - TotalAggregation:
+                  ComputationId: 83444057-5a7d-469b-a376-c44b7337dfb4
+                  Name: BudgetNameTotalAggregate
+                  Value:
+                    CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: Budget Name
+                        DataSetIdentifier: budgets_view
+                      FieldId: ae8e6006-8453-444e-b6ba-0192598b083a.8.1720017746792
+              CustomNarrative:
+                Narrative: "<narrative>\n  <br/>\n  Total\n  <expression>BudgetPeriodOverPeriod.metricField.name</expression>\n\
+                  \  \_for\n  <inline background-color=\"PrimaryBackground\">\n    <expression>BudgetPeriodOverPeriod.currentTimeValue.formattedValue</expression>\n\
+                  \  </inline>\n  <if condition=\"BudgetPeriodOverPeriod.percentDifference.value\
+                  \ &gt;= 0\" level=\"inline\">\n    <inline color=\"Accent\">\n      <b>\_\
+                  increased by\_</b>\n    </inline>\n  </if>\n  <if condition=\"BudgetPeriodOverPeriod.percentDifference.value\
+                  \ &lt; 0\" level=\"inline\">\n    <inline color=\"Accent\">\n      <b>\_\
+                  decreased by\_</b>\n    </inline>\n  </if>\n  <inline color=\"Accent\"\
+                  >\n    <b>\n      <expression>BudgetPeriodOverPeriod.percentDifference.formattedAbsoluteValue</expression>\n\
+                  \    </b>\n  </inline>\n  <inline color=\"Accent\">\n    <b>\_(</b>\n\
+                  \  </inline>\n  <inline color=\"Accent\">\n    <b>\n      <expression>BudgetPeriodOverPeriod.absoluteDifference.formattedValue</expression>\n\
+                  \    </b>\n  </inline>\n  <inline color=\"Accent\">\n    <b>)</b>\n  </inline>\n\
+                  \  \_from\n  <inline background-color=\"PrimaryBackground\">\n    <expression>BudgetPeriodOverPeriod.previousMetricValue.formattedValue</expression>\n\
+                  \  </inline>\n  \_to\n  <inline background-color=\"PrimaryBackground\"\
+                  >\n    <expression>BudgetPeriodOverPeriod.currentMetricValue.formattedValue</expression>\n\
+                  \  </inline>\n  .\n  <br/>\n  Total\n  <inline background-color=\"PrimaryBackground\"\
+                  >\n    <expression>ActualPeriodOverPeriod.metricField.name</expression>\n\
+                  \  </inline>\n  \_for\n  <inline background-color=\"PrimaryBackground\"\
+                  >\n    <expression>ActualPeriodOverPeriod.currentTimeValue.formattedValue</expression>\n\
+                  \  </inline>\n  <if condition=\"ActualPeriodOverPeriod.percentDifference.value\
+                  \ &gt;= 0\" level=\"inline\">\n    <inline color=\"Accent\">\n      <b>\_\
+                  increased by\_</b>\n    </inline>\n  </if>\n  <if condition=\"ActualPeriodOverPeriod.percentDifference.value\
+                  \ &lt; 0\" level=\"inline\">\n    <inline color=\"Accent\">\n      <b>\_\
+                  decreased by\_</b>\n    </inline>\n  </if>\n  <inline color=\"Accent\"\
+                  >\n    <b>\n      <expression>ActualPeriodOverPeriod.percentDifference.formattedAbsoluteValue</expression>\n\
+                  \    </b>\n  </inline>\n  <inline color=\"Accent\">\n    <b>\_(</b>\n\
+                  \  </inline>\n  <inline color=\"Accent\">\n    <b>\n      <expression>ActualPeriodOverPeriod.absoluteDifference.formattedValue</expression>\n\
+                  \    </b>\n  </inline>\n  <inline color=\"Accent\">\n    <b>)</b>\n  </inline>\n\
+                  \  \_from\n  <inline background-color=\"PrimaryBackground\">\n    <expression>ActualPeriodOverPeriod.previousMetricValue.formattedValue</expression>\n\
+                  \  </inline>\n  \_to\n  <inline background-color=\"PrimaryBackground\"\
+                  >\n    <expression>ActualPeriodOverPeriod.currentMetricValue.formattedValue</expression>\n\
+                  \  </inline>\n  .\n  <br/>\n  Total\n  <inline background-color=\"PrimaryBackground\"\
+                  >\n    <expression>ForecastPeriodOverPeriod.metricField.name</expression>\n\
+                  \  </inline>\n  \_for\n  <inline background-color=\"PrimaryBackground\"\
+                  >\n    <expression>ForecastPeriodOverPeriod.currentTimeValue.formattedValue</expression>\n\
+                  \  </inline>\n  <if condition=\"ForecastPeriodOverPeriod.percentDifference.value\
+                  \ &gt;= 0\" level=\"inline\">\n    <inline color=\"Accent\">\n      <b>\_\
+                  increased by\_</b>\n    </inline>\n  </if>\n  <if condition=\"ForecastPeriodOverPeriod.percentDifference.value\
+                  \ &lt; 0\" level=\"inline\">\n    <inline color=\"Accent\">\n      <b>\_\
+                  decreased by\_</b>\n    </inline>\n  </if>\n  <inline color=\"Accent\"\
+                  >\n    <b>\n      <expression>ForecastPeriodOverPeriod.percentDifference.formattedAbsoluteValue</expression>\n\
+                  \    </b>\n  </inline>\n  <inline color=\"Accent\">\n    <b>\_(</b>\n\
+                  \  </inline>\n  <inline color=\"Accent\">\n    <b>\n      <expression>ForecastPeriodOverPeriod.absoluteDifference.formattedValue</expression>\n\
+                  \    </b>\n  </inline>\n  <inline color=\"Accent\">\n    <b>)</b>\n  </inline>\n\
+                  \  \_from\n  <inline background-color=\"PrimaryBackground\">\n    <expression>ForecastPeriodOverPeriod.previousMetricValue.formattedValue</expression>\n\
+                  \  </inline>\n  \_to\n  <inline background-color=\"PrimaryBackground\"\
+                  >\n    <expression>ForecastPeriodOverPeriod.currentMetricValue.formattedValue</expression>\n\
+                  \  </inline>\n  .\n</narrative>"
+            Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>This is the sum of every budget created. Select
+                  a budget level or a specific budget in the controls.</visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="20px">Total Budgets Summary Insight</inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: 6985b6c1-fbe7-403e-a1d5-dc985cf40583
+        - InsightVisual:
+            Actions: []
+            DataSetIdentifier: budgets_view
+            InsightConfiguration:
+              Computations:
+              - TotalAggregation:
+                  ComputationId: a786e035-0782-461e-9fc6-c6ca7f161610
+                  Name: TotalAggregate
+                  Value:
+                    CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: Budget Name
+                        DataSetIdentifier: budgets_view
+                      FieldId: ae8e6006-8453-444e-b6ba-0192598b083a.2.1720018723510
+              - TotalAggregation:
+                  ComputationId: 41366843-febf-4e53-86c1-728c5b1f9239
+                  Name: UnhealthyTotalAggregate
+                  Value:
+                    NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Unhealthy Budget
+                        DataSetIdentifier: budgets_view
+                      FieldId: c1ad2f87-e00e-42d5-a49b-0ddc46eb53ab.4.1720018743330
+              - TotalAggregation:
+                  ComputationId: 5a6edb40-4192-407e-8815-d73aec3ac23c
+                  Name: HealthyTotalAggregate
+                  Value:
+                    NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Healthy Budget
+                        DataSetIdentifier: budgets_view
+                      FieldId: a59db40c-c98e-4293-b8d6-7a6c323f3fad.3.1720018742634
+              - TotalAggregation:
+                  ComputationId: a16fb50f-d1d6-4740-8b1d-4be740094550
+                  Name: ForecastUnhealthyTotalAggregate
+                  Value:
+                    CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: Budget Name
+                        DataSetIdentifier: budgets_view
+                      FieldId: ae8e6006-8453-444e-b6ba-0192598b083a.2.1720018723510
+              - PeriodOverPeriod:
+                  ComputationId: 5a05032b-666f-4ef6-b32d-a664ca1c1a42
+                  Name: DatePeriodOverPeriod
+                  Time:
+                    DateDimensionField:
+                      Column:
+                        ColumnName: budget_date
+                        DataSetIdentifier: budgets_view
+                      FieldId: 1b7430f1-ee1a-4599-aecc-33998b283691.budget_date.0.1720018579044
+                  Value:
+                    CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: Budget Name
+                        DataSetIdentifier: budgets_view
+                      FieldId: ae8e6006-8453-444e-b6ba-0192598b083a.2.1720018723510
+              CustomNarrative:
+                Narrative: "<narrative>\n  <br/>\n  There are\n  <b>\_</b>\n  <b>\n    <expression>TotalAggregate.totalAggregate.value</expression>\n\
+                  \  </b>\n  <b>\_Budgets\_</b>\n  currently active, with\n  <inline background-color=\"\
+                  PrimaryBackground\" color=\"#f22323\">\n   \_<expression>UnhealthyTotalAggregate.totalAggregate.formattedValue</expression>\n\
+                  \  </inline>\n  <inline color=\"#f22323\">\_exceeding the budget</inline>\n\
+                  \  \_and\n  <inline background-color=\"PrimaryBackground\" color=\"#0bcc20\"\
+                  >\n    \_<expression>HealthyTotalAggregate.totalAggregate.value</expression>\n\
+                  \  </inline>\n  <inline color=\"#0bcc20\">\_within the budget</inline>\n\
+                  \  , with\n  <inline background-color=\"PrimaryBackground\" color=\"#f22323\"\
+                  >\n    \_<expression>ForecastUnhealthyTotalAggregate.totalAggregate.formattedValue</expression>\n\
+                  \  </inline>\n  <inline color=\"#f22323\">\_that will exceed the budget\_\
+                  </inline>\n  <inline color=\"#080808\">during the month.</inline>\n</narrative>"
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="20px">Budgets Status Insight</inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: 2187aeae-6a45-4781-b9db-70f079750987
+      - ContentType: INTERACTIVE
+        FilterControls:
+        - CrossSheet:
+            FilterControlId: 38024980-9a8c-4e91-8676-179cc0e581d9
+            SourceFilterId: e6bcd82f-e003-4dc2-8ee7-f05596dece82
+        Layouts:
+        - Configuration:
+            GridLayout:
+              CanvasSizeOptions:
+                ScreenCanvasSizeOptions:
+                  OptimizedViewPortWidth: 1600px
+                  ResizeOption: FIXED
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: d4b3a6d1-37fe-4b72-b70b-0a3112e90ba1
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 6
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 9fcbe9bf-1102-4e48-a01b-66096ca8f62f
+                ElementType: TEXT_BOX
+                RowIndex: 6
+                RowSpan: 6
+        Name: About
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnSpan: 2
+                ElementId: 38024980-9a8c-4e91-8676-179cc0e581d9
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+        SheetId: 33b8cf20-7be2-4297-b4ee-bba6a8f62275
+        TextBoxes:
+        - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\"/>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\">\n    <inline font-size=\"24px\">\n      <b>AWS Budgets Dashboard</b>\n\
+            \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
+            \  <block align=\"center\">v0.1.1</block>\n  <br/>\n  <block align=\"center\"\
+            />\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"\
+            >\n    <b>Authors:\_</b>\n    <inline color=\"#1d1c1d\">Marco De Bianchi, Mohideen\
+            \ HajaMohideen</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n\
+            \  <br/>\n  <block align=\"right\"/>\n</text-box>"
+          SheetTextBoxId: d4b3a6d1-37fe-4b72-b70b-0a3112e90ba1
+        - Content: "<text-box>\n  <inline font-size=\"32px\">Notices</inline>\n  <br/>\n\
+            \  <br/>\n  <inline font-size=\"20px\">Customers are responsible for making\
+            \ their own independent assessment of\_this dashboard and its content.\_This\
+            \ dashboard and its content: (a) is for informational purposes only, (b) represents\
+            \ current AWS product offerings and practices, which are subject to change without\
+            \ notice, and (c) does not create any commitments or assurances from AWS and\
+            \ its affiliates, suppliers or licensors. AWS\_content, products or services\
+            \ are provided \u201Cas is\u201D without warranties, representations, or conditions\
+            \ of any kind, whether express or implied. The responsibilities and liabilities\
+            \ of AWS to its customers are controlled by AWS agreements, and this document\
+            \ is not part of, nor does it modify, any agreement between AWS and its customers.</inline>\n\
+            </text-box>"
+          SheetTextBoxId: 9fcbe9bf-1102-4e48-a01b-66096ca8f62f
+        Visuals: []
+datasets:
+  budgets_view:
+    data:
+      DataSetId: 8ac5a222-9776-47bc-97aa-aa3af065ad19
+      Name: budgets_view
+      PhysicalTableMap:
+        837bbb14-78d7-44f6-8733-35c9d535665c:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+        92380c13-4243-40f6-849c-2fefa127e241:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: budgets_view
+            InputColumns:
+            - Name: budget_name
+              Type: STRING
+            - Name: budget_amount
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: actualspend
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: forecastedspend
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: percentage_actuals_vs_budgeted
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: percentage_forecast_vs_budgeted
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: budget_date
+              Type: DATETIME
+            - Name: timeunit
+              Type: STRING
+            - Name: budget_type
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: start_date
+              Type: STRING
+            - Name: end_date
+              Type: STRING
+            - Name: budget_year
+              Type: STRING
+            - Name: budget_month
+              Type: STRING
+            - Name: budget_level
+              Type: STRING
+      LogicalTableMap:
+        1b7430f1-ee1a-4599-aecc-33998b283691:
+          Alias: budgets_view
+          Source:
+            PhysicalTableId: 92380c13-4243-40f6-849c-2fefa127e241
+        4cb1eb04-92b5-4164-a5f4-d094a83a99e5:
+          Alias: account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: 837bbb14-78d7-44f6-8733-35c9d535665c
+        f5f32349-3445-4576-8c69-14de2f6e80bd:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - budget_name
+              - budget_amount
+              - actualspend
+              - forecastedspend
+              - percentage_actuals_vs_budgeted
+              - percentage_forecast_vs_budgeted
+              - budget_date
+              - timeunit
+              - budget_type
+              - account_id
+              - start_date
+              - end_date
+              - budget_year
+              - budget_month
+              - budget_level
+              - account_id[account_map]
+              - account_name
+          Source:
+            JoinInstruction:
+              LeftOperand: 1b7430f1-ee1a-4599-aecc-33998b283691
+              RightOperand: 4cb1eb04-92b5-4164-a5f4-d094a83a99e5
+              Type: LEFT
+              OnClause: '{account_id} = {account_id[account_map]}'
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - budgets_view
+    schedules:
+    - default
+crawlers: {}
+views:
+  budgets_view:
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.budgets_view AS
+      SELECT
+        budgetname budget_name
+      , CAST(budgetlimit.amount AS decimal) budget_amount
+      , CAST(calculatedspend.actualspend.amount AS decimal) actualspend
+      , CAST(calculatedspend.forecastedspend.amount AS decimal) forecastedspend
+      , CAST((CAST(calculatedspend.actualspend.amount AS decimal(18, 4)) / CAST(budgetlimit.amount AS decimal(18, 4))) AS decimal(18, 4)) percentage_actuals_vs_budgeted
+      , CAST((CAST(calculatedspend.forecastedspend.amount AS decimal(18, 4)) / CAST(budgetlimit.amount AS decimal(18, 4))) AS decimal(18, 4)) percentage_forecast_vs_budgeted
+      , CAST(CONCAT(year, '-', month, '-01') AS DATE) budget_date
+      , timeunit
+      , budgettype budget_type
+      , account_id
+      , timeperiod.start start_date
+      , timeperiod."end" end_date
+      , year budget_year
+      , month budget_month
+      , MAX((CASE WHEN (tag.key = 'cid:budget-level') THEN tag.value END)) budget_level
+      FROM
+        (${data_collection_database_name}.budgets_data
+      CROSS JOIN UNNEST(${data_collection_database_name}.budgets_data.tags) t (tag))
+      WHERE ((budgettype = 'COST') AND (costfilters.filter[1] = 'None'))
+      GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'budgets_data'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True

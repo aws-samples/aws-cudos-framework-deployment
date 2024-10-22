@@ -607,33 +607,6 @@ dashboards:
               - ede83f5e-b2eb-4f84-87dd-f15107b1c401
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 50f21b8b-a92f-42b7-a9b3-4daa88eaee75
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: event_category
-              DataSetIdentifier: health_events_view
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: EventCategory
-            FilterId: b10e0f0e-8a3d-4fee-b7f7-c4e795836082
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: aa361ea5-a24e-46fe-ab29-cbb62c62f45e
-              VisualIds:
-              - be3d4569-2c01-4033-83c8-ae1d32f3bd18
-              - facfde5a-8667-4884-a0d8-aa1073f6548d
-              - c0be8b58-5e33-48e3-9190-bb4bc7c54967
-              - 3fa7e5ed-772a-4761-80bd-fe59c0584b55
-              - bf4b73bb-8bd2-40c0-bc30-ada80ec7b466
-              - 7a51a992-ef8c-4412-b246-7578ddfe38be
-              - ede83f5e-b2eb-4f84-87dd-f15107b1c401
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: b2558018-8325-4e04-85bc-386d104e2005
         Filters:
         - CategoryFilter:
@@ -2077,6 +2050,51 @@ dashboards:
               - cbbd002f-4bca-40eb-8177-bfde520c2eac
               - daf8eda1-209e-4982-8b65-ef8829dba819
         Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 2861a43c-94dd-481b-9805-bcd854e17c30
+        Filters:
+        - TimeRangeFilter:
+            Column:
+              ColumnName: start_time
+              DataSetIdentifier: health_events_view
+            FilterId: 1fb04213-9d9f-43f0-99f7-fc2dea3a40a6
+            IncludeMinimum: true
+            NullOption: NON_NULLS_ONLY
+            RangeMinimumValue:
+              Parameter: StartTime
+            TimeGranularity: DAY
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 7df9865b-fdcd-4aa4-af55-b29fe714f382
+              VisualIds:
+              - dba75577-3dfd-469e-9936-f39251871e5e
+              - dc491b68-8503-4c65-aa98-b7a74b7a26d0
+              - 77c8c5ea-df2a-47a7-bb0c-8c79dac0ff23
+              - e3691913-1c7d-47a7-a79a-25f99b735344
+              - 17c75fb9-452f-4bed-84e4-39ab35c6521c
+              - 47dd688d-0f57-489b-a6e5-9c6f1094ce44
+              - 23154baf-7cfe-4700-b237-d04c31d9fa52
+              - b6840313-7bb9-4677-8d2e-86107c7a6967
+              - 2017ae95-9627-4368-a4d6-3f303a731e5a
+              - cd098797-ad5d-4ab4-84ad-f188e3b2462e
+              - 0cc5b4a1-3776-40cc-ba97-fad07e4392e0
+              - 8565b8c0-2db8-4b73-9ad6-e97e8f779247
+              - 10f6509d-6668-4cb9-8e3d-61f0c3c9d059
+              - 15055ee5-a062-4759-8682-23e344d78b2f
+              - e61d9f40-55cc-4dd9-9dcb-8eadcfb35d66
+              - 3a1640f4-545a-470e-838d-aeb1f2998733
+              - 741be374-cf87-4706-9de3-1525f310e430
+              - 30d3e6bd-8742-4e54-9152-f0dc9167c23a
+              - c6d5beb6-9771-461c-814a-0baaf34e32ea
+              - 05aea380-d759-4f6b-ae00-e0e38cd86955
+              - dade3a15-f573-47bb-a5d0-0b8d39a76fcd
+              - b7e7bde6-1b7b-468b-befd-91b81c59802e
+              - cac4df37-6414-4372-bfd3-b4ec434256f9
+              - cbbd002f-4bca-40eb-8177-bfde520c2eac
+              - daf8eda1-209e-4982-8b65-ef8829dba819
+        Status: ENABLED
       Options:
         WeekStart: SUNDAY
       ParameterDeclarations:
@@ -2302,7 +2320,7 @@ dashboards:
       - DateTimeParameterDeclaration:
           DefaultValues:
             RollingDate:
-              Expression: addDateTime(-30, 'DD', truncDate('DD', now()))
+              Expression: addDateTime(-180, 'DD', truncDate('DD', now()))
             StaticValues: []
           Name: StartTime
           TimeGranularity: DAY
@@ -2648,6 +2666,19 @@ dashboards:
                 RowSpan: 14
         Name: Summary
         ParameterControls:
+        - DateTimePicker:
+            DisplayOptions:
+              DateTimeFormat: YYYY/MM/DD
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            ParameterControlId: 060e4239-4848-4a0a-80b4-cdcda4599b26
+            SourceParameterName: StartTime
+            Title: Start Day On Or After
         - List:
             DisplayOptions:
               InfoIconLabelOptions:
@@ -2676,7 +2707,7 @@ dashboards:
               SearchOptions:
                 Visibility: HIDDEN
               SelectAllOptions:
-                Visibility: HIDDEN
+                Visibility: VISIBLE
               TitleOptions:
                 FontConfiguration:
                   FontSize:
@@ -3247,6 +3278,10 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 060e4239-4848-4a0a-80b4-cdcda4599b26
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
         SheetId: 7df9865b-fdcd-4aa4-af55-b29fe714f382
         TextBoxes:
         - Content: "<text-box>\n  <br/>\n  <inline color=\"PrimaryForeground\" font-size=\"\
@@ -3728,7 +3763,7 @@ dashboards:
                   Element:
                     FieldId: 842ccebe-a9b9-453a-b704-c972f6706b09.1.1725475951282
                     FieldValue: Pending
-                - Color: '#AAAAAA'
+                - Color: '#DFE3E4'
                   Element:
                     FieldId: 842ccebe-a9b9-453a-b704-c972f6706b09.1.1725475951282
                     FieldValue: No status
@@ -4243,16 +4278,19 @@ dashboards:
                 SelectedFieldOptions:
                 - CustomLabel: Region
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.region.1.1724174817676
-                  Width: 161px
+                  Width: 120px
+                - CustomLabel: No Status
+                  FieldId: 5499f917-db38-47e9-90c1-84593d5e698d.4.1729079573520
+                  Width: 82px
                 - CustomLabel: Resolved
                   FieldId: 89d8de36-d8d1-4515-982f-17be70dcf0a8.2.1725897159210
-                  Width: 82px
+                  Width: 77px
                 - CustomLabel: Impaired
                   FieldId: 4d4c6553-95d1-4d20-9ff9-b77cec88582a.3.1725897222201
                   Width: 76px
                 - CustomLabel: Pending
                   FieldId: 2fbce13a-6f9f-435f-925e-d5473e195f19.4.1725897231360
-                  Width: 76px
+                  Width: 70px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -4262,6 +4300,13 @@ dashboards:
                         DataSetIdentifier: health_events_view
                       FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.region.1.1724174817676
                   Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: is_non_status
+                        DataSetIdentifier: health_events_view
+                      FieldId: 5499f917-db38-47e9-90c1-84593d5e698d.4.1729079573520
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
@@ -5417,7 +5462,7 @@ dashboards:
                 AxisOffset: 271px
               VisualPalette:
                 ColorMap:
-                - Color: '#AAAAAA'
+                - Color: '#DFE3E4'
                   Element:
                     FieldId: a0eda20e-cd03-4295-88a7-008b2804e76a.2.1720821190724
                     FieldValue: No status
@@ -5615,7 +5660,7 @@ dashboards:
                   Element:
                     FieldId: be95ee21-3edb-4a9c-93d4-7cd392782e71.3.1711658988228
                     FieldValue: Impaired
-                - Color: '#AAAAAA'
+                - Color: '#DFE3E4'
                   Element:
                     FieldId: be95ee21-3edb-4a9c-93d4-7cd392782e71.3.1711658988228
                     FieldValue: No status
@@ -5691,15 +5736,15 @@ dashboards:
                 SelectedFieldOptions:
                 - CustomLabel: Service
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.service.11.1725487238726
-                  Width: 120px
+                  Width: 114px
                 - FieldId: 34d64760-870a-4b85-a621-724c0c8f27cf.12.1725487245429
-                  Width: 377px
+                  Width: 362px
                 - CustomLabel: Start
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.start_time.9.1724256941162
-                  Width: 91px
+                  Width: 85px
                 - CustomLabel: Days out
                   FieldId: 68936dbc-a510-4b2c-ae7c-03b1ce6d0169.12.1726691169211
-                  Width: 81px
+                  Width: 74px
                 - CustomLabel: Category
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.event_category_icon.11.1725941481315
                   Width: 152px
@@ -5708,25 +5753,28 @@ dashboards:
                   Width: 114px
                 - CustomLabel: Related Events
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.4.1712628646208
-                  Width: 112px
+                  Width: 108px
                 - CustomLabel: Regions
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.region.7.1724175144276
-                  Width: 91px
+                  Width: 67px
                 - CustomLabel: Payers
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.payer_account_id.11.1724907138767
-                  Width: 75px
+                  Width: 60px
                 - CustomLabel: Accounts
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.account_id.2.1712085867749
                   Width: 77px
                 - CustomLabel: Total Resources
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.2.1710953947578
                   Width: 112px
+                - CustomLabel: No Status
+                  FieldId: 5499f917-db38-47e9-90c1-84593d5e698d.13.1729079848564
+                  Width: 79px
                 - CustomLabel: Resolved
                   FieldId: 89d8de36-d8d1-4515-982f-17be70dcf0a8.6.1724170427728
-                  Width: 76px
+                  Width: 74px
                 - CustomLabel: Unresolved
                   FieldId: afc6fe37-136f-4dab-91d3-3ec6e25e237a.10.1724245575979
-                  Width: 87px
+                  Width: 85px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -5799,6 +5847,13 @@ dashboards:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
+                        ColumnName: is_non_status
+                        DataSetIdentifier: health_events_view
+                      FieldId: 5499f917-db38-47e9-90c1-84593d5e698d.13.1729079848564
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
                         ColumnName: is_resource_resolved
                         DataSetIdentifier: health_events_view
                       FieldId: 89d8de36-d8d1-4515-982f-17be70dcf0a8.6.1724170427728
@@ -5843,6 +5898,10 @@ dashboards:
                   FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.payer_account_id.11.1724907138767
                   NegativeColor: '#DE3B00'
                   PositiveColor: '#6197E2'
+              - DataBars:
+                  FieldId: 5499f917-db38-47e9-90c1-84593d5e698d.13.1729079848564
+                  NegativeColor: '#DE3B00'
+                  PositiveColor: '#EEEEEE'
               TableOptions:
                 CellStyle:
                   Height: 23
@@ -6051,6 +6110,9 @@ dashboards:
                     Value:
                       SelectAllValueOptions: ALL_VALUES
                   - DestinationParameterName: Service
+                    Value:
+                      SelectAllValueOptions: ALL_VALUES
+                  - DestinationParameterName: StartTime
                     Value:
                       SelectAllValueOptions: ALL_VALUES
               CustomActionId: 9e63ee02-95d9-493e-8c43-38487bcaa66d
@@ -6304,7 +6366,7 @@ dashboards:
               SearchOptions:
                 Visibility: HIDDEN
               SelectAllOptions:
-                Visibility: HIDDEN
+                Visibility: VISIBLE
               TitleOptions:
                 FontConfiguration:
                   FontSize:
@@ -7282,7 +7344,7 @@ dashboards:
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                     FieldValue: NO STATUS
-                - Color: '#464343'
+                - Color: '#DFE3E4'
                   Element:
                     FieldId: a17df69f-8a76-4730-80f0-82ac4b31daf6.2.1718781988978
                     FieldValue: No status
@@ -7762,7 +7824,7 @@ dashboards:
                 Narrative: "<narrative>\n  <block align=\"center\">\n    <inline color=\"\
                   Accent\" font-size=\"68.8px\">\n      <b>Heath Events Dashboard</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ color=\"#dbdbdb\" font-size=\"54.88px\">\n      <b>v2.0.1</b>\n    </inline>\n\
+                  \ color=\"#dbdbdb\" font-size=\"54.88px\">\n      <b>v2.0.2</b>\n    </inline>\n\
                   \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"\
                   22.4px\">\_\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"\
                   >\n    <inline font-size=\"22.4px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/health-events\"\
