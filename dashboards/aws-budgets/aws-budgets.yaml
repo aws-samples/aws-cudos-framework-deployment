@@ -1152,7 +1152,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: "<visual-title>\n  Budget Summary by\n  <parameter>${GroupBy}</parameter>\n\
+                RichText: "<visual-title>\n  Budget Summary by\_\n  <parameter>${GroupBy}</parameter>\n\
                   \  \_This Month\n</visual-title>"
               Visibility: VISIBLE
             VisualId: 4b2805c8-dec6-448f-8153-9e49b7af07dd
@@ -1451,7 +1451,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: "<visual-title>\n  Budget Summary by\n  <parameter>${GroupBy}</parameter>\n\
+                RichText: "<visual-title>\n  Budget Summary by\_\n  <parameter>${GroupBy}</parameter>\n\
                   \  \_This Month\n</visual-title>"
               Visibility: VISIBLE
             VisualId: 9b824440-6ee3-4d38-a536-f86dcf25ef5d
@@ -1624,7 +1624,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: "<visual-title>\n  Budget Distribution from\n  <parameter>${GroupBy}</parameter>\n\
+                RichText: "<visual-title>\n  Budget Distribution from\_\n  <parameter>${GroupBy}</parameter>\n\
                   \  \_to Budget Level\n</visual-title>"
               Visibility: VISIBLE
             VisualId: f886ae6d-4d75-45f0-858f-7cf93ecce111
