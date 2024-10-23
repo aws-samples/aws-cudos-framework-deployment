@@ -601,6 +601,18 @@ views:
       views:
         - compute_optimizer_lambda_lines
 
+  compute_optimizer_rds_storage_options:
+    File: co/rds_storage_options.sql
+    dependsOn:
+      views:
+        - compute_optimizer_rds_instance_lines
+
+  compute_optimizer_rds_instance_options:
+    File: co/rds_instance_options.sql
+    dependsOn:
+      views:
+        - compute_optimizer_rds_instance_lines
+
   compute_optimizer_all_options:
     File: co/all_options.sql
     dependsOn:
