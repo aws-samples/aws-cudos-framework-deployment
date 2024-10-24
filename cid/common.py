@@ -499,7 +499,6 @@ class Cid():
                 logger.info(f'Removing unknown dataset "{name}" ({id}) from dashboard {dashboard_id}')
                 del dashboard_datasets[name]
 
-        compatible = True
         if dashboard_definition.get('templateId'):
             # Get QuickSight template details
             try:
@@ -512,7 +511,6 @@ class Cid():
                 raise CidCritical(exc) # Cannot proceed without a valid template
             dashboard_definition['sourceTemplate'] = source_template
             print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
-            compatible = self.check_dashboard_version_compatibility(dashboard_id)
         elif dashboard_definition.get('data'):
             data = dashboard_definition.get('data')
             params = self.get_template_parameters(dashboard_definition.get('parameters', dict()))
@@ -527,7 +525,7 @@ class Cid():
         else:
             raise CidCritical('Definition of dashboard resource must contain data or template_id')
 
-
+        compatible = self.check_dashboard_version_compatibility(dashboard_id)
         if not recursive and compatible == False:
             if get_parameter(
                 param_name=f'confirm-recursive',
@@ -1070,46 +1068,21 @@ class Cid():
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         except CidCritical:
-            dashboard = None
-        if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
-        if not isinstance(dashboard.deployedTemplate, CidQsTemplate):
-            print(f'Dashboard "{dashboard_id}" does not have a versioned template')
-            return None
-        if not isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            print(f"Cannot access QuickSight source template for {dashboard_id}")
-            return None
-        try:
-            cid_version = dashboard.deployedTemplate.cid_version
-        except ValueError:
-            logger.debug("The cid version of the deployed dashboard could not be retrieved")
-            cid_version = "N/A"
-
-        try:
-            cid_version_latest = dashboard.sourceTemplate.cid_version
-        except ValueError:
-            logger.debug("The latest version of the dashboard could not be retrieved")
-            cid_version_latest = "N/A"
 
         if dashboard.latest:
             cid_print("You are up to date!")
-            cid_print(f"  Version    {cid_version}")
-            cid_print(f"  VersionId  {dashboard.deployed_version} ")
+            cid_print(f"  Version    {dashboard.cid_version}")
         else:
             cid_print(f"An update is available:")
-            cid_print("              Deployed -> Latest")
-            cid_print(f"  Version    {str(cid_version): <9}   {str(cid_version_latest): <9}")
-            cid_print(f"  VersionId  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <9}")
+            cid_print(f"  Version    {dashboard.cid_version: <9} ->  {str(cid_version_latest): <9}")
 
-        # Check if version are compatible
-        compatible = None
         try:
-            compatible = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
+            return dashboard.cid_version.compatible_versions(dashboard.cid_version)
         except ValueError as exc:
             logger.info(exc)
-
-        return compatible
+        return None
 
     def update_dashboard(self, dashboard_id, dashboard_definition):
 
@@ -1118,29 +1091,26 @@ class Cid():
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return
 
-        print(f'\nChecking for updates...')
         if isinstance(dashboard.deployedTemplate, CidQsTemplate):
             print(f'Deployed template: {dashboard.deployedTemplate.arn}')
-        else:
-            print(f'Deployed template: Not available')
         if isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
-        else:
-            print('Unable to determine dashboard source.')
+            print(f"Latest template:   {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
 
-        # Update dashboard
-        print(f'\nUpdating {dashboard_id}')
-        logger.debug(f"Updating {dashboard_id}")
+        try:
+            cid_print(f'\nUpdating {dashboard_id} from <BOLD>{dashboard.cid_version}<END> to <BOLD>{dashboard.cid_version_latest}<END>')
+        except:
+            cid_print(f'\nUpdating {dashboard_id}')
+            logger.debug('Failed to define versions. Still continue.')
 
         try:
             self.qs.update_dashboard(dashboard, dashboard_definition)
             print('Update completed\n')
             dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)
             self.track('updated', dashboard_id)
-        except Exception as e:
+        except Exception as exc:
             # Catch exception and dump a reason
-            logger.debug(e, exc_info=True)
-            print(f'failed with an error message: {e}')
+            logger.debug(exc, exc_info=True)
+            print(f'failed with an error message: {exc}')
 
         return dashboard_id
 
