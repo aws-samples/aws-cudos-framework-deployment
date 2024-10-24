@@ -283,6 +283,12 @@ Conditions:
       - !Condition NeedQuickSightDataSourceRole
       - !Condition NeedDataBucketsKms
   NeedPermissionsBoundary: !Not [!Equals [ !Ref PermissionsBoundary, "" ]]
+  IsChinaOrGovCloudRegion:
+    Fn::Or:
+      - !Equals [!Ref "AWS::Region", "cn-north-1"]
+      - !Equals [!Ref "AWS::Region", "cn-northwest-1"]
+      - !Equals [!Ref "AWS::Region", "us-gov-east-1"]
+      - !Equals [!Ref "AWS::Region", "us-gov-west-1"]
 
 Resources:
   SpiceRefreshExecutionRole: #Role needed to schedule spice ingestion for the datasets not used by default
@@ -1686,6 +1692,7 @@ Resources:
         quicksight-user: !Ref QuickSightUser
         account-map-source: 'dummy' #initial
         share-with-account: !Ref ShareDashboard
+        resources: !If [IsChinaOrGovCloudRegion, 'https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/hub/cudos/CUDOS-v5.yaml', !Ref 'AWS::NoValue']
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
