@@ -165,7 +165,7 @@ def export_analysis(qs, athena, glue):
                 if views_name in athena._resources.get('views') and not get_parameters().get('export-known-datasets'):
                     cid_print(f'    Athena view <BOLD>{views_name}<END> is in resources. Skipping')
                 else:
-                    all_views_and_databases.append((views_name, database_name)
+                    all_views_and_databases.append((views_name, database_name))
             elif 'CustomSql' in value and 'DataSourceArn' in value['CustomSql']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like CustomSql athena dataset")
                 value['CustomSql']['DataSourceArn'] = '${athena_datasource_arn}'
