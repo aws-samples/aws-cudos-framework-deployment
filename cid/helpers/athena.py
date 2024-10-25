@@ -494,9 +494,6 @@ class Athena(CidBase):
                     dep_view = dep_view.replace('"', '')
                     if len(dep_view.split('.')) == 2:
                         dep_database, dep_view_name = dep_view.split('.')
-                        if dep_database != self.DatabaseName:
-                            logger.error(f'The view {view} has a dependency on {dep_view}. CID cannot manage multiple Databases. Please move {dep_view_name} to Database {self.DatabaseName}. Skipping dependency.')
-                            continue
                     dep_view = dep_view.split('.')[-1]
                     if dep_view not in all_views:
                         _recursively_process_view(dep_view)
