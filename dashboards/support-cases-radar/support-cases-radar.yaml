@@ -1650,14 +1650,6 @@ datasets:
               Type: STRING
             - Name: account_id
               Type: STRING
-            - Name: region_city
-              Type: STRING
-            - Name: region_latitude
-              Type: STRING
-            - Name: region_longitude
-              Type: STRING
-            - Name: region_timezone
-              Type: STRING
         cddcae52-1ce1-43ed-bf75-4883a0830a81:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -1737,10 +1729,6 @@ datasets:
               - communication_sequence
               - account_name
               - account_id[account_map]
-              - region_city
-              - region_latitude
-              - region_longitude
-              - region_timezone
           Source:
             JoinInstruction:
               LeftOperand: 0ed31dde-ec87-40c0-9a50-01737a0014b1
