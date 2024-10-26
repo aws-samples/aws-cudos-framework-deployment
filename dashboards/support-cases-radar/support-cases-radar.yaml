@@ -1797,7 +1797,7 @@ datasets:
     parameters:
       data_collection_database_name:
         type: athena
-        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'budgets_data'
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'support_cases_data'
         default: optimization_data
         description: "Enter the name of the data collection database"
         global: True
@@ -1842,7 +1842,7 @@ views:
     parameters:
       data_collection_database_name:
         type: athena
-        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'budgets_data'
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'support_cases_data'
         default: optimization_data
         description: "Enter the name of the data collection database"
         global: True
