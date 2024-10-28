@@ -2116,7 +2116,7 @@ views:
       , TRY(json_extract_scalar(FILTER(casted_tags, (x) -> (json_extract_scalar(x, '$.key') = 'cid:budget-level'))[1], '$.value')) as budget_level
       FROM
         budgets_with_casted_tags
-      WHERE ((budgettype = 'COST') AND (costfilters.filter[1] = 'None'))
+      WHERE (budgettype = 'COST')
       GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
     parameters:
       data_collection_database_name:
