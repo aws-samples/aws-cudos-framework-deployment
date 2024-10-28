@@ -18,8 +18,14 @@ dashboards:
           SheetContentType: INTERACTIVE
       CalculatedFields:
       - DataSetIdentifier: ca_summary_view
+        Expression: linkedaccountname
+        Name: Account
+      - DataSetIdentifier: ca_summary_view
         Expression: ifelse({payer_id} ='0', 'All','All')
         Name: All
+      - DataSetIdentifier: ca_summary_view
+        Expression: concat(Account,':',service,':',usagetype,':',region)
+        Name: Details
       - DataSetIdentifier: ca_summary_view
         Expression: |-
           ifelse(${GroupBy}='Account ID',linkedaccount,
@@ -29,16 +35,124 @@ dashboards:
           All)
         Name: Group by
       - DataSetIdentifier: ca_summary_view
-        Expression: |2-
-          totalimpactpercentage * 100
+        Expression: '{Max Last Update} = anomalylastupdatedate'
+        Name: Last Update Date is Max Last Update Date
+      - DataSetIdentifier: ca_summary_view
+        Expression: maxOver(anomalylastupdatedate, [anomalyid], PRE_AGG)
+        Name: Max Last Update
+      - DataSetIdentifier: ca_summary_view
+        Expression: totalactualspend
+        Name: Total Actual Spend
+      - DataSetIdentifier: ca_summary_view
+        Expression: totalexpectedspend
+        Name: Total Expected Spend
+      - DataSetIdentifier: ca_summary_view
+        Expression: '{tota_impact}'
+        Name: Total Impact
+      - DataSetIdentifier: ca_summary_view
+        Expression: totalimpactpercentage * 100
         Name: percentage
       - DataSetIdentifier: ca_summary_view
-        Expression: |2-
+        Expression: |-
           ifelse (
-            dateDiff(anomalylastupdatedate,now(),'DD') >= ${numberofdays},"Closed","Open"
+            dateDiff(anomalylastupdatedate,now(),'DD') >= ${numberofdays},"Past","Active"
           )
         Name: status
       ColumnConfigurations:
+      - Column:
+          ColumnName: Total Actual Spend
+          DataSetIdentifier: ca_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                NumberScale: AUTO
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - Column:
+          ColumnName: Total Expected Spend
+          DataSetIdentifier: ca_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                NumberScale: AUTO
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - Column:
+          ColumnName: Total Impact
+          DataSetIdentifier: ca_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                NumberScale: AUTO
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - Column:
+          ColumnName: anomaly_start_date
+          DataSetIdentifier: ca_summary_view
+        FormatConfiguration:
+          DateTimeFormatConfiguration:
+            DateTimeFormat: MMM D YYYY, h A
+            NullValueFormatConfiguration:
+              NullString: 'null'
+      - Column:
+          ColumnName: maximpact
+          DataSetIdentifier: ca_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - ColorsConfiguration:
+          CustomColors:
+          - Color: '#DE3B00'
+            FieldValue: Open
+        Column:
+          ColumnName: status
+          DataSetIdentifier: ca_summary_view
       - Column:
           ColumnName: tota_impact
           DataSetIdentifier: ca_summary_view
@@ -56,8 +170,27 @@ dashboards:
                     Symbol: COMMA
                     Visibility: VISIBLE
                 Symbol: USD
+      - Column:
+          ColumnName: totalactualspend
+          DataSetIdentifier: ca_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
       DataSetIdentifierDeclarations:
-      - DataSetArn: arn:aws:quicksight:::dataset/19a16987-6c8f-45f6-8a60-f43b755f9f19
+      - DataSetArn: arn:aws:quicksight:::dataset/ca_summary_view
         Identifier: ca_summary_view
       FilterGroups:
       - CrossDataset: SINGLE_DATASET
@@ -79,34 +212,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
+              SheetId: 307f2c1e-fcf1-42f7-b0a2-fa4af0e48d1c
               VisualIds:
-              - 24488232-a887-4a68-b5d2-bc818d94a7d3
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: dd8a5f73-e526-4103-ba5b-c2e415d6c938
-        Filters:
-        - TopBottomFilter:
-            AggregationSortConfigurations:
-            - AggregationFunction:
-                NumericalAggregationFunction:
-                  SimpleNumericalAggregation: SUM
-              Column:
-                ColumnName: tota_impact
-                DataSetIdentifier: ca_summary_view
-              SortDirection: DESC
-            Column:
-              ColumnName: linkedaccountname
-              DataSetIdentifier: ca_summary_view
-            FilterId: c11b19f2-11da-4b5b-ac37-60251c788188
-            Limit: 10
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
-              VisualIds:
-              - 120d7e67-9cc0-4777-ae7f-5e1af2e2bb25
+              - adcfaa2c-7ec8-4289-8625-1690a5c855f3
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 06509af4-ecd5-4adc-be02-4520ca5fc166
@@ -128,64 +236,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
-        Status: ENABLED
-      - CrossDataset: ALL_DATASETS
-        FilterGroupId: 3f3e05ee-c9fa-4196-85db-115626420d99
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: linkedaccount
-              DataSetIdentifier: ca_summary_view
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: linkedaccount
-            FilterId: 18c88df6-29a8-44af-a423-260f4f507ec2
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
-        Status: ENABLED
-      - CrossDataset: ALL_DATASETS
-        FilterGroupId: 0d15e209-4893-4faa-8104-da1bc7e3f32c
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: linkedaccountname
-              DataSetIdentifier: ca_summary_view
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: AccountName
-            FilterId: 8dba3e09-b28b-44cb-9739-90526a196b48
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
-        Status: ENABLED
-      - CrossDataset: ALL_DATASETS
-        FilterGroupId: 8112811a-8c42-484f-ac6d-4aa7de80204e
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: status
-              DataSetIdentifier: ca_summary_view
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: status
-            FilterId: ab6a6283-78c6-4131-85ad-01c5a747845d
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
+              SheetId: 307f2c1e-fcf1-42f7-b0a2-fa4af0e48d1c
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 700a562d-68f8-4883-8ee9-c3914b3bcdb3
@@ -199,131 +250,181 @@ dashboards:
             IncludeMinimum: false
             NullOption: ALL_VALUES
             RangeMinimum:
-              Parameter: totalimpact
+              Parameter: TotalImpactThreshold
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
+              SheetId: 307f2c1e-fcf1-42f7-b0a2-fa4af0e48d1c
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 78824e95-a6fe-4ed3-a52a-5895000fd727
+        FilterGroupId: 1ff15e80-a055-4588-b878-c7a78c02d30d
         Filters:
-        - TopBottomFilter:
-            AggregationSortConfigurations:
-            - AggregationFunction:
-                NumericalAggregationFunction:
-                  SimpleNumericalAggregation: SUM
-              Column:
-                ColumnName: totalactualspend
-                DataSetIdentifier: ca_summary_view
-              SortDirection: DESC
+        - NumericEqualityFilter:
             Column:
-              ColumnName: service
+              ColumnName: Last Update Date is Max Last Update Date
               DataSetIdentifier: ca_summary_view
-            FilterId: 89033000-dc1e-4c09-8e1a-eae4e9edc308
-            Limit: 10
+            FilterId: 35911ca4-beb7-412b-b629-d0fd34e0d9c2
+            MatchOperator: EQUALS
+            NullOption: ALL_VALUES
+            Value: 1.0
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
+              SheetId: 307f2c1e-fcf1-42f7-b0a2-fa4af0e48d1c
               VisualIds:
-              - a98ae705-0b31-4a15-b1ba-eafdf37da041
+              - cfe3a1a5-adb0-45d2-9a8b-fd5d64d9ccf9
+              - adcfaa2c-7ec8-4289-8625-1690a5c855f3
+              - ad3c54e7-cbcd-4f2e-81e5-0b5a69909476
+              - c8851433-215a-4447-bbb0-aec332986e8d
+              - 6d8ba6b3-cbda-4678-b244-e2830bf60f9b
         Status: ENABLED
-      - CrossDataset: ALL_DATASETS
-        FilterGroupId: e9aba4b4-ed11-4c12-8763-516605af7b7e
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 7f9a67a4-8184-47db-853a-c8499d232dbd
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: anomaly_start_date
+              DataSetIdentifier: ca_summary_view
+            FilterId: 806e916e-ef65-4b1f-9a55-722a0f2368a8
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: LAST
+            RelativeDateValue: 4
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 307f2c1e-fcf1-42f7-b0a2-fa4af0e48d1c
+              VisualIds:
+              - b8cec74c-3349-4000-bc25-f902d45db291
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 08e726eb-0dcb-43c4-9a45-fd162a7087db
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: linkedaccountname
+              DataSetIdentifier: ca_summary_view
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            DefaultFilterControlConfiguration:
+              ControlOptions:
+                DefaultDropdownOptions:
+                  DisplayOptions:
+                    SelectAllOptions:
+                      Visibility: VISIBLE
+                    TitleOptions:
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
+                      Visibility: VISIBLE
+                  Type: MULTI_SELECT
+              Title: Account Name
+            FilterId: e1e906b6-de99-44f5-b4b2-005d77060433
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: ca44a301-3d23-43e1-aaa6-ba535504e4e1
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: linkedaccount
+              DataSetIdentifier: ca_summary_view
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            DefaultFilterControlConfiguration:
+              ControlOptions:
+                DefaultDropdownOptions:
+                  DisplayOptions:
+                    SelectAllOptions:
+                      Visibility: VISIBLE
+                    TitleOptions:
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
+                      Visibility: VISIBLE
+                  Type: MULTI_SELECT
+              Title: Linked Account Id
+            FilterId: 01da955f-4790-4186-a105-3b57b03b7d8c
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 22054d1c-c6a1-4b2c-92f2-bc5306b6569d
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: status
+              DataSetIdentifier: ca_summary_view
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            DefaultFilterControlConfiguration:
+              ControlOptions:
+                DefaultDropdownOptions:
+                  DisplayOptions:
+                    SelectAllOptions:
+                      Visibility: VISIBLE
+                    TitleOptions:
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
+                      Visibility: VISIBLE
+                  Type: MULTI_SELECT
+              Title: Status
+            FilterId: a1119975-7777-4e8c-9c6b-6d409e100946
+        ScopeConfiguration:
+          AllSheets: {}
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: f93fa598-e93b-4f4a-93f7-582b2d7e0776
         Filters:
         - CategoryFilter:
             Column:
               ColumnName: payer_id
               DataSetIdentifier: ca_summary_view
             Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: payeraccount
-            FilterId: 9066dc04-85a9-46d9-86f8-beadd7bfccaf
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: f9f5db40-12d1-4aad-85e9-7d76f2678586
-        Filters:
-        - TopBottomFilter:
-            AggregationSortConfigurations:
-            - AggregationFunction:
-                NumericalAggregationFunction:
-                  SimpleNumericalAggregation: SUM
-              Column:
-                ColumnName: tota_impact
-                DataSetIdentifier: ca_summary_view
-              SortDirection: DESC
-            Column:
-              ColumnName: region
-              DataSetIdentifier: ca_summary_view
-            FilterId: b8147bad-8857-4d40-89b3-66a3fead5458
-            Limit: 10
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
-              VisualIds:
-              - 92cc7652-7613-4d12-b595-b50c322a2181
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 02132560-a0a0-4f5c-8b26-1117e90df876
-        Filters:
-        - TopBottomFilter:
-            AggregationSortConfigurations:
-            - AggregationFunction:
-                NumericalAggregationFunction:
-                  SimpleNumericalAggregation: SUM
-              Column:
-                ColumnName: tota_impact
-                DataSetIdentifier: ca_summary_view
-              SortDirection: DESC
-            Column:
-              ColumnName: service
-              DataSetIdentifier: ca_summary_view
-            FilterId: 383e43fa-fefd-4d5b-acfa-dbfdd0cee1a6
-            Limit: 10
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
-              VisualIds:
-              - d21a3831-b55a-439d-b59a-7c674bdc4fbb
-        Status: ENABLED
-      - CrossDataset: ALL_DATASETS
-        FilterGroupId: ff0d10dd-ab44-4432-a211-3ef44bdbebf5
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: Group by
-              DataSetIdentifier: ca_summary_view
-            Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
                 SelectAllOptions: FILTER_ALL_VALUES
-            FilterId: b5f7d6e5-e9a0-409b-8c9d-7da66e1da28d
+            DefaultFilterControlConfiguration:
+              ControlOptions:
+                DefaultDropdownOptions:
+                  DisplayOptions:
+                    SelectAllOptions:
+                      Visibility: VISIBLE
+                    TitleOptions:
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
+                      Visibility: VISIBLE
+                  Type: MULTI_SELECT
+              Title: Management Account Id
+            FilterId: 5dba49d6-0fca-49c4-9205-70495bf03727
         ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 71953f59-5361-4610-be0d-088c270b9666
+          AllSheets: {}
         Status: ENABLED
       ParameterDeclarations:
       - DecimalParameterDeclaration:
           DefaultValues:
             StaticValues:
-            - 200.0
-          Name: totalimpact
+            - 0.0
+          Name: TotalImpactThreshold
           ParameterValueType: SINGLE_VALUED
           ValueWhenUnset:
             ValueWhenUnsetOption: RECOMMENDED_VALUE
@@ -358,8 +459,8 @@ dashboards:
       - StringParameterDeclaration:
           DefaultValues:
             StaticValues:
-            - Closed
-            - Open
+            - Active
+            - Past
           Name: status
           ParameterValueType: MULTI_VALUED
           ValueWhenUnset:
@@ -395,6 +496,19 @@ dashboards:
           TimeGranularity: DAY
       Sheets:
       - ContentType: INTERACTIVE
+        FilterControls:
+        - CrossSheet:
+            FilterControlId: cd63ee4a-9fdc-4863-86b0-0dfef8aa8f81
+            SourceFilterId: e1e906b6-de99-44f5-b4b2-005d77060433
+        - CrossSheet:
+            FilterControlId: abac51bc-d48c-41c0-a6ea-209efdaaed49
+            SourceFilterId: 01da955f-4790-4186-a105-3b57b03b7d8c
+        - CrossSheet:
+            FilterControlId: afc230a2-c9a2-4cd1-b0b5-32c03d33a23c
+            SourceFilterId: a1119975-7777-4e8c-9c6b-6d409e100946
+        - CrossSheet:
+            FilterControlId: f00d211e-4257-40c4-b3c1-8c8e8e80a18e
+            SourceFilterId: 5dba49d6-0fca-49c4-9205-70495bf03727
         Layouts:
         - Configuration:
             GridLayout:
@@ -404,95 +518,59 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 8
+                ColumnSpan: 14
+                ElementId: 06d8fd74-63c8-4f1e-8729-7b507588fe60
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 4
+              - ColumnIndex: 14
+                ColumnSpan: 17
+                ElementId: 12639c44-36a9-4a31-9aff-39825fe1e91f
+                ElementType: TEXT_BOX
+                RowIndex: 0
+                RowSpan: 4
+              - ColumnIndex: 31
+                ColumnSpan: 5
                 ElementId: 0242b4bf-9667-4886-afc8-156564e737d9
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
-                RowSpan: 3
-              - ColumnIndex: 8
-                ColumnSpan: 13
-                ElementId: a10b6e7d-f99d-45ec-80fa-cde786f87d2a
-                ElementType: TEXT_BOX
-                RowIndex: 0
-                RowSpan: 1
-              - ColumnIndex: 21
-                ColumnSpan: 15
-                ElementId: 75496596-ec3b-4932-9723-3a11e50c0474
-                ElementType: VISUAL
-                RowIndex: 0
-                RowSpan: 5
-              - ColumnIndex: 8
-                ColumnSpan: 13
-                ElementId: 643a37ff-5efa-46c2-ab0b-7a892205b5e4
-                ElementType: VISUAL
-                RowIndex: 1
-                RowSpan: 6
-              - ColumnIndex: 0
-                ColumnSpan: 8
-                ElementId: daed692c-42a2-4974-816e-2ea370479e97
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 3
-                RowSpan: 2
-              - ColumnIndex: 0
-                ColumnSpan: 8
-                ElementId: 2f70293a-fd1b-43c3-bd35-73679e64d7d6
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 5
-                RowSpan: 2
-              - ColumnIndex: 21
-                ColumnSpan: 7
-                ElementId: d21a3831-b55a-439d-b59a-7c674bdc4fbb
-                ElementType: VISUAL
-                RowIndex: 5
-                RowSpan: 6
-              - ColumnIndex: 28
-                ColumnSpan: 8
-                ElementId: 120d7e67-9cc0-4777-ae7f-5e1af2e2bb25
-                ElementType: VISUAL
-                RowIndex: 5
-                RowSpan: 3
-              - ColumnIndex: 0
-                ColumnSpan: 8
-                ElementId: 7efa69f9-81df-4230-ae46-f5c47d97851e
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 7
-                RowSpan: 2
-              - ColumnIndex: 8
-                ColumnSpan: 13
-                ElementId: 1ffd5f49-7d1b-448e-8f65-88650bb12191
-                ElementType: VISUAL
-                RowIndex: 7
                 RowSpan: 4
-              - ColumnIndex: 28
-                ColumnSpan: 8
-                ElementId: 92cc7652-7613-4d12-b595-b50c322a2181
-                ElementType: VISUAL
-                RowIndex: 8
-                RowSpan: 3
               - ColumnIndex: 0
-                ColumnSpan: 8
-                ElementId: bcda09e9-b05d-4d2f-9838-dc65ebbfdab7
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 9
-                RowSpan: 2
-              - ColumnIndex: 0
-                ColumnSpan: 19
-                ElementId: 3d702097-ea7a-4a34-b4fb-435e3ae2005c
+                ColumnSpan: 31
+                ElementId: ad3c54e7-cbcd-4f2e-81e5-0b5a69909476
                 ElementType: VISUAL
-                RowIndex: 11
+                RowIndex: 4
                 RowSpan: 10
-              - ColumnIndex: 19
-                ColumnSpan: 17
-                ElementId: a98ae705-0b31-4a15-b1ba-eafdf37da041
+              - ColumnIndex: 31
+                ColumnSpan: 5
+                ElementId: c8851433-215a-4447-bbb0-aec332986e8d
                 ElementType: VISUAL
-                RowIndex: 11
+                RowIndex: 4
+                RowSpan: 10
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: 6d8ba6b3-cbda-4678-b244-e2830bf60f9b
+                ElementType: VISUAL
+                RowIndex: 14
+                RowSpan: 10
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: cfe3a1a5-adb0-45d2-9a8b-fd5d64d9ccf9
+                ElementType: VISUAL
+                RowIndex: 14
                 RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 24488232-a887-4a68-b5d2-bc818d94a7d3
+                ElementId: adcfaa2c-7ec8-4289-8625-1690a5c855f3
                 ElementType: VISUAL
-                RowIndex: 21
-                RowSpan: 11
+                RowIndex: 24
+                RowSpan: 14
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: b8cec74c-3349-4000-bc25-f902d45db291
+                ElementType: VISUAL
+                RowIndex: 38
+                RowSpan: 14
         Name: AWS Cost Anomalies
         ParameterControls:
         - DateTimePicker:
@@ -517,112 +595,25 @@ dashboards:
             ParameterControlId: 2f70293a-fd1b-43c3-bd35-73679e64d7d6
             SourceParameterName: startdate
             Title: Start Date
-        - List:
-            DisplayOptions:
-              SearchOptions:
-                Visibility: HIDDEN
-              SelectAllOptions:
-                Visibility: VISIBLE
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            ParameterControlId: e93bf3e8-31a7-4ff5-8f3a-f57287f2c218
-            SelectableValues:
-              LinkToDataSetColumn:
-                ColumnName: linkedaccountname
-                DataSetIdentifier: ca_summary_view
-            SourceParameterName: AccountName
-            Title: Account Name
-            Type: SINGLE_SELECT
-        - List:
-            DisplayOptions:
-              SearchOptions:
-                Visibility: HIDDEN
-              SelectAllOptions:
-                Visibility: VISIBLE
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            ParameterControlId: e9616d68-4a5b-4757-8cd7-4b45ae118a2f
-            SelectableValues:
-              Values:
-              - Account ID
-              - Account Name
-              - All
-              - Payer Account ID
-            SourceParameterName: GroupBy
-            Title: Group By
-            Type: SINGLE_SELECT
-        - Dropdown:
-            DisplayOptions:
-              SelectAllOptions:
-                Visibility: VISIBLE
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            ParameterControlId: f9ead3c8-57c6-4416-b2f6-717b9c5f678e
-            SelectableValues:
-              LinkToDataSetColumn:
-                ColumnName: linkedaccount
-                DataSetIdentifier: ca_summary_view
-            SourceParameterName: linkedaccount
-            Title: Account ID
-            Type: MULTI_SELECT
-        - Dropdown:
-            DisplayOptions:
-              SelectAllOptions:
-                Visibility: VISIBLE
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            ParameterControlId: df8dcea1-b182-43ac-86d0-ec07024eb0a6
-            SelectableValues:
-              LinkToDataSetColumn:
-                ColumnName: payer_id
-                DataSetIdentifier: ca_summary_view
-            SourceParameterName: payeraccount
-            Title: Payer Account ID
-            Type: SINGLE_SELECT
-        - Dropdown:
-            DisplayOptions:
-              SelectAllOptions:
-                Visibility: VISIBLE
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            ParameterControlId: bcda09e9-b05d-4d2f-9838-dc65ebbfdab7
-            SelectableValues:
-              Values:
-              - Closed
-              - Open
-            SourceParameterName: status
-            Title: Status
-            Type: MULTI_SELECT
         - Slider:
             DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
               TitleOptions:
                 FontConfiguration:
                   FontSize:
                     Relative: MEDIUM
                 Visibility: VISIBLE
-            MaximumValue: 1000000.0
+            MaximumValue: 100000.0
             MinimumValue: 0.0
             ParameterControlId: 0242b4bf-9667-4886-afc8-156564e737d9
-            SourceParameterName: totalimpact
-            StepSize: 2000.0
-            Title: Filter by Total Impact Greater then by input value
+            SourceParameterName: TotalImpactThreshold
+            StepSize: 200.0
+            Title: Total Impact Greater then
         - TextField:
             DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
               PlaceholderOptions:
                 Visibility: VISIBLE
               TitleOptions:
@@ -632,173 +623,482 @@ dashboards:
                 Visibility: VISIBLE
             ParameterControlId: daed692c-42a2-4974-816e-2ea370479e97
             SourceParameterName: numberofdays
-            Title: Number of X days to consider Closed Anomalies
+            Title: Days to consider Active
         SheetControlLayouts:
         - Configuration:
             GridLayout:
               Elements:
-              - ColumnIndex: 0
-                ColumnSpan: 2
-                ElementId: e9616d68-4a5b-4757-8cd7-4b45ae118a2f
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 0
-                RowSpan: 1
               - ColumnIndex: 2
-                ColumnSpan: 3
-                ElementId: df8dcea1-b182-43ac-86d0-ec07024eb0a6
-                ElementType: PARAMETER_CONTROL
+                ColumnSpan: 2
+                ElementId: f00d211e-4257-40c4-b3c1-8c8e8e80a18e
+                ElementType: FILTER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-              - ColumnIndex: 5
-                ColumnSpan: 3
-                ElementId: f9ead3c8-57c6-4416-b2f6-717b9c5f678e
-                ElementType: PARAMETER_CONTROL
+              - ColumnIndex: 4
+                ColumnSpan: 2
+                ElementId: abac51bc-d48c-41c0-a6ea-209efdaaed49
+                ElementType: FILTER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 6
+                ColumnSpan: 2
+                ElementId: cd63ee4a-9fdc-4863-86b0-0dfef8aa8f81
+                ElementType: FILTER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
               - ColumnIndex: 8
-                ColumnSpan: 3
-                ElementId: e93bf3e8-31a7-4ff5-8f3a-f57287f2c218
+                ColumnSpan: 2
+                ElementId: afc230a2-c9a2-4cd1-b0b5-32c03d33a23c
+                ElementType: FILTER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 10
+                ColumnSpan: 2
+                ElementId: daed692c-42a2-4974-816e-2ea370479e97
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-        SheetId: 71953f59-5361-4610-be0d-088c270b9666
+              - ColumnIndex: 0
+                ColumnSpan: 2
+                ElementId: 2f70293a-fd1b-43c3-bd35-73679e64d7d6
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 1
+                RowSpan: 1
+              - ColumnIndex: 2
+                ColumnSpan: 2
+                ElementId: 7efa69f9-81df-4230-ae46-f5c47d97851e
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 1
+                RowSpan: 1
+        SheetId: 307f2c1e-fcf1-42f7-b0a2-fa4af0e48d1c
         TextBoxes:
-        - Content: |-
-            <text-box>
-              <block align="center">
-                <inline color="#61d1d6" font-family="Amazon Ember" font-size="14px">
-                  <b>By default, you can see the anomalies that are detected in the last 90 days.</b>
-                </inline>
-              </block>
-            </text-box>
-          SheetTextBoxId: a10b6e7d-f99d-45ec-80fa-cde786f87d2a
+        - Content: "<text-box>\n  <inline font-size=\"40px\">AWS Cost Anomalies Dashboard\_\
+            </inline>\n  <br/>\n  <inline font-size=\"20px\">Historical view on Cost Anomalies\
+            \ across Oraganizations</inline>\n</text-box>"
+          SheetTextBoxId: 06d8fd74-63c8-4f1e-8729-7b507588fe60
+        - Content: "<text-box>\n  <inline font-size=\"16px\">\n    <b>&#128161; Insights:</b>\n\
+            \  </inline>\n  <br/>\n  <ul>\n    <li>\n      At least 1 cost anomaly monitor\
+            \ should be configured to view the results of cost anomaly detection [\n   \
+            \   <a href=\"https://catalog.workshops.aws/awscff/en-US/foundations/3-cost-anomaly\"\
+            \ target=\"_blank\">1</a>\n      ].\n    </li>\n    <li>\n      This dashbaord\
+            \ is build for reviews and long term analysis for reactive notification use\
+            \ built-in mechanism in AWS Cost Anomaly service [\n      <a href=\"https://docs.aws.amazon.com/cost-management/latest/userguide/ad-SNS.html\"\
+            \ target=\"_blank\">2</a>\n      ].\n    </li>\n    <li>\n      <inline color=\"\
+            #161e2d\" font-size=\"14px\">In the event that there is no clear root cause\
+            \ for the anomaly,\_\_</inline>\n      <inline font-size=\"14px\">Account Id,\
+            \ Account Name, Usage Type and Region recorded as\_</inline>\n      null\n \
+            \     <inline font-size=\"14px\">\_in the visuals [</inline>\n      <inline\
+            \ font-size=\"14px\">\n        <a href=\"https://aws.amazon.com/aws-cost-management/aws-cost-anomaly-detection/faqs/\"\
+            \ target=\"_blank\">3</a>\n      </inline>\n      <inline font-size=\"14px\"\
+            >].</inline>\n    </li>\n  </ul>\n</text-box>"
+          SheetTextBoxId: 12639c44-36a9-4a31-9aff-39825fe1e91f
         Visuals:
-        - InsightVisual:
-            Actions: []
-            DataSetIdentifier: ca_summary_view
-            InsightConfiguration:
-              Computations:
-              - TopBottomRanked:
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.2.1729867991947
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 5196277a-ddbe-4ac8-b168-bc39e9b85f42
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              CategoryAxis:
+                DataOptions:
+                  DateAxisOptions:
+                    MissingDateVisibility: VISIBLE
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
+              FieldWells:
+                BarChartAggregatedFieldWells:
                   Category:
-                    CategoricalDimensionField:
+                  - DateDimensionField:
                       Column:
-                        ColumnName: service
+                        ColumnName: anomalylastupdatedate
                         DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1686744080024
-                  ComputationId: f34fa7c9-8b4b-473a-af43-8f9131c695af
-                  Name: Top
-                  ResultSize: 5
-                  Type: TOP
-                  Value:
-                    NumericalMeasureField:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalylastupdatedate.2.1729867752015
+                      HierarchyId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalylastupdatedate.2.1729867752015
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: anomalyid
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.2.1729867991947
+                  Values:
+                  - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: tota_impact
                         DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.2.1688557465691
-              CustomNarrative:
-                Narrative: "<narrative>\n  Top\n  <if condition=\"Top.itemsCount &gt; 1\"\
-                  \ level=\"inline\">\n    <expression>Top.itemsCount</expression>\n  </if>\n\
-                  \  <expression>Top.categoryField.name</expression>\n  \_for total\n  <expression>Top.metricField.name</expression>\n\
-                  \  <if condition=\"Top.itemsCount &gt; 1\" level=\"inline\">\_are:</if>\n\
-                  \  <if condition=\"Top.itemsCount &lt; 2\" level=\"inline\">\_is:</if>\n\
-                  \  <br/>\n  <for level=\"block\" listExpression=\"Top.items\">\n    <ul>\n\
-                  \      <li>\n        <inline color=\"#21a0d7\">\n          <b>\n     \
-                  \       <expression>Top.items[index].categoryValue.formattedValue</expression>\n\
-                  \          </b>\n        </inline>\n        \_with\n        <expression>Top.items[index].metricValue.formattedValue</expression>\n\
-                  \      </li>\n    </ul>\n  </for>\n  <br/>\n</narrative>"
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.2.1729867766115
+              Legend:
+                Visibility: HIDDEN
+                Width: 287px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  ItemsLimit: 500
+                  OtherCategories: EXCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalylastupdatedate.2.1729867752015
+                ColorItemsLimit:
+                  ItemsLimit: 10
+                  OtherCategories: EXCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: EXCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalylastupdatedate.2.1729867752015
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.2.1729867766115
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.2.1729867991947
+                      Visibility: VISIBLE
+                  - ColumnTooltipItem:
+                      Aggregation:
+                        AttributeAggregationFunction:
+                          SimpleAttributeAggregation: UNIQUE_VALUE
+                      Column:
+                        ColumnName: service
+                        DataSetIdentifier: ca_summary_view
+                      Visibility: VISIBLE
+                  - ColumnTooltipItem:
+                      Aggregation:
+                        AttributeAggregationFunction:
+                          SimpleAttributeAggregation: UNIQUE_VALUE
+                      Column:
+                        ColumnName: Account
+                        DataSetIdentifier: ca_summary_view
+                      Visibility: VISIBLE
+                  - ColumnTooltipItem:
+                      Aggregation:
+                        AttributeAggregationFunction:
+                          SimpleAttributeAggregation: UNIQUE_VALUE
+                      Column:
+                        ColumnName: usagetype
+                        DataSetIdentifier: ca_summary_view
+                      Visibility: VISIBLE
+                  - ColumnTooltipItem:
+                      Aggregation:
+                        NumericalAggregationFunction:
+                          SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Total Actual Spend
+                        DataSetIdentifier: ca_summary_view
+                      Visibility: VISIBLE
+                  - ColumnTooltipItem:
+                      Aggregation:
+                        NumericalAggregationFunction:
+                          SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Total Expected Spend
+                        DataSetIdentifier: ca_summary_view
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                HierarchyId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalylastupdatedate.2.1729867752015
             Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Select anomaly in the table above to focus. More
+                  details available in the tooltips</visual-subtitle>
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: <visual-title>Top 5 Movers (Total Cost Impact)</visual-title>
+                RichText: <visual-title>Daily Cost Anomalies Total Impact</visual-title>
               Visibility: VISIBLE
-            VisualId: 75496596-ec3b-4932-9723-3a11e50c0474
-        - WordCloudVisual:
-            Actions: []
+            VisualId: b8cec74c-3349-4000-bc25-f902d45db291
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 3d608954-5fef-487c-9028-83b22d26a677
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
             ChartConfiguration:
+              BarsArrangement: CLUSTERED
+              CategoryAxis:
+                AxisLineVisibility: VISIBLE
+                ScrollbarOptions:
+                  Visibility: VISIBLE
+                  VisibleRange:
+                    PercentRange:
+                      From: 0.0
+                      To: 100.0
+              CategoryLabelOptions:
+                SortIconVisibility: HIDDEN
+                Visibility: HIDDEN
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: VISIBLE
               FieldWells:
-                WordCloudAggregatedFieldWells:
-                  GroupBy:
+                BarChartAggregatedFieldWells:
+                  Category:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: service
                         DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.0.1688557193615
-                  Size: []
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1725975644777
+                  Colors: []
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Total Actual Spend
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: ce4579ec-ce78-43eb-a49e-64499862b098.4.1729866290439
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Total Expected Spend
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: dd810294-c26c-499b-acbc-d8f38c797666.4.1729866311684
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Total Impact
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: 4f55cd1e-ee07-4cba-a75f-f2b1905f0ac3.3.1729866338320
+              Legend:
+                Height: 64px
+                Position: AUTO
+                Title:
+                  Visibility: HIDDEN
+                Visibility: VISIBLE
+                Width: 157px
+              Orientation: HORIZONTAL
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
-              WordCloudOptions: {}
+                CategorySort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: ce4579ec-ce78-43eb-a49e-64499862b098.4.1729866290439
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1725975644777
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: ce4579ec-ce78-43eb-a49e-64499862b098.4.1729866290439
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: dd810294-c26c-499b-acbc-d8f38c797666.4.1729866311684
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 4f55cd1e-ee07-4cba-a75f-f2b1905f0ac3.3.1729866338320
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: BASIC
+                TooltipVisibility: VISIBLE
+              ValueAxis:
+                GridLineVisibility: HIDDEN
+                TickLabelOptions:
+                  LabelOptions:
+                    Visibility: VISIBLE
             ColumnHierarchies: []
             Subtitle:
-              Visibility: VISIBLE
+              FormatText:
+                RichText: <visual-subtitle>Total Impact</visual-subtitle>
+              Visibility: HIDDEN
             Title:
               FormatText:
-                RichText: |-
-                  <visual-title>
-                    <inline font-size="14px">Top Service with high-cost anomaly impact</inline>
-                  </visual-title>
+                RichText: "<visual-title>Total Impact Cost\_</visual-title>"
               Visibility: VISIBLE
-            VisualId: d21a3831-b55a-439d-b59a-7c674bdc4fbb
-        - WordCloudVisual:
-            Actions: []
+            VisualId: 6d8ba6b3-cbda-4678-b244-e2830bf60f9b
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 8a3f3ec1-d96f-4fcb-a556-7391401524e2.2.1725973064206
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 0603c74c-c90d-465a-affd-276a3fedc19d
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
             ChartConfiguration:
+              BarsArrangement: STACKED
+              CategoryAxis:
+                AxisOffset: 15px
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                TotalsVisibility: VISIBLE
+                Visibility: VISIBLE
               FieldWells:
-                WordCloudAggregatedFieldWells:
-                  GroupBy:
+                BarChartAggregatedFieldWells:
+                  Category:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: linkedaccountname
+                        ColumnName: Account
                         DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.linkedaccountname.0.1686761251548
-                  Size: []
+                      FieldId: 8a3f3ec1-d96f-4fcb-a556-7391401524e2.2.1725973064206
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: service
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1725968468201
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Total Impact
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: b4866425-7eff-4852-865b-e3935902a23e.2.1725967100020
+              Legend:
+                Height: 64px
+                Position: AUTO
+                Title:
+                  Visibility: HIDDEN
+                Visibility: VISIBLE
+                Width: 223px
+              Orientation: HORIZONTAL
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
-              WordCloudOptions: {}
+                CategorySort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: b4866425-7eff-4852-865b-e3935902a23e.2.1725967100020
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                ColorSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1725968468201
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: b4866425-7eff-4852-865b-e3935902a23e.2.1725967100020
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1725968468201
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 8a3f3ec1-d96f-4fcb-a556-7391401524e2.2.1725973064206
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: BASIC
+                TooltipVisibility: VISIBLE
+              ValueAxis:
+                GridLineVisibility: HIDDEN
+                TickLabelOptions:
+                  LabelOptions:
+                    Visibility: VISIBLE
             ColumnHierarchies: []
             Subtitle:
-              Visibility: VISIBLE
+              FormatText:
+                RichText: <visual-subtitle>Total Impact</visual-subtitle>
+              Visibility: HIDDEN
             Title:
               FormatText:
-                RichText: <visual-title>Top Account with high-cost anomaly impact</visual-title>
+                RichText: <visual-title>AWS Cost Anomalies - Service (Total Cost Impact)</visual-title>
               Visibility: VISIBLE
-            VisualId: 120d7e67-9cc0-4777-ae7f-5e1af2e2bb25
+            VisualId: cfe3a1a5-adb0-45d2-9a8b-fd5d64d9ccf9
         - TableVisual:
-            Actions: []
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.12.1729867637032
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: daaf0e00-bd5c-4e8a-aac1-80a518e24afa
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               FieldOptions:
                 Order: []
                 SelectedFieldOptions:
+                - FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.12.1729867637032
+                  Visibility: HIDDEN
+                  Width: 254px
                 - CustomLabel: Service
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1686744080024
+                  Width: 231px
                 - CustomLabel: Account ID
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.linkedaccount.5.1686759391866
+                  Width: 111px
                 - CustomLabel: Account Name
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.linkedaccountname.7.1686760943959
+                  Width: 140px
                 - CustomLabel: Region
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.region.10.1688542840413
                 - CustomLabel: Usage Type
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.usagetype.8.1686760952029
-                - CustomLabel: Anomaly Start Date
+                  Width: 208px
+                - CustomLabel: Start Date
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.0.1686744069603
+                  Width: 141px
+                - CustomLabel: Last Update
+                  FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalylastupdatedate.11.1725972061234
                 - CustomLabel: Status
                   FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.9.1688530165960
+                  Width: 66px
                 - CustomLabel: Total Actual Spend
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.totalactualspend.1.1686744072810
+                  Width: 113px
                 - CustomLabel: Total Expected Spend
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.totalexpectedspend.6.1686759551680
+                  Width: 132px
                 - CustomLabel: Total Impact
                   FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.3.1686751650024
                   Width: 91px
-                - CustomLabel: Total Impact %
-                  FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.totalimpactpercentage.6.1686760175338
-                  Width: 115px
+                - CustomLabel: Duration days
+                  FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.duration.11.1729862998580
+                  Width: 74px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: anomalyid
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.12.1729867637032
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: service
@@ -828,8 +1128,13 @@ dashboards:
                       Column:
                         ColumnName: anomaly_start_date
                         DataSetIdentifier: ca_summary_view
-                      DateGranularity: MONTH
+                      DateGranularity: MINUTE
                       FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.0.1686744069603
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: anomalylastupdatedate
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalylastupdatedate.11.1725972061234
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: status
@@ -887,31 +1192,26 @@ dashboards:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: totalimpactpercentage
+                        ColumnName: duration
                         DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.totalimpactpercentage.6.1686760175338
-                      FormatConfiguration:
-                        FormatConfiguration:
-                          CurrencyDisplayFormatConfiguration:
-                            DecimalPlacesConfiguration:
-                              DecimalPlaces: 0
-                            NegativeValueConfiguration:
-                              DisplayMode: POSITIVE
-                            NumberScale: NONE
-                            SeparatorConfiguration:
-                              DecimalSeparator: DOT
-                              ThousandsSeparator:
-                                Symbol: COMMA
-                                Visibility: HIDDEN
-                            Suffix: '%'
-                            Symbol: USD
-              SortConfiguration: {}
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.duration.11.1729862998580
+              SortConfiguration:
+                RowSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.3.1686751650024
+              TableInlineVisualizations:
+              - DataBars:
+                  FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.3.1686751650024
+                  NegativeColor: '#DE3B00'
+                  PositiveColor: '#F6AA54'
               TableOptions:
                 CellStyle:
                   Height: 25
                   TextWrap: WRAP
                 HeaderStyle:
-                  Height: 44
+                  Height: 50
+                  HorizontalTextAlignment: CENTER
                   TextWrap: WRAP
                   Visibility: VISIBLE
                 RowAlternateColorOptions:
@@ -919,31 +1219,70 @@ dashboards:
               TotalOptions:
                 Placement: END
                 ScrollStatus: PINNED
-                TotalsVisibility: VISIBLE
+                TotalsVisibility: HIDDEN
+            ConditionalFormatting:
+              ConditionalFormattingOptions:
+              - Cell:
+                  FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.9.1688530165960
+                  TextFormat:
+                    TextColor:
+                      Solid:
+                        Color: '#DE3B00'
+                        Expression: '{status} = "Active"'
+              - Cell:
+                  FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.9.1688530165960
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#DE3B00'
+                        Expression: '{status} = "Open"'
+                        IconOptions:
+                          Icon: FLAG
+              - Cell:
+                  FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.9.1688530165960
+                  TextFormat:
+                    Icon:
+                      CustomCondition:
+                        Color: '#AAAAAA'
+                        Expression: '{status} = "Closed"'
+                        IconOptions:
+                          Icon: CHECKMARK
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>AWS Cost Anomalies Details</visual-title>
               Visibility: VISIBLE
-            VisualId: 24488232-a887-4a68-b5d2-bc818d94a7d3
-        - ComboChartVisual:
-            Actions: []
+            VisualId: adcfaa2c-7ec8-4289-8625-1690a5c855f3
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFields:
+                    - 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1725975644777
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: 5a7a32db-caef-49fb-9bcf-4b234585e354
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
             ChartConfiguration:
-              BarDataLabels:
-                Overlap: DISABLE_OVERLAP
-                Visibility: HIDDEN
               BarsArrangement: STACKED
+              CategoryAxis:
+                AxisLineVisibility: VISIBLE
+                ScrollbarOptions:
+                  Visibility: HIDDEN
+              CategoryLabelOptions:
+                SortIconVisibility: HIDDEN
+                Visibility: HIDDEN
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                TotalsVisibility: VISIBLE
+                Visibility: VISIBLE
               FieldWells:
-                ComboChartAggregatedFieldWells:
-                  BarValues:
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
-                        ColumnName: tota_impact
-                        DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.2.1688556543198
+                BarChartAggregatedFieldWells:
                   Category:
                   - DateDimensionField:
                       Column:
@@ -951,26 +1290,29 @@ dashboards:
                         DataSetIdentifier: ca_summary_view
                       DateGranularity: MONTH
                       FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1686733460628
-                      HierarchyId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1686733460628
+                      HierarchyId: 24e4e84f-d24c-400c-b48c-aa46b66c7291
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: service
                         DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1688539250062
-                  LineValues: []
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1725975644777
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Total Impact
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: 4f55cd1e-ee07-4cba-a75f-f2b1905f0ac3.2.1729866375404
               Legend:
                 Height: 64px
                 Position: AUTO
                 Title:
                   Visibility: HIDDEN
                 Visibility: VISIBLE
-                Width: 181px
-              PrimaryYAxisDisplayOptions:
-                GridLineVisibility: HIDDEN
-                TickLabelOptions:
-                  LabelOptions:
-                    Visibility: VISIBLE
+                Width: 274px
+              Orientation: VERTICAL
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
@@ -980,20 +1322,55 @@ dashboards:
                     FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1686733460628
                 ColorItemsLimit:
                   OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1686733460628
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.2.1725975644777
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 4f55cd1e-ee07-4cba-a75f-f2b1905f0ac3.2.1729866375404
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: BASIC
+                TooltipVisibility: VISIBLE
+              ValueAxis:
+                GridLineVisibility: HIDDEN
+                TickLabelOptions:
+                  LabelOptions:
+                    Visibility: VISIBLE
             ColumnHierarchies:
             - DateTimeHierarchy:
-                HierarchyId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1686733460628
+                DrillDownFilters: []
+                HierarchyId: 24e4e84f-d24c-400c-b48c-aa46b66c7291
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Total Impact</visual-subtitle>
               Visibility: HIDDEN
             Title:
               FormatText:
-                RichText: <visual-title>AWS Cost Anomalies - Service (Total Cost Impact)</visual-title>
+                RichText: "<visual-title>Total Impact Cost\_by Anomaly Start Date</visual-title>"
               Visibility: VISIBLE
-            VisualId: 3d702097-ea7a-4a34-b4fb-435e3ae2005c
-        - FunnelChartVisual:
-            Actions: []
+            VisualId: ad3c54e7-cbcd-4f2e-81e5-0b5a69909476
+        - PieChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisualOptions: ALL_VISUALS
+              CustomActionId: a59b94f7-e096-42fc-a37e-f1f2ac4691fd
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               CategoryLabelOptions:
                 AxisLabelOptions:
@@ -1003,27 +1380,45 @@ dashboards:
                       DataSetIdentifier: ca_summary_view
                     FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.0.1688537174069
                   CustomLabel: <<$GroupBy>>
-              DataLabelOptions:
+              DataLabels:
                 CategoryLabelVisibility: VISIBLE
+                LabelContent: VALUE
                 LabelFontConfiguration:
                   FontSize:
                     Relative: EXTRA_LARGE
                 MeasureLabelVisibility: VISIBLE
-                Position: INSIDE
+                Overlap: DISABLE_OVERLAP
+                Position: OUTSIDE
                 Visibility: VISIBLE
+              DonutOptions:
+                ArcOptions:
+                  ArcThickness: MEDIUM
               FieldWells:
-                FunnelChartAggregatedFieldWells:
+                PieChartAggregatedFieldWells:
                   Category:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: status
                         DataSetIdentifier: ca_summary_view
                       FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.0.1688537174069
-                  Values: []
+                  Values:
+                  - CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: anomalyid
+                        DataSetIdentifier: ca_summary_view
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.1.1729865549365
+              Legend:
+                Width: 70px
               SortConfiguration:
                 CategoryItemsLimit:
                   OtherCategories: INCLUDE
-                CategorySort: []
+                CategorySort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.1.1729865549365
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
               Tooltip:
                 FieldBasedTooltip:
                   AggregationVisibility: HIDDEN
@@ -1031,225 +1426,65 @@ dashboards:
                   - FieldTooltipItem:
                       FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.0.1688537174069
                       Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomalyid.1.1729865549365
+                      Visibility: VISIBLE
+                  - ColumnTooltipItem:
+                      Aggregation:
+                        NumericalAggregationFunction:
+                          SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: Total Impact
+                        DataSetIdentifier: ca_summary_view
+                      Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
-                SelectedTooltipType: BASIC
+                SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
               VisualPalette:
                 ColorMap:
-                - Color: '#2CAD00'
+                - Color: '#AAAAAA'
                   Element:
                     FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.0.1688537174069
                     FieldValue: Closed
+                - Color: '#AAAAAA'
+                  Element:
+                    FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.0.1688537174069
+                    FieldValue: Past
+                - Color: '#DE3B00'
+                  Element:
+                    FieldId: 29d6de89-a42f-47b9-a077-d9c421e79def.0.1688537174069
+                    FieldValue: Active
             ColumnHierarchies: []
             Subtitle:
-              Visibility: HIDDEN
-            Title:
-              FormatText:
-                RichText: <visual-title>Anomalies Status by days input from left side control</visual-title>
-              Visibility: VISIBLE
-            VisualId: 643a37ff-5efa-46c2-ab0b-7a892205b5e4
-        - WordCloudVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                WordCloudAggregatedFieldWells:
-                  GroupBy:
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: region
-                        DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.region.0.1686761488609
-                  Size: []
-              SortConfiguration:
-                CategoryItemsLimit:
-                  OtherCategories: INCLUDE
-              WordCloudOptions: {}
-            ColumnHierarchies: []
-            Subtitle:
-              Visibility: VISIBLE
-            Title:
               FormatText:
                 RichText: |-
-                  <visual-title>
-                    <inline font-size="14px">Top Region with high-cost anomaly impact</inline>
-                  </visual-title>
+                  <visual-subtitle>
+                    Status changes to Past after '
+                    <parameter>${numberofdays}</parameter>
+                    ' days.
+                    <br/>
+                    You can change in Controls.
+                  </visual-subtitle>
               Visibility: VISIBLE
-            VisualId: 92cc7652-7613-4d12-b595-b50c322a2181
-        - ComboChartVisual:
-            Actions: []
-            ChartConfiguration:
-              BarDataLabels:
-                Overlap: DISABLE_OVERLAP
-                Visibility: HIDDEN
-              BarsArrangement: STACKED
-              FieldWells:
-                ComboChartAggregatedFieldWells:
-                  BarValues:
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
-                        ColumnName: totalactualspend
-                        DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.totalactualspend.0.1688540208376
-                      FormatConfiguration:
-                        FormatConfiguration:
-                          CurrencyDisplayFormatConfiguration:
-                            DecimalPlacesConfiguration:
-                              DecimalPlaces: 2
-                            NegativeValueConfiguration:
-                              DisplayMode: POSITIVE
-                            SeparatorConfiguration:
-                              DecimalSeparator: DOT
-                              ThousandsSeparator:
-                                Symbol: COMMA
-                                Visibility: VISIBLE
-                            Symbol: USD
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
-                        ColumnName: totalexpectedspend
-                        DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.totalexpectedspend.2.1688540235516
-                      FormatConfiguration:
-                        FormatConfiguration:
-                          CurrencyDisplayFormatConfiguration:
-                            DecimalPlacesConfiguration:
-                              DecimalPlaces: 2
-                            NegativeValueConfiguration:
-                              DisplayMode: POSITIVE
-                            SeparatorConfiguration:
-                              DecimalSeparator: DOT
-                              ThousandsSeparator:
-                                Symbol: COMMA
-                                Visibility: VISIBLE
-                            Symbol: USD
-                  Category:
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: service
-                        DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.service.1.1688540227659
-                  Colors: []
-                  LineValues:
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
-                        ColumnName: tota_impact
-                        DataSetIdentifier: ca_summary_view
-                      FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.3.1688540293625
-                      FormatConfiguration:
-                        FormatConfiguration:
-                          CurrencyDisplayFormatConfiguration:
-                            DecimalPlacesConfiguration:
-                              DecimalPlaces: 2
-                            NegativeValueConfiguration:
-                              DisplayMode: POSITIVE
-                            SeparatorConfiguration:
-                              DecimalSeparator: DOT
-                              ThousandsSeparator:
-                                Symbol: COMMA
-                                Visibility: VISIBLE
-                            Symbol: USD
-              Legend:
-                Title:
-                  CustomLabel: Total Spend (Actual Vs Expected)
-                  Visibility: HIDDEN
-                Visibility: VISIBLE
-                Width: 137px
-              PrimaryYAxisDisplayOptions:
-                GridLineVisibility: HIDDEN
-                TickLabelOptions:
-                  LabelOptions:
-                    Visibility: VISIBLE
-              SortConfiguration:
-                CategoryItemsLimit:
-                  OtherCategories: INCLUDE
-                CategorySort:
-                - FieldSort:
-                    Direction: DESC
-                    FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.totalactualspend.0.1688540208376
-                ColorItemsLimit:
-                  OtherCategories: INCLUDE
-            ColumnHierarchies: []
-            Subtitle:
-              Visibility: HIDDEN
             Title:
               FormatText:
-                RichText: <visual-title>Total 10 Services Spend (Actual  Vs Expected)</visual-title>
+                RichText: <visual-title>Anomalies Status</visual-title>
               Visibility: VISIBLE
-            VisualId: a98ae705-0b31-4a15-b1ba-eafdf37da041
-        - KPIVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                TargetValues: []
-                TrendGroups:
-                - DateDimensionField:
-                    Column:
-                      ColumnName: anomaly_start_date
-                      DataSetIdentifier: ca_summary_view
-                    DateGranularity: MONTH
-                    FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1688556821520
-                    HierarchyId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1688556821520
-                Values:
-                - NumericalMeasureField:
-                    AggregationFunction:
-                      SimpleNumericalAggregation: SUM
-                    Column:
-                      ColumnName: tota_impact
-                      DataSetIdentifier: ca_summary_view
-                    FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.tota_impact.1.1688556235551
-              KPIOptions:
-                PrimaryValueDisplayType: COMPARISON
-                ProgressBar:
-                  Visibility: HIDDEN
-                SecondaryValue:
-                  Visibility: VISIBLE
-              SortConfiguration:
-                TrendGroupSort:
-                - FieldSort:
-                    Direction: DESC
-                    FieldId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1688556821520
-            ColumnHierarchies:
-            - DateTimeHierarchy:
-                HierarchyId: 0e0f5f65-03fe-4bbd-b40d-34a68730292e.anomaly_start_date.1.1688556821520
-            ConditionalFormatting:
-              ConditionalFormattingOptions:
-              - PrimaryValue:
-                  Icon:
-                    CustomCondition:
-                      Color: '#DE3B00'
-                      Expression: difference(SUM({tota_impact}),[SUM({tota_impact}) DESC],1,[])
-                        > 0
-                      IconOptions:
-                        Icon: ARROW_UP
-              - PrimaryValue:
-                  Icon:
-                    CustomCondition:
-                      Color: '#F6AA54'
-                      Expression: difference(SUM({tota_impact}),[SUM({tota_impact}) DESC],1,[])
-                        = 0
-                      IconOptions:
-                        Icon: ARROW_RIGHT
-              - PrimaryValue:
-                  Icon:
-                    CustomCondition:
-                      Color: '#2CAD00'
-                      Expression: difference(SUM({tota_impact}),[SUM({tota_impact}) DESC],1,[])
-                        < 0
-                      IconOptions:
-                        Icon: ARROW_DOWN
-            Subtitle:
-              Visibility: HIDDEN
-            Title:
-              FormatText:
-                RichText: <visual-title>Trend of  Total cost Impact from previous month</visual-title>
-              Visibility: VISIBLE
-            VisualId: 1ffd5f49-7d1b-448e-8f65-88650bb12191
+            VisualId: c8851433-215a-4447-bbb0-aec332986e8d
       - ContentType: INTERACTIVE
+        FilterControls:
+        - CrossSheet:
+            FilterControlId: 2db8e6c5-7be4-47bc-947a-76b8995caea6
+            SourceFilterId: 01da955f-4790-4186-a105-3b57b03b7d8c
+        - CrossSheet:
+            FilterControlId: 5b4fda12-69ee-426f-a4a8-b583a116e82a
+            SourceFilterId: e1e906b6-de99-44f5-b4b2-005d77060433
+        - CrossSheet:
+            FilterControlId: d3f0e792-745a-477d-a728-2fb7083be28f
+            SourceFilterId: a1119975-7777-4e8c-9c6b-6d409e100946
+        - CrossSheet:
+            FilterControlId: 3f5dd0d5-67c9-4e7e-90d0-7325c268add2
+            SourceFilterId: 5dba49d6-0fca-49c4-9205-70495bf03727
         Layouts:
         - Configuration:
             GridLayout:
@@ -1271,41 +1506,50 @@ dashboards:
                 RowIndex: 6
                 RowSpan: 14
         Name: About
-        SheetId: aa07bedc-348c-4fe1-ba03-57a8e3dff04f
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnSpan: 2
+                ElementId: 2db8e6c5-7be4-47bc-947a-76b8995caea6
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 5b4fda12-69ee-426f-a4a8-b583a116e82a
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: d3f0e792-745a-477d-a728-2fb7083be28f
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 3f5dd0d5-67c9-4e7e-90d0-7325c268add2
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+        SheetId: 73835dbf-c978-4de7-bd4c-f538ce56c75d
         TextBoxes:
-        - Content: "<text-box>\n  <br/>\n  <block align=\"center\">\n    <inline color=\"\
-            #0ab791\" font-size=\"20px\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\"\
-            \ target=\"_blank\">\n        <b>AWS Cost Anomaly Insights Dashboard</b>\n \
-            \     </a>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n\
-            \    <inline font-size=\"16px\">\n      <b>v1.0</b>\n    </inline>\n  </block>\n\
-            \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\"/>\n\
-            \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n\
-            \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"center\"/>\n\
-            \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built\
-            \ by: Yash Bindlish,  Yuriy Prykhodko,  Iakov Gan</block>\n  <br/>\n  <block\
-            \ align=\"right\">\n    Learn more about AWS Cloud Intelligence Dashboards (CID)\
-            \ on\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
-            \ target=\"_blank\">AWS Well-Architected Labs</a>\n    </inline>\n    \_and\n\
-            \    <inline color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
-            \ target=\"_blank\">CID YouTube Channel</a>\n    </inline>\n  </block>\n  <br/>\n\
-            \  <block align=\"right\">\n    <inline font-size=\"20px\">\n      <a href=\"\
-            https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\" target=\"\
-            _blank\">\n        <b>\n          <u>If you like Cloud Intelligence Dashboards\
-            \ we kindly ask you to fill out this\_</u>\n        </b>\n      </a>\n    </inline>\n\
-            \    <inline color=\"#61d1d6\">\n      <a href=\"https://eventbox.dev/survey/AJ0EIZ7\"\
-            \ target=\"_blank\">customer survey</a>\n    </inline>\n  </block>\n  <br/>\n\
-            \  <block align=\"right\">\n    <inline font-size=\"20px\">\n      <a href=\"\
-            https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\" target=\"\
-            _blank\">\n        <b>\n          <u>Powered by: Amazon QuickSight, Amazon Athena,\
-            \ Amazon S3</u>\n        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n\
-            \  <block align=\"right\">\n    <inline font-size=\"20px\">\n      <a href=\"\
-            https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\" target=\"\
-            _blank\">\n        <b>\n          <u>If you wish to provide feedback or report\
-            \ an error please email:</u>\n        </b>\n      </a>\n    </inline>\n    <inline\
-            \ color=\"#61d1d6\">\_</inline>\n    <inline color=\"#61d1d6\">\n      <a href=\"\
-            mailto:cloud-intelligence-dashboards@amazon.com?subject=CID%20Dashboard%20Feedback\"\
-            \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
-            \  </block>\n</text-box>"
+        - Content: "<text-box>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block\
+            \ align=\"center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"\
+            40px\">AWS Cost Anomaly Insights Dashboard</inline>\n  </block>\n  <br/>\n \
+            \ <block align=\"center\">\n    <inline font-size=\"32px\">v1.1.0</inline>\n\
+            \  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
+            >\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/cost-anomaly\"\
+            \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
+            24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cost-anomalies.md\"\
+            \ target=\"_blank\">Changelog</a>\n    </inline>\n    <inline font-size=\"24px\"\
+            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/cost-anomaly/prerequisites\"\
+            \ target=\"_blank\">Deployment</a>\n    </inline>\n    <inline font-size=\"\
+            24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/feedback-support\"\
+            \ target=\"_blank\">Feedback</a>\n    </inline>\n    <inline font-size=\"24px\"\
+            >\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block\
+            \ align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block\
+            \ align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block\
+            \ align=\"right\"/>\n  <br/>\n  <block align=\"right\">Built by: Yash Bindlish,\
+            \  Yuriy Prykhodko,  Iakov Gan</block>\n  <br/>\n  <block align=\"right\">Powered\
+            \ by: Amazon QuickSight, Amazon Athena, Amazon S3</block>\n  <br/>\n  <block\
+            \ align=\"right\">If you wish to provide feedback or report an error please\
+            \ email: cloud-intelligence-dashboards@amazon.com</block>\n</text-box>"
           SheetTextBoxId: d9a12df7-0c6e-4942-9403-b82db7d5f754
         - Content: "<text-box>\n  <inline font-size=\"20px\">\n    <b>Notices</b>\n  </inline>\n\
             \  <br/>\n  <br/>\n  <inline font-size=\"14px\">Customers are responsible for\
