@@ -115,8 +115,7 @@ def export_analysis(qs, athena, glue):
 
     dataset_references = []
     datasets = {}
-    all_views = []
-    all_databases = []
+    all_views_and_databases = []
     for dataset_arn in analysis['DataSetArns']:
         dependency_views = []
         dataset_id = dataset_arn.split('/')[-1]
@@ -154,15 +153,19 @@ def export_analysis(qs, athena, glue):
                 and 'Schema' in value['RelationalTable']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like classic athena dataset")
                 value['RelationalTable']['DataSourceArn'] = '${athena_datasource_arn}'
-                all_databases.append(value['RelationalTable']['Schema'])
-                value['RelationalTable']['Schema'] = '${athena_database_name}'
+                database_name = value['RelationalTable']['Schema']
+                discovered_databases = list(set([d for _, d in all_views_and_databases])) # default database is the first one
+                if not discovered_databases or discovered_databases[0] == database_name:
+                    value['RelationalTable']['Schema'] = '${athena_database_name}'
+                else:
+                    logger.warning('Database {database_name} is not default, you will need to make it a parameter.') #TODO: can be added on code level
                 athena_source = value['RelationalTable']['Name']
                 views_name = athena_source.split('.')[-1]
                 dependency_views.append(views_name)
                 if views_name in athena._resources.get('views') and not get_parameters().get('export-known-datasets'):
                     cid_print(f'    Athena view <BOLD>{views_name}<END> is in resources. Skipping')
                 else:
-                    all_views.append(views_name)
+                    all_views_and_databases.append((views_name, database_name))
             elif 'CustomSql' in value and 'DataSourceArn' in value['CustomSql']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like CustomSql athena dataset")
                 value['CustomSql']['DataSourceArn'] = '${athena_datasource_arn}'
@@ -192,10 +195,10 @@ def export_analysis(qs, athena, glue):
         }
         if dep_cur:
             datasets[dataset_name]['dependsOn']['cur'] = True
-
-    all_databases = list(set(all_databases))
+    all_views =     [view_and_database[0] for view_and_database in all_views_and_databases]
+    all_databases = [view_and_database[1] for view_and_database in all_views_and_databases]
     if len(all_databases) > 1:
-        raise CidCritical(f'CID only supports one database. Multiple used: {all_databases}')
+        logger.warning(f'CID only supports one database. Multiple used: {all_databases}')
 
     if all_databases:
         athena.DatabaseName = all_databases[0]
@@ -418,6 +421,8 @@ def export_analysis(qs, athena, glue):
             AwsAccountId=qs.account_id,
             AnalysisId=analysis_id,
         )['Definition']
+
+        definition.pop('QueryExecutionMode', None) # QueryExecutionMode is supported for export but not for create or update as of 2024-10-17
 
         for dataset in definition.get('DataSetIdentifierDeclarations', []):
             # Hide region and account number of the source account
