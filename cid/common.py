@@ -1063,7 +1063,7 @@ class Cid():
             cid_print(f"  Version    {str(dashboard.cid_version): <9} ->  {str(dashboard.cid_version_latest): <9}")
 
         try:
-            return dashboard.cid_version.compatible_versions(dashboard.cid_version)
+            return dashboard.cid_version.compatible_versions(dashboard.cid_version_latest)
         except ValueError as exc:
             logger.info(exc)
         return None
