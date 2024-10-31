@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'CFN template for scheduled bucket policy management using EventBridge'
+Description: 'CID - Protecting CUR Bucket from replication Writes'
 
 Parameters:
   ResourcePrefix:
