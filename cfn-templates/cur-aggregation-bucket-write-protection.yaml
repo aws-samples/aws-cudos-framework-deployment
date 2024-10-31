@@ -2,9 +2,15 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'CID - Protecting CUR Bucket from replication Writes'
 
 Parameters:
-  ResourcePrefix:
+  BucketName:
     Type: String
-    Description: Prefix for resource names. Must be the same as in the CUR Aggregation stack
+    Description: Target Bucket Name. You can use ACCOUNT_ID placeholder.
+    Default: 'cid-ACCOUNT_ID-shared'
+
+  PolicySid:
+    Type: String
+    Description: 'Policy Sid to Disable/Enable'
+    Default: 'AllowReplicationWrite'
 
   DisableCronSchedule:
     Type: String
@@ -19,6 +25,7 @@ Parameters:
     Default: '0 3 * * ? *'
     AllowedPattern: '^[0-9*,\-/\s?]+$'
     ConstraintDescription: Must be a valid cron expression
+
 
 Resources:
   BucketPolicyLambdaRole:
@@ -42,7 +49,7 @@ Resources:
                 Action:
                   - s3:GetBucketPolicy
                   - s3:PutBucketPolicy
-                Resource: !Sub 'arn:aws:s3:::${ResourcePrefix}-${AWS::AccountId}-shared'
+                Resource: !Sub 'arn:aws:s3:::${BucketName}'
 
   BucketPolicyLambda:
     Type: AWS::Lambda::Function
@@ -56,45 +63,29 @@ Resources:
           import json
           import boto3
 
+          POLICY_SID = os.environ['POLICY_SID']
+
           def lambda_handler(event, context):
               s3 = boto3.client('s3')
               action = event.get('action', 'enable')  # 'enable' or 'disable'
-              account_id = context.invoked_function_arn.split(':')[4]
-              bucket_name = f"{os.environ['RESOURCE_PREFIX']}-{account_id}-shared"
+              bucket_name = os.environ['BUCKET_NAME']
 
               try:
-                  # Get current bucket policy
-                  try:
-                      policy = json.loads(s3.get_bucket_policy(Bucket=bucket_name)['Policy'])
-                  except s3.exceptions.NoSuchBucketPolicy:
-                      return {
-                          'statusCode': 404,
-                          'body': 'No bucket policy exists'
-                      }
+                  policy = json.loads(s3.get_bucket_policy(Bucket=bucket_name)['Policy'])
 
-                  # Find and modify the AllowReplicationWrite statement
-                  found = False
+                  # Find and modify the policy statement
                   for statement in policy['Statement']:
-                      if statement.get('Sid') == 'AllowReplicationWrite':
+                      if statement.get('Sid') == POLICY_SID:
                           statement['Effect'] = 'Allow' if action == 'enable' else 'Deny'
-                          found = True
                           break
+                  else:
+                      raise Exception(f'{POLICY_SID} statement not found in policy')
 
-                  if not found:
-                      return {
-                          'statusCode': 404,
-                          'body': 'AllowReplicationWrite statement not found in policy'
-                      }
-
-                  # Put updated policy
-                  s3.put_bucket_policy(
-                      Bucket=bucket_name,
-                      Policy=json.dumps(policy)
-                  )
+                  s3.put_bucket_policy(Bucket=bucket_name, Policy=json.dumps(policy))
 
                   return {
                       'statusCode': 200,
-                      'body': f'Successfully {action}d AllowReplicationWrite statement'
+                      'body': f'Successfully {action}d {POLICY_SID} statement'
                   }
 
               except Exception as e:
@@ -104,9 +95,10 @@ Resources:
                   }
       Environment:
         Variables:
-          RESOURCE_PREFIX: !Ref ResourcePrefix
-      Timeout: 30
+          BUCKET_NAME: !Ref BucketName
+          POLICY_SID: !Ref PolicySid
       MemorySize: 128
+      Timeout: 60
     Metadata:
       cfn_nag:
         rules_to_suppress:
