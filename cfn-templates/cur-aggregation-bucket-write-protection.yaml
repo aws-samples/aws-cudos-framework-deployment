@@ -145,20 +145,3 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt EnableRuleSchedule.Arn
-
-Outputs:
-  LambdaFunctionArn:
-    Description: ARN of the created Lambda function
-    Value: !GetAtt BucketPolicyLambda.Arn
-  DisableScheduleRuleArn:
-    Description: ARN of the disable schedule rule
-    Value: !GetAtt DisableRuleSchedule.Arn
-  EnableScheduleRuleArn:
-    Description: ARN of the enable schedule rule
-    Value: !GetAtt EnableScheduleRuleArn
-  ConfiguredDisableSchedule:
-    Description: Configured cron schedule for disable action
-    Value: !Ref DisableCronSchedule
-  ConfiguredEnableSchedule:
-    Description: Configured cron schedule for enable action
-    Value: !Ref EnableCronSchedule
