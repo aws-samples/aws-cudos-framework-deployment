@@ -4,7 +4,7 @@ Description: 'CID - Protecting CUR Bucket from replication Writes'
 Parameters:
   BucketName:
     Type: String
-    Description: Target Bucket Name. You can use ACCOUNT_ID placeholder.
+    Description: Target Bucket Name. Replce ACCOUNT_ID with your Account Id.
     Default: 'cid-ACCOUNT_ID-shared'
 
   PolicySid:
