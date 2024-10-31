@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: '2010-09-10'
+Description: 'CFN template for scheduled bucket policy management using EventBridge'
+
+Parameters:
+  ResourcePrefix:
+    Type: String
+    Description: Prefix for resource names. Must be the same as in the CUR Aggregation stack
+
+  DisableCronSchedule:
+    Type: String
+    Description: 'Cron expression for disabling replication (UTC)'
+    Default: '0 1 * * ? *'
+    AllowedPattern: '^[0-9*,\-/\s?]+$'
+    ConstraintDescription: Must be a valid cron expression
+
+  EnableCronSchedule:
+    Type: String
+    Description: 'Cron expression for enabling replication (UTC)'
+    Default: '0 3 * * ? *'
+    AllowedPattern: '^[0-9*,\-/\s?]+$'
+    ConstraintDescription: Must be a valid cron expression
+
+Resources:
+  BucketPolicyLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: BucketPolicyAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketPolicy
+                  - s3:PutBucketPolicy
+                Resource: !Sub 'arn:aws:s3:::${ResourcePrefix}-${AWS::AccountId}-shared'
+
+  BucketPolicyLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt BucketPolicyLambdaRole.Arn
+      Code:
+        ZipFile: |
+          import os
+          import json
+          import boto3
+
+          def lambda_handler(event, context):
+              s3 = boto3.client('s3')
+              action = event.get('action', 'enable')  # 'enable' or 'disable'
+              account_id = context.invoked_function_arn.split(':')[4]
+              bucket_name = f"{os.environ['RESOURCE_PREFIX']}-{account_id}-shared"
+
+              try:
+                  # Get current bucket policy
+                  try:
+                      policy = json.loads(s3.get_bucket_policy(Bucket=bucket_name)['Policy'])
+                  except s3.exceptions.NoSuchBucketPolicy:
+                      return {
+                          'statusCode': 404,
+                          'body': 'No bucket policy exists'
+                      }
+
+                  # Find and modify the AllowReplicationWrite statement
+                  found = False
+                  for statement in policy['Statement']:
+                      if statement.get('Sid') == 'AllowReplicationWrite':
+                          statement['Effect'] = 'Allow' if action == 'enable' else 'Deny'
+                          found = True
+                          break
+
+                  if not found:
+                      return {
+                          'statusCode': 404,
+                          'body': 'AllowReplicationWrite statement not found in policy'
+                      }
+
+                  # Put updated policy
+                  s3.put_bucket_policy(
+                      Bucket=bucket_name,
+                      Policy=json.dumps(policy)
+                  )
+
+                  return {
+                      'statusCode': 200,
+                      'body': f'Successfully {action}d AllowReplicationWrite statement'
+                  }
+
+              except Exception as e:
+                  return {
+                      'statusCode': 500,
+                      'body': str(e)
+                  }
+      Environment:
+        Variables:
+          RESOURCE_PREFIX: !Ref ResourcePrefix
+      Timeout: 30
+      MemorySize: 128
+
+  DisableRuleSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: !Sub "Schedule for disabling replication using cron: ${DisableCronSchedule}"
+      ScheduleExpression: !Sub "cron(${DisableCronSchedule})"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt BucketPolicyLambda.Arn
+          Id: "DisableReplicationTarget"
+          Input: '{"action": "disable"}'
+
+  EnableRuleSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: !Sub "Schedule for enabling replication using cron: ${EnableCronSchedule}"
+      ScheduleExpression: !Sub "cron(${EnableCronSchedule})"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt BucketPolicyLambda.Arn
+          Id: "EnableReplicationTarget"
+          Input: '{"action": "enable"}'
+
+  LambdaPermissionDisable:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BucketPolicyLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DisableRuleSchedule.Arn
+
+  LambdaPermissionEnable:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BucketPolicyLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EnableRuleSchedule.Arn
+
+Outputs:
+  LambdaFunctionArn:
+    Description: ARN of the created Lambda function
+    Value: !GetAtt BucketPolicyLambda.Arn
+  DisableScheduleRuleArn:
+    Description: ARN of the disable schedule rule
+    Value: !GetAtt DisableRuleSchedule.Arn
+  EnableScheduleRuleArn:
+    Description: ARN of the enable schedule rule
+    Value: !GetAtt EnableScheduleRuleArn
+  ConfiguredDisableSchedule:
+    Description: Configured cron schedule for disable action
+    Value: !Ref DisableCronSchedule
+  ConfiguredEnableSchedule:
+    Description: Configured cron schedule for enable action
+    Value: !Ref EnableCronSchedule
