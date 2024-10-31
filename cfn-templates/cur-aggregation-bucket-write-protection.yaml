@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-10'
+AWSTemplateFormatVersion: '2010-09-09'
 Description: 'CFN template for scheduled bucket policy management using EventBridge'
 
 Parameters:
@@ -107,7 +107,13 @@ Resources:
           RESOURCE_PREFIX: !Ref ResourcePrefix
       Timeout: 30
       MemorySize: 128
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W89'
+            reason: "This Lambda does not require VPC"
+          - id: 'W92'
+            reason: "One Time execution. No need for ReservedConcurrentExecutions"
   DisableRuleSchedule:
     Type: AWS::Events::Rule
     Properties:
