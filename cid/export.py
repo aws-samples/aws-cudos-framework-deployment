@@ -200,9 +200,10 @@ def export_analysis(qs, athena, glue):
         elif cur_version == '2':
             datasets[dataset_name]['dependsOn']['cur2'] = True
 
-    all_databases = list(set(all_databases))
+    all_views =     [view_and_database[0] for view_and_database in all_views_and_databases]
+    all_databases = [view_and_database[1] for view_and_database in all_views_and_databases]
     if len(all_databases) > 1:
-        logger.warning(f'CID only supports one database. Multiple used: {all_databases}') # fixme need to fix database 
+        logger.warning(f'CID only supports one database. Multiple used: {all_databases}')
 
     if all_databases:
         athena.DatabaseName = all_databases[0]

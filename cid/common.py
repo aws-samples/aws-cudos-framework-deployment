@@ -1073,13 +1073,13 @@ class Cid():
 
         if dashboard.latest:
             cid_print("You are up to date!")
-            cid_print(f"  Version    {dashboard.cid_version}")
+            cid_print(f"  Version    {str(dashboard.cid_version)}")
         else:
             cid_print(f"An update is available:")
-            cid_print(f"  Version    {dashboard.cid_version: <9} ->  {str(cid_version_latest): <9}")
+            cid_print(f"  Version    {str(dashboard.cid_version): <9} ->  {str(dashboard.cid_version_latest): <9}")
 
         try:
-            return dashboard.cid_version.compatible_versions(dashboard.cid_version)
+            return dashboard.cid_version.compatible_versions(dashboard.cid_version_latest)
         except ValueError as exc:
             logger.info(exc)
         return None

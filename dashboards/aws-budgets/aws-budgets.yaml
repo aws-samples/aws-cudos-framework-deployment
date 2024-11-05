@@ -2075,7 +2075,29 @@ crawlers: {}
 views:
   budgets_view:
     data: |-
-      CREATE OR REPLACE VIEW ${athena_database_name}.budgets_view AS
+      CREATE OR REPLACE VIEW ${athena_database_name}.budgets_view AS 
+      WITH budgets_with_casted_tags AS (
+      SELECT budgetname
+      , budgetlimit
+      , costfilters
+      , costtypes
+      , timeunit
+      , timeperiod
+      , calculatedspend
+      , budgettype
+      , lastupdatedtime
+      , collection_time
+      , account_id
+      , account_name
+      , year
+      , month
+      ,   CASE WHEN (cardinality(tags) > 0) 
+          THEN TRANSFORM(tags, (x) -> CAST(x AS json))
+          ELSE ARRAY[cast(null AS json)] 
+          END as casted_tags 
+      FROM ${data_collection_database_name}.budgets_data
+      )
+
       SELECT
         budgetname budget_name
       , CAST(budgetlimit.amount AS decimal) budget_amount
@@ -2091,12 +2113,11 @@ views:
       , timeperiod."end" end_date
       , year budget_year
       , month budget_month
-      , MAX((CASE WHEN (tag.key = 'cid:budget-level') THEN tag.value END)) budget_level
+      , TRY(json_extract_scalar(FILTER(casted_tags, (x) -> (json_extract_scalar(x, '$.key') = 'cid:budget-level'))[1], '$.value')) as budget_level
       FROM
-        (${data_collection_database_name}.budgets_data
-      CROSS JOIN UNNEST(${data_collection_database_name}.budgets_data.tags) t (tag))
-      WHERE ((budgettype = 'COST') AND (costfilters.filter[1] = 'None'))
-      GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
+        budgets_with_casted_tags
+      WHERE (budgettype = 'COST')
+      GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
     parameters:
       data_collection_database_name:
         type: athena
