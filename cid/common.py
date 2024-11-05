@@ -362,9 +362,9 @@ class Cid():
                     try:
                         res_list = self.athena.query(query)
                     except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
-                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}.') from exc
                     if not res_list:
-                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results')
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results. {value.get("error")}')
                     elif len(res_list) == 1:
                         params[key] = '-'.join(res_list[0])
                     else:
