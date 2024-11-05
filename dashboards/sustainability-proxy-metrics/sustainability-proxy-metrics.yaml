@@ -3,7 +3,7 @@ dashboards:
     category: 'Additional'
     dependsOn:
       datasets:
-      - carbon_emissions_aggregate_longform
+      - carbon_emissions_longform
       - sus_carbon_emissions
       - sus_compute_ec2
       - sus_compute_split
@@ -27,7 +27,7 @@ dashboards:
                   ResizeOption: FIXED
           SheetContentType: INTERACTIVE
       CalculatedFields:
-      - DataSetIdentifier: carbon_emissions_aggregate_longform
+      - DataSetIdentifier: carbon_emissions_longform
         Expression: |-
           ifelse(metric = 'gridmixinefficiency', 'Emission savings from AWS renewable energy purchases' ,
           metric = 'servermedianinefficiency', 'Emission savings from using AWS computing services' ,
@@ -269,7 +269,7 @@ dashboards:
       - DataSetArn: arn:aws:quicksight:::dataset/af858de6-f6ef-4961-88c4-964aa1266b9a
         Identifier: sus_storage_athena
       - DataSetArn: arn:aws:quicksight:::dataset/814f2ac6-3205-43b8-ac8b-bab4dc1c864a
-        Identifier: carbon_emissions_aggregate_longform
+        Identifier: carbon_emissions_longform
       FilterGroups:
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 52f87545-d3b8-45c0-9148-da6b8d46c388
@@ -451,7 +451,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: da3eb99f-a3c9-4888-b4a3-ee469eba8dc6
+              SheetId: e5a60f56-b9b7-40e5-91aa-987b5f70acf3
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: f244c343-08aa-4e4c-84eb-c9ecfd96664f
@@ -491,7 +491,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: da3eb99f-a3c9-4888-b4a3-ee469eba8dc6
+              SheetId: e5a60f56-b9b7-40e5-91aa-987b5f70acf3
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a4a96c0f-2863-44a8-b6a3-84da850cff08
@@ -499,7 +499,7 @@ dashboards:
         - CategoryFilter:
             Column:
               ColumnName: metric_speaking
-              DataSetIdentifier: carbon_emissions_aggregate_longform
+              DataSetIdentifier: carbon_emissions_longform
             Configuration:
               FilterListConfiguration:
                 MatchOperator: CONTAINS
@@ -510,7 +510,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: da3eb99f-a3c9-4888-b4a3-ee469eba8dc6
+              SheetId: e5a60f56-b9b7-40e5-91aa-987b5f70acf3
               VisualIds:
               - a31027d5-1668-4967-9524-7d426d4bbad8
         Status: ENABLED
@@ -536,7 +536,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: da3eb99f-a3c9-4888-b4a3-ee469eba8dc6
+              SheetId: e5a60f56-b9b7-40e5-91aa-987b5f70acf3
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 16589d28-e102-4d8a-ae41-d3bff092272b
@@ -1645,7 +1645,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: account_email_id
+                        ColumnName: line_item_product_code
                         DataSetIdentifier: sus_compute_split
                       FieldId: 3b98fdf2-4730-401d-b095-59581cce1db9.account_email_id.2.1720097164432
                   Values:
@@ -1653,7 +1653,7 @@ dashboards:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: account_business_metric
+                        ColumnName: ScaledValue
                         DataSetIdentifier: sus_compute_split
                       FieldId: 3af7087e-542f-439f-b88c-822cc9cacd3c.account_business_metric.2.1720097158417
               Legend:
@@ -3139,34 +3139,36 @@ dashboards:
                 RowIndex: 45
                 RowSpan: 12
         Name: AWS Customer Carbon Footprint Tool Data
-        SheetId: da3eb99f-a3c9-4888-b4a3-ee469eba8dc6
+        SheetId: e5a60f56-b9b7-40e5-91aa-987b5f70acf3
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"20px\">\n    <b>AWS Customer Carbon\
             \ Footprint Tool</b>\n  </inline>\n  <br/>\n  <br/>\n  You can use the\n  <a\
             \ href=\"https://aws.amazon.com/aws-cost-management/aws-customer-carbon-footprint-tool/\"\
-            \ target=\"_blank\">AWS Customer Carbon Footprint Tool\_</a>\n  (CCFT) to view\
+            \ target=\"_blank\">\_AWS Customer Carbon Footprint Tool\_</a>\n  (CCFT) to view\
             \ estimates of the carbon emissions associated with your AWS products and services.\n\
             \  <br/>\n  These visuals show data from the AWS Customer Carbon Footprint Tool,\
             \ made available through the\n  <a href=\"https://github.com/aws-samples/experimental-programmatic-access-ccft\"\
-            \ target=\"_blank\">experimental programmatic access</a>\n  . To learn more\
+            \ target=\"_blank\">\_experimental programmatic access</a>\n  . To learn more\
             \ about the methodology of the customer carbon footprint tool, check out the\n\
             \  <a href=\"https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/what-is-ccft.html\
-            \ \" target=\"_blank\">documentation</a>\n  .\n  <br/>\n  <br/>\n  The default\
+            \ \" target=\"_blank\">\_documentation</a>\n  .\n  <br/>\n  <br/>\n  The default\
             \ deployment of the CCFT graphs below is designed to return\n  <inline color=\"\
             #fb0707\">\_No Data</inline>\n  . In order to view data, you must deploy the\n\
             \  <a href=\"https://github.com/aws-samples/experimental-programmatic-access-ccft\"\
             \ target=\"_blank\">\_experimental programmatic access</a>\n  , and update the\
             \ Amazon Athena views as documented in the\n  <a href=\"https://catalog.workshops.aws/well-architected-sustainability/en-US/5-process-and-culture/cur-reports-as-efficiency-reports/4-install-sus-dashboard\"\
-            \ target=\"_blank\">Sustainability Proxy Metrics deployment guide</a>\n  .\n\
+            \ target=\"_blank\">\_Sustainability Proxy Metrics deployment guide</a>\n  .\n\
             </text-box>"
           SheetTextBoxId: a59bf304-620c-43dd-b6f5-0f724d15b98b
-        - Content: |-
-            <text-box>
-              Total Carbon emissions (Scope 1 and Scope 2 market-based) and Emission savings over all selected Account IDs per month for all selected metrics
-              <br/>
-              <br/>
-              <inline color="#989595">Select Date Range and Account ID's in the control on top, metrics to include on the right.</inline>
-            </text-box>
+        - Content: "<text-box>\n  Total Carbon emissions (Scope 1 and Scope 2 market-based)\
+            \ and Emission savings over all selected Account IDs per month for all selected\
+            \ metrics\n  <br/>\n  <br/>\n  <inline color=\"#989595\">Select Date Range and\
+            \ Account ID's in the control on top, metrics to include on the right.</inline>\n\
+            \  <br/>\n  <br/>\n  <inline color=\"#989595\">\n    <b>Emission savings from\
+            \ AWS purchase of renewable energy</b>\n  </inline>\n  <inline color=\"#989595\"\
+            >: this number is the difference between the carbon footprint emissions calculated\
+            \ using the location-based method (LBM) and the market-based\_</inline>\n  <br/>\n\
+            \  <inline color=\"#989595\">method (MBM).</inline>\n</text-box>"
           SheetTextBoxId: 6695e917-765c-4d42-b8fe-6b9a1982938f
         Visuals:
         - SankeyDiagramVisual:
@@ -3221,7 +3223,8 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: <visual-title>Sankey Diagram</visual-title>
+                RichText: <visual-title>Mapping of carbon emissions from geographical areas
+                  to product codes</visual-title>
               Visibility: VISIBLE
             VisualId: bab683bc-a3db-4d13-82f9-f956d88cd178
         - BarChartVisual:
@@ -3260,13 +3263,16 @@ dashboards:
                         DataSetIdentifier: sus_carbon_emissions
                       DateGranularity: MONTH
                       FieldId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.0.1710235673445
-                      HierarchyId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.0.1710235673445
+                      HierarchyId: 5d01bc86-6fd0-48c2-ae29-5f4f1187081a
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: paceproductcode
                         DataSetIdentifier: sus_carbon_emissions
                       FieldId: 245db76e-b801-413a-9cbe-dbd50172abe8.paceproductcode.2.1710235693562
+                      FormatConfiguration:
+                        NullValueFormatConfiguration:
+                          NullString: 'null'
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3275,6 +3281,13 @@ dashboards:
                         ColumnName: mbmcarbon
                         DataSetIdentifier: sus_carbon_emissions
                       FieldId: 245db76e-b801-413a-9cbe-dbd50172abe8.mbmcarbon.1.1710235681176
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          NumberDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 3
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
               Legend:
                 Title:
                   CustomLabel: Product Code
@@ -3317,7 +3330,8 @@ dashboards:
                   CustomLabel: Carbon emissions (MTCO2e)
             ColumnHierarchies:
             - DateTimeHierarchy:
-                HierarchyId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.0.1710235673445
+                DrillDownFilters: []
+                HierarchyId: 5d01bc86-6fd0-48c2-ae29-5f4f1187081a
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Select Date Range and Account ID's in the control
@@ -3364,7 +3378,7 @@ dashboards:
                         DataSetIdentifier: sus_carbon_emissions
                       DateGranularity: MONTH
                       FieldId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.2.1710235718612
-                      HierarchyId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.2.1710235718612
+                      HierarchyId: 435b29fc-ceda-46cd-a0e8-932385d60580
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -3379,6 +3393,13 @@ dashboards:
                         ColumnName: mbmcarbon
                         DataSetIdentifier: sus_carbon_emissions
                       FieldId: 245db76e-b801-413a-9cbe-dbd50172abe8.mbmcarbon.1.1710235711465
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          NumberDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 3
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
               Legend:
                 Title:
                   CustomLabel: Geographical Area
@@ -3421,7 +3442,8 @@ dashboards:
                   CustomLabel: Carbon emissions (MTCO2e)
             ColumnHierarchies:
             - DateTimeHierarchy:
-                HierarchyId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.2.1710235718612
+                DrillDownFilters: []
+                HierarchyId: 435b29fc-ceda-46cd-a0e8-932385d60580
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Select Date Range and Account ID's in the control
@@ -3436,8 +3458,6 @@ dashboards:
             Actions: []
             ChartConfiguration:
               BarsArrangement: STACKED
-              CategoryAxis:
-                AxisOffset: 66px
               CategoryLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -3458,13 +3478,13 @@ dashboards:
                         DataSetIdentifier: sus_carbon_emissions
                       DateGranularity: MONTH
                       FieldId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.0.1710321714087
-                      HierarchyId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.0.1710321714087
+                      HierarchyId: 1ac71bbd-11ff-405b-b05c-3adabc52ae90
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Account Name
                         DataSetIdentifier: sus_carbon_emissions
-                      FieldId: b6a95723-d77c-4d31-a001-e68ce1d3d1d9.2.1720086435912
+                      FieldId: 5bb04396-4d04-47af-89be-d996793e34a8.2.1728647136713
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3473,6 +3493,13 @@ dashboards:
                         ColumnName: mbmcarbon
                         DataSetIdentifier: sus_carbon_emissions
                       FieldId: 245db76e-b801-413a-9cbe-dbd50172abe8.mbmcarbon.1.1710321714087
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          NumberDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 3
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
               Legend:
                 Title:
                   CustomLabel: Account ID
@@ -3500,7 +3527,7 @@ dashboards:
                       FieldId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.0.1710321714087
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: b6a95723-d77c-4d31-a001-e68ce1d3d1d9.2.1720086435912
+                      FieldId: 5bb04396-4d04-47af-89be-d996793e34a8.2.1728647136713
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
@@ -3521,7 +3548,8 @@ dashboards:
                   CustomLabel: Carbon emissions (MTCO2e)
             ColumnHierarchies:
             - DateTimeHierarchy:
-                HierarchyId: 245db76e-b801-413a-9cbe-dbd50172abe8.startdate.0.1710321714087
+                DrillDownFilters: []
+                HierarchyId: 1ac71bbd-11ff-405b-b05c-3adabc52ae90
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Select Date Range and Account ID's in the control
@@ -3542,7 +3570,7 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: startdate
-                      DataSetIdentifier: carbon_emissions_aggregate_longform
+                      DataSetIdentifier: carbon_emissions_longform
                     FieldId: 1c4e087c-344e-4ad0-b986-aa01476f6091.startdate.1.1720689364743
                   CustomLabel: Date
               DataLabels:
@@ -3554,15 +3582,15 @@ dashboards:
                   - DateDimensionField:
                       Column:
                         ColumnName: startdate
-                        DataSetIdentifier: carbon_emissions_aggregate_longform
+                        DataSetIdentifier: carbon_emissions_longform
                       DateGranularity: MONTH
                       FieldId: 1c4e087c-344e-4ad0-b986-aa01476f6091.startdate.1.1720689364743
-                      HierarchyId: 1c4e087c-344e-4ad0-b986-aa01476f6091.startdate.1.1720689364743
+                      HierarchyId: 30e1574a-81b3-40ec-85e9-9c2005dfe73b
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: metric_speaking
-                        DataSetIdentifier: carbon_emissions_aggregate_longform
+                        DataSetIdentifier: carbon_emissions_longform
                       FieldId: 59bebdd6-b66d-42e8-bf7d-280860277c8b.2.1721654285868
                   Values:
                   - NumericalMeasureField:
@@ -3570,8 +3598,15 @@ dashboards:
                         SimpleNumericalAggregation: SUM
                       Column:
                         ColumnName: value
-                        DataSetIdentifier: carbon_emissions_aggregate_longform
+                        DataSetIdentifier: carbon_emissions_longform
                       FieldId: 1c4e087c-344e-4ad0-b986-aa01476f6091.value.0.1720689361709
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          NumberDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 3
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
               Legend:
                 Height: 39px
                 Position: RIGHT
@@ -3611,12 +3646,13 @@ dashboards:
                 - ApplyTo:
                     Column:
                       ColumnName: value
-                      DataSetIdentifier: carbon_emissions_aggregate_longform
+                      DataSetIdentifier: carbon_emissions_longform
                     FieldId: 1c4e087c-344e-4ad0-b986-aa01476f6091.value.0.1720689361709
                   CustomLabel: Carbon emissions (MTCO2e)
             ColumnHierarchies:
             - DateTimeHierarchy:
-                HierarchyId: 1c4e087c-344e-4ad0-b986-aa01476f6091.startdate.1.1720689364743
+                DrillDownFilters: []
+                HierarchyId: 30e1574a-81b3-40ec-85e9-9c2005dfe73b
             Subtitle:
               Visibility: HIDDEN
             Title:
@@ -3630,14 +3666,14 @@ dashboards:
                 ScreenCanvasSizeOptions:
                   OptimizedViewPortWidth: 1920px
               Elements:
-              - ElementId: b65e0729-42a4-4de3-84d1-e8cbb7789b69
+              - ElementId: e003c03e-fb53-4d77-b728-19d448fe178b
                 ElementType: VISUAL
                 Height: 272px
                 Visibility: VISIBLE
                 Width: 1792px
                 XAxisLocation: 0px
                 YAxisLocation: 0px
-              - ElementId: b3668974-7aa2-4203-ae13-09f505222d23
+              - ElementId: 43cc365e-b935-4b6a-afa9-edbca2ad2ad1
                 ElementType: VISUAL
                 Height: 784px
                 Visibility: VISIBLE
@@ -3645,7 +3681,7 @@ dashboards:
                 XAxisLocation: 0px
                 YAxisLocation: 272px
         Name: About
-        SheetId: e6d41419-8cb7-481d-97b7-e1fe960b5180
+        SheetId: 05e390e3-ff3a-4674-8b10-537aadaeb77d
         Visuals:
         - InsightVisual:
             Actions: []
@@ -3669,7 +3705,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: VISIBLE
-            VisualId: b65e0729-42a4-4de3-84d1-e8cbb7789b69
+            VisualId: e003c03e-fb53-4d77-b728-19d448fe178b
         - InsightVisual:
             Actions: []
             DataSetIdentifier: sus_geo_region_athena
@@ -3708,7 +3744,7 @@ dashboards:
               Visibility: VISIBLE
             Title:
               Visibility: VISIBLE
-            VisualId: b3668974-7aa2-4203-ae13-09f505222d23
+            VisualId: 43cc365e-b935-4b6a-afa9-edbca2ad2ad1
 datasets:
   sus_s3_storage_all:
     data:
@@ -4073,10 +4109,10 @@ datasets:
       - account_map
     schedules:
     - default
-  carbon_emissions_aggregate_longform:
+  carbon_emissions_longform:
     data:
       DataSetId: 814f2ac6-3205-43b8-ac8b-bab4dc1c864a
-      Name: carbon_emissions_aggregate_longform
+      Name: carbon_emissions_longform
       PhysicalTableMap:
         c58a049b-ecf8-4884-8916-2b8ec86bd941:
           RelationalTable:
@@ -4764,7 +4800,7 @@ views:
         global: True
   sus_carbon_emissions_view:
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".sus_carbon_emissions_view AS
+      CREATE VIEW "${athena_database_name}".sus_carbon_emissions_view AS
       SELECT
         '123456789789' accountid
       , '2024-01-01' querydate
@@ -4775,7 +4811,7 @@ views:
       WHERE (1 = 0)
   sus_carbon_emissions_longform:
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".sus_carbon_emissions_longform AS 
+      CREATE VIEW "${athena_database_name}".sus_carbon_emissions_longform AS 
       SELECT
         'gridmixinefficiency' metric
       , 0 value
