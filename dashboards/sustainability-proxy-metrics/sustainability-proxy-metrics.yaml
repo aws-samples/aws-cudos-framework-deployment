@@ -4800,7 +4800,7 @@ views:
         global: True
   sus_carbon_emissions_view:
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".sus_carbon_emissions_view AS
+      CREATE VIEW "${athena_database_name}".sus_carbon_emissions_view AS
       SELECT
         '123456789789' accountid
       , '2024-01-01' querydate
@@ -4811,7 +4811,7 @@ views:
       WHERE (1 = 0)
   sus_carbon_emissions_longform:
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".sus_carbon_emissions_longform AS 
+      CREATE VIEW "${athena_database_name}".sus_carbon_emissions_longform AS 
       SELECT
         'gridmixinefficiency' metric
       , 0 value
