@@ -1915,3 +1915,36 @@ Outputs:
     Description: "URL of ComputeOptimizerDashboard"
     Condition: NeedComputeOptimizerDashboard
     Value: !GetAtt ComputeOptimizerDashboard.DashboardURL
+  CidExecArn:
+    Description: Technical Value - CidExecArn
+    Value: !GetAtt CidExec.Arn
+    Export: { Name: !Sub 'cid${Suffix}-CidExecArn'}
+  AthenaWorkgroup:
+    Description: Technical Value - AthenaWorkgroup
+    Value: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+    Export: { Name: !Sub 'cid${Suffix}-AthenaWorkgroup'}
+  QuickSightDatasourceId:
+    Description: Technical Value - QuickSightDatasourceId
+    Value: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
+    Export: { Name: !Sub 'cid${Suffix}-QuickSightDatasourceId'}
+  QuickSightDatasourceRoleArn:
+    Description: Technical Value - QuickSightDatasourceRoleArn
+    Value: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+    Export: { Name: !Sub 'cid${Suffix}-QuickSightDatasourceRoleArn'}
+  AthenaDatabase:
+    Description: Technical Value - AthenaDatabase
+    Value: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+    Export: { Name: !Sub 'cid${Suffix}-AthenaDatabase'}
+  GlueCatalog:
+    Description: Technical Value - GlueCatalog
+    Value: !Ref GlueDataCatalog
+    Export: { Name: !Sub 'cid${Suffix}-GlueCatalog'}
+  CurTableName:
+    Description: Technical Value - CurTableName
+    Value: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+    Export: { Name: !Sub 'cid${Suffix}-CurTableName'}
+  QuickSightUser:
+    Description: Technical Value - QuickSightUser
+    Value: !Ref QuickSightUser
+    Export: { Name: !Sub 'cid${Suffix}-QuickSightUser'}
+
