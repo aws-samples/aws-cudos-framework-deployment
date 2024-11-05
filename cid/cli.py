@@ -136,7 +136,8 @@ def deploy(ctx, **kwargs):
      --category TEXT                       Comma separated list of categories of dashboards (ex: foundational,advanced )
      --catalog TEXT                        Comma separated list of catalog files or urls (ex: foundational,advanced )
      --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
-    """
+     --share-with-account  (yes|no)        Make dashboard visible to other users in the same account by default.
+     """
     ctx.obj.deploy(**kwargs)
 
 
