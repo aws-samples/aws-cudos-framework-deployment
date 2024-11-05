@@ -342,7 +342,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
       Policies:
         - PolicyName: !Sub 'CidSpiceRefreshExecutionRole${Suffix}'
           PolicyDocument:
@@ -716,7 +716,7 @@ Resources:
           WORKGROUP: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
           CRAWLER: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
           QUICKSIGHT_USER: !Ref QuickSightUser
-          QUICKSIGHT_ROLE: !If [ NeedQuickSightDataSourceRole, !Ref QuickSightDataSourceRole, !Ref AWS::NoValue ]
+          QUICKSIGHT_ROLE: !If [ NeedQuickSightDataSourceRole, !Ref QuickSightDataSourceRole, !Ref 'AWS::NoValue' ]
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -762,7 +762,7 @@ Resources:
                     - iam:DetachRolePolicy
                   Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}"
                 - !Ref 'AWS::NoValue'
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
 
   InitLambdaExecutionRoleWorkGroupPolicy:
     Type: AWS::IAM::Policy
@@ -848,7 +848,7 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: !Ref RolePath
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
       Policies:
         - PolicyName: AWSCURCrawlerComponentFunction
           PolicyDocument:
@@ -1130,7 +1130,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Path: !Ref RolePath
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
       Policies:
         - PolicyName: AWSCURCrawlerComponentFunction
           PolicyDocument:
@@ -1214,7 +1214,7 @@ Resources:
               - 'sts:AssumeRole'
       Path: !Ref RolePath
       RoleName: !Sub '${QuickSightDataSourceRoleName}${Suffix}'
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
       Policies:
         - PolicyName: AthenaAccess
           PolicyDocument:
@@ -1355,14 +1355,14 @@ Resources:
   CidAthenaDataSource:
     Type: AWS::QuickSight::DataSource
     Properties:
-      AwsAccountId: !Sub '${AWS::AccountId}'
+      AwsAccountId: !Ref 'AWS::AccountId'
       Type: ATHENA
       DataSourceId: !Sub 'CID-Athena${Suffix}'
       Name:         !Sub 'CID-Athena${Suffix}'
       DataSourceParameters:
         AthenaParameters:
           WorkGroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-          RoleArn: !If [ UseQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRoleName}", !Ref AWS::NoValue ]
+          RoleArn: !If [ UseQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRoleName}", !Ref 'AWS::NoValue']
       Permissions:
         - Actions:
             - 'quicksight:DescribeDataSource'
@@ -1387,8 +1387,8 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-      ManagedPolicyArns: !If [UseCUR2,  [ !ImportValue cid-DataExports-ReadAccessPolicyARN ]  , !Ref AWS::NoValue]
+      PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
+      ManagedPolicyArns: !If [UseCUR2,  [ !ImportValue cid-DataExports-ReadAccessPolicyARN ]  , !Ref 'AWS::NoValue']
       Policies:
         - PolicyName: CidExecPolicy
           PolicyDocument:
