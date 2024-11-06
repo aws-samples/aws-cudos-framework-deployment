@@ -32,23 +32,14 @@ Resources:
     Type: Custom::CidDashboard
     Properties:
       Name: !Ref DashboardId
-      ServiceToken: {Fn::ImportValue: "cid-CidExecArn"}
+      ServiceToken: {'Fn::ImportValue': "cid-CidExecArn"}
       Dashboard:
         dashboard-id: !Ref DashboardId
         account-map-source: 'dummy'
         data-collection-database-name: 'optimization_data'
-        athena-workgroup: {Fn::ImportValue: "cid-AthenaWorkgroup"}
-        quicksight-datasource-id: {Fn::ImportValue: "cid-QuickSightDatasourceId"}
-        quicksight-datasource-role-arn: {Fn::ImportValue: "cid-QuickSightDatasourceRoleArn"}
-        athena-database: {Fn::ImportValue: "cid-AthenaDatabase"}
-        glue-data-catalog: {Fn::ImportValue: "cid-GlueCatalog"}
-        cur-table-name: {Fn::ImportValue: "cid-CurTableName"}
-        cur-database-name: {Fn::ImportValue: "cid-CurDatabaseName"}
-        quicksight-user: {Fn::ImportValue: "cid-QuickSightUser"}
-        share-with-account: 'yes'
         resources: !If [ResourcesUrlIsEmpty, !Ref 'AWS::NoValue', !Ref ResourcesUrl]
-        data_exports_database_name: !If [RequiresDataExports, {Fn::ImportValue:  "cid-DataExports-Database"}, !Ref 'AWS::NoValue']
-        data_collection_database_name: !If [RequiresDataCollection, {Fn::ImportValue:  "cid-DataCollection-Database"}, !Ref 'AWS::NoValue']
+        data_exports_database_name: !If [RequiresDataExports, {'Fn::ImportValue':  "cid-DataExports-Database"}, !Ref 'AWS::NoValue']
+        data_collection_database_name: !If [RequiresDataCollection, {'Fn::ImportValue':  "cid-DataCollection-Database"}, !Ref 'AWS::NoValue']
 
 Outputs:
   DashboardURL:
