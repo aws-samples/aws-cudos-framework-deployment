@@ -4,7 +4,7 @@
 account_id=$(aws sts get-caller-identity --query "Account" --output text )
 database_name="${database_name:-athenacurcfn_cur1}" # If variable not set or null, use default
 quicksight_user="${quicksight_user:-cicd-staging}" # If variable not set or null, use default
-quicksight_datasource_id="${quicksight_datasource_id:-31c87a3c-8494-4f42-a590-c6930602e8e7}" # If variable not set or null, use default
+quicksight_datasource_id="${quicksight_datasource_id:-CID-CMD-Athena}" # If variable not set or null, use default
 cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME can be autodetected!
 
 
@@ -14,9 +14,12 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
     --athena-database $database_name\
     --account-map-source dummy \
     --cur-table-name $cur_table \
+    --athena-workgroup primary\
     --quicksight-user $quicksight_user \
     --share-with-account \
+    --timezone 'Europe/Paris' \
     --quicksight-datasource-id $quicksight_datasource_id
+
 
   [ "$status" -eq 0 ]
 }
@@ -26,7 +29,7 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
     --catalog-name 'AwsDataCatalog'\
     --database-name $database_name \
     --table-name 'summary_view' \
- 
+
  # FIXME: add
  #  compute_savings_plan_eligible_spend
  #  summary_view
@@ -57,6 +60,7 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
   run cid-cmd -vv --yes update --force --recursive  \
     --dashboard-id cudos-v5 \
     --cur-table-name $cur_table \
+    --athena-workgroup primary\
     --quicksight-user $quicksight_user   \
 
   [ "$status" -eq 0 ]
@@ -65,6 +69,7 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
 
 @test "Delete runs" {
   run cid-cmd -vv --yes delete \
+    --athena-workgroup primary\
     --dashboard-id cudos-v5
 
   [ "$status" -eq 0 ]

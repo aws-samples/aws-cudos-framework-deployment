@@ -1,6 +1,6 @@
 /*Replace customer_all in row 20 with your CUR table name */
-CREATE OR REPLACE VIEW kpi_ebs_snap AS 
-		WITH 
+CREATE OR REPLACE VIEW kpi_ebs_snap AS
+		WITH
 		-- Step 1: Add mapping view
 		map AS(SELECT *
 		FROM account_map),
@@ -8,8 +8,8 @@ CREATE OR REPLACE VIEW kpi_ebs_snap AS
 		-- Step 2: Filter CUR to return all ebs ec2 snapshot usage data
 		snapshot_usage_all_time AS (
 		   SELECT
-			 year
-		   , month
+			 split_part(billing_period, '/', 1) year
+		   , split_part(billing_period, '/', 2) month
 		   , bill_billing_period_start_date billing_period
 		   , line_item_usage_start_date usage_start_date
 		   , bill_payer_account_id payer_account_id
@@ -20,7 +20,7 @@ CREATE OR REPLACE VIEW kpi_ebs_snap AS
 		   , line_item_unblended_cost
 		   , pricing_public_on_demand_cost
 		   FROM
-			 "${cur_table_name}"
+			 "${cur2_database}"."${cur2_table_name}"
 		   WHERE (((((bill_payer_account_id <> '') AND (line_item_resource_id <> '')) AND (line_item_line_item_type LIKE '%Usage%')) AND (line_item_product_code = 'AmazonEC2')) AND (line_item_usage_type LIKE '%EBS:Snapshot%'))
 
 		),	
