@@ -1459,7 +1459,9 @@ class Cid():
         if isinstance(athena_datasource, Datasource) and athena_datasource.role_name:
             data_providers = dataset_definition.get('dependsOn', {}).get('dataProviders', [])
             policies_arns = [self.cfn.get_read_access_policy_for_module(provider) for provider in data_providers]
-            self.iam.ensure_managed_policies_attached (role_name=athena_datasource.role_name, policies_arns=','.join(policies_arns))
+            policies_arns = [policies_arn for policies_arn in policies_arns if policies_arn] # filter out nones
+            if policies_arns:
+                self.iam.ensure_managed_policies_attached(role_name=athena_datasource.role_name, policies_arns=','.join(policies_arns))
 
         # Check for required views
         _views = dataset_definition.get('dependsOn', {}).get('views', [])
