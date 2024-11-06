@@ -1942,7 +1942,7 @@ Outputs:
   CurDatabaseName:
     Description: Technical Value - CurDatabaseName
     Value: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
-    Export: { Name: !Sub 'cid${Suffix}-CurTableName'}
+    Export: { Name: !Sub 'cid${Suffix}-CurDatabaseName'}
   CurTableName:
     Description: Technical Value - CurTableName
     Value: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
