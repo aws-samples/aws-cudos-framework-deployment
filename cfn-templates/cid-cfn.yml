@@ -1939,12 +1939,15 @@ Outputs:
     Description: Technical Value - GlueCatalog
     Value: !Ref GlueDataCatalog
     Export: { Name: !Sub 'cid${Suffix}-GlueCatalog'}
+  CurDatabaseName:
+    Description: Technical Value - CurDatabaseName
+    Value: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+    Export: { Name: !Sub 'cid${Suffix}-CurTableName'}
   CurTableName:
     Description: Technical Value - CurTableName
-    Value: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
+    Value: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
     Export: { Name: !Sub 'cid${Suffix}-CurTableName'}
   QuickSightUser:
     Description: Technical Value - QuickSightUser
     Value: !Ref QuickSightUser
     Export: { Name: !Sub 'cid${Suffix}-QuickSightUser'}
-

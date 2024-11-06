@@ -43,6 +43,7 @@ Resources:
         athena-database: {Fn::ImportValue: "cid-AthenaDatabase"}
         glue-data-catalog: {Fn::ImportValue: "cid-GlueCatalog"}
         cur-table-name: {Fn::ImportValue: "cid-CurTableName"}
+        cur-database-name: {Fn::ImportValue: "cid-CurDatabaseName"}
         quicksight-user: {Fn::ImportValue: "cid-QuickSightUser"}
         share-with-account: 'yes'
         resources: !If [ResourcesUrlIsEmpty, !Ref 'AWS::NoValue', !Ref ResourcesUrl]
