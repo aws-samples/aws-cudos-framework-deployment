@@ -1665,6 +1665,9 @@ Resources:
               dash_url = "Unknown"
               try:
                   dashboard = properties['Dashboard']
+                  # set additional parameters from environment variables
+                  for par in 'athena_workgroup quicksight_datasource_id quicksight_datasource_role_arn athena_database glue_data_catalog cur_table_name cur_database quicksight_user account_map_source share_with_account'.split():
+                      dashboard[par.replace('_', '-')] = dashboard.get(par.replace('_', '-'), os.environ.get(par))
                   if request_type == 'Create':
                       dash_url = deploy_dash(dashboard)
                       status, reason = 'SUCCESS', f"{request_type} {physical_id} ok"
@@ -1725,6 +1728,18 @@ Resources:
               return app.qs_url.format(dashboard_id=params['dashboard-id'], **app.qs_url_params)
       Layers:
         - !Ref CidResourceLambdaLayer
+      Environment:
+        Variables:
+          athena_workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+          quicksight_datasource_id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
+          quicksight_datasource_role_arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
+          athena_database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          glue_data_catalog: !Ref GlueDataCatalog
+          cur_table_name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
+          cur_database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
+          quicksight_user: !Ref QuickSightUser
+          account_map_source: 'dummy' #initial
+          share_with_account: !Ref ShareDashboard
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -1759,18 +1774,8 @@ Resources:
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
         dashboard-id: cost_intelligence_dashboard
-        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
-        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-        glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
-        quicksight-user: !Ref QuickSightUser
-        account-map-source: 'dummy' #initial
-        share-with-account: !Ref ShareDashboard
 
-  CUDOSDashboard:
+  CUDOSDashboard: # Legacy
     Type: Custom::CidDashboard
     Condition: NeedCUDOSDashboard
     DependsOn:
@@ -1780,19 +1785,10 @@ Resources:
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
         dashboard-id: cudos
-        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
-        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-        glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
-        quicksight-user: !Ref QuickSightUser
-        account-map-source: 'dummy' #initial
-        share-with-account: !Ref ShareDashboard
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
+
   CUDOSv5Dashboard:
     Type: Custom::CidDashboard
     Condition: NeedCUDOSv5
@@ -1803,20 +1799,11 @@ Resources:
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
         dashboard-id: cudos-v5
-        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
-        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-        glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
-        quicksight-user: !Ref QuickSightUser
-        account-map-source: 'dummy' #initial
-        share-with-account: !Ref ShareDashboard
         resources: !If [IsChinaOrGovCloudRegion, 'https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/hub/cudos/CUDOS-v5.yaml', !Ref 'AWS::NoValue']
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
+
   KPIDashboard:
     Type: Custom::CidDashboard
     Condition: NeedKPIDashboard
@@ -1827,16 +1814,6 @@ Resources:
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
         dashboard-id: kpi_dashboard
-        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
-        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-        glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
-        quicksight-user: !Ref QuickSightUser
-        account-map-source: 'dummy' #initial
-        share-with-account: !Ref ShareDashboard
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
@@ -1853,15 +1830,6 @@ Resources:
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
         dashboard-id: ta-organizational-view
-        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
-        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-        glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
-        quicksight-user: !Ref QuickSightUser
-        share-with-account: !Ref ShareDashboard
         view-ta-organizational-view-reports-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/trusted-advisor/trusted-advisor-data'
 
   ComputeOptimizerDashboard:
@@ -1874,15 +1842,6 @@ Resources:
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
         dashboard-id: compute-optimizer-dashboard
-        athena-workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-        quicksight-datasource-id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-        quicksight-datasource-role-arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
-        athena-database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-        glue-data-catalog: !Ref GlueDataCatalog
-        cur-table-name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
-        cur-database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
-        quicksight-user: !Ref QuickSightUser
-        share-with-account: !Ref ShareDashboard
         view-compute-optimizer-lambda-lines-s3FolderPath:       !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_lambda'
         view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
         view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
@@ -1919,32 +1878,3 @@ Outputs:
     Description: Technical Value - CidExecArn
     Value: !GetAtt CidExec.Arn
     Export: { Name: !Sub 'cid${Suffix}-CidExecArn'}
-  AthenaWorkgroup:
-    Description: Technical Value - AthenaWorkgroup
-    Value: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
-    Export: { Name: !Sub 'cid${Suffix}-AthenaWorkgroup'}
-  QuickSightDatasourceId:
-    Description: Technical Value - QuickSightDatasourceId
-    Value: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
-    Export: { Name: !Sub 'cid${Suffix}-QuickSightDatasourceId'}
-  QuickSightDatasourceRoleArn:
-    Description: Technical Value - QuickSightDatasourceRoleArn
-    Value: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
-    Export: { Name: !Sub 'cid${Suffix}-QuickSightDatasourceRoleArn'}
-  AthenaDatabase:
-    Description: Technical Value - AthenaDatabase
-    Value: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-    Export: { Name: !Sub 'cid${Suffix}-AthenaDatabase'}
-  GlueCatalog:
-    Description: Technical Value - GlueCatalog
-    Value: !Ref GlueDataCatalog
-    Export: { Name: !Sub 'cid${Suffix}-GlueCatalog'}
-  CurTableName:
-    Description: Technical Value - CurTableName
-    Value: !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ]
-    Export: { Name: !Sub 'cid${Suffix}-CurTableName'}
-  QuickSightUser:
-    Description: Technical Value - QuickSightUser
-    Value: !Ref QuickSightUser
-    Export: { Name: !Sub 'cid${Suffix}-QuickSightUser'}
-
