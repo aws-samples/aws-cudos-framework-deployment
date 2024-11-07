@@ -6719,7 +6719,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_datasource_arn}
+            Schema: ${athena_database_name}
             Name: cora_view
             InputColumns:
             - Name: account_id
