@@ -1741,6 +1741,7 @@ class Cid():
         columns_tpl = {
             #'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
+            'athena_table_name': view_name,
             'cur_database':    self.cur1.database   if cur1_required else None, # for backward compatibly
             'cur_table_name':  self.cur1.table_name if cur1_required else None, # for backward compatibly
             'cur1_database':   self.cur1.database   if cur1_required else None,
