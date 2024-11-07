@@ -1846,6 +1846,7 @@ Resources:
         view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
         view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
         view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ec2_instance'
+        view-compute-optimizer-rds-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_rds_instance'
         dataset-compute-optimizer-all-options-primary-tag-name: !Sub '${PrimaryTagName}'
         dataset-compute-optimizer-all-options-secondary-tag-name: !Sub '${SecondaryTagName}'
 
