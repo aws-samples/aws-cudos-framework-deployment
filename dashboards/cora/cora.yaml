@@ -6719,7 +6719,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${data_exports_database_name}
+            Schema: ${athena_datasource_arn}
             Name: cora_view
             InputColumns:
             - Name: account_id
@@ -6860,17 +6860,10 @@ datasets:
         default: cid_cur
         description: Database of account_map table (from foundational dashboards)
         global: True
-      data_exports_database_name:
-        type: athena
-        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'coh'
-        error: Please check if you have CID Data Exports installed and Cost Optimization Hub option is activated
-        default: cid_data_export
-        description: Database of cid data exports
-        global: True
 views:
   cora_view:
     data: |-
-      CREATE OR REPLACE VIEW "${data_exports_database_name}"."cora_view" AS
+      CREATE OR REPLACE VIEW "cora_view" AS
       SELECT
         "account_id"
       , "action_type"
