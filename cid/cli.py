@@ -9,7 +9,7 @@ from cid.utils import get_parameters, set_parameters, get_latest_tool_version, c
 from cid._version import __version__
 from cid.exceptions import CidCritical, CidError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('cid')
 version = __version__
 latest_version = get_latest_tool_version()
 prog_name="CLOUD INTELLIGENCE DASHBOARDS (CID) CLI"
@@ -20,6 +20,15 @@ if __version__ != latest_version and latest_version != 'UNDEFINED':
 
 def cid_command(func):
     def wrapper(ctx, **kwargs):
+
+        def get_command_line():
+            params = get_parameters()
+            return ('cid-cmd ' + ctx.info_name
+                + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
+                + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
+                + ''.join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
+            )
+
         # Complete kwargs with other parameters
         if len(ctx.args) % 2 != 0:
             print(f"Unknown extra argument, or an option without value {ctx.args}")
@@ -33,19 +42,13 @@ def cid_command(func):
         res = None
         try:
             res = func(ctx, **kwargs)
-        except CidCritical as exc:
+        except (CidCritical, CidError) as exc:
             logger.debug(exc, exc_info=True)
-            logger.critical(exc)
-        except CidError as exc:
-            logger.debug(exc, exc_info=True)
+            logger.debug(f'When running {get_command_line()}')
             logger.error(exc)
         params = get_parameters()
         logger.info('Next time you can use following command:')
-        logger.info('   cid-cmd ' + ctx.info_name
-            + ''.join([f" --{k.replace('_','-')}" for k, v in ctx.params.items() if isinstance(v, bool) and v])
-            + ''.join([f" --{k.replace('_','-')} '{v}'" for k, v in ctx.params.items() if not isinstance(v, bool) and v is not None])
-            + ''.join([f" --{k} '{v}' " for k, v in params.items() if not isinstance(v, bool) and v is not None])
-        )
+        logger.info(get_command_line())
         return res
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
@@ -113,7 +116,7 @@ def csv2view(ctx, **kwargs):
 @cid_command
 def deploy(ctx, **kwargs):
     """Deploy Dashboard
-    
+
     \b
     Command options:
      --category TEXT                       The dashboards category to choose from. Not needed if dashboard-id provided directly
@@ -136,7 +139,8 @@ def deploy(ctx, **kwargs):
      --category TEXT                       Comma separated list of categories of dashboards (ex: foundational,advanced )
      --catalog TEXT                        Comma separated list of catalog files or urls (ex: foundational,advanced )
      --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
-    """
+     --share-with-account  (yes|no)        Make dashboard visible to other users in the same account by default.
+     """
     ctx.obj.deploy(**kwargs)
 
 
@@ -145,7 +149,7 @@ def deploy(ctx, **kwargs):
 @cid_command
 def export(ctx, **kwargs):
     """Export Dashboard
-    
+
     \b
     Command options:
         --analysis-name              Analysis you want to share (not needed if analysis-id is provided).
@@ -199,7 +203,6 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
     """Update Dashboard
 
     \b
-
      --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
      --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
 
@@ -264,14 +267,31 @@ def create_cur_table(ctx, **kwargs):
     ctx.obj.create_cur_table(**kwargs)
 
 @click.option('-v', '--verbose', count=True)
+@click.option('--cur-version', help='Cur Version (1 or 2)')
+@click.option('--fields', help='CUR fields', default='')
+@cid_command
+def create_cur_proxy(ctx, cur_version, fields, **kwargs):
+    """Create CUR proxy - an Athena view that transforms cur1 to cur2 or cur2 > cur1
+
+    \b
+     --cur-version  (1|2)        The target version of CUR
+     --fields                    Comma Separated list of additional CUR fields
+     --cur-table-name TEXT       CUR table name
+     --cur-database TEXT         Athena database of CUR
+     --athena-database TEXT      Athena database to create proxy
+    """
+
+    ctx.obj.create_cur_proxy(cur_version=cur_version, fields=fields, **kwargs)
+
+
+@click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
 def teardown(ctx, **kwargs):
     """Delete all CID assets
 
     \b
-
-    THIS IS VERY DANGEROUS. DO NOT USE IT.
+    THIS IS VERY DANGEROUS. DO NOT USE THIS COMMAND.
     """
 
     ctx.obj.teardown(**kwargs)

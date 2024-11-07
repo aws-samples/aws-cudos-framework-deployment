@@ -1,6 +1,7 @@
 CREATE OR REPLACE VIEW "s3_view" AS
-SELECT DISTINCT "year",
-    "month",
+SELECT DISTINCT 
+    split_part("billing_period", '-', 1) "year",
+    split_part("billing_period", '-', 2) "month",
     "bill_billing_period_start_date" "billing_period",
     "date_trunc"('day', "line_item_usage_start_date") "usage_date",
     "bill_payer_account_id" "payer_account_id",
@@ -8,7 +9,7 @@ SELECT DISTINCT "year",
     "line_item_resource_id" "resource_id",
     "line_item_product_code" "product_code",
     "line_item_operation" "operation",
-    "product_region" "region",
+    product['region'] "region",
     "line_item_line_item_type" "charge_type",
     "pricing_unit" "pricing_unit",
     "sum"(
@@ -19,7 +20,7 @@ SELECT DISTINCT "year",
     ) "usage_quantity",
     "sum"("line_item_unblended_cost") "unblended_cost",
     "sum"("pricing_public_on_demand_cost") "public_cost"
-FROM "${cur_table_name}"
+FROM "${cur2_database}"."${cur2_table_name}"
 WHERE (
         (
             (
