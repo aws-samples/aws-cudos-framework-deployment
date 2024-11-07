@@ -1415,10 +1415,10 @@ class QuickSight(CidBase):
                 dataset_declarations = create_parameters['Definition'].get('DataSetIdentifierDeclarations', [])
                 for ds_dec in dataset_declarations:
                     if identifier == ds_dec['Identifier']:
-                        logger.debug('Dataset {identifier} matched by Name')
+                        logger.debug(f'Dataset {identifier} matched by Name')
                         break # all good
                     elif arn.split('/')[-1] == ds_dec['DataSetArn'].split('/')[-1]:
-                        logger.debug('Dataset {identifier} matched by Id')
+                        logger.debug(f'Dataset {identifier} matched by Id')
                         identifier = ds_dec['Identifier']
                         break
                 else:
