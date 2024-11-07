@@ -5,7 +5,7 @@ dashboards:
       - scad_cca_hourly_resource_view
       - scad_cca_summary_view
     name: SCAD Containers Cost Allocation
-    dashboardId: scad-containers-cost-allocation2
+    dashboardId: scad-containers-cost-allocation
     category: Additional
     templateId: scad-containers-cost-allocation
 datasets:
