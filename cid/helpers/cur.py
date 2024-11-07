@@ -105,7 +105,7 @@ class AbstractCUR(CidBase):
         """ Return an Athena type of a given non existent CUR column """
         if column.startswith('cost_category_') or column.startswith('resource_tags_'):
             return 'STRING'
-        for ending in ['_cost', '_factor', '_quantity', '_fee', '_amount', '_discount']:
+        for ending in ['_cost', '_factor', '_quantity', '_fee', '_amount', '_discount', '_usage', '_usage_ratio']:
             if column.endswith(ending):
                 return 'DOUBLE'
         if column.endswith('_date') and not column.endswith('_to_date'):
@@ -117,14 +117,10 @@ class AbstractCUR(CidBase):
             "discount": "MAP",
             "product": "MAP",
             "resource_tags": "MAP",
-            "reservation_amortized_upfront_cost_for_usage": "DOUBLE",
             "reservation_amortized_upfront_fee_for_billing_period": "DOUBLE",
-            "reservation_recurring_fee_for_usage": "DOUBLE",
             "reservation_unused_amortized_upfront_fee_for_billing_period": "DOUBLE",
             "reservation_upfront_value": "DOUBLE",
-            "reservation_net_amortized_upfront_cost_for_usage": "DOUBLE",
             "reservation_net_amortized_upfront_fee_for_billing_period": "DOUBLE",
-            "reservation_net_recurring_fee_for_usage": "DOUBLE",
             "reservation_net_unused_amortized_upfront_fee_for_billing_period": "DOUBLE",
             "reservation_net_upfront_value": "DOUBLE",
             "savings_plan_total_commitment_to_date": "DOUBLE",

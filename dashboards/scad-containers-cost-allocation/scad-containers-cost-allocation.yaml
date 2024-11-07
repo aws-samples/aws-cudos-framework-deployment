@@ -5,7 +5,7 @@ dashboards:
       - scad_cca_hourly_resource_view
       - scad_cca_summary_view
     name: SCAD Containers Cost Allocation
-    dashboardId: scad-containers-cost-allocation
+    dashboardId: scad-containers-cost-allocation2
     category: Additional
     templateId: scad-containers-cost-allocation
 datasets:
@@ -483,24 +483,27 @@ views:
   scad_cca_summary_view:
     dependsOn:
       cur:
-        reservation_reservation_a_r_n: string
-        split_line_item_parent_resource_id: string
-        split_line_item_reserved_usage: double
-        split_line_item_actual_usage: double
-        split_line_item_split_usage: double
-        split_line_item_split_usage_ratio: double
-        split_line_item_split_cost: double
-        split_line_item_unused_cost: double
-        split_line_item_net_split_cost: double
-        split_line_item_net_unused_cost: double
-        split_line_item_public_on_demand_split_cost: double
-        split_line_item_public_on_demand_unused_cost: double
-        resource_tags_aws_eks_cluster_name: string
-        resource_tags_aws_eks_deployment: string
-        resource_tags_aws_eks_namespace: string
-        resource_tags_aws_eks_node: string
-        resource_tags_aws_eks_workload_name: string
-        resource_tags_aws_eks_workload_type: string
+        - reservation_reservation_a_r_n #: string
+        - split_line_item_parent_resource_id #: string
+        - split_line_item_reserved_usage #: double
+        - split_line_item_actual_usage #: double
+        - split_line_item_split_usage #: double
+        - split_line_item_split_usage_ratio #: double
+        - split_line_item_split_cost #: double
+        - split_line_item_unused_cost #: double
+        - split_line_item_net_split_cost #: double
+        - split_line_item_net_unused_cost #: double
+        - split_line_item_public_on_demand_split_cost #: double
+        - split_line_item_public_on_demand_unused_cost #: double
+        - resource_tags_aws_eks_cluster_name #: string
+        - resource_tags_aws_eks_deployment #: string
+        - resource_tags_aws_eks_namespace #: string
+        - resource_tags_aws_eks_node #: string
+        - resource_tags_aws_eks_workload_name #: string
+        - resource_tags_aws_eks_workload_type #: string
+        - product_instance_family
+        - product_vcpu
+        - product_memory
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".scad_cca_summary_view AS
       SELECT
@@ -586,24 +589,27 @@ views:
   scad_cca_hourly_resource_view:
     dependsOn:
       cur:
-        reservation_reservation_a_r_n: string
-        split_line_item_parent_resource_id: string
-        split_line_item_reserved_usage: double
-        split_line_item_actual_usage: double
-        split_line_item_split_usage: double
-        split_line_item_split_usage_ratio: double
-        split_line_item_split_cost: double
-        split_line_item_unused_cost: double
-        split_line_item_net_split_cost: double
-        split_line_item_net_unused_cost: double
-        split_line_item_public_on_demand_split_cost: double
-        split_line_item_public_on_demand_unused_cost: double
-        resource_tags_aws_eks_cluster_name: string
-        resource_tags_aws_eks_deployment: string
-        resource_tags_aws_eks_namespace: string
-        resource_tags_aws_eks_node: string
-        resource_tags_aws_eks_workload_name: string
-        resource_tags_aws_eks_workload_type: string
+        - reservation_reservation_a_r_n #: string
+        - split_line_item_parent_resource_id #: string
+        - split_line_item_reserved_usage #: double
+        - split_line_item_actual_usage #: double
+        - split_line_item_split_usage #: double
+        - split_line_item_split_usage_ratio #: double
+        - split_line_item_split_cost #: double
+        - split_line_item_unused_cost #: double
+        - split_line_item_net_split_cost #: double
+        - split_line_item_net_unused_cost #: double
+        - split_line_item_public_on_demand_split_cost #: double
+        - split_line_item_public_on_demand_unused_cost #: double
+        - resource_tags_aws_eks_cluster_name #: string
+        - resource_tags_aws_eks_deployment #: string
+        - resource_tags_aws_eks_namespace #: string
+        - resource_tags_aws_eks_node #: string
+        - resource_tags_aws_eks_workload_name #: string
+        - resource_tags_aws_eks_workload_type #: string
+        - product_instance_family
+        - product_vcpu
+        - product_memory
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".scad_cca_hourly_resource_view AS
       SELECT
