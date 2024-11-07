@@ -504,6 +504,11 @@ views:
         - product_instance_family
         - product_vcpu
         - product_memory
+        - product_region
+        - product_memory_gib
+        - product_instance_type
+        - product_instance_type_family
+        - product_operating_system
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".scad_cca_summary_view AS
       SELECT
@@ -610,6 +615,11 @@ views:
         - product_instance_family
         - product_vcpu
         - product_memory
+        - product_region
+        - product_memory_gib
+        - product_instance_type
+        - product_instance_type_family
+        - product_operating_system
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".scad_cca_hourly_resource_view AS
       SELECT
