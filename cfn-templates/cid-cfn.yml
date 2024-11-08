@@ -137,7 +137,7 @@ Parameters:
     Type: String
     Default: '2.0'
     AllowedValues: ["1.0", "2.0"]
-    Description: "We support 2 options: CUR 2.0 from DataExports stack managed by CID or CUR 1(Legacy)."
+    Description: "We support 2 options: CUR 2.0 from DataExports stack managed by CID or CUR 1(Legacy). When you switch to CUR2 consider KeepLegacyCURTable parameter to yes for keeping Legacy CUR table for migration period."
   CURBucketPath:
     Type: String
     MinLength: 3
@@ -248,7 +248,9 @@ Conditions:
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
-  NeedLegacyCUR: !Equals [!Ref KeepLegacyCURTable, "yes"]
+  NeedLegacyCUR: !Or
+    - !Equals [!Ref KeepLegacyCURTable, "yes"]
+    - !Equals [!Ref CURVersion, '1.0']
   NeedComputeOptimizerDashboard: !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   UseCUR2:
     Fn::And:
