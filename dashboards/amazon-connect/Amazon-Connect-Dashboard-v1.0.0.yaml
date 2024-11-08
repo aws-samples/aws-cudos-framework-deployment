@@ -1,5 +1,5 @@
 dashboards:
-  AMAZON CONNECT DASHBOARD V1.0.0:
+  AMAZON CONNECT DASHBOARD:
     dependsOn:
       datasets:
       - resource_connect_view_v1
