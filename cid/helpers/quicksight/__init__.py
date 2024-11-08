@@ -261,21 +261,17 @@ class QuickSight(CidBase):
                     logger.info(f'Unable to describe template for {dashboardId}, {exc}')
             else:
                 logger.info("Minimum template version could not be found for Dashboard {dashboardId}: {_template_arn}, deployed template could not be described")
-        
-        if _template_arn is None:
+        else: # Dashboard is not template based but definition based
+            try:
+                dashboard.deployedDefinition = self.describe_dashboard_definition(dashboard_id=dashboardId, refresh=refresh)
+            except CidError as exc:
+                logger.info('Exception on reading dashboard definition {dashboardId}: {exc}. Not critical. Continue.')
+
+        if 'data' in _definition:
             # Resolve source definition (the latest definition publicly available)
             data_stream = io.StringIO(_definition["data"])
             definition_data = yaml.safe_load(data_stream)
             dashboard.sourceDefinition = CidQsDefinition(definition_data)
-
-            # Resolve deployed dashboard definition
-            params = {
-                "dashboard_id": dashboardId,
-                "refresh": refresh
-            }
-            _deployed_definition = self.describe_dashboard_definition(**params)
-            # Assign property deployedDefinition to the retrieved dashboard definition
-            dashboard.deployedDefinition = _deployed_definition
 
         # Fetch datasets (works for both TEMPLATE and DEFINITION based dashboards)
         for dataset in dashboard.version.get('DataSetArns', []):
@@ -1415,10 +1411,10 @@ class QuickSight(CidBase):
                 dataset_declarations = create_parameters['Definition'].get('DataSetIdentifierDeclarations', [])
                 for ds_dec in dataset_declarations:
                     if identifier == ds_dec['Identifier']:
-                        logger.debug('Dataset {identifier} matched by Name')
+                        logger.debug(f'Dataset {identifier} matched by Name')
                         break # all good
                     elif arn.split('/')[-1] == ds_dec['DataSetArn'].split('/')[-1]:
-                        logger.debug('Dataset {identifier} matched by Id')
+                        logger.debug(f'Dataset {identifier} matched by Id')
                         identifier = ds_dec['Identifier']
                         break
                 else:
