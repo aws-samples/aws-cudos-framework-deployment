@@ -6,7 +6,7 @@ dashboards:
       - summary_view
     name: Amazon Connect Dashboard v1.0.0
     dashboardId: amazon-connect-dashboard-v1-0-0
-    category: Custom
+    category: Additional
     theme: CLASSIC
     data: |-
       AnalysisDefaults:
