@@ -2,10 +2,10 @@ dashboards:
   AMAZON CONNECT DASHBOARD:
     dependsOn:
       datasets:
-      - resource_connect_view_v1
+      - resource_connect_view
       - summary_view
-    name: Amazon Connect Dashboard v1.0.0
-    dashboardId: amazon-connect-dashboard-v1-0-0
+    name: Amazon Connect Dashboard
+    dashboardId: amazon-connect
     category: Additional
     theme: CLASSIC
     data: |-
@@ -16369,10 +16369,10 @@ dashboards:
               Visibility: VISIBLE
             VisualId: 1e30be54-30f9-470a-8995-3640e5a82635
 datasets:
-  resource_connect_view_v1:
+  resource_connect_view:
     data:
       DataSetId: 9a724a6b-6951-466f-a16c-d2a0866c3dce
-      Name: resource_connect_view_v1
+      Name: resource_connect_view
       PhysicalTableMap:
         262bcde8-fd8b-46b0-906e-9ea47394ffa8:
           RelationalTable:
@@ -16575,7 +16575,7 @@ datasets:
                   {location} = 'US East (N. Virginia)', 'Alexandria',
                   {location} = 'Canada (Central)', 'Toronto',
                   {location} = 'US West (Oregon)', 'Oregon',
-                  ''
+                  '{location}'
                   )
           - TagColumnOperation:
               ColumnName: country
