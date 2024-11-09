@@ -101,7 +101,7 @@ Parameters:
     Type: String
     Description: Changing of this parameter will require redeployment of this Stack, purging of data in Destination and then additional Backfill request. HOURLY is a recommended option unless your AWS invoice is more then $50M (in this case contact your TAM when installing).
     Default: "HOURLY"
-    AllowedValues: ["HOURLY", "DAILY"]
+    AllowedValues: ["HOURLY", "DAILY", "MONTHLY"]
 
 Conditions:
   EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
