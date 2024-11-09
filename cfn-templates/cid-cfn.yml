@@ -582,13 +582,14 @@ Resources:
       Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
-      Timeout: 300
+      Timeout: 600
       Handler: 'index.lambda_handler'
       Code:
         ZipFile: |
           import os
           import uuid
           import json
+          import time
           import boto3
           import botocore
           import urllib3
@@ -644,12 +645,26 @@ Resources:
 
           def on_create():
               if CRAWLER:
+                  timeout_seconds = 300
                   try:
                       boto3.client('glue').start_crawler(Name=CRAWLER)
                   except Exception as exc:
-                      return (True, f'ERROR: error invoking crawler {CRAWLER} {exc}')
-                  return (True, 'INFO: crawler started. Takes 1 min to update the table.')
-              return (True, 'INFO: No actions on create')
+                      if 'CrawlerRunningException' in str(exc):
+                          print ("crawler is running already")
+                      else:
+                          return (True, f'ERROR: error invoking crawler {CRAWLER} {exc}')
+                  print('started crawler started. waiting for crawler to finish')
+                  start_time = time.time()
+                  while time.time() - start_time < timeout_seconds:
+                      time.sleep(10)
+                      crawler_status = glue.get_crawler(Name=CRAWLER)['Crawler']['State']
+                      print('status=', crawler_status)
+                      if crawler_status in ('READY', 'STOPPING'):
+                          print("Stop waiting")
+                          break
+                  else:
+                      return (True, f"Timeout exceeded. Crawler '{CRAWLER}' did not complete. But we do not fail the execution.")
+                  return (True, 'Crawler run completed.')
 
           def on_delete():
               # Delete bucket (CF cannot delete if they are non-empty)
@@ -814,6 +829,7 @@ Resources:
           - Effect: Allow
             Action:
               - glue:StartCrawler
+              - glue:GetCrawler
             Resource:
               - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:crawler/${MyGlueCURCrawler}'
       Roles:
