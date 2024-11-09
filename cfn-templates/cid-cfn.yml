@@ -646,8 +646,9 @@ Resources:
           def on_create():
               if CRAWLER:
                   timeout_seconds = 300
+                  glue = boto3.client('glue')
                   try:
-                      boto3.client('glue').start_crawler(Name=CRAWLER)
+                      glue.start_crawler(Name=CRAWLER)
                   except Exception as exc:
                       if 'CrawlerRunningException' in str(exc):
                           print ("crawler is running already")
