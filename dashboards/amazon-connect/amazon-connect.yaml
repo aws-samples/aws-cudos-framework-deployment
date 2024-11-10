@@ -16575,7 +16575,7 @@ datasets:
                   {location} = 'US East (N. Virginia)', 'Alexandria',
                   {location} = 'Canada (Central)', 'Toronto',
                   {location} = 'US West (Oregon)', 'Oregon',
-                  '{location}'
+                  {location}
                   )
           - TagColumnOperation:
               ColumnName: country
