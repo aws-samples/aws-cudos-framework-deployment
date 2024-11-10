@@ -166,11 +166,11 @@ class QuickSight(CidBase):
         return self._datasources
 
     def ensure_subscription(self) -> None:
-        """Ensure that the QuickSight subscription is active"""
+        """Ensure that the Amazon QuickSight subscription is active"""
         if not self.edition(fresh=True):
-            raise CidCritical('QuickSight is not activated. Please run `cid-cmd initqs` command, or activate QuickSight Enterprise Edition from the console.')
+            raise CidCritical('Amazon QuickSight is not activated. Please run `cid-cmd initqs` command, or activate QuickSight Enterprise Edition from the console.')
         if self.edition() == 'STANDARD':
-            raise CidCritical(f'QuickSight Enterprise edition is required, you have {self.edition}.')
+            raise CidCritical(f'Amazon QuickSight Enterprise edition is required, you have {self.edition}.')
         logger.info(f'QuickSight subscription: {self._subscription_info}')
 
     def describe_account_subscription(self) -> dict:
@@ -809,7 +809,7 @@ class QuickSight(CidBase):
 
 
     def describe_dashboard(self, poll: bool=False, **kwargs) -> Union[None, Dashboard]:
-        """ Describes an AWS QuickSight dashboard
+        """ Describes an Amazon QuickSight dashboard
         Keyword arguments:
             DashboardId
             poll_interval
@@ -842,14 +842,14 @@ class QuickSight(CidBase):
         except self.client.exceptions.ResourceNotFoundException:
             return None
         except self.client.exceptions.UnsupportedUserEditionException as exc:
-            raise CidCritical('Error: AWS QuickSight Enterprise Edition is required') from exc
+            raise CidCritical('Error: Amazon QuickSight Enterprise Edition is required') from exc
         except Exception as exc:
             logger.error(f'Error in describe_dashboard: {exc}')
             raise
     
     # Create a method to retrieve the definition for a given dashboard
     def describe_dashboard_definition(self, dashboard_id: str, refresh: bool = False) -> CidQsDefinition:
-        """ Describes an AWS QuickSight dashboard definition """
+        """ Describes an Amazon QuickSight dashboard definition """
         if refresh or not self._definitions.get(f'{self.account_id}:{self.identityRegion}:{dashboard_id}'):
             try:
                 parameters = {
@@ -860,7 +860,7 @@ class QuickSight(CidBase):
                 self._definitions.update({f'{self.account_id}:{self.identityRegion}:{dashboard_id}': CidQsDefinition(result.get('Definition'))})
                 logger.debug(result)
             except self.client.exceptions.UnsupportedUserEditionException as exc:
-                raise CidCritical('AWS QuickSight Enterprise Edition is required') from exc
+                raise CidCritical('Amazon QuickSight Enterprise Edition is required') from exc
             except self.client.exceptions.ResourceNotFoundException as exc:
                 raise CidError(f'Error: Definition for dashboard with ID {dashboard_id} is not available in account {self.account_id} and region {self.identityRegion}') from exc
             except Exception as exc:
@@ -869,7 +869,7 @@ class QuickSight(CidBase):
         return self._definitions.get(f'{self.account_id}:{self.identityRegion}:{dashboard_id}')
 
     def delete_dashboard(self, dashboard_id):
-        """ Deletes an AWS QuickSight dashboard """
+        """ Deletes an Amazon QuickSight dashboard """
         params = {
             'AwsAccountId': self.account_id,
             'DashboardId': dashboard_id
@@ -880,7 +880,7 @@ class QuickSight(CidBase):
         return result
 
     def delete_data_source(self, datasource_id):
-        """ Deletes an AWS QuickSight dashboard """
+        """ Deletes an Amazon QuickSight dashboard """
         params = {
             'AwsAccountId': self.account_id,
             'DataSourceId': datasource_id
@@ -896,7 +896,7 @@ class QuickSight(CidBase):
         return result
 
     def delete_dataset(self, id: str) -> bool:
-        """ Deletes an AWS QuickSight dataset """
+        """ Deletes an Amazon QuickSight dataset """
 
         logger.info(f'Deleting dataset {id}')
         try:
@@ -949,7 +949,7 @@ class QuickSight(CidBase):
 
 
     def describe_dataset(self, id, timeout: int=1) -> Dataset:
-        """ Describes an AWS QuickSight dataset """
+        """ Describes an Amazon QuickSight dataset """
         if self._datasets and id in self._datasets:
             return self._datasets.get(id)
         self._datasets = self._datasets or {}
@@ -1048,7 +1048,7 @@ class QuickSight(CidBase):
         return mode, status
 
     def describe_data_source(self, id: str, update: bool=False) -> Datasource:
-        """ Describes an AWS QuickSight DataSource """
+        """ Describes an Amazon QuickSight DataSource """
         if not update and self.datasources and id in self.datasources:
             return self.datasources.get(id)
         try:
@@ -1073,7 +1073,7 @@ class QuickSight(CidBase):
 
 
     def describe_template(self, template_id: str, version_number: int=None, account_id: str=None, region: str='us-east-1') -> CidQsTemplate:
-        """ Describes an AWS QuickSight template """
+        """ Describes an Amazon QuickSight template """
         if not account_id:
             account_id=self.cidAccountId
         if not self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}'):
@@ -1089,7 +1089,7 @@ class QuickSight(CidBase):
                 self._templates.update({f'{account_id}:{region}:{template_id}:{version_number}': CidQsTemplate(result.get('Template'))})
                 logger.debug(result)
             except self.client.exceptions.UnsupportedUserEditionException as exc:
-                raise CidCritical('AWS QuickSight Enterprise Edition is required') from exc
+                raise CidCritical('Amazon QuickSight Enterprise Edition is required') from exc
             except self.client.exceptions.ResourceNotFoundException as exc:
                 raise CidError(f'Error: Template {template_id} is not available in account {account_id} and region {region}') from exc
             except Exception as exc:
@@ -1098,7 +1098,7 @@ class QuickSight(CidBase):
         return self._templates.get(f'{account_id}:{region}:{template_id}:{version_number}')
 
     def describe_user(self, username: str) -> dict:
-        """ Describes an AWS QuickSight user """
+        """ Describes an Amazon QuickSight user """
         parameters = {
             'AwsAccountId': self.account_id,
             'UserName': username,
@@ -1122,7 +1122,7 @@ class QuickSight(CidBase):
             return None
 
     def describe_group(self, groupname: str) -> dict:
-        """ Describes an AWS QuickSight Group """
+        """ Describes an Amazon QuickSight Group """
         try:
             result = self.identityClient.describe_group(**{
                 'AwsAccountId': self.account_id,
@@ -1140,7 +1140,7 @@ class QuickSight(CidBase):
 
 
     def create_dataset(self, definition: dict) -> str:
-        """ Creates an AWS QuickSight dataset """
+        """ Creates an Amazon QuickSight dataset """
         poll_interval = 1
         max_timeout = 60
         columns_tpl = {
@@ -1167,7 +1167,8 @@ class QuickSight(CidBase):
             dataset_id = definition.get("DataSetId")
             logger.info(f'Dataset {definition.get("Name")} already exists with DataSetId={dataset_id}')
         except self.client.exceptions.LimitExceededException as exc:
-            raise CidCritical('Not enough AWS QuickSight SPICE capacity. Add SPICE here https://quicksight.aws.amazon.com/sn/admin#capacity .') from exc
+            logger.error(exc)
+            raise CidCritical(f'Not enough Amazon QuickSight SPICE capacity in {self.region}. Add SPICE here https://quicksight.aws.amazon.com/sn/admin#capacity .') from exc
 
         logger.info(f'Waiting for {definition.get("Name")} to be created')
         deadline = time.time() + max_timeout
@@ -1185,7 +1186,7 @@ class QuickSight(CidBase):
 
 
     def update_dataset(self, definition: dict) -> Dataset:
-        """ Update an AWS QuickSight dataset """
+        """ Update an Amazon QuickSight dataset """
         definition.update({'AwsAccountId': self.account_id})
         logger.info(f'Updating dataset {definition.get("Name")}')
 
@@ -1338,7 +1339,7 @@ class QuickSight(CidBase):
             pass
 
     def create_dashboard(self, definition: dict) -> Dashboard:
-        """ Creates an AWS QuickSight dashboard """
+        """ Creates an Amazon QuickSight dashboard """
 
         create_parameters = self._build_params_for_create_update_dash(definition)
 
@@ -1430,7 +1431,7 @@ class QuickSight(CidBase):
         return create_parameters
 
     def update_dashboard(self, dashboard: Dashboard, definition):
-        """ Updates an AWS QuickSight dashboard """
+        """ Updates an Amazon QuickSight dashboard """
         update_parameters = self._build_params_for_create_update_dash(definition)
         logger.info(f'Updating dashboard "{dashboard.name}"')
         logger.debug(f"Update parameters: {update_parameters}")
@@ -1457,7 +1458,7 @@ class QuickSight(CidBase):
 
 
     def update_dashboard_permissions(self, **update_parameters):
-        """ Updates an AWS QuickSight dashboard permissions """
+        """ Updates an Amazon QuickSight dashboard permissions """
         logger.debug(f"Updating Dashboard permissions: {update_parameters}")
         update_parameters.update({'AwsAccountId': self.account_id})
         update_status = self.client.update_dashboard_permissions(**update_parameters)
@@ -1466,7 +1467,7 @@ class QuickSight(CidBase):
 
 
     def update_data_set_permissions(self, **update_parameters):
-        """ Updates an AWS QuickSight dataset permissions """
+        """ Updates an Amazon QuickSight dataset permissions """
         logger.debug(f"Updating DataSet permissions: {update_parameters}")
         update_parameters.update({'AwsAccountId': self.account_id})
         update_status = self.client.update_data_set_permissions(**update_parameters)
@@ -1475,7 +1476,7 @@ class QuickSight(CidBase):
 
 
     def update_data_source_permissions(self, **update_parameters):
-        """ Updates an AWS QuickSight data source permissions """
+        """ Updates an Amazon QuickSight data source permissions """
         logger.debug(f"Updating DataSource permissions: {update_parameters}")
         update_parameters.update({'AwsAccountId': self.account_id})
         update_status = self.client.update_data_source_permissions(**update_parameters)
@@ -1484,7 +1485,7 @@ class QuickSight(CidBase):
 
 
     def update_template_permissions(self, **update_parameters):
-        """ Updates an AWS QuickSight template permissions """
+        """ Updates an Amazon QuickSight template permissions """
         logger.debug(f"Updating Template permissions: {update_parameters}")
         update_parameters.update({'AwsAccountId': self.account_id})
         update_status = self.client.update_template_permissions(**update_parameters)
