@@ -391,6 +391,7 @@ class Cid():
                             message=f"Required parameter: {key} ({value.get('description')})",
                             choices=options,
                             default=default if default in options else None,
+                            fuzzy=False,
                         )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
@@ -527,14 +528,15 @@ class Cid():
 
         compatible = self.check_dashboard_version_compatibility(dashboard_id)
         if not recursive and compatible == False:
-            if get_parameter(
+            if get_yesno_parameter(
                 param_name=f'confirm-recursive',
                 message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
-                choices=['yes', 'no'],
                 default='yes') != 'yes':
-                return
-            logger.info("Switch to recursive mode")
-            recursive = True
+                #return
+                print('as you wish')
+            else:
+                logger.info("Switch to recursive mode")
+                recursive = True
 
         if recursive:
             self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
@@ -793,10 +795,9 @@ class Cid():
                         logger.debug(f'Picking the first of dataset databases: {dataset.schemas}')
                         self.athena.DatabaseName = schema
 
-                    if get_parameter(
+                    if get_yesno_parameter(
                         param_name=f'confirm-{dataset.name}',
                         message=f'Delete QuickSight Dataset {dataset.name}?',
-                        choices=['yes', 'no'],
                         default='no') == 'yes':
                         print(f'Deleting dataset {dataset.name} ({dataset.id})')
                         self.qs.delete_dataset(dataset.id)
@@ -1147,7 +1148,8 @@ class Cid():
                             param_name=f'{dataset_name}-dataset-id',
                             message=f'Multiple "{dataset_name}" datasets detected, please select one',
                             choices=[v.id for v in datasets],
-                            default=datasets[0].id
+                            default=datasets[0].id,
+                            fuzzy=False,
                         )
                     known_datasets.update({dataset_name: dataset_id})
                 print(f'Updating dataset: "{dataset_name}"')
