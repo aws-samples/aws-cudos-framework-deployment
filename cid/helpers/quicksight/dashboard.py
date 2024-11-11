@@ -74,16 +74,7 @@ class Dashboard(CidQsResource):
 
     @property
     def latest(self) -> bool:
-        return self.latest_cid_version == self.deployed_cid_version
-
-    @property
-    def latest_cid_version(self) -> int:
-        if isinstance(self.sourceTemplate, CidQsTemplate):
-            return self.sourceTemplate.cid_version
-        elif isinstance(self.sourceDefinition, CidQsDefinition):
-            return self.sourceDefinition.cid_version
-        else:
-            return None
+        return self.latest_available_cid_version == self.deployed_cid_version
 
     @property
     def health(self) -> bool:
@@ -98,6 +89,7 @@ class Dashboard(CidQsResource):
         else:
             return "UNKNOWN"
     
+
     @property
     def cid_version(self) -> int:
         if self.origin_type == "TEMPLATE":
@@ -108,7 +100,7 @@ class Dashboard(CidQsResource):
             return None
     
     @property
-    def cid_version_latest(self) -> int:
+    def latest_available_cid_version(self) -> int:
         if self.origin_type == "TEMPLATE":
             return self.sourceTemplate.cid_version
         elif self.origin_type == "DEFINITION":
@@ -136,11 +128,11 @@ class Dashboard(CidQsResource):
             # Source Template has changed
             elif self.deployedTemplate and self.sourceTemplate and self.deployedTemplate.arn and self.sourceTemplate.arn and not self.deployedTemplate.arn.startswith(self.sourceTemplate.arn):
                 self._status = 'legacy'
-            elif not self.latest_cid_version or not self.deployed_cid_version:
+            elif not self.latest_available_cid_version or not self.deployed_cid_version:
                 self._status = 'undetermined'
             else:
-                if self.latest_cid_version > self.deployed_cid_version:
-                    self._status = f'update available {self.deployed_cid_version}->{self.latest_cid_version}'
+                if self.latest_available_cid_version > self.deployed_cid_version:
+                    self._status = f'update available {self.deployed_cid_version}->{self.latest_available_cid_version}'
                 elif self.latest:
                     self._status = 'up to date'
         return self._status
@@ -157,22 +149,18 @@ class Dashboard(CidQsResource):
         if self.status_detail:
             cid_print(f"  <BOLD>Status detail:<END> {self.status_detail}")
 
-        cid_version = "N/A"
-        cid_version_latest =  "N/A"
-
-        cid_version = self.cid_version
-        if cid_version is None:
+        if not self.cid_version:
             logger.debug("The cid version of the deployed dashboard could not be retrieved")
 
-        cid_version_latest = self.cid_version_latest
-        if cid_version_latest is None:
+        if not self.latest_available_cid_version:
             logger.debug("The latest version of the dashboard could not be retrieved")
-
-        if self.latest:
-            cid_print(f"  <BOLD>Version:<END>   <GREEN>{cid_version}<END> (latest)")
+            cid_print(f"  <BOLD>Version:<END>   <YELLOW>{self.cid_version or 'N/A'}<END> (unable to find latest)")
         else:
-            logger.debug("An update is available")
-            cid_print(f"  <BOLD>Version:<END>   <YELLOW>{str(cid_version): <8} --> {str(cid_version_latest): <8}<END>")
+            if self.latest:
+                cid_print(f"  <BOLD>Version:<END>   <GREEN>{self.cid_version or 'N/A'}<END> (latest)")
+            else:
+                logger.debug("An update is available")
+                cid_print(f"  <BOLD>Version:<END>   <YELLOW>{self.cid_version or 'N/A'} --> {self.latest_available_cid_version or 'N/A'}<END>")
 
         cid_print('  <BOLD>Owners:<END>')
         try:

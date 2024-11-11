@@ -782,8 +782,7 @@ class Cid():
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
                     if dataset.id in dashboard.datasets.values():
-                        logger.info(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
-                        print      (f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
+                        cid_print(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
                         return False
                 else: #not used
 
@@ -1073,13 +1072,13 @@ class Cid():
 
         if dashboard.latest:
             cid_print("You are up to date!")
-            cid_print(f"  Version    {str(dashboard.cid_version)}")
+            cid_print(f"  Version    {dashboard.cid_version}")
         else:
             cid_print(f"An update is available:")
-            cid_print(f"  Version    {str(dashboard.cid_version): <9} ->  {str(dashboard.cid_version_latest): <9}")
+            cid_print(f"  Version    {dashboard.cid_version} ->  {dashboard.latest_available_cid_version}")
 
         try:
-            return dashboard.cid_version.compatible_versions(dashboard.cid_version_latest)
+            return dashboard.cid_version.compatible_versions(dashboard.latest_available_cid_version)
         except ValueError as exc:
             logger.info(exc)
         return None
@@ -1094,10 +1093,10 @@ class Cid():
         if isinstance(dashboard.deployedTemplate, CidQsTemplate):
             print(f'Deployed template: {dashboard.deployedTemplate.arn}')
         if isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            print(f"Latest template:   {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+            print(f"Latest template:   {dashboard.sourceTemplate.arn}/version/{dashboard.sourceTemplate.version}")
 
         try:
-            cid_print(f'\nUpdating {dashboard_id} from <BOLD>{dashboard.cid_version}<END> to <BOLD>{dashboard.cid_version_latest}<END>')
+            cid_print(f'\nUpdating {dashboard_id} from <BOLD>{dashboard.cid_version}<END> to <BOLD>{dashboard.latest_available_cid_version}<END>')
         except:
             cid_print(f'\nUpdating {dashboard_id}')
             logger.debug('Failed to define versions. Still continue.')
