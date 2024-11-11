@@ -1,4 +1,4 @@
-# What's new in the Graviton Opportunities Dashboard
+# What's new in the Graviton Savings Dashboard
 
 
 ## Graviton Savings Dashboard v2.0.0:
@@ -8,10 +8,20 @@ cid-cmd update --dashboard-id graviton-savings --force --recursive
 * New Savings Implementation Effort and Reason Categorization
 * New Top and Bottom insights for Managed Services
 * New Radio buttons to toggle between Spend, Usage & Savings
-* New Potential Graviton Savings breakdown by Purchase OPtion and Operating System
+* New Potential Graviton Savings breakdown by Purchase Option and Operating System
 
 
-## Graviton Opportunities Dashboard has changed it's name Graviton Savings Dashboard. Please delete the legacy version of this dashbaord by running "cid-cmd delete --dashboard-id graviton-opportunities" .Please deploy the latest version of this dashbaord by running "cid-cmd deploy --dashboard-id graviton-savings"
+## Graviton Savings Dashboard Name Update ##
+**Important:** Graviton Opportunities Dashboard has changed it's name Graviton Savings Dashboard.
+
+Please delete the legacy version of this dashboard by running 
+```
+cid-cmd delete --dashboard-id graviton-opportunities
+``` 
+Please deploy the new version of this dashboard by running 
+```
+cid-cmd deploy --dashboard-id graviton-savings
+```
 
 ## Graviton Opportunities Dashboard v1.1.1:
 ```
