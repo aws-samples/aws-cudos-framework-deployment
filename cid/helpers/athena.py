@@ -81,8 +81,10 @@ class Athena(CidBase):
         athena_databases = self.list_databases()
 
         # check if we have a default database
-        print(athena_databases)
+        logger.info(f'athena_databases = {athena_databases}')
         default_databases = [database for database in athena_databases if database == self.defaults.get('DatabaseName')]
+        if 'cid_cur' in athena_databases:
+            default_databases = ['cid_cur']
 
         # Ask user
         choices = list(athena_databases)
@@ -90,7 +92,7 @@ class Athena(CidBase):
             choices.append(self.defaults.get('DatabaseName') + ' (CREATE NEW)')
         self._DatabaseName = get_parameter(
             param_name='athena-database',
-            message="Select AWS Athena database to use",
+            message="Select AWS Athena database to use as default",
             choices=choices,
             default=default_databases[0] if default_databases else None,
         )
@@ -391,10 +393,9 @@ class Athena(CidBase):
 
 
     def delete_table(self, name: str, catalog: str=None, database: str=None):
-        if get_parameter(
+        if get_yesno_parameter(
                 param_name=f'confirm-{name}',
                 message=f'Delete Athena table {name}?',
-                choices=['yes', 'no'],
                 default='no') != 'yes':
             return False
 
@@ -415,10 +416,9 @@ class Athena(CidBase):
         return True
 
     def delete_view(self, name: str, catalog: str=None, database: str=None):
-        if get_parameter(
+        if get_yesno_parameter(
                 param_name=f'confirm-{name}',
                 message=f'Delete Athena view {name}?',
-                choices=['yes', 'no'],
                 default='no') != 'yes':
             return False
 
@@ -545,7 +545,8 @@ class Athena(CidBase):
                         param_name='view-' + view_name + '-override',
                         message=f'The existing view is different. Override?',
                         choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
-                        default='retry diff'
+                        default='retry diff',
+                        fuzzy=False,
                     )
                     if choice == 'retry diff':
                         unset_parameter('view-' + view_name + '-override')
