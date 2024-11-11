@@ -7270,8 +7270,7 @@ dashboards:
                 <b>Typically Easy:</b>
               </inline>
               <br/>
-              Transitioning workloads to Graviton instances is typically straightforward. See
-              <a href="https://aws.amazon.com/ec2/graviton/getting-started/" target="_blank">Getting started with Graviton</a>
+              Transitioning workloads to Graviton instances is typically straightforward. See <a href="https://aws.amazon.com/ec2/graviton/getting-started/" target="_blank">Getting started with Graviton</a>
               .
             </text-box>
           SheetTextBoxId: 84cce479-eb7e-46aa-a9db-bdfafcce72be
@@ -7293,9 +7292,9 @@ dashboards:
             \  <ul>\n    <li>\n      Spot Instances: Spot Instance prices are set by Amazon\
             \ EC2 and adjust gradually based on long-term trends in supply and demand for\
             \ Spot Instance capacity. For up-to-date pricing information and potential cost\
-            \ savings, please consult the\n      <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances-history.html\"\
+            \ savings, please consult the\_\n      <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances-history.html\"\
             \ target=\"_blank\">Spot Instance history page</a>\n      .\n    </li>\n   \
-            \ <li>\n      Windows-based Instances: For migration path, please refer to\n\
+            \ <li>\n      Windows-based Instances: For migration path, please refer to\_\n\
             \      <a href=\"https://aws.amazon.com/windows/modernization/\" target=\"_blank\"\
             >Modernize Windows Workloads with AWS</a>\n      .\n    </li>\n    <li>Instances\
             \ without a comparable Graviton mapping: Instance mapping data is regularly\
@@ -20039,8 +20038,8 @@ dashboards:
             \  <br/>\n  <block align=\"right\">\n    Learn more\n    <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
             \ target=\"_blank\">\_</a>\n    about AWS Cloud Intelligence Dashboards (CID)\
             \ on\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
-            \ target=\"_blank\">\n        <u>AWS Well-Architected Labs</u>\n      </a>\n\
-            \    </inline>\n    \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"\
+            \ target=\"_blank\">\n        <u>\_AWS Well-Architected Labs\_</u>\n      </a>\n\
+            \    </inline>\n    \_and\_\n    <inline color=\"#61d1d6\">\n      <a href=\"\
             https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\" target=\"_blank\"\
             >\n        <u>CID YouTube Channel</u>\n      </a>\n    </inline>\n  </block>\n\
             \  <br/>\n  <block align=\"right\">\n    If you wish to provide feedback please\
