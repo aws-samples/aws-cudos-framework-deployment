@@ -64,26 +64,26 @@ class Dashboard(CidQsResource):
         return None
 
     @property
-    def deployed_version(self) -> int:
+    def deployed_cid_version(self) -> int:
         if isinstance(self.deployedTemplate, CidQsTemplate):
-            return self.deployedTemplate.version
+            return self.deployedTemplate.cid_version
         elif isinstance(self.deployedDefinition, CidQsDefinition):
             return self.deployedDefinition.cid_version
         else:
-            return -1
+            return None
 
     @property
     def latest(self) -> bool:
-        return self.latest_version == self.deployed_version
+        return self.latest_cid_version == self.deployed_cid_version
 
     @property
-    def latest_version(self) -> int:
+    def latest_cid_version(self) -> int:
         if isinstance(self.sourceTemplate, CidQsTemplate):
-            return self.sourceTemplate.version
+            return self.sourceTemplate.cid_version
         elif isinstance(self.sourceDefinition, CidQsDefinition):
             return self.sourceDefinition.cid_version
         else:
-            return -1
+            return None
 
     @property
     def health(self) -> bool:
@@ -136,11 +136,11 @@ class Dashboard(CidQsResource):
             # Source Template has changed
             elif self.deployedTemplate and self.sourceTemplate and self.deployedTemplate.arn and self.sourceTemplate.arn and not self.deployedTemplate.arn.startswith(self.sourceTemplate.arn):
                 self._status = 'legacy'
-            elif self.latest_version is None or self.deployed_version is None:
+            elif not self.latest_cid_version or not self.deployed_cid_version:
                 self._status = 'undetermined'
             else:
-                if self.latest_version > self.deployed_version:
-                    self._status = f'update available {self.deployed_version}->{self.latest_version}'
+                if self.latest_cid_version > self.deployed_cid_version:
+                    self._status = f'update available {self.deployed_cid_version}->{self.latest_cid_version}'
                 elif self.latest:
                     self._status = 'up to date'
         return self._status
