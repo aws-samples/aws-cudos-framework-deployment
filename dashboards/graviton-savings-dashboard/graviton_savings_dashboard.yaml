@@ -4294,10 +4294,9 @@ dashboards:
               DataSetIdentifier: ec2_graviton_dashboard
             Configuration:
               FilterListConfiguration:
-                CategoryValues:
-                - Excluded from Savings Calculations
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
             FilterId: 19d3a180-6b84-4e31-ad80-96e97a548ac8
         ScopeConfiguration:
           SelectedSheets:
@@ -7691,6 +7690,14 @@ dashboards:
                   Element:
                     FieldId: 3188be01-c7be-4ba0-b10f-6180fc01f709.graviton_savings_potential.2.1731089366632
                     FieldValue: graviton_savings_potential
+                - Color: '#FC850D'
+                  Element:
+                    FieldId: 0ea70594-2da9-4880-bcc2-dca49750aba1.3.1731097267977
+                    FieldValue: Compared Graviton Instance Amortized Cost
+                - Color: '#0A87AF'
+                  Element:
+                    FieldId: db2cf960-849e-47d4-ac56-6bd181ae958a.3.1731097230024
+                    FieldValue: Current Instance Amortized Cost
             ColumnHierarchies:
             - DateTimeHierarchy:
                 HierarchyId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709749666284
@@ -8775,6 +8782,16 @@ dashboards:
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
+              VisualPalette:
+                ColorMap:
+                - Color: '#FC850D'
+                  Element:
+                    FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.processor_type.0.1709746554394
+                    FieldValue: Graviton
+                - Color: '#0A87AF'
+                  Element:
+                    FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.processor_type.0.1709746554394
+                    FieldValue: Intel
             ColumnHierarchies: []
             Subtitle:
               FormatText:
@@ -8860,6 +8877,16 @@ dashboards:
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
+              VisualPalette:
+                ColorMap:
+                - Color: '#FC850D'
+                  Element:
+                    FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.processor_type.0.1709746554394
+                    FieldValue: Graviton
+                - Color: '#0A87AF'
+                  Element:
+                    FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.processor_type.0.1709746554394
+                    FieldValue: Intel
             ColumnHierarchies: []
             Subtitle:
               FormatText:
@@ -9242,10 +9269,14 @@ dashboards:
                   Element:
                     FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.processor_type.2.1709748062728
                     FieldValue: AMD
-                - Color: '#FC850D'
+                - Color: '#0A87AF'
                   Element:
                     FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.processor_type.2.1709748062728
                     FieldValue: Intel
+                - Color: '#FC850D'
+                  Element:
+                    FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.processor_type.2.1709748062728
+                    FieldValue: Graviton
             ColumnHierarchies:
             - DateTimeHierarchy:
                 HierarchyId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709748053059
@@ -9512,6 +9543,14 @@ dashboards:
                   Element:
                     FieldId: caec0237-c336-4d83-819a-b0dfe5e48ed4.2.1731035572805
                     FieldValue: Realized Graviton Savings
+                - Color: '#FC850D'
+                  Element:
+                    FieldId: a554b949-c14f-4824-bc35-5afbb8892a7a.3.1731037089058
+                    FieldValue: Current Graviton Instance Amortized Cost
+                - Color: '#0A87AF'
+                  Element:
+                    FieldId: a0836bbb-c63a-4084-9c0e-88b107b7e1f3.3.1731037004545
+                    FieldValue: Compared Instance Amortized Cost
             ColumnHierarchies:
             - DateTimeHierarchy:
                 HierarchyId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.billing_period.0.1709748278244
@@ -12352,7 +12391,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="20px">
-                      <b>Existing Graviton Savings Details</b>
+                      <b>Realized Graviton Savings Details</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -14041,8 +14080,8 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="20px">
-                      <b>Eligibility and Savings by RDS Resource ID</b>
+                    <inline color="Accent" font-size="20px">
+                      <b>Potential Graviton Savings Details</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -15263,8 +15302,8 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="20px">
-                      <b>Existing Graviton Savings Details</b>
+                    <inline color="Accent" font-size="20px">
+                      <b>Realized Graviton Savings Details</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -16804,8 +16843,12 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: "<visual-title>\n  <inline font-size=\"20px\">\n    <b>Resource\
-                  \ Level Eligibility and Savings\_</b>\n  </inline>\n</visual-title>"
+                RichText: |-
+                  <visual-title>
+                    <inline color="Accent" font-size="20px">
+                      <b>Potential Graviton Savings Details</b>
+                    </inline>
+                  </visual-title>
               Visibility: VISIBLE
             VisualId: 28ea1f4a-1129-4a88-b304-b2df9667e56c
         - PieChartVisual:
@@ -17160,9 +17203,9 @@ dashboards:
                   Category:
                     CategoricalDimensionField:
                       Column:
-                        ColumnName: line_item_usage_account_id
+                        ColumnName: account_name
                         DataSetIdentifier: elasticache_graviton_dashboard
-                      FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.line_item_usage_account_id.0.1731184810681
+                      FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.1.1731360099217
                   ComputationId: b744b6c6-c718-42b7-8efc-93b165f473cc
                   Name: Top
                   ResultSize: 3
@@ -17204,9 +17247,9 @@ dashboards:
                   Category:
                     CategoricalDimensionField:
                       Column:
-                        ColumnName: line_item_usage_account_id
+                        ColumnName: account_name
                         DataSetIdentifier: elasticache_graviton_dashboard
-                      FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.line_item_usage_account_id.1.1731184878428
+                      FieldId: b3c3d179-94ff-4dd5-b176-872d48bf6c4b.account_name.1.1731360106286
                   ComputationId: ab48ad39-0853-4f23-bb33-f3719bcd2f2f
                   Name: Bottom
                   ResultSize: 3
@@ -18421,8 +18464,8 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="20px">
-                      <b>Eligibility and Savings by Amazon OpenSearch Resource ID</b>
+                    <inline color="Accent" font-size="20px">
+                      <b>Realized Graviton Savings Details</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -19834,8 +19877,8 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="20px">
-                      <b>Eligibility and Savings by Amazon OpenSearch Resource ID</b>
+                    <inline color="Accent" font-size="20px">
+                      <b>Potential Graviton Savings Details</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
