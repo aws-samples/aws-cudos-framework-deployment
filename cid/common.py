@@ -300,7 +300,7 @@ class Cid():
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
     def get_page(self, source):
-        resp = requests.get(source, timeout=10)
+        resp = requests.get(source, timeout=10, headers={'User-Agent': 'cid'})
         resp.raise_for_status()
         return resp
 
