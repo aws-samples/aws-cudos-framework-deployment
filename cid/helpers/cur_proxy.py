@@ -491,7 +491,7 @@ class ProxyView():
             if not self.cur.column_exists(requirement):
                 missing_requirements.append(requirement)
 
-        if missing_requirements:
+        if missing_requirements and field_type.lower() in empty:
             logger.trace(f'field {field} cannot be present as prereqs are missing in source cur: {missing_requirements}')
             return empty[field_type.lower()]
 
@@ -508,10 +508,10 @@ class ProxyView():
                 keys_set = set(self.exposed_maps.get(field, set()))
                 keys_set.update(self.fields_to_expose_in_maps.get(map_field, set()))
                 for key in keys_set:
-                    if f'{map_field}_{key}' in self.cur.fields:
+                    if self.cur.column_exists(f'{map_field}_{key}'):
                         map_mapping[key] = f'{map_field}_{key}'
                     else:
-                        map_mapping[key] = 'CAST(NULL as VARCHAR)'
+                        map_mapping[key] = empty['string'] # all known maps have string vaules for now
                 if not map_mapping:
                     return 'cast(NULL AS MAP<VARCHAR, VARCHAR>)'
                 map_mapping = dict(sorted(map_mapping.items())) # ordered dict
