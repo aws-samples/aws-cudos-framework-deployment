@@ -664,7 +664,7 @@ Resources:
                           print("Stop waiting")
                           break
                   else:
-                      return (True, f"Timeout exceeded. Crawler '{CRAWLER}' did not complete. But we do not fail the execution.")
+                      return (True, f"Timeout exceeded. Crawler '{CRAWLER}' did not complete. This is not a fatal error and the rest of the deployment will continue.")
                   return (True, 'Crawler run completed.')
 
           def on_delete():
