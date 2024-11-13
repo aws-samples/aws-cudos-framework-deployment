@@ -74,7 +74,11 @@ class Dashboard(CidQsResource):
 
     @property
     def latest(self) -> bool:
-        return self.latest_available_cid_version == self.deployed_cid_version
+        try:
+            return self.latest_available_cid_version == self.deployed_cid_version
+        except Exception as exc:
+            logger.debug(f'Failed to determine if latest for dashboards: {self.id}. {exc}')
+            return None
 
     @property
     def health(self) -> bool:
@@ -82,9 +86,9 @@ class Dashboard(CidQsResource):
     
     @property
     def origin_type(self) -> str:
-        if self.deployedTemplate is not None:
+        if self.deployedTemplate:
             return "TEMPLATE"
-        elif self.deployedDefinition is not None:
+        elif self.deployedDefinition:
             return "DEFINITION"
         else:
             return "UNKNOWN"
@@ -101,9 +105,9 @@ class Dashboard(CidQsResource):
     
     @property
     def latest_available_cid_version(self) -> int:
-        if self.origin_type == "TEMPLATE":
+        if self.sourceTemplate:
             return self.sourceTemplate.cid_version
-        elif self.origin_type == "DEFINITION":
+        elif self.sourceDefinition:
             return self.sourceDefinition.cid_version
         else:
             return None
