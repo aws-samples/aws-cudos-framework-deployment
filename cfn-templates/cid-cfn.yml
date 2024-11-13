@@ -655,17 +655,21 @@ Resources:
                       else:
                           return (True, f'ERROR: error invoking crawler {CRAWLER} {exc}')
                   print('started crawler started. waiting for crawler to finish')
-                  start_time = time.time()
-                  while time.time() - start_time < timeout_seconds:
-                      time.sleep(10)
-                      crawler_status = glue.get_crawler(Name=CRAWLER)['Crawler']['State']
-                      print('status=', crawler_status)
-                      if crawler_status in ('READY', 'STOPPING'):
-                          print("Stop waiting")
-                          break
-                  else:
-                      return (True, f"Timeout exceeded. Crawler '{CRAWLER}' did not complete. This is not a fatal error and the rest of the deployment will continue.")
+                  try:
+                      start_time = time.time()
+                      while time.time() - start_time < timeout_seconds:
+                          time.sleep(10)
+                          crawler_status = glue.get_crawler(Name=CRAWLER)['Crawler']['State']
+                          print('status=', crawler_status)
+                          if crawler_status in ('READY', 'STOPPING'):
+                              print("Stop waiting")
+                              break
+                      else:
+                          return (True, f"Timeout exceeded. Crawler '{CRAWLER}' did not complete. This is not a fatal error and the rest of the deployment will continue.")
+                  except Exception as exc:
+                      return (True, f'ERROR: error waiting for crawler {CRAWLER} {exc}')
                   return (True, 'Crawler run completed.')
+              return (True, 'Ended create.')
 
           def on_delete():
               # Delete bucket (CF cannot delete if they are non-empty)
@@ -869,7 +873,7 @@ Resources:
       Path: !Ref RolePath
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
       Policies:
-        - PolicyName: AWSCURCrawlerComponentFunction
+        - PolicyName: CloudWatch
           PolicyDocument:
             Version: 2012-10-17
             Statement:
