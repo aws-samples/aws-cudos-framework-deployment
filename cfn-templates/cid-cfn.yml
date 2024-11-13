@@ -658,7 +658,7 @@ Resources:
                   try:
                       start_time = time.time()
                       while time.time() - start_time < timeout_seconds:
-                          time.sleep(10)
+                          time.sleep(1)
                           crawler_status = glue.get_crawler(Name=CRAWLER)['Crawler']['State']
                           print(f'status = {crawler_status}')
                           if crawler_status in ('READY', 'STOPPING'):
