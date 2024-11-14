@@ -300,7 +300,7 @@ class Cid():
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
     def get_page(self, source):
-        resp = requests.get(source, timeout=10)
+        resp = requests.get(source, timeout=10, headers={'User-Agent': 'cid'})
         resp.raise_for_status()
         return resp
 
@@ -435,7 +435,7 @@ class Cid():
 
         # In case if we cannot discover datasets, we need to discover dashboards
         # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
-        self.qs.discover_dashboards()
+        self.qs.dashboards
 
         dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
         category_filter = [cat for cat in get_parameters().get('category', '').upper().split(',') if cat]
@@ -782,8 +782,7 @@ class Cid():
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
                     if dataset.id in dashboard.datasets.values():
-                        logger.info(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
-                        print      (f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
+                        cid_print(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
                         return False
                 else: #not used
 
@@ -1073,13 +1072,13 @@ class Cid():
 
         if dashboard.latest:
             cid_print("You are up to date!")
-            cid_print(f"  Version    {str(dashboard.cid_version)}")
+            cid_print(f"  Version    {dashboard.cid_version}")
         else:
             cid_print(f"An update is available:")
-            cid_print(f"  Version    {str(dashboard.cid_version): <9} ->  {str(dashboard.cid_version_latest): <9}")
+            cid_print(f"  Version    {dashboard.cid_version} ->  {dashboard.latest_available_cid_version}")
 
         try:
-            return dashboard.cid_version.compatible_versions(dashboard.cid_version_latest)
+            return dashboard.cid_version.compatible_versions(dashboard.latest_available_cid_version)
         except ValueError as exc:
             logger.info(exc)
         return None
@@ -1094,10 +1093,10 @@ class Cid():
         if isinstance(dashboard.deployedTemplate, CidQsTemplate):
             print(f'Deployed template: {dashboard.deployedTemplate.arn}')
         if isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            print(f"Latest template:   {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
+            print(f"Latest template:   {dashboard.sourceTemplate.arn}/version/{dashboard.sourceTemplate.version}")
 
         try:
-            cid_print(f'\nUpdating {dashboard_id} from <BOLD>{dashboard.cid_version}<END> to <BOLD>{dashboard.cid_version_latest}<END>')
+            cid_print(f'\nUpdating {dashboard_id} from <BOLD>{dashboard.cid_version}<END> to <BOLD>{dashboard.latest_available_cid_version}<END>')
         except:
             cid_print(f'\nUpdating {dashboard_id}')
             logger.debug('Failed to define versions. Still continue.')
