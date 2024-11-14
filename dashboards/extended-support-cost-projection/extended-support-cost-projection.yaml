@@ -3569,7 +3569,7 @@ views:
          , sum(c.line_item_usage_amount)
          FROM
            ("${cur2_database}"."${cur2_table_name}" c
-         INNER JOIN eks_clusters_inventory eksinv ON ((c.bill_payer_account_id = eksinv.payer_id) AND (c.line_item_usage_account_id = eksinv.accountid) AND (c.product_region = eksinv.region) AND (c.line_item_resource_id = eksinv.cluster_arn)))
+         INNER JOIN eks_clusters_inventory eksinv ON ((c.bill_payer_account_id = eksinv.payer_id) AND (c.line_item_usage_account_id = eksinv.accountid) AND (c.product['region'] = eksinv.region) AND (c.line_item_resource_id = eksinv.cluster_arn)))
          INNER JOIN account_map accmap on c.line_item_usage_account_id = accmap.account_id
          WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.billing_period, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonEKS') AND (c.line_item_line_item_type IN ('Usage')) AND ((c.product_product_family = 'Compute') AND (c.line_item_usage_type LIKE '%AmazonEKS-Hours:perCluster')))
          GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
