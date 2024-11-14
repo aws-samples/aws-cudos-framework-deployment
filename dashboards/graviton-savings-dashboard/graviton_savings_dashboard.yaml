@@ -20745,7 +20745,15 @@ datasets:
 views:
   graviton_opensearch_view:
     dependsOn:
-      cur: true
+      cur2:
+        - line_item_normalized_usage_amount
+        - product['instance_type']
+        - product['location']
+        - pricing_term
+        - pricing_lease_contract_length
+        - pricing_offering_class
+        - pricing_purchase_option
+        - product['vcpu']
       views:
         - modernization_mapping
     parameters:
@@ -20757,48 +20765,48 @@ views:
       CREATE OR REPLACE VIEW graviton_opensearch_view AS
       WITH
         cur_data AS (
-         SELECT
-           cur.bill_payer_account_id
-         , cur.line_item_usage_account_id
-         , DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d') bill_billing_period_start_date
-         , SPLIT_PART(cur.line_item_resource_id, '/', 2) line_item_resource_id
-         , cur.product_instance_type
-         , SPLIT_PART(product_instance_type, '.', 1) instance_family
-         , (CASE WHEN (SPLIT_PART(product_instance_type, '.', 1) LIKE '%g%') THEN 'Graviton' ELSE 'Intel' END) processor_type
-         , cur.product_location
-         , cur.pricing_term
-         , cur.pricing_lease_contract_length
-         , cur.pricing_offering_class
-         , cur.pricing_purchase_option
-         , SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) line_item_usage_amount
-         , (SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) * CAST(product_vcpu AS double)) line_item_vcpu_normalized_usage_amount
-         , SUM(line_item_unblended_cost) line_item_unblended_cost
-         , SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.savings_plan_savings_plan_effective_cost WHEN (cur.line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (cur.savings_plan_total_commitment_to_date - cur.savings_plan_used_commitment) WHEN (cur.line_item_line_item_type = 'SavingsPlanNegation') THEN 0 WHEN (cur.line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0 WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.reservation_effective_cost WHEN (cur.line_item_line_item_type = 'RIFee') THEN (cur.reservation_unused_amortized_upfront_fee_for_billing_period + cur.reservation_unused_recurring_fee) WHEN ((cur.line_item_line_item_type = 'Fee') AND (cur.reservation_reservation_a_r_n <> '')) THEN 0 ELSE cur.line_item_unblended_cost END)) amortized_cost
-         , modernization_mapping.generation
-         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(cur.product_instance_type, '.', 2), '.search') ELSE '' END) graviton_instance
-         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(cur.product_instance_type, '.', 2), '.search') ELSE '' END) previous_intel_instance
-         FROM
-           (${cur_table_name} cur
-         LEFT JOIN modernization_mapping ON (CONCAT(SPLIT_PART(cur.product_instance_type, '.', 1), '.search') = modernization_mapping.family))
-         WHERE ((cur.product_product_name IN ('Amazon Elasticsearch Service', 'Amazon OpenSearch Service')) AND (cur.line_item_product_code = 'AmazonES') AND (cur.line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'SavingsPlanCoveredUsage')) AND (cur.product_product_family = 'Amazon OpenSearch Service Instance') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY cur.bill_payer_account_id, cur.line_item_usage_account_id, DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d'), DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d'), SPLIT_PART(cur.line_item_resource_id, '/', 2), cur.product_instance_type, cur.product_location, cur.pricing_term, cur.pricing_lease_contract_length, cur.pricing_offering_class, cur.pricing_purchase_option, modernization_mapping.generation, cur.product_vcpu, 18, 19
-      )
+          SELECT
+            cur.bill_payer_account_id
+          , cur.line_item_usage_account_id
+          , DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d') bill_billing_period_start_date
+          , SPLIT_PART(cur.line_item_resource_id, '/', 2) line_item_resource_id
+          , cur.product['instance_type'] product_instance_type
+          , SPLIT_PART(cur.product['instance_type'], '.', 1) instance_family
+          , (CASE WHEN (SPLIT_PART(cur.product['instance_type'], '.', 1) LIKE '%g%') THEN 'Graviton' ELSE 'Intel' END) processor_type
+          , cur.product['location']  product_location
+          , cur.pricing_term
+          , cur.pricing_lease_contract_length
+          , cur.pricing_offering_class
+          , cur.pricing_purchase_option
+          , SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) line_item_usage_amount
+          , (SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) * CAST(cur.product['vcpu'] AS double)) line_item_vcpu_normalized_usage_amount
+          , SUM(line_item_unblended_cost) line_item_unblended_cost
+          , SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.savings_plan_savings_plan_effective_cost WHEN (cur.line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (cur.savings_plan_total_commitment_to_date - cur.savings_plan_used_commitment) WHEN (cur.line_item_line_item_type = 'SavingsPlanNegation') THEN 0 WHEN (cur.line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0 WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.reservation_effective_cost WHEN (cur.line_item_line_item_type = 'RIFee') THEN (cur.reservation_unused_amortized_upfront_fee_for_billing_period + cur.reservation_unused_recurring_fee) WHEN ((cur.line_item_line_item_type = 'Fee') AND (cur.reservation_reservation_a_r_n <> '')) THEN 0 ELSE cur.line_item_unblended_cost END)) amortized_cost
+          , modernization_mapping.generation
+          , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(cur.product['instance_type'], '.', 2), '.search') ELSE '' END) graviton_instance
+          , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(cur.product['instance_type'], '.', 2), '.search') ELSE '' END) previous_intel_instance
+          FROM
+            ("${cur2_database}"."${cur2_table_name}" cur
+          LEFT JOIN modernization_mapping ON (CONCAT(SPLIT_PART(cur.product['instance_type'], '.', 1), '.search') = modernization_mapping.family))
+          WHERE ((cur.product['product_name'] IN ('Amazon Elasticsearch Service', 'Amazon OpenSearch Service')) AND (cur.line_item_product_code = 'AmazonES') AND (cur.line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'SavingsPlanCoveredUsage')) AND (cur.product['product_family'] = 'Amazon OpenSearch Service Instance') AND ((cur.bill_billing_period_start_date >= (date_trunc('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(concat(billing_period, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '7' MONTH))))
+          GROUP BY cur.bill_payer_account_id, cur.line_item_usage_account_id, DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d'), DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d'), SPLIT_PART(cur.line_item_resource_id, '/', 2), cur.product['instance_type'], cur.product['location'], cur.pricing_term, cur.pricing_lease_contract_length, cur.pricing_offering_class, cur.pricing_purchase_option, modernization_mapping.generation, cur.product['vcpu'], 18, 19
+        )
       , describe_domains AS (
-         SELECT DISTINCT
-           domainname
-         , engineversion
-         , SPLIT_PART(engineversion, '_', 1) engine
-         , SPLIT_PART(engineversion, '_', 2) version
-         , SPLIT_PART(SPLIT_PART(engineversion, '_', 2), '.', 1) major
-         , SPLIT_PART(SPLIT_PART(engineversion, '_', 2), '.', 2) minor
-         FROM
-           ${data_collection_database_name}.inventory_opensearch_domains_data
+        SELECT DISTINCT
+          domainname
+        , engineversion
+        , SPLIT_PART(engineversion, '_', 1) engine
+        , SPLIT_PART(engineversion, '_', 2) version
+        , SPLIT_PART(SPLIT_PART(engineversion, '_', 2), '.', 1) major
+        , SPLIT_PART(SPLIT_PART(engineversion, '_', 2), '.', 2) minor
+        FROM
+          ${data_collection_database_name}.inventory_opensearch_domains_data
       )
       , pricing AS (
-         SELECT *
-         FROM
-           ${data_collection_database_name}.pricing_opensearch_data
-         WHERE (("instance type" <> '') AND (operation = 'ESDomain') AND (unit = 'Hrs'))
+        SELECT *
+        FROM
+          ${data_collection_database_name}.pricing_opensearch_data
+        WHERE (("instance type" <> '') AND (operation = 'ESDomain') AND (unit = 'Hrs'))
       )
       SELECT
         cur.*
@@ -20816,7 +20824,12 @@ views:
       LEFT JOIN pricing PL2 ON ((PL2."instance type" = cur.previous_intel_instance) AND (PL2.location = cur.product_location) AND (PL2.termtype = cur.pricing_term) AND (PL2.leasecontractlength = cur.pricing_lease_contract_length) AND (PL2.purchaseoption = cur.pricing_purchase_option) AND (PL2.offeringclass = cur.pricing_offering_class)))
   graviton_elasticache_view:
     dependsOn:
-      cur: true
+      cur2:
+        - line_item_normalized_usage_amount
+        - product_location
+        - pricing_offering_class
+        - pricing_lease_contract_length
+        - product['cache_engine']
       views:
         - modernization_mapping
     parameters:
@@ -20828,33 +20841,31 @@ views:
       CREATE OR REPLACE VIEW graviton_elasticache_view AS
       WITH
         elasticache_spend AS (
-         SELECT
-           bill_payer_account_id
-         , line_item_usage_account_id
-         , DATE_FORMAT(line_item_usage_start_date, '%Y-%m') month_line_item_usage_start_date
-         , SPLIT_PART(line_item_resource_id, ':', 7) split_line_item_resource_id
-         , SPLIT_PART(line_item_usage_type, ':', 2) split_line_item_usage_type
-         , product_location
-         , product_cache_engine
-         , (CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN 'Reserved Instance' WHEN (line_item_line_item_type = 'Usage') THEN 'OnDemand' ELSE 'Others' END) case_purchase_option
-         , pricing_lease_contract_length
-         , pricing_offering_class
-         , pricing_purchase_option
-         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) sum_line_item_usage_amount
-         , SUM(line_item_unblended_cost) sum_line_item_unblended_cost
-         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
-         , SUM((CASE WHEN (line_item_line_item_type = 'RIFee') THEN -(reservation_amortized_upfront_fee_for_billing_period) ELSE 0 END)) sum_ri_trueup
-         , SUM((CASE WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN line_item_unblended_cost ELSE 0 END)) ri_upfront_fees
-         , modernization_mapping.generation
-         , modernization_mapping.latest_arm graviton_family
-         , modernization_mapping.previous_intel previous_intel_family
-         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) graviton_instance
-         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) previous_intel
-         FROM
-           (${cur_table_name}
-         LEFT JOIN modernization_mapping ON (CONCAT('cache.', SPLIT_PART(line_item_usage_type, '.', 2)) = modernization_mapping.family))
-         WHERE ((product_product_name = 'Amazon ElastiCache') AND (product_product_family = 'Cache Instance') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'RIFee', 'Fee')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY DATE_FORMAT(line_item_usage_start_date, '%Y-%m'), bill_payer_account_id, line_item_usage_account_id, line_item_line_item_type, line_item_resource_id, line_item_usage_type, product_location, product_cache_engine, pricing_lease_contract_length, pricing_offering_class, pricing_purchase_option, modernization_mapping.generation, modernization_mapping.latest_arm, modernization_mapping.previous_intel
+          SELECT
+              bill_payer_account_id
+            , line_item_usage_account_id
+            , DATE_FORMAT(line_item_usage_start_date, '%Y-%m') month_line_item_usage_start_date
+            , SPLIT_PART(line_item_resource_id, ':', 7) split_line_item_resource_id
+            , SPLIT_PART(line_item_usage_type, ':', 2) split_line_item_usage_type
+            , product_location
+            , product['cache_engine'] product_cache_engine
+            , (CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN 'Reserved Instance' WHEN (line_item_line_item_type = 'Usage') THEN 'OnDemand' ELSE 'Others' END) case_purchase_option
+            , pricing_lease_contract_length
+            , pricing_offering_class
+            , pricing_purchase_option
+            , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) sum_line_item_usage_amount
+            , SUM(line_item_unblended_cost) sum_line_item_unblended_cost
+            , SUM((CASE WHEN (line_item_line_item_type = 'RIFee') THEN -(reservation_amortized_upfront_fee_for_billing_period) ELSE 0 END)) sum_ri_trueup
+            , SUM((CASE WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN line_item_unblended_cost ELSE 0 END)) ri_upfront_fees
+            , modernization_mapping.generation
+            , modernization_mapping.latest_arm graviton_family
+            , modernization_mapping.previous_intel previous_intel_family
+            , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) graviton_instance
+            , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) previous_intel
+          FROM ("${cur2_database}"."${cur2_table_name}"
+          LEFT JOIN modernization_mapping ON (CONCAT('cache.', SPLIT_PART(line_item_usage_type, '.', 2)) = modernization_mapping.family))
+          WHERE ((product['product_name'] = 'Amazon ElastiCache') AND (product_product_family = 'Cache Instance') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'RIFee', 'Fee')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL '7' MONTH)) AND (CAST("concat"(billing_period, '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL '7' MONTH))))
+          GROUP BY DATE_FORMAT(line_item_usage_start_date, '%Y-%m'), bill_payer_account_id, line_item_usage_account_id, line_item_line_item_type, line_item_resource_id, line_item_usage_type, product_location, product['cache_engine'], pricing_lease_contract_length, pricing_offering_class, pricing_purchase_option, modernization_mapping.generation, modernization_mapping.latest_arm, modernization_mapping.previous_intel
       )
       , elasticache_engineversion AS (
          SELECT DISTINCT
@@ -20887,7 +20898,18 @@ views:
       LEFT JOIN pricing PL2 ON ((elasticache_spend.previous_intel = PL2."instance type") AND (elasticache_spend.product_location = PL2.location) AND (elasticache_spend.product_cache_engine = PL2."cache engine") AND (elasticache_spend.case_purchase_option = PL2.termtype) AND (elasticache_spend.pricing_lease_contract_length = PL2.leasecontractlength) AND (elasticache_spend.pricing_purchase_option = PL2.purchaseoption)))
   graviton_ec2_view:
     dependsOn:
-      cur: true
+      cur2:
+        - line_item_normalized_usage_amount
+        - product['region']
+        - product['operating_system']
+        - product['physical_processor']
+        - product['instance_type']
+        - product['instance_type_family']
+        - pricing_offering_class
+        - savings_plan_offering_type
+        - savings_plan_purchase_term
+        - reservation_reservation_a_r_n
+        - savings_plan_savings_plan_a_r_n
       views:
         - modernization_mapping
     parameters:
@@ -20899,37 +20921,37 @@ views:
       CREATE OR REPLACE VIEW graviton_ec2_view AS
       WITH
         summary_view AS (
-         SELECT
-           "bill_billing_period_start_date" "billing_period"
-         , DATE_FORMAT(line_item_usage_start_date, '%Y-%m-%d') "usage_date"
-         , "bill_payer_account_id" "payer_account_id"
-         , "line_item_usage_account_id" "linked_account_id"
-         , product_instance_type existing_instance
-         , "line_item_line_item_type" "charge_type"
-         , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN 'SavingsPlan' WHEN ("reservation_reservation_a_r_n" <> '') THEN 'Reserved' WHEN ("line_item_usage_type" LIKE '%Spot%') THEN 'Spot' ELSE 'OnDemand' END) "purchase_option"
-         , "product_region" "region"
-         , product_location "location"
-         , product_operating_system
-         , line_item_operation
-         , (CASE WHEN (product_physical_processor LIKE '%Intel%') THEN 'Intel' WHEN (product_physical_processor LIKE '%AMD%') THEN 'AMD' WHEN (product_physical_processor LIKE '%Graviton%') THEN 'Graviton' ELSE product_physical_processor END) processor_type
-         , product_instance_type_family
-         , "split_part"(product_instance_type, '.', 2) size
-         , (CASE WHEN (pricing_lease_contract_length <> '') THEN pricing_lease_contract_length ELSE savings_plan_purchase_term END) contract_length
-         , (CASE WHEN (pricing_offering_class <> '') THEN pricing_offering_class ELSE savings_plan_offering_type END) offering_type
-         , (CASE WHEN (pricing_offering_class <> '') THEN pricing_offering_class WHEN (savings_plan_offering_type = 'ComputeSavingsPlans') THEN 'convertible' WHEN (savings_plan_offering_type = 'EC2InstanceSavingsPlans') THEN 'standard' END) offering_type_mapping_only_column
-         , (CASE WHEN (pricing_purchase_option <> '') THEN pricing_purchase_option ELSE savings_plan_payment_option END) payment_option
-         , (CASE WHEN ((NOT (product_physical_processor LIKE '%Graviton%')) AND (modernization_mapping.latest_arm <> '')) THEN "concat"(modernization_mapping.latest_arm, '.', "split_part"(product_instance_type, '.', 2)) ELSE ' ' END) graviton_instance
-         , (CASE WHEN (product_physical_processor LIKE '%Graviton%') THEN "concat"(modernization_mapping.previous_intel, '.', "split_part"(product_instance_type, '.', 2)) ELSE ' ' END) previous_intel_instance
-         , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "line_item_usage_amount" WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "line_item_usage_amount" WHEN ("line_item_line_item_type" = 'Usage') THEN "line_item_usage_amount" ELSE 0 END)) "usage_quantity"
-         , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "line_item_normalized_usage_amount" WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "line_item_normalized_usage_amount" WHEN ("line_item_line_item_type" = 'Usage') THEN "line_item_normalized_usage_amount" ELSE 0 END)) "normalized_usage_quantity"
-         , "sum"("line_item_unblended_cost") "unblended_cost"
-         , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "savings_plan_savings_plan_effective_cost" WHEN ("line_item_line_item_type" = 'SavingsPlanRecurringFee') THEN ("savings_plan_total_commitment_to_date" - "savings_plan_used_commitment") WHEN ("line_item_line_item_type" = 'SavingsPlanNegation') THEN 0 WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN 0 WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "reservation_effective_cost" WHEN ("line_item_line_item_type" = 'RIFee') THEN ("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee") WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE "line_item_unblended_cost" END)) "amortized_cost"
-         FROM
-           (${cur_table_name}
-         LEFT JOIN modernization_mapping ON (product_instance_type_family = modernization_mapping.family))
-         WHERE (((((line_item_product_code = 'AmazonEC2') AND ((line_item_usage_type LIKE '%BoxUsage%') OR ("line_item_usage_type" LIKE '%Spot%'))) AND (line_item_line_item_type <> 'SavingsPlanNegation')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH)))) AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee', 'SavingsPlanCoveredUsage')))
-         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
-      )
+          SELECT
+            CAST(concat("billing_period", '-01') AS date) "billing_period"
+          , line_item_usage_start_date "usage_date"
+          , bill_payer_account_id "payer_account_id"
+          , line_item_usage_account_id "linked_account_id"
+          , product['instance_type'] existing_instance
+          , line_item_line_item_type "charge_type"
+          , (CASE WHEN (savings_plan_savings_plan_a_r_n <> '') THEN 'SavingsPlan' WHEN (reservation_reservation_a_r_n <> '') THEN 'Reserved' WHEN (line_item_usage_type LIKE '%Spot%') THEN 'Spot' ELSE 'OnDemand' END) "purchase_option"                                                                                                                       
+          , product['region'] "region"
+          , product['location'] "location"
+          , product['operating_system'] "product_operating_system"
+          , line_item_operation
+          , (CASE WHEN (product['physical_processor'] LIKE '%Intel%') THEN 'Intel' WHEN (product['physical_processor'] LIKE '%AMD%') THEN 'AMD' WHEN (product['physical_processor'] LIKE '%Graviton%') THEN 'Graviton' ELSE product['physical_processor'] END) processor_type                                                                                   
+          , product['instance_type_family'] "product_instance_type_family"
+          , split_part(product['instance_type'], '.', 2) size
+          , (CASE WHEN (pricing_lease_contract_length <> '') THEN pricing_lease_contract_length ELSE savings_plan_purchase_term END) contract_length
+          , (CASE WHEN (pricing_offering_class <> '') THEN pricing_offering_class ELSE savings_plan_offering_type END) offering_type
+          , (CASE WHEN (pricing_offering_class <> '') THEN pricing_offering_class WHEN (savings_plan_offering_type = 'ComputeSavingsPlans') THEN 'convertible' WHEN (savings_plan_offering_type = 'EC2InstanceSavingsPlans') THEN 'standard' END) offering_type_mapping_only_column
+          , (CASE WHEN (pricing_purchase_option <> '') THEN pricing_purchase_option ELSE savings_plan_payment_option END) payment_option
+          , (CASE WHEN ((NOT (product['physical_processor'] LIKE '%Graviton%')) AND (modernization_mapping.latest_arm <> '')) THEN concat(modernization_mapping.latest_arm, '.', split_part(product['instance_type'], '.', 2)) ELSE ' ' END) graviton_instance
+          , (CASE WHEN (product['physical_processor'] LIKE '%Graviton%') THEN concat(modernization_mapping.previous_intel, '.', split_part(product['instance_type'], '.', 2)) ELSE ' ' END) previous_intel_instance
+          , sum((CASE WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) "usage_quantity"
+          , sum((CASE WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN line_item_normalized_usage_amount WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_normalized_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_normalized_usage_amount ELSE 0 END)) "normalized_usage_quantity"
+          , sum(line_item_unblended_cost) "unblended_cost"
+          , sum((CASE WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment) WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0 WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0 WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) "amortized_cost"                                                                                                                                                                                                                                                                                       
+          FROM
+            ("${cur2_database}"."${cur2_table_name}"
+          LEFT JOIN modernization_mapping ON (product['instance_type_family'] = modernization_mapping.family))
+          WHERE (((((line_item_product_code = 'AmazonEC2') AND ((line_item_usage_type LIKE '%BoxUsage%') OR (line_item_usage_type LIKE '%Spot%'))) AND (line_item_line_item_type <> 'SavingsPlanNegation')) AND ((bill_billing_period_start_date >= (date_trunc('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(concat(split_part("billing_period", '-', 1), '-', split_part("billing_period", '-', 2), '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '7' MONTH)))) AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee', 'SavingsPlanCoveredUsage')))                                                                                                         
+          GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+        )
       , ec2_pricing AS (
          SELECT
            od.*
@@ -20981,7 +21003,20 @@ views:
         summary_view_reserved ri
   graviton_rds_view:
     dependsOn:
-      cur: true
+      cur2:
+        - line_item_normalized_usage_amount
+        - pricing_lease_contract_length
+        - pricing_public_on_demand_rate
+        - pricing_purchase_option
+        - pricing_term
+        - pricing_unit
+        - product['database_engine']
+        - product['deployment_option']
+        - product['instance_type_family']
+        - product['instance_type']
+        - product['location']
+        - product['physical_processor']
+        - product['storage']
       views:
         - modernization_mapping
     parameters:
@@ -20993,39 +21028,39 @@ views:
       CREATE OR REPLACE VIEW graviton_rds_view AS
       WITH
         cur_data AS (
-         SELECT
-           bill_payer_account_id
-         , line_item_usage_account_id
-         , bill_billing_period_start_date
-         , product_instance_type
-         , product_storage
-         , pricing_term
-         , pricing_lease_contract_length
-         , pricing_purchase_option
-         , pricing_unit
-         , SPLIT_PART(line_item_resource_id, ':', 7) line_item_resource_id
-         , (CASE WHEN (product_storage LIKE 'EBS Only') THEN 'EBS Only' WHEN (product_storage LIKE 'Aurora IO Optimization Mode') THEN 'Aurora IO Optimization Mode' WHEN (product_storage LIKE '%SSD%') THEN 'SSD' ELSE 'Other Storage' END) product_storage_type
-         , (CASE WHEN (product_database_engine LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
-         , (CASE WHEN (product_database_engine LIKE 'Aurora%') THEN SPLIT_PART(product_database_engine, ' ', 2) ELSE product_database_engine END) db_engine
-         , line_item_availability_zone
-         , product_location
-         , lower(product_instance_type_family) "product_instance_type_family"
-         , (CASE WHEN (product_physical_processor LIKE '%Intel%') THEN 'Intel' WHEN (product_physical_processor LIKE '%AMD%') THEN 'AMD' WHEN (product_physical_processor LIKE '%Graviton%') THEN 'Graviton' ELSE product_physical_processor END) processor_type
-         , product_deployment_option
-         , line_item_unblended_rate
-         , pricing_public_on_demand_rate
-         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) line_item_usage_amount
-         , SUM(line_item_unblended_cost) line_item_unblended_cost
-         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
-         , modernization_mapping.generation
-         , modernization_mapping.latest_arm
-         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT('db.', modernization_mapping.latest_arm, '.', SPLIT_PART(product_instance_type, '.', 3)) ELSE '' END) graviton_instance_type
-         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT('db.', modernization_mapping.previous_intel, '.', SPLIT_PART(product_instance_type, '.', 3)) ELSE '' END) latest_intel_instance_type
-         FROM
-           (${cur_table_name}
-         LEFT JOIN modernization_mapping ON (lower(product_instance_type_family) = modernization_mapping.family))
-         WHERE (((product_product_name = 'Amazon Relational Database Service') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee')) AND (product_product_family = 'Database Instance')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY bill_payer_account_id, line_item_usage_account_id, bill_billing_period_start_date, product_instance_type, product_storage, line_item_usage_amount, pricing_term, line_item_availability_zone, product_instance_type_family, product_location, line_item_resource_id, product_database_engine, product_deployment_option, line_item_unblended_rate, product_physical_processor, modernization_mapping.generation, modernization_mapping.latest_arm, pricing_lease_contract_length, pricing_purchase_option, pricing_unit, pricing_public_on_demand_rate, 26, 27
+          SELECT
+              bill_payer_account_id
+            , line_item_usage_account_id
+            , bill_billing_period_start_date
+            , product['instance_type']      product_instance_type
+            , product['storage']     product_storage
+            , pricing_term
+            , pricing_lease_contract_length
+            , pricing_purchase_option
+            , pricing_unit
+            , SPLIT_PART(line_item_resource_id, ':', 7) line_item_resource_id
+            , (CASE WHEN (product['storage'] LIKE 'EBS Only') THEN 'EBS Only' WHEN (product['storage'] LIKE 'Aurora IO Optimization Mode') THEN 'Aurora IO Optimization Mode' WHEN (product['storage'] LIKE '%SSD%') THEN 'SSD' ELSE 'Other Storage' END) product_storage_type
+            , (CASE WHEN (product['database_engine'] LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
+            , (CASE WHEN (product['database_engine'] LIKE 'Aurora%') THEN SPLIT_PART(product['database_engine'], ' ', 2) ELSE product['database_engine'] END) db_engine
+            , line_item_availability_zone
+            , product['location'] "product_location"
+            , lower(product['instance_type_family']) "product_instance_type_family"
+            , (CASE WHEN (product['physical_processor'] LIKE '%Intel%') THEN 'Intel' WHEN (product['physical_processor'] LIKE '%AMD%') THEN 'AMD' WHEN (product['physical_processor'] LIKE '%Graviton%') THEN 'Graviton' ELSE product['physical_processor'] END) processor_type
+            , product['deployment_option']  "product_deployment_option"
+            , line_item_unblended_rate
+            , pricing_public_on_demand_rate
+            , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) line_item_usage_amount
+            , SUM(line_item_unblended_cost) line_item_unblended_cost                                                                                                                                                                                                                                                                                                 , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
+            , modernization_mapping.generation
+            , modernization_mapping.latest_arm
+            , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT('db.', modernization_mapping.latest_arm, '.', SPLIT_PART(product['instance_type'], '.', 3)) ELSE '' END) graviton_instance_type
+            , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT('db.', modernization_mapping.previous_intel, '.', SPLIT_PART(product['instance_type'], '.', 3)) ELSE '' END) latest_intel_instance_type
+          FROM
+            ("${cur2_database}"."${cur2_table_name}"
+            LEFT JOIN modernization_mapping ON (lower(product['instance_type_family']) = modernization_mapping.family))
+            WHERE (((product['product_name'] = 'Amazon Relational Database Service') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee')) AND (product['product_family'] = 'Database Instance')) 
+            AND ((bill_billing_period_start_date >= (date_trunc('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(concat(split_part("billing_period", '-', 1), '-', split_part("billing_period", '-', 2), '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '7' MONTH)))) 
+            GROUP BY bill_payer_account_id, line_item_usage_account_id, bill_billing_period_start_date, product['instance_type'], product['storage'], line_item_usage_amount, pricing_term, line_item_availability_zone, product['instance_type_family'], product['location'], line_item_resource_id, product['database_engine'], product['deployment_option'], line_item_unblended_rate, product['physical_processor'], modernization_mapping.generation, modernization_mapping.latest_arm, pricing_lease_contract_length, pricing_purchase_option, pricing_unit, pricing_public_on_demand_rate, 26, 27
       )
       , describe_db_data AS (
          SELECT DISTINCT
