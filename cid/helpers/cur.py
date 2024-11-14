@@ -111,7 +111,7 @@ class AbstractCUR(CidBase):
         if column.endswith('_date') and not column.endswith('_to_date'):
             return 'TIMESTAMP'
         if column.endswith('_time') and (version or self.version) == '2':
-            return 'TIMESTAMP'
+            return 'STRING' # yes, they are string
         special_cases = {
             "cost_category": "MAP",
             "discount": "MAP",
