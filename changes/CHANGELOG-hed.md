@@ -1,4 +1,10 @@
 # What's new in Health Events Dashboard (HED)
+## v2.0.3
+* Fix case where reported resource name is not a full unique ARN to derive unique instance counts
+* Easier filtering by date ranges
+* Layout changes to event detail section
+* Minor cosmetic and usage guidance changes
+
 ## v2.0.2
 * Fix Event Category filter on Events Explorer tab
 * Minor cosmetic changes
