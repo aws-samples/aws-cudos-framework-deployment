@@ -263,7 +263,7 @@ class QuickSight(CidBase):
                 logger.info("Minimum template version could not be found for Dashboard {dashboardId}: {_template_arn}, deployed template could not be described")
         else: # Dashboard is not template based but definition based
             try:
-                dashboard.deployedDefinition = self.describe_dashboard_definition(dashboard_id=dashboardId, refresh=refresh)
+                dashboard.deployed_definition = self.describe_dashboard_definition(dashboard_id=dashboardId, refresh=refresh)
             except CidError as exc:
                 logger.info('Exception on reading dashboard definition {dashboardId}: {exc}. Not critical. Continue.')
 
@@ -271,7 +271,7 @@ class QuickSight(CidBase):
             # Resolve source definition (the latest definition publicly available)
             data_stream = io.StringIO(_definition["data"])
             definition_data = yaml.safe_load(data_stream)
-            dashboard.sourceDefinition = CidQsDefinition(definition_data)
+            dashboard.source_definition = CidQsDefinition(definition_data)
 
         # Fetch datasets (works for both TEMPLATE and DEFINITION based dashboards)
         for dataset in dashboard.version.get('DataSetArns', []):
@@ -289,7 +289,7 @@ class QuickSight(CidBase):
                 logger.info(f'Invalid dataset {dataset_id}')
         logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
 
-        # Fetch the latest version of sourceTemplate referenced in definition
+        # Fetch the latest version of source_template referenced in definition
         source_template_account_id = _definition.get('sourceAccountId')
         template_id = _definition.get('templateId')
         region = _definition.get('region', 'us-east-1')
@@ -297,13 +297,13 @@ class QuickSight(CidBase):
             try:
                 logger.debug(f'Loading latest source template {template_id} from source account {source_template_account_id} in {region}')
                 template = self.describe_template(template_id, account_id=source_template_account_id, region=region)
-                dashboard.sourceTemplate = template
+                dashboard.source_template = template
             except Exception as exc:
                 logger.debug(exc, exc_info=True)
                 logger.info(f'Unable to describe template {template_id} in {source_template_account_id} ({region})')
 
         # Checking for version override in template definition
-        for dashboard_template in [dashboard.deployedTemplate, dashboard.sourceTemplate]:
+        for dashboard_template in [dashboard.deployedTemplate, dashboard.source_template]:
             if not isinstance(dashboard_template, CidQsTemplate)\
                 or int(dashboard_template.version) <= 0 \
                 or not version_obj:
