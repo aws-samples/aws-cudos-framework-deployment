@@ -3610,7 +3610,7 @@ views:
         - product['deployment_option']
         - product['instance_type']
         - product['instance_type_family']
-        - product['product_family']
+        - product_product_family
         - product['region']
         - product['vcpu']
     data: |-
@@ -3800,14 +3800,14 @@ views:
          , accmap.account_name
          , c.product['region'] region_code
          , (CASE WHEN (c.product['database_engine'] LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
-         , (CASE WHEN (c.line_item_usage_type LIKE '%InstanceUsage%') THEN 'SINGLE-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN 'MULTI-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZClusterUsage%') THEN 'MULTI-AZ-CLUSTER' WHEN ((c.product['product_family'] = 'Serverless') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 'SERVERLESS' WHEN ((c.product['product_family'] = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'SERVERLESSV2' ELSE 'UNDEFINED (Check the usage type)' END) deployment_option
+         , (CASE WHEN (c.line_item_usage_type LIKE '%InstanceUsage%') THEN 'SINGLE-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN 'MULTI-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZClusterUsage%') THEN 'MULTI-AZ-CLUSTER' WHEN ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 'SERVERLESS' WHEN ((c.product_product_family = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'SERVERLESSV2' ELSE 'UNDEFINED (Check the usage type)' END) deployment_option
          , (CASE WHEN (rdsu.engine IS NOT NULL) THEN rdsu.engine ELSE c.product['database_engine'] END) engine
          , (CASE WHEN ((rdsu.engine IS NOT NULL) AND (rdsu.engineversion IS NOT NULL)) THEN CONCAT(rdsu.engine, rdsu.engineversion) ELSE 'engine-1.-1.-1' END) engineversion
          , c.product['instance_type_family'] instance_type_family
          , c.product['instance_type'] instance_type
          , c.line_item_line_item_description item_description
-         , (CASE WHEN ((c.product['product_family'] like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 0 ELSE CAST(c.product['vcpu'] AS int) END) vcpus
-         , (CASE WHEN ((c.product['product_family'] = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'acu-hour' ELSE 'vcpu-hour' END) usage_unit
+         , (CASE WHEN ((c.product_product_family like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 0 ELSE CAST(c.product['vcpu'] AS int) END) vcpus
+         , (CASE WHEN ((c.product_product_family = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'acu-hour' ELSE 'vcpu-hour' END) usage_unit
          , split_part(c.line_item_resource_id, ':', 7) dbresourceidentifier
          , c.line_item_resource_id resource_id
          , c.product['deployment_option'] original_deployment_option
