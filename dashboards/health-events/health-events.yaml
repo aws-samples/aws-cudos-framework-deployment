@@ -6355,7 +6355,7 @@ dashboards:
                     Value:
                       CustomValuesConfiguration:
                         CustomValues:
-                          StringValues: []
+                          StringValues: [ ]
                         IncludeNullValue: false
                   - DestinationParameterName: DescriptionPage
                     Value:
