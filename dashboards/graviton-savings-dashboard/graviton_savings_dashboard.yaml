@@ -2104,28 +2104,6 @@ dashboards:
               SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: e594b280-a5a5-4eb1-b35f-96255efcdd56
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: graviton_eligibility
-              DataSetIdentifier: opensearch_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Requires Update
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: 157aeccb-a6d4-4abd-a34c-c1814d4e294d
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
-              VisualIds:
-              - 0a72f59c-d4a7-456a-b79d-84b3e9dd0d58
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: be075717-c7a0-4e56-828a-3664b757de05
         Filters:
         - CategoryFilter:
@@ -2187,28 +2165,6 @@ dashboards:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
               SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: d2415f8a-4fcb-439d-82da-e89bf33045e7
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: graviton_instance
-              DataSetIdentifier: opensearch_graviton_dashboard
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - ''
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: 1d3eb0ef-a472-4466-bdd9-9852574d4172
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
-              VisualIds:
-              - 0a72f59c-d4a7-456a-b79d-84b3e9dd0d58
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4630e35b-01cf-4e89-a503-34245871c904
@@ -2644,27 +2600,6 @@ dashboards:
               - dbcad183-c013-4f07-8e56-7592c13c43ab
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 90b4e8d1-8c26-4130-8a70-e03f0eb4bab3
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: processor_type
-              DataSetIdentifier: opensearch_graviton_dashboard
-            Configuration:
-              CustomFilterConfiguration:
-                MatchOperator: EQUALS
-                NullOption: NON_NULLS_ONLY
-                ParameterName: OpenSearchProcessor
-            FilterId: 34a4e648-f9b9-4b0a-9edb-80268d4229be
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
-              VisualIds:
-              - dbcad183-c013-4f07-8e56-7592c13c43ab
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 9f143f6b-a2cd-46aa-9310-146062ae1307
         Filters:
         - CategoryFilter:
@@ -2684,28 +2619,6 @@ dashboards:
               SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
               VisualIds:
               - dbcad183-c013-4f07-8e56-7592c13c43ab
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: a539098b-3419-4c16-8496-b1112f1f52a0
-        Filters:
-        - RelativeDatesFilter:
-            AnchorDateConfiguration:
-              AnchorOption: NOW
-            Column:
-              ColumnName: bill_billing_period_start_date
-              DataSetIdentifier: opensearch_graviton_dashboard
-            FilterId: 22e9c33e-75cb-4584-b37d-052216de2b3f
-            MinimumGranularity: DAY
-            NullOption: NON_NULLS_ONLY
-            RelativeDateType: PREVIOUS
-            TimeGranularity: MONTH
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
-              VisualIds:
-              - 0a72f59c-d4a7-456a-b79d-84b3e9dd0d58
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: be16a8a3-a1ab-4580-b6b2-440352f1761f
@@ -6408,6 +6321,598 @@ dashboards:
               VisualIds:
               - 611377dc-276d-4378-8647-fa9988768eaa
         Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 96d8847e-ae98-4a41-8915-0388541a8ad6
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_custom
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: a94736e9-2526-4cfd-87ff-c087d6357365
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: cbe69215-5234-4fab-b3f2-614bf51a3438
+              VisualIds:
+              - 28ea1f4a-1129-4a88-b304-b2df9667e56c
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 1dbb5c63-74f2-46ba-977b-f5299ed0d2c2
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_custom
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: f34df328-a63b-46c2-999b-c261676c91b5
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: cbe69215-5234-4fab-b3f2-614bf51a3438
+              VisualIds:
+              - 6e9c3b24-15c2-4957-ad32-0e6799006d69
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 7ba45f69-9483-4157-854b-ba014f2a2ab8
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_custom
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: c8eb87f9-f424-4627-b4e7-e2c697d961de
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: cbe69215-5234-4fab-b3f2-614bf51a3438
+              VisualIds:
+              - d0ce11dd-e109-48d8-bd18-ad7169293dbf
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: a02795ca-9528-42f3-b58c-645cb0da6a9c
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_custom
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: e7ba933b-2d04-4e56-becb-3466be5e9123
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: cbe69215-5234-4fab-b3f2-614bf51a3438
+              VisualIds:
+              - 144151e9-e382-4305-9917-ad03930347f5
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: b00ac44c-095e-4697-9283-5b919466a61c
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_custom
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: b435c92c-436f-4db6-90ad-5912e829990d
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: cbe69215-5234-4fab-b3f2-614bf51a3438
+              VisualIds:
+              - 6189b50b-70fc-462b-93a9-3b787f6d6e85
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 53e8bd68-e31d-4a49-9533-3b086f2ff3e0
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_custom
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: f9001ac4-eb80-46fd-b485-e99d9e9337be
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: cbe69215-5234-4fab-b3f2-614bf51a3438
+              VisualIds:
+              - f16da1f8-cb46-4c20-9d7c-6c917e71b6c3
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 3141fb83-4e51-4211-9e2d-20452bf3d462
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_custom
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 8d090111-fd41-41bf-99d3-86f823aef2ae
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: cbe69215-5234-4fab-b3f2-614bf51a3438
+              VisualIds:
+              - dd4bbaee-d054-400a-b4bd-64f084ee3b01
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 36a45eb7-2056-4a26-ab24-0e62a479c765
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_custom
+              DataSetIdentifier: elasticache_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: bf33e834-063b-46a8-a641-611138e41fc9
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: cbe69215-5234-4fab-b3f2-614bf51a3438
+              VisualIds:
+              - 4af41837-1c58-4049-8c8e-cdb4c5a2ebb8
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 63e6a709-92f8-4f6c-b8fb-ec2253657ee8
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Graviton
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 2052f092-96a5-40b5-9a34-fb8321028bcf
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - f2d6838c-dbb0-4974-979b-6c26d53fbfc8
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: a0317c4b-79c3-45b3-bc9c-0de894880e3e
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Graviton
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: f34d6f3b-d2e4-45ef-a8c6-2426998938ff
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - 68f6914a-b416-441d-abf2-1c1ed47c2dfc
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: c28c4538-3767-4a8d-a4de-29031a4e2ab8
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Graviton
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 0b7be1d0-323b-4c48-ba9d-77d81f18b0e9
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - 84bcb07a-f5b0-43c3-99c1-331b46bca82e
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 618bb662-15eb-43a5-b0e3-69311876cc47
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 75925da0-820d-4938-a762-06d915799cfc
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - 582a99cb-fb18-45e2-911b-dc9c38ca72d1
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: e2a37a21-77b3-42f9-9fd4-2171d24b6d03
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 2683870e-6ec8-477c-aabd-9c67a46a9e6c
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - dbcad183-c013-4f07-8e56-7592c13c43ab
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 53f8d25a-daeb-4ba9-bfcc-e8484418a342
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 0df1fe51-d84d-4768-b372-736c53bcd693
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - 40898747-84e8-4801-916f-3eb433a2db94
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: c1dfd977-311e-4409-92e3-eeb0d95ac620
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 4c4af238-8afc-44c5-953a-11a465f58b89
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - 35ac44e0-bc1a-4fb4-a32e-e4284ced8801
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: b12ca508-086c-46f4-ae14-1b778b5f9a03
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 7c681224-19ce-483d-9bad-cda42fc09c4e
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - d050e318-4f87-4cf4-a952-522d730756c6
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 8d37d804-a855-4437-afd2-7ff06389c895
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 4f1db205-3a29-4d96-ad36-5e1bbd4ea52b
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - 8679738c-994b-45aa-9c5d-b3fb4dce6b17
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 6378f60a-db5a-4867-971e-299d75b7bb7c
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: engine
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            FilterId: 7f09b114-ed39-454f-bb11-cfbfafa7da91
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - c2d17c7e-d72d-4492-977f-be7026b420bf
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: b8329ec2-d8ad-4155-9c8d-c7b5558cb226
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: graviton_eligibility
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Eligible
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: f63be849-b85a-458b-a12a-873382f063a3
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - c2d17c7e-d72d-4492-977f-be7026b420bf
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: c3fb2c26-3b1f-4724-85c1-e6f0c0634c27
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: pricing_term
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - OnDemand
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 50ef2ace-33ac-4f57-b7a9-b6430704dda9
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - c2d17c7e-d72d-4492-977f-be7026b420bf
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 9eb6bf86-b12a-4122-82fb-6626bdc96059
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 8ac6a6de-4335-40e9-9768-fc6488a21ba3
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - c2d17c7e-d72d-4492-977f-be7026b420bf
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 7c4e5eea-025c-493f-98a4-2613b95a362b
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: bill_billing_period_start_date
+              DataSetIdentifier: opensearch_graviton_dashboard
+            FilterId: fb64d76e-e952-46f0-9bee-a1feb634cbed
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - c2d17c7e-d72d-4492-977f-be7026b420bf
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 03e928ba-1dac-4e17-a6f6-b609e06fea08
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: engine
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
+            FilterId: 7a3f1db7-679f-49d0-a399-227d1abdd4a9
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - bdb2fb83-edd1-47e5-a32e-65833ba9f737
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: e7beec0b-0fca-49b1-a489-1f1bdc00dd3c
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: graviton_eligibility
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Requires Update
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: a01f9f2f-0ec0-4a07-8670-13910dd0a225
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - bdb2fb83-edd1-47e5-a32e-65833ba9f737
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: ccff88c0-2947-4d41-a817-11f432e1171e
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: pricing_term
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - OnDemand
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: d13c8649-f58d-4a30-82e5-52e581d80c95
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - bdb2fb83-edd1-47e5-a32e-65833ba9f737
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 3c117c0a-c1a9-4cba-a7fd-45e5275166bd
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: processor_type
+              DataSetIdentifier: opensearch_graviton_dashboard
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - Intel
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: ea1d3c4f-c179-43d0-b9f1-e6cf03aa033e
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - bdb2fb83-edd1-47e5-a32e-65833ba9f737
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: e05e2ebd-5f6b-4607-903a-4d2b6ed1c17c
+        Filters:
+        - RelativeDatesFilter:
+            AnchorDateConfiguration:
+              AnchorOption: NOW
+            Column:
+              ColumnName: bill_billing_period_start_date
+              DataSetIdentifier: opensearch_graviton_dashboard
+            FilterId: 38aef614-d505-4126-a1e8-4968e7d805ff
+            MinimumGranularity: DAY
+            NullOption: NON_NULLS_ONLY
+            RelativeDateType: PREVIOUS
+            TimeGranularity: MONTH
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
+              VisualIds:
+              - bdb2fb83-edd1-47e5-a32e-65833ba9f737
+        Status: ENABLED
       Options: {}
       ParameterDeclarations:
       - DecimalParameterDeclaration:
@@ -6983,66 +7488,66 @@ dashboards:
                 ElementId: ec8b905c-ecc4-4b32-9448-775831404d2c
                 ElementType: TEXT_BOX
                 RowIndex: 98
-                RowSpan: 1
+                RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: 921d2cb8-cf57-4871-82bf-5c46d667237d
                 ElementType: FILTER_CONTROL
-                RowIndex: 99
+                RowIndex: 100
                 RowSpan: 2
               - ColumnIndex: 5
                 ColumnSpan: 5
                 ElementId: 922f6b3e-f89a-42c3-856c-a573cfdf375b
                 ElementType: FILTER_CONTROL
-                RowIndex: 99
+                RowIndex: 100
                 RowSpan: 2
               - ColumnIndex: 10
                 ColumnSpan: 5
                 ElementId: 855dee4e-7dc4-4848-a14f-ec068b355c89
                 ElementType: FILTER_CONTROL
-                RowIndex: 99
+                RowIndex: 100
                 RowSpan: 2
               - ColumnIndex: 15
                 ColumnSpan: 5
                 ElementId: 491013f7-56fd-4b04-b9b9-226ed215c53f
                 ElementType: FILTER_CONTROL
-                RowIndex: 99
+                RowIndex: 100
                 RowSpan: 2
               - ColumnIndex: 20
                 ColumnSpan: 5
                 ElementId: ffde6b96-bf72-4979-b577-9c04fb5c1a89
                 ElementType: FILTER_CONTROL
-                RowIndex: 99
+                RowIndex: 100
                 RowSpan: 2
               - ColumnIndex: 25
                 ColumnSpan: 5
                 ElementId: a0799b74-5d6b-4630-a94c-28daa5b111aa
                 ElementType: FILTER_CONTROL
-                RowIndex: 99
+                RowIndex: 100
                 RowSpan: 2
               - ColumnIndex: 30
                 ColumnSpan: 5
                 ElementId: b7ce7f74-deea-47ed-9cab-1b4b9f4adb04
                 ElementType: FILTER_CONTROL
-                RowIndex: 99
+                RowIndex: 100
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 1ad4a970-7e4d-4931-aa0e-063005cd7aba
                 ElementType: VISUAL
-                RowIndex: 101
+                RowIndex: 102
                 RowSpan: 14
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: b93349e7-2fbe-4078-be50-964d8e3876f5
                 ElementType: TEXT_BOX
-                RowIndex: 115
+                RowIndex: 116
                 RowSpan: 6
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 1f5d30a5-2260-43de-b725-7cb892d9d880
                 ElementType: TEXT_BOX
-                RowIndex: 115
+                RowIndex: 116
                 RowSpan: 6
         Name: EC2
         ParameterControls:
@@ -9313,6 +9818,7 @@ dashboards:
                 Visibility: VISIBLE
               DataLabels:
                 Overlap: DISABLE_OVERLAP
+                TotalsVisibility: VISIBLE
                 Visibility: VISIBLE
               FieldWells:
                 BarChartAggregatedFieldWells:
@@ -9816,7 +10322,7 @@ dashboards:
                               DisplayMode: POSITIVE
                             NullValueFormatConfiguration:
                               NullString: 'null'
-                            NumberScale: THOUSANDS
+                            NumberScale: AUTO
                             SeparatorConfiguration:
                               DecimalSeparator: DOT
                               ThousandsSeparator:
@@ -9828,6 +10334,13 @@ dashboards:
                         ColumnName: Realized Graviton Savings %
                         DataSetIdentifier: ec2_graviton_dashboard
                       FieldId: 18e7e6ef-e0ec-4117-84fc-342c40962336.12.1731037301436
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          PercentageDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 0
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
               SortConfiguration:
                 FieldSortOptions: []
               TableOptions:
@@ -10261,6 +10774,10 @@ dashboards:
                 - DataPathList:
                   - FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.region.6.1709750028429
                     FieldValue: region
+                  Width: 112px
+                - DataPathList:
+                  - FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.normalized_usage_quantity.7.1709750035355
+                    FieldValue: normalized_usage_quantity
                   Width: 102px
                 - DataPathList:
                   - FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.product_instance_type_family.2.1709750001887
@@ -10282,10 +10799,6 @@ dashboards:
                   - FieldId: 30a1836d-deb7-4883-820a-0acb671b8a45.graviton_price.14.1726036560271
                     FieldValue: graviton_price
                   Width: 89px
-                - DataPathList:
-                  - FieldId: d76c6ad6-0eab-4acb-b93b-9f33300a945a.normalized_usage_quantity.7.1709750035355
-                    FieldValue: normalized_usage_quantity
-                  Width: 87px
                 SelectedFieldOptions:
                 - CustomLabel: Account Name
                   FieldId: 47626e9f-53d0-42ba-b193-a1a463746fca.account_name.10.1710859804154
@@ -10509,6 +11022,8 @@ dashboards:
                       FormatConfiguration:
                         FormatConfiguration:
                           PercentageDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 0
                             NegativeValueConfiguration:
                               DisplayMode: NEGATIVE
                             NullValueFormatConfiguration:
@@ -13761,6 +14276,9 @@ dashboards:
                 - CustomLabel: Account Name
                   FieldId: 3a626a64-21c8-4be1-8cd4-45a86fcd240d.account_name.10.1710858880835
                   Visibility: VISIBLE
+                - CustomLabel: Payer ID
+                  FieldId: bb1be3db-3e61-4cf5-b074-24e95303a13b.bill_payer_account_id.20.1731699635528
+                  Visibility: VISIBLE
                 - CustomLabel: Linked Account ID
                   FieldId: 530d2655-2282-4e72-b694-dbbd85392931.account_id.19.1726779849494
                   Visibility: VISIBLE
@@ -13827,6 +14345,11 @@ dashboards:
                         ColumnName: account_name
                         DataSetIdentifier: rds_graviton_dashboard
                       FieldId: 3a626a64-21c8-4be1-8cd4-45a86fcd240d.account_name.10.1710858880835
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: bill_payer_account_id
+                        DataSetIdentifier: rds_graviton_dashboard
+                      FieldId: bb1be3db-3e61-4cf5-b074-24e95303a13b.bill_payer_account_id.20.1731699635528
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: account_id
@@ -16612,6 +17135,10 @@ dashboards:
                     FieldValue: graviton_instance
                   Width: 120px
                 - DataPathList:
+                  - FieldId: 07b00d3c-1514-4700-a4dc-3c466f317e67.graviton_savings.14.1726458151424
+                    FieldValue: graviton_savings
+                  Width: 118px
+                - DataPathList:
                   - FieldId: 79a39270-88a1-45be-9ae6-a3e39c6d4bde.line_item_usage_account_id.4.1695327092350
                     FieldValue: line_item_usage_account_id
                   Width: 107px
@@ -17377,19 +17904,25 @@ dashboards:
                 RowIndex: 53
                 RowSpan: 2
               - ColumnIndex: 0
-                ColumnSpan: 12
+                ColumnSpan: 10
                 ElementId: 582a99cb-fb18-45e2-911b-dc9c38ca72d1
                 ElementType: VISUAL
                 RowIndex: 55
                 RowSpan: 5
-              - ColumnIndex: 12
-                ColumnSpan: 12
-                ElementId: 0a72f59c-d4a7-456a-b79d-84b3e9dd0d58
+              - ColumnIndex: 10
+                ColumnSpan: 9
+                ElementId: c2d17c7e-d72d-4492-977f-be7026b420bf
                 ElementType: VISUAL
                 RowIndex: 55
                 RowSpan: 5
-              - ColumnIndex: 24
-                ColumnSpan: 12
+              - ColumnIndex: 19
+                ColumnSpan: 9
+                ElementId: bdb2fb83-edd1-47e5-a32e-65833ba9f737
+                ElementType: VISUAL
+                RowIndex: 55
+                RowSpan: 5
+              - ColumnIndex: 28
+                ColumnSpan: 8
                 ElementId: fe498f81-3244-4385-8094-ef1e213346c4
                 ElementType: VISUAL
                 RowIndex: 55
@@ -17425,24 +17958,18 @@ dashboards:
                 RowIndex: 76
                 RowSpan: 9
               - ColumnIndex: 0
-                ColumnSpan: 11
+                ColumnSpan: 13
                 ElementId: cde60a3b-b35f-41b7-acf3-c173af1af875
                 ElementType: TEXT_BOX
                 RowIndex: 85
                 RowSpan: 2
-              - ColumnIndex: 11
+              - ColumnIndex: 13
                 ColumnSpan: 8
                 ElementId: b20f0523-94ab-4a34-8f46-22fdef5ee615
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 85
                 RowSpan: 2
-              - ColumnIndex: 19
-                ColumnSpan: 9
-                ElementId: 0274ebbf-511c-4caf-8d05-bc20412cbee6
-                ElementType: PARAMETER_CONTROL
-                RowIndex: 85
-                RowSpan: 2
-              - ColumnIndex: 28
+              - ColumnIndex: 21
                 ColumnSpan: 8
                 ElementId: e16dd599-e535-4371-89a2-165b37ce2553
                 ElementType: PARAMETER_CONTROL
@@ -17453,18 +17980,18 @@ dashboards:
                 ElementId: dbcad183-c013-4f07-8e56-7592c13c43ab
                 ElementType: VISUAL
                 RowIndex: 87
-                RowSpan: 18
+                RowSpan: 13
               - ColumnIndex: 0
                 ColumnSpan: 17
                 ElementId: dda659f2-97c3-4457-9583-2594b981eff7
                 ElementType: TEXT_BOX
-                RowIndex: 105
+                RowIndex: 100
                 RowSpan: 7
               - ColumnIndex: 17
                 ColumnSpan: 19
                 ElementId: 2e92ff4a-f144-432b-ac93-d0ea05da26df
                 ElementType: TEXT_BOX
-                RowIndex: 105
+                RowIndex: 100
                 RowSpan: 7
         Name: OpenSearch
         ParameterControls:
@@ -17495,10 +18022,6 @@ dashboards:
                   ColumnName: engine
                   DataSetIdentifier: opensearch_graviton_dashboard
                 SourceSheetControlId: e16dd599-e535-4371-89a2-165b37ce2553
-              - ColumnToMatch:
-                  ColumnName: processor_type
-                  DataSetIdentifier: opensearch_graviton_dashboard
-                SourceSheetControlId: 0274ebbf-511c-4caf-8d05-bc20412cbee6
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -17544,10 +18067,6 @@ dashboards:
                   ColumnName: engine
                   DataSetIdentifier: opensearch_graviton_dashboard
                 SourceSheetControlId: e16dd599-e535-4371-89a2-165b37ce2553
-              - ColumnToMatch:
-                  ColumnName: processor_type
-                  DataSetIdentifier: opensearch_graviton_dashboard
-                SourceSheetControlId: 0274ebbf-511c-4caf-8d05-bc20412cbee6
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -17593,10 +18112,6 @@ dashboards:
                   ColumnName: engine
                   DataSetIdentifier: opensearch_graviton_dashboard
                 SourceSheetControlId: e16dd599-e535-4371-89a2-165b37ce2553
-              - ColumnToMatch:
-                  ColumnName: processor_type
-                  DataSetIdentifier: opensearch_graviton_dashboard
-                SourceSheetControlId: 0274ebbf-511c-4caf-8d05-bc20412cbee6
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -17642,10 +18157,6 @@ dashboards:
                   ColumnName: engine
                   DataSetIdentifier: opensearch_graviton_dashboard
                 SourceSheetControlId: e16dd599-e535-4371-89a2-165b37ce2553
-              - ColumnToMatch:
-                  ColumnName: processor_type
-                  DataSetIdentifier: opensearch_graviton_dashboard
-                SourceSheetControlId: 0274ebbf-511c-4caf-8d05-bc20412cbee6
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -17691,10 +18202,6 @@ dashboards:
                   ColumnName: engine
                   DataSetIdentifier: opensearch_graviton_dashboard
                 SourceSheetControlId: e16dd599-e535-4371-89a2-165b37ce2553
-              - ColumnToMatch:
-                  ColumnName: processor_type
-                  DataSetIdentifier: opensearch_graviton_dashboard
-                SourceSheetControlId: 0274ebbf-511c-4caf-8d05-bc20412cbee6
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -17748,25 +18255,6 @@ dashboards:
                 DataSetIdentifier: opensearch_graviton_dashboard
             SourceParameterName: OpenSearchEngine
             Title: Engine
-            Type: MULTI_SELECT
-        - Dropdown:
-            DisplayOptions:
-              InfoIconLabelOptions:
-                Visibility: HIDDEN
-              SelectAllOptions:
-                Visibility: VISIBLE
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            ParameterControlId: 0274ebbf-511c-4caf-8d05-bc20412cbee6
-            SelectableValues:
-              LinkToDataSetColumn:
-                ColumnName: processor_type
-                DataSetIdentifier: opensearch_graviton_dashboard
-            SourceParameterName: OpenSearchProcessor
-            Title: Processor Type
             Type: MULTI_SELECT
         SheetId: 43d3c206-77a5-4997-980c-90be244e7f2a
         TextBoxes:
@@ -17867,6 +18355,90 @@ dashboards:
             \ OpenSearch Graviton Opportunity</i>\n    </b>\n  </inline>\n</text-box>"
           SheetTextBoxId: cf310330-aaa1-4981-99ec-c16500e1784a
         Visuals:
+        - KPIVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldWells:
+                TargetValues: []
+                TrendGroups: []
+                Values:
+                - CategoricalMeasureField:
+                    AggregationFunction: DISTINCT_COUNT
+                    Column:
+                      ColumnName: version
+                      DataSetIdentifier: opensearch_graviton_dashboard
+                    FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.version.0.1731701331949
+              KPIOptions:
+                Comparison:
+                  ComparisonMethod: PERCENT_DIFFERENCE
+                PrimaryValueDisplayType: ACTUAL
+                SecondaryValueFontConfiguration:
+                  FontSize:
+                    Relative: EXTRA_LARGE
+                Sparkline:
+                  Type: AREA
+                  Visibility: VISIBLE
+                VisualLayoutOptions:
+                  StandardLayout:
+                    Type: VERTICAL
+              SortConfiguration: {}
+            ColumnHierarchies: []
+            Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Previous Month - On Demand</visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="20px">
+                      <b>Requires Update by Engine Version</b>
+                    </inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: bdb2fb83-edd1-47e5-a32e-65833ba9f737
+        - KPIVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldWells:
+                TargetValues: []
+                TrendGroups: []
+                Values:
+                - CategoricalMeasureField:
+                    AggregationFunction: DISTINCT_COUNT
+                    Column:
+                      ColumnName: version
+                      DataSetIdentifier: opensearch_graviton_dashboard
+                    FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.version.0.1731701288965
+              KPIOptions:
+                Comparison:
+                  ComparisonMethod: PERCENT_DIFFERENCE
+                PrimaryValueDisplayType: ACTUAL
+                SecondaryValueFontConfiguration:
+                  FontSize:
+                    Relative: EXTRA_LARGE
+                Sparkline:
+                  Type: AREA
+                  Visibility: VISIBLE
+                VisualLayoutOptions:
+                  StandardLayout:
+                    Type: VERTICAL
+              SortConfiguration: {}
+            ColumnHierarchies: []
+            Subtitle:
+              FormatText:
+                RichText: <visual-subtitle>Previous Month - On Demand</visual-subtitle>
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="20px">
+                      <b>Eligible by Engine Version</b>
+                    </inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: c2d17c7e-d72d-4492-977f-be7026b420bf
         - BarChartVisual:
             Actions: []
             ChartConfiguration:
@@ -18690,46 +19262,6 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: "<visual-title>\n  <inline font-size=\"20px\">\n    <b>Require\
-                  \ Version Update\_</b>\n  </inline>\n</visual-title>"
-              Visibility: VISIBLE
-            VisualId: 0a72f59c-d4a7-456a-b79d-84b3e9dd0d58
-        - KPIVisual:
-            Actions: []
-            ChartConfiguration:
-              FieldWells:
-                TargetValues: []
-                TrendGroups: []
-                Values:
-                - CategoricalMeasureField:
-                    AggregationFunction: DISTINCT_COUNT
-                    Column:
-                      ColumnName: line_item_resource_id
-                      DataSetIdentifier: opensearch_graviton_dashboard
-                    FieldId: 21ab4447-1069-4fa1-86b2-81eb3f0563ea.line_item_resource_id.0.1696601729333
-              KPIOptions:
-                Comparison:
-                  ComparisonMethod: PERCENT_DIFFERENCE
-                PrimaryValueDisplayType: ACTUAL
-                PrimaryValueFontConfiguration:
-                  FontColor: '#DFE3E4'
-                SecondaryValueFontConfiguration:
-                  FontSize:
-                    Relative: EXTRA_LARGE
-                Sparkline:
-                  Type: AREA
-                  Visibility: VISIBLE
-                VisualLayoutOptions:
-                  StandardLayout:
-                    Type: VERTICAL
-              SortConfiguration: {}
-            ColumnHierarchies: []
-            Subtitle:
-              FormatText:
-                RichText: <visual-subtitle>Previous Month</visual-subtitle>
-              Visibility: VISIBLE
-            Title:
-              FormatText:
                 RichText: |-
                   <visual-title>
                     <inline font-size="20px">
@@ -18802,6 +19334,7 @@ dashboards:
                       FieldId: 21ab4447-1069-4fa1-86b2-81eb3f0563ea.generation.0.1695330568607
                   LineValues: []
               Legend:
+                Position: AUTO
                 Title:
                   Visibility: HIDDEN
               LineDataLabels:
@@ -18883,6 +19416,7 @@ dashboards:
                   FontSize:
                     Relative: MEDIUM
                 Overlap: ENABLE_OVERLAP
+                TotalsVisibility: VISIBLE
                 Visibility: VISIBLE
               FieldWells:
                 BarChartAggregatedFieldWells:
@@ -19580,6 +20114,10 @@ dashboards:
               FieldOptions:
                 DataPathOptions:
                 - DataPathList:
+                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_instance.5.1726471581017
+                    FieldValue: graviton_instance
+                  Width: 149px
+                - DataPathList:
                   - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_savings.1.1726471466503
                     FieldValue: graviton_savings
                   Width: 135px
@@ -19588,9 +20126,13 @@ dashboards:
                     FieldValue: line_item_resource_id
                   Width: 135px
                 - DataPathList:
-                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.engine.10.1726471823268
-                    FieldValue: engine
-                  Width: 124px
+                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_eligibility.4.1726471574355
+                    FieldValue: graviton_eligibility
+                  Width: 133px
+                - DataPathList:
+                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.version.13.1726472130660
+                    FieldValue: version
+                  Width: 125px
                 - DataPathList:
                   - FieldId: f99cbee2-9f2b-407b-a890-fa912abcb2ac.6.1726471586598
                     FieldValue: Total_Amortized_Cost
@@ -19600,21 +20142,21 @@ dashboards:
                     FieldValue: pricing_term
                   Width: 110px
                 - DataPathList:
-                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_eligibility.4.1726471574355
-                    FieldValue: graviton_eligibility
-                  Width: 103px
+                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.engine.10.1726471823268
+                    FieldValue: engine
+                  Width: 102px
+                - DataPathList:
+                  - FieldId: d4aae438-6594-49c7-a9a3-457cb9abd75f.account_name.0.1726471466503
+                    FieldValue: account_name
+                  Width: 101px
                 - DataPathList:
                   - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_location.14.1726472763595
                     FieldValue: product_location
-                  Width: 103px
+                  Width: 91px
                 - DataPathList:
-                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.processor_type.12.1726472057544
-                    FieldValue: processor_type
-                  Width: 101px
-                - DataPathList:
-                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.version.13.1726472130660
-                    FieldValue: version
-                  Width: 68px
+                  - FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_usage_amount.14.1731694549708
+                    FieldValue: line_item_usage_amount
+                  Width: 65px
                 SelectedFieldOptions:
                 - CustomLabel: Account Name
                   FieldId: d4aae438-6594-49c7-a9a3-457cb9abd75f.account_name.0.1726471466503
@@ -19622,14 +20164,8 @@ dashboards:
                 - CustomLabel: Management Payer ID
                   FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.bill_payer_account_id.2.1726471477590
                   Visibility: VISIBLE
-                - CustomLabel: Processor
-                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.processor_type.12.1726472057544
-                  Visibility: VISIBLE
-                - CustomLabel: Resource ID
-                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_resource_id.3.1726471568430
-                  Visibility: VISIBLE
-                - CustomLabel: Current Instance Type
-                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_instance_type.9.1726471814975
+                - CustomLabel: Region
+                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_location.14.1726472763595
                   Visibility: VISIBLE
                 - CustomLabel: Current Engine
                   FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.engine.10.1726471823268
@@ -19637,19 +20173,26 @@ dashboards:
                 - CustomLabel: Current Engine Version
                   FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.version.13.1726472130660
                   Visibility: VISIBLE
-                - CustomLabel: Region
-                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_location.14.1726472763595
+                - CustomLabel: Resource ID
+                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_resource_id.3.1726471568430
                   Visibility: VISIBLE
-                - CustomLabel: Elibility
-                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_eligibility.4.1726471574355
+                - CustomLabel: Current Instance Type
+                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_instance_type.9.1726471814975
                   Visibility: VISIBLE
-                - CustomLabel: Graviton Instance
+                - CustomLabel: Compared Graviton Instance
                   FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_instance.5.1726471581017
                   Visibility: VISIBLE
                 - CustomLabel: Pricing Term
                   FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.pricing_term.15.1726472884778
                   Visibility: VISIBLE
-                - FieldId: cdbfa1bc-b652-4351-8125-128dfe31d867.15.1731087061202
+                - CustomLabel: Graviton Eligibility
+                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_eligibility.4.1726471574355
+                  Visibility: VISIBLE
+                - CustomLabel: Usage
+                  FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_usage_amount.14.1731694549708
+                  Visibility: VISIBLE
+                - CustomLabel: Unit Cost
+                  FieldId: cdbfa1bc-b652-4351-8125-128dfe31d867.15.1731087061202
                   Visibility: VISIBLE
                 - CustomLabel: Amortized Cost
                   FieldId: f99cbee2-9f2b-407b-a890-fa912abcb2ac.6.1726471586598
@@ -19676,19 +20219,9 @@ dashboards:
                       FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.bill_payer_account_id.2.1726471477590
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: processor_type
+                        ColumnName: product_location
                         DataSetIdentifier: opensearch_graviton_dashboard
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.processor_type.12.1726472057544
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: line_item_resource_id
-                        DataSetIdentifier: opensearch_graviton_dashboard
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_resource_id.3.1726471568430
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: product_instance_type
-                        DataSetIdentifier: opensearch_graviton_dashboard
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_instance_type.9.1726471814975
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_location.14.1726472763595
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: engine
@@ -19701,14 +20234,14 @@ dashboards:
                       FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.version.13.1726472130660
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: product_location
+                        ColumnName: line_item_resource_id
                         DataSetIdentifier: opensearch_graviton_dashboard
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_location.14.1726472763595
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_resource_id.3.1726471568430
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: graviton_eligibility
+                        ColumnName: product_instance_type
                         DataSetIdentifier: opensearch_graviton_dashboard
-                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_eligibility.4.1726471574355
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.product_instance_type.9.1726471814975
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: graviton_instance
@@ -19719,12 +20252,51 @@ dashboards:
                         ColumnName: pricing_term
                         DataSetIdentifier: opensearch_graviton_dashboard
                       FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.pricing_term.15.1726472884778
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: graviton_eligibility
+                        DataSetIdentifier: opensearch_graviton_dashboard
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.graviton_eligibility.4.1726471574355
                   Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: line_item_usage_amount
+                        DataSetIdentifier: opensearch_graviton_dashboard
+                      FieldId: 6f1fc28d-3742-4f40-a60e-9f13b33b4f53.line_item_usage_amount.14.1731694549708
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          NumberDisplayFormatConfiguration:
+                            NegativeValueConfiguration:
+                              DisplayMode: NEGATIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
                   - NumericalMeasureField:
                       Column:
                         ColumnName: Unit Cost
                         DataSetIdentifier: opensearch_graviton_dashboard
                       FieldId: cdbfa1bc-b652-4351-8125-128dfe31d867.15.1731087061202
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 2
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
                   - NumericalMeasureField:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
@@ -20073,7 +20645,7 @@ dashboards:
         - Content: "<text-box>\n  <block align=\"center\">\n    <inline color=\"#61d1d6\"\
             \ font-size=\"68.8px\">\n      <b>\n        <u>Graviton Savings Dashboard</u>\n\
             \      </b>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n\
-            \    <inline font-size=\"68.8px\">\n      <b>v2.0.0</b>\n    </inline>\n  </block>\n\
+            \    <inline font-size=\"68.8px\">\n      <b>v2.1.0</b>\n    </inline>\n  </block>\n\
             \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n\
             \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"center\"/>\n\
             \  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built\
@@ -20745,7 +21317,15 @@ datasets:
 views:
   graviton_opensearch_view:
     dependsOn:
-      cur: true
+      cur2:
+        - line_item_normalized_usage_amount
+        - product['instance_type']
+        - product['location']
+        - pricing_term
+        - pricing_lease_contract_length
+        - pricing_offering_class
+        - pricing_purchase_option
+        - product['vcpu']
       views:
         - modernization_mapping
     parameters:
@@ -20757,48 +21337,48 @@ views:
       CREATE OR REPLACE VIEW graviton_opensearch_view AS
       WITH
         cur_data AS (
-         SELECT
-           cur.bill_payer_account_id
-         , cur.line_item_usage_account_id
-         , DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d') bill_billing_period_start_date
-         , SPLIT_PART(cur.line_item_resource_id, '/', 2) line_item_resource_id
-         , cur.product_instance_type
-         , SPLIT_PART(product_instance_type, '.', 1) instance_family
-         , (CASE WHEN (SPLIT_PART(product_instance_type, '.', 1) LIKE '%g%') THEN 'Graviton' ELSE 'Intel' END) processor_type
-         , cur.product_location
-         , cur.pricing_term
-         , cur.pricing_lease_contract_length
-         , cur.pricing_offering_class
-         , cur.pricing_purchase_option
-         , SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) line_item_usage_amount
-         , (SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) * CAST(product_vcpu AS double)) line_item_vcpu_normalized_usage_amount
-         , SUM(line_item_unblended_cost) line_item_unblended_cost
-         , SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.savings_plan_savings_plan_effective_cost WHEN (cur.line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (cur.savings_plan_total_commitment_to_date - cur.savings_plan_used_commitment) WHEN (cur.line_item_line_item_type = 'SavingsPlanNegation') THEN 0 WHEN (cur.line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0 WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.reservation_effective_cost WHEN (cur.line_item_line_item_type = 'RIFee') THEN (cur.reservation_unused_amortized_upfront_fee_for_billing_period + cur.reservation_unused_recurring_fee) WHEN ((cur.line_item_line_item_type = 'Fee') AND (cur.reservation_reservation_a_r_n <> '')) THEN 0 ELSE cur.line_item_unblended_cost END)) amortized_cost
-         , modernization_mapping.generation
-         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(cur.product_instance_type, '.', 2), '.search') ELSE '' END) graviton_instance
-         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(cur.product_instance_type, '.', 2), '.search') ELSE '' END) previous_intel_instance
-         FROM
-           (${cur_table_name} cur
-         LEFT JOIN modernization_mapping ON (CONCAT(SPLIT_PART(cur.product_instance_type, '.', 1), '.search') = modernization_mapping.family))
-         WHERE ((cur.product_product_name IN ('Amazon Elasticsearch Service', 'Amazon OpenSearch Service')) AND (cur.line_item_product_code = 'AmazonES') AND (cur.line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'SavingsPlanCoveredUsage')) AND (cur.product_product_family = 'Amazon OpenSearch Service Instance') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY cur.bill_payer_account_id, cur.line_item_usage_account_id, DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d'), DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d'), SPLIT_PART(cur.line_item_resource_id, '/', 2), cur.product_instance_type, cur.product_location, cur.pricing_term, cur.pricing_lease_contract_length, cur.pricing_offering_class, cur.pricing_purchase_option, modernization_mapping.generation, cur.product_vcpu, 18, 19
-      )
+          SELECT
+            cur.bill_payer_account_id
+          , cur.line_item_usage_account_id
+          , DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d') bill_billing_period_start_date
+          , SPLIT_PART(cur.line_item_resource_id, '/', 2) line_item_resource_id
+          , cur.product_instance_type
+          , SPLIT_PART(product_instance_type, '.', 1) instance_family
+          , (CASE WHEN (SPLIT_PART(product_instance_type, '.', 1) LIKE '%g%') THEN 'Graviton' ELSE 'Intel' END) processor_type
+          , cur.product_location
+          , cur.pricing_term
+          , coalesce(cur.pricing_lease_contract_length,'') pricing_lease_contract_length
+          , coalesce(cur.pricing_offering_class,'') pricing_offering_class
+          , coalesce(cur.pricing_purchase_option,'') pricing_purchase_option
+          , SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) line_item_usage_amount
+          , (SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.line_item_usage_amount WHEN (cur.line_item_line_item_type = 'Usage') THEN cur.line_item_usage_amount ELSE 0 END)) * CAST(product['vcpu'] AS double)) line_item_vcpu_normalized_usage_amount
+          , SUM(line_item_unblended_cost) line_item_unblended_cost
+          , SUM((CASE WHEN (cur.line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN cur.savings_plan_savings_plan_effective_cost WHEN (cur.line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (cur.savings_plan_total_commitment_to_date - cur.savings_plan_used_commitment) WHEN (cur.line_item_line_item_type = 'SavingsPlanNegation') THEN 0 WHEN (cur.line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0 WHEN (cur.line_item_line_item_type = 'DiscountedUsage') THEN cur.reservation_effective_cost WHEN (cur.line_item_line_item_type = 'RIFee') THEN (cur.reservation_unused_amortized_upfront_fee_for_billing_period + cur.reservation_unused_recurring_fee) WHEN ((cur.line_item_line_item_type = 'Fee') AND (cur.reservation_reservation_a_r_n <> '')) THEN 0 ELSE cur.line_item_unblended_cost END)) amortized_cost
+          , modernization_mapping.generation
+          , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(cur.product_instance_type, '.', 2), '.search') ELSE '' END) graviton_instance
+          , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(cur.product_instance_type, '.', 2), '.search') ELSE '' END) previous_intel_instance
+          FROM
+            ( "${cur2_database}"."${cur2_table_name}" cur
+          LEFT JOIN modernization_mapping ON (CONCAT(SPLIT_PART(cur.product_instance_type, '.', 1), '.search') = modernization_mapping.family))
+          WHERE ((cur.product['product_name'] IN ('Amazon Elasticsearch Service', 'Amazon OpenSearch Service')) AND (cur.line_item_product_code = 'AmazonES') AND (cur.line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'SavingsPlanCoveredUsage')) AND (cur.product_product_family = 'Amazon OpenSearch Service Instance') AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(concat(split_part("billing_period", '-', 1), '-', split_part("billing_period", '-', 2), '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
+          GROUP BY cur.bill_payer_account_id, cur.line_item_usage_account_id, DATE_FORMAT(cur.bill_billing_period_start_date, '%Y-%m-%d'), DATE_FORMAT(cur.line_item_usage_start_date, '%Y-%m-%d'), SPLIT_PART(cur.line_item_resource_id, '/', 2), cur.product_instance_type, cur.product_location, cur.pricing_term, cur.pricing_lease_contract_length, cur.pricing_offering_class, cur.pricing_purchase_option, modernization_mapping.generation, cur.product['vcpu'], 18, 19
+       )
       , describe_domains AS (
-         SELECT DISTINCT
-           domainname
-         , engineversion
-         , SPLIT_PART(engineversion, '_', 1) engine
-         , SPLIT_PART(engineversion, '_', 2) version
-         , SPLIT_PART(SPLIT_PART(engineversion, '_', 2), '.', 1) major
-         , SPLIT_PART(SPLIT_PART(engineversion, '_', 2), '.', 2) minor
-         FROM
-           ${data_collection_database_name}.inventory_opensearch_domains_data
+        SELECT DISTINCT
+          domainname
+        , engineversion
+        , SPLIT_PART(engineversion, '_', 1) engine
+        , SPLIT_PART(engineversion, '_', 2) version
+        , SPLIT_PART(SPLIT_PART(engineversion, '_', 2), '.', 1) major
+        , SPLIT_PART(SPLIT_PART(engineversion, '_', 2), '.', 2) minor
+        FROM
+          ${data_collection_database_name}.inventory_opensearch_domains_data
       )
       , pricing AS (
-         SELECT *
-         FROM
-           ${data_collection_database_name}.pricing_opensearch_data
-         WHERE (("instance type" <> '') AND (operation = 'ESDomain') AND (unit = 'Hrs'))
+        SELECT *
+        FROM
+          ${data_collection_database_name}.pricing_opensearch_data
+        WHERE (("instance type" <> '') AND (operation = 'ESDomain') AND (unit = 'Hrs'))
       )
       SELECT
         cur.*
@@ -20816,7 +21396,12 @@ views:
       LEFT JOIN pricing PL2 ON ((PL2."instance type" = cur.previous_intel_instance) AND (PL2.location = cur.product_location) AND (PL2.termtype = cur.pricing_term) AND (PL2.leasecontractlength = cur.pricing_lease_contract_length) AND (PL2.purchaseoption = cur.pricing_purchase_option) AND (PL2.offeringclass = cur.pricing_offering_class)))
   graviton_elasticache_view:
     dependsOn:
-      cur: true
+      cur2:
+        - line_item_normalized_usage_amount
+        - product_location
+        - pricing_offering_class
+        - pricing_lease_contract_length
+        - product['cache_engine']
       views:
         - modernization_mapping
     parameters:
@@ -20828,33 +21413,33 @@ views:
       CREATE OR REPLACE VIEW graviton_elasticache_view AS
       WITH
         elasticache_spend AS (
-         SELECT
-           bill_payer_account_id
-         , line_item_usage_account_id
-         , DATE_FORMAT(line_item_usage_start_date, '%Y-%m') month_line_item_usage_start_date
-         , SPLIT_PART(line_item_resource_id, ':', 7) split_line_item_resource_id
-         , SPLIT_PART(line_item_usage_type, ':', 2) split_line_item_usage_type
-         , product_location
-         , product_cache_engine
-         , (CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN 'Reserved Instance' WHEN (line_item_line_item_type = 'Usage') THEN 'OnDemand' ELSE 'Others' END) case_purchase_option
-         , pricing_lease_contract_length
-         , pricing_offering_class
-         , pricing_purchase_option
-         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) sum_line_item_usage_amount
-         , SUM(line_item_unblended_cost) sum_line_item_unblended_cost
-         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
-         , SUM((CASE WHEN (line_item_line_item_type = 'RIFee') THEN -(reservation_amortized_upfront_fee_for_billing_period) ELSE 0 END)) sum_ri_trueup
-         , SUM((CASE WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN line_item_unblended_cost ELSE 0 END)) ri_upfront_fees
-         , modernization_mapping.generation
-         , modernization_mapping.latest_arm graviton_family
-         , modernization_mapping.previous_intel previous_intel_family
-         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) graviton_instance
-         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) previous_intel
-         FROM
-           (${cur_table_name}
-         LEFT JOIN modernization_mapping ON (CONCAT('cache.', SPLIT_PART(line_item_usage_type, '.', 2)) = modernization_mapping.family))
-         WHERE ((product_product_name = 'Amazon ElastiCache') AND (product_product_family = 'Cache Instance') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'RIFee', 'Fee')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY DATE_FORMAT(line_item_usage_start_date, '%Y-%m'), bill_payer_account_id, line_item_usage_account_id, line_item_line_item_type, line_item_resource_id, line_item_usage_type, product_location, product_cache_engine, pricing_lease_contract_length, pricing_offering_class, pricing_purchase_option, modernization_mapping.generation, modernization_mapping.latest_arm, modernization_mapping.previous_intel
+        SELECT
+          bill_payer_account_id
+        , line_item_usage_account_id
+        , DATE_FORMAT(line_item_usage_start_date, '%Y-%m') month_line_item_usage_start_date
+        , SPLIT_PART(line_item_resource_id, ':', 7) split_line_item_resource_id
+        , SPLIT_PART(line_item_usage_type, ':', 2) split_line_item_usage_type
+        , product_location
+        , product['cache_engine'] product_cache_engine
+        , (CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN 'Reserved Instance' WHEN (line_item_line_item_type = 'Usage') THEN 'OnDemand' ELSE 'Others' END) case_purchase_option
+        , coalesce(pricing_lease_contract_length,'') pricing_lease_contract_length
+        , coalesce(pricing_offering_class,'') pricing_offering_class
+        , coalesce(pricing_purchase_option,'') pricing_purchase_option
+        , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) sum_line_item_usage_amount
+        , SUM(line_item_unblended_cost) sum_line_item_unblended_cost
+        , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
+        , SUM((CASE WHEN (line_item_line_item_type = 'RIFee') THEN -(reservation_amortized_upfront_fee_for_billing_period) ELSE 0 END)) sum_ri_trueup
+        , SUM((CASE WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN line_item_unblended_cost ELSE 0 END)) ri_upfront_fees
+        , modernization_mapping.generation
+        , modernization_mapping.latest_arm graviton_family
+        , modernization_mapping.previous_intel previous_intel_family
+        , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT(modernization_mapping.latest_arm, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) graviton_instance
+        , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT(modernization_mapping.previous_intel, '.', SPLIT_PART(line_item_usage_type, '.', 3)) ELSE '' END) previous_intel
+        FROM
+          ("${cur2_database}"."${cur2_table_name}"
+        LEFT JOIN modernization_mapping ON (CONCAT('cache.', SPLIT_PART(line_item_usage_type, '.', 2)) = modernization_mapping.family))
+        WHERE ((product['product_name'] = 'Amazon ElastiCache') AND (product_product_family = 'Cache Instance') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'RIFee', 'Fee')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(concat(split_part("billing_period", '-', 1), '-', split_part("billing_period", '-', 2), '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
+        GROUP BY DATE_FORMAT(line_item_usage_start_date, '%Y-%m'), bill_payer_account_id, line_item_usage_account_id, line_item_line_item_type, line_item_resource_id, line_item_usage_type, product_location,  product['cache_engine'] , pricing_lease_contract_length, pricing_offering_class, pricing_purchase_option, modernization_mapping.generation, modernization_mapping.latest_arm, modernization_mapping.previous_intel
       )
       , elasticache_engineversion AS (
          SELECT DISTINCT
@@ -20887,7 +21472,18 @@ views:
       LEFT JOIN pricing PL2 ON ((elasticache_spend.previous_intel = PL2."instance type") AND (elasticache_spend.product_location = PL2.location) AND (elasticache_spend.product_cache_engine = PL2."cache engine") AND (elasticache_spend.case_purchase_option = PL2.termtype) AND (elasticache_spend.pricing_lease_contract_length = PL2.leasecontractlength) AND (elasticache_spend.pricing_purchase_option = PL2.purchaseoption)))
   graviton_ec2_view:
     dependsOn:
-      cur: true
+      cur2:
+        - line_item_normalized_usage_amount
+        - product['region']
+        - product['operating_system']
+        - product['physical_processor']
+        - product['instance_type']
+        - product['instance_type_family']
+        - pricing_offering_class
+        - savings_plan_offering_type
+        - savings_plan_purchase_term
+        - reservation_reservation_a_r_n
+        - savings_plan_savings_plan_a_r_n
       views:
         - modernization_mapping
     parameters:
@@ -20902,33 +21498,33 @@ views:
          SELECT
            "bill_billing_period_start_date" "billing_period"
          , DATE_FORMAT(line_item_usage_start_date, '%Y-%m-%d') "usage_date"
-         , "bill_payer_account_id" "payer_account_id"
-         , "line_item_usage_account_id" "linked_account_id"
+         , bill_payer_account_id "payer_account_id"
+         , line_item_usage_account_id "linked_account_id"
          , product_instance_type existing_instance
-         , "line_item_line_item_type" "charge_type"
-         , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN 'SavingsPlan' WHEN ("reservation_reservation_a_r_n" <> '') THEN 'Reserved' WHEN ("line_item_usage_type" LIKE '%Spot%') THEN 'Spot' ELSE 'OnDemand' END) "purchase_option"
-         , "product_region" "region"
-         , product_location "location"
-         , product_operating_system
-         , line_item_operation
-         , (CASE WHEN (product_physical_processor LIKE '%Intel%') THEN 'Intel' WHEN (product_physical_processor LIKE '%AMD%') THEN 'AMD' WHEN (product_physical_processor LIKE '%Graviton%') THEN 'Graviton' ELSE product_physical_processor END) processor_type
-         , product_instance_type_family
-         , "split_part"(product_instance_type, '.', 2) size
-         , (CASE WHEN (pricing_lease_contract_length <> '') THEN pricing_lease_contract_length ELSE savings_plan_purchase_term END) contract_length
-         , (CASE WHEN (pricing_offering_class <> '') THEN pricing_offering_class ELSE savings_plan_offering_type END) offering_type
-         , (CASE WHEN (pricing_offering_class <> '') THEN pricing_offering_class WHEN (savings_plan_offering_type = 'ComputeSavingsPlans') THEN 'convertible' WHEN (savings_plan_offering_type = 'EC2InstanceSavingsPlans') THEN 'standard' END) offering_type_mapping_only_column
-         , (CASE WHEN (pricing_purchase_option <> '') THEN pricing_purchase_option ELSE savings_plan_payment_option END) payment_option
-         , (CASE WHEN ((NOT (product_physical_processor LIKE '%Graviton%')) AND (modernization_mapping.latest_arm <> '')) THEN "concat"(modernization_mapping.latest_arm, '.', "split_part"(product_instance_type, '.', 2)) ELSE ' ' END) graviton_instance
-         , (CASE WHEN (product_physical_processor LIKE '%Graviton%') THEN "concat"(modernization_mapping.previous_intel, '.', "split_part"(product_instance_type, '.', 2)) ELSE ' ' END) previous_intel_instance
-         , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "line_item_usage_amount" WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "line_item_usage_amount" WHEN ("line_item_line_item_type" = 'Usage') THEN "line_item_usage_amount" ELSE 0 END)) "usage_quantity"
-         , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "line_item_normalized_usage_amount" WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "line_item_normalized_usage_amount" WHEN ("line_item_line_item_type" = 'Usage') THEN "line_item_normalized_usage_amount" ELSE 0 END)) "normalized_usage_quantity"
-         , "sum"("line_item_unblended_cost") "unblended_cost"
-         , "sum"((CASE WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN "savings_plan_savings_plan_effective_cost" WHEN ("line_item_line_item_type" = 'SavingsPlanRecurringFee') THEN ("savings_plan_total_commitment_to_date" - "savings_plan_used_commitment") WHEN ("line_item_line_item_type" = 'SavingsPlanNegation') THEN 0 WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN 0 WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "reservation_effective_cost" WHEN ("line_item_line_item_type" = 'RIFee') THEN ("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee") WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE "line_item_unblended_cost" END)) "amortized_cost"
-         FROM
-           (${cur_table_name}
-         LEFT JOIN modernization_mapping ON (product_instance_type_family = modernization_mapping.family))
-         WHERE (((((line_item_product_code = 'AmazonEC2') AND ((line_item_usage_type LIKE '%BoxUsage%') OR ("line_item_usage_type" LIKE '%Spot%'))) AND (line_item_line_item_type <> 'SavingsPlanNegation')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH)))) AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee', 'SavingsPlanCoveredUsage')))
-         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+         , line_item_line_item_type "charge_type"
+            , (CASE WHEN (savings_plan_savings_plan_a_r_n <> '') THEN 'SavingsPlan' WHEN (reservation_reservation_a_r_n <> '') THEN 'Reserved' WHEN (line_item_usage_type LIKE '%Spot%') THEN 'Spot' ELSE 'OnDemand' END) "purchase_option"
+            , product['region'] "region"
+            , product_location "location"
+            , product['operating_system'] "product_operating_system"
+            , line_item_operation
+            , (CASE WHEN (product['physical_processor'] LIKE '%Intel%') THEN 'Intel' WHEN (product['physical_processor'] LIKE '%AMD%') THEN 'AMD' WHEN (product['physical_processor'] LIKE '%Graviton%') THEN 'Graviton' ELSE product['physical_processor'] END) processor_type
+            , product['instance_type_family'] "product_instance_type_family"
+            , split_part(product_instance_type, '.', 2) size
+            , (CASE WHEN (pricing_lease_contract_length <> '') THEN pricing_lease_contract_length ELSE savings_plan_purchase_term END) contract_length
+            , COALESCE((CASE WHEN (COALESCE(pricing_offering_class, '') <> '') THEN COALESCE(pricing_offering_class, '') ELSE savings_plan_offering_type END), '') offering_type
+            , (CASE WHEN (COALESCE(pricing_offering_class, '') <> '') THEN COALESCE(pricing_offering_class, '') WHEN (savings_plan_offering_type = 'ComputeSavingsPlans') THEN 'convertible' WHEN (savings_plan_offering_type = 'EC2InstanceSavingsPlans') THEN 'standard' END) offering_type_mapping_only_column
+            , (CASE WHEN (pricing_purchase_option <> '') THEN pricing_purchase_option ELSE savings_plan_payment_option END) payment_option
+            , (CASE WHEN ((NOT (product['physical_processor'] LIKE '%Graviton%')) AND (modernization_mapping.latest_arm <> '')) THEN concat(modernization_mapping.latest_arm, '.', split_part(product_instance_type, '.', 2)) ELSE ' ' END) graviton_instance
+        , (CASE WHEN (product['physical_processor'] LIKE '%Graviton%') THEN concat(modernization_mapping.previous_intel, '.', split_part(product_instance_type, '.', 2)) ELSE ' ' END) previous_intel_instance
+        , sum((CASE WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) "usage_quantity"
+        , sum((CASE WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN line_item_normalized_usage_amount WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_normalized_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_normalized_usage_amount ELSE 0 END)) "normalized_usage_quantity"
+        , sum(line_item_unblended_cost) "unblended_cost"
+        , sum((CASE WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment) WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0 WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0 WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) "amortized_cost"
+        FROM
+            ("${cur2_database}"."${cur2_table_name}"
+        LEFT JOIN modernization_mapping ON (product['instance_type_family'] = modernization_mapping.family))
+        WHERE (((((line_item_product_code = 'AmazonEC2') AND ((line_item_usage_type LIKE '%BoxUsage%') OR (line_item_usage_type LIKE '%Spot%'))) AND (line_item_line_item_type <> 'SavingsPlanNegation')) AND ((bill_billing_period_start_date >= (date_trunc('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(concat(split_part("billing_period", '-', 1), '-', split_part("billing_period", '-', 2), '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '7' MONTH)))) AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee', 'SavingsPlanCoveredUsage')))
+        GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
       )
       , ec2_pricing AS (
          SELECT
@@ -20981,7 +21577,21 @@ views:
         summary_view_reserved ri
   graviton_rds_view:
     dependsOn:
-      cur: true
+      cur2:
+        - line_item_normalized_usage_amount
+        - line_item_unblended_rate
+        - pricing_lease_contract_length
+        - pricing_public_on_demand_rate
+        - pricing_purchase_option
+        - pricing_term
+        - pricing_unit
+        - product['database_engine']
+        - product['deployment_option']
+        - product['instance_type_family']
+        - product['instance_type']
+        - product['location']
+        - product['physical_processor']
+        - product['storage']
       views:
         - modernization_mapping
     parameters:
@@ -20993,39 +21603,39 @@ views:
       CREATE OR REPLACE VIEW graviton_rds_view AS
       WITH
         cur_data AS (
-         SELECT
-           bill_payer_account_id
-         , line_item_usage_account_id
-         , bill_billing_period_start_date
-         , product_instance_type
-         , product_storage
-         , pricing_term
-         , pricing_lease_contract_length
-         , pricing_purchase_option
-         , pricing_unit
-         , SPLIT_PART(line_item_resource_id, ':', 7) line_item_resource_id
-         , (CASE WHEN (product_storage LIKE 'EBS Only') THEN 'EBS Only' WHEN (product_storage LIKE 'Aurora IO Optimization Mode') THEN 'Aurora IO Optimization Mode' WHEN (product_storage LIKE '%SSD%') THEN 'SSD' ELSE 'Other Storage' END) product_storage_type
-         , (CASE WHEN (product_database_engine LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
-         , (CASE WHEN (product_database_engine LIKE 'Aurora%') THEN SPLIT_PART(product_database_engine, ' ', 2) ELSE product_database_engine END) db_engine
-         , line_item_availability_zone
-         , product_location
-         , lower(product_instance_type_family) "product_instance_type_family"
-         , (CASE WHEN (product_physical_processor LIKE '%Intel%') THEN 'Intel' WHEN (product_physical_processor LIKE '%AMD%') THEN 'AMD' WHEN (product_physical_processor LIKE '%Graviton%') THEN 'Graviton' ELSE product_physical_processor END) processor_type
-         , product_deployment_option
-         , line_item_unblended_rate
-         , pricing_public_on_demand_rate
-         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) line_item_usage_amount
-         , SUM(line_item_unblended_cost) line_item_unblended_cost
-         , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
-         , modernization_mapping.generation
-         , modernization_mapping.latest_arm
-         , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT('db.', modernization_mapping.latest_arm, '.', SPLIT_PART(product_instance_type, '.', 3)) ELSE '' END) graviton_instance_type
-         , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT('db.', modernization_mapping.previous_intel, '.', SPLIT_PART(product_instance_type, '.', 3)) ELSE '' END) latest_intel_instance_type
-         FROM
-           (${cur_table_name}
-         LEFT JOIN modernization_mapping ON (lower(product_instance_type_family) = modernization_mapping.family))
-         WHERE (((product_product_name = 'Amazon Relational Database Service') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee')) AND (product_product_family = 'Database Instance')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST("concat"("year", '-', "month", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
-         GROUP BY bill_payer_account_id, line_item_usage_account_id, bill_billing_period_start_date, product_instance_type, product_storage, line_item_usage_amount, pricing_term, line_item_availability_zone, product_instance_type_family, product_location, line_item_resource_id, product_database_engine, product_deployment_option, line_item_unblended_rate, product_physical_processor, modernization_mapping.generation, modernization_mapping.latest_arm, pricing_lease_contract_length, pricing_purchase_option, pricing_unit, pricing_public_on_demand_rate, 26, 27
+          SELECT
+            bill_payer_account_id
+          , line_item_usage_account_id
+          , bill_billing_period_start_date
+          , product_instance_type
+          , product['storage'] product_storage
+          , pricing_term
+          , coalesce(pricing_lease_contract_length,'') pricing_lease_contract_length
+          , coalesce(pricing_purchase_option,'') pricing_purchase_option
+          , pricing_unit
+          , SPLIT_PART(line_item_resource_id, ':', 7) line_item_resource_id
+          , (CASE WHEN (product['storage'] LIKE 'EBS Only') THEN 'EBS Only' WHEN (product['storage'] LIKE 'Aurora IO Optimization Mode') THEN 'Aurora IO Optimization Mode' WHEN (product['storage'] LIKE '%SSD%') THEN 'SSD' ELSE 'Other Storage' END) product_storage_type
+          , (CASE WHEN (product['database_engine'] LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
+          , (CASE WHEN (product['database_engine'] LIKE 'Aurora%') THEN SPLIT_PART(product['database_engine'], ' ', 2) ELSE product['database_engine'] END) db_engine
+          , line_item_availability_zone
+          , product_location
+          , lower(product['instance_type_family']) "product_instance_type_family"
+          , (CASE WHEN (product['physical_processor'] LIKE '%Intel%') THEN 'Intel' WHEN (product['physical_processor'] LIKE '%AMD%') THEN 'AMD' WHEN (product['physical_processor'] LIKE '%Graviton%') THEN 'Graviton' ELSE product['physical_processor'] END) processor_type
+          , product['deployment_option'] product_deployment_option
+          , line_item_unblended_rate
+          , pricing_public_on_demand_rate
+          , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN line_item_usage_amount WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) line_item_usage_amount
+          , SUM(line_item_unblended_cost) line_item_unblended_cost
+          , SUM((CASE WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee) WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0 ELSE line_item_unblended_cost END)) sum_amortized_cost
+          , modernization_mapping.generation
+          , modernization_mapping.latest_arm
+          , (CASE WHEN (modernization_mapping.latest_arm <> '') THEN CONCAT('db.', modernization_mapping.latest_arm, '.', SPLIT_PART(product_instance_type, '.', 3)) ELSE '' END) graviton_instance_type
+          , (CASE WHEN (modernization_mapping.previous_intel <> '') THEN CONCAT('db.', modernization_mapping.previous_intel, '.', SPLIT_PART(product_instance_type, '.', 3)) ELSE '' END) latest_intel_instance_type
+          FROM
+            ( "${cur2_database}"."${cur2_table_name}"
+          LEFT JOIN modernization_mapping ON (lower(product['instance_type_family']) = modernization_mapping.family))
+          WHERE (((product['product_name'] = 'Amazon Relational Database Service') AND (line_item_line_item_type IN ('DiscountedUsage', 'Usage', 'Fee', 'RIFee')) AND (product_product_family = 'Database Instance')) AND (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(concat(split_part("billing_period", '-', 1), '-', split_part("billing_period", '-', 2), '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))))
+          GROUP BY bill_payer_account_id, line_item_usage_account_id, bill_billing_period_start_date, product_instance_type, product['storage'], line_item_usage_amount, pricing_term, line_item_availability_zone, product['instance_type_family'], product_location, line_item_resource_id, product['database_engine'], product['deployment_option'], line_item_unblended_rate, product['physical_processor'], modernization_mapping.generation, modernization_mapping.latest_arm, pricing_lease_contract_length, pricing_purchase_option, pricing_unit, pricing_public_on_demand_rate, 26, 27
       )
       , describe_db_data AS (
          SELECT DISTINCT
