@@ -255,7 +255,7 @@ class QuickSight(CidBase):
                 try:
                     _template = self.describe_template(**params)
                     if isinstance(_template, CidQsTemplate):
-                        dashboard.deployedTemplate = _template
+                        dashboard.deployed_template = _template
                 except Exception as exc:
                     logger.debug(exc, exc_info=True)
                     logger.info(f'Unable to describe template for {dashboardId}, {exc}')
@@ -303,7 +303,7 @@ class QuickSight(CidBase):
                 logger.info(f'Unable to describe template {template_id} in {source_template_account_id} ({region})')
 
         # Checking for version override in template definition
-        for dashboard_template in [dashboard.deployedTemplate, dashboard.source_template]:
+        for dashboard_template in [dashboard.deployed_template, dashboard.source_template]:
             if not isinstance(dashboard_template, CidQsTemplate)\
                 or int(dashboard_template.version) <= 0 \
                 or not version_obj:
