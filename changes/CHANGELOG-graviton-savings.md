@@ -1,5 +1,12 @@
 # What's new in the Graviton Savings Dashboard
 
+## Graviton Savings Dashboard v2.1.0:
+```
+cid-cmd update --dashboard-id graviton-savings --force --recursive
+```
+* CUR 2 Support
+* Fixed filters on Opensearch and ElastiCache Tabs
+
 
 ## Graviton Savings Dashboard v2.0.0:
 ```
