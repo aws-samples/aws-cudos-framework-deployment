@@ -13596,7 +13596,22 @@ datasets:
       views:
       - security_hub_findings
     schedules:
-    - default
+    - incremental-daily
+
+schedules:
+  incremental-daily:
+    ScheduleId: cid
+    ScheduleFrequency:
+      Interval: DAILY
+      TimeOfTheDay: '02:00-05:00'
+    RefreshType: INCREMENTAL_REFRESH
+    RefreshConfiguration:
+        IncrementalRefresh:
+            LookbackWindow:
+                ColumnName: collection_time
+                Size: 1
+                SizeUnit: DAY
+
 crawlers: {}
 views:
   security_hub_findings:
