@@ -1259,13 +1259,30 @@ class QuickSight(CidBase):
                 return
 
         for schedule in schedules:
-
             # Get the list of existing schedules with the same id
             existing_schedule = None
             for existing in existing_schedules:
                 if schedule["ScheduleId"] == existing["ScheduleId"]:
                     existing_schedule = existing
                     break
+
+            refresh_configuration = schedule.pop('RefreshConfiguration', {})
+            if refresh_configuration:
+                # schedule exists so we need to update
+                logger.debug(f'Updating refresh schedule configuration with id {schedule["ScheduleId"]} for dataset {dataset_id}.')
+                try:
+                    self.client.put_data_set_refresh_properties(
+                        DataSetId=dataset_id,
+                        AwsAccountId=self.account_id,
+                        DataSetRefreshProperties={'RefreshConfiguration': refresh_configuration}
+                    )
+                    logger.debug(f'Refresh schedule configuration with id {schedule["ScheduleId"]} for dataset {dataset_id} is updated.')
+                except self.client.exceptions.ResourceNotFoundException:
+                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]}. Dataset {dataset_id} does not exist.')
+                except self.client.exceptions.AccessDeniedException:
+                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]}. Please add quicksight:UpdateDataSet permission.')
+                except Exception as exc:
+                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
 
             # Verify that all schedule parameters are set
             schedule["ScheduleId"] = schedule.get("ScheduleId", "cid")
