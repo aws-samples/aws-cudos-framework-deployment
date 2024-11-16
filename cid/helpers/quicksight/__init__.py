@@ -585,21 +585,18 @@ class QuickSight(CidBase):
                     self.describe_data_source(d)
         except Exception as exc:
             logger.debug(exc, exc_info=True)
-    
+
     def discover_dashboards(self, refresh_overrides: List[str]=[], refresh: bool = False) -> None:
         """ Discover deployed dashboards
-        
         :param refresh_overrides: a list of dashboard ids to refresh
         :param refresh: force refresh all dashboards
         """
-        
         if refresh or self._dashboards is None:
             self._dashboards = {}
         else:
             for dashboard_id in refresh_overrides:
                 if dashboard_id in self._dashboards:
                     del self._dashboards[dashboard_id]
-        
         logger.info('Discovering deployed dashboards')
         deployed_dashboards=self.list_dashboards()
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
@@ -611,9 +608,7 @@ class QuickSight(CidBase):
             dashboard_id = dashboard.get('DashboardId')
             bar.set_description(f'Discovering {dashboard_name[:10]:<10}', refresh=True)
             logger.info(f'Discovering "{dashboard_name}"')
-            
             refresh = dashboard_id in refresh_overrides
-            
             self.discover_dashboard(dashboard_id, refresh=refresh)
 
     def list_dashboards(self) -> list:
@@ -1266,7 +1261,7 @@ class QuickSight(CidBase):
                 if schedule["ScheduleId"] == existing["ScheduleId"]:
                     existing_schedule = existing
                     break
-
+            
             # Verify that all schedule parameters are set
             schedule["ScheduleId"] = schedule.get("ScheduleId", "cid")
             if "ScheduleFrequency" not in schedule:
