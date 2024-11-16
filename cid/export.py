@@ -115,8 +115,7 @@ def export_analysis(qs, athena, glue):
 
     dataset_references = []
     datasets = {}
-    all_views = []
-    all_databases = []
+    all_views_and_databases = []
     for dataset_arn in analysis['DataSetArns']:
         dependency_views = []
         dataset_id = dataset_arn.split('/')[-1]
@@ -154,15 +153,19 @@ def export_analysis(qs, athena, glue):
                 and 'Schema' in value['RelationalTable']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like classic athena dataset")
                 value['RelationalTable']['DataSourceArn'] = '${athena_datasource_arn}'
-                all_databases.append(value['RelationalTable']['Schema'])
-                value['RelationalTable']['Schema'] = '${athena_database_name}'
+                database_name = value['RelationalTable']['Schema']
+                discovered_databases = list(set([d for _, d in all_views_and_databases])) # default database is the first one
+                if not discovered_databases or discovered_databases[0] == database_name:
+                    value['RelationalTable']['Schema'] = '${athena_database_name}'
+                else:
+                    logger.warning('Database {database_name} is not default, you will need to make it a parameter.') #TODO: can be added on code level
                 athena_source = value['RelationalTable']['Name']
                 views_name = athena_source.split('.')[-1]
                 dependency_views.append(views_name)
                 if views_name in athena._resources.get('views') and not get_parameters().get('export-known-datasets'):
                     cid_print(f'    Athena view <BOLD>{views_name}<END> is in resources. Skipping')
                 else:
-                    all_views.append(views_name)
+                    all_views_and_databases.append((views_name, database_name))
             elif 'CustomSql' in value and 'DataSourceArn' in value['CustomSql']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like CustomSql athena dataset")
                 value['CustomSql']['DataSourceArn'] = '${athena_datasource_arn}'
@@ -180,22 +183,27 @@ def export_analysis(qs, athena, glue):
                 #FIXME add value['Source']['DataSetArn'] to the list of dataset_arn
                 raise CidCritical(f"DataSet {dataset.raw['Name']} contains unsupported join. Please replace join of {value.get('Alias')} from DataSet to DataSource")
 
-        dep_cur = False
+        cur_version = False
         for dep_view in dependency_views[:]:
-            if cur_helper.table_is_cur(name=dep_view):
+            version = cur_helper.table_is_cur(name=dep_view)
+            if version:
                 dependency_views.remove(dep_view)
-                dep_cur = True
+                cur_version = True
         datasets[dataset_name] = {
             'data': dataset_data,
             'dependsOn': {'views': dependency_views},
             'schedules': ['default'], #FIXME: need to read a real schedule
         }
-        if dep_cur:
+        # FIXME: add a list of all columns used in the view
+        if cur_version == '1':
             datasets[dataset_name]['dependsOn']['cur'] = True
+        elif cur_version == '2':
+            datasets[dataset_name]['dependsOn']['cur2'] = True
 
-    all_databases = list(set(all_databases))
+    all_views =     [view_and_database[0] for view_and_database in all_views_and_databases]
+    all_databases = [view_and_database[1] for view_and_database in all_views_and_databases]
     if len(all_databases) > 1:
-        raise CidCritical(f'CID only supports one database. Multiple used: {all_databases}')
+        logger.warning(f'CID only supports one database. Multiple used: {all_databases}')
 
     if all_databases:
         athena.DatabaseName = all_databases[0]
@@ -210,7 +218,7 @@ def export_analysis(qs, athena, glue):
     cur_tables = []
     for key, view_data in all_views_data.items():
         if all_databases and isinstance(view_data.get('data'), str):
-            view_data['data'] = view_data['data'].replace(f'{all_databases[0]}.', '${athena_database_name}.')
+            view_data['data'] = view_data['data'].replace(f'{all_databases[0]}.', '"${athena_database_name}".')
 
         if isinstance(view_data.get('data'), str):
             view_data['data'] = view_data['data'].replace('CREATE VIEW ', 'CREATE OR REPLACE VIEW ')
@@ -221,12 +229,17 @@ def export_analysis(qs, athena, glue):
         for dep_view in deps.get('views', []):
             dep_view_name = dep_view.split('.')[-1]
             if dep_view_name in cur_tables or cur_helper.table_is_cur(name=dep_view_name):
+                cur_version = cur_helper.table_is_cur(name=dep_view_name)
                 logger.debug(f'{dep_view_name} is cur')
                 view_data['dependsOn']['cur'] = True
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
                     # cur tables treated separately as we don't manage CUR table here
-                    view_data['data'] = view_data['data'].replace(f'{dep_view_name}', '${cur_table_name}')
+                    if dep_view_name != 'cur':
+                        backslash = "\\" # workaround f-string limitation
+                        view_data['data'] = view_data['data'].replace(f'{dep_view_name}', f'"${backslash}cur{cur_version}_database{backslash}"."${backslash}cur{cur_version}_table_name{backslash}"')
+                    else:
+                        pass # FIXME: this replace is too dangerous as cur can be a part of other words. Need to find some other way
                 cur_tables.append(dep_view_name)
             else:
                 logger.debug(f'{dep_view_name} is not cur')
@@ -418,6 +431,8 @@ def export_analysis(qs, athena, glue):
             AwsAccountId=qs.account_id,
             AnalysisId=analysis_id,
         )['Definition']
+
+        definition.pop('QueryExecutionMode', None) # QueryExecutionMode is supported for export but not for create or update as of 2024-10-17
 
         for dataset in definition.get('DataSetIdentifierDeclarations', []):
             # Hide region and account number of the source account

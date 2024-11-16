@@ -6708,7 +6708,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${account_map_database_name}
             Name: account_map
             InputColumns:
             - Name: account_id
@@ -6852,10 +6852,18 @@ datasets:
       - cora_view
     schedules:
     - default
+    parameters:
+      account_map_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'account_map'
+        error: You need to install Foundational Dashboards that provide account_map view.
+        default: cid_cur
+        description: Database of account_map table (from foundational dashboards)
+        global: True
 views:
   cora_view:
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}"."cora_view" AS
+      CREATE OR REPLACE VIEW "cora_view" AS
       SELECT
         "account_id"
       , "action_type"
@@ -6891,6 +6899,8 @@ views:
       WHERE (CAST("date" AS date) >= ("date_trunc"('month', current_timestamp) - INTERVAL  '6' MONTH))
     parameters:
       data_exports_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'coh'
         default: cid_data_export
         description: Database of cid data exports
         global: True

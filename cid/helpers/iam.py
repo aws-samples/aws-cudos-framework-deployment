@@ -4,6 +4,7 @@ import json
 import copy
 import time
 import logging
+from functools import lru_cache
 
 import boto3
 from tqdm import tqdm
@@ -37,6 +38,43 @@ class IAM(CidBase):
     def __init__(self, session):
         super().__init__(session)
         self.client = self.session.client('iam')
+
+    @lru_cache(1000)
+    def list_attached_policies(self, role_name) -> list:
+        """ List attached policies for the role
+        """
+        return list(self.client.get_paginator("list_attached_role_policies").paginate(RoleName=role_name).search('AttachedPolicies.PolicyArn'))
+
+    @lru_cache(1000)
+    def ensure_managed_policies_attached(self, role_name, policies_arns='') -> None:
+        """ Make sure policies are attached to the role
+        """
+        policies_arns = [arn for arn in policies_arns.split(',') if arn]
+        if not policies_arns:
+            logger.debug('No need to attach roles')
+            return
+
+        if role_name in ['aws-quicksight-service-role-v0']:
+            logger.warning(f'{role_name} is a managed role. Please manage it in QuickSight UI. Make sure that equivalent of those polices is configured: {policies_arns}')
+            return
+
+        try:
+            attached_policies = self.list_attached_policies(role_name)
+        except self.client.exceptions.ClientError as exc:
+            logger.info(f'Unable to list attached policies {role_name}: {exc}')
+            return
+
+        for policy_arn in policies_arns:
+            if policy_arn not in attached_policies:
+                try:
+                    self.client.attach_role_policy(
+                        RoleName=role_name,
+                        PolicyArn=policy_arn,
+                    )
+                    logger.info('Attached {policy_arn} to the role {role_name}')
+                except self.client.exceptions.ClientError as exc:
+                    logger.warning(f'Unable to attach policy {policy_arn} to {role_name}: {exc}')
+
 
     def ensure_role_for_crawler(self, s3bucket, database, table, role_name: str='CidCmdCrawlerRole', policy_name: str="CidCmdGlueCrawlerPolicy") -> None:
         """Ensure Role for Crawler exists"""

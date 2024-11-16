@@ -3505,7 +3505,9 @@ datasets:
 views:
   eks_extended_support_view:
     dependsOn:
-      cur: true
+      cur2:
+        - pricing_unit
+        - product['region']
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".eks_extended_support_view AS
       WITH
@@ -3557,19 +3559,19 @@ views:
          , c.bill_payer_account_id payer_account_id
          , c.line_item_usage_account_id linked_account_id
          , accmap.account_name
-         , c.product_region
+         , c.product['region'] region_code
          , eksinv.cluster_name
          , eksinv.k8s_version
-         , c.line_item_line_item_description
+         , c.line_item_line_item_description item_description
          , c.pricing_unit
          , c.line_item_resource_id
          , c.line_item_usage_type
          , sum(c.line_item_usage_amount)
          FROM
-           ("${athena_database_name}"."${cur_table_name}" c
-         INNER JOIN eks_clusters_inventory eksinv ON ((c.bill_payer_account_id = eksinv.payer_id) AND (c.line_item_usage_account_id = eksinv.accountid) AND (c.product_region = eksinv.region) AND (c.line_item_resource_id = eksinv.cluster_arn)))
+           ("${cur2_database}"."${cur2_table_name}" c
+         INNER JOIN eks_clusters_inventory eksinv ON ((c.bill_payer_account_id = eksinv.payer_id) AND (c.line_item_usage_account_id = eksinv.accountid) AND (c.product['region'] = eksinv.region) AND (c.line_item_resource_id = eksinv.cluster_arn)))
          INNER JOIN account_map accmap on c.line_item_usage_account_id = accmap.account_id
-         WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.year, '-', c.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonEKS') AND (c.line_item_line_item_type IN ('Usage')) AND ((c.product_product_family = 'Compute') AND (c.line_item_usage_type LIKE '%AmazonEKS-Hours:perCluster')))
+         WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.billing_period, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonEKS') AND (c.line_item_line_item_type IN ('Usage')) AND ((c.product_product_family = 'Compute') AND (c.line_item_usage_type LIKE '%AmazonEKS-Hours:perCluster')))
          GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
       )
       SELECT
@@ -3594,14 +3596,6 @@ views:
         (eks_clusters_usage ekscus
       INNER JOIN eks_k8s_release_calendar rc ON (ekscus.k8s_version = rc.k8s_version))
     parameters:
-        cur_database_name:
-          default: cid_cur
-          description: "Enter the name of the CUR database"
-          global: True
-        cur_table_name:
-          default: cur
-          description: "Enter the name of the CUR table"
-          global: True
         data_collection_database_name:
           type: athena
           query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'inventory_eks_data'
@@ -3610,7 +3604,15 @@ views:
           global: True
   rds_extended_support_view:
     dependsOn:
-      cur: true
+      cur2:
+        - pricing_unit
+        - product['database_engine']
+        - product['deployment_option']
+        - product['instance_type']
+        - product['instance_type_family']
+        - product['product_family']
+        - product['region']
+        - product['vcpu']
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".rds_extended_support_view AS
       WITH
@@ -3791,34 +3793,34 @@ views:
       )
       , rds_resources (billing_period, usage_date, payer_account_id, linked_account_id, account_name, region_code, rds_type, deployment_option, engine, engineversion, instance_type_family, instance_type, item_description, vcpus, usage_unit, dbresourceidentifier, resource_id, original_deployment_option, original_usage_type, usage_amount, vcpu_acu_hours) AS (
          SELECT
-           c.bill_billing_period_start_date
-         , date_trunc('day', c.line_item_usage_start_date)
+           c.bill_billing_period_start_date billing_period
+         , date_trunc('day', c.line_item_usage_start_date) usage_date
          , c.bill_payer_account_id payer_account_id
          , c.line_item_usage_account_id linked_account_id
          , accmap.account_name
-         , c.product_region
-         , (CASE WHEN (c.product_database_engine LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
-         , (CASE WHEN (c.line_item_usage_type LIKE '%InstanceUsage%') THEN 'SINGLE-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN 'MULTI-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZClusterUsage%') THEN 'MULTI-AZ-CLUSTER' WHEN ((c.product_product_family = 'Serverless') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 'SERVERLESS' WHEN ((c.product_product_family = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'SERVERLESSV2' ELSE 'UNDEFINED (Check the usage type)' END)
-         , (CASE WHEN (rdsu.engine IS NOT NULL) THEN rdsu.engine ELSE c.product_database_engine END)
-         , (CASE WHEN ((rdsu.engine IS NOT NULL) AND (rdsu.engineversion IS NOT NULL)) THEN CONCAT(rdsu.engine, rdsu.engineversion) ELSE 'engine-1.-1.-1' END)
-         , c.product_instance_type_family
-         , c.product_instance_type
-         , c.line_item_line_item_description
-         , (CASE WHEN ((c.product_product_family like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 0 ELSE CAST(c.product_vcpu AS int) END)
-         , (CASE WHEN ((c.product_product_family = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'acu-hour' ELSE 'vcpu-hour' END)
-         , split_part(c.line_item_resource_id, ':', 7)
-         , c.line_item_resource_id
-         , c.product_deployment_option
-         , c.line_item_usage_type
-         , sum(c.line_item_usage_amount)
-         , sum((CASE WHEN (c.pricing_unit = 'ACU-Hr') THEN c.line_item_usage_amount WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN (CAST(c.product_vcpu AS int) * c.line_item_usage_amount * 2) ELSE (CAST(c.product_vcpu AS int) * c.line_item_usage_amount) END))
+         , c.product['region'] region_code
+         , (CASE WHEN (c.product['database_engine'] LIKE 'Aurora%') THEN 'Aurora' ELSE 'AmazonRDS' END) rds_type
+         , (CASE WHEN (c.line_item_usage_type LIKE '%InstanceUsage%') THEN 'SINGLE-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN 'MULTI-AZ' WHEN (c.line_item_usage_type LIKE '%Multi-AZClusterUsage%') THEN 'MULTI-AZ-CLUSTER' WHEN ((c.product['product_family'] = 'Serverless') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 'SERVERLESS' WHEN ((c.product['product_family'] = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'SERVERLESSV2' ELSE 'UNDEFINED (Check the usage type)' END) deployment_option
+         , (CASE WHEN (rdsu.engine IS NOT NULL) THEN rdsu.engine ELSE c.product['database_engine'] END) engine
+         , (CASE WHEN ((rdsu.engine IS NOT NULL) AND (rdsu.engineversion IS NOT NULL)) THEN CONCAT(rdsu.engine, rdsu.engineversion) ELSE 'engine-1.-1.-1' END) engineversion
+         , c.product['instance_type_family'] instance_type_family
+         , c.product['instance_type'] instance_type
+         , c.line_item_line_item_description item_description
+         , (CASE WHEN ((c.product['product_family'] like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage')) THEN 0 ELSE CAST(c.product['vcpu'] AS int) END) vcpus
+         , (CASE WHEN ((c.product['product_family'] = 'ServerlessV2') AND (c.line_item_usage_type like '%Aurora:ServerlessV2%Usage')) THEN 'acu-hour' ELSE 'vcpu-hour' END) usage_unit
+         , split_part(c.line_item_resource_id, ':', 7) dbresourceidentifier
+         , c.line_item_resource_id resource_id
+         , c.product['deployment_option'] original_deployment_option
+         , c.line_item_usage_type original_usage_type
+         , sum(c.line_item_usage_amount) usage_amount
+         , sum((CASE WHEN (c.pricing_unit = 'ACU-Hr') THEN c.line_item_usage_amount WHEN (c.line_item_usage_type LIKE '%Multi-AZUsage%') THEN (CAST(c.product['vcpu'] AS int) * c.line_item_usage_amount * 2) ELSE (CAST(c.product['vcpu'] AS int) * c.line_item_usage_amount) END)) vcpu_acu_hours
          FROM
-           ((${cur_database_name}.${cur_table_name} c
-         INNER JOIN all_sanitised_rds_resources rdsu ON ((c.bill_payer_account_id = rdsu.payer_id) AND (c.line_item_usage_account_id = rdsu.accountid) AND (c.product_region = rdsu.region) AND (split_part(c.line_item_resource_id, ':', 7) = rdsu.dbresourceidentifier)))
+           (("${cur2_database}"."${cur2_table_name}" c
+         INNER JOIN all_sanitised_rds_resources rdsu ON ((c.bill_payer_account_id = rdsu.payer_id) AND (c.line_item_usage_account_id = rdsu.accountid) AND (c.product['region'] = rdsu.region) AND (split_part(c.line_item_resource_id, ':', 7) = rdsu.dbresourceidentifier)))
          INNER JOIN account_map accmap ON (c.line_item_usage_account_id = accmap.account_id))
-         WHERE (((c.bill_billing_period_start_date >= ("date_trunc"('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.year, '-', c.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonRDS') AND (c.line_item_line_item_type IN ('DiscountedUsage', 'Usage')) AND ((c.product_product_family = 'Database Instance') OR ((c.product_product_family like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage'))))
+         WHERE (((c.bill_billing_period_start_date >= (date_trunc('month', current_timestamp) - INTERVAL  '4' MONTH)) AND (CAST(concat(c.billing_period, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL  '4' MONTH))) AND (c.product_servicecode = 'AmazonRDS') AND (c.line_item_line_item_type IN ('DiscountedUsage', 'Usage')) AND ((c.product['product_family'] = 'Database Instance') OR ((c.product['product_family'] like 'Serverless%') AND (c.line_item_usage_type like '%Aurora:Serverless%Usage'))))
          GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
-      ) 
+      )
       SELECT
         rdsr.billing_period
       , rdsr.usage_date
@@ -3860,14 +3862,6 @@ views:
         (rp.rds_type = 'Aurora' and rdsr.deployment_option in ('SERVERLESS', 'SERVERLESSV2'))
       )
     parameters:
-        cur_database_name:
-          default: cid_cur
-          description: "Enter the name of the CUR database"
-          global: True
-        cur_table_name:
-          default: cur
-          description: "Enter the name of the CUR table"
-          global: True
         data_collection_database_name:
           type: athena
           query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'inventory_rds_db_instances_data'

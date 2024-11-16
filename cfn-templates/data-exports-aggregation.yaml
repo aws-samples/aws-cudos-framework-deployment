@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Billing Data Export Aggregation v0.1.0
+Description: AWS Billing Data Export Aggregation v0.1.4
 Metadata:
 
   AWS::CloudFormation::Interface:
@@ -24,6 +24,7 @@ Metadata:
         Parameters:
           - EnableSCAD
           - RolePath
+          - TimeGranularity
 
     ParameterLabels:
       ManageCOH:
@@ -40,6 +41,8 @@ Metadata:
         default: "Source Account Ids (Comma separated list)"
       EnableSCAD:
         default: "Enable Split Cost Allocation Data (SCAD) in CUR 2.0"
+      TimeGranularity:
+        default: "CUR 2.0 Granularity. Do not change."
 
 
 Parameters:
@@ -92,8 +95,13 @@ Parameters:
     Default: "yes"
   RolePath:
     Type: String
-    Default: '/'
     Description: Path for roles where PermissionBoundaries can limit location
+    Default: '/'
+  TimeGranularity:
+    Type: String
+    Description: Changing of this parameter will require redeployment of this Stack, purging of data in Destination and then additional Backfill request. HOURLY is a recommended option unless your AWS invoice is more then $50M (in this case contact your TAM when installing).
+    Default: "HOURLY"
+    AllowedValues: ["HOURLY", "DAILY", "MONTHLY"]
 
 Conditions:
   EmptySourceAccountIds: !Equals [ !Ref SourceAccountIds, '']
@@ -427,7 +435,7 @@ Resources:
           QueryStatement: !If [EnableSCAD, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
-              TIME_GRANULARITY: "HOURLY"
+              TIME_GRANULARITY: !Ref TimeGranularity
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
               INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [EnableSCAD, "TRUE", "FALSE"]
@@ -458,7 +466,7 @@ Resources:
           QueryStatement: !If [EnableSCAD, !FindInMap [DataExports, CUR2, SCADQuery], !FindInMap [DataExports, CUR2, DefaultQuery]]
           TableConfigurations:
             COST_AND_USAGE_REPORT:
-              TIME_GRANULARITY: "HOURLY"
+              TIME_GRANULARITY: !Ref TimeGranularity
               INCLUDE_RESOURCES: "TRUE"
               INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE"
               INCLUDE_SPLIT_COST_ALLOCATION_DATA: !If [EnableSCAD, "TRUE", "FALSE"]
@@ -903,6 +911,7 @@ Resources:
             - {"Name": "line_item_resource_id", "Type": "string" }
             - {"Name": "line_item_unblended_cost", "Type": "double" }
             - {"Name": "line_item_usage_account_id", "Type": "string" }
+            - {"Name": "line_item_usage_account_name", "Type": "string" }
             - {"Name": "line_item_usage_amount", "Type": "double" }
             - {"Name": "line_item_usage_end_date", "Type": "timestamp" }
             - {"Name": "line_item_usage_start_date", "Type": "timestamp" }
@@ -921,20 +930,20 @@ Resources:
             - {"Name": "product_to_location", "Type": "string" }
             - {"Name": "reservation_amortized_upfront_fee_for_billing_period", "Type": "double" }
             - {"Name": "reservation_effective_cost", "Type": "double" }
-            - {"Name": "reservation_end_time", "Type": "timestamp" }
+            - {"Name": "reservation_end_time", "Type": "string" }
             - {"Name": "reservation_reservation_a_r_n", "Type": "string" }
-            - {"Name": "reservation_start_time", "Type": "timestamp" }
+            - {"Name": "reservation_start_time", "Type": "string" }
             - {"Name": "reservation_unused_amortized_upfront_fee_for_billing_period", "Type": "double" }
             - {"Name": "reservation_unused_recurring_fee", "Type": "double" }
             - {"Name": "resource_tags", "Type": "map<string,string>" }
             - {"Name": "savings_plan_amortized_upfront_commitment_for_billing_period", "Type": "double" }
-            - {"Name": "savings_plan_end_time", "Type": "timestamp" }
+            - {"Name": "savings_plan_end_time", "Type": "string" }
             - {"Name": "savings_plan_offering_type", "Type": "string" }
             - {"Name": "savings_plan_payment_option", "Type": "string" }
             - {"Name": "savings_plan_purchase_term", "Type": "string" }
             - {"Name": "savings_plan_savings_plan_a_r_n", "Type": "string" }
             - {"Name": "savings_plan_savings_plan_effective_cost", "Type": "double" }
-            - {"Name": "savings_plan_start_time", "Type": "timestamp" }
+            - {"Name": "savings_plan_start_time", "Type": "string" }
             - {"Name": "savings_plan_total_commitment_to_date", "Type": "double" }
             - {"Name": "savings_plan_used_commitment", "Type": "double" }
             - {"Name": "split_line_item_parent_resource_id", "Type": "string" }
@@ -1446,7 +1455,7 @@ Resources:
             reason: "Need an explicit name for reference"
 
 Outputs:
-  DestinationBucketName:
+  AggregateBucketName:
     Description: Bucket with aggregate Data Exports
     Value: !Sub ${ResourcePrefix}-${DestinationAccountId}-data-exports
     Export: { Name: 'cid-DataExports-Bucket'}

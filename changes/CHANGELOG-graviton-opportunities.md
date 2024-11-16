@@ -1,5 +1,40 @@
 # What's new in the Graviton Opportunities Dashboard
 
+**Important:** Graviton Opportunities Dashboard has changed it's name Graviton Savings Dashboard.
+
+Please delete the legacy version of this dashboard by running 
+```
+cid-cmd delete --dashboard-id graviton-opportunities
+``` 
+Please deploy the new version of this dashboard by running 
+```
+cid-cmd deploy --dashboard-id graviton-savings
+```
+
+## Graviton Opportunities Dashboard v1.1.1:
+```
+cid-cmd update --dashboard-id graviton-opportunities
+Choose 'Yes' for the following prompt
+[confirm-update] No updates available, should I update it anyway? 
+```
+* Fix broken hyperlinks under Additional Resources
+
+## Graviton Opportunities Dashboard v1.1.0:
+**Important:** If attempting to update the dashboard, please update cid-cmd first. To update run these commands in your CloudShell (recommended) or other terminal:
+
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id graviton-opportunities --force --recursive
+```
+**Bug fixes and improvements**
+* Mordernization mapping updated with missing instance types
+* Deleted Target Coverage and Efficiency sliders
+* Including Savings Plan covered usage for EC2
+* Updated Missing filters for RDS
+* Updates to visuals
+* New visuals for existing, potential coverage and implementation effort
+
 ## Graviton Opportunities Dashboard v1.0.3:
 * Updated modernization mapping to include r8g
 * Moved EC2 usage type filters from dashboard into SQL
