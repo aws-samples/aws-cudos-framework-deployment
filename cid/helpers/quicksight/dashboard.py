@@ -18,13 +18,13 @@ class Dashboard(CidQsResource):
         # Initialize properties
         self.datasets: Dict[str, str] = {}
         # Deployed template
-        self._deployedTemplate: CidQsTemplate = None
-        self._deployedDefinition: CidQsDefinition = None
+        self._deployed_template: CidQsTemplate = None
+        self._deployed_definition: CidQsDefinition = None
         self._status = str()
         self.status_detail = str()
         # Source template in origin account
-        self.sourceTemplate: CidQsTemplate = None
-        self.sourceDefinition: CidQsDefinition = None
+        self.source_template: CidQsTemplate = None
+        self.source_definition: CidQsDefinition = None
         self.qs = qs
 
     @property
@@ -36,75 +36,69 @@ class Dashboard(CidQsResource):
         return self.get_property('Version')
 
     @property
-    def deployedTemplate(self) -> CidQsTemplate:
-        return self._deployedTemplate
+    def deployed_template(self) -> CidQsTemplate:
+        return self._deployed_template
 
-    @deployedTemplate.setter
-    def deployedTemplate(self, template: CidQsTemplate) -> None:
-        self._deployedTemplate = template
+    @deployed_template.setter
+    def deployed_template(self, template: CidQsTemplate) -> None:
+        self._deployed_template = template
 
     @property
-    def deployedDefinition(self) -> CidQsTemplate:
-        return self._deployedDefinition
+    def deployed_definition(self) -> CidQsTemplate:
+        return self._deployed_definition
 
-    @deployedDefinition.setter
-    def deployedDefinition(self, definition: CidQsDefinition) -> None:
-        self._deployedDefinition = definition
+    @deployed_definition.setter
+    def deployed_definition(self, definition: CidQsDefinition) -> None:
+        self._deployed_definition = definition
 
     @property
     def template_id(self) -> str:
-        if isinstance(self.deployedTemplate, CidQsTemplate):
-            return self.deployedTemplate.id
+        if isinstance(self.deployed_template, CidQsTemplate):
+            return self.deployed_template.id
         return None
 
     @property
     def template_arn(self) -> str:
-        if isinstance(self.deployedTemplate, CidQsTemplate):
-            return self.deployedTemplate.arn
+        if isinstance(self.deployed_template, CidQsTemplate):
+            return self.deployed_template.arn
         return None
 
     @property
     def deployed_cid_version(self) -> int:
-        if isinstance(self.deployedTemplate, CidQsTemplate):
-            return self.deployedTemplate.cid_version
-        elif isinstance(self.deployedDefinition, CidQsDefinition):
-            return self.deployedDefinition.cid_version
+        if isinstance(self.deployed_template, CidQsTemplate):
+            return self.deployed_template.cid_version
+        elif isinstance(self.deployed_definition, CidQsDefinition):
+            return self.deployed_definition.cid_version
         else:
             return None
 
     @property
     def latest(self) -> bool:
-        return self.latest_available_cid_version == self.deployed_cid_version
+        try:
+            return self.latest_available_cid_version == self.deployed_cid_version
+        except Exception as exc:
+            logger.debug(f'Failed to determine if latest for dashboards: {self.id}. {exc}')
+            return None
 
     @property
     def health(self) -> bool:
         return self.status not in ['broken']
-    
-    @property
-    def origin_type(self) -> str:
-        if self.deployedTemplate is not None:
-            return "TEMPLATE"
-        elif self.deployedDefinition is not None:
-            return "DEFINITION"
-        else:
-            return "UNKNOWN"
-    
 
     @property
     def cid_version(self) -> int:
-        if self.origin_type == "TEMPLATE":
-            return self.deployedTemplate.cid_version
-        elif self.origin_type == "DEFINITION":
-            return self.deployedDefinition.cid_version
+        if self.deployed_template:
+            return self.deployed_template.cid_version
+        elif self.deployed_definition:
+            return self.deployed_definition.cid_version
         else:
             return None
-    
+
     @property
     def latest_available_cid_version(self) -> int:
-        if self.origin_type == "TEMPLATE":
-            return self.sourceTemplate.cid_version
-        elif self.origin_type == "DEFINITION":
-            return self.sourceDefinition.cid_version
+        if self.source_template:
+            return self.source_template.cid_version
+        elif self.source_definition:
+            return self.source_definition.cid_version
         else:
             return None
 
@@ -126,7 +120,7 @@ class Dashboard(CidQsResource):
                 logger.info(f"Found datasets: {self.datasets}")
                 logger.info(f"Required datasets: {self.definition.get('dependsOn').get('datasets')}")
             # Source Template has changed
-            elif self.deployedTemplate and self.sourceTemplate and self.deployedTemplate.arn and self.sourceTemplate.arn and not self.deployedTemplate.arn.startswith(self.sourceTemplate.arn):
+            elif self.deployed_template and self.source_template and self.deployed_template.arn and self.source_template.arn and not self.deployed_template.arn.startswith(self.source_template.arn):
                 self._status = 'legacy'
             elif not self.latest_available_cid_version or not self.deployed_cid_version:
                 self._status = 'undetermined'
