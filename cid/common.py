@@ -300,7 +300,7 @@ class Cid():
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
     def get_page(self, source):
-        resp = requests.get(source, timeout=10)
+        resp = requests.get(source, timeout=10, headers={'User-Agent': 'cid'})
         resp.raise_for_status()
         return resp
 
@@ -391,7 +391,6 @@ class Cid():
                             message=f"Required parameter: {key} ({value.get('description')})",
                             choices=options,
                             default=default if default in options else None,
-                            fuzzy=False,
                         )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
@@ -436,7 +435,7 @@ class Cid():
 
         # In case if we cannot discover datasets, we need to discover dashboards
         # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
-        self.qs.discover_dashboards()
+        self.qs.dashboards
 
         dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
         category_filter = [cat for cat in get_parameters().get('category', '').upper().split(',') if cat]
@@ -528,15 +527,14 @@ class Cid():
 
         compatible = self.check_dashboard_version_compatibility(dashboard_id)
         if not recursive and compatible == False:
-            if get_parameters().get('confirm-recursive') != 'no':
-                if get_yesno_parameter(
-                    param_name=f'confirm-recursive',
-                    message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
-                    default='yes') != 'yes':
-                    return
-                else:
-                    logger.info("Switch to recursive mode")
-                    recursive = True
+            if get_parameter(
+                param_name=f'confirm-recursive',
+                message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
+                choices=['yes', 'no'],
+                default='yes') != 'yes':
+                return
+            logger.info("Switch to recursive mode")
+            recursive = True
 
         if recursive:
             self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
@@ -784,8 +782,7 @@ class Cid():
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
                     if dataset.id in dashboard.datasets.values():
-                        logger.info(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
-                        print      (f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
+                        cid_print(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
                         return False
                 else: #not used
 
@@ -795,9 +792,10 @@ class Cid():
                         logger.debug(f'Picking the first of dataset databases: {dataset.schemas}')
                         self.athena.DatabaseName = schema
 
-                    if get_yesno_parameter(
+                    if get_parameter(
                         param_name=f'confirm-{dataset.name}',
                         message=f'Delete QuickSight Dataset {dataset.name}?',
+                        choices=['yes', 'no'],
                         default='no') == 'yes':
                         print(f'Deleting dataset {dataset.name} ({dataset.id})')
                         self.qs.delete_dataset(dataset.id)
@@ -1074,10 +1072,10 @@ class Cid():
 
         if dashboard.latest:
             cid_print("You are up to date!")
-            cid_print(f"  Version    {str(dashboard.cid_version)}")
+            cid_print(f"  Version    {dashboard.cid_version}")
         else:
             cid_print(f"An update is available:")
-            cid_print(f"  Version    {str(dashboard.cid_version): <9} ->  {str(dashboard.latest_available_cid_version): <9}")
+            cid_print(f"  Version    {dashboard.cid_version} ->  {dashboard.latest_available_cid_version}")
 
         try:
             return dashboard.cid_version.compatible_versions(dashboard.latest_available_cid_version)
@@ -1094,9 +1092,8 @@ class Cid():
 
         if isinstance(dashboard.deployed_template, CidQsTemplate):
             print(f'Deployed template: {dashboard.deployed_template.arn}')
-        if isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            print(f"Latest template:   {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
-
+        if isinstance(dashboard.source_template, CidQsTemplate):
+            print(f"Latest template:   {dashboard.source_template.arn}/version/{dashboard.source_template.version}")
         try:
             cid_print(f'\nUpdating {dashboard_id} from <BOLD>{dashboard.cid_version}<END> to <BOLD>{dashboard.latest_available_cid_version}<END>')
         except:
@@ -1148,8 +1145,7 @@ class Cid():
                             param_name=f'{dataset_name}-dataset-id',
                             message=f'Multiple "{dataset_name}" datasets detected, please select one',
                             choices=[v.id for v in datasets],
-                            default=datasets[0].id,
-                            fuzzy=False,
+                            default=datasets[0].id
                         )
                     known_datasets.update({dataset_name: dataset_id})
                 print(f'Updating dataset: "{dataset_name}"')
