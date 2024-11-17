@@ -13294,8 +13294,8 @@ datasets:
             Schema: ${athena_database_name}
             Name: security_hub_findings
             InputColumns:
-            - Name: id
-              Type: INTEGER
+            - Name: parition_date
+              Type: DATETIME
             - Name: collection_time
               Type: DATETIME
             - Name: delegated_admin
@@ -13352,6 +13352,8 @@ datasets:
               Type: STRING
             - Name: aws_inspector_productversion
               Type: STRING
+            - Name: aws_inspector_inspectorscore
+              Type: STRING
             - Name: aws_securityhub_annotation
               Type: STRING
             - Name: workflowstate
@@ -13365,6 +13367,8 @@ datasets:
             - Name: recordstate
               Type: STRING
             - Name: finding_service
+              Type: STRING
+            - Name: resource_keyname
               Type: STRING
       LogicalTableMap:
         33ac0e38-1902-44db-819b-31c7addf7bbc:
@@ -13394,8 +13398,8 @@ datasets:
               Columns:
               - ColumnName: __control_title_with_status
                 ColumnId: a30d328a-40aa-4a6e-8eae-fbbc0496bc89
-                Expression: |-
-                  concat(substring({__status_per_control},1,1), '  ' ,securitycontrolid, '                 ', title)
+                Expression: concat(substring({__status_per_control},1,1), '  ' ,securitycontrolid,
+                  '                 ', title)
           - CreateColumnsOperation:
               Columns:
               - ColumnName: __controlid
@@ -13405,8 +13409,8 @@ datasets:
               Columns:
               - ColumnName: __control_count_passed
                 ColumnId: 4e9d54e1-8bdc-4bb9-9b07-0afd53eedf49
-                Expression: |-
-                  distinct_countIf(concat({__controlid}, {standardsid}), contains({__status_per_control}, 'PASSED'))
+                Expression: distinct_countIf(concat({__controlid}, {standardsid}),
+                  contains({__status_per_control}, 'PASSED'))
           - CreateColumnsOperation:
               Columns:
               - ColumnName: __control_count_total
@@ -13444,8 +13448,7 @@ datasets:
               Columns:
               - ColumnName: __split_finding_id
                 ColumnId: e84234d2-c351-4e40-9e9f-44e23bd90635
-                Expression: |-
-                  split({finding_id},"/",7)
+                Expression: split({finding_id},"/",7)
           - CreateColumnsOperation:
               Columns:
               - ColumnName: __finding_id_count
@@ -13476,8 +13479,8 @@ datasets:
               Columns:
               - ColumnName: __just_control_count_passed
                 ColumnId: 69fbe822-d962-4bb4-849b-c070cc738392
-                Expression: "distinct_countIf(concat({__controlid},''), contains({__status_per_control_passed_only},\
-                  \ 'PASSED'))"
+                Expression: distinct_countIf(concat({__controlid},''), contains({__status_per_control_passed_only},
+                  'PASSED'))
           - CreateColumnsOperation:
               Columns:
               - ColumnName: __just_control_count_total
@@ -13523,6 +13526,16 @@ datasets:
                       {recordstate},
                       NULL
                   )
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: __latest_compliance_status
+                ColumnId: 189d67fb-d3c1-42c4-8ae4-60d10df316d4
+                Expression: |-
+                  ifelse(
+                      {__latest_update_per_resource_and_title} = {updatedat} AND compliance_status <> '',
+                      {compliance_status},
+                      NULL
+                  )
           - TagColumnOperation:
               ColumnName: region
               Tags:
@@ -13533,7 +13546,7 @@ datasets:
               - ColumnGeographicRole: STATE
           - ProjectOperation:
               ProjectedColumns:
-              - id
+              - parition_date
               - collection_time
               - delegated_admin
               - year
@@ -13562,6 +13575,7 @@ datasets:
               - title
               - aws_inspector_findingstatus
               - aws_inspector_productversion
+              - aws_inspector_inspectorscore
               - aws_securityhub_annotation
               - workflowstate
               - finding_types
@@ -13569,26 +13583,28 @@ datasets:
               - securitycontrolid
               - recordstate
               - finding_service
+              - resource_keyname
               - __number_of_failed_per_control
               - __status_per_control
               - __control_title_with_status
               - __controlid
-              - __controlscore
               - __control_count_passed
               - __control_count_total
+              - __controlscore
               - __failed_checks_count_per_resource
               - __resource_id
               - __resource_count
               - __split_finding_id
               - __finding_id_count
-              - __just_control_count_passed
-              - __just_control_count_total
               - __number_of_passed_per_control
               - __status_per_control_passed_only
+              - __just_control_count_passed
+              - __just_control_count_total
               - __standard_name
               - __latest_update_per_resource_and_title
               - __latest_inspector_status
               - __latest_recordstate
+              - __latest_compliance_status
           Source:
             PhysicalTableId: 93eee313-96a4-4f70-9f21-698add7064c3
       ImportMode: SPICE
@@ -13600,29 +13616,29 @@ datasets:
 
 schedules:
   incremental-daily:
-    ScheduleId: cid
+    ScheduleId: cid-incremental
     ScheduleFrequency:
       Interval: DAILY
       TimeOfTheDay: '02:00-05:00'
     RefreshType: INCREMENTAL_REFRESH
     RefreshConfiguration:
-        IncrementalRefresh:
-            LookbackWindow:
-                ColumnName: collection_time
-                Size: 1
-                SizeUnit: DAY
+      IncrementalRefresh:
+        LookbackWindow:
+          ColumnName: parition_date
+          Size: 1
+          SizeUnit: DAY
 
 crawlers: {}
 views:
   security_hub_findings:
     data: |-
       CREATE OR REPLACE VIEW security_hub_findings AS
-      SELECT
-        COUNT(DISTINCT id) id
-      , TRY(CAST(from_iso8601_timestamp(time) AS date)) collection_time
+      SELECT DISTINCT
+        TRY(CAST(from_iso8601_timestamp(time) AS date)) collection_time
       , account delegated_admin
       , split_part(datehour, '/', 1) year
       , split_part(datehour, '/', 2) month
+      , date_parse(datehour, '%Y/%m/%d') parition_date
       , detail detail
       , json_extract_scalar(detail, '$.findings[0].awsaccountid') LinkedAccountId
       , json_extract_scalar(detail, '$.findings[0].region') Region
@@ -13647,17 +13663,18 @@ views:
       , json_extract_scalar(detail, '$.findings[0].title') title
       , json_extract_scalar(detail, '$.findings[0].productfields.aws_inspector_findingstatus') aws_inspector_findingstatus
       , json_extract_scalar(detail, '$.findings[0].productfields.aws_inspector_productversion') aws_inspector_productversion
-      , json_extract_scalar(detail, '$.findings[0].productfields.aws_inspector_productversion') aws_securityhub_annotation
+      , json_extract_scalar(detail, '$.findings[0].productfields.aws_inspector_inspectorscore') aws_inspector_inspectorscore
+      , json_extract_scalar(detail, '$.findings[0].productfields.aws_securityhub_annotation') aws_securityhub_annotation
       , json_extract_scalar(detail, '$.findings[0].workflowstate') workflowstate
       , COALESCE(regexp_extract(json_extract_scalar(detail, '$.findings[0].Types[0]'), '.*/(.*)$', 1), json_extract_scalar(detail, '$.findings[0].Types[0]')) Finding_Types
       , json_extract_scalar(detail, '$.findings[0].compliance.status') Compliance_Status
       , json_extract_scalar(detail, '$.findings[0].compliance.securitycontrolid') SecurityControlId
       , json_extract_scalar(detail, '$.findings[0].recordstate') RecordState
       , upper(split_part(json_extract_scalar(detail, '$.findings[0].resources[0].id'), ':', 3)) Finding_Service
+      , json_format(json_extract(detail, '$.findings[0].resources[0].details')) resource_keyname
       FROM
         "${securityhub_database_name}"."securityhub_events"
-      WHERE (CAST("from_iso8601_timestamp"(json_extract_scalar(detail, '$.findings[0].updatedat')) AS date) >= date_parse(date_format(date_add('month', -3, current_date), '%Y-%m-%d'), '%Y-%m-%d'))
-      GROUP BY 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34
+      WHERE (date_parse(datehour, '%Y/%m/%d') >= date_add('month', -3, current_date))
     parameters:
       securityhub_database_name:
         type: athena
