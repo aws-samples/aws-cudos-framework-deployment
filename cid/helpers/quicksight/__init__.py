@@ -255,7 +255,7 @@ class QuickSight(CidBase):
                 try:
                     _template = self.describe_template(**params)
                     if isinstance(_template, CidQsTemplate):
-                        dashboard.deployedTemplate = _template
+                        dashboard.deployed_template = _template
                 except Exception as exc:
                     logger.debug(exc, exc_info=True)
                     logger.info(f'Unable to describe template for {dashboardId}, {exc}')
@@ -263,7 +263,7 @@ class QuickSight(CidBase):
                 logger.info("Minimum template version could not be found for Dashboard {dashboardId}: {_template_arn}, deployed template could not be described")
         else: # Dashboard is not template based but definition based
             try:
-                dashboard.deployedDefinition = self.describe_dashboard_definition(dashboard_id=dashboardId, refresh=refresh)
+                dashboard.deployed_definition = self.describe_dashboard_definition(dashboard_id=dashboardId, refresh=refresh)
             except CidError as exc:
                 logger.info('Exception on reading dashboard definition {dashboardId}: {exc}. Not critical. Continue.')
 
@@ -271,7 +271,7 @@ class QuickSight(CidBase):
             # Resolve source definition (the latest definition publicly available)
             data_stream = io.StringIO(_definition["data"])
             definition_data = yaml.safe_load(data_stream)
-            dashboard.sourceDefinition = CidQsDefinition(definition_data)
+            dashboard.source_definition = CidQsDefinition(definition_data)
 
         # Fetch datasets (works for both TEMPLATE and DEFINITION based dashboards)
         for dataset in dashboard.version.get('DataSetArns', []):
@@ -289,7 +289,7 @@ class QuickSight(CidBase):
                 logger.info(f'Invalid dataset {dataset_id}')
         logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
 
-        # Fetch the latest version of sourceTemplate referenced in definition
+        # Fetch the latest version of source_template referenced in definition
         source_template_account_id = _definition.get('sourceAccountId')
         template_id = _definition.get('templateId')
         region = _definition.get('region', 'us-east-1')
@@ -297,13 +297,13 @@ class QuickSight(CidBase):
             try:
                 logger.debug(f'Loading latest source template {template_id} from source account {source_template_account_id} in {region}')
                 template = self.describe_template(template_id, account_id=source_template_account_id, region=region)
-                dashboard.sourceTemplate = template
+                dashboard.source_template = template
             except Exception as exc:
                 logger.debug(exc, exc_info=True)
                 logger.info(f'Unable to describe template {template_id} in {source_template_account_id} ({region})')
 
         # Checking for version override in template definition
-        for dashboard_template in [dashboard.deployedTemplate, dashboard.sourceTemplate]:
+        for dashboard_template in [dashboard.deployed_template, dashboard.source_template]:
             if not isinstance(dashboard_template, CidQsTemplate)\
                 or int(dashboard_template.version) <= 0 \
                 or not version_obj:
@@ -585,21 +585,18 @@ class QuickSight(CidBase):
                     self.describe_data_source(d)
         except Exception as exc:
             logger.debug(exc, exc_info=True)
-    
+
     def discover_dashboards(self, refresh_overrides: List[str]=[], refresh: bool = False) -> None:
         """ Discover deployed dashboards
-        
         :param refresh_overrides: a list of dashboard ids to refresh
         :param refresh: force refresh all dashboards
         """
-        
         if refresh or self._dashboards is None:
             self._dashboards = {}
         else:
             for dashboard_id in refresh_overrides:
                 if dashboard_id in self._dashboards:
                     del self._dashboards[dashboard_id]
-        
         logger.info('Discovering deployed dashboards')
         deployed_dashboards=self.list_dashboards()
         logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
@@ -611,9 +608,7 @@ class QuickSight(CidBase):
             dashboard_id = dashboard.get('DashboardId')
             bar.set_description(f'Discovering {dashboard_name[:10]:<10}', refresh=True)
             logger.info(f'Discovering "{dashboard_name}"')
-            
             refresh = dashboard_id in refresh_overrides
-            
             self.discover_dashboard(dashboard_id, refresh=refresh)
 
     def list_dashboards(self) -> list:
@@ -1259,13 +1254,30 @@ class QuickSight(CidBase):
                 return
 
         for schedule in schedules:
-
             # Get the list of existing schedules with the same id
             existing_schedule = None
             for existing in existing_schedules:
                 if schedule["ScheduleId"] == existing["ScheduleId"]:
                     existing_schedule = existing
                     break
+
+            refresh_configuration = schedule.pop('RefreshConfiguration', {})
+            if refresh_configuration:
+                # schedule exists so we need to update
+                logger.debug(f'Updating refresh schedule configuration with id {schedule["ScheduleId"]} for dataset {dataset_id}.')
+                try:
+                    self.client.put_data_set_refresh_properties(
+                        DataSetId=dataset_id,
+                        AwsAccountId=self.account_id,
+                        DataSetRefreshProperties={'RefreshConfiguration': refresh_configuration}
+                    )
+                    logger.debug(f'Refresh schedule configuration with id {schedule["ScheduleId"]} for dataset {dataset_id} is updated.')
+                except self.client.exceptions.ResourceNotFoundException:
+                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]}. Dataset {dataset_id} does not exist.')
+                except self.client.exceptions.AccessDeniedException:
+                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]}. Please add quicksight:UpdateDataSet permission.')
+                except Exception as exc:
+                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
 
             # Verify that all schedule parameters are set
             schedule["ScheduleId"] = schedule.get("ScheduleId", "cid")

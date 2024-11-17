@@ -1090,11 +1090,10 @@ class Cid():
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return
 
-        if isinstance(dashboard.deployedTemplate, CidQsTemplate):
-            print(f'Deployed template: {dashboard.deployedTemplate.arn}')
-        if isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            print(f"Latest template:   {dashboard.sourceTemplate.arn}/version/{dashboard.sourceTemplate.version}")
-
+        if isinstance(dashboard.deployed_template, CidQsTemplate):
+            print(f'Deployed template: {dashboard.deployed_template.arn}')
+        if isinstance(dashboard.source_template, CidQsTemplate):
+            print(f"Latest template:   {dashboard.source_template.arn}/version/{dashboard.source_template.version}")
         try:
             cid_print(f'\nUpdating {dashboard_id} from <BOLD>{dashboard.cid_version}<END> to <BOLD>{dashboard.latest_available_cid_version}<END>')
         except:
