@@ -4848,6 +4848,9 @@ datasets:
 crawlers: {}
 views:
   focus_resource_view:
+    dependsOn:
+      views:
+      - focus_consolidation_view
     data: |-
       CREATE OR REPLACE VIEW focus_resource_view AS
       SELECT
@@ -4894,16 +4897,13 @@ views:
       , sum(ConsumedQuantity) ConsumedQuantity
       , sum(PricingQuantity) PricingQuantity
       FROM
-        "${data_exports_database_name}"."focus"
+        focus_consolidation_view
       WHERE (((current_date - INTERVAL  '30' DAY) <= ChargePeriodStart) AND (ResourceId <> '') AND (CAST(concat(billing_period, '-01') AS date) >= "date_trunc"('month', (current_date - INTERVAL  '30' DAY))))
       GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34
-    parameters:
-        data_exports_database_name:
-          default: cid_data_export
-          description: "Enter the name of the database"
-          global: True
-
   focus_summary_view:
+    dependsOn:
+      views:
+      - focus_consolidation_view
     data: |-
       CREATE OR REPLACE VIEW focus_summary_view AS
       SELECT
@@ -4947,9 +4947,59 @@ views:
       , sum(ConsumedQuantity) ConsumedQuantity
       , sum(PricingQuantity) PricingQuantity
       FROM
-        "${data_exports_database_name}"."focus"
+        focus_consolidation_view
       WHERE (("BillingPeriodStart" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(concat(billing_period, '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH)))
       GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+  focus_consolidation_view:
+    data: |-
+      CREATE VIEW focus_consolidation_view AS
+      SELECT
+        availabilityzone
+      , billedcost
+      , billingaccountid
+      , billingaccountname
+      , billingcurrency
+      , billingperiodend
+      , billingperiodstart
+      , chargecategory
+      , chargeclass
+      , chargedescription
+      , chargefrequency
+      , chargeperiodend
+      , chargeperiodstart
+      , commitmentdiscountcategory
+      , commitmentdiscountid
+      , commitmentdiscountname
+      , commitmentdiscounttype
+      , commitmentdiscountstatus
+      , consumedquantity
+      , consumedunit
+      , contractedcost
+      , contractedunitprice
+      , effectivecost
+      , invoiceissuername
+      , listcost
+      , listunitprice
+      , pricingcategory
+      , pricingquantity
+      , pricingunit
+      , providername
+      , publishername
+      , regionid
+      , regionname
+      , resourceid
+      , resourcename
+      , resourcetype
+      , servicecategory
+      , servicename
+      , skuid
+      , skupriceid
+      , subaccountid
+      , subaccountname
+      , tags
+      , billing_period
+      FROM
+        "${data_exports_database_name}"."focus"
     parameters:
         data_exports_database_name:
           type: athena

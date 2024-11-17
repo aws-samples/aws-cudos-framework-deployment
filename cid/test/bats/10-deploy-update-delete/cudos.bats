@@ -61,6 +61,7 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
     --dashboard-id cudos-v5 \
     --cur-table-name $cur_table \
     --athena-workgroup primary\
+    --timezone 'Europe/Paris' \
     --quicksight-user $quicksight_user   \
 
   [ "$status" -eq 0 ]
