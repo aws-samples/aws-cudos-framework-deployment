@@ -21326,6 +21326,7 @@ views:
         - pricing_offering_class
         - pricing_purchase_option
         - product['vcpu']
+        - product_location
       views:
         - modernization_mapping
     parameters:
@@ -21474,6 +21475,7 @@ views:
     dependsOn:
       cur2:
         - line_item_normalized_usage_amount
+        - product_location
         - product['region']
         - product['operating_system']
         - product['physical_processor']
@@ -21592,6 +21594,7 @@ views:
         - product['location']
         - product['physical_processor']
         - product['storage']
+        - product_location
       views:
         - modernization_mapping
     parameters:
