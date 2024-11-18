@@ -169,6 +169,7 @@ def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     if all_yes != None:
         global _all_yes
         _all_yes = all_yes
+        logger.debug(f'all_yes={all_yes}')
 
 def get_parameters():
     return dict(params)
@@ -183,7 +184,7 @@ def get_yesno_parameter(param_name, message, default=None, break_on_ctrl_c=True)
     if param_name in params and params.get(param_name) == None:
         unset_parameter(param_name)
     if default != None:
-        default = 'yes' if mapping[default] else 'no'
+        default = 'yes' if mapping.get(default) else 'no'
     res = get_parameter(param_name, message=message, choices=['yes', 'no'], default=default, break_on_ctrl_c=break_on_ctrl_c, fuzzy=False)
     params[param_name] = (res == 'yes')
     return params[param_name]
@@ -216,7 +217,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         return value
 
     if choices is not None:
-        if 'yes' in choices and _all_yes:
+        if _all_yes and ('yes' in choices):
             return 'yes'
         if isinstance(choices, dict):
             _choices = []

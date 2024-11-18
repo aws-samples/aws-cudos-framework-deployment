@@ -801,8 +801,7 @@ class Cid():
                         print(f'Deleting dataset {dataset.name} ({dataset.id})')
                         self.qs.delete_dataset(dataset.id)
                     else:
-                        logger.info(f'Skipping dataset {dataset.name}')
-                        print      (f'Skipping dataset {dataset.name}')
+                        cid_print(f'Skipping dataset {dataset.name}')
                         return False
                 if not dataset.datasources:
                     continue
