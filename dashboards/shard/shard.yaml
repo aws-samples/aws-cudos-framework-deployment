@@ -13679,6 +13679,6 @@ views:
       securityhub_database_name:
         type: athena
         query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'securityhub_events'
-        default: cid_cid_security_hub
+        default: cid_security_hub
         description: "Enter the name cid_security_hub database"
         global: True
