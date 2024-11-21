@@ -16751,7 +16751,7 @@ views:
       cur2:
         - product_region_code
         - product_location
-        - product['product_usagetype']
+        - product_usagetype
         - product['country']
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.resource_connect_contact_summary_view AS
@@ -16762,12 +16762,12 @@ views:
       , line_item_resource_id resource_id
       , split_part(line_item_resource_id, '/', 4) contact_id
       , split_part(line_item_resource_id, '/', 2) connect_instance_id
-      , COUNT((CASE WHEN (product['product_usagetype'] = 'Inbound Call') THEN 1 END)) c_inbound_leg
-      , COUNT((CASE WHEN (product['product_usagetype'] = 'Outbound Call') THEN 1 END)) c_outbound_leg
-      , COUNT((CASE WHEN ((product['product_usagetype'] = '') OR (product['product_usagetype'] IS NULL)) THEN 1 END)) c_internal_leg
+      , COUNT((CASE WHEN (product_usagetype = 'Inbound Call') THEN 1 END)) c_inbound_leg
+      , COUNT((CASE WHEN (product_usagetype = 'Outbound Call') THEN 1 END)) c_outbound_leg
+      , COUNT((CASE WHEN ((product_usagetype = '') OR (product_usagetype IS NULL)) THEN 1 END)) c_internal_leg
       , COUNT((CASE WHEN ((product['country'] <> '') AND (product['country'] IS NOT NULL)) THEN product['country'] END)) c_country
-      , MAX((CASE WHEN (product['product_usagetype'] = 'Inbound Call') THEN product['country'] END)) in_country
-      , MAX((CASE WHEN (product['product_usagetype'] = 'Outbound Call') THEN product['country'] END)) out_country
+      , MAX((CASE WHEN (product_usagetype = 'Inbound Call') THEN product['country'] END)) in_country
+      , MAX((CASE WHEN (product_usagetype = 'Outbound Call') THEN product['country'] END)) out_country
       , ARRAY_JOIN(ARRAY_AGG((CASE WHEN ((product['country'] <> '') AND (product['country'] IS NOT NULL)) THEN product['country'] END)), ',') country_list
       , SUM(line_item_unblended_cost) cost
       , MAX(line_item_usage_amount) max_duration
