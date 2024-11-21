@@ -1,6 +1,6 @@
 DatabaseName: "${athena_database_name}"
 TableInput:
-  Name: "${athenaTableName}"
+  Name: "${athena_table_name}"
   Owner: owner
   Retention: 0
   TableType: EXTERNAL_TABLE
