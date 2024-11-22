@@ -16751,7 +16751,7 @@ views:
       cur2:
         - product_region_code
         - product_location
-        - product_usagetype
+        - product['line_type']
         - product['country']
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.resource_connect_contact_summary_view AS
@@ -16762,12 +16762,12 @@ views:
       , line_item_resource_id resource_id
       , split_part(line_item_resource_id, '/', 4) contact_id
       , split_part(line_item_resource_id, '/', 2) connect_instance_id
-      , COUNT((CASE WHEN (product_usagetype = 'Inbound Call') THEN 1 END)) c_inbound_leg
-      , COUNT((CASE WHEN (product_usagetype = 'Outbound Call') THEN 1 END)) c_outbound_leg
-      , COUNT((CASE WHEN ((product_usagetype = '') OR (product_usagetype IS NULL)) THEN 1 END)) c_internal_leg
+      , COUNT((CASE WHEN (product['line_type'] = 'Inbound Call') THEN 1 END)) c_inbound_leg
+      , COUNT((CASE WHEN (product['line_type'] = 'Outbound Call') THEN 1 END)) c_outbound_leg
+      , COUNT((CASE WHEN ((product['line_type'] = '') OR (product['line_type'] IS NULL)) THEN 1 END)) c_internal_leg
       , COUNT((CASE WHEN ((product['country'] <> '') AND (product['country'] IS NOT NULL)) THEN product['country'] END)) c_country
-      , MAX((CASE WHEN (product_usagetype = 'Inbound Call') THEN product['country'] END)) in_country
-      , MAX((CASE WHEN (product_usagetype = 'Outbound Call') THEN product['country'] END)) out_country
+      , MAX((CASE WHEN (product['line_type'] = 'Inbound Call') THEN product['country'] END)) in_country
+      , MAX((CASE WHEN (product['line_type'] = 'Outbound Call') THEN product['country'] END)) out_country
       , ARRAY_JOIN(ARRAY_AGG((CASE WHEN ((product['country'] <> '') AND (product['country'] IS NOT NULL)) THEN product['country'] END)), ',') country_list
       , SUM(line_item_unblended_cost) cost
       , MAX(line_item_usage_amount) max_duration
@@ -16786,12 +16786,12 @@ views:
       - product['country']
       - product['line_type']
       - product['region']
-      - product['location']
+      - product_location
       - product['group']
-      - product['product_family']
-      - product['servicecode']
+      - product_product_family
+      - product_service_code
       - product['servicename']
-      - pricing_unit
+      - product_pricing_unit
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.resource_connect_view AS
       SELECT DISTINCT
@@ -16813,15 +16813,15 @@ views:
       , line_item_line_item_type "charge_type"
       , line_item_usage_type "usage_type"
       , line_item_unblended_rate "rate"
-      , pricing_unit "pricing_unit"
+      , product_pricing_unit "pricing_unit"
       , product['region'] "region"
-      , product['location'] "location"
+      , product_location "location"
       , line_item_line_item_description "item_description"
       , line_item_legal_entity "legal_entity"
       , pricing_term "pricing_term"
       , product['group'] "product_group"
-      , product['product_family'] "product_family"
-      , product['servicecode'] "service"
+      , product_product_family "product_family"
+      , product_service_code "service"
       , product['servicename'] "servicename"
       , "sum"(line_item_usage_amount) usage_quantity
       , "sum"(line_item_unblended_cost) unblended_cost
