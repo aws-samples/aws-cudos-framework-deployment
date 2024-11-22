@@ -16789,7 +16789,7 @@ views:
       - product_location
       - product['group']
       - product_product_family
-      - product_service_code
+      - product_servicecode
       - product['servicename']
       - product_pricing_unit
     data: |-
@@ -16821,7 +16821,7 @@ views:
       , pricing_term "pricing_term"
       , product['group'] "product_group"
       , product_product_family "product_family"
-      , product_service_code "service"
+      , product_servicecode "service"
       , product['servicename'] "servicename"
       , "sum"(line_item_usage_amount) usage_quantity
       , "sum"(line_item_unblended_cost) unblended_cost
