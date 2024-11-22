@@ -1,5 +1,8 @@
 # What's new in the Compute Optimizer Dashboard (COD)
 
+## Compute Optimizer Dashboard - v3.0.0
+* Added RDS Compute Optimizer sheets
+
 ## Compute Optimizer Dashboard - v2.0.2
 * Added History Visual on EBS tab
 

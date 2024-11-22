@@ -1,10 +1,8 @@
 import os
-import sys
 import json
 import urllib
 import logging
 import functools
-from pathlib import Path
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
@@ -22,7 +20,7 @@ from cid.base import CidBase
 from cid.plugin import Plugin
 from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects, IsolatedParameters
 from cid.helpers.account_map import AccountMap
-from cid.helpers import Athena, S3, IAM, CUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations
+from cid.helpers import Athena, S3, IAM, CUR, ProxyCUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations, CFN
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
 from cid.export import export_analysis
@@ -106,6 +104,10 @@ class Cid():
         return IAM(self.base.session)
 
     @cached_property
+    def cfn(self) -> CFN:
+        return CFN(self.base.session)
+
+    @cached_property
     def organizations(self) -> Organizations:
         return Organizations(self.base.session)
 
@@ -113,8 +115,26 @@ class Cid():
     def s3(self) -> S3:
         return S3(self.base.session)
 
+    @cached_property
+    def cur1(self):
+        """ get/create a cur1 """
+        return self.get_cur('1')
+
+    @cached_property
+    def cur2(self):
+        """ get/create a cur2 """
+        return self.get_cur('2')
+
+    def get_cur(self, target_cur_version):
+        """ get a cur """
+        cur_version = self.cur.version
+        if cur_version != target_cur_version or get_parameters().get('use-cur-proxy'):
+            return ProxyCUR(self.cur, target_cur_version=target_cur_version)
+        return self.cur
+
     @property
     def cur(self) -> CUR:
+        '''can return any CUR (1 or 2) that customer provides'''
         if not self._clients.get('cur'):
             while True:
                 try:
@@ -140,17 +160,13 @@ class Cid():
                     self.create_cur_table()
         return self._clients['cur']
 
-    @property
-    def accountMap(self) -> AccountMap:
-        if not self._clients.get('accountMap'):
-            _account_map = AccountMap(self.base.session)
-            _account_map.athena = self.athena
-            _account_map.cur = self.cur
-
-            self._clients.update({
-                'accountMap': _account_map
-            })
-        return self._clients.get('accountMap')
+    def create_or_update_account_map(self, name):
+        account_map = AccountMap(
+            self.base.session,
+            self.athena,
+            self.cur, # can be any CUR. But it is only needed for trends and dummy
+        )
+        return account_map.create_or_update(name)
 
     def command(func):
         ''' a decorator that ensure that we logged in to AWS acc, and loaded additional resource files
@@ -284,7 +300,7 @@ class Cid():
             logger.debug(f"Issue logging action {action}  for dashboard {dashboard_id} , due to a urllib3 exception {str(e)} . This issue will be ignored")
 
     def get_page(self, source):
-        resp = requests.get(source, timeout=10)
+        resp = requests.get(source, timeout=10, headers={'User-Agent': 'cid'})
         resp.raise_for_status()
         return resp
 
@@ -362,9 +378,9 @@ class Cid():
                     try:
                         res_list = self.athena.query(query)
                     except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
-                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}') from exc
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}.') from exc
                     if not res_list:
-                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results')
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results. {value.get("error")}')
                     elif len(res_list) == 1:
                         params[key] = '-'.join(res_list[0])
                     else:
@@ -419,7 +435,7 @@ class Cid():
 
         # In case if we cannot discover datasets, we need to discover dashboards
         # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
-        self.qs.discover_dashboards()
+        self.qs.dashboards
 
         dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
         category_filter = [cat for cat in get_parameters().get('category', '').upper().split(',') if cat]
@@ -483,7 +499,6 @@ class Cid():
                 logger.info(f'Removing unknown dataset "{name}" ({id}) from dashboard {dashboard_id}')
                 del dashboard_datasets[name]
 
-        compatible = True
         if dashboard_definition.get('templateId'):
             # Get QuickSight template details
             try:
@@ -496,7 +511,6 @@ class Cid():
                 raise CidCritical(exc) # Cannot proceed without a valid template
             dashboard_definition['sourceTemplate'] = source_template
             print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
-            compatible = self.check_dashboard_version_compatibility(dashboard_id)
         elif dashboard_definition.get('data'):
             data = dashboard_definition.get('data')
             params = self.get_template_parameters(dashboard_definition.get('parameters', dict()))
@@ -511,7 +525,7 @@ class Cid():
         else:
             raise CidCritical('Definition of dashboard resource must contain data or template_id')
 
-
+        compatible = self.check_dashboard_version_compatibility(dashboard_id)
         if not recursive and compatible == False:
             if get_parameter(
                 param_name=f'confirm-recursive',
@@ -768,8 +782,7 @@ class Cid():
                 # Check if dataset is used in some other dashboard
                 for dashboard in (self.qs.dashboards or {}).values():
                     if dataset.id in dashboard.datasets.values():
-                        logger.info(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
-                        print      (f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
+                        cid_print(f'Dataset {dataset.name} ({dataset.id}) is still used by dashboard "{dashboard.id}". Skipping.')
                         return False
                 else: #not used
 
@@ -1054,46 +1067,21 @@ class Cid():
         try:
             dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
         except CidCritical:
-            dashboard = None
-        if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
-        if not isinstance(dashboard.deployedTemplate, CidQsTemplate):
-            print(f'Dashboard "{dashboard_id}" does not have a versioned template')
-            return None
-        if not isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            print(f"Cannot access QuickSight source template for {dashboard_id}")
-            return None
-        try:
-            cid_version = dashboard.deployedTemplate.cid_version
-        except ValueError:
-            logger.debug("The cid version of the deployed dashboard could not be retrieved")
-            cid_version = "N/A"
-
-        try:
-            cid_version_latest = dashboard.sourceTemplate.cid_version
-        except ValueError:
-            logger.debug("The latest version of the dashboard could not be retrieved")
-            cid_version_latest = "N/A"
 
         if dashboard.latest:
             cid_print("You are up to date!")
-            cid_print(f"  Version    {cid_version}")
-            cid_print(f"  VersionId  {dashboard.deployed_version} ")
+            cid_print(f"  Version    {dashboard.cid_version}")
         else:
             cid_print(f"An update is available:")
-            cid_print("              Deployed -> Latest")
-            cid_print(f"  Version    {str(cid_version): <9}   {str(cid_version_latest): <9}")
-            cid_print(f"  VersionId  {str(dashboard.deployedTemplate.version): <9}   {dashboard.latest_version: <9}")
+            cid_print(f"  Version    {dashboard.cid_version} ->  {dashboard.latest_available_cid_version}")
 
-        # Check if version are compatible
-        compatible = None
         try:
-            compatible = dashboard.sourceTemplate.cid_version.compatible_versions(dashboard.deployedTemplate.cid_version)
+            return dashboard.cid_version.compatible_versions(dashboard.latest_available_cid_version)
         except ValueError as exc:
             logger.info(exc)
-
-        return compatible
+        return None
 
     def update_dashboard(self, dashboard_id, dashboard_definition):
 
@@ -1102,44 +1090,25 @@ class Cid():
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return
 
-        print(f'\nChecking for updates...')
-        if isinstance(dashboard.deployedTemplate, CidQsTemplate):
-            print(f'Deployed template: {dashboard.deployedTemplate.arn}')
-        else:
-            print(f'Deployed template: Not available')
-        if isinstance(dashboard.sourceTemplate, CidQsTemplate):
-            print(f"Latest template: {dashboard.sourceTemplate.arn}/version/{dashboard.latest_version}")
-        else:
-            print('Unable to determine dashboard source.')
-
-        if dashboard.status == 'legacy':
-            if get_parameter(
-                param_name=f'confirm-update',
-                message=f'Dashboard template changed, update it anyway?',
-                choices=['yes', 'no'],
-                default='yes') != 'yes':
-                return
-        elif dashboard.latest:
-            if get_parameter(
-                param_name=f'confirm-update',
-                message=f'No updates available, should I update it anyway?',
-                choices=['yes', 'no'],
-                default='yes') != 'yes':
-                return
-
-        # Update dashboard
-        print(f'\nUpdating {dashboard_id}')
-        logger.debug(f"Updating {dashboard_id}")
+        if isinstance(dashboard.deployed_template, CidQsTemplate):
+            print(f'Deployed template: {dashboard.deployed_template.arn}')
+        if isinstance(dashboard.source_template, CidQsTemplate):
+            print(f"Latest template:   {dashboard.source_template.arn}/version/{dashboard.source_template.version}")
+        try:
+            cid_print(f'\nUpdating {dashboard_id} from <BOLD>{dashboard.cid_version}<END> to <BOLD>{dashboard.latest_available_cid_version}<END>')
+        except:
+            cid_print(f'\nUpdating {dashboard_id}')
+            logger.debug('Failed to define versions. Still continue.')
 
         try:
             self.qs.update_dashboard(dashboard, dashboard_definition)
             print('Update completed\n')
             dashboard.display_url(self.qs_url, launch=True, **self.qs_url_params)
             self.track('updated', dashboard_id)
-        except Exception as e:
+        except Exception as exc:
             # Catch exception and dump a reason
-            logger.debug(e, exc_info=True)
-            print(f'failed with an error message: {e}')
+            logger.debug(exc, exc_info=True)
+            print(f'failed with an error message: {exc}')
 
         return dashboard_id
 
@@ -1393,7 +1362,8 @@ class Cid():
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
-        cur_required = dataset_definition.get('dependsOn', dict()).get('cur')
+        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur')
+        cur2_required = dataset_definition.get('dependsOn', dict()).get('cur2')
         athena_datasource = None
 
         # Manage datasource
@@ -1483,9 +1453,17 @@ class Cid():
             else:
                 logger.debug('Athena_datasource is not defined. Will only create views')
 
+        # attach roles
+        if isinstance(athena_datasource, Datasource) and athena_datasource.role_name:
+            data_providers = dataset_definition.get('dependsOn', {}).get('dataProviders', [])
+            policies_arns = [self.cfn.get_read_access_policy_for_module(provider) for provider in data_providers]
+            policies_arns = [policies_arn for policies_arn in policies_arns if policies_arn] # filter out nones
+            if policies_arns:
+                self.iam.ensure_managed_policies_attached(role_name=athena_datasource.role_name, policies_arns=','.join(policies_arns))
+
         # Check for required views
         _views = dataset_definition.get('dependsOn', {}).get('views', [])
-        required_views = [(self.cur.table_name if cur_required and name =='${cur_table_name}' else name) for name in _views]
+        required_views = _views
 
         self.athena.discover_views(required_views)
         found_views = utils.intersection(required_views, self.athena._metadata.keys())
@@ -1494,9 +1472,9 @@ class Cid():
         if recursive:
             print(f"Detected views: {', '.join(found_views)}")
             for view_name in found_views:
-                if cur_required and view_name == self.cur.table_name:
-                    logger.debug(f'Dependency view {view_name} is a CUR. Skip.')
-                    continue
+                #if cur_required and view_name == self.cur.table_name:
+                #    logger.debug(f'Dependency view {view_name} is a CUR. Skip.')
+                #    continue
                 if view_name == 'account_map':
                     logger.debug(f'Dependency view is {view_name}. Skip.')
                     continue
@@ -1515,7 +1493,12 @@ class Cid():
         columns_tpl = {
             'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
-            'cur_table_name': self.cur.table_name if cur_required else None
+            'cur_database':    self.cur1.database   if cur1_required else None, # for backward compatibly
+            'cur_table_name':  self.cur1.table_name if cur1_required else None, # for backward compatibly
+            'cur1_database':   self.cur1.database   if cur1_required else None,
+            'cur1_table_name': self.cur1.table_name if cur1_required else None,
+            'cur2_database':   self.cur2.database   if cur2_required else None,
+            'cur2_table_name': self.cur2.table_name if cur2_required else None,
         }
 
         logger.debug(f'dataset_id={dataset_id}')
@@ -1531,7 +1514,7 @@ class Cid():
         try:
             compiled_dataset = json.loads(compiled_dataset_text)
         except json.JSONDecodeError as exc:
-            logger.error('The json of dataset is not correct. Please check parameters of the dasbhoard.')
+            logger.error('The json of dataset is not correct. Please check parameters of the dashboard.')
             logger.debug(compiled_dataset_text)
             raise
         if dataset_id:
@@ -1545,7 +1528,7 @@ class Cid():
             elif found_dataset.name != compiled_dataset.get('Name'):
                 print(f"Dataset found with name {found_dataset.name}, but {compiled_dataset.get('Name')} expected. Updating.")
                 update_dataset = True
-            if update_dataset and get_parameters().get('on-drift', 'show').lower() != 'override' and isatty() and not cur_required:
+            if update_dataset and get_parameters().get('on-drift', 'show').lower() != 'override' and isatty() and not cur1_required and not cur2_required:
                 while True:
                     diff = self.qs.dataset_diff(found_dataset.raw, compiled_dataset)
                     if diff and diff['diff']:
@@ -1600,17 +1583,20 @@ class Cid():
 
     def create_or_update_view(self, view_name: str, recursive: bool=True, update: bool=False) -> None:
         # Avoid checking a views multiple times in one cid session
+        update = update or get_parameters().get('update')
+        logger.trace(f'create_or_update_view({view_name}, recursive={recursive}, update={update})')
         if view_name in self._visited_views:
+            logger.trace(f'{view_name} is in _visited_views.skipping')
             return
         self._visited_views.append(view_name)
         logger.info(f'Processing view: {view_name}')
 
         # For account mappings create a view using a special helper
         if view_name in ['account_map', 'aws_accounts']:
-            if view_name in self.athena._metadata.keys():
+            if view_name in self.athena._metadata.keys() and (not update and not recursive):
                 print(f'Account map {view_name} exists. Skipping.')
             else:
-                self.accountMap.create(view_name) #FIXME: add or_update
+                self.create_or_update_account_map(view_name)
             return
 
         # Create a view
@@ -1626,17 +1612,17 @@ class Cid():
         dependencies = view_definition.get('dependsOn', {})
 
         # Process CUR columns
-        if isinstance(dependencies.get('cur'), list):
-            for column in dependencies.get('cur'):
-                self.cur.ensure_column(column)
-        elif isinstance(dependencies.get('cur'), dict):
-            for column, column_type in dependencies.get('cur').items():
-                self.cur.ensure_column(column, column_type)
+        if dependencies.get('cur'):
+            self.cur1.ensure_columns(dependencies.get('cur'))
+        if dependencies.get('cur2'):
+            self.cur2.ensure_columns(dependencies.get('cur2'))
 
         if recursive:
             dependency_views = dependencies.get('views', [])
             if 'cur' in dependency_views:
                 dependency_views.remove('cur')
+            if 'cur2' in dependency_views:
+                dependency_views.remove('cur2')
             # Discover dependency views (may not be discovered earlier)
             self.athena.discover_views(dependency_views)
             logger.info(f"Dependency views: {', '.join(dependency_views)}" if dependency_views else 'No dependency views')
@@ -1657,44 +1643,8 @@ class Cid():
                 else:
                     if 'CREATE EXTERNAL TABLE' in view_query.upper():
                         logger.warning('Cannot recreate table {view_name}')
-
                     elif 'CREATE OR REPLACE' in view_query.upper():
-                        update_view = False
-                        while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
-                            cid_print(f'Analyzing view {view_name}')
-                            diff = self.athena.get_view_diff(view_name, view_query)
-                            if diff and diff['diff']:
-                                cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
-                                cid_print(diff['printable'])
-                                choice = get_parameter(
-                                    param_name='view-' + view_name + '-override',
-                                    message=f'The existing view is different. Override?',
-                                    choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
-                                    default='retry diff'
-                                )
-                                if choice == 'retry diff':
-                                    unset_parameter('view-' + view_name + '-override')
-                                    continue
-                                elif choice == 'proceed and override':
-                                    update_view = True
-                                    break
-                                elif choice == 'keep existing':
-                                    update_view = False
-                                    break
-                                else:
-                                    raise CidCritical(f'User choice is not to update {view_name}.')
-                            elif not diff:
-                                if not get_yesno_parameter(
-                                    param_name='view-' + view_name + '-override',
-                                    message=f'Cannot get sql diff for {view_name}. Continue?',
-                                    default='yes'
-                                    ):
-                                    raise CidCritical(f'User choice is not to update {view_name}.')
-                                update_view = True
-                            break
-                        if update_view:
-                            print(f'Updating view: "{view_name}"')
-                            self.athena.execute_query(view_query)
+                        self.athena.create_or_update_view(view_name=view_name, view_query=view_query)
                     else:
                         print(f'View "{view_name}" is not compatible with update. Skipping.')
                 if 'CREATE OR REPLACE VIEW' in view_query.upper() or 'CREATE VIEW' in view_query.upper():
@@ -1764,18 +1714,19 @@ class Cid():
         """ Returns a fully compiled AHQ """
         # View path
         view_definition = self.get_definition("view", name=view_name)
-        cur_required = view_definition.get('dependsOn', dict()).get('cur')
-        if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
-            view_definition['File'] = view_definition.get('spriFile')
-        elif cur_required and self.cur.has_savings_plans and view_definition.get('spFile'):
-            view_definition['File'] = view_definition.get('spFile')
-        elif cur_required and self.cur.has_reservations and view_definition.get('riFile'):
-            view_definition['File'] = view_definition.get('riFile')
-        elif view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
-            pass
-        else:
-            logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
-            raise Exception(f'\nCannot find view {view_name}')
+        cur1_required = view_definition.get('dependsOn', dict()).get('cur') or view_definition.get('dependsOn', dict()).get('cur1')
+        cur2_required = view_definition.get('dependsOn', dict()).get('cur2')
+        #if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
+        #    view_definition['File'] = view_definition.get('spriFile')
+        #elif cur_required and self.cur.has_savings_plans and view_definition.get('spFile'):
+        #    view_definition['File'] = view_definition.get('spFile')
+        #elif cur_required and self.cur.has_reservations and view_definition.get('riFile'):
+        #    view_definition['File'] = view_definition.get('riFile')
+        #if view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
+        #    pass
+        #else:
+        #    logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
+        #    raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
         data = self.get_data_from_definition('view', view_definition)
@@ -1786,9 +1737,15 @@ class Cid():
 
         # Prepare template parameters
         columns_tpl = {
-            'cur_table_name': self.cur.table_name if cur_required else None,
-            'athenaTableName': view_name,
+            #'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
+            'athena_table_name': view_name,
+            'cur_database':    self.cur1.database   if cur1_required else None, # for backward compatibly
+            'cur_table_name':  self.cur1.table_name if cur1_required else None, # for backward compatibly
+            'cur1_database':   self.cur1.database   if cur1_required else None,
+            'cur1_table_name': self.cur1.table_name if cur1_required else None,
+            'cur2_database':   self.cur2.database   if cur2_required else None,
+            'cur2_table_name': self.cur2.table_name if cur2_required else None,
         }
 
         columns_tpl = self.get_template_parameters(
@@ -1815,7 +1772,7 @@ class Cid():
     def map(self, **kwargs):
         """Create account mapping Athena views"""
         for v in ['account_map', 'aws_accounts']:
-            self.accountMap.create(v)
+            self.create_or_update_account_map(v)
 
     @command
     def teardown(self, **kwargs):
@@ -1830,6 +1787,24 @@ class Cid():
     def init_qs(self, **kwargs):
         """ Initialize QuickSight resources for deployment """
         return InitQsCommand(cid=self, **kwargs).execute()
+
+    @command
+    def create_cur_proxy(self, cur_version=None, fields=None, **kwargs):
+        cid_print(f'Using CUR {self.cur.table_name}') # need to call self.cur
+        cur_version = cur_version or get_parameter(
+            'cur-version',
+            message='Enter a version of CUR you want to create or update',
+            choices=['1', '2'],
+        )
+        if cur_version.startswith('1'):
+            cur_proxy = self.cur1
+        if cur_version.startswith('2'):
+            cur_proxy = self.cur2
+        fields = get_parameters().get('fields', [])
+        cur_proxy.metadata
+        cur_proxy.proxy.fields_to_expose += (fields.split(',') if fields else [])
+        cur_proxy.proxy.create_or_update_view()
+        print('done')
 
     @command
     def create_cur_table(self, **kwargs):

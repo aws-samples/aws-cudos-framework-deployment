@@ -11,3 +11,4 @@ Resources:
   - Url: aws-feeds/aws-feeds.yaml
   - Url: focus/focus.yaml
   - Url: cora/cora.yaml
+  - Url: aws-budgets/aws-budgets.yaml

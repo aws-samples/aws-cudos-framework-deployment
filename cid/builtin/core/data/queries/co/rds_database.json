@@ -10,27 +10,55 @@
                     "Type": "string"
                 },
                 {
-                    "Name": "instancearn",
+                    "Name": "resourcearn",
                     "Type": "string"
                 },
                 {
-                    "Name": "instancename",
+                    "Name": "engine",
                     "Type": "string"
                 },
                 {
-                    "Name": "currentinstancetype",
+                    "Name": "engineversion",
                     "Type": "string"
                 },
                 {
-                    "Name": "finding",
+                    "Name": "idle",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_cpu_maximum",
+                    "Name": "multiazdbinstance",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_memory_maximum",
+                    "Name": "currentdbinstanceclass",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentstorageconfigurationstoragetype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentstorageconfigurationmaxallocatedstorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentstorageconfigurationallocatedstorage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentstorageconfigurationiops",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentstorageconfigurationstoragethroughput",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentstorageondemandmonthlyprice",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentinstanceondemandhourlyprice",
                     "Type": "string"
                 },
                 {
@@ -38,431 +66,407 @@
                     "Type": "string"
                 },
                 {
-                    "Name": "current_vcpus",
+                    "Name": "lastrefreshtimestamp",
                     "Type": "string"
                 },
                 {
-                    "Name": "current_memory",
+                    "Name": "utilizationmetricscpumaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "current_storage",
+                    "Name": "utilizationmetricsmemorymaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "current_network",
+                    "Name": "utilizationmetricsebsvolumestoragespaceutilizationmaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "current_ondemandprice",
+                    "Name": "utilizationmetricsnetworkreceivethroughputmaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "current_standardoneyearnoupfrontreservedprice",
+                    "Name": "utilizationmetricsnetworktransmitthroughputmaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "current_standardthreeyearnoupfrontreservedprice",
+                    "Name": "utilizationmetricsebsvolumereadiopsmaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendations_count",
+                    "Name": "utilizationmetricsebsvolumewriteiopsmaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_instancetype",
+                    "Name": "utilizationmetricsebsvolumereadthroughputmaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_instancetype",
+                    "Name": "utilizationmetricsebsvolumewritethroughputmaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_instancetype",
+                    "Name": "utilizationmetricsdatabaseconnectionsmaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_projectedutilizationmetrics_cpu_maximum",
+                    "Name": "instancefinding",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_projectedutilizationmetrics_cpu_maximum",
+                    "Name": "instancefindingreasoncodes_iscpuoverprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_projectedutilizationmetrics_cpu_maximum",
+                    "Name": "instancefindingreasoncodes_isnetworkbandwidthoverprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_projectedutilizationmetrics_memory_maximum",
+                    "Name": "instancefindingreasoncodes_isebsiopsoverprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_projectedutilizationmetrics_memory_maximum",
+                    "Name": "instancefindingreasoncodes_isebsthroughputoverprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_projectedutilizationmetrics_memory_maximum",
+                    "Name": "instancefindingreasoncodes_iscpuunderprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_performancerisk",
+                    "Name": "instancefindingreasoncodes_isnetworkbandwidthunderprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_performancerisk",
+                    "Name": "instancefindingreasoncodes_isebsthroughputunderprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_performancerisk",
+                    "Name": "instancefindingreasoncodes_isnewgenerationdbinstanceclassavailable",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_vcpus",
+                    "Name": "instancefindingreasoncodes_isnewengineversionavailable",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_vcpus",
+                    "Name": "storagefinding",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_vcpus",
+                    "Name": "storagefindingreasoncodes_isebsvolumeallocatedstorageunderprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_memory",
+                    "Name": "storagefindingreasoncodes_isebsvolumethroughputunderprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_memory",
+                    "Name": "storagefindingreasoncodes_isebsvolumeiopsoverprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_memory",
+                    "Name": "storagefindingreasoncodes_isebsvolumethroughputoverprovisioned",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_storage",
+                    "Name": "storagefindingreasoncodes_isnewgenerationstoragetypeavailable",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_storage",
+                    "Name": "instance_recommendations_count",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_storage",
+                    "Name": "instancerecommendationoptions_1_dbinstanceclass",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_network",
+                    "Name": "instancerecommendationoptions_1_rank",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_network",
+                    "Name": "instancerecommendationoptions_1_performancerisk",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_network",
+                    "Name": "instancerecommendationoptions_1_projectedutilizationmetricscpumaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_ondemandprice",
+                    "Name": "instancerecommendationoptions_1_instanceondemandhourlyprice",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_ondemandprice",
+                    "Name": "instancerecommendationoptions_1_savingsopportunitypercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_ondemandprice",
+                    "Name": "instancerecommendationoptions_1_estimatedmonthlysavingscurrency",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_standardoneyearnoupfrontreservedprice",
+                    "Name": "instancerecommendationoptions_1_estimatedmonthlysavingsvalue",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_standardoneyearnoupfrontreservedprice",
+                    "Name": "instancerecommendationoptions_1_savingsopportunityafterdiscountspercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_standardoneyearnoupfrontreservedprice",
+                    "Name": "instancerecommendationoptions_1_estimatedmonthlysavingscurrencyafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_standardthreeyearnoupfrontreservedprice",
+                    "Name": "instancerecommendationoptions_1_estimatedmonthlysavingsvalueafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_standardthreeyearnoupfrontreservedprice",
+                    "Name": "instancerecommendationoptions_2_dbinstanceclass",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_standardthreeyearnoupfrontreservedprice",
+                    "Name": "instancerecommendationoptions_2_rank",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationssources_1_recommendationsourcearn",
+                    "Name": "instancerecommendationoptions_2_performancerisk",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationssources_1_recommendationsourcetype",
+                    "Name": "instancerecommendationoptions_2_projectedutilizationmetricscpumaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "lastrefreshtimestamp_utc",
+                    "Name": "instancerecommendationoptions_2_instanceondemandhourlyprice",
                     "Type": "string"
                 },
                 {
-                    "Name": "errorcode",
+                    "Name": "instancerecommendationoptions_2_savingsopportunitypercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "errormessage",
+                    "Name": "instancerecommendationoptions_2_estimatedmonthlysavingscurrency",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_ebs_read_ops_per_second_maximum",
+                    "Name": "instancerecommendationoptions_2_estimatedmonthlysavingsvalue",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_ebs_write_ops_per_second_maximum",
+                    "Name": "instancerecommendationoptions_2_savingsopportunityafterdiscountspercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_ebs_read_bytes_per_second_maximum",
+                    "Name": "instancerecommendationoptions_2_estimatedmonthlysavingscurrencyafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_ebs_write_bytes_per_second_maximum",
+                    "Name": "instancerecommendationoptions_2_estimatedmonthlysavingsvalueafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_platformdifferences_ishypervisordifferent",
+                    "Name": "instancerecommendationoptions_3_dbinstanceclass",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_platformdifferences_isnetworkinterfacedifferent",
+                    "Name": "instancerecommendationoptions_3_rank",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_platformdifferences_isstorageinterfacedifferent",
+                    "Name": "instancerecommendationoptions_3_performancerisk",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_platformdifferences_isinstancestoreavailabilitydifferent",
+                    "Name": "instancerecommendationoptions_3_projectedutilizationmetricscpumaximum",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_platformdifferences_isvirtualizationtypedifferent",
+                    "Name": "instancerecommendationoptions_3_instanceondemandhourlyprice",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_platformdifferences_ishypervisordifferent",
+                    "Name": "instancerecommendationoptions_3_savingsopportunitypercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_platformdifferences_isnetworkinterfacedifferent",
+                    "Name": "instancerecommendationoptions_3_estimatedmonthlysavingscurrency",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_platformdifferences_isstorageinterfacedifferent",
+                    "Name": "instancerecommendationoptions_3_estimatedmonthlysavingsvalue",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_platformdifferences_isinstancestoreavailabilitydifferent",
+                    "Name": "instancerecommendationoptions_3_savingsopportunityafterdiscountspercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_platformdifferences_isvirtualizationtypedifferent",
+                    "Name": "instancerecommendationoptions_3_estimatedmonthlysavingscurrencyafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_platformdifferences_ishypervisordifferent",
+                    "Name": "instancerecommendationoptions_3_estimatedmonthlysavingsvalueafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_platformdifferences_isnetworkinterfacedifferent",
+                    "Name": "storage_recommendations_count",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_platformdifferences_isstorageinterfacedifferent",
+                    "Name": "storagerecommendationoptions_1_storagetype",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_platformdifferences_isinstancestoreavailabilitydifferent",
+                    "Name": "storagerecommendationoptions_1_allocatedstorage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_platformdifferences_isvirtualizationtypedifferent",
+                    "Name": "storagerecommendationoptions_1_maxallocatedstorage",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_iscpuoverprovisioned",
+                    "Name": "storagerecommendationoptions_1_iops",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_iscpuunderprovisioned",
+                    "Name": "storagerecommendationoptions_1_storagethroughput",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_ismemoryoverprovisioned",
+                    "Name": "storagerecommendationoptions_1_rank",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_ismemoryunderprovisioned",
+                    "Name": "storagerecommendationoptions_1_ondemandmonthlyprice",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isebsthroughputoverprovisioned",
+                    "Name": "storagerecommendationoptions_1_savingsopportunitypercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isebsthroughputunderprovisioned",
+                    "Name": "storagerecommendationoptions_1_estimatedmonthlysavingscurrency",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isebsiopsoverprovisioned",
+                    "Name": "storagerecommendationoptions_1_estimatedmonthlysavingsvalue",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isebsiopsunderprovisioned",
+                    "Name": "storagerecommendationoptions_1_savingsopportunityafterdiscountspercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isnetworkbandwidthoverprovisioned",
+                    "Name": "storagerecommendationoptions_1_estimatedmonthlysavingscurrencyafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isnetworkbandwidthunderprovisioned",
+                    "Name": "storagerecommendationoptions_1_estimatedmonthlysavingsvalueafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isnetworkppsoverprovisioned",
+                    "Name": "storagerecommendationoptions_2_storagetype",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isnetworkppsunderprovisioned",
+                    "Name": "storagerecommendationoptions_2_allocatedstorage",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isdiskiopsoverprovisioned",
+                    "Name": "storagerecommendationoptions_2_maxallocatedstorage",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isdiskiopsunderprovisioned",
+                    "Name": "storagerecommendationoptions_2_iops",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isdiskthroughputoverprovisioned",
+                    "Name": "storagerecommendationoptions_2_storagethroughput",
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isdiskthroughputunderprovisioned",
+                    "Name": "storagerecommendationoptions_2_rank",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_network_in_bytes_per_second_maximum",
+                    "Name": "storagerecommendationoptions_2_ondemandmonthlyprice",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_network_out_bytes_per_second_maximum",
+                    "Name": "storagerecommendationoptions_2_savingsopportunitypercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_network_packets_in_per_second_maximum",
+                    "Name": "storagerecommendationoptions_2_estimatedmonthlysavingscurrency",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_network_packets_out_per_second_maximum",
+                    "Name": "storagerecommendationoptions_2_estimatedmonthlysavingsvalue",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_disk_read_ops_per_second_maximum",
+                    "Name": "storagerecommendationoptions_2_savingsopportunityafterdiscountspercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_disk_write_ops_per_second_maximum",
+                    "Name": "storagerecommendationoptions_2_estimatedmonthlysavingscurrencyafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_disk_read_bytes_per_second_maximum",
+                    "Name": "storagerecommendationoptions_2_estimatedmonthlysavingsvalueafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationmetrics_disk_write_bytes_per_second_maximum",
+                    "Name": "storagerecommendationoptions_3_storagetype",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_platformdifferences_isarchitecturedifferent",
+                    "Name": "storagerecommendationoptions_3_allocatedstorage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_platformdifferences_isarchitecturedifferent",
+                    "Name": "storagerecommendationoptions_3_maxallocatedstorage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_platformdifferences_isarchitecturedifferent",
+                    "Name": "storagerecommendationoptions_3_iops",
                     "Type": "string"
                 },
                 {
-                    "Name": "currentperformancerisk",
+                    "Name": "storagerecommendationoptions_3_storagethroughput",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_savingsopportunitypercentage",
+                    "Name": "storagerecommendationoptions_3_rank",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_estimatedmonthlysavings_currency",
+                    "Name": "storagerecommendationoptions_3_ondemandmonthlyprice",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_1_estimatedmonthlysavings_value",
+                    "Name": "storagerecommendationoptions_3_savingsopportunitypercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_savingsopportunitypercentage",
+                    "Name": "storagerecommendationoptions_3_estimatedmonthlysavingscurrency",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_estimatedmonthlysavings_currency",
+                    "Name": "storagerecommendationoptions_3_estimatedmonthlysavingsvalue",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_2_estimatedmonthlysavings_value",
+                    "Name": "storagerecommendationoptions_3_savingsopportunityafterdiscountspercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_savingsopportunitypercentage",
+                    "Name": "storagerecommendationoptions_3_estimatedmonthlysavingscurrencyafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "recommendationoptions_3_estimatedmonthlysavings_currency",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_3_estimatedmonthlysavings_value",
-                    "Type": "string"
-                },
-                {
-                    "Name": "effectiverecommendationpreferencesinferredworkloadtypes",
-                    "Type": "string"
-                },
-                {
-                    "Name": "inferredworkloadtypes",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_1_migrationeffort",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_2_migrationeffort",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_3_migrationeffort",
+                    "Name": "storagerecommendationoptions_3_estimatedmonthlysavingsvalueafterdiscounts",
                     "Type": "string"
                 },
                 {
@@ -474,11 +478,19 @@
                     "Type": "string"
                 },
                 {
-                    "Name": "effectiverecommendationpreferencesexternalmetricssource",
+                    "Name": "effectiverecommendationpreferenceslookbackperiod",
                     "Type": "string"
                 },
                 {
-                    "Name": "instancestate",
+                    "Name": "effectiverecommendationpreferencessavingsestimationmodesource",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errorcode",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errormessage",
                     "Type": "string"
                 },
                 {

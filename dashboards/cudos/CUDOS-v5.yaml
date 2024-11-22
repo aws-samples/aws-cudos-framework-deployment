@@ -1,5 +1,5 @@
 dashboards:
-  CUDOS V5:
+  CUDOSv5:
     dependsOn:
       datasets:
       - hourly_view

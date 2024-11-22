@@ -5,7 +5,7 @@ import logging
 
 from cid.base import CidBase
 from cid.helpers import S3
-from cid.utils import get_parameter, get_parameters, cid_print
+from cid.utils import get_parameter, get_parameters, cid_print, isatty, unset_parameter, get_yesno_parameter
 from cid.helpers.diff import diff
 from cid.exceptions import CidCritical, CidError
 
@@ -25,9 +25,11 @@ class Athena(CidBase):
     _resources = dict()
     _client = None
 
-    def __init__(self, session, resources: dict=None) -> None:
+    def __init__(self, session, resources: dict=None, database_name: str=None) -> None:
         super().__init__(session)
         self._resources = resources
+        if database_name:
+           self.DatabaseName = database_name # this can raise AccessDenied or CidError if database not found
 
     @property
     def client(self):
@@ -39,19 +41,17 @@ class Athena(CidBase):
     def CatalogName(self) -> str:
         """ Check if AWS DataCatalog and Athena database exist """
         if not self._CatalogName:
-            # Get AWS Glue DataCatalogs
-            glue_data_catalogs = [d for d in self.list_data_catalogs() if d['Type'] == 'GLUE']
-            if not len(glue_data_catalogs):
-                logger.error('AWS DataCatalog of type GLUE not found!')
-                self._status = 'AWS DataCatalog of type GLUE not found'
+            glue_data_catalogs = self.list_data_catalogs()
+            if not glue_data_catalogs:
+                raise CidCritical('AWS DataCatalog of type GLUE not found!')
             if len(glue_data_catalogs) == 1:
-                self._CatalogName = glue_data_catalogs.pop().get('CatalogName')
+                self._CatalogName = glue_data_catalogs[0]
             elif len(glue_data_catalogs) > 1:
                 # Ask user
                 self._CatalogName = get_parameter(
                     param_name='glue-data-catalog',
                     message="Select AWS DataCatalog to use",
-                    choices=[catalog.get('CatalogName') for catalog in glue_data_catalogs],
+                    choices=glue_data_catalogs,
                 )
             logger.info(f'Using DataCatalog: {self._CatalogName}')
         return self._CatalogName
@@ -63,7 +63,8 @@ class Athena(CidBase):
     @property
     def DatabaseName(self) -> str:
         """ Check if Athena database exist """
-        if self._DatabaseName: return self._DatabaseName
+        if self._DatabaseName:
+            return self._DatabaseName
 
         if get_parameters().get('athena-database'):
             self._DatabaseName = get_parameters().get('athena-database')
@@ -80,17 +81,18 @@ class Athena(CidBase):
         athena_databases = self.list_databases()
 
         # check if we have a default database
-        default_databases = [database for database in athena_databases if database['Name'] == self.defaults.get('DatabaseName')]
+        print(athena_databases)
+        default_databases = [database for database in athena_databases if database == self.defaults.get('DatabaseName')]
 
         # Ask user
-        choices = [d['Name'] for d in athena_databases]
+        choices = list(athena_databases)
         if self.defaults.get('DatabaseName') not in choices:
             choices.append(self.defaults.get('DatabaseName') + ' (CREATE NEW)')
         self._DatabaseName = get_parameter(
             param_name='athena-database',
             message="Select AWS Athena database to use",
             choices=choices,
-            default=default_databases[0]['Name'] if default_databases else None,
+            default=default_databases[0] if default_databases else None,
         )
         if self._DatabaseName.endswith( ' (CREATE NEW)'):
             self._DatabaseName = self.defaults.get('DatabaseName')
@@ -99,8 +101,12 @@ class Athena(CidBase):
         return self._DatabaseName
 
     @DatabaseName.setter
-    def DatabaseName(self, database):
-        self._DatabaseName = database
+    def DatabaseName(self, database_name):
+        database = self.get_database(database_name) # this can raise AccessDenied error
+        if database:
+            self._DatabaseName = database_name
+        else:
+            raise CidError(f'Database {database_name} not found')
 
     @property
     def WorkGroup(self) -> str:
@@ -162,7 +168,7 @@ class Athena(CidBase):
         if name == 'primary': # QuickSight manages primary wg differently, relying exclusively on bucket with a predefined name
             bucket_name = f'{self.partition}-athena-query-results-{self.region}-{self.account_id}'
         else:
-            bucket_name = f'{self.partition}-athena-query-results-cid-{self.account_id}-{self.region}'
+            bucket_name = f'{self.partition}-athena-query-results-cidcmd-{self.account_id}-{self.region}'
 
         try:
             workgroup = self.client.get_work_group(WorkGroup=name)
@@ -222,11 +228,16 @@ class Athena(CidBase):
             logger.exception(exc)
             raise CidCritical(f'Failed to create Athena work group ({exc})') from exc
 
-    def list_data_catalogs(self) -> list:
-        return self.client.list_data_catalogs().get('DataCatalogsSummary')
+    def list_data_catalogs(self, type_: str='GLUE', workgroup: str=None) -> list:
+        """get data catalogs"""
+        params = {}
+        if workgroup:
+            params['WorkGroup'] = workgroup
+        return list(self.client.get_paginator('list_data_catalogs').paginate(**params).search(f"DataCatalogsSummary[?Type == '{type_}'].CatalogName"))
 
-    def list_databases(self) -> list:
-        return self.client.list_databases(CatalogName=self.CatalogName).get('DatabaseList')
+    def list_databases(self, catalog_name: str=None) -> list:
+        """get database"""
+        return list(self.client.get_paginator('list_databases').paginate(CatalogName=catalog_name or self.CatalogName).search('DatabaseList[].Name'))
 
     def get_database(self, DatabaseName: str=None) -> bool:
         """ Check if AWS DataCatalog and Athena database exist """
@@ -240,10 +251,10 @@ class Athena(CidBase):
                 logger.debug(exc, exc_info=True)
                 return None
 
-    def list_table_metadata(self, DatabaseName: str=None, max_items: int=None) -> dict:
+    def list_table_metadata(self, database_name: str=None, max_items: int=None) -> dict:
         params = {
             'CatalogName': self.CatalogName,
-            'DatabaseName': DatabaseName or self.DatabaseName,
+            'DatabaseName': database_name or self.DatabaseName,
             'PaginationConfig':{
                 'MaxItems': max_items,
             },
@@ -255,9 +266,9 @@ class Athena(CidBase):
             for page in response_iterator:
                 table_metadata.extend(page.get('TableMetadataList'))
             logger.debug(f'Table metadata: {table_metadata}')
-            logger.info(f'Found {len(table_metadata)} tables in {DatabaseName if DatabaseName else self.DatabaseName}')
+            logger.info(f'Found {len(table_metadata)} tables in {database_name or self.DatabaseName}')
         except Exception as e:
-            logger.error(f'Failed to list tables in {DatabaseName if DatabaseName else self.DatabaseName}')
+            logger.error(f'Failed to list tables in {database_name or self.DatabaseName}')
             logger.error(e)
 
         return table_metadata
@@ -268,16 +279,16 @@ class Athena(CidBase):
         logger.debug(f'WorkGroups: {result.get("WorkGroups")}')
         return result.get('WorkGroups')
 
-    def get_table_metadata(self, TableName: str) -> dict:
-        table_metadata = self._metadata.get(TableName)
+    def get_table_metadata(self, table_name: str, database_name: str=None) -> dict:
+        table_metadata = self._metadata.get(table_name)
         params = {
             'CatalogName': self.CatalogName,
-            'DatabaseName': self.DatabaseName,
-            'TableName': TableName
+            'DatabaseName': database_name or self.DatabaseName,
+            'TableName': table_name
         }
         if not table_metadata:
             table_metadata = self.client.get_table_metadata(**params).get('TableMetadata')
-            self._metadata.update({TableName: table_metadata})
+            self._metadata.update({table_name: table_metadata})
 
         return table_metadata
 
@@ -311,7 +322,7 @@ class Athena(CidBase):
             raise CidCritical(f'InvalidRequestException: {exc}') from exc
         except Exception as exc:
             logger.debug(f'Full query: {sql_query}')
-            raise CidCritical(f'Athena query failed: {exc}') from exc
+            raise CidCritical(f'Query:\n{sql_query}\n\nAthena query failed: {exc}') from exc
 
         current_status = query_status['QueryExecution']['Status']['State']
 
@@ -329,7 +340,7 @@ class Athena(CidBase):
         logger.info(f'Athena query failed: {failure_reason}')
         logger.debug(f'Full query: {sql_query}')
         if fail:
-            raise CidCritical(f'Athena query failed: {failure_reason}')
+            raise CidCritical(f'Query:\n{sql_query}\n\nAthena query status failed : {failure_reason}')
         return False
 
     def get_query_results(self, query_id):
@@ -359,7 +370,7 @@ class Athena(CidBase):
         """ Discover views from a given list of view names and cache them. """
         for view_name in views:
             try:
-                self.get_table_metadata(TableName=view_name)
+                self.get_table_metadata(table_name=view_name)
             except self.client.exceptions.MetadataException:
                 pass
 
@@ -494,9 +505,6 @@ class Athena(CidBase):
                     dep_view = dep_view.replace('"', '')
                     if len(dep_view.split('.')) == 2:
                         dep_database, dep_view_name = dep_view.split('.')
-                        if dep_database != self.DatabaseName:
-                            logger.error(f'The view {view} has a dependency on {dep_view}. CID cannot manage multiple Databases. Please move {dep_view_name} to Database {self.DatabaseName}. Skipping dependency.')
-                            continue
                     dep_view = dep_view.split('.')[-1]
                     if dep_view not in all_views:
                         _recursively_process_view(dep_view)
@@ -516,3 +524,86 @@ class Athena(CidBase):
             _recursively_process_view(view)
 
         return all_views
+
+    def create_or_update_view(self, view_name, view_query):
+        """ update view while asking user
+        """
+        update_view = None
+        # first understand if view exists
+        self.discover_views([view_name])
+        logger.trace(str(list(self._metadata.keys())))
+        if view_name not in self._metadata:
+            update_view = True
+        else: # view exists
+            while get_parameters().get('on-drift', 'show').lower() != 'override' and isatty():
+                cid_print(f'Analyzing view {view_name}')
+                diff = self.get_view_diff(view_name, view_query)
+                if diff and diff['diff']:
+                    cid_print(f'<BOLD>Found a difference between existing view <YELLOW>{view_name}<END> <BOLD>and the one we want to deploy. <END>')
+                    cid_print(diff['printable'])
+                    choice = get_parameter(
+                        param_name='view-' + view_name + '-override',
+                        message=f'The existing view is different. Override?',
+                        choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
+                        default='retry diff'
+                    )
+                    if choice == 'retry diff':
+                        unset_parameter('view-' + view_name + '-override')
+                        continue
+                    elif choice == 'proceed and override':
+                        update_view = True
+                        break
+                    elif choice == 'keep existing':
+                        update_view = False
+                        break
+                    else:
+                        raise CidCritical(f'User choice is not to update {view_name}.')
+                elif not diff:
+                    if not get_yesno_parameter(
+                        param_name='view-' + view_name + '-override',
+                        message=f'Cannot get sql diff for {view_name}. Continue?',
+                        default='yes'
+                        ):
+                        raise CidCritical(f'User choice is not to update {view_name}.')
+                    update_view = True
+                elif diff and not diff['diff']:
+                    cid_print(f'No need to update {view_name}. Skipping.')
+                break
+        if update_view:
+            cid_print(f'Updating view: "{view_name}"')
+            self.execute_query(view_query)
+
+
+    def find_tables_with_columns_in_information_schema(self, columns):
+        """ find table and database that contain given set of columns
+        this function takes 1+ min to fetch information schema. For better performance consider find_tables_with_columns.
+        """
+        columns = set(columns)
+        return self.execute_query(f'''
+        SELECT
+            table_schema,
+            table_name
+        FROM
+            information_schema.columns
+        WHERE
+            column_name IN ({[','.join(["'"+col+"'" for col in columns])]})
+        GROUP BY
+            table_schema,
+            table_name
+        HAVING
+            COUNT(DISTINCT column_name) = {len(columns)}
+        ''')
+
+    def find_tables_with_columns(self, columns: list, database_name: str=None, catalog_name: str=None, max_items: int=10000):
+        """ This function searches a table with a given set of columns
+        """
+        iterator = self.client.get_paginator('list_table_metadata').paginate(
+            DatabaseName=database_name or self.DatabaseName,
+            CatalogName=catalog_name or self.CatalogName,
+            PaginationConfig= {
+                'MaxItems': max_items, # sometimes customers can have 1'000s of tables (due to a crawler going crazy for example)
+            },
+        )
+        return iterator.search(f"""
+            TableMetadataList[?{' && '.join(["contains(Columns[].Name, '"+col+"' )" for col in columns])}].Name
+        """)
