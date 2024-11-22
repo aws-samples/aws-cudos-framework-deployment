@@ -19,8 +19,25 @@ dashboards:
           SheetContentType: INTERACTIVE
       CalculatedFields:
       - DataSetIdentifier: support_cases_communications_view
-        Expression: ifelse({account_name} <> '', {account_name}, {account_id})
+        Expression: |-
+          ifelse(
+              {account_name} <> '', {account_name},
+              {account_alias} <> '', {account_alias},
+              {account_id}
+          )
         Name: Account
+      - DataSetIdentifier: support_cases_communications_view
+        Expression: |-
+          ifelse(summary ='',  '<No Bedrock Summary.
+          Summarization Module is not installed or did not processed this Case yet.>',
+              concat(
+                  ifelse({executive_summary} <> '', concat({executive_summary}, '
+          '), ''),
+                  ifelse(actions <> '', concat(actions, '
+          '), '')
+              )
+          )
+        Name: Bedrock Summary
       - DataSetIdentifier: support_cases_communications_view
         Expression: '{case_created_time}'
         Name: Case Created
@@ -46,6 +63,10 @@ dashboards:
       - DataSetIdentifier: support_cases_communications_view
         Expression: 'dateDiff({Last Communication}, now(), ''DD'') '
         Name: Days Since Last Communication
+      - DataSetIdentifier: support_cases_communications_view
+        Expression: "concat(\n    ifelse({Long Lasting} <> '', '\U0001F6A9', ''),\n    '\
+          \ ',\n    ifelse({Long Lasting} <> '', 'Long lasting ', ''),\n    ''\n)"
+        Name: Flags
       - DataSetIdentifier: support_cases_communications_view
         Expression: |-
           switch(
@@ -129,14 +150,24 @@ dashboards:
         Expression: maxOver({Communication Time}, [{case_id}, subject, {display_id}], PRE_AGG)
         Name: Last Communication
       - DataSetIdentifier: support_cases_communications_view
+        Expression: |-
+          ifelse(
+              {Days Since Last Communication} > 30 AND status = 'resolved', 'long lasting',
+              ''
+          )
+        Name: Long Lasting
+      - DataSetIdentifier: support_cases_communications_view
         Expression: dateDiff({Case Created}, {Communication Time}, 'MI')
         Name: Minutes Since Case Started
       - DataSetIdentifier: support_cases_communications_view
         Expression: '{communication_lag}'
         Name: Minutes Since Previous Communication
       - DataSetIdentifier: support_cases_communications_view
-        Expression: 'ifelse(${Search} <> '''', contains(concat(body, {Communcation Info},
-          {Case Info}), ${Search}), TRUE) '
+        Expression: |-
+          ifelse(${Search} <> '' AND isNotNull(${Search}),
+              contains(concat(body, {Communcation Info}, {Case Info}), ${Search}, CASE_INSENSITIVE),
+              TRUE
+          )
         Name: Search Matches
       - DataSetIdentifier: support_cases_communications_view
         Expression: "switch (\n    {severity_code},\n    'low',      '\U0001F7E2 General\
@@ -168,6 +199,8 @@ dashboards:
             FieldValue: "\U0001F534 Business-critical system down"
           - Color: '#219FD7'
             FieldValue: "\U0001F535 Production system down"
+          - Color: '#2CAD00'
+            FieldValue: resolved
         Column:
           ColumnName: Group By
           DataSetIdentifier: support_cases_communications_view
@@ -198,6 +231,8 @@ dashboards:
           ColumnName: status
           DataSetIdentifier: support_cases_communications_view
       DataSetIdentifierDeclarations:
+      - DataSetArn: arn:aws:quicksight:::dataset/4833ceae-d7f3-43fa-9448-a8746b87c0a1
+        Identifier: support_cases_status
       - DataSetArn: arn:aws:quicksight:::dataset/support_cases_communications_view
         Identifier: support_cases_communications_view
       FilterGroups:
@@ -218,7 +253,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: fe406ce0-ad29-4178-86a4-fedadfefc5d0
+              SheetId: f7ddc181-da95-4674-9376-5955405a5d31
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 77d64cf0-6fdb-469b-9f40-74c1cc11c3aa
@@ -266,9 +301,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: fe406ce0-ad29-4178-86a4-fedadfefc5d0
+              SheetId: f7ddc181-da95-4674-9376-5955405a5d31
               VisualIds:
-              - 12e705e9-633c-4de2-b133-415b6381f3bc
+              - d2ca1ae8-8cfd-4f6c-8744-bb7fb588327b
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: d7a1422e-767d-4445-af75-d910ce405ede
@@ -285,11 +320,11 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: fe406ce0-ad29-4178-86a4-fedadfefc5d0
+              SheetId: f7ddc181-da95-4674-9376-5955405a5d31
               VisualIds:
-              - bf94be2f-fc2f-411a-9e64-a456789e7f10
-              - bdd04bd9-dc7e-44bf-9e84-73e054a0820d
-              - ee344612-534e-4f47-9d1e-b23b565a6dc4
+              - 360bfd54-84b2-4eb7-8932-1bb13a6dcb09
+              - b9b9ee6a-62c0-465c-8e30-240c1b4ae5a7
+              - 0475a240-1f28-43d6-a17b-c0d08073a59d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5757f8b2-86a2-4d0a-a19b-d5f88f24a54a
@@ -544,32 +579,38 @@ dashboards:
                   ResizeOption: FIXED
               Elements:
               - ColumnIndex: 0
-                ColumnSpan: 11
+                ColumnSpan: 14
                 ElementId: 62f1fd5c-8765-4f78-a074-951e3ea151b6
                 ElementType: TEXT_BOX
                 RowIndex: 0
                 RowSpan: 3
-              - ColumnIndex: 11
-                ColumnSpan: 15
+              - ColumnIndex: 14
+                ColumnSpan: 17
                 ElementId: 5ed81291-62e1-4eab-9d17-79b68fb6fc3d
                 ElementType: TEXT_BOX
                 RowIndex: 0
                 RowSpan: 3
+              - ColumnIndex: 31
+                ColumnSpan: 4
+                ElementId: 786f80f7-31fd-42af-baae-e265d17b6687
+                ElementType: VISUAL
+                RowIndex: 0
+                RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 13
-                ElementId: 12e705e9-633c-4de2-b133-415b6381f3bc
+                ElementId: d2ca1ae8-8cfd-4f6c-8744-bb7fb588327b
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 6
               - ColumnIndex: 13
                 ColumnSpan: 12
-                ElementId: 8a9ffc2a-e623-4c66-a93f-b0b072f45509
+                ElementId: 41448b1b-dab3-45e2-b4c5-ba586080ad2f
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 6
               - ColumnIndex: 25
                 ColumnSpan: 10
-                ElementId: 3e2f81e2-3b44-4978-8bd8-c04068dec36b
+                ElementId: b69571e7-76e2-4fce-9d64-772cc438120e
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 6
@@ -581,7 +622,7 @@ dashboards:
                 RowSpan: 5
               - ColumnIndex: 5
                 ColumnSpan: 30
-                ElementId: 8e6c0928-2c93-4dcb-9585-a461cd506697
+                ElementId: 5a8bcbed-99e6-4eb7-8e5e-bb8a39d8e581
                 ElementType: VISUAL
                 RowIndex: 9
                 RowSpan: 7
@@ -598,64 +639,34 @@ dashboards:
                 RowIndex: 16
                 RowSpan: 2
               - ColumnIndex: 4
-                ColumnSpan: 3
-                ElementId: b6ee9adf-15eb-44d4-9928-6eaa3a8de9d1
-                ElementType: FILTER_CONTROL
-                RowIndex: 16
-                RowSpan: 2
-              - ColumnIndex: 7
-                ColumnSpan: 2
-                ElementId: 1dfe9050-1498-45d6-80f7-276240917b5f
-                ElementType: FILTER_CONTROL
-                RowIndex: 16
-                RowSpan: 2
-              - ColumnIndex: 9
-                ColumnSpan: 2
-                ElementId: 5a33341e-6598-4905-bd77-6e9448300748
-                ElementType: FILTER_CONTROL
-                RowIndex: 16
-                RowSpan: 2
-              - ColumnIndex: 11
-                ColumnSpan: 3
-                ElementId: 4d29f79a-dd02-4780-823e-f08c85f63fd4
-                ElementType: FILTER_CONTROL
-                RowIndex: 16
-                RowSpan: 2
-              - ColumnIndex: 14
-                ColumnSpan: 4
-                ElementId: 77d8052c-60cd-424d-b7eb-5ec442641738
-                ElementType: FILTER_CONTROL
-                RowIndex: 16
-                RowSpan: 2
-              - ColumnIndex: 18
-                ColumnSpan: 18
+                ColumnSpan: 31
                 ElementId: 6991cebb-c883-4c1e-a469-bce50da2ab16
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 16
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 8bb8b3f7-86de-4b5f-99ff-6e785ffa4caa
+                ElementId: fb1e1abe-f1e0-4d6e-91a6-585dd17944a5
                 ElementType: VISUAL
                 RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 26
-                ElementId: bf94be2f-fc2f-411a-9e64-a456789e7f10
+                ElementId: 360bfd54-84b2-4eb7-8932-1bb13a6dcb09
                 ElementType: VISUAL
-                RowIndex: 27
-                RowSpan: 4
+                RowIndex: 36
+                RowSpan: 5
               - ColumnIndex: 26
                 ColumnSpan: 9
-                ElementId: ee344612-534e-4f47-9d1e-b23b565a6dc4
+                ElementId: 0475a240-1f28-43d6-a17b-c0d08073a59d
                 ElementType: VISUAL
-                RowIndex: 27
-                RowSpan: 4
+                RowIndex: 36
+                RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 26
-                ElementId: bdd04bd9-dc7e-44bf-9e84-73e054a0820d
+                ElementId: b9b9ee6a-62c0-465c-8e30-240c1b4ae5a7
                 ElementType: VISUAL
-                RowIndex: 31
+                RowIndex: 41
                 RowSpan: 12
         Name: Summary
         ParameterControls:
@@ -687,7 +698,7 @@ dashboards:
         - TextField:
             DisplayOptions:
               InfoIconLabelOptions:
-                InfoIconText: Case Sensitive Search in Body And Metadata
+                InfoIconText: Search in Communications
                 Visibility: VISIBLE
               PlaceholderOptions:
                 Visibility: VISIBLE
@@ -702,29 +713,70 @@ dashboards:
         SheetControlLayouts:
         - Configuration:
             GridLayout:
-              Elements: []
-        SheetId: fe406ce0-ad29-4178-86a4-fedadfefc5d0
+              Elements:
+              - ColumnIndex: 0
+                ColumnSpan: 3
+                ElementId: f668ae06-bb3d-4c22-88a6-0b9bb37674c5
+                ElementType: FILTER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 3
+                ColumnSpan: 3
+                ElementId: 28713ebc-36d3-4e2b-86b6-d9e9aeef5383
+                ElementType: FILTER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 6
+                ColumnSpan: 6
+                ElementId: 5a33341e-6598-4905-bd77-6e9448300748
+                ElementType: FILTER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 0
+                ColumnSpan: 2
+                ElementId: 1dfe9050-1498-45d6-80f7-276240917b5f
+                ElementType: FILTER_CONTROL
+                RowIndex: 1
+                RowSpan: 1
+              - ColumnIndex: 2
+                ColumnSpan: 2
+                ElementId: 4d29f79a-dd02-4780-823e-f08c85f63fd4
+                ElementType: FILTER_CONTROL
+                RowIndex: 1
+                RowSpan: 1
+              - ColumnIndex: 4
+                ColumnSpan: 2
+                ElementId: 77d8052c-60cd-424d-b7eb-5ec442641738
+                ElementType: FILTER_CONTROL
+                RowIndex: 1
+                RowSpan: 1
+              - ColumnIndex: 6
+                ColumnSpan: 3
+                ElementId: b6ee9adf-15eb-44d4-9928-6eaa3a8de9d1
+                ElementType: FILTER_CONTROL
+                RowIndex: 1
+                RowSpan: 1
+        SheetId: f7ddc181-da95-4674-9376-5955405a5d31
         TextBoxes:
         - Content: |-
             <text-box>
               <inline font-size="40px">AWS Support Cases Radar</inline>
             </text-box>
           SheetTextBoxId: 62f1fd5c-8765-4f78-a074-951e3ea151b6
-        - Content: "<text-box>\n  \u2728\n  <inline font-size=\"15px\">Recommendations:</inline>\n\
-            \  <br/>\n  <ul>\n    <li>For urgent matters, use the Chat or Phone contact\
-            \ methods to ensure prompt and interactive communication with a support agent</li>\n\
-            \    <li>\n      Use the\n      <inline color=\"#61d1d6\">\n        <a href=\"\
-            https://docs.aws.amazon.com/awssupport/latest/user/aws-support-app-for-slack.html\"\
-            \ target=\"_blank\">AWS Support App in Slack</a>\n      </inline>\n      \_\
-            to manage support cases quickly in Slack\n    </li>\n    <li>Do not forget to\
-            \ rate answers with 5 stars. If anything less, check with you TAM</li>\n  </ul>\n\
-            </text-box>"
+        - Content: "<text-box>\n  <inline font-size=\"15px\">Recommendations:</inline>\n\
+            \  <br/>\n  <ul>\n    <li>For urgent matters use the Chat contact method.</li>\n\
+            \    <li>\n      Use the AWS Support App in Slack to manage support cases quickly\
+            \ in Slack [\n      <a href=\"https://docs.aws.amazon.com/awssupport/latest/user/aws-support-app-for-slack.html\"\
+            \ target=\"_blank\">1</a>\n      ].\n    </li>\n    <li>\n      Provide feedback\
+            \ on the support communications with\n      <inline background-color=\"#282c34\"\
+            \ color=\"#abb2bf\">\u2B50\uFE0F\_</inline>\n      \_5 stars rating.\n    </li>\n\
+            \  </ul>\n</text-box>"
           SheetTextBoxId: 5ed81291-62e1-4eab-9d17-79b68fb6fc3d
         - Content: "<text-box>\n  &#128161;\n  <b>Tip:\_</b>\n  Use drill down \u2193\u2191\
             \ to switch date aggregation\n</text-box>"
           SheetTextBoxId: 18fd7b33-4332-45bd-bae5-0bfb0af42585
         Visuals:
-        - PivotTableVisual:
+        - TableVisual:
             Actions:
             - ActionOperations:
               - FilterOperation:
@@ -734,75 +786,44 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisualOptions: ALL_VISUALS
-              CustomActionId: 57ebf73f-5025-42db-bddf-cd4f9ba3f01c
+              CustomActionId: fe69288f-31cc-4db1-a00e-e5ca0e835bd9
               Name: Action 1
               Status: ENABLED
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               FieldOptions:
-                DataPathOptions:
-                - DataPathList:
-                  - FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.subject.3.1727791391482
-                    FieldValue: subject
-                  Width: 336px
-                - DataPathList:
-                  - FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.3.1727812113706
-                    FieldValue: display_id
-                  Width: 168px
-                - DataPathList:
-                  - FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.body.4.1727852331334
-                    FieldValue: body
-                  Width: 114px
-                - DataPathList:
-                  - FieldId: 2bd3f82d-7f46-47fa-825c-84d76122e80d.9.1727865394222
-                    FieldValue: Days Since Last Communication
-                  Width: 114px
-                - DataPathList:
-                  - FieldId: e8f75584-6780-4f8c-b834-47692379789b.5.1727852373801
-                    FieldValue: Case Created
-                  Width: 113px
-                - DataPathList:
-                  - FieldId: e8676d0a-ffe0-4679-9b01-378e0fed89dc.9.1728236942613
-                    FieldValue: Status Icon
-                  Width: 53px
-                - DataPathList:
-                  - FieldId: 1afef0f7-f494-4f74-a6ba-f4b96e51371f.6.1727855457741
-                    FieldValue: Severity Code
-                  Width: 53px
+                Order: []
                 SelectedFieldOptions:
                 - CustomLabel: Case Id
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.3.1727812113706
-                  Visibility: VISIBLE
-                - FieldId: e8f75584-6780-4f8c-b834-47692379789b.5.1727852373801
-                  Visibility: VISIBLE
                 - CustomLabel: Severity
                   FieldId: 1afef0f7-f494-4f74-a6ba-f4b96e51371f.6.1727855457741
-                  Visibility: VISIBLE
+                  Width: 31px
                 - CustomLabel: Account
                   FieldId: 86d8e8fd-9c46-4ba9-a6dc-790df441d408.3.1727813911340
-                  Visibility: VISIBLE
+                  Width: 207px
                 - CustomLabel: Service
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.service_code.7.1727865825419
-                  Visibility: VISIBLE
                 - CustomLabel: Status
                   FieldId: e8676d0a-ffe0-4679-9b01-378e0fed89dc.9.1728236942613
-                  Visibility: VISIBLE
+                  Width: 32px
+                - FieldId: 031fe8e6-0d75-419f-aeec-52102b145a0f.11.1729886737212
+                  Width: 26px
                 - CustomLabel: Subject
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.subject.3.1727791391482
-                  Visibility: VISIBLE
+                  Width: 341px
                 - CustomLabel: Summary
-                  FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.summary.10.1728237002001
-                  Visibility: VISIBLE
+                  FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.executive_summary.11.1730110582239
+                  Width: 241px
                 - CustomLabel: Days Since Last Communication
                   FieldId: 2bd3f82d-7f46-47fa-825c-84d76122e80d.9.1727865394222
-                  Visibility: VISIBLE
+                  Width: 63px
                 - CustomLabel: Communications
                   FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.body.4.1727852331334
-                  Visibility: VISIBLE
+                  Width: 73px
               FieldWells:
-                PivotTableAggregatedFieldWells:
-                  Columns: []
-                  Rows:
+                TableAggregatedFieldWells:
+                  GroupBy:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: display_id
@@ -836,14 +857,19 @@ dashboards:
                       FieldId: e8676d0a-ffe0-4679-9b01-378e0fed89dc.9.1728236942613
                   - CategoricalDimensionField:
                       Column:
+                        ColumnName: Flags
+                        DataSetIdentifier: support_cases_communications_view
+                      FieldId: 031fe8e6-0d75-419f-aeec-52102b145a0f.11.1729886737212
+                  - CategoricalDimensionField:
+                      Column:
                         ColumnName: subject
                         DataSetIdentifier: support_cases_communications_view
                       FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.subject.3.1727791391482
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: summary
+                        ColumnName: executive_summary
                         DataSetIdentifier: support_cases_communications_view
-                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.summary.10.1728237002001
+                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.executive_summary.11.1730110582239
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -859,48 +885,21 @@ dashboards:
                         DataSetIdentifier: support_cases_communications_view
                       FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.body.4.1727852331334
               SortConfiguration:
-                FieldSortOptions:
-                - FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.3.1727812113706
-                  SortBy:
-                    Column:
-                      AggregationFunction:
-                        DateAggregationFunction: COUNT
-                      Direction: ASC
-                      SortBy:
-                        ColumnName: case_created_time
-                        DataSetIdentifier: support_cases_communications_view
+                RowSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.3.1727812113706
               TableOptions:
                 CellStyle:
                   Height: 25
                   TextWrap: NONE
-                CollapsedRowDimensionsVisibility: HIDDEN
-                ColumnHeaderStyle:
+                HeaderStyle:
                   BackgroundColor: '#0A87AF'
-                  Height: 45
+                  Height: 29
                   TextWrap: NONE
                 RowAlternateColorOptions:
                   Status: DISABLED
                   UsePrimaryBackgroundColor: ENABLED
-                RowFieldNamesStyle:
-                  BackgroundColor: '#0A87AF'
-                  Height: 45
-                  TextWrap: NONE
-                RowsLayout: TABULAR
-              TotalOptions:
-                ColumnTotalOptions:
-                  Placement: END
-                RowSubtotalOptions:
-                  CustomLabel: <<$aws:subtotalDimension>> Subtotal
-                  MetricHeaderCellStyle: {}
-                  StyleTargets:
-                  - CellType: VALUE
-                  - CellType: TOTAL
-                  - CellType: METRIC_HEADER
-                  TotalCellStyle: {}
-                  TotalsVisibility: HIDDEN
-                  ValueCellStyle: {}
-                RowTotalOptions:
-                  Placement: AUTO
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Select ONE case here to see Summary and Communications
@@ -910,7 +909,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>List of Cases</visual-title>
               Visibility: VISIBLE
-            VisualId: 8bb8b3f7-86de-4b5f-99ff-6e785ffa4caa
+            VisualId: fb1e1abe-f1e0-4d6e-91a6-585dd17944a5
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -919,9 +918,8 @@ dashboards:
                 SelectedFieldOptions:
                 - FieldId: da29737e-3461-4049-984b-d698f5806bd1.3.1727813586844
                   Width: 450px
-                - CustomLabel: Bedrock Summary
-                  FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.summary.2.1727813444430
-                  Width: 660px
+                - FieldId: a90a2c28-db3c-402d-82c5-869d525ed247.1.1729923193358
+                  Width: 588px
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
@@ -932,9 +930,9 @@ dashboards:
                       FieldId: da29737e-3461-4049-984b-d698f5806bd1.3.1727813586844
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: summary
+                        ColumnName: Bedrock Summary
                         DataSetIdentifier: support_cases_communications_view
-                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.summary.2.1727813444430
+                      FieldId: a90a2c28-db3c-402d-82c5-869d525ed247.1.1729923193358
                   Values: []
               SortConfiguration: {}
               TableOptions:
@@ -957,7 +955,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>The Case Summary (Select the Case Above)</visual-title>
               Visibility: VISIBLE
-            VisualId: bf94be2f-fc2f-411a-9e64-a456789e7f10
+            VisualId: 360bfd54-84b2-4eb7-8932-1bb13a6dcb09
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -973,12 +971,6 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: STACKED
-              CategoryAxis:
-                ScrollbarOptions:
-                  VisibleRange:
-                    PercentRange:
-                      From: 52.38095238095238
-                      To: 100.0
               DataLabels:
                 Overlap: DISABLE_OVERLAP
                 Visibility: VISIBLE
@@ -996,6 +988,7 @@ dashboards:
                         ColumnName: status
                         DataSetIdentifier: support_cases_communications_view
                       FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.status.2.1727852443668
+                      HierarchyId: 4d8e9aed-0485-4f5a-83ec-40cd49f35594
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
@@ -1005,6 +998,7 @@ dashboards:
                       FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.1.1727812096524
               Legend:
                 Position: AUTO
+                Width: 87px
               Orientation: HORIZONTAL
               SortConfiguration:
                 CategoryItemsLimit:
@@ -1025,22 +1019,30 @@ dashboards:
                       FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.service_code.1.1727798927670
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.status.2.1727852443668
+                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.1.1727812096524
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.1.1727812096524
+                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.status.2.1727852443668
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
-            ColumnHierarchies: []
+            ColumnHierarchies:
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: status
+                  DataSetIdentifier: support_cases_communications_view
+                - ColumnName: category_code
+                  DataSetIdentifier: support_cases_communications_view
+                DrillDownFilters: []
+                HierarchyId: 4d8e9aed-0485-4f5a-83ec-40cd49f35594
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Cases by Service</visual-title>
               Visibility: VISIBLE
-            VisualId: 12e705e9-633c-4de2-b133-415b6381f3bc
+            VisualId: d2ca1ae8-8cfd-4f6c-8744-bb7fb588327b
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -1115,7 +1117,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Case Communications</visual-title>
               Visibility: VISIBLE
-            VisualId: bdd04bd9-dc7e-44bf-9e84-73e054a0820d
+            VisualId: b9b9ee6a-62c0-465c-8e30-240c1b4ae5a7
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -1192,7 +1194,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Cases by Account</visual-title>
               Visibility: VISIBLE
-            VisualId: 8a9ffc2a-e623-4c66-a93f-b0b072f45509
+            VisualId: 41448b1b-dab3-45e2-b4c5-ba586080ad2f
         - PieChartVisual:
             Actions:
             - ActionOperations:
@@ -1222,7 +1224,7 @@ dashboards:
                         ColumnName: status
                         DataSetIdentifier: support_cases_communications_view
                       FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.status.1.1727791185968
-                      HierarchyId: 158da3b7-d7ca-4d5c-88fe-b3d69d5feb6c
+                      HierarchyId: 8f2ef2c7-5eeb-4ac5-95bc-2724212f78c2
                   Values:
                   - CategoricalMeasureField:
                       AggregationFunction: DISTINCT_COUNT
@@ -1244,10 +1246,10 @@ dashboards:
                   AggregationVisibility: HIDDEN
                   TooltipFields:
                   - FieldTooltipItem:
-                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.status.1.1727791185968
+                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.1.1727812172409
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.display_id.1.1727812172409
+                      FieldId: 0ed31dde-ec87-40c0-9a50-01737a0014b1.status.1.1727791185968
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
@@ -1260,14 +1262,14 @@ dashboards:
                 - ColumnName: severity_code
                   DataSetIdentifier: support_cases_communications_view
                 DrillDownFilters: []
-                HierarchyId: 158da3b7-d7ca-4d5c-88fe-b3d69d5feb6c
+                HierarchyId: 8f2ef2c7-5eeb-4ac5-95bc-2724212f78c2
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Cases by Status</visual-title>
               Visibility: VISIBLE
-            VisualId: 3e2f81e2-3b44-4978-8bd8-c04068dec36b
+            VisualId: b69571e7-76e2-4fce-9d64-772cc438120e
         - ComboChartVisual:
             Actions:
             - ActionOperations:
@@ -1287,6 +1289,10 @@ dashboards:
                 Overlap: DISABLE_OVERLAP
                 Visibility: VISIBLE
               BarsArrangement: STACKED
+              CategoryAxis:
+                DataOptions:
+                  DateAxisOptions:
+                    MissingDateVisibility: VISIBLE
               FieldWells:
                 ComboChartAggregatedFieldWells:
                   BarValues:
@@ -1307,7 +1313,7 @@ dashboards:
                         DateTimeFormat: MMM D, YYYY
                         NullValueFormatConfiguration:
                           NullString: 'null'
-                      HierarchyId: 1ade68ab-9613-4c94-b6d1-a29dd689c2b2
+                      HierarchyId: a8780be4-8500-463a-a06d-0cbaa158ae77
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -1318,7 +1324,7 @@ dashboards:
               Legend:
                 Title:
                   CustomLabel: <<$GroupBy>>
-                Width: 173px
+                Width: 60px
               LineDataLabels:
                 Overlap: DISABLE_OVERLAP
               SortConfiguration:
@@ -1352,14 +1358,14 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 1ade68ab-9613-4c94-b6d1-a29dd689c2b2
+                HierarchyId: a8780be4-8500-463a-a06d-0cbaa158ae77
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: <visual-title>Ceses by Create Time</visual-title>
+                RichText: <visual-title>Cases by Create Time</visual-title>
               Visibility: VISIBLE
-            VisualId: 8e6c0928-2c93-4dcb-9585-a461cd506697
+            VisualId: 5a8bcbed-99e6-4eb7-8e5e-bb8a39d8e581
         - ScatterPlotVisual:
             Actions: []
             ChartConfiguration:
@@ -1449,7 +1455,57 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Case Timeline in Minutes</visual-title>
               Visibility: VISIBLE
-            VisualId: ee344612-534e-4f47-9d1e-b23b565a6dc4
+            VisualId: 0475a240-1f28-43d6-a17b-c0d08073a59d
+        - TableVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldOptions:
+                Order: []
+                SelectedFieldOptions:
+                - FieldId: 0e9ca7c7-85c9-494f-bb79-abd1ae1eefd7.account_id.1.1729882782628
+                  Width: 57px
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: last_read
+                        DataSetIdentifier: support_cases_status
+                      FieldId: 0e9ca7c7-85c9-494f-bb79-abd1ae1eefd7.last_read.1.1729882663078
+                  Values:
+                  - CategoricalMeasureField:
+                      AggregationFunction: COUNT
+                      Column:
+                        ColumnName: account_id
+                        DataSetIdentifier: support_cases_status
+                      FieldId: 0e9ca7c7-85c9-494f-bb79-abd1ae1eefd7.account_id.1.1729882782628
+              SortConfiguration:
+                RowSort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: 0e9ca7c7-85c9-494f-bb79-abd1ae1eefd7.last_read.1.1729882663078
+              TableOptions:
+                CellStyle:
+                  Border:
+                    UniformBorder:
+                      Style: NONE
+                      Thickness: 4
+                  Height: 25
+                  TextWrap: NONE
+                HeaderStyle:
+                  Height: 25
+                  TextWrap: WRAP
+                  Visibility: HIDDEN
+                RowAlternateColorOptions:
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: <visual-title>Last Update</visual-title>
+              Visibility: VISIBLE
+            VisualId: 786f80f7-31fd-42af-baae-e265d17b6687
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -1476,15 +1532,14 @@ dashboards:
         - Configuration:
             GridLayout:
               Elements: []
-        SheetId: 53e274fa-5739-49b4-ac2a-6018a5be88a9
+        SheetId: 9105aeb2-ef62-48a0-a2d8-e99e6d3e77ab
         TextBoxes:
         - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
             center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"64px\"\
-            >\n      <b>Support Cases Radar</b>\n    </inline>\n  </block>\n  <br/>\n  <block\
-            \ align=\"center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"\
-            24px\">v0.0.1</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n \
-            \ <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\">\n     \
-            \ <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/support-cases-radar\"\
+            >AWS Support Cases Radar</inline>\n  </block>\n  <br/>\n  <block align=\"center\"\
+            />\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\">v0.0.1</inline>\n\
+            \  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\">\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/support-cases-radar\"\
             \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-support-cases-radar.md\"\
             \ target=\"_blank\">Changelog</a>\n    </inline>\n    <inline font-size=\"24px\"\
@@ -1494,11 +1549,9 @@ dashboards:
             \ target=\"_blank\">Feedback</a>\n    </inline>\n    <inline font-size=\"24px\"\
             >\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block\
             \ align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built by: Samuel Chniber,\
-            \ Iakov Gan, Yuriy Prykhodko</block>\n  <br/>\n  <block align=\"right\">If you\
-            \ wish to provide feedback please or report an error please email: cloud-intelligence-dashboards@amazon.comm</block>\n\
-            \  <br/>\n  <block align=\"right\">Powered by: Amazon QuickSight, Amazon Athena,\
-            \ Amazon S3, AWS Cost Optimization Hub</block>\n  <br/>\n  <block align=\"center\"\
-            />\n  <br/>\n  <block align=\"center\"/>\n</text-box>"
+            \ Iakov Gan, Yuriy Prykhodko</block>\n  <br/>\n  <block align=\"right\">Powered\
+            \ by: Amazon QuickSight, Amazon Athena, Amazon S3</block>\n  <br/>\n  <block\
+            \ align=\"center\"/>\n</text-box>"
           SheetTextBoxId: 822df85b-99c9-459c-8324-5a0cadb47243
         - Content: "<text-box>\n  <inline font-size=\"32px\">Notes</inline>\n  <br/>\n \
             \ <inline font-size=\"14px\">Customers are responsible for making their own\
@@ -1527,9 +1580,9 @@ datasets:
             Schema: ${athena_database_name}
             Name: account_map
             InputColumns:
-            - Name: account_id
-              Type: STRING
             - Name: account_name
+              Type: STRING
+            - Name: account_id
               Type: STRING
         cddcae52-1ce1-43ed-bf75-4883a0830a81:
           RelationalTable:
@@ -1549,6 +1602,8 @@ datasets:
             - Name: payer_id
               Type: STRING
             - Name: account_id
+              Type: STRING
+            - Name: account_alias
               Type: STRING
             - Name: display_id
               Type: STRING
@@ -1572,6 +1627,16 @@ datasets:
               Type: STRING
             - Name: summary
               Type: STRING
+            - Name: executive_summary
+              Type: STRING
+            - Name: proposed_solutions
+              Type: STRING
+            - Name: actions
+              Type: STRING
+            - Name: references
+              Type: STRING
+            - Name: feedback
+              Type: STRING
             - Name: communication_lag
               Type: INTEGER
             - Name: communication_sequence
@@ -1581,7 +1646,7 @@ datasets:
           Alias: support_cases_communications_view
           Source:
             PhysicalTableId: cddcae52-1ce1-43ed-bf75-4883a0830a81
-        412040f9-02a5-4a2c-8fe6-c339698deafa:
+        4e501460-8e08-4796-ae46-6f29cd21eacb:
           Alias: Intermediate Table
           DataTransforms:
           - ProjectOperation:
@@ -1592,6 +1657,7 @@ datasets:
               - communication_time
               - payer_id
               - account_id
+              - account_alias
               - display_id
               - subject
               - status
@@ -1603,10 +1669,15 @@ datasets:
               - cc_email_addresses
               - language
               - summary
+              - executive_summary
+              - proposed_solutions
+              - actions
+              - references
+              - feedback
               - communication_lag
               - communication_sequence
-              - account_id[account_map]
               - account_name
+              - account_id[account_map]
           Source:
             JoinInstruction:
               LeftOperand: 0ed31dde-ec87-40c0-9a50-01737a0014b1
@@ -1628,22 +1699,62 @@ datasets:
       - support_cases_communications_view
     schedules:
     - default
+  support_cases_status:
+    data:
+      DataSetId: 4833ceae-d7f3-43fa-9448-a8746b87c0a1
+      Name: support_cases_status
+      PhysicalTableMap:
+        afee2bc3-f731-47bb-8264-2809da32905e:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${data_collection_database_name}
+            Name: support_cases_status
+            InputColumns:
+            - Name: last_read
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: payer_id
+              Type: STRING
+      LogicalTableMap:
+        0e9ca7c7-85c9-494f-bb79-abd1ae1eefd7:
+          Alias: support_cases_status
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - last_read
+              - account_id
+              - payer_id
+          Source:
+            PhysicalTableId: afee2bc3-f731-47bb-8264-2809da32905e
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - support_cases_status
+    schedules:
+    - default
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'support_cases_data'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
 crawlers: {}
 views:
   support_cases_communications_view:
-    dependsOn:
-      views:
-      - support_cases_communications
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".support_cases_communications_view AS
-      WITH communications AS (
-        SELECT
-            caseid case_id
-          , body
-          , submittedby submitted_by
-          , TRY(CAST(from_iso8601_timestamp(timecreated) AS timestamp)) communication_time
-        FROM
-          "${data_collection_database_name}".support_cases_communications
+      WITH
+        communications AS (
+         SELECT
+           caseid case_id
+         , body
+         , submittedby submitted_by
+         , TRY(CAST(from_iso8601_timestamp(timecreated) AS timestamp)) communication_time
+         FROM
+           "${data_collection_database_name}".support_cases_communications
       )
       SELECT
         communications.case_id
@@ -1652,6 +1763,7 @@ views:
       , communications.communication_time
       , cases.payer_id
       , cases.account_id
+      , cases.accountalias account_alias
       , cases.displayid display_id
       , cases.subject
       , cases.status
@@ -1663,18 +1775,13 @@ views:
       , TRY(ARRAY_JOIN(cases.ccemailaddresses, ',')) cc_email_addresses
       , cases.language
       , cases.summary
-      , DATE_DIFF(
-          'minute',
-          LAG(communications.communication_time, 1) OVER (
-            PARTITION BY communications.case_id
-            ORDER BY communications.communication_time ASC
-          ),
-          communications.communication_time
-        ) communication_lag
-      , RANK() OVER (
-          PARTITION BY communications.case_id
-          ORDER BY communications.communication_time ASC
-        ) communication_sequence
+      , json_extract_scalar(cases.summary, '$.executive_summary') executive_summary
+      , json_extract_scalar(cases.summary, '$.proposed_solutions') proposed_solutions
+      , json_extract_scalar(cases.summary, '$.actions') actions
+      , json_extract_scalar(cases.summary, '$.references') references
+      , json_extract_scalar(cases.summary, '$.feedback') feedback
+      , DATE_DIFF('minute', LAG(communications.communication_time, 1) OVER (PARTITION BY communications.case_id ORDER BY communications.communication_time ASC), communications.communication_time) communication_lag
+      , RANK() OVER (PARTITION BY communications.case_id ORDER BY communications.communication_time ASC) communication_sequence
       FROM
         (communications
       LEFT JOIN "${data_collection_database_name}".support_cases_data cases ON (communications.case_id = cases.caseid))
