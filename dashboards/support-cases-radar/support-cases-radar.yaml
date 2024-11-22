@@ -1697,6 +1697,8 @@ datasets:
       views:
       - account_map
       - support_cases_communications_view
+      dataProviders:
+      - DataExports
     schedules:
     - default
   support_cases_status:
@@ -1732,6 +1734,8 @@ datasets:
     dependsOn:
       views:
       - support_cases_status
+      dataProviders:
+      - DataExports
     schedules:
     - default
     parameters:
