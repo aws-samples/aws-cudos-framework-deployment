@@ -1,6 +1,11 @@
 output "cur_report_arn" {
   description = "ARN of the Cost and Usage Report"
-  value       = aws_cur_report_definition.this.arn
+  value       = one(aws_cur_report_definition.this[*].arn)
+}
+
+output "bcm_export_arn" {
+  description = "ARN of the BCM Data Export"
+  value       = one(aws_bcmdataexports_export.this[*].export)
 }
 
 output "cur_bucket_arn" {

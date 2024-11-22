@@ -118,7 +118,10 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     principals {
       type        = "Service"
-      identifiers = ["billingreports.amazonaws.com"]
+      identifiers = [
+        "billingreports.amazonaws.com",
+        "bcm-data-exports.amazonaws.com"
+      ]
     }
     resources = [
       aws_s3_bucket.this.arn,
@@ -126,7 +129,10 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     condition {
       test     = "StringLike"
-      values   = ["arn:${data.aws_partition.this.partition}:cur:us-east-1:${data.aws_caller_identity.this.account_id}:definition/*"]
+      values = [
+        "arn:${data.aws_partition.this.partition}:cur:us-east-1:${data.aws_caller_identity.this.account_id}:definition/*",
+        "arn:${data.aws_partition.this.partition}:bcm-data-exports:us-east-1:${data.aws_caller_identity.this.account_id}:export/*"
+      ]
       variable = "aws:SourceArn"
     }
     condition {
@@ -143,14 +149,20 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     principals {
       type        = "Service"
-      identifiers = ["billingreports.amazonaws.com"]
+      identifiers = [
+        "billingreports.amazonaws.com",
+        "bcm-data-exports.amazonaws.com"
+      ]
     }
     resources = [
       "${aws_s3_bucket.this.arn}/*",
     ]
     condition {
       test     = "StringLike"
-      values   = ["arn:${data.aws_partition.this.partition}:cur:us-east-1:${data.aws_caller_identity.this.account_id}:definition/*"]
+      values = [
+        "arn:${data.aws_partition.this.partition}:cur:us-east-1:${data.aws_caller_identity.this.account_id}:definition/*",
+        "arn:${data.aws_partition.this.partition}:bcm-data-exports:us-east-1:${data.aws_caller_identity.this.account_id}:export/*"
+      ]
       variable = "aws:SourceArn"
     }
     condition {
@@ -219,10 +231,17 @@ resource "aws_iam_role" "replication" {
   name_prefix        = "${var.resource_prefix}-replication"
   path               = "/${var.resource_prefix}/"
   assume_role_policy = data.aws_iam_policy_document.s3_assume_role.json
-  inline_policy {
-    name   = "S3Replication"
-    policy = data.aws_iam_policy_document.replication.json
-  }
+}
+
+resource "aws_iam_role_policy_attachment" "replication_attach" {
+  role       = aws_iam_role.replication.name
+  policy_arn = aws_iam_policy.replication.arn
+}
+
+resource "aws_iam_policy" "replication" {
+  name        = "CUR-replication"
+  description = "Replication policy for S3 CUR"
+  policy      = data.aws_iam_policy_document.replication.json
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
@@ -250,7 +269,51 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 ###
 # CUR
 ###
+resource "aws_bcmdataexports_export" "this" {
+  count = var.enable_cur_v1 ? 0 : 1
+  provider = aws.useast1
+
+  # Make sure versioning and bucket policy is configured first
+  depends_on = [
+    aws_s3_bucket_versioning.this,
+    aws_s3_bucket_policy.this
+  ]
+
+  export {
+    name = "${var.resource_prefix}-${var.cur_name_suffix}"
+    data_query {
+      query_statement = var.bcm_query
+      table_configurations = {
+        COST_AND_USAGE_REPORT = {
+          TIME_GRANULARITY                      = "HOURLY",
+          INCLUDE_RESOURCES                     = "TRUE",
+          INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY = "FALSE",
+          INCLUDE_SPLIT_COST_ALLOCATION_DATA    = var.enable_split_cost_allocation_data ? "TRUE" : "FALSE",
+        }
+      }
+    }
+    destination_configurations {
+      s3_destination {
+        s3_bucket = aws_s3_bucket.this.bucket
+        s3_prefix = "cur/${data.aws_caller_identity.this.account_id}"
+        s3_region = data.aws_region.this.name
+        s3_output_configurations {
+          overwrite   = "OVERWRITE_REPORT"
+          format      = "PARQUET"
+          compression = "PARQUET"
+          output_type = "CUSTOM"
+        }
+      }
+    }
+
+    refresh_cadence {
+      frequency = "SYNCHRONOUS"
+    }
+  }
+}
+
 resource "aws_cur_report_definition" "this" {
+  count = var.enable_cur_v1 ? 1 : 0
   provider = aws.useast1
 
   # Make sure versioning and bucket policy is configured first
