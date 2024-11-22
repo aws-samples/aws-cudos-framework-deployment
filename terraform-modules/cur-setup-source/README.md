@@ -12,6 +12,9 @@ one instance of this module for each payer account.
 > For complete usage documentation of using this module together with the cur-setup-destination
 module, refer to the main Terraform [Deployment Instructions](../README.md#deployment-instructions).
 
+> [!Note]
+> If you are **not** using `enable_cur_v1` and do not specify a different query string via `bcm_query`, **all** available fields are selected.  This will impact the size of your CUR files.
+
 ```hcl
 provider "aws" {
   region = "us-west-2"
@@ -32,6 +35,25 @@ module "cur_source" {
   providers = {
     aws.useast1 = aws.useast1
   }
+}
+```
+
+## Legacy CUR v1 usage
+> [!Note]
+> Legacy CUR v1 is deprecated and no longer supported!
+
+If you require legacy CUR v1 files, you must set `enable_cur_v1` to `true`.  Each CUR version requires different CUR resources and associated permissions.
+
+If you do not configure `enable_cur_v1` in your module call it will assume you desire CUR v2 and enable the appropriate resources.
+
+```hcl
+module "cur_source" {
+  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/cur-setup-source"
+
+  destination_bucket_arn = "UPDATEME"
+  enable_cur_v1 = true
+
+  # etc
 }
 ```
 
