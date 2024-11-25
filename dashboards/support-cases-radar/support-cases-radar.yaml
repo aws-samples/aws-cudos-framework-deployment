@@ -201,6 +201,8 @@ dashboards:
       DataSetIdentifierDeclarations:
       - DataSetArn: arn:aws:quicksight:::dataset/support_cases_communications_view
         Identifier: support_cases_communications_view
+      - DataSetArn: arn:aws:quicksight:::dataset/support_cases_status
+        Identifier: support_cases_status        
       FilterGroups:
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 05bfc599-44a7-4f29-9659-a4cb12927bfc
