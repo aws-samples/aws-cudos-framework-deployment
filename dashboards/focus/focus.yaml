@@ -4,7 +4,7 @@ dashboards:
       datasets:
       - focus_resource_view
       - focus_summary_view
-    name: FOCUS Dashboard Preview
+    name: FOCUS Dashboard
     dashboardId: focus-dashboard
     category: Additional
     theme: MIDNIGHT
@@ -1710,7 +1710,7 @@ dashboards:
                 RowSpan: 1
         SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
         TextBoxes:
-        - Content: "<text-box>\n  <inline font-size=\"36px\">FOCUS Dashboard (Preview)</inline>\n\
+        - Content: "<text-box>\n  <inline font-size=\"36px\">FOCUS Dashboard</inline>\n\
             \  <br/>\n  <inline color=\"#b3b3b3\" font-size=\"16px\">An interactive and\
             \ customizable dashboard from the\_</inline>\n  <inline color=\"#61d1d6\" font-size=\"\
             16px\">\n    <a href=\"https://catalog.workshops.aws/awscid/en-US\" target=\"\
@@ -4509,7 +4509,7 @@ dashboards:
             </text-box>"
           SheetTextBoxId: d1aa905c-abc4-4c09-9a95-c321b38338dc
         - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
-            center\">\n    <inline font-size=\"40px\">\n      <b>FOCUS Dashboard (Preview)</b>\n\
+            center\">\n    <inline font-size=\"40px\">\n      <b>FOCUS Dashboard</b>\n\
             \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
             \ font-size=\"40px\">\n      <b>v0.1</b>\n    </inline>\n  </block>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"40px\">\n      <b>FinOps\
