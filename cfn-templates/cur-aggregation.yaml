@@ -9,6 +9,7 @@ Metadata:
           - DestinationAccountId
           - ResourcePrefix
           - CreateCUR
+          - CreateCostCategory
           - AddSCAD
       -
         Label:
@@ -25,7 +26,8 @@ Metadata:
         default: "Source Account Ids (Comma separated list)"
       AddSCAD:
         default: "Add Split Cost Allocation Data (SCAD) to CUR."
-
+      CreateCostCategory:
+          default: "Create account_name Cost Category to be used by all dashboards."
 
 Parameters:
 
@@ -51,6 +53,11 @@ Parameters:
     Description: Add Split Cost Allocation Data (SCAD) to CUR
     AllowedValues: ['yes', 'no']
     Default: "no"
+  CreateCostCategory:
+      Type: String
+      Description: Whenever or not create 'accountname' Cost Category. This allows accounts names to be populated in the dashboards.
+      AllowedValues: ["True", "False"]
+      Default: "False"
 
   ##
   # Destination specific params
@@ -75,6 +82,8 @@ Conditions:
       - !Equals [!Ref 'AWS::Region', 'us-east-1']
       - !Equals [!Ref 'AWS::Region', 'cn-northwest-1']
   CUREnable: !Equals [!Ref CreateCUR, 'True']
+  CostCategoryEnable: !Equals [!Ref CreateCostCategory, "True"]
+  DeployCostCategory: !And [!Condition CostCategoryEnable, !Condition IsSourceAccount]
   DeployCURViaCFNInSource: !And [!Condition CUREnable, !Condition IsSourceAccount, !Condition RegionSupportsCURviaCFN]
   DeployCURViaCFNInDestination: !And [!Condition CUREnable, !Condition IsDestinationAccount, !Condition RegionSupportsCURviaCFN]
   DeployCURViaLambda: !And [!Condition CUREnable, !Not [!Condition RegionSupportsCURviaCFN]]
@@ -387,6 +396,17 @@ Resources:
                   - s3:GetObjectVersionTagging
                 Resource:
                   Fn::Sub: "arn:${AWS::Partition}:s3:::${ResourcePrefix}-${DestinationAccountId}-shared/cur/${AWS::AccountId}/*"
+
+####
+# Cost Categories - accountname
+####
+AccountNameCostCategory:
+    Type: AWS::CE::CostCategory
+    Condition: DeployCostCategory
+    Properties:
+        Name: "accountname"
+        RuleVersion: CostCategoryExpression.v1
+        Rules: '[{"Type": "INHERITED_VALUE", "InheritedValue": {"DimensionName": "LINKED_ACCOUNT_NAME"}}]'
 
 ####
 # Local CUR
