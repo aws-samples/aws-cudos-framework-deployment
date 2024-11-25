@@ -18,7 +18,7 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
     --quicksight-user $quicksight_user \
     --share-with-account \
     --timezone 'Europe/Paris' \
-    --quicksight-datasource-id $quicksight_datasource_id
+    --quicksight-datasource-id $quicksight_datasource_id \
 
 
   [ "$status" -eq 0 ]
@@ -60,9 +60,11 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
   run cid-cmd -vv --yes update --force --recursive  \
     --dashboard-id cudos-v5 \
     --cur-table-name $cur_table \
+    --athena-database $database_name\
     --athena-workgroup primary\
     --timezone 'Europe/Paris' \
     --quicksight-user $quicksight_user   \
+    --quicksight-datasource-id $quicksight_datasource_id \
 
   [ "$status" -eq 0 ]
 }
@@ -70,6 +72,7 @@ cur_table="${cur_table:-cur1}" # If variable not set or null, use default. FIXME
 
 @test "Delete runs" {
   run cid-cmd -vv --yes delete \
+    --athena-database $database_name\
     --athena-workgroup primary\
     --dashboard-id cudos-v5
 

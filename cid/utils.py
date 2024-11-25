@@ -11,7 +11,8 @@ from functools import lru_cache as cache
 from collections.abc import Iterable
 
 import requests
-import questionary
+from InquirerPy import inquirer
+from InquirerPy.base.control import Choice
 from boto3.session import Session
 from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError, ProfileNotFound
 
@@ -183,23 +184,24 @@ def get_yesno_parameter(param_name, message, default=None, break_on_ctrl_c=True)
         unset_parameter(param_name)
     if default != None:
         default = 'yes' if mapping[default] else 'no'
-    res = get_parameter(param_name, message=message, choices=['yes', 'no'], default=default, break_on_ctrl_c=break_on_ctrl_c)
+    res = get_parameter(param_name, message=message, choices=['yes', 'no'], default=default, break_on_ctrl_c=break_on_ctrl_c, fuzzy=False)
     params[param_name] = (res == 'yes')
     return params[param_name]
 
 
-def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True):
+def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True, fuzzy=True):
     """
-    Check if parameters are provided in the command line and if not, ask user 
+    Check if parameters are provided in the command line and if not, ask user
 
     :param message: text message for user
     :param choices: a list or dict for choice. None for text entry. Keys and Values must be strings.
     :param default: a default text template
     :param none_as_disabled: if True and choices is a dict, all choices with None as a value will be disabled
-    :param template_variables: a dict with varibles for template
+    :param template_variables: a dict with variables for template
     :param break_on_ctrl_c: if True, exit() if user pressed CTRL+C
+    :param fuzzy: if True, exit() if user pressed CTRL+C
 
-    :returns: a value choosed by user or provided in command line    
+    :returns: a value from user or provided in command line
     """
     logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
@@ -220,22 +222,31 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             _choices = []
             for key, value in choices.items():
                 _choices.append(
-                    questionary.Choice(
-                        title=key,
+                    Choice(
+                        name=key,
                         value=value,
-                        disabled=True if (none_as_disabled and value is None) else False,
+                        enabled=not (none_as_disabled and value is None),
                     )
                 )
                 choices = _choices
-
         print()
         if not isatty():
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
-        result = questionary.select(
-            message=f'[{param_name}] {message}:',
-            choices=choices,
-            default=default,
-        ).ask()
+        if fuzzy:
+            result = inquirer.fuzzy(
+                message=f'[{param_name}] {message}:',
+                choices=choices,
+                long_instruction='use arrows or start typing',
+                match_exact=True,
+                default=default,
+            ).execute()
+        else:
+            result = inquirer.select(
+                message=f'[{param_name}] {message}:',
+                choices=choices,
+                long_instruction='use arrows or start typing',
+                default=default,
+            ).execute()
     else: # it is a text entry
         if isinstance(default, str) and template_variables:
             print(template_variables)
@@ -243,10 +254,10 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         print()
         if not isatty():
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
-        result = questionary.text(
+        result = inquirer.text(
             message=f'[{param_name}] {message}:' ,
             default=default or '',
-        ).ask()
+        ).execute()
         if isinstance(result, str) and template_variables:
             result = result.format(**template_variables)
     if (break_on_ctrl_c and result is None):
