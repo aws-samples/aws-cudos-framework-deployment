@@ -151,7 +151,7 @@ Mappings:
     FOCUS:
       DefaultQuery: >-
         SELECT AvailabilityZone, BilledCost, BillingAccountId, BillingAccountName, BillingCurrency, BillingPeriodEnd, BillingPeriodStart, ChargeCategory, ChargeClass, ChargeDescription, ChargeFrequency, ChargePeriodEnd, ChargePeriodStart, CommitmentDiscountCategory, CommitmentDiscountId, CommitmentDiscountName, CommitmentDiscountType, CommitmentDiscountStatus, ConsumedQuantity, ConsumedUnit, ContractedCost, ContractedUnitPrice, EffectiveCost, InvoiceIssuerName, ListCost, ListUnitPrice, PricingCategory, PricingQuantity, PricingUnit, ProviderName, PublisherName, RegionId, RegionName, ResourceId, ResourceName, ResourceType, ServiceCategory, ServiceName, SkuId, SkuPriceId, SubAccountId, SubAccountName, Tags, x_CostCategories, x_Discounts, x_Operation, x_ServiceCode, x_UsageType
-        FROM FOCUS_1_0_AWS_PREVIEW
+        FROM FOCUS_1_0_AWS
     COH:
       DefaultQuery: >-
         SELECT account_id, action_type, currency_code, current_resource_details, current_resource_summary, current_resource_type, estimated_monthly_cost_after_discount, estimated_monthly_cost_before_discount, estimated_monthly_savings_after_discount, estimated_monthly_savings_before_discount, estimated_savings_percentage_after_discount, estimated_savings_percentage_before_discount, implementation_effort, last_refresh_timestamp, recommendation_id, recommendation_lookback_period_in_days, recommendation_source, recommended_resource_details, recommended_resource_summary, recommended_resource_type, region, resource_arn, restart_needed, rollback_possible, tags
