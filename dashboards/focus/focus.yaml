@@ -4,7 +4,7 @@ dashboards:
       datasets:
       - focus_resource_view
       - focus_summary_view
-    name: FOCUS Dashboard Preview
+    name: FOCUS Dashboard
     dashboardId: focus-dashboard
     category: Additional
     theme: MIDNIGHT
@@ -36,8 +36,8 @@ dashboards:
         Expression: |-
           ifelse(
           ${MoMGroupBy1} = 'Provider', providername,
-          ${MoMGroupBy1} = 'Billing Account Name', billingaccountname,
-          ${MoMGroupBy1} = 'Sub Account Name', subaccountname,
+          ${MoMGroupBy1} = 'Billing Account', {Billing Account},
+          ${MoMGroupBy1} = 'Sub Account', {Sub Account},
           ${MoMGroupBy1} = 'Charge Category', chargecategory,
           ${MoMGroupBy1} = 'Service Category', servicecategory,
           ${MoMGroupBy1} = 'Service Name', servicename,
@@ -48,8 +48,8 @@ dashboards:
         Expression: |-
           ifelse(
           ${MoMGroupByTwo} = 'Provider', providername,
-          ${MoMGroupByTwo} = 'Billing Account Name', billingaccountname,
-          ${MoMGroupByTwo} = 'Sub Account Name', subaccountname,
+          ${MoMGroupByTwo} = 'Billing Account', {Billing Account},
+          ${MoMGroupByTwo} = 'Sub Account', {Sub Account},
           ${MoMGroupByTwo} = 'Charge Category', chargecategory,
           ${MoMGroupByTwo} = 'Service Category', servicecategory,
           ${MoMGroupByTwo} = 'Service Name', servicename,
@@ -170,8 +170,8 @@ dashboards:
         Name: Total Discounts Absolute
       ColumnConfigurations:
       - Column:
-          ColumnName: Total Discounts
-          DataSetIdentifier: focus_summary_view
+          ColumnName: Cost
+          DataSetIdentifier: focus_resource_view
         FormatConfiguration:
           NumberFormatConfiguration:
             FormatConfiguration:
@@ -180,25 +180,8 @@ dashboards:
                   NullString: 'null'
                 NumberScale: AUTO
       - Column:
-          ColumnName: List Cost amortized
-          DataSetIdentifier: focus_summary_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              NumberDisplayFormatConfiguration:
-                NegativeValueConfiguration:
-                  DisplayMode: NEGATIVE
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                NumberScale: AUTO
-                SeparatorConfiguration:
-                  DecimalSeparator: DOT
-                  ThousandsSeparator:
-                    Symbol: COMMA
-                    Visibility: VISIBLE
-      - Column:
-          ColumnName: Cost Absolute
-          DataSetIdentifier: focus_summary_view
+          ColumnName: consumedquantity
+          DataSetIdentifier: focus_resource_view
         FormatConfiguration:
           NumberFormatConfiguration:
             FormatConfiguration:
@@ -207,22 +190,15 @@ dashboards:
                   NullString: 'null'
                 NumberScale: AUTO
       - Column:
-          ColumnName: MoM % Group By One
-          DataSetIdentifier: focus_summary_view
+          ColumnName: effectivecost
+          DataSetIdentifier: focus_resource_view
         FormatConfiguration:
           NumberFormatConfiguration:
             FormatConfiguration:
-              PercentageDisplayFormatConfiguration:
-                NegativeValueConfiguration:
-                  DisplayMode: NEGATIVE
+              NumberDisplayFormatConfiguration:
                 NullValueFormatConfiguration:
                   NullString: 'null'
-                SeparatorConfiguration:
-                  DecimalSeparator: DOT
-                  ThousandsSeparator:
-                    Symbol: COMMA
-                    Visibility: VISIBLE
-                Suffix: '%'
+                NumberScale: AUTO
       - Column:
           ColumnName: Cost
           DataSetIdentifier: focus_summary_view
@@ -234,34 +210,7 @@ dashboards:
                   NullString: 'null'
                 NumberScale: AUTO
       - Column:
-          ColumnName: MoM % Group By Two
-          DataSetIdentifier: focus_summary_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              PercentageDisplayFormatConfiguration:
-                NegativeValueConfiguration:
-                  DisplayMode: NEGATIVE
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                SeparatorConfiguration:
-                  DecimalSeparator: DOT
-                  ThousandsSeparator:
-                    Symbol: COMMA
-                    Visibility: VISIBLE
-                Suffix: '%'
-      - Column:
-          ColumnName: 6863c7a0-8a43-4098-899e-1755cb4cd658
-          DataSetIdentifier: focus_summary_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              NumberDisplayFormatConfiguration:
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                NumberScale: AUTO
-      - Column:
-          ColumnName: Total Discounts Absolute
+          ColumnName: Cost Absolute
           DataSetIdentifier: focus_summary_view
         FormatConfiguration:
           NumberFormatConfiguration:
@@ -287,6 +236,84 @@ dashboards:
                     Symbol: COMMA
                     Visibility: VISIBLE
                 Suffix: '%'
+      - Column:
+          ColumnName: List Cost amortized
+          DataSetIdentifier: focus_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              NumberDisplayFormatConfiguration:
+                NegativeValueConfiguration:
+                  DisplayMode: NEGATIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                NumberScale: AUTO
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+      - Column:
+          ColumnName: MoM % Group By One
+          DataSetIdentifier: focus_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              PercentageDisplayFormatConfiguration:
+                NegativeValueConfiguration:
+                  DisplayMode: NEGATIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Suffix: '%'
+      - Column:
+          ColumnName: MoM % Group By Two
+          DataSetIdentifier: focus_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              PercentageDisplayFormatConfiguration:
+                NegativeValueConfiguration:
+                  DisplayMode: NEGATIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Suffix: '%'
+      - Column:
+          ColumnName: Summary Group By
+          DataSetIdentifier: focus_summary_view
+        FormatConfiguration:
+          StringFormatConfiguration:
+            NullValueFormatConfiguration:
+              NullString: 'null'
+      - Column:
+          ColumnName: Total Discounts
+          DataSetIdentifier: focus_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              NumberDisplayFormatConfiguration:
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                NumberScale: AUTO
+      - Column:
+          ColumnName: Total Discounts Absolute
+          DataSetIdentifier: focus_summary_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              NumberDisplayFormatConfiguration:
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                NumberScale: AUTO
       - Column:
           ColumnName: billedcost
           DataSetIdentifier: focus_summary_view
@@ -363,53 +390,6 @@ dashboards:
                   ThousandsSeparator:
                     Symbol: COMMA
                     Visibility: VISIBLE
-      - Column:
-          ColumnName: f24621b5-7339-42bf-8cf4-b6b2e5ecebf0
-          DataSetIdentifier: focus_summary_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              NumberDisplayFormatConfiguration:
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                NumberScale: AUTO
-      - Column:
-          ColumnName: Summary Group By
-          DataSetIdentifier: focus_summary_view
-        FormatConfiguration:
-          StringFormatConfiguration:
-            NullValueFormatConfiguration:
-              NullString: 'null'
-      - Column:
-          ColumnName: consumedquantity
-          DataSetIdentifier: focus_resource_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              NumberDisplayFormatConfiguration:
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                NumberScale: AUTO
-      - Column:
-          ColumnName: effectivecost
-          DataSetIdentifier: focus_resource_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              NumberDisplayFormatConfiguration:
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                NumberScale: AUTO
-      - Column:
-          ColumnName: Cost
-          DataSetIdentifier: focus_resource_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              NumberDisplayFormatConfiguration:
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                NumberScale: AUTO
       DataSetIdentifierDeclarations:
       - DataSetArn: arn:aws:quicksight:::dataset/0b4c0cab-545f-447d-b10c-8a7993a858e1
         Identifier: focus_summary_view
@@ -433,9 +413,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 6961dad8-651b-47d4-b3ae-a64ba891fe6e
+              - 0b31aca1-ed4d-4812-9220-d1e61b46c349
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 7cb60254-ab73-4352-acad-7373605213ea
@@ -460,9 +440,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 6961dad8-651b-47d4-b3ae-a64ba891fe6e
+              - 0b31aca1-ed4d-4812-9220-d1e61b46c349
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4117f433-b778-4bd8-9d92-4ff86d774b94
@@ -481,9 +461,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 9a6c6793-ef86-489e-8ec6-20ba04bbc177
+              - 73ac2224-f196-4ac0-9246-a14a9ce783f8
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 91c6ebbe-18c5-4bba-8dfb-9bd75328315c
@@ -508,9 +488,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 9a6c6793-ef86-489e-8ec6-20ba04bbc177
+              - 73ac2224-f196-4ac0-9246-a14a9ce783f8
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 7fbfb95b-41f9-46a2-81ae-809aec82c770
@@ -529,9 +509,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 3adb0b68-a807-43c0-a5c8-48fecc45e4f7
+              - aef80370-6168-4dc8-b702-0c19a6a5a2d9
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: ea7f27ea-4460-4f69-9c81-500277658cf7
@@ -555,9 +535,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 2e1e217e-4b0f-4980-acbe-ebe67b605a1b
+              - 1a5c4479-8094-4294-8454-be2459f3bf94
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5832e57a-8317-43e7-9df7-0094c87a10ad
@@ -576,9 +556,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 2e1e217e-4b0f-4980-acbe-ebe67b605a1b
+              - 1a5c4479-8094-4294-8454-be2459f3bf94
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a3993377-0893-433e-947f-48158625e55a
@@ -597,9 +577,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - d0a72d7e-450e-4d81-bc31-9a2e573e36f0
+              - 3cd9e58c-3803-4141-9ae3-57842d14882f
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4d6406c8-9858-414b-9aae-679377d8699f
@@ -618,9 +598,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 1337a6b4-7706-4b5c-96f5-281af813589d
+              - 46800753-aa5f-4e25-8273-0bb3f8744b98
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 2000cb5a-171d-41c7-82fc-07e1b6cc187e
@@ -639,9 +619,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 9e95dab0-f6af-438b-9f3b-ebdce5aa1d35
+              - 30dc92d5-9f94-4975-96db-e0c64e06dc50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: e8936e41-9b66-4a8e-8b46-fbd792898f59
@@ -662,9 +642,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 9e95dab0-f6af-438b-9f3b-ebdce5aa1d35
+              - 30dc92d5-9f94-4975-96db-e0c64e06dc50
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 95035b13-5003-486e-bf17-28e7c5106a50
@@ -683,9 +663,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - e5c73dd9-aa47-45c5-9b30-316f96d1a248
+              - 625f6722-4cc5-43e5-bead-03f61a0e7d5d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 11c1c4c1-78f9-4ca1-a189-afd152c2c282
@@ -704,9 +684,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 409cb8be-1b39-4b18-873e-95d954b897af
+              - 6c1e23ba-4e12-458c-aedc-5ee4eb73a3fc
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 37306cec-43c8-4fe0-84e0-015201cca9df
@@ -760,9 +740,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - b04a86bb-35a0-4468-8402-a77a8248a4d9
+              - a65fe3a3-b84c-4cfa-9d50-00d6cb0e50df
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 709cb020-e02a-4e6b-ae01-21c558dd3d8d
@@ -786,16 +766,16 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 1337a6b4-7706-4b5c-96f5-281af813589d
-              - d0a72d7e-450e-4d81-bc31-9a2e573e36f0
-              - 409cb8be-1b39-4b18-873e-95d954b897af
-              - 9e95dab0-f6af-438b-9f3b-ebdce5aa1d35
-              - 1b1101dd-2644-4fa6-9ceb-dd066359845f
-              - 20cf5dba-70e5-4419-868c-1c3d493656c4
-              - 3d268919-2308-4307-b655-a08a25aadb0c
-              - 6b146db9-5eff-4370-8772-4e47e971623d
+              - 46800753-aa5f-4e25-8273-0bb3f8744b98
+              - 3cd9e58c-3803-4141-9ae3-57842d14882f
+              - 6c1e23ba-4e12-458c-aedc-5ee4eb73a3fc
+              - 30dc92d5-9f94-4975-96db-e0c64e06dc50
+              - 748fba8e-e6c4-4f4a-96b6-84759f157161
+              - 29835058-faa1-4e81-9fb5-2071264b9419
+              - 8a0e1e7a-326b-4e5f-a43c-3374a61f34e4
+              - 7bfc5eb8-6018-47a1-a1f0-16322d17fb12
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 7fa52251-b5a3-458b-9b69-d540e6b6432e
@@ -814,9 +794,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 1b1101dd-2644-4fa6-9ceb-dd066359845f
+              - 748fba8e-e6c4-4f4a-96b6-84759f157161
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 04f9b7cf-fd83-4178-93c3-7464d7d503bb
@@ -835,9 +815,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 20cf5dba-70e5-4419-868c-1c3d493656c4
+              - 29835058-faa1-4e81-9fb5-2071264b9419
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 46c869d6-b18a-422d-963c-d07c14359376
@@ -862,9 +842,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - 3978d0f8-65e2-440a-9bd9-a54bb91e611b
+              - 68773bde-a3cc-4e20-8047-e633f0a63c8a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 26981e7b-25d3-49ba-8956-d95b93c800e2
@@ -889,9 +869,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - c5d4b0eb-d476-46d1-bdab-98fbd3e61e9c
+              - 07d418fd-6db3-4493-b23a-c155be51d662
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a341a510-42d8-43f8-84a8-5322c35645df
@@ -916,9 +896,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - b8e84036-8c0b-46ec-8e22-052fb2243732
+              - ba1827bc-8ccd-4684-b379-05daf72f8ef0
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 712605fc-0008-4c86-81c4-cfd952eac6c5
@@ -941,9 +921,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - b8e84036-8c0b-46ec-8e22-052fb2243732
+              - ba1827bc-8ccd-4684-b379-05daf72f8ef0
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a69db1be-4e55-4d18-9f66-c00c0af428e5
@@ -962,9 +942,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - b8e84036-8c0b-46ec-8e22-052fb2243732
+              - ba1827bc-8ccd-4684-b379-05daf72f8ef0
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: ada342f9-1d7f-4bb6-96c0-9f507f09f5a1
@@ -989,9 +969,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - 29323ab7-0fc9-44d9-bf53-221bc10b2840
+              - a5fd7071-1aa9-49f8-8985-890c670f44e1
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 04c5a853-56ca-4f4a-8555-12576fd1d45d
@@ -1014,9 +994,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - 29323ab7-0fc9-44d9-bf53-221bc10b2840
+              - a5fd7071-1aa9-49f8-8985-890c670f44e1
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 72453bf9-a33f-4690-a040-dc9307590d87
@@ -1035,9 +1015,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - 29323ab7-0fc9-44d9-bf53-221bc10b2840
+              - a5fd7071-1aa9-49f8-8985-890c670f44e1
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: ba9bc548-90e1-450e-a3ff-eb5b699c100a
@@ -1056,9 +1036,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 3d268919-2308-4307-b655-a08a25aadb0c
+              - 8a0e1e7a-326b-4e5f-a43c-3374a61f34e4
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: bff52c62-f539-4889-81d9-88aa7fe8f3b8
@@ -1081,9 +1061,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - 31a634a4-c9d8-4515-b853-0ff1e64c9894
+              - a1a7eb2c-ca31-485a-b4ea-1ea5067198ef
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: cd71e356-fff9-496f-b56b-a7d11ba06684
@@ -1106,9 +1086,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - 3f97f389-2b35-41f6-90a7-3e2cb59f1597
+              - 23ecd18b-1954-46d5-bcea-15db1380e532
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 46b7540c-b4a5-4b05-8522-b9fe11180274
@@ -1131,9 +1111,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
               VisualIds:
-              - a8c4a928-1951-43d7-bea2-535fd0da4327
+              - a14fe328-2f5a-4b7b-9fba-62fdb04f2bd4
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: e6664bc4-9e23-4899-a428-c31bc032e306
@@ -1194,9 +1174,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
             - Scope: ALL_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 3f0405b3-da12-43b9-ac97-cbcff39e5e36
@@ -1228,11 +1208,11 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
             - Scope: ALL_VISUALS
-              SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+              SheetId: 783eff71-967d-49b6-bc92-106aac872f66
             - Scope: ALL_VISUALS
-              SheetId: b183f169-67e2-4a1d-b53d-6f23f5f1ad37
+              SheetId: 6c9efd44-6c6f-4464-97ed-256a98303ffe
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 3178b205-403d-408c-8761-a008125047d2
@@ -1282,9 +1262,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 4145e5fe-16a7-4cf1-9f18-91ccb48d9a32
+              - 6ed2da63-3eb7-4696-b1cb-09e3abc40965
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 1d2e9d7d-69a1-402b-a6e2-10d50ee9aa31
@@ -1303,9 +1283,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 6b146db9-5eff-4370-8772-4e47e971623d
+              - 7bfc5eb8-6018-47a1-a1f0-16322d17fb12
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 472ac19d-8ef1-45fd-8258-478fd3bb11af
@@ -1324,9 +1304,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 1b274604-a042-4a2b-acfd-5d5eaa67b601
+              - 0ab3bc19-eaec-4e9f-95f5-d8b49e9522c4
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 0b02173b-68c6-4b3e-8add-49767918f1d2
@@ -1347,9 +1327,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 1b274604-a042-4a2b-acfd-5d5eaa67b601
+              - 0ab3bc19-eaec-4e9f-95f5-d8b49e9522c4
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 712dcf21-664c-40b5-8a3e-ac7d2976b56a
@@ -1370,9 +1350,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 1b274604-a042-4a2b-acfd-5d5eaa67b601
+              - 0ab3bc19-eaec-4e9f-95f5-d8b49e9522c4
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: b746ded9-c6e5-4a70-996c-2d8f3e271e64
@@ -1391,9 +1371,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 8e6b9243-ffa0-4a2d-b6b1-f49f383de7af
+              - 4b593d4e-4d56-4469-add8-7aa9760e1c7d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 42913ff1-4356-4c0f-8384-12b3616e750e
@@ -1413,9 +1393,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+              SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
               VisualIds:
-              - 8e6b9243-ffa0-4a2d-b6b1-f49f383de7af
+              - 4b593d4e-4d56-4469-add8-7aa9760e1c7d
         Status: ENABLED
       Options:
         WeekStart: SUNDAY
@@ -1507,55 +1487,55 @@ dashboards:
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 7
-                ElementId: 6961dad8-651b-47d4-b3ae-a64ba891fe6e
+                ElementId: 0b31aca1-ed4d-4812-9220-d1e61b46c349
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 4
               - ColumnIndex: 7
                 ColumnSpan: 7
-                ElementId: 9a6c6793-ef86-489e-8ec6-20ba04bbc177
+                ElementId: 73ac2224-f196-4ac0-9246-a14a9ce783f8
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 4
               - ColumnIndex: 14
                 ColumnSpan: 7
-                ElementId: 2e1e217e-4b0f-4980-acbe-ebe67b605a1b
+                ElementId: 1a5c4479-8094-4294-8454-be2459f3bf94
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 4
               - ColumnIndex: 21
                 ColumnSpan: 15
-                ElementId: 9e95dab0-f6af-438b-9f3b-ebdce5aa1d35
+                ElementId: 30dc92d5-9f94-4975-96db-e0c64e06dc50
                 ElementType: VISUAL
                 RowIndex: 3
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 7
-                ElementId: d0a72d7e-450e-4d81-bc31-9a2e573e36f0
+                ElementId: 3cd9e58c-3803-4141-9ae3-57842d14882f
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 3
               - ColumnIndex: 7
                 ColumnSpan: 7
-                ElementId: 1337a6b4-7706-4b5c-96f5-281af813589d
+                ElementId: 46800753-aa5f-4e25-8273-0bb3f8744b98
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 3
               - ColumnIndex: 14
                 ColumnSpan: 7
-                ElementId: 409cb8be-1b39-4b18-873e-95d954b897af
+                ElementId: 6c1e23ba-4e12-458c-aedc-5ee4eb73a3fc
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 15
-                ElementId: e5c73dd9-aa47-45c5-9b30-316f96d1a248
+                ElementId: 625f6722-4cc5-43e5-bead-03f61a0e7d5d
                 ElementType: VISUAL
                 RowIndex: 10
                 RowSpan: 12
               - ColumnIndex: 15
                 ColumnSpan: 16
-                ElementId: 3adb0b68-a807-43c0-a5c8-48fecc45e4f7
+                ElementId: aef80370-6168-4dc8-b702-0c19a6a5a2d9
                 ElementType: VISUAL
                 RowIndex: 10
                 RowSpan: 12
@@ -1567,19 +1547,19 @@ dashboards:
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 1b274604-a042-4a2b-acfd-5d5eaa67b601
+                ElementId: 0ab3bc19-eaec-4e9f-95f5-d8b49e9522c4
                 ElementType: VISUAL
                 RowIndex: 22
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 15
-                ElementId: 1b1101dd-2644-4fa6-9ceb-dd066359845f
+                ElementId: 748fba8e-e6c4-4f4a-96b6-84759f157161
                 ElementType: VISUAL
                 RowIndex: 33
                 RowSpan: 10
               - ColumnIndex: 15
                 ColumnSpan: 21
-                ElementId: 20cf5dba-70e5-4419-868c-1c3d493656c4
+                ElementId: 29835058-faa1-4e81-9fb5-2071264b9419
                 ElementType: VISUAL
                 RowIndex: 33
                 RowSpan: 10
@@ -1597,25 +1577,25 @@ dashboards:
                 RowSpan: 4
               - ColumnIndex: 7
                 ColumnSpan: 11
-                ElementId: 3d268919-2308-4307-b655-a08a25aadb0c
+                ElementId: 8a0e1e7a-326b-4e5f-a43c-3374a61f34e4
                 ElementType: VISUAL
                 RowIndex: 45
                 RowSpan: 4
               - ColumnIndex: 18
                 ColumnSpan: 18
-                ElementId: 8e6b9243-ffa0-4a2d-b6b1-f49f383de7af
+                ElementId: 4b593d4e-4d56-4469-add8-7aa9760e1c7d
                 ElementType: VISUAL
                 RowIndex: 45
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 18
-                ElementId: 6b146db9-5eff-4370-8772-4e47e971623d
+                ElementId: 7bfc5eb8-6018-47a1-a1f0-16322d17fb12
                 ElementType: VISUAL
                 RowIndex: 49
                 RowSpan: 11
               - ColumnIndex: 18
                 ColumnSpan: 18
-                ElementId: 4145e5fe-16a7-4cf1-9f18-91ccb48d9a32
+                ElementId: 6ed2da63-3eb7-4696-b1cb-09e3abc40965
                 ElementType: VISUAL
                 RowIndex: 49
                 RowSpan: 11
@@ -1708,9 +1688,9 @@ dashboards:
                 ElementType: PARAMETER_CONTROL
                 RowIndex: 1
                 RowSpan: 1
-        SheetId: 8a6bed9e-8232-4f29-b37c-4bff5b4447ae
+        SheetId: d8cfb704-5883-4f80-9414-042670f0f1a3
         TextBoxes:
-        - Content: "<text-box>\n  <inline font-size=\"36px\">FOCUS Dashboard (Preview)</inline>\n\
+        - Content: "<text-box>\n  <inline font-size=\"36px\">FOCUS Dashboard</inline>\n\
             \  <br/>\n  <inline color=\"#b3b3b3\" font-size=\"16px\">An interactive and\
             \ customizable dashboard from the\_</inline>\n  <inline color=\"#61d1d6\" font-size=\"\
             16px\">\n    <a href=\"https://catalog.workshops.aws/awscid/en-US\" target=\"\
@@ -1769,7 +1749,7 @@ dashboards:
                   \ Adjustments and Credits in\_</inline>\n  <inline font-size=\"20px\"\
                   >\n    <parameter>${Currency}</parameter>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 8e6b9243-ffa0-4a2d-b6b1-f49f383de7af
+            VisualId: 4b593d4e-4d56-4469-add8-7aa9760e1c7d
         - ComboChartVisual:
             Actions:
             - ActionOperations:
@@ -1821,7 +1801,7 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: DAY
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.chargeperiodstart.3.1718832307233
-                      HierarchyId: 3426c6e1-d9ca-446c-91f3-ff91520f376b
+                      HierarchyId: 906395f0-080a-4cf0-aa31-87a360f9b63a
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -1886,7 +1866,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 3426c6e1-d9ca-446c-91f3-ff91520f376b
+                HierarchyId: 906395f0-080a-4cf0-aa31-87a360f9b63a
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Excluding Credits, Adjustments and Tax</visual-subtitle>
@@ -1901,7 +1881,7 @@ dashboards:
                   \ font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n  </inline>\n\
                   </visual-title>"
               Visibility: VISIBLE
-            VisualId: 1b274604-a042-4a2b-acfd-5d5eaa67b601
+            VisualId: 0ab3bc19-eaec-4e9f-95f5-d8b49e9522c4
         - WaterfallVisual:
             Actions: []
             ChartConfiguration:
@@ -1970,7 +1950,7 @@ dashboards:
                   \ Credits and Adjustmets in\_</inline>\n  <inline font-size=\"20px\">\n\
                   \    <parameter>${Currency}</parameter>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 6b146db9-5eff-4370-8772-4e47e971623d
+            VisualId: 7bfc5eb8-6018-47a1-a1f0-16322d17fb12
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2012,7 +1992,7 @@ dashboards:
                   20px\">Effective Discount Rate in\_</inline>\n  <inline font-size=\"20px\"\
                   >\n    <parameter>${Currency}</parameter>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 3d268919-2308-4307-b655-a08a25aadb0c
+            VisualId: 8a0e1e7a-326b-4e5f-a43c-3374a61f34e4
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -2055,7 +2035,7 @@ dashboards:
                         ColumnName: servicecategory
                         DataSetIdentifier: focus_summary_view
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.servicecategory.2.1718949055814
-                      HierarchyId: dca65968-c77a-4eb7-b1a8-e908ed012c56
+                      HierarchyId: 98a31c5e-b91d-422e-83a7-0e4a073dae71
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -2106,7 +2086,7 @@ dashboards:
                 - ColumnName: servicename
                   DataSetIdentifier: focus_summary_view
                 DrillDownFilters: []
-                HierarchyId: dca65968-c77a-4eb7-b1a8-e908ed012c56
+                HierarchyId: 98a31c5e-b91d-422e-83a7-0e4a073dae71
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>\n  Previous month.\n  <inline font-size=\"\
@@ -2119,7 +2099,7 @@ dashboards:
                   \ Account Name in\_</inline>\n  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 20cf5dba-70e5-4419-868c-1c3d493656c4
+            VisualId: 29835058-faa1-4e81-9fb5-2071264b9419
         - SankeyDiagramVisual:
             Actions:
             - ActionOperations:
@@ -2178,7 +2158,7 @@ dashboards:
                   \  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 1b1101dd-2644-4fa6-9ceb-dd066359845f
+            VisualId: 748fba8e-e6c4-4f4a-96b6-84759f157161
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2191,7 +2171,7 @@ dashboards:
                       DataSetIdentifier: focus_summary_view
                     DateGranularity: DAY
                     FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1717800713725
-                    HierarchyId: 1b4225d7-e163-4095-8b3d-c91d6e352576
+                    HierarchyId: 8b31e5df-71b4-4ce8-9590-4f91e2d23def
                 Values:
                 - CategoricalMeasureField:
                     AggregationFunction: DISTINCT_COUNT
@@ -2224,7 +2204,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 1b4225d7-e163-4095-8b3d-c91d6e352576
+                HierarchyId: 8b31e5df-71b4-4ce8-9590-4f91e2d23def
             ConditionalFormatting:
               ConditionalFormattingOptions:
               - ComparisonValue:
@@ -2266,7 +2246,7 @@ dashboards:
                     <inline color="#ffffff" font-size="20px">Total Providers</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 409cb8be-1b39-4b18-873e-95d954b897af
+            VisualId: 6c1e23ba-4e12-458c-aedc-5ee4eb73a3fc
         - ComboChartVisual:
             Actions:
             - ActionOperations:
@@ -2313,7 +2293,7 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: MONTH
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1717800713725
-                      HierarchyId: aa5e88d6-1240-4af7-aa62-da74d7285833
+                      HierarchyId: 66aab224-8bfe-49cc-9acb-ab16a048b51f
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -2380,7 +2360,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: aa5e88d6-1240-4af7-aa62-da74d7285833
+                HierarchyId: 66aab224-8bfe-49cc-9acb-ab16a048b51f
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -2390,7 +2370,7 @@ dashboards:
                   \ in\_</inline>\n  <inline color=\"#ffffff\" font-size=\"20px\">\n   \
                   \ <parameter>${Currency}</parameter>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: e5c73dd9-aa47-45c5-9b30-316f96d1a248
+            VisualId: 625f6722-4cc5-43e5-bead-03f61a0e7d5d
         - WordCloudVisual:
             Actions:
             - ActionOperations:
@@ -2399,9 +2379,12 @@ dashboards:
                     SelectedColumns:
                     - ColumnName: regionname
                       DataSetIdentifier: focus_summary_view
+                    - ColumnName: regionname
+                      DataSetIdentifier: focus_summary_view
                     - ColumnName: providername
                       DataSetIdentifier: focus_summary_view
                     SelectedFields:
+                    - 9b0ed71e-9072-4dc4-92ed-47cf617e5206.regionname.1.1717804447612
                     - 9b0ed71e-9072-4dc4-92ed-47cf617e5206.regionname.1.1717804447612
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
@@ -2422,7 +2405,7 @@ dashboards:
                         ColumnName: regionname
                         DataSetIdentifier: focus_summary_view
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.regionname.1.1717804447612
-                      HierarchyId: 29e0fcf8-d4b6-4c6b-b14b-cb4364ce11ef
+                      HierarchyId: 0f472310-4d12-48f1-91ac-eaa1ea7ba500
                   Size:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -2449,7 +2432,7 @@ dashboards:
                 - ColumnName: providername
                   DataSetIdentifier: focus_summary_view
                 DrillDownFilters: []
-                HierarchyId: 29e0fcf8-d4b6-4c6b-b14b-cb4364ce11ef
+                HierarchyId: 0f472310-4d12-48f1-91ac-eaa1ea7ba500
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>\n  Previous month.\n  <inline font-size=\"\
@@ -2461,7 +2444,7 @@ dashboards:
                   \ by\_</inline>\n  <inline font-size=\"20px\">\n    <parameter>${Cost}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 9e95dab0-f6af-438b-9f3b-ebdce5aa1d35
+            VisualId: 30dc92d5-9f94-4975-96db-e0c64e06dc50
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2474,7 +2457,7 @@ dashboards:
                       DataSetIdentifier: focus_summary_view
                     DateGranularity: DAY
                     FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1717800713725
-                    HierarchyId: 1a11c129-cd5d-48cc-a672-ed171cd28220
+                    HierarchyId: 8d426e5c-0047-4ff0-a748-85a0109291b6
                 Values:
                 - CategoricalMeasureField:
                     AggregationFunction: DISTINCT_COUNT
@@ -2507,7 +2490,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 1a11c129-cd5d-48cc-a672-ed171cd28220
+                HierarchyId: 8d426e5c-0047-4ff0-a748-85a0109291b6
             ConditionalFormatting:
               ConditionalFormattingOptions:
               - ComparisonValue:
@@ -2549,7 +2532,7 @@ dashboards:
                     <inline color="#ffffff" font-size="20px">Total Services</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 1337a6b4-7706-4b5c-96f5-281af813589d
+            VisualId: 46800753-aa5f-4e25-8273-0bb3f8744b98
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2562,7 +2545,7 @@ dashboards:
                       DataSetIdentifier: focus_summary_view
                     DateGranularity: MONTH
                     FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1717800713725
-                    HierarchyId: 52a78587-fb52-4c5a-9a9b-25028aad288f
+                    HierarchyId: 78ad2719-2c69-414c-b4ef-baaf0def791d
                 Values:
                 - CategoricalMeasureField:
                     AggregationFunction: DISTINCT_COUNT
@@ -2601,7 +2584,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 52a78587-fb52-4c5a-9a9b-25028aad288f
+                HierarchyId: 78ad2719-2c69-414c-b4ef-baaf0def791d
             ConditionalFormatting:
               ConditionalFormattingOptions:
               - ComparisonValue:
@@ -2643,7 +2626,7 @@ dashboards:
                     <inline color="#ffffff" font-size="20px">Total Accounts</inline>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: d0a72d7e-450e-4d81-bc31-9a2e573e36f0
+            VisualId: 3cd9e58c-3803-4141-9ae3-57842d14882f
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2656,7 +2639,7 @@ dashboards:
                       DataSetIdentifier: focus_summary_view
                     DateGranularity: MONTH
                     FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1717800713725
-                    HierarchyId: 352012ac-c536-40cf-a4b4-712fa760d57c
+                    HierarchyId: 030e4d0e-5ce9-4453-a4c2-6048963d0364
                 Values:
                 - NumericalMeasureField:
                     AggregationFunction:
@@ -2690,7 +2673,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 352012ac-c536-40cf-a4b4-712fa760d57c
+                HierarchyId: 030e4d0e-5ce9-4453-a4c2-6048963d0364
             ConditionalFormatting:
               ConditionalFormattingOptions:
               - ComparisonValue:
@@ -2732,7 +2715,7 @@ dashboards:
                   \  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 2e1e217e-4b0f-4980-acbe-ebe67b605a1b
+            VisualId: 1a5c4479-8094-4294-8454-be2459f3bf94
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2745,7 +2728,7 @@ dashboards:
                       DataSetIdentifier: focus_summary_view
                     DateGranularity: MONTH
                     FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1717800713725
-                    HierarchyId: 3ae7177a-6080-4aad-bd23-499e671d6151
+                    HierarchyId: 06226f25-89a2-4f74-98a4-44ae08483c12
                 Values:
                 - NumericalMeasureField:
                     AggregationFunction:
@@ -2779,7 +2762,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 3ae7177a-6080-4aad-bd23-499e671d6151
+                HierarchyId: 06226f25-89a2-4f74-98a4-44ae08483c12
             ConditionalFormatting:
               ConditionalFormattingOptions:
               - ComparisonValue:
@@ -2824,7 +2807,7 @@ dashboards:
                   \  <inline font-size=\"20px\">\_in\_</inline>\n  <inline font-size=\"\
                   20px\">\n    <parameter>${Currency}</parameter>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 9a6c6793-ef86-489e-8ec6-20ba04bbc177
+            VisualId: 73ac2224-f196-4ac0-9246-a14a9ce783f8
         - KPIVisual:
             Actions: []
             ChartConfiguration:
@@ -2837,7 +2820,7 @@ dashboards:
                       DataSetIdentifier: focus_summary_view
                     DateGranularity: MONTH
                     FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1717800713725
-                    HierarchyId: a4bb1280-874c-4149-9a51-d55e46fda35d
+                    HierarchyId: df879119-a360-4006-80b7-78b9afaf7f7d
                 Values:
                 - NumericalMeasureField:
                     AggregationFunction:
@@ -2871,7 +2854,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: a4bb1280-874c-4149-9a51-d55e46fda35d
+                HierarchyId: df879119-a360-4006-80b7-78b9afaf7f7d
             ConditionalFormatting:
               ConditionalFormattingOptions:
               - ComparisonValue:
@@ -2916,7 +2899,7 @@ dashboards:
                   \  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 6961dad8-651b-47d4-b3ae-a64ba891fe6e
+            VisualId: 0b31aca1-ed4d-4812-9220-d1e61b46c349
         - ComboChartVisual:
             Actions:
             - ActionOperations:
@@ -2963,7 +2946,7 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: MONTH
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1717800713725
-                      HierarchyId: 84b8d852-7dfe-4baf-8e7b-48d254d669fa
+                      HierarchyId: 9c700510-aa8f-4f03-be34-2d57a483e366
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -3026,7 +3009,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 84b8d852-7dfe-4baf-8e7b-48d254d669fa
+                HierarchyId: 9c700510-aa8f-4f03-be34-2d57a483e366
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -3038,7 +3021,7 @@ dashboards:
                   \ font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n  </inline>\n\
                   </visual-title>"
               Visibility: VISIBLE
-            VisualId: 3adb0b68-a807-43c0-a5c8-48fecc45e4f7
+            VisualId: aef80370-6168-4dc8-b702-0c19a6a5a2d9
         - ComboChartVisual:
             Actions: []
             ChartConfiguration:
@@ -3065,14 +3048,14 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: MONTH
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.0.1718628967568
-                      HierarchyId: f4b15818-d0fa-4d71-a616-2bf7b3893a31
+                      HierarchyId: ec5d4dc5-f7f6-4022-a01c-1a0979676359
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: chargecategory
                         DataSetIdentifier: focus_summary_view
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.chargecategory.3.1718629001537
-                      HierarchyId: 7e624736-c3b2-45a1-b69a-6576cbc52635
+                      HierarchyId: a287475f-8a4f-4b50-acc4-fbad3b98ed8e
                   LineValues: []
               LineDataLabels:
                 Overlap: DISABLE_OVERLAP
@@ -3116,10 +3099,10 @@ dashboards:
                 - ColumnName: chargedescription
                   DataSetIdentifier: focus_summary_view
                 DrillDownFilters: []
-                HierarchyId: 7e624736-c3b2-45a1-b69a-6576cbc52635
+                HierarchyId: a287475f-8a4f-4b50-acc4-fbad3b98ed8e
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: f4b15818-d0fa-4d71-a616-2bf7b3893a31
+                HierarchyId: ec5d4dc5-f7f6-4022-a01c-1a0979676359
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>\n  <inline font-size=\"14px\">Use drill down\u2193\
@@ -3131,7 +3114,7 @@ dashboards:
                   \ in\_</inline>\n  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 4145e5fe-16a7-4cf1-9f18-91ccb48d9a32
+            VisualId: 6ed2da63-3eb7-4696-b1cb-09e3abc40965
       - ContentType: INTERACTIVE
         FilterControls:
         - CrossSheet:
@@ -3165,31 +3148,31 @@ dashboards:
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 11
-                ElementId: e3fb07b3-c364-4ddb-a1b9-215438ed3d4d
+                ElementId: 9e59c1a8-c141-491a-b6d0-1eff0411b27d
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 11
               - ColumnIndex: 11
                 ColumnSpan: 12
-                ElementId: a8c4a928-1951-43d7-bea2-535fd0da4327
+                ElementId: a14fe328-2f5a-4b7b-9fba-62fdb04f2bd4
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 11
               - ColumnIndex: 23
                 ColumnSpan: 13
-                ElementId: 3f97f389-2b35-41f6-90a7-3e2cb59f1597
+                ElementId: 23ecd18b-1954-46d5-bcea-15db1380e532
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 18
-                ElementId: c5d4b0eb-d476-46d1-bdab-98fbd3e61e9c
+                ElementId: 07d418fd-6db3-4493-b23a-c155be51d662
                 ElementType: VISUAL
                 RowIndex: 15
                 RowSpan: 11
               - ColumnIndex: 18
                 ColumnSpan: 18
-                ElementId: 31a634a4-c9d8-4515-b853-0ff1e64c9894
+                ElementId: a1a7eb2c-ca31-485a-b4ea-1ea5067198ef
                 ElementType: VISUAL
                 RowIndex: 15
                 RowSpan: 11
@@ -3201,7 +3184,7 @@ dashboards:
                 RowSpan: 9
               - ColumnIndex: 5
                 ColumnSpan: 28
-                ElementId: b04a86bb-35a0-4468-8402-a77a8248a4d9
+                ElementId: a65fe3a3-b84c-4cfa-9d50-00d6cb0e50df
                 ElementType: VISUAL
                 RowIndex: 26
                 RowSpan: 9
@@ -3213,7 +3196,7 @@ dashboards:
                 RowSpan: 9
               - ColumnIndex: 5
                 ColumnSpan: 28
-                ElementId: 3978d0f8-65e2-440a-9bd9-a54bb91e611b
+                ElementId: 68773bde-a3cc-4e20-8047-e633f0a63c8a
                 ElementType: VISUAL
                 RowIndex: 35
                 RowSpan: 9
@@ -3225,13 +3208,13 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: b8e84036-8c0b-46ec-8e22-052fb2243732
+                ElementId: ba1827bc-8ccd-4684-b379-05daf72f8ef0
                 ElementType: VISUAL
                 RowIndex: 46
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 29323ab7-0fc9-44d9-bf53-221bc10b2840
+                ElementId: a5fd7071-1aa9-49f8-8985-890c670f44e1
                 ElementType: VISUAL
                 RowIndex: 58
                 RowSpan: 12
@@ -3321,7 +3304,7 @@ dashboards:
                 ElementType: FILTER_CONTROL
                 RowIndex: 0
                 RowSpan: 1
-        SheetId: 9b2648f6-c0dd-4baa-be08-8e815defc5a7
+        SheetId: 783eff71-967d-49b6-bc92-106aac872f66
         TextBoxes:
         - Content: |-
             <text-box>
@@ -3382,7 +3365,7 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: MONTH
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.5.1717896811137
-                      HierarchyId: 2570e498-7566-4832-bbb2-eb5ce2d00ba9
+                      HierarchyId: 0793c997-a808-47b8-8d15-4570a2928245
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3429,7 +3412,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 2570e498-7566-4832-bbb2-eb5ce2d00ba9
+                HierarchyId: 0793c997-a808-47b8-8d15-4570a2928245
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Top 10</visual-subtitle>
@@ -3440,7 +3423,7 @@ dashboards:
                   \ Billing Account in\_</inline>\n  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: a8c4a928-1951-43d7-bea2-535fd0da4327
+            VisualId: a14fe328-2f5a-4b7b-9fba-62fdb04f2bd4
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3481,7 +3464,7 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: MONTH
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.5.1717896811137
-                      HierarchyId: 6d0a639d-c880-4f0f-9b23-296ccaa84b38
+                      HierarchyId: d9c89fe5-7b97-4530-98fa-7b8dca1a4974
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3520,15 +3503,13 @@ dashboards:
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
-              ValueAxis:
-                AxisOffset: 67px
               ValueLabelOptions:
                 SortIconVisibility: HIDDEN
                 Visibility: HIDDEN
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 6d0a639d-c880-4f0f-9b23-296ccaa84b38
+                HierarchyId: d9c89fe5-7b97-4530-98fa-7b8dca1a4974
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Top 10</visual-subtitle>
@@ -3539,7 +3520,7 @@ dashboards:
                   \ Sub Account in\_</inline>\n  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 3f97f389-2b35-41f6-90a7-3e2cb59f1597
+            VisualId: 23ecd18b-1954-46d5-bcea-15db1380e532
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3580,7 +3561,7 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: MONTH
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.5.1717896811137
-                      HierarchyId: 52dfec1a-fc7d-405c-8047-68015541b2a1
+                      HierarchyId: ef55d794-b05b-47cc-a404-e1c5332b9016
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3627,7 +3608,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 52dfec1a-fc7d-405c-8047-68015541b2a1
+                HierarchyId: ef55d794-b05b-47cc-a404-e1c5332b9016
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Top 10</visual-subtitle>
@@ -3638,7 +3619,7 @@ dashboards:
                   \ Service Name in\_</inline>\n  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 31a634a4-c9d8-4515-b853-0ff1e64c9894
+            VisualId: a1a7eb2c-ca31-485a-b4ea-1ea5067198ef
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -3799,7 +3780,7 @@ dashboards:
                   \  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 29323ab7-0fc9-44d9-bf53-221bc10b2840
+            VisualId: a5fd7071-1aa9-49f8-8985-890c670f44e1
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3840,7 +3821,7 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: MONTH
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.5.1717896811137
-                      HierarchyId: 21dcf8a9-2e07-4e0c-8a95-a0f6714b4b3f
+                      HierarchyId: ba63cbe0-443a-4e7d-ace0-c00bc6662a0c
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3888,7 +3869,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 21dcf8a9-2e07-4e0c-8a95-a0f6714b4b3f
+                HierarchyId: ba63cbe0-443a-4e7d-ace0-c00bc6662a0c
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -3897,7 +3878,7 @@ dashboards:
                   \ Provider in\_</inline>\n  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: e3fb07b3-c364-4ddb-a1b9-215438ed3d4d
+            VisualId: 9e59c1a8-c141-491a-b6d0-1eff0411b27d
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3945,7 +3926,7 @@ dashboards:
                         DataSetIdentifier: focus_summary_view
                       DateGranularity: MONTH
                       FieldId: 9b0ed71e-9072-4dc4-92ed-47cf617e5206.billingperiodstart.5.1717896811137
-                      HierarchyId: 95ea7ff8-4c9e-44ca-bbb1-b18aba38e75f
+                      HierarchyId: 66159618-6caf-49c2-a3a2-43c829363083
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3992,7 +3973,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 95ea7ff8-4c9e-44ca-bbb1-b18aba38e75f
+                HierarchyId: 66159618-6caf-49c2-a3a2-43c829363083
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -4001,7 +3982,7 @@ dashboards:
                   \ Service Category in\_</inline>\n  <inline font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: c5d4b0eb-d476-46d1-bdab-98fbd3e61e9c
+            VisualId: 07d418fd-6db3-4493-b23a-c155be51d662
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -4133,7 +4114,7 @@ dashboards:
                         Color: '#2CAD00'
                         Expression: '{MoM % Group By Two} < 0'
                         IconOptions:
-                          Icon: ARROW_UP
+                          Icon: ARROW_DOWN
               - Cell:
                   FieldId: 5cbb4814-4f5c-40ac-aa35-38b4f87bcad3.4.1717980387458
                   Scopes:
@@ -4145,7 +4126,7 @@ dashboards:
                         Expression: ({MoM % Group By Two} >= 0) AND ({MoM % Group By Two}
                           <= 0)
                         IconOptions:
-                          Icon: ARROW_RIGHT
+                          Icon: MINUS
               - Cell:
                   FieldId: 5cbb4814-4f5c-40ac-aa35-38b4f87bcad3.4.1717980387458
                   Scopes:
@@ -4156,7 +4137,7 @@ dashboards:
                         Color: '#DE3B00'
                         Expression: '{MoM % Group By Two} > 0'
                         IconOptions:
-                          Icon: ARROW_DOWN
+                          Icon: ARROW_UP
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -4167,7 +4148,7 @@ dashboards:
                   \ font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n  </inline>\n\
                   </visual-title>"
               Visibility: VISIBLE
-            VisualId: 3978d0f8-65e2-440a-9bd9-a54bb91e611b
+            VisualId: 68773bde-a3cc-4e20-8047-e633f0a63c8a
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -4353,7 +4334,7 @@ dashboards:
                   \ font-size=\"20px\">\n    <parameter>${Currency}</parameter>\n  </inline>\n\
                   </visual-title>"
               Visibility: VISIBLE
-            VisualId: b04a86bb-35a0-4468-8402-a77a8248a4d9
+            VisualId: a65fe3a3-b84c-4cfa-9d50-00d6cb0e50df
         - LineChartVisual:
             Actions:
             - ActionOperations:
@@ -4384,7 +4365,7 @@ dashboards:
                         ColumnName: chargeperiodstart
                         DataSetIdentifier: focus_resource_view
                       FieldId: 8852150b-d200-4b78-bf01-5a906bcdfcf6.chargeperiodstart.1.1718005587763
-                      HierarchyId: 99363ca7-151e-4b2f-8624-5fd2aeb6099d
+                      HierarchyId: f72d2286-00b1-4427-8f76-526a90316f4c
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -4432,7 +4413,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 99363ca7-151e-4b2f-8624-5fd2aeb6099d
+                HierarchyId: f72d2286-00b1-4427-8f76-526a90316f4c
             Subtitle:
               Visibility: HIDDEN
             Title:
@@ -4441,7 +4422,7 @@ dashboards:
                   per Top 15 Resource in\_</inline>\n  <inline font-size=\"20px\">\n   \
                   \ <parameter>${Currency}</parameter>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: b8e84036-8c0b-46ec-8e22-052fb2243732
+            VisualId: ba1827bc-8ccd-4684-b379-05daf72f8ef0
       - ContentType: INTERACTIVE
         FilterControls:
         - CrossSheet:
@@ -4493,7 +4474,7 @@ dashboards:
                 ElementId: d83bd85f-b6ea-42cf-a526-c508870eb6a8
                 ElementType: FILTER_CONTROL
                 RowSpan: 1
-        SheetId: b183f169-67e2-4a1d-b53d-6f23f5f1ad37
+        SheetId: 6c9efd44-6c6f-4464-97ed-256a98303ffe
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"54.88px\">Notices</inline>\n  <br/>\n\
             \  <br/>\n  <inline font-size=\"22.4px\">Customers are responsible for making\
@@ -4509,16 +4490,16 @@ dashboards:
             </text-box>"
           SheetTextBoxId: d1aa905c-abc4-4c09-9a95-c321b38338dc
         - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
-            center\">\n    <inline font-size=\"40px\">\n      <b>FOCUS Dashboard (Preview)</b>\n\
-            \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-            \ font-size=\"40px\">\n      <b>v0.1</b>\n    </inline>\n  </block>\n  <br/>\n\
+            center\">\n    <inline font-size=\"40px\">\n      <b>FOCUS Dashboard</b>\n \
+            \   </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
+            \ font-size=\"40px\">\n      <b>v0.2.0</b>\n    </inline>\n  </block>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"40px\">\n      <b>FinOps\
             \ Cost and Usage Specification Dashboard</b>\n    </inline>\n  </block>\n  <br/>\n\
             \  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n\
             \  <block align=\"right\"/>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built by: Yuriy\
-            \ Prykhodko, Iakov Gan, Zach Erdman</block>\n  <br/>\n  <block align=\"right\">\n    Learn\
-            \ more\n    <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+            \ Prykhodko, Iakov Gan, Zach Erdman</block>\n  <br/>\n  <block align=\"right\"\
+            >\n    Learn more\n    <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
             \ target=\"_blank\">\_</a>\n    about AWS Cloud Intelligence Dashboards (CID)\
             \ in\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
             \ target=\"_blank\">\n        <u>AWS Well-Architected Labs</u>\n      </a>\n\
