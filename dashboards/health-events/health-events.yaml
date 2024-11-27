@@ -3540,9 +3540,6 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - dba75577-3dfd-469e-9936-f39251871e5e
-                      - dc491b68-8503-4c65-aa98-b7a74b7a26d0
-                      - 77c8c5ea-df2a-47a7-bb0c-8c79dac0ff23
                       - e3691913-1c7d-47a7-a79a-25f99b735344
                       - 17c75fb9-452f-4bed-84e4-39ab35c6521c
                       - 47dd688d-0f57-489b-a6e5-9c6f1094ce44
@@ -3637,7 +3634,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Event IDs and URLs</inline>
+                    <inline font-size="16px">Unique events in scope</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: cb19273f-22c8-41dd-b235-5700e0ff0ff0
@@ -3758,12 +3755,14 @@ dashboards:
               SortConfiguration: {}
             ColumnHierarchies: []
             Subtitle:
-              Visibility: HIDDEN
+              FormatText:
+                RichText: <visual-subtitle>TOTAL</visual-subtitle>
+              Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Pending or Impaired</inline>
+                    <inline font-size="16px">Pending or impaired</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: dba75577-3dfd-469e-9936-f39251871e5e
@@ -3801,12 +3800,14 @@ dashboards:
               SortConfiguration: {}
             ColumnHierarchies: []
             Subtitle:
-              Visibility: HIDDEN
+              FormatText:
+                RichText: <visual-subtitle>TOTAL</visual-subtitle>
+              Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Total resources</inline>
+                    <inline font-size="16px">Resources</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: dc491b68-8503-4c65-aa98-b7a74b7a26d0
@@ -3844,7 +3845,9 @@ dashboards:
               SortConfiguration: {}
             ColumnHierarchies: []
             Subtitle:
-              Visibility: HIDDEN
+              FormatText:
+                RichText: <visual-subtitle>TOTAL</visual-subtitle>
+              Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: |-
@@ -4426,9 +4429,7 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - dba75577-3dfd-469e-9936-f39251871e5e
-                      - dc491b68-8503-4c65-aa98-b7a74b7a26d0
-                      - 77c8c5ea-df2a-47a7-bb0c-8c79dac0ff23
+                      - cb19273f-22c8-41dd-b235-5700e0ff0ff0
                       - e3691913-1c7d-47a7-a79a-25f99b735344
                       - 17c75fb9-452f-4bed-84e4-39ab35c6521c
                       - 47dd688d-0f57-489b-a6e5-9c6f1094ce44
@@ -4450,7 +4451,6 @@ dashboards:
                       - cac4df37-6414-4372-bfd3-b4ec434256f9
                       - cbbd002f-4bca-40eb-8177-bfde520c2eac
                       - daf8eda1-209e-4982-8b65-ef8829dba819
-                      - cb19273f-22c8-41dd-b235-5700e0ff0ff0
               CustomActionId: 3da9439f-0d1a-4e39-a844-620a287dd858
               Name: Action 1
               Status: ENABLED
@@ -4557,7 +4557,7 @@ dashboards:
               FormatText:
                 RichText: |-
                   <visual-title>
-                    <inline font-size="16px">Payer</inline>
+                    <inline font-size="16px">Payer accounts</inline>
                   </visual-title>
               Visibility: VISIBLE
             VisualId: 2017ae95-9627-4368-a4d6-3f303a731e5a
@@ -4570,9 +4570,7 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - dba75577-3dfd-469e-9936-f39251871e5e
-                      - dc491b68-8503-4c65-aa98-b7a74b7a26d0
-                      - 77c8c5ea-df2a-47a7-bb0c-8c79dac0ff23
+                      - cb19273f-22c8-41dd-b235-5700e0ff0ff0
                       - e3691913-1c7d-47a7-a79a-25f99b735344
                       - 17c75fb9-452f-4bed-84e4-39ab35c6521c
                       - 47dd688d-0f57-489b-a6e5-9c6f1094ce44
@@ -4594,7 +4592,6 @@ dashboards:
                       - cac4df37-6414-4372-bfd3-b4ec434256f9
                       - cbbd002f-4bca-40eb-8177-bfde520c2eac
                       - daf8eda1-209e-4982-8b65-ef8829dba819
-                      - cb19273f-22c8-41dd-b235-5700e0ff0ff0
               CustomActionId: c579a4da-53b7-4be7-b739-7fb2845100a2
               Name: Action 1
               Status: ENABLED
@@ -5365,9 +5362,7 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - dba75577-3dfd-469e-9936-f39251871e5e
-                      - dc491b68-8503-4c65-aa98-b7a74b7a26d0
-                      - 77c8c5ea-df2a-47a7-bb0c-8c79dac0ff23
+                      - cb19273f-22c8-41dd-b235-5700e0ff0ff0
                       - e3691913-1c7d-47a7-a79a-25f99b735344
                       - 17c75fb9-452f-4bed-84e4-39ab35c6521c
                       - 47dd688d-0f57-489b-a6e5-9c6f1094ce44
@@ -5389,7 +5384,6 @@ dashboards:
                       - cac4df37-6414-4372-bfd3-b4ec434256f9
                       - cbbd002f-4bca-40eb-8177-bfde520c2eac
                       - daf8eda1-209e-4982-8b65-ef8829dba819
-                      - cb19273f-22c8-41dd-b235-5700e0ff0ff0
               CustomActionId: 0fa167f5-93b4-4453-a404-f541754c0f48
               Name: Action 1
               Status: ENABLED
@@ -5559,9 +5553,7 @@ dashboards:
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
-                      - dba75577-3dfd-469e-9936-f39251871e5e
-                      - dc491b68-8503-4c65-aa98-b7a74b7a26d0
-                      - 77c8c5ea-df2a-47a7-bb0c-8c79dac0ff23
+                      - cb19273f-22c8-41dd-b235-5700e0ff0ff0
                       - e3691913-1c7d-47a7-a79a-25f99b735344
                       - 17c75fb9-452f-4bed-84e4-39ab35c6521c
                       - 47dd688d-0f57-489b-a6e5-9c6f1094ce44
@@ -5583,7 +5575,6 @@ dashboards:
                       - cac4df37-6414-4372-bfd3-b4ec434256f9
                       - cbbd002f-4bca-40eb-8177-bfde520c2eac
                       - daf8eda1-209e-4982-8b65-ef8829dba819
-                      - cb19273f-22c8-41dd-b235-5700e0ff0ff0
               CustomActionId: 75ea10e7-963f-4d2b-8ef3-cf6ab1a4604b
               Name: Action 1
               Status: ENABLED
