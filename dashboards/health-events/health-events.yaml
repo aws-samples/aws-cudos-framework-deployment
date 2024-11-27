@@ -8199,7 +8199,7 @@ dashboards:
                 Narrative: "<narrative>\n  <block align=\"center\">\n    <inline color=\"\
                   Accent\" font-size=\"68.8px\">\n      <b>Heath Events Dashboard</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ color=\"#dbdbdb\" font-size=\"54.88px\">\n      <b>v2.0.4</b>\n    </inline>\n\
+                  \ color=\"#dbdbdb\" font-size=\"54.88px\">\n      <b>v2.0.3</b>\n    </inline>\n\
                   \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"\
                   22.4px\">\_\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"\
                   >\n    <inline font-size=\"22.4px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/health-events\"\
