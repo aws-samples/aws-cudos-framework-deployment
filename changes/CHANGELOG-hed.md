@@ -1,4 +1,8 @@
 # What's new in Health Events Dashboard (HED)
+## v2.0.4
+* Fix resetting description free text filter issue
+* Minor cosmetic and usability changes
+
 ## v2.0.3
 * Fix case where reported resource name is not a full unique ARN to derive unique instance counts
 * Easier filtering by date ranges

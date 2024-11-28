@@ -285,6 +285,10 @@ Conditions:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
       - !Condition NeedCURTable
+  NeedLakeFormationEnabledQuickSightDataSourceRole:
+    Fn::And:
+      - !Equals [ !Ref LakeFormationEnabled, "yes" ]
+      - !Condition NeedQuickSightDataSourceRole
   UseQuickSightDataSourceRole: !Not [!Equals [ !Ref QuickSightDataSourceRoleName, "" ]]
   NeedQuickSightDataSourceRole: !Equals [ !Ref QuickSightDataSourceRoleName, "CidQuickSightDataSourceRole" ]
   NeedQuickSightDataSourceRoleAndLegacyCUR:
@@ -1446,6 +1450,11 @@ Resources:
                       - NeedDatabase
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
               - Effect: Allow
                 Action:
                   - s3:CreateBucket
@@ -1561,13 +1570,38 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingsCidExecRolePermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationEnabled
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt CidExecRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        TableResource:
+          CatalogId: !Ref "AWS::AccountId"
+          DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          TableWildcard: {}
+
+  DataLakeSettingsQuickSightDataSourceRolePerm:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabledQuickSightDataSourceRole
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt QuickSightDataSourceRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref "AWS::AccountId"
+          Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+  DataLakeSettingsQuickSightDataSourceRolePermTable:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabledQuickSightDataSourceRole
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt QuickSightDataSourceRole.Arn
       Permissions:
         - ALL
       Resource:
@@ -1588,7 +1622,6 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingsCidCrawlerRolePermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationCrawlerPermissions
@@ -1615,7 +1648,6 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingQuickSightAdminUserPermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationEnabled
