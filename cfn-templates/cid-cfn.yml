@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v4.0.1
+Description: Deployment of Cloud Intelligence Dashboards v4.0.5
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -137,7 +137,7 @@ Parameters:
     Type: String
     Default: '2.0'
     AllowedValues: ["1.0", "2.0"]
-    Description: "We support 2 options: CUR 2.0 from DataExports stack managed by CID or CUR 1(Legacy)."
+    Description: "We support 2 options: CUR 2.0 from DataExports stack managed by CID or CUR 1(Legacy). When you switch to CUR2 consider KeepLegacyCURTable parameter to yes for keeping Legacy CUR table for migration period."
   CURBucketPath:
     Type: String
     MinLength: 3
@@ -248,7 +248,9 @@ Conditions:
   NeedCostIntelligenceDashboard: !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
   NeedKPIDashboard: !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedTAODashboard: !Equals [ !Ref DeployTAODashboard, "yes" ]
-  NeedLegacyCUR: !Equals [!Ref KeepLegacyCURTable, "yes"]
+  NeedLegacyCUR: !Or
+    - !Equals [!Ref KeepLegacyCURTable, "yes"]
+    - !Equals [!Ref CURVersion, '1.0']
   NeedComputeOptimizerDashboard: !Equals [ !Ref DeployComputeOptimizerDashboard, "yes" ]
   UseCUR2:
     Fn::And:
@@ -283,6 +285,10 @@ Conditions:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
       - !Condition NeedCURTable
+  NeedLakeFormationEnabledQuickSightDataSourceRole:
+    Fn::And:
+      - !Equals [ !Ref LakeFormationEnabled, "yes" ]
+      - !Condition NeedQuickSightDataSourceRole
   UseQuickSightDataSourceRole: !Not [!Equals [ !Ref QuickSightDataSourceRoleName, "" ]]
   NeedQuickSightDataSourceRole: !Equals [ !Ref QuickSightDataSourceRoleName, "CidQuickSightDataSourceRole" ]
   NeedQuickSightDataSourceRoleAndLegacyCUR:
@@ -580,13 +586,14 @@ Resources:
       Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
-      Timeout: 300
+      Timeout: 600
       Handler: 'index.lambda_handler'
       Code:
         ZipFile: |
           import os
           import uuid
           import json
+          import time
           import boto3
           import botocore
           import urllib3
@@ -642,12 +649,31 @@ Resources:
 
           def on_create():
               if CRAWLER:
+                  timeout_seconds = 300
+                  glue = boto3.client('glue')
                   try:
-                      boto3.client('glue').start_crawler(Name=CRAWLER)
+                      glue.start_crawler(Name=CRAWLER)
                   except Exception as exc:
-                      return (True, f'ERROR: error invoking crawler {CRAWLER} {exc}')
-                  return (True, 'INFO: crawler started. Takes 1 min to update the table.')
-              return (True, 'INFO: No actions on create')
+                      if 'CrawlerRunningException' in str(exc):
+                          print ("crawler is running already")
+                      else:
+                          return (True, f'ERROR: error invoking crawler {CRAWLER} {exc}')
+                  print('started crawler started. waiting for crawler to finish')
+                  try:
+                      start_time = time.time()
+                      while time.time() - start_time < timeout_seconds:
+                          time.sleep(1)
+                          crawler_status = glue.get_crawler(Name=CRAWLER)['Crawler']['State']
+                          print(f'status = {crawler_status}')
+                          if crawler_status in ('READY', 'STOPPING'):
+                              print("Stop waiting")
+                              break
+                      else:
+                          return (True, f"Timeout exceeded. Crawler '{CRAWLER}' did not complete. This is not a fatal error and the rest of the deployment will continue.")
+                  except Exception as exc:
+                      return (True, f'ERROR: error waiting for crawler {CRAWLER} {exc}')
+                  return (True, 'Crawler run completed.')
+              return (True, 'Ended create.')
 
           def on_delete():
               # Delete bucket (CF cannot delete if they are non-empty)
@@ -812,6 +838,7 @@ Resources:
           - Effect: Allow
             Action:
               - glue:StartCrawler
+              - glue:GetCrawler
             Resource:
               - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:crawler/${MyGlueCURCrawler}'
       Roles:
@@ -850,7 +877,7 @@ Resources:
       Path: !Ref RolePath
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
       Policies:
-        - PolicyName: AWSCURCrawlerComponentFunction
+        - PolicyName: CloudWatch
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -1423,6 +1450,11 @@ Resources:
                       - NeedDatabase
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
               - Effect: Allow
                 Action:
                   - s3:CreateBucket
@@ -1538,13 +1570,38 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingsCidExecRolePermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationEnabled
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt CidExecRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        TableResource:
+          CatalogId: !Ref "AWS::AccountId"
+          DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          TableWildcard: {}
+
+  DataLakeSettingsQuickSightDataSourceRolePerm:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabledQuickSightDataSourceRole
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt QuickSightDataSourceRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref "AWS::AccountId"
+          Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+  DataLakeSettingsQuickSightDataSourceRolePermTable:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabledQuickSightDataSourceRole
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt QuickSightDataSourceRole.Arn
       Permissions:
         - ALL
       Resource:
@@ -1565,7 +1622,6 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingsCidCrawlerRolePermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationCrawlerPermissions
@@ -1592,7 +1648,6 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingQuickSightAdminUserPermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationEnabled
@@ -1758,7 +1813,7 @@ Resources:
           - LambdaLayerBucketPrefixIsManaged
           - !FindInMap [RegionMap, !Ref 'AWS::Region', BucketName]
           - !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}' # Region added for backward compatibility
-        S3Key: 'cid-resource-lambda-layer/cid-4.0.1.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-4.0.5.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11
@@ -1846,6 +1901,7 @@ Resources:
         view-compute-optimizer-ebs-volume-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ebs_volume'
         view-compute-optimizer-auto-scale-lines-s3FolderPath:   !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_auto_scale'
         view-compute-optimizer-ec2-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_ec2_instance'
+        view-compute-optimizer-rds-instance-lines-s3FolderPath: !Sub '${OptimizationDataCollectionBucketPath}/compute_optimizer/compute_optimizer_rds_instance'
         dataset-compute-optimizer-all-options-primary-tag-name: !Sub '${PrimaryTagName}'
         dataset-compute-optimizer-all-options-secondary-tag-name: !Sub '${SecondaryTagName}'
 
