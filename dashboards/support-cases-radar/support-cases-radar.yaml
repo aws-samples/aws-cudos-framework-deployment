@@ -3,6 +3,7 @@ dashboards:
     dependsOn:
       datasets:
       - support_cases_communications_view
+      - support_cases_status
     name: AWS Support Cases Radar
     dashboardId: support-cases-radar
     category: Advanced
