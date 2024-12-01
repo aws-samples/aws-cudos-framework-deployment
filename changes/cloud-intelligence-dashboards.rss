@@ -13,6 +13,19 @@
     <language>en-us</language>
 
     <item>
+      <title>CUDOS update v5.5</title>
+      <link>https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi</link>
+      <pubDate>Fri, 29 Nov 2024 12:00:00 GMT</pubDate>
+      <category><![CDATA[Update]]></category>
+      <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cudos.md#cudos---55</guid>
+      <description>CUDOS update to v5.4</description>
+      <content:encoded>[new tab] Security: Introducing Security tab with cost and usage details for Security services. New tab includes visuals 'Security Spend per Service', 'Security Spend per Account' and respective detailed view sections for Amazon Cognito and Amazon GuardDuty
+Security: New Amazon Cognito section with visuals 'Amazon Cognito Spend and Projected Cost for M2M App Clients and Tokens', 'Amazon Cognito Spend and Projected Cost for M2M App Clients and Tokens per Account' and 'Amazon Cognito Detailed View'
+Security: New Amazon GuardDuty section with visuals 'Amazon GuardDuty Spend per UsageType', 'Amazon GuardDuty Spend per Account' and 'Accounts and Regions where Amazon GuardDuty is not enabled'
+Databases: Bugfix for Storage Type categorization on 'Daily Storage Cost'
+DynamoDB: Improved 'TOP 15 Candidates for Infrequent Access Tables Last 30 Days' visual to exclude tables after they migrated to Infrequent Access</content:encoded>
+    </item>
+    <item>
       <title>SCAD Containers Cost Allocation Dashboard update to v1.0.0</title>
       <link>https://catalog.workshops.aws/awscid/en-US/dashboards/additional/scad-containers-cost-allocation</link>
       <pubDate>Thu, 25 Apr 2024 12:00:00 GMT</pubDate>
