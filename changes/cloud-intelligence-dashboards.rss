@@ -6,7 +6,7 @@
     <title>AWS Cloud Intelligence Dashboards</title>
     <link>https://catalog.workshops.aws/awscid/en-US</link>
     <description>The Cloud Intelligence Dashboards is an open-source framework from AWS to get high-level and granular insight into their cost and usage data</description>
-    <atom:link href="https://github.com/aws-samples/aws-cudos-framework-deployment/tree/main/changes/"
+    <atom:link href="https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/refs/heads/rss_feed/changes/cloud-intelligence-dashboards.rss"
                  rel="self"
                  type="application/rss+xml"/>
     <lastBuildDate>Fri, 29 Nov 2024 12:00:00 GMT</lastBuildDate>
