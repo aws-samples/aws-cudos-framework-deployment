@@ -21,7 +21,7 @@
       <description>CUDOS update to v5.5</description>
       <content:encoded>DynamoDB: Refactored visuals to improve user experience and simplify navigation. 'DynamoDB Accounts by Category' visuals replaced with 'DynamoDB Cost per Account' and 'DynamoDB Cost per Usage Type Group'
 DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservations Savings Estimation' which allows to calculate estimated savings for Amazon DynamoDB reserved capacity based on custom commitment amount.
-DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservation Coverage & Usage Monitoring' which allows monitor reserved capacity coverage per region and capacity type dimensions
+DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservation Coverage and Usage Monitoring' which allows monitor reserved capacity coverage per region and capacity type dimensions
 DynamoDB: New visual 'Infrequent Access Tables Cost and Cost Efficiency Gain/Loss vs Standard Storage' which shows efficiency gains from Infrequent Access tables and also tables which could be migrated to Standard table class
 Monitoring and Observability: New section 'AWS Config Periodic Recording Savings Opportunities' which shows potential savings from migration to periodic configuration item recording
 Monitoring and Observability: New section 'Account and Regions without AWS Config' which allows to identify account and regions with AWS service usage and where AWS Config is not enabled
