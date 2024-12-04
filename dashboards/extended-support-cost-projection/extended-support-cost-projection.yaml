@@ -4,6 +4,7 @@ dashboards:
       datasets:
       - eks_extended_support_view
       - rds_extended_support_view
+      - opensearch_extended_support_view
     name: Extended Support Cost Projection
     dashboardId: extended-support-cost-projection
     category: Advanced
