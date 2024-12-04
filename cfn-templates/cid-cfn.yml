@@ -1450,6 +1450,11 @@ Resources:
                       - NeedDatabase
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
               - Effect: Allow
                 Action:
                   - s3:CreateBucket
@@ -1929,3 +1934,7 @@ Outputs:
     Description: Technical Value - CidExecArn
     Value: !GetAtt CidExec.Arn
     Export: { Name: !Sub 'cid${Suffix}-CidExecArn'}
+  CidDatabase:
+    Description: Technical Value - CidDatabase
+    Value: !Ref CidDatabase
+    Export: { Name: !Sub 'cid${Suffix}-CidDatabase'}
