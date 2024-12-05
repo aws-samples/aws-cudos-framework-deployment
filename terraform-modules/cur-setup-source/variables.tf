@@ -52,3 +52,7 @@ variable "tags" {
   description = "Map of tags to apply to module resources"
   default     = {}
 }
+variable "permissionsboundary_arn" {
+  type        = string
+  description = "Permissionsboundary ARN"
+}
