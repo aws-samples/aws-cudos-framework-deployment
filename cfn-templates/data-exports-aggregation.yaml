@@ -632,8 +632,6 @@ Resources:
                 Action:
                   - iam:GetRole
                   - iam:CreateServiceLinkedRole
-                  - iam:DeleteServiceLinkedRole
-                  - iam:GetServiceLinkedRoleDeletionStatus
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/bcm-data-exports.amazonaws.com/AWSServiceRoleForBCMDataExports'
               - Effect: Allow
                 Action:
@@ -730,13 +728,17 @@ Resources:
           def create_service_linked_role(service_name: str, description: str):
               try:
                   logger.info(f"Creating a service-linked role for {service_name}...")
-
                   role_name = iam_client.create_service_linked_role(
                       AWSServiceName=service_name,
                       Description=description
                   )["Role"]["RoleName"]
+
+                  logger.info(f"Waiting for the service-linked role to be available...")
                   waiter = iam_client.get_waiter("role_exists")
-                  waiter.wait(RoleName=role_name)
+                  waiter.wait(
+                      RoleName=role_name,
+                      WaiterConfig={"Delay": 1, "MaxAttempts": 30}
+                  )
                   time.sleep(10)  # Additional wait time, just in case
 
                   logger.info(
