@@ -173,15 +173,18 @@ def get_parameters():
     return dict(params)
 
 
-def get_yesno_parameter(param_name, message, default=None, break_on_ctrl_c=True):
+def get_yesno_parameter(param_name: str, message: str, default: str | None = None, break_on_ctrl_c = True):
     logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
-    mapping = {True: True, False:False, 'yes': True, 'no': False}
-    if param_name in params and params.get(param_name) != None:
-        return mapping[params.get(param_name)]
-    if param_name in params and params.get(param_name) == None:
-        unset_parameter(param_name)
-    if default != None:
+    mapping = {True: True, False: False, 'yes': True, 'no': False}
+    if param_name in params:
+        param_value = params.get(param_name)
+        if param_value is not None:
+            return mapping[param_value]
+        else:
+            unset_parameter(param_name)
+    if default is not None:
+        default = default.lower()
         default = 'yes' if mapping[default] else 'no'
     res = get_parameter(param_name, message=message, choices=['yes', 'no'], default=default, break_on_ctrl_c=break_on_ctrl_c)
     params[param_name] = (res == 'yes')
