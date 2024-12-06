@@ -1,12 +1,12 @@
 dashboards:
-  AMAZON CONNECT DASHBOARD V1.0.0:
+  AMAZON CONNECT DASHBOARD:
     dependsOn:
       datasets:
-      - resource_connect_view_v1
+      - resource_connect_view
       - summary_view
-    name: Amazon Connect Dashboard v1.0.0
-    dashboardId: amazon-connect-dashboard-v1-0-0
-    category: Custom
+    name: Amazon Connect Dashboard
+    dashboardId: amazon-connect
+    category: Additional
     theme: CLASSIC
     data: |-
       AnalysisDefaults:
@@ -3462,9 +3462,11 @@ dashboards:
                 ElementType: TEXT_BOX
                 RowIndex: 25
                 RowSpan: 8
-              - ColumnSpan: 36
-                ElementId: c6a35a63-5d7b-478e-8760-90697bcaebe5
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 5a59e779-4d46-40a6-9c20-3a0522dfbda3
                 ElementType: TEXT_BOX
+                RowIndex: 33
                 RowSpan: 1
         Name: Overview
         ParameterControls:
@@ -3703,10 +3705,10 @@ dashboards:
           SheetTextBoxId: 598765d9-ce9d-41d4-966a-fc45522c140a
         - Content: "<text-box>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
             >&#128075; If you wish to provide a feedback or report an error please email:\_\
-            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards-amazon-connect@amazon.com?subject=CID%20Connect%20Dashboard%20Feedback\"\
-            \ target=\"_blank\">cloud-intelligence-dashboards-amazon-connect@amazon.com</a>\n\
-            \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n</text-box>"
-          SheetTextBoxId: c6a35a63-5d7b-478e-8760-90697bcaebe5
+            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com\"\
+            \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
+            \  </block>\n</text-box>"
+          SheetTextBoxId: 5a59e779-4d46-40a6-9c20-3a0522dfbda3
         Visuals:
         - WordCloudVisual:
             Actions: []
@@ -5374,9 +5376,11 @@ dashboards:
                 ElementType: VISUAL
                 RowIndex: 31
                 RowSpan: 3
-              - ColumnSpan: 36
-                ElementId: 3f4ab6f4-2c83-452f-b862-7483c88d65dd
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 1089fdc1-fddf-45b0-aa95-11fa6bfe5f40
                 ElementType: TEXT_BOX
+                RowIndex: 34
                 RowSpan: 1
         Name: Connect
         ParameterControls:
@@ -5578,6 +5582,12 @@ dashboards:
             >\n    <a href=\"https://aws.amazon.com/connect/pricing/\" target=\"_blank\"\
             >https://aws.amazon.com/connect/pricing/</a>\n  </inline>\n</text-box>"
           SheetTextBoxId: 46fdb308-2d97-46ba-9c0e-3c459b326e42
+        - Content: "<text-box>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
+            >&#128075; If you wish to provide a feedback or report an error please email:\_\
+            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com\"\
+            \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
+            \  </block>\n</text-box>"
+          SheetTextBoxId: 1089fdc1-fddf-45b0-aa95-11fa6bfe5f40
         - Content: "<text-box>\n  &#128161;\n  <inline font-size=\"14px\">For certain usage\
             \ types, the cost may be $0.00 even with some reported usage, due to free tier\
             \ pricing.\_</inline>\n  Examples of free tier usage types:\n  <br/>\n  <ul>\n\
@@ -5606,12 +5616,6 @@ dashboards:
             no associated telecom costs. Each chat message costs $0.004 and can include
             up to 1,024 characters.</text-box>
           SheetTextBoxId: 5707cf98-ad87-4d92-8a25-1ac65ba25eb7
-        - Content: "<text-box>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
-            >&#128075; If you wish to provide a feedback or report an error please email:\_\
-            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards-amazon-connect@amazon.com?subject=CID%20Connect%20Dashboard%20Feedback\"\
-            \ target=\"_blank\">cloud-intelligence-dashboards-amazon-connect@amazon.com</a>\n\
-            \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n</text-box>"
-          SheetTextBoxId: 3f4ab6f4-2c83-452f-b862-7483c88d65dd
         Visuals:
         - PivotTableVisual:
             Actions: []
@@ -7198,8 +7202,8 @@ dashboards:
                   </inline>\n  <inline font-size=\"14px\">\n    <parameter>${lastNmonth}</parameter>\n\
                   \  </inline>\n  <inline font-size=\"14px\">\_month(s) deflecting\_</inline>\n\
                   \  <inline font-size=\"14px\">\n    <parameter>${reduceEndCustomerMins}</parameter>\n\
-                  \  </inline>\n  <inline font-size=\"14px\">\_ % of end-customer-minutes\
-                  \ to chat with\_</inline>\n  <inline font-size=\"14px\">\n    <parameter>${chatMessagePerMinute}</parameter>\n\
+                  \  </inline>\n  <inline font-size=\"14px\">\_ % of calls to chat with\_\
+                  </inline>\n  <inline font-size=\"14px\">\n    <parameter>${chatMessagePerMinute}</parameter>\n\
                   \  </inline>\n  <inline font-size=\"14px\">\_messages per minute will\
                   \ cost</inline>\n</visual-title>"
               Visibility: VISIBLE
@@ -7420,9 +7424,11 @@ dashboards:
                 ElementType: FILTER_CONTROL
                 RowIndex: 39
                 RowSpan: 3
-              - ColumnSpan: 36
-                ElementId: b8faa635-da38-4af3-a850-b0e01fee4630
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: f2b4483a-38a8-41ad-b11b-8d4ce3743b5d
                 ElementType: TEXT_BOX
+                RowIndex: 42
                 RowSpan: 1
         Name: Telecom
         ParameterControls:
@@ -7583,6 +7589,12 @@ dashboards:
             \ target=\"_blank\">The Amazon Connect Telephony coverage guide</a>\n  \_provides\
             \ matrix with supported number types &amp; telecom features per country.\n</text-box>"
           SheetTextBoxId: daaae2c4-7120-4541-aa95-7ce5e19c8725
+        - Content: "<text-box>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
+            >&#128075; If you wish to provide a feedback or report an error please email:\_\
+            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com\"\
+            \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
+            \  </block>\n</text-box>"
+          SheetTextBoxId: f2b4483a-38a8-41ad-b11b-8d4ce3743b5d
         - Content: |-
             <text-box>
               <block align="center">
@@ -7592,12 +7604,6 @@ dashboards:
               </block>
             </text-box>
           SheetTextBoxId: 777de81b-395c-47a1-8bc5-10fe45e63bf1
-        - Content: "<text-box>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
-            >&#128075; If you wish to provide a feedback or report an error please email:\_\
-            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards-amazon-connect@amazon.com?subject=CID%20Connect%20Dashboard%20Feedback\"\
-            \ target=\"_blank\">cloud-intelligence-dashboards-amazon-connect@amazon.com</a>\n\
-            \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n</text-box>"
-          SheetTextBoxId: b8faa635-da38-4af3-a850-b0e01fee4630
         Visuals:
         - TableVisual:
             Actions: []
@@ -9523,9 +9529,11 @@ dashboards:
                 ElementType: VISUAL
                 RowIndex: 134
                 RowSpan: 7
-              - ColumnSpan: 36
-                ElementId: 2d9e5b1f-e91f-4fdc-b8b3-20a259c1fe38
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 6a53b92b-2c37-433a-9a5e-aae8579e5c14
                 ElementType: TEXT_BOX
+                RowIndex: 141
                 RowSpan: 1
         Name: Daily Usage
         ParameterControls:
@@ -9659,10 +9667,10 @@ dashboards:
           SheetTextBoxId: 353a0cdf-bd12-4f78-95ce-711270300745
         - Content: "<text-box>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
             >&#128075; If you wish to provide a feedback or report an error please email:\_\
-            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards-amazon-connect@amazon.com?subject=CID%20Connect%20Dashboard%20Feedback\"\
-            \ target=\"_blank\">cloud-intelligence-dashboards-amazon-connect@amazon.com</a>\n\
-            \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n</text-box>"
-          SheetTextBoxId: 2d9e5b1f-e91f-4fdc-b8b3-20a259c1fe38
+            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com\"\
+            \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
+            \  </block>\n</text-box>"
+          SheetTextBoxId: 6a53b92b-2c37-433a-9a5e-aae8579e5c14
         Visuals:
         - PivotTableVisual:
             Actions:
@@ -13463,9 +13471,9 @@ dashboards:
           SheetTextBoxId: 7bbe7c68-c998-4ddc-b14c-7c8c47355847
         - Content: "<text-box>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
             >&#128075; If you wish to provide a feedback or report an error please email:\_\
-            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards-amazon-connect@amazon.com?subject=CID%20Connect%20Dashboard%20Feedback\"\
-            \ target=\"_blank\">cloud-intelligence-dashboards-amazon-connect@amazon.com</a>\n\
-            \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n</text-box>"
+            </inline>\n    <inline font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com\"\
+            \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
+            \  </block>\n</text-box>"
           SheetTextBoxId: 6057d81b-c994-4fd7-9281-9e8fd30ea671
         Visuals:
         - PivotTableVisual:
@@ -15388,8 +15396,8 @@ dashboards:
                 ScrollbarOptions:
                   VisibleRange:
                     PercentRange:
-                      From: 35.550890287185226
-                      To: 58.20142625202326
+                      From: 36.50342268508748
+                      To: 59.33395305026515
                 TickLabelOptions:
                   LabelOptions:
                     Visibility: VISIBLE
@@ -15561,10 +15569,6 @@ dashboards:
                 ElementType: VISUAL
                 RowIndex: 29
                 RowSpan: 13
-              - ColumnSpan: 36
-                ElementId: e9f09183-9a19-4007-8e34-dcab90c13bf4
-                ElementType: TEXT_BOX
-                RowSpan: 1
         Name: Contact Search
         ParameterControls:
         - Dropdown:
@@ -15604,14 +15608,6 @@ dashboards:
             Title: Region
             Type: MULTI_SELECT
         SheetId: 1c63a25f-a067-4aad-9886-c4a29dfc832f
-        TextBoxes:
-        - Content: "<text-box>\n  <block align=\"right\">\n    <inline font-size=\"14px\"\
-            >&#128075; If you wish to provide a feedback or repo</inline>\n    mailto:mailto:cloud-intelligence-dashboards-amazon-connect@amazon.com?subject=CID%20Connect%20Dashboard%20Feedback\n\
-            \    <inline font-size=\"14px\">rt an error please email:\_</inline>\n    <inline\
-            \ font-size=\"14px\">\n      <a href=\"mailto:cloud-intelligence-dashboards-amazon-connect@amazon.com?subject=CID%20Connect%20Dashboard%20Feedback\"\
-            \ target=\"_blank\">cloud-intelligence-dashboards-amazon-connect@amazon.com</a>\n\
-            \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n</text-box>"
-          SheetTextBoxId: e9f09183-9a19-4007-8e34-dcab90c13bf4
         Visuals:
         - ScatterPlotVisual:
             Actions:
@@ -16162,10 +16158,10 @@ dashboards:
                 TooltipVisibility: VISIBLE
               WindowOptions:
                 Bounds:
-                  East: 206.71922161380002
-                  North: 85.05112899999989
-                  South: -67.10133453313892
-                  West: -511.7782467608963
+                  East: 156.07773901975168
+                  North: 76.8366031621029
+                  South: -47.50855649140783
+                  West: -314.62067062438575
                 MapZoomMode: MANUAL
             ColumnHierarchies: []
             Subtitle:
@@ -16350,36 +16346,33 @@ dashboards:
                   \  <block align=\"right\">Built by: Alex Yankovskyy, Audrey Chagwedera,\
                   \ Mariia Poliakh</block>\n  <br/>\n  <block align=\"right\">\n    Learn\
                   \ more about AWS Cloud Intelligence Dashboards (CID) on\n    <inline color=\"\
-                  PrimaryBackground\">_</inline>\n    <inline color=\"#61d1d6\">\n     \
-                  \ <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+                  #61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
                   \ target=\"_blank\">AWS Well-Architected Labs</a>\n    </inline>\n   \
-                  \ \_and\n    <inline color=\"PrimaryBackground\">_</inline>\n    <inline\
-                  \ color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
+                  \ \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
                   \ target=\"_blank\">CID YouTube Channel</a>\n    </inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"right\">\n    If you like Cloud Intelligence\
                   \ Dashboards we kindly ask you to fill out this\n    <inline color=\"\
-                  PrimaryBackground\">_</inline>\n    <inline color=\"#61d1d6\">\n     \
-                  \ <a href=\"https://eventbox.dev/survey/AJ0EIZ7\" target=\"_blank\">customer\
-                  \ survey</a>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"\
-                  >Powered by: Amazon QuickSight, Amazon Athena, Amazon S3</block>\n  <br/>\n\
-                  \  <block align=\"right\">\n    Have a question? Ask the community\n \
-                  \   <inline color=\"PrimaryBackground\">_</inline>\n    <a href=\"https://repost.aws/tags/TANKNkVH-tSUa2jYNx4F159g/cloud-intelligence-dashboards\"\
+                  #61d1d6\">\n      <a href=\"https://eventbox.dev/survey/AJ0EIZ7\" target=\"\
+                  _blank\">customer survey</a>\n    </inline>\n  </block>\n  <br/>\n  <block\
+                  \ align=\"right\">Powered by: Amazon QuickSight, Amazon Athena, Amazon\
+                  \ S3</block>\n  <br/>\n  <block align=\"right\">\n    Have a question?\
+                  \ Ask the community\n    <a href=\"https://repost.aws/tags/TANKNkVH-tSUa2jYNx4F159g/cloud-intelligence-dashboards\"\
                   \ target=\"_blank\">on re:Post</a>\n    .\n  </block>\n  <br/>\n  <block\
                   \ align=\"right\">\n    If you wish to provide feedback or report an error\
                   \ please email:\n    <inline color=\"#61d1d6\">\_</inline>\n    <inline\
-                  \ color=\"#61d1d6\">\n      <a href=\"mailto:mailto:cloud-intelligence-dashboards-amazon-connect@amazon.com?subject=CID%20Connect%20Dashboard%20Feedback\"\
-                  \ target=\"_blank\">cloud-intelligence-dashboards-amazon-connect@amazon.com</a>\n\
-                  \    </inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n</narrative>"
+                  \ color=\"#61d1d6\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CID%20Dashboard%20Feedback\"\
+                  \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n   \
+                  \ </inline>\n  </block>\n  <br/>\n  <block align=\"right\"/>\n</narrative>"
             Subtitle:
               Visibility: VISIBLE
             Title:
               Visibility: VISIBLE
             VisualId: 1e30be54-30f9-470a-8995-3640e5a82635
 datasets:
-  resource_connect_view_v1:
+  resource_connect_view:
     data:
       DataSetId: 9a724a6b-6951-466f-a16c-d2a0866c3dce
-      Name: resource_connect_view_v1
+      Name: resource_connect_view
       PhysicalTableMap:
         262bcde8-fd8b-46b0-906e-9ea47394ffa8:
           RelationalTable:
@@ -16582,7 +16575,7 @@ datasets:
                   {location} = 'US East (N. Virginia)', 'Alexandria',
                   {location} = 'Canada (Central)', 'Toronto',
                   {location} = 'US West (Oregon)', 'Oregon',
-                  ''
+                  {location}
                   )
           - TagColumnOperation:
               ColumnName: country
@@ -16755,68 +16748,84 @@ crawlers: {}
 views:
   resource_connect_contact_summary_view:
     dependsOn:
-      cur: true
+      cur2:
+        - product_region_code
+        - product_location
+        - product['line_type']
+        - product['country']
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".resource_connect_contact_summary_view AS
+      CREATE OR REPLACE VIEW ${athena_database_name}.resource_connect_contact_summary_view AS
       SELECT
-        "date_trunc"('day', "line_item_usage_start_date") "usage_date"
-      , product_region region_code
+        date_trunc('day', line_item_usage_start_date) usage_date
+      , product_region_code region_code
       , product_location region_name
       , line_item_resource_id resource_id
       , split_part(line_item_resource_id, '/', 4) contact_id
       , split_part(line_item_resource_id, '/', 2) connect_instance_id
-      , COUNT((CASE WHEN (product_line_type = 'Inbound Call') THEN 1 END)) c_inbound_leg
-      , COUNT((CASE WHEN (product_line_type = 'Outbound Call') THEN 1 END)) c_outbound_leg
-      , COUNT((CASE WHEN ((product_line_type = '') OR (product_line_type IS NULL)) THEN 1 END)) c_internal_leg
-      , COUNT((CASE WHEN ((product_country <> '') AND (product_country IS NOT NULL)) THEN product_country END)) c_country
-      , MAX((CASE WHEN (product_line_type = 'Inbound Call') THEN product_country END)) in_country
-      , MAX((CASE WHEN (product_line_type = 'Outbound Call') THEN product_country END)) out_country
-      , ARRAY_JOIN(ARRAY_AGG((CASE WHEN ((product_country <> '') AND (product_country IS NOT NULL)) THEN product_country END)), ',') country_list
+      , COUNT((CASE WHEN (product['line_type'] = 'Inbound Call') THEN 1 END)) c_inbound_leg
+      , COUNT((CASE WHEN (product['line_type'] = 'Outbound Call') THEN 1 END)) c_outbound_leg
+      , COUNT((CASE WHEN ((product['line_type'] = '') OR (product['line_type'] IS NULL)) THEN 1 END)) c_internal_leg
+      , COUNT((CASE WHEN ((product['country'] <> '') AND (product['country'] IS NOT NULL)) THEN product['country'] END)) c_country
+      , MAX((CASE WHEN (product['line_type'] = 'Inbound Call') THEN product['country'] END)) in_country
+      , MAX((CASE WHEN (product['line_type'] = 'Outbound Call') THEN product['country'] END)) out_country
+      , ARRAY_JOIN(ARRAY_AGG((CASE WHEN ((product['country'] <> '') AND (product['country'] IS NOT NULL)) THEN product['country'] END)), ',') country_list
       , SUM(line_item_unblended_cost) cost
       , MAX(line_item_usage_amount) max_duration
-      , MIN("date_trunc"('hour', "line_item_usage_start_date")) contact_start_date_time
-      , MAX("date_trunc"('hour', "line_item_usage_end_date")) contact_end_date_time
+      , MIN(date_trunc('hour', line_item_usage_start_date)) contact_start_date_time
+      , MAX(date_trunc('hour', line_item_usage_end_date)) contact_end_date_time
       FROM
-        "$\cur1_database\"."$\cur1_table_name\"
-      WHERE ((line_item_resource_id LIKE '%/contact/%') AND (line_item_usage_type LIKE '%-mins') AND (NOT (line_item_usage_type LIKE '%agent-screen-recording-mins')) AND ((((current_date - INTERVAL  '30' DAY) <= line_item_usage_start_date) AND (line_item_resource_id <> '')) AND (line_item_product_code IN ('AmazonConnect', 'ContactCenterTelecomm', 'ContactLensAmazonConnect', 'AmazonConnectCases', 'AmazonConnectVoiceID', 'CustomerProfiles'))))
+        "${cur2_database}"."${cur2_table_name}"
+      WHERE ((line_item_resource_id LIKE '%/contact/%') AND (line_item_usage_type LIKE '%-mins') AND (NOT (line_item_usage_type LIKE '%agent-screen-recording-mins')) AND ((((current_date - INTERVAL '30' DAY) <= line_item_usage_start_date) AND (line_item_resource_id <> '')) AND (line_item_product_code IN ('AmazonConnect', 'ContactCenterTelecomm', 'ContactLensAmazonConnect', 'AmazonConnectCases', 'AmazonConnectVoiceID', 'CustomerProfiles'))))
       GROUP BY 1, 2, 3, 4
   resource_connect_view:
     dependsOn:
-      cur: true
+      cur2:
+      - product['product_name']
+      - product['calling_type']
+      - product['channel']
+      - product['country']
+      - product['line_type']
+      - product['region']
+      - product_location
+      - product['group']
+      - product_product_family
+      - product_servicecode
+      - product['servicename']
+      - prcing_unit
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".resource_connect_view AS
+      CREATE OR REPLACE VIEW ${athena_database_name}.resource_connect_view AS
       SELECT DISTINCT
-        "date_trunc"('day', "line_item_usage_start_date") "usage_date"
-      , "bill_payer_account_id" "payer_account_id"
-      , "line_item_usage_account_id" "linked_account_id"
-      , "bill_billing_entity" "billing_entity"
-      , "product_product_name" "product_name"
-      , "product_calling_type" "calling_type"
-      , "product_channel" "channel"
-      , "product_country" "country"
-      , "product_line_type" "line_type"
-      , "line_item_usage_start_date" "usage_start_date_time"
-      , "line_item_usage_end_date" "usage_end_date_time"
-      , "line_item_resource_id" "resource_id"
+        "date_trunc"('day', line_item_usage_start_date) "usage_date"
+      , bill_payer_account_id "payer_account_id"
+      , line_item_usage_account_id "linked_account_id"
+      , bill_billing_entity "billing_entity"
+      , product['product_name'] "product_name"
+      , product['calling_type'] "calling_type"
+      , product['channel'] "channel"
+      , product['country'] "country"
+      , product['line_type'] "line_type"
+      , line_item_usage_start_date "usage_start_date_time"
+      , line_item_usage_end_date "usage_end_date_time"
+      , line_item_resource_id "resource_id"
       , split_part(line_item_resource_id, '/', 4) contact_id
-      , "line_item_product_code" "product_code"
-      , "line_item_operation" "operation"
-      , "line_item_line_item_type" "charge_type"
-      , "line_item_usage_type" "usage_type"
-      , "line_item_unblended_rate" "rate"
-      , "pricing_unit" "pricing_unit"
-      , "product_region" "region"
-      , "product_location" "location"
-      , "line_item_line_item_description" "item_description"
-      , "line_item_legal_entity" "legal_entity"
-      , "pricing_term" "pricing_term"
-      , "product_group" "product_group"
-      , "product_product_family" "product_family"
-      , "product_servicecode" "service"
-      , "product_servicename" "servicename"
-      , "sum"("line_item_usage_amount") usage_quantity
-      , "sum"("line_item_unblended_cost") unblended_cost
+      , line_item_product_code "product_code"
+      , line_item_operation "operation"
+      , line_item_line_item_type "charge_type"
+      , line_item_usage_type "usage_type"
+      , line_item_unblended_rate "rate"
+      , prcing_unit "pricing_unit"
+      , product['region'] "region"
+      , product_location "location"
+      , line_item_line_item_description "item_description"
+      , line_item_legal_entity "legal_entity"
+      , pricing_term "pricing_term"
+      , product['group'] "product_group"
+      , product_product_family "product_family"
+      , product_servicecode "service"
+      , product['servicename'] "servicename"
+      , "sum"(line_item_usage_amount) usage_quantity
+      , "sum"(line_item_unblended_cost) unblended_cost
       FROM
-        ""$\cur1_database\"."$\cur1_table_name\""
-      WHERE ((((current_date - INTERVAL  '30' DAY) <= line_item_usage_start_date) AND (line_item_resource_id <> '')) AND (line_item_product_code IN ('AmazonConnect', 'ContactCenterTelecomm', 'ContactLensAmazonConnect', 'AmazonConnectCases', 'AmazonConnectVoiceID', 'CustomerProfiles')))
+        "${cur2_database}"."${cur2_table_name}"
+      WHERE ((((CURRENT_DATE - INTERVAL  '30' DAY) <= line_item_usage_start_date) AND (line_item_resource_id <> '')) AND (line_item_product_code IN ('AmazonConnect', 'ContactCenterTelecomm', 'ContactLensAmazonConnect', 'AmazonConnectCases', 'AmazonConnectVoiceID', 'CustomerProfiles')))
       GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28
