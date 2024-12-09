@@ -16792,6 +16792,7 @@ views:
       - product_servicecode
       - product['servicename']
       - prcing_unit
+      - line_item_unblended_rate
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.resource_connect_view AS
       SELECT DISTINCT
