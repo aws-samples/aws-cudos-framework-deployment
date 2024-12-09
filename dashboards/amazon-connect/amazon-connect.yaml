@@ -16791,7 +16791,7 @@ views:
       - product_product_family
       - product_servicecode
       - product['servicename']
-      - prcing_unit
+      - pricing_unit
       - line_item_unblended_rate
     data: |-
       CREATE OR REPLACE VIEW ${athena_database_name}.resource_connect_view AS
@@ -16814,7 +16814,7 @@ views:
       , line_item_line_item_type "charge_type"
       , line_item_usage_type "usage_type"
       , line_item_unblended_rate "rate"
-      , prcing_unit "pricing_unit"
+      , pricing_unit "pricing_unit"
       , product['region'] "region"
       , product_location "location"
       , line_item_line_item_description "item_description"
