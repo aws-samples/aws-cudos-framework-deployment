@@ -3140,6 +3140,27 @@ dashboards:
               VisualIds:
               - de9eca85-8a54-4311-b9b2-ae65c00a8bcd
         Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: e74b9d1f-5ff1-4e27-8e60-33c4d64f7613
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: country
+              DataSetIdentifier: resource_connect_view
+            Configuration:
+              CustomFilterConfiguration:
+                CategoryValue: ''
+                MatchOperator: DOES_NOT_EQUAL
+                NullOption: NON_NULLS_ONLY
+            FilterId: ccba620b-17bc-42a7-bba6-6f6ad1e42d4a
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: feae3482-a2ee-4f8c-bc05-e4172e790c3a
+              VisualIds:
+              - 63d9f78b-8e7a-4847-bb2b-1ec47c8fb683
+        Status: ENABLED
       Options:
         WeekStart: MONDAY
       ParameterDeclarations:
@@ -3263,6 +3284,7 @@ dashboards:
             StaticValues: []
           Name: lastUsageDate
           TimeGranularity: DAY
+
       Sheets:
       - ContentType: INTERACTIVE
         Layouts:
@@ -4770,42 +4792,6 @@ dashboards:
                   TotalsVisibility: VISIBLE
                   ValueCellStyle:
                     BackgroundColor: '#EEEEEE'
-            ConditionalFormatting:
-              ConditionalFormattingOptions:
-              - Cell:
-                  FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.unblended_cost.4.1721838697019
-                  Scopes:
-                  - Role: FIELD
-                  TextFormat:
-                    Icon:
-                      CustomCondition:
-                        Color: '#DE3B00'
-                        Expression: SUM({unblended_cost}) > "TOP_25_PERCENT"
-                        IconOptions:
-                          Icon: CARET_UP
-              - Cell:
-                  FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.unblended_cost.4.1721838697019
-                  Scopes:
-                  - Role: FIELD
-                  TextFormat:
-                    Icon:
-                      CustomCondition:
-                        Color: '#F6AA54'
-                        Expression: (SUM({unblended_cost}) >= "BOTTOM_25_PERCENT") AND (SUM({unblended_cost})
-                          <= "TOP_25_PERCENT")
-                        IconOptions:
-                          Icon: MINUS
-              - Cell:
-                  FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.unblended_cost.4.1721838697019
-                  Scopes:
-                  - Role: FIELD
-                  TextFormat:
-                    Icon:
-                      CustomCondition:
-                        Color: '#2CAD00'
-                        Expression: SUM({unblended_cost}) < "BOTTOM_25_PERCENT"
-                        IconOptions:
-                          Icon: CARET_DOWN
             Subtitle:
               Visibility: VISIBLE
             Title:
@@ -13787,8 +13773,8 @@ dashboards:
                   Visibility: VISIBLE
                   VisibleRange:
                     PercentRange:
-                      From: 70.0
-                      To: 90.0
+                      From: 69.0
+                      To: 89.0
                 TickLabelOptions:
                   LabelOptions:
                     Visibility: VISIBLE
@@ -14549,41 +14535,11 @@ dashboards:
                     SelectedColumns:
                     - ColumnName: country
                       DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __duration_buckets
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
                     - ColumnName: __duration_buckets
                       DataSetIdentifier: resource_connect_view
                     - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
+                      DataSetIdentifier: resource_connect_view               
                     SelectedFields:
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
                     - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
                     - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
                   TargetVisualsConfiguration:
@@ -14715,52 +14671,7 @@ dashboards:
                     SelectedColumns:
                     - ColumnName: contact_id
                       DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
                     SelectedFields:
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
                     - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
@@ -15016,53 +14927,8 @@ dashboards:
                     SelectedColumns:
                     - ColumnName: __call_type
                       DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
                     SelectedFields:
                     - 8b3854b7-95c6-4b5f-803b-5f547fedb897.contact_end_date_time.0.1724179850633
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
                     - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
@@ -15386,52 +15252,7 @@ dashboards:
                     SelectedColumns:
                     - ColumnName: contact_id
                       DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
                     SelectedFields:
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
                     - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
@@ -15574,52 +15395,7 @@ dashboards:
                     SelectedColumns:
                     - ColumnName: country
                       DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
                     SelectedFields:
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
                     - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
@@ -15975,10 +15751,10 @@ dashboards:
                 TooltipVisibility: VISIBLE
               WindowOptions:
                 Bounds:
-                  East: 460.9989059563097
-                  North: 80.99651729167641
-                  South: -81.47388476331007
-                  West: -318.09681578003665
+                  East: 158.98642708457726
+                  North: 66.67252153466927
+                  South: 63.08125916830423
+                  West: 136.56368504797166
                 MapZoomMode: MANUAL
             ColumnHierarchies: []
             Subtitle:
