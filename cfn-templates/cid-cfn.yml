@@ -1934,7 +1934,3 @@ Outputs:
     Description: Technical Value - CidExecArn
     Value: !GetAtt CidExec.Arn
     Export: { Name: !Sub 'cid${Suffix}-CidExecArn'}
-  CidDatabase:
-    Description: Technical Value - CidDatabase
-    Value: !Ref CidDatabase
-    Export: { Name: !Sub 'cid${Suffix}-CidDatabase'}
