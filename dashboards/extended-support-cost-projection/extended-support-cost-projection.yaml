@@ -100,6 +100,7 @@ dashboards:
                   DisplayMode: POSITIVE
                 NullValueFormatConfiguration:
                   NullString: 'null'
+                NumberScale: AUTO
                 SeparatorConfiguration:
                   DecimalSeparator: DOT
                   ThousandsSeparator:
@@ -3743,90 +3744,90 @@ dashboards:
                 ElementId: df57c9e1-b450-40fe-afbf-f62ff12ba50f
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 2
+                RowSpan: 3
               - ColumnIndex: 1
                 ColumnSpan: 18
                 ElementId: 48d185a2-e38a-4f26-8eb3-c0ec785f06cf
                 ElementType: VISUAL
-                RowIndex: 2
+                RowIndex: 3
                 RowSpan: 6
               - ColumnIndex: 19
                 ColumnSpan: 16
                 ElementId: dc46e775-0f2c-41e6-8d0f-861518c976b0
                 ElementType: TEXT_BOX
-                RowIndex: 2
+                RowIndex: 3
                 RowSpan: 2
               - ColumnIndex: 19
                 ColumnSpan: 4
                 ElementId: 5f30b4c7-9a9f-4405-9cfb-82f6d8e4fc48
                 ElementType: VISUAL
-                RowIndex: 4
+                RowIndex: 5
                 RowSpan: 4
               - ColumnIndex: 23
                 ColumnSpan: 4
                 ElementId: c4d781dd-e558-4745-a163-20a70277ba99
                 ElementType: VISUAL
-                RowIndex: 4
+                RowIndex: 5
                 RowSpan: 4
               - ColumnIndex: 27
                 ColumnSpan: 4
                 ElementId: 45254025-1423-4763-98f1-b1af58cff23f
                 ElementType: VISUAL
-                RowIndex: 4
+                RowIndex: 5
                 RowSpan: 4
               - ColumnIndex: 31
                 ColumnSpan: 4
                 ElementId: 9217a4cf-8ba8-4223-bd3b-ee94e7c14469
                 ElementType: VISUAL
-                RowIndex: 4
+                RowIndex: 5
                 RowSpan: 4
               - ColumnIndex: 11
                 ColumnSpan: 14
                 ElementId: 57bf6215-ee65-4baa-b899-1f9d90da1d02
                 ElementType: VISUAL
-                RowIndex: 8
+                RowIndex: 9
                 RowSpan: 4
               - ColumnIndex: 1
                 ColumnSpan: 34
                 ElementId: b5ade97b-0f3d-404a-bb11-deba6ae81cec
                 ElementType: VISUAL
-                RowIndex: 12
+                RowIndex: 13
                 RowSpan: 6
               - ColumnIndex: 1
                 ColumnSpan: 12
                 ElementId: 508490e0-b2d9-49c0-b020-157ca0711395
                 ElementType: VISUAL
-                RowIndex: 18
+                RowIndex: 19
                 RowSpan: 9
               - ColumnIndex: 13
                 ColumnSpan: 11
                 ElementId: a43e7b3c-f3de-4383-aeb9-460d18aa88e6
                 ElementType: VISUAL
-                RowIndex: 18
+                RowIndex: 19
                 RowSpan: 9
               - ColumnIndex: 24
                 ColumnSpan: 11
                 ElementId: e7b191ef-f81f-41a2-84d8-0aeb3ba01304
                 ElementType: VISUAL
-                RowIndex: 18
+                RowIndex: 19
                 RowSpan: 9
               - ColumnIndex: 1
                 ColumnSpan: 17
                 ElementId: c7f4d930-f890-4330-ad03-1d064f42ed38
                 ElementType: VISUAL
-                RowIndex: 27
+                RowIndex: 28
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 17
                 ElementId: 2ac1ceae-0a8a-4a8c-86ae-0f0196751397
                 ElementType: VISUAL
-                RowIndex: 27
+                RowIndex: 28
                 RowSpan: 12
               - ColumnIndex: 1
                 ColumnSpan: 34
                 ElementId: 8e994e23-7149-4da0-b627-0d99cf9f3f93
                 ElementType: VISUAL
-                RowIndex: 39
+                RowIndex: 40
                 RowSpan: 12
         Name: OpenSearch Extended Support (Cost Projection)
         ParameterControls:
@@ -3923,6 +3924,7 @@ dashboards:
               <br/>
               <ul>
                 <li>Estimated cost values are based on the last 30 days of usage data.</li>
+                <li>Only OpenSearch and ElasticSearch versions with announced dates for extended support are displayed.</li>
               </ul>
             </text-box>
           SheetTextBoxId: df57c9e1-b450-40fe-afbf-f62ff12ba50f
@@ -3932,8 +3934,9 @@ dashboards:
             ChartConfiguration:
               BarsArrangement: STACKED
               CategoryAxis:
+                AxisOffset: 47px
                 ScrollbarOptions:
-                  Visibility: HIDDEN
+                  Visibility: VISIBLE
               CategoryLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -4092,7 +4095,7 @@ dashboards:
                   LabelOptions:
                     FontConfiguration:
                       FontSize:
-                        Relative: LARGE
+                        Relative: MEDIUM
               ValueLabelOptions:
                 SortIconVisibility: HIDDEN
                 Visibility: HIDDEN
@@ -4648,7 +4651,7 @@ dashboards:
                   LabelOptions:
                     FontConfiguration:
                       FontSize:
-                        Relative: LARGE
+                        Relative: MEDIUM
               ValueLabelOptions:
                 SortIconVisibility: HIDDEN
                 Visibility: HIDDEN
@@ -4666,6 +4669,8 @@ dashboards:
             Actions: []
             ChartConfiguration:
               BarsArrangement: STACKED
+              CategoryAxis:
+                AxisOffset: 33px
               CategoryLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -5656,36 +5661,36 @@ views:
          FROM
            (
        VALUES
-              ROW ('Elasticsearch_1.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_2.3', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_5.1', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_5.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_5.6', CAST('2025-11-08' AS timestamp), CAST('2028-11-07' AS timestamp))
-            , ROW ('Elasticsearch_6.0', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_6.1', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_6.2', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_6.3', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_6.4', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_6.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_6.6', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_6.7', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_7.1', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_7.2', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_7.3', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_7.4', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_7.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_7.6', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_7.7', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('Elasticsearch_7.8', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_1.0', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_1.2', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_2.3', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_2.4', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_2.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_2.6', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_2.7', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_2.8', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
-            , ROW ('OpenSearch_2.9', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+              ROW ('elasticsearch_1.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_2.3', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_5.1', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_5.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_5.6', CAST('2025-11-08' AS timestamp), null)
+            , ROW ('elasticsearch_6.0', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_6.1', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_6.2', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_6.3', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_6.4', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_6.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_6.6', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_6.7', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_7.1', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_7.2', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_7.3', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_7.4', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_7.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_7.6', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_7.7', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('elasticsearch_7.8', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_1.0', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_1.2', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_2.3', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_2.4', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_2.5', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_2.6', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_2.7', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_2.8', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
+            , ROW ('opensearch_2.9', CAST('2025-11-08' AS timestamp), CAST('2026-11-07' AS timestamp))
          )
       )
       , instance_size_norm_factors (instance_size, normalization_factor) AS (
@@ -5757,7 +5762,7 @@ views:
          , region
          , domainname
          , domainid
-         , engineversion
+         , lower(engineversion)
          , instancetype
          , CAST("concat"("year", '-', "month", '-', "day") AS date)
          , max(CAST("concat"("year", '-', "month", '-', "day") AS date)) OVER (ORDER BY domainid ASC)
