@@ -1,5 +1,19 @@
 # What's new in Extended Support Cost Projection
 
+## Extended Support Cost Projection - v4.0.0
+
+**Important:** This version requires the data collection version 3.2.0+. Update to this version requires a forced update. Since this is a major version upgrade, the `cid-cmd` tool will ask to confirm a recursive update or not. Please make sure to confirm the recursive update by answering **yes** to continue the update process and have the new OpenSearch dataset and Athena view deployed for the dashboard.
+
+If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.
+
+To update run these commands in your CloudShell (recommended) or other terminal:
+
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id extended-support-cost-projection --force
+```
+
 ## Extended Support Cost Projection - v3.1.0
 
 **Important:** This version requires the data collection version 3.2.0+. Update to this version requires a forced and recursive update. If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.
