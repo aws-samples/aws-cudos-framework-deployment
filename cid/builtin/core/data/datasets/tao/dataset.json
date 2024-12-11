@@ -1,4 +1,4 @@
-{
+{cc
     "DataSetId": "ta-organizational-view",
     "Name": "ta-organizational-view",
     "Permissions": [],
@@ -1383,12 +1383,24 @@
                     }
                 },
                 {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": "account_id",
+                                "ColumnId": "2f67fc2d-9c64-4f14-9d28-f962cad070d9",
+                                "Expression": "accountid"
+                            }
+                        ]
+                    }
+                },
+                {
                     "ProjectOperation": {
                         "ProjectedColumns": [
                             "ip address",
                             "checkname",
                             "accountparentname",
                             "accountid",
+                            "account_id",
                             "category",
                             "checkid",
                             "issuppressed",
