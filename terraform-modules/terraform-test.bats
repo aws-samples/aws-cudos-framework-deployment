@@ -82,6 +82,8 @@ setup_file() {
     source                 = "./terraform-modules/cur-setup-source"
     resource_prefix        = "$cur_prefix"
     destination_bucket_arn = module.cur_destination.cur_bucket_arn
+    bcm_query              = "SELECT bill_bill_type, bill_billing_entity FROM COST_AND_USAGE_REPORT"
+    enable_cur_v1          = false
 
     providers = {
       aws.useast1 = aws.useast1
