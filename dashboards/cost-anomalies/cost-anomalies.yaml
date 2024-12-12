@@ -1655,30 +1655,77 @@ datasets:
 views:
   cost_anomalies:
     data: |-
-      CREATE OR REPLACE VIEW cost_anomalies AS
+      CREATE OR REPLACE VIEW "cost_anomalies" AS 
+      WITH
+        unnested_data AS (
+          SELECT
+            "year"
+          , "month"
+          , payer_id
+          , anomalyid
+          , dimensionvalue
+          , CAST("from_iso8601_timestamp"("anomalystartdate") AS date) anomaly_start_date
+          , CAST("from_iso8601_timestamp"("anomalyenddate") AS date) anomalylastupdatedate
+          , CAST(maximpact AS double) maximpact
+          , CAST(totalactualspend AS double) totalactualspend
+          , CAST(totalexpectedspend AS double) totalexpectedspend
+          , CAST(totalimpact AS double) total_impact
+          , CAST(totalimpactpercentage AS double) totalimpactpercentage
+          , EXTRACT(DAY FROM (CAST("from_iso8601_timestamp"("anomalyenddate") AS date) - CAST("from_iso8601_timestamp"("anomalystartdate") AS date))) duration
+          , monitorarn
+          , CAST(RootCauses AS ARRAY(JSON)) root_causes_array
+          FROM
+            "${data_collection_database_name}"."cost_anomaly_data"
+          WHERE ("date_parse"("concat"("year", "month", "day"), '%Y%m%d') >= (current_timestamp - INTERVAL  '3' MONTH))
+      ),
+      latest_data AS (
+        SELECT 
+          anomalyid,
+          MAX(anomalylastupdatedate) as latest_date
+        FROM unnested_data
+        GROUP BY anomalyid
+      )
       SELECT DISTINCT
-        "year"
-      , "month"
-      , payer_id
-      , anomalyid
-      , dimensionvalue
-      , CAST("from_iso8601_timestamp"("anomalystartdate") AS date) anomaly_start_date
-      , CAST("from_iso8601_timestamp"("anomalyenddate") AS date) anomalylastupdatedate
-      , CAST(maximpact AS int) maximpact
-      , CAST(totalactualspend AS int) totalactualspend
-      , CAST(totalexpectedspend AS int) totalexpectedspend
-      , CAST(totalimpact AS int) tota_impact
-      , CAST(totalimpactpercentage AS int) totalimpactpercentage
-      , EXTRACT(DAY FROM (CAST("from_iso8601_timestamp"("anomalyenddate") AS date) - CAST("from_iso8601_timestamp"("anomalystartdate") AS date))) duration
-      , monitorarn
-      , region
-      , service
-      , linkedaccount
-      , linkedaccountname
-      , usagetype
-      FROM
-        "${data_collection_database_name}"."cost_anomaly_data"
-      WHERE ("date_parse"("concat"("year", "month", "day"), '%Y%m%d') >= (current_timestamp - INTERVAL  '3' MONTH))
+        d."year"
+      , d."month"
+      , d.payer_id
+      , d.anomalyid
+      , d.dimensionvalue
+      , d.anomaly_start_date
+      , d.anomalylastupdatedate
+      , CASE 
+          WHEN ROW_NUMBER() OVER (PARTITION BY d.anomalyid ORDER BY TRY(json_extract_scalar(rc, '$.region'))) = 1 
+          THEN d.maximpact 
+          ELSE NULL 
+        END as maximpact
+      , CASE 
+          WHEN ROW_NUMBER() OVER (PARTITION BY d.anomalyid ORDER BY TRY(json_extract_scalar(rc, '$.region'))) = 1 
+          THEN d.totalactualspend 
+          ELSE NULL 
+        END as totalactualspend
+      , CASE 
+          WHEN ROW_NUMBER() OVER (PARTITION BY d.anomalyid ORDER BY TRY(json_extract_scalar(rc, '$.region'))) = 1 
+          THEN d.totalexpectedspend 
+          ELSE NULL 
+        END as totalexpectedspend
+      , CASE 
+          WHEN ROW_NUMBER() OVER (PARTITION BY d.anomalyid ORDER BY TRY(json_extract_scalar(rc, '$.region'))) = 1 
+          THEN d.total_impact 
+          ELSE NULL 
+        END as total_impact
+      , d.totalimpactpercentage
+      , d.duration
+      , d.monitorarn
+      , TRY(json_extract_scalar(rc, '$.region')) region
+      , TRY(json_extract_scalar(rc, '$.service')) extracted_service
+      , TRY(json_extract_scalar(rc, '$.linkedaccountname')) linkedaccountname
+      , TRY(json_extract_scalar(rc, '$.linkedaccount')) linkedaccount
+      , TRY(json_extract_scalar(rc, '$.usagetype')) usagetype
+      , TRY(json_extract_scalar(rc, '$.Contribution')) Contribution
+      FROM unnested_data d
+      CROSS JOIN UNNEST(root_causes_array) t (rc)
+      JOIN latest_data ld ON d.anomalyid = ld.anomalyid 
+        AND d.anomalylastupdatedate = ld.latest_date
     schedules:
     - default
     parameters:
