@@ -2,6 +2,21 @@
 
 # CUDOS v5
 
+# CUDOS - 5.5
+
+* **DynamoDB**: Refactored visuals to improve user experience and simplify navigation. *'DynamoDB Accounts by Category'* visuals replaced with 'DynamoDB Cost per Account' and 'DynamoDB Cost per Usage Type Group'
+* **DynamoDB**: New section *'DynamoDB Provisioned Capacity - Reservations Savings Estimation'* which allows to calculate estimated savings for Amazon DynamoDB reserved capacity based on custom commitment amount.
+* **DynamoDB**: New section 'DynamoDB Provisioned Capacity - Reservation Coverage & Usage Monitoring' which allows monitor reserved capacity coverage per region | capacity type dimensions
+* **DynamoDB**: New visual *'Infrequent Access Tables Cost and Cost Efficiency Gain/Loss vs Standard Storage'* which shows efficiency gains from Infrequent Access tables and also tables which could be migrated to Standard table class
+* **Monitoring and Observability**: New section 'AWS Config Periodic Recording Savings Opportunities' which shows potential savings from migration to periodic configuration item recording
+* **Monitoring and Observability**: New section *'Account and Regions without AWS Config'* which allows to identify account and regions with AWS service usage and where AWS Config is not enabled
+* **Analytics**: Improved *'QuickSight Usage Type Group'* calculated field to accommodate the latest QuickSight pricing constructs
+* **AI/ML**: Added Guardrails to the *'Bedrock UsageType Group'* calculated field
+* **Databases**: Updated action filter on *'RI Coverage per region | engine | instance type or family'* to be applied to *'Top 20 instances'* allowing to focus on resources which belong to particular RI dimension
+* **Compute**: Bug fix for *'EKS Extended Support Cost per Account'* visual. Added missing filter for Last 30 days.
+
+ 
+
 # CUDOS - 5.4
 * **[new tab] Security**: Introducing Security tab with cost and usage details for Security services. New tab includes visuals 'Security Spend per Service', 'Security Spend per Account' and respective detailed view sections for Amazon Cognito and Amazon GuardDuty
 * **Security**: New Amazon Cognito section with visuals 'Amazon Cognito Spend and Projected Cost for M2M App Clients and Tokens', 'Amazon Cognito Spend and Projected Cost for M2M App Clients and Tokens per Account' and 'Amazon Cognito Detailed View'
