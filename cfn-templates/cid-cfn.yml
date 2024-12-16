@@ -1795,7 +1795,7 @@ Resources:
           quicksight_user: !Ref QuickSightUser
           account_map_source: 'dummy' #initial
           share_with_account: !Ref ShareDashboard
-          account-map-database-name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          account_map_database_name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
     Metadata:
       cfn_nag:
         rules_to_suppress:
