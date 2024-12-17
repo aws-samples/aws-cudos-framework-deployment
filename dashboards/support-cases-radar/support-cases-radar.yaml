@@ -1,0 +1,292 @@
+dashboards:
+  SUPPORT CASES RADAR:
+    dependsOn:
+      datasets:
+      - support_cases_communications_view
+      - support_cases_status_view
+    name: AWS Support Cases Radar
+    dashboardId: support-cases-radar
+    category: Advanced
+    theme: MIDNIGHT
+    templateId: support-cases-radar
+datasets:
+  support_cases_status_view:
+    data:
+      DataSetId: a5857fbb-8210-402e-800e-6d9ccef42564
+      Name: support_cases_status_view
+      PhysicalTableMap:
+        24d7d4f8-c978-4377-b7f2-5f1db7c616a8:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: support_cases_status_view
+            InputColumns:
+            - Name: last_read
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: payer_id
+              Type: STRING
+      LogicalTableMap:
+        9e713f4d-a732-448b-88e0-0a795034bb31:
+          Alias: support_cases_status_view
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - last_read
+              - account_id
+              - payer_id
+          Source:
+            PhysicalTableId: 24d7d4f8-c978-4377-b7f2-5f1db7c616a8
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - support_cases_status_view
+    schedules:
+    - default
+  support_cases_communications_view:
+    data:
+      DataSetId: support_cases_communications_view
+      Name: support_cases_communications_view
+      PhysicalTableMap:
+        bb496e3a-0c1b-4711-a115-f63cb9cdc045:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_name
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+        cddcae52-1ce1-43ed-bf75-4883a0830a81:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: support_cases_communications_view
+            InputColumns:
+            - Name: case_id
+              Type: STRING
+            - Name: submitted_by
+              Type: STRING
+            - Name: submitted_by_full
+              Type: STRING
+            - Name: communicationclass
+              Type: STRING
+            - Name: communicationorigin
+              Type: STRING
+            - Name: communication_sequence
+              Type: INTEGER
+            - Name: body
+              Type: STRING
+            - Name: communication_time
+              Type: DATETIME
+            - Name: communication_endtime
+              Type: DATETIME
+            - Name: communication_lag
+              Type: INTEGER
+            - Name: payer_id
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: account_alias
+              Type: STRING
+            - Name: display_id
+              Type: STRING
+            - Name: caseid
+              Type: STRING
+            - Name: case_created_time
+              Type: DATETIME
+            - Name: url
+              Type: STRING
+            - Name: subject
+              Type: STRING
+            - Name: status
+              Type: STRING
+            - Name: correspondencemethod
+              Type: STRING
+            - Name: service_code
+              Type: STRING
+            - Name: category_code
+              Type: STRING
+            - Name: severity_code
+              Type: STRING
+            - Name: case_submitted_by
+              Type: STRING
+            - Name: case_submitted_by_full
+              Type: STRING
+            - Name: case_submitted_by_first
+              Type: STRING
+            - Name: cc_email_addresses
+              Type: STRING
+            - Name: language
+              Type: STRING
+            - Name: summary
+              Type: STRING
+            - Name: executive_summary
+              Type: STRING
+            - Name: proposed_solutions
+              Type: STRING
+            - Name: actions
+              Type: STRING
+            - Name: references
+              Type: STRING
+            - Name: feedback
+              Type: STRING
+      LogicalTableMap:
+        0ed31dde-ec87-40c0-9a50-01737a0014b1:
+          Alias: support_cases_communications_view
+          Source:
+            PhysicalTableId: cddcae52-1ce1-43ed-bf75-4883a0830a81
+        9b0b3388-0717-413b-bd11-96c72b388d86:
+          Alias: account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: bb496e3a-0c1b-4711-a115-f63cb9cdc045
+        d7bf6f3e-390a-4289-8982-ab1127904bd8:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - case_id
+              - submitted_by
+              - submitted_by_full
+              - communicationclass
+              - communicationorigin
+              - communication_sequence
+              - body
+              - communication_time
+              - communication_endtime
+              - communication_lag
+              - payer_id
+              - account_id
+              - account_alias
+              - display_id
+              - caseid
+              - case_created_time
+              - url
+              - subject
+              - status
+              - correspondencemethod
+              - service_code
+              - category_code
+              - severity_code
+              - case_submitted_by
+              - case_submitted_by_full
+              - case_submitted_by_first
+              - cc_email_addresses
+              - language
+              - summary
+              - executive_summary
+              - proposed_solutions
+              - actions
+              - references
+              - feedback
+              - account_id[account_map]
+              - account_name
+          Source:
+            JoinInstruction:
+              LeftOperand: 0ed31dde-ec87-40c0-9a50-01737a0014b1
+              RightOperand: 9b0b3388-0717-413b-bd11-96c72b388d86
+              Type: LEFT
+              OnClause: '{account_id} = {account_id[account_map]}'
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - support_cases_communications_view
+    schedules:
+    - default
+crawlers: {}
+views:
+  support_cases_status_view:
+    data: |-
+      CREATE OR REPLACE VIEW "${athena_database_name}".support_cases_status_view AS
+      SELECT
+        last_read
+      , account_id
+      , payer_id
+      FROM
+        "${data_collection_database_name}".support_cases_status
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'support_cases_status'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
+  support_cases_communications_view:
+    data: |-
+      CREATE OR REPLACE VIEW "${athena_database_name}".support_cases_communications_view AS
+      WITH
+        communications AS (
+         SELECT
+           "caseid" "case_id"
+         , COALESCE(NULLIF(REGEXP_EXTRACT("submittedby", '(?:[^/]+/)([a-zA-Z0-9._%+-]+(?:@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?)\s*(?:\(Role\))(?:\s*<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>)?', 1), ''), NULLIF(REGEXP_EXTRACT(communications."body", '_.*by ([a-zA-Z0-9._%+-]+) \(in Slack\)_', 1), ''), "submittedby") "submitted_by"
+         , "submittedby" "submitted_by_full"
+         , CAST(null AS VARCHAR) "communicationClass"
+         , CAST(null AS VARCHAR) "communicationOrigin"
+         , RANK() OVER (PARTITION BY "caseid" ORDER BY "timecreated" ASC) "communication_sequence"
+         , "body"
+         , TRY(CAST(from_iso8601_timestamp("timecreated") AS timestamp)) "communication_time"
+         FROM
+           "${data_collection_database_name}".support_cases_communications "communications"
+      )
+      , cases AS (
+         SELECT
+           cases."payer_id"
+         , cases."account_id"
+         , cases."accountalias" "account_alias"
+         , cases."displayid" "display_id"
+         , cases."caseid" "caseid"
+         , TRY(CAST(from_iso8601_timestamp(cases."timecreated") AS timestamp)) "case_created_time"
+         , CONCAT('https://support.console.aws.amazon.com/support/home#/case/?displayId=', cases."displayid") "url"
+         , cases."subject"
+         , cases."status"
+         , CAST(null AS VARCHAR) "correspondencemethod"
+         , cases."servicecode" "service_code"
+         , cases."categorycode" "category_code"
+         , cases."severitycode" "severity_code"
+         , COALESCE(NULLIF(REGEXP_EXTRACT(cases."submittedby", '(?:[^/]+/)([a-zA-Z0-9._%+-]+(?:@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})?)\s*(?:\(Role\))(?:\s*<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>)?', 1), ''), NULLIF(REGEXP_EXTRACT(communications."body", '_.*by ([a-zA-Z0-9._%+-]+) \(in Slack\)_', 1), ''), cases."submittedby") "case_submitted_by"
+         , cases."submittedby" "case_submitted_by_full"
+         , communications."submitted_by_full" "case_submitted_by_first"
+         , TRY(ARRAY_JOIN(cases."ccemailaddresses", ',')) "cc_email_addresses"
+         , cases."language"
+         , cases."summary"
+         , json_extract_scalar(cases."summary", '$.executive_summary') "executive_summary"
+         , json_extract_scalar(cases."summary", '$.proposed_solutions') "proposed_solutions"
+         , json_extract_scalar(cases."summary", '$.actions') "actions"
+         , json_extract_scalar(cases."summary", '$.references') "references"
+         , json_extract_scalar(cases."summary", '$.feedback') "feedback"
+         FROM
+           ("${data_collection_database_name}".support_cases_data "cases"
+         LEFT JOIN "communications" ON (("cases"."caseid" = "communications"."case_id") AND ("communication_sequence" = 1)))
+      )
+      SELECT
+        communications.*
+      , COALESCE(
+          LEAD(communications."communication_time", 1) OVER (
+            PARTITION BY communications."case_id"
+            ORDER BY communications."communication_time" ASC
+          ),
+          communications."communication_time"
+        ) "communication_endtime"
+      , DATE_DIFF('minute', LAG(communications."communication_time", 1) OVER (PARTITION BY communications."case_id" ORDER BY communications."communication_time" ASC), communications."communication_time") "communication_lag"
+      , cases.*
+      FROM
+        (communications
+      LEFT JOIN cases ON (cases."caseid" = communications."case_id"))
+      ORDER BY cases."case_created_time" ASC, communications."communication_sequence" ASC
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'support_cases_data'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
