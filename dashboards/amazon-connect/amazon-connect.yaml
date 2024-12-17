@@ -3519,8 +3519,7 @@ dashboards:
             StaticValues: []
           Name: lastUsageDate
           TimeGranularity: DAY
-      QueryExecutionOptions:
-        QueryExecutionMode: AUTO
+
       Sheets:
       - ContentType: INTERACTIVE
         FilterControls:
