@@ -15232,53 +15232,13 @@ dashboards:
                       DataSetIdentifier: resource_connect_view
                     - ColumnName: __duration_buckets
                       DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __duration_buckets
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __duration_buckets
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __duration_buckets
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __duration_buckets
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __duration_buckets
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __duration_buckets
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: country
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __duration_buckets
-                      DataSetIdentifier: resource_connect_view
+
                     - ColumnName: __call_type
                       DataSetIdentifier: resource_connect_view
                     SelectedFields:
                     - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
                     - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
-                    - 5b28f552-94e2-4acd-9287-57bf209ac381.country.2.1723679428010
-                    - 0670a64c-293a-461b-8acf-fb7aae0bb0f5.2.1723679503315
+                    
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
