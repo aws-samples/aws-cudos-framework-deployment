@@ -20,7 +20,7 @@ datasets:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
             Schema: ${athena_database_name}
-            Name: support_cases_status
+            Name: support_cases_status_view
             InputColumns:
             - Name: last_read
               Type: STRING
@@ -270,7 +270,13 @@ views:
       )
       SELECT
         communications.*
-      , COALESCE(LEAD(communications."communication_time", 1) OVER (PARTITION BY communications."case_id" ORDER BY communications."communication_time" ASC), communications."communication_time") "communication_endtime"
+      , COALESCE(
+          LEAD(communications."communication_time", 1) OVER (
+            PARTITION BY communications."case_id"
+            ORDER BY communications."communication_time" ASC
+          ),
+          communications."communication_time"
+        ) "communication_endtime"
       , DATE_DIFF('minute', LAG(communications."communication_time", 1) OVER (PARTITION BY communications."case_id" ORDER BY communications."communication_time" ASC), communications."communication_time") "communication_lag"
       , cases.*
       FROM
