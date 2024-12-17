@@ -3381,7 +3381,7 @@ dashboards:
             DefaultFilterControlConfiguration:
               ControlOptions:
                 DefaultDropdownOptions:
-                  CommitMode: MANUAL
+                  
                   DisplayOptions:
                     SelectAllOptions:
                       Visibility: VISIBLE
@@ -15812,9 +15812,9 @@ dashboards:
             SourceFilterId: b4fbe089-ea9a-4635-87ac-d65f389399bc
         - DateTimePicker:
             DisplayOptions:
-              DateIconVisibility: VISIBLE
+              
               DateTimeFormat: YYYY/MM/DD HH:mm:ss
-              HelperTextVisibility: HIDDEN
+              
               InfoIconLabelOptions:
                 InfoIconText: Groups contacts by start hour due to hourly reporting granularity.
                   E.g. 14:37 contact falls in 14:00
