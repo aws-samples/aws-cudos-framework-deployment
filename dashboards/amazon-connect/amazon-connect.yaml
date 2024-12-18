@@ -3625,8 +3625,7 @@ dashboards:
             StaticValues: []
           Name: lastUsageDate
           TimeGranularity: DAY
-      QueryExecutionOptions:
-        QueryExecutionMode: AUTO
+
       Sheets:
       - ContentType: INTERACTIVE
         Layouts:
@@ -16162,7 +16161,7 @@ dashboards:
         FilterControls:
         - DateTimePicker:
             DisplayOptions:
-              DateIconVisibility: VISIBLE
+              
               DateTimeFormat: DD MMM YYYY HH:00
               InfoIconLabelOptions:
                 InfoIconText: Groups contacts by start hour due to hourly reporting granularity.
@@ -16179,9 +16178,9 @@ dashboards:
             Type: DATE_RANGE
         - DateTimePicker:
             DisplayOptions:
-              DateIconVisibility: VISIBLE
+              
               DateTimeFormat: DD MMM YYYY HH:00
-              HelperTextVisibility: HIDDEN
+              
               InfoIconLabelOptions:
                 InfoIconText: Groups contacts by end hour due to hourly reporting granularity.
                   E.g. 14:37 contact falls in 15:00
