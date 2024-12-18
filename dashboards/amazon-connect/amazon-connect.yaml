@@ -17793,7 +17793,7 @@ views:
   resource_connect_contact_summary_view:
     dependsOn:
       cur2:
-        - product_region_code
+        - product['region']
         - product_location
         - product['line_type']
         - product['country']
@@ -17801,7 +17801,7 @@ views:
       CREATE OR REPLACE VIEW ${athena_database_name}.resource_connect_contact_summary_view AS
       SELECT
         date_trunc('day', line_item_usage_start_date) usage_date
-      , product_region_code region_code
+      , product['region'] region_code
       , product_location region_name
       , line_item_resource_id resource_id
       , split_part(line_item_resource_id, '/', 4) contact_id
