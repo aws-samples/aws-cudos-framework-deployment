@@ -433,6 +433,7 @@ def export_analysis(qs, athena, glue):
         )['Definition']
 
         definition.pop('QueryExecutionMode', None) # QueryExecutionMode is supported for export but not for create or update as of 2024-10-17
+        definition.pop('QueryExecutionOptions', None) # QueryExecutionOptions is supported for export but not for create or update as of 2024-10-17
 
         for dataset in definition.get('DataSetIdentifierDeclarations', []):
             # Hide region and account number of the source account
