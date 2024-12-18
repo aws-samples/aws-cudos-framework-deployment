@@ -173,7 +173,7 @@ def get_parameters():
     return dict(params)
 
 
-def get_yesno_parameter(param_name: str, message: str, default: str | None = None, break_on_ctrl_c = True):
+def get_yesno_parameter(param_name: str, message: str, default: str=None, break_on_ctrl_c=True):
     logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
     mapping = {True: True, False: False, 'yes': True, 'no': False}
