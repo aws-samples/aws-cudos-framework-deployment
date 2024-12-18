@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Billing Data Export Aggregation v0.1.4
+Description: AWS Billing Data Export Aggregation v0.1.5
 Metadata:
 
   AWS::CloudFormation::Interface:
@@ -632,12 +632,10 @@ Resources:
                 Action:
                   - iam:GetRole
                   - iam:CreateServiceLinkedRole
-                  - iam:DeleteServiceLinkedRole
-                  - iam:GetServiceLinkedRoleDeletionStatus
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/bcm-data-exports.amazonaws.com/AWSServiceRoleForBCMDataExports'
               - Effect: Allow
                 Action:
-                  - cost-optimization-hub:GetPreferences
+                  - cost-optimization-hub:ListEnrollmentStatuses
                 Resource: '*' # Cannot restrict this
 
     Metadata:
@@ -657,57 +655,100 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Runtime: python3.12
-      Timeout: 15
+      Timeout: 90
       Role: !GetAtt LambdaServiceLinkedRoleExecutionRole.Arn
       Code:
         ZipFile: |
           import json
+          import logging
           import time
-          import boto3
-          import cfnresponse
+
+          import boto3  # type: ignore
+          from botocore.exceptions import ClientError  # type: ignore
+          from botocore.config import Config  # type: ignore
+          import cfnresponse  # type: ignore
+
+          CUSTOM_RESOURCE_PHYSICAL_ID = "CreateServiceLinkedRoleBcmDataExports"
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          config = Config(retries={"max_attempts": 5, "mode": "standard"})
+          iam_client = boto3.client("iam", region_name="us-east-1", config=config)
+          coh_client = boto3.client("cost-optimization-hub", region_name="us-east-1", config=config)  # noqa: E501
+
 
           def handler(event, context):
-              print(json.dumps(event))
-              coh = boto3.client('cost-optimization-hub', region_name='us-east-1')
-              iam = boto3.client('iam')
+              logger.info(f"Event: {json.dumps(event, default=str)}")
+
               try:
-                  if event['RequestType'] in ['Create', 'Update']:
+                  if event["RequestType"] == "Delete":
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS,
+                                      {}, physicalResourceId=CUSTOM_RESOURCE_PHYSICAL_ID)
+                      return
 
-                      print("Make sure CO hub is activated")
-                      try:
-                          coh.get_preferences()
-                      except Exception as e:
-                          if 'AWS account is not enrolled for recommendations' in str(e):
-                              raise Exception('AWS account is not enrolled for recommendations. Please activate Cost Optimization Hub.')
-                          raise
+                  account_id = context.invoked_function_arn.split(":")[4]
+                  validate_coh_enrollment(account_id)
+                  create_service_linked_role(
+                      service_name="bcm-data-exports.amazonaws.com",
+                      description="Service-linked role for bcm-data-exports.amazonaws.com"
+                  )
 
-                      print("Creating service linked role")
-                      iam.create_service_linked_role(
-                          AWSServiceName='bcm-data-exports.amazonaws.com',
-                          Description='Service-linked role for bcm-data-exports.amazonaws.com'
-                      )
-
-                      print("Waiting for the role to be created")
-                      for i in range(60):
-                          try:
-                              iam.get_role(RoleName='AWSServiceRoleForBCMDataExports')
-                              print("Role is created")
-                              break
-                          except iam.exceptions.NoSuchEntityException:
-                              time.sleep(1)
-
-                      print("Additional wait to make sure the role is available")
-                      time.sleep(30)
-
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS,
+                                  {}, physicalResourceId=CUSTOM_RESOURCE_PHYSICAL_ID)
 
               except Exception as e:
-                  if 'has been taken in this account' in str(e):
-                      print('the role AWSServiceRoleForBCMDataExports already exist')
-                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                  logger.exception(e)
+                  cfnresponse.send(event, context, cfnresponse.FAILED,
+                                  {}, physicalResourceId=CUSTOM_RESOURCE_PHYSICAL_ID, reason=str(e))
+
+
+          def validate_coh_enrollment(account_id: str):
+              """
+              Returns `None` if account is enrolled in Cost Optimization Hub; otherwise, raises `AssertionError`
+              """
+              logger.info("Checking if account is enrolled in COH...")
+
+              paginator = coh_client.get_paginator("list_enrollment_statuses")
+              page_iterator = paginator.paginate(accountId=account_id)
+              items = [item
+                      for page in page_iterator
+                      for item in page["items"]
+                      if item["status"] == "Active"]
+
+              if items:
+                  logger.info("Account is enrolled in COH")
+                  return
+
+              raise AssertionError(
+                  "Account is NOT enrolled in COH. Please try again after enabling Cost Optimization Hub."
+              )
+
+
+          def create_service_linked_role(service_name: str, description: str):
+              try:
+                  logger.info(f"Creating a service-linked role for {service_name}...")
+                  role_name = iam_client.create_service_linked_role(
+                      AWSServiceName=service_name,
+                      Description=description
+                  )["Role"]["RoleName"]
+
+                  logger.info(f"Waiting for the service-linked role to be available...")
+                  waiter = iam_client.get_waiter("role_exists")
+                  waiter.wait(
+                      RoleName=role_name,
+                      WaiterConfig={"Delay": 1, "MaxAttempts": 30}
+                  )
+                  time.sleep(10)  # Additional wait time, just in case
+
+                  logger.info(
+                      f"Successfully created a service-linked role for {service_name}: {role_name}")
+              except ClientError as e:
+                  if e.response["Error"]["Code"] == "InvalidInput":
+                      logger.info(
+                          f"Service-linked role for {service_name} already exists")
                   else:
-                      print(e)
-                      cfnresponse.send(event, context, cfnresponse.FAILED, {}, reason=str(e))
+                      raise
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -721,6 +762,7 @@ Resources:
     Type: 'AWS::CloudFormation::CustomResource'
     Properties:
       ServiceToken: !GetAtt CreateServiceLinkedRoleFunction.Arn
+      ServiceTimeout: "90"
 
 ###########################################################################
 # Lambda DataExport Creator: used to create DataExport from outside us-east-1 or cn-northwest-1
