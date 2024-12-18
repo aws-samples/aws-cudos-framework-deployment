@@ -15897,54 +15897,10 @@ dashboards:
                     SelectedColumns:
                     - ColumnName: __call_type
                       DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: __call_type
-                      DataSetIdentifier: resource_connect_view
                     SelectedFields:
                     - 8b3854b7-95c6-4b5f-803b-5f547fedb897.contact_end_date_time.0.1724179850633
                     - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
-                    - 7f32a31a-992c-4525-ab22-47e8971ca6b0.2.1724179872682
+
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
