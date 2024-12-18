@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v4.0.5
+Description: Deployment of Cloud Intelligence Dashboards v4.0.6
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -285,6 +285,10 @@ Conditions:
     Fn::And:
       - !Equals [ !Ref LakeFormationEnabled, "yes" ]
       - !Condition NeedCURTable
+  NeedLakeFormationEnabledQuickSightDataSourceRole:
+    Fn::And:
+      - !Equals [ !Ref LakeFormationEnabled, "yes" ]
+      - !Condition NeedQuickSightDataSourceRole
   UseQuickSightDataSourceRole: !Not [!Equals [ !Ref QuickSightDataSourceRoleName, "" ]]
   NeedQuickSightDataSourceRole: !Equals [ !Ref QuickSightDataSourceRoleName, "CidQuickSightDataSourceRole" ]
   NeedQuickSightDataSourceRoleAndLegacyCUR:
@@ -527,11 +531,14 @@ Resources:
     Properties:
       Name: !Sub 'CID${Suffix}'
       Description: !Sub 'Used for CloudIntelligenceDashboards${Suffix}'
+      State: ENABLED
+      RecursiveDeleteOption: true
       WorkGroupConfiguration:
         EnforceWorkGroupConfiguration: true
         ResultConfiguration:
           EncryptionConfiguration:
             EncryptionOption: SSE_S3
+          ExpectedBucketOwner: !Ref AWS::AccountId
           OutputLocation: !If [ NeedAthenaQueryResultsBucket, !Sub 's3://${MyAthenaQueryResultsBucket}/', !Sub 's3://${AthenaQueryResultsBucket}/' ]
 
   #Legacy version. Replaced by CustomResourceFunctionInit but we cannot remove it completely as it was removing workgroup on deletion of the custom resource.
@@ -578,7 +585,7 @@ Resources:
     Properties:
       FunctionName: !Sub "CidCustomResourceFunctionInit-DoNotRun${Suffix}"
       Role: !GetAtt 'InitLambdaExecutionRole.Arn'
-      Description: "Do what CFN cannot: start crawler, delete bucket with objects and delete an non empty workgroup"
+      Description: "Do what CFN cannot: start crawler and delete bucket with objects"
       Runtime: python3.11
       Architectures: [ x86_64 ] #Compatible with arm64 but it is not supported in all regions
       MemorySize: 128
@@ -598,7 +605,6 @@ Resources:
           from cid.utils import set_parameters
 
           BUCKET = os.environ['BUCKET']
-          WORKGROUP = os.environ['WORKGROUP']
           CRAWLER = os.environ['CRAWLER']
           QUICKSIGHT_USER = os.environ['QUICKSIGHT_USER']
           QUICKSIGHT_ROLE = os.environ.get('QUICKSIGHT_ROLE')
@@ -673,7 +679,6 @@ Resources:
 
           def on_delete():
               # Delete bucket (CF cannot delete if they are non-empty)
-              # and delete WorkGroup (CF cannot do that)
               s3 = boto3.resource('s3')
               log = []
 
@@ -694,24 +699,6 @@ Resources:
                           log.append(f'ERROR: {BUCKET} - {errcode}')
                   except Exception as exc:
                       log.append(f'ERROR: {BUCKET} Error: {exc}')
-
-              if WORKGROUP:
-                  try:
-                      response = boto3.client('athena').delete_work_group(
-                          WorkGroup=WORKGROUP,
-                          RecursiveDeleteOption=True
-                      )
-                      print(f'DEBUG: WorkGroup {WORKGROUP} deleted. {response}')
-                      log.append(f'INFO: WorkGroup {WORKGROUP} deleted.')
-                  except botocore.exceptions.ClientError as exc:
-                      status = exc.response["ResponseMetadata"]["HTTPStatusCode"]
-                      errcode = exc.response["Error"]["Code"]
-                      if status == 404:
-                          log.append(f'INFO:  WorkGroup {WORKGROUP} - {errcode}')
-                      else:
-                          log.append(f'ERROR: WorkGroup {WORKGROUP} - {errcode}')
-                  except Exception as exc:
-                      log.append(f'ERROR: WorkGroup {WORKGROUP} Error: {exc}')
 
               if QUICKSIGHT_ROLE:
                   try:
@@ -735,7 +722,6 @@ Resources:
       Environment:
         Variables:
           BUCKET: !If [NeedAthenaQueryResultsBucket, !Ref MyAthenaQueryResultsBucket, '']
-          WORKGROUP: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
           CRAWLER: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
           QUICKSIGHT_USER: !Ref QuickSightUser
           QUICKSIGHT_ROLE: !If [ NeedQuickSightDataSourceRole, !Ref QuickSightDataSourceRole, !Ref 'AWS::NoValue' ]
@@ -785,20 +771,6 @@ Resources:
                   Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}"
                 - !Ref 'AWS::NoValue'
       PermissionsBoundary: !If [NeedPermissionsBoundary, !Ref PermissionsBoundary, !Ref 'AWS::NoValue']
-
-  InitLambdaExecutionRoleWorkGroupPolicy:
-    Type: AWS::IAM::Policy
-    Condition: NeedAthenaWorkgroup
-    Properties:
-      PolicyName: AthenaWorkGroupDeletion
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action: athena:DeleteWorkGroup
-            Resource: !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}'
-      Roles:
-        - !Ref InitLambdaExecutionRole
 
   InitLambdaExecutionRoleBucketPolicy:
     Type: AWS::IAM::Policy
@@ -851,8 +823,6 @@ Resources:
           Value: !If [NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, '']
         - Key: IgnoreConditionalDependsOnDatabase
           Value: !If [NeedCURTable, !Ref MyGlueCURCrawler, '']
-        - Key: IgnoreConditionalDependsOnPolicy1
-          Value: !If [NeedAthenaWorkgroup, !Ref InitLambdaExecutionRoleWorkGroupPolicy, '']
         - Key: IgnoreConditionalDependsOnPolicy2
           Value: !If [NeedAthenaQueryResultsBucket, !Ref InitLambdaExecutionRoleBucketPolicy, '']
         - Key: IgnoreConditionalDependsOnPolicy3
@@ -1446,6 +1416,11 @@ Resources:
                       - NeedDatabase
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${CidDatabase}/*
                       - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
+                  - Fn::If:
+                      - NeedDatabase
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${CidDatabase}
+                      - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
               - Effect: Allow
                 Action:
                   - s3:CreateBucket
@@ -1561,13 +1536,38 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingsCidExecRolePermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationEnabled
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt CidExecRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        TableResource:
+          CatalogId: !Ref "AWS::AccountId"
+          DatabaseName: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          TableWildcard: {}
+
+  DataLakeSettingsQuickSightDataSourceRolePerm:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabledQuickSightDataSourceRole
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt QuickSightDataSourceRole.Arn
+      Permissions:
+        - ALL
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref "AWS::AccountId"
+          Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+  DataLakeSettingsQuickSightDataSourceRolePermTable:
+    Type: AWS::LakeFormation::Permissions
+    Condition: NeedLakeFormationEnabledQuickSightDataSourceRole
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt QuickSightDataSourceRole.Arn
       Permissions:
         - ALL
       Resource:
@@ -1588,7 +1588,6 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingsCidCrawlerRolePermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationCrawlerPermissions
@@ -1615,7 +1614,6 @@ Resources:
         DatabaseResource:
           CatalogId: !Ref "AWS::AccountId"
           Name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
-
   DataLakeSettingQuickSightAdminUserPermTable:
     Type: AWS::LakeFormation::Permissions
     Condition: NeedLakeFormationEnabled
@@ -1763,6 +1761,7 @@ Resources:
           quicksight_user: !Ref QuickSightUser
           account_map_source: 'dummy' #initial
           share_with_account: !Ref ShareDashboard
+          account_map_database_name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -1781,7 +1780,7 @@ Resources:
           - LambdaLayerBucketPrefixIsManaged
           - !FindInMap [RegionMap, !Ref 'AWS::Region', BucketName]
           - !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}' # Region added for backward compatibility
-        S3Key: 'cid-resource-lambda-layer/cid-4.0.5.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-4.0.6.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11
