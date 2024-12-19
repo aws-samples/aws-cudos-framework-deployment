@@ -3,6 +3,9 @@
 
 # First build layer
 layer=$(./assets/build_lambda_layer.sh)
+# Source the version
+export CID_VERSION=$(python3 -c "from cid import _version;print(_version.__version__)")
+
 
 # Then publish on s3
 export AWS_REGION=us-east-1
@@ -23,7 +26,7 @@ aws cloudformation list-stack-instances \
     if [ $? -ne 0 ]; then
       echo "Error: $output"
     else
-      echo "Uploaded successfuly"
+      echo "Uploaded successfully"
     fi
   done
 
@@ -35,6 +38,8 @@ rm -vf ./$layer
 if aws s3 ls "s3://aws-managed-cost-intelligence-dashboards" >/dev/null 2>&1; then
   echo "Updating cid-cfn.yml"
   aws s3 sync ./cfn-templates/ s3://aws-managed-cost-intelligence-dashboards/cfn/
+  # Publish additional copy into respective version folder
+  aws s3 sync ./cfn-templates/ "s3://aws-managed-cost-intelligence-dashboards/cfn/${CID_VERSION}/"
 
   echo "Syncing dashboards"
   aws s3 sync ./dashboards s3://aws-managed-cost-intelligence-dashboards/hub/
