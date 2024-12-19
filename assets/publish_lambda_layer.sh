@@ -3,8 +3,8 @@
 
 # First build layer
 layer=$(./assets/build_lambda_layer.sh)
-# Source the version from the previous script execution
-source ./assets/build_lambda_layer.sh
+# Source the version
+export CID_VERSION=$(python3 -c "from cid import _version;print(_version.__version__)")
 
 
 # Then publish on s3
@@ -26,7 +26,7 @@ aws cloudformation list-stack-instances \
     if [ $? -ne 0 ]; then
       echo "Error: $output"
     else
-      echo "Uploaded successfuly"
+      echo "Uploaded successfully"
     fi
   done
 
