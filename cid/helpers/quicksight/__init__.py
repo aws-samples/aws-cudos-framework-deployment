@@ -114,6 +114,15 @@ class QuickSight(CidBase):
             logger.info(f'Using QuickSight identity region: {self._identityRegion}')
         return self._identityRegion
 
+    def pre_discover(self) -> str:
+        """ Pre discover assets
+        :fresh: check if we need to discover datasets and discover dashboards dastasets if we are not allowed to get datasets
+        """
+        try:
+            self.client.list_data_sets(AwsAccountId=self.account_id)
+        except self.client.exceptions.AccessDeniedException:
+            self.discover_dashboards(scan_all=True) # we need to discover datasets via dashboards if we cannot do that directly via api
+
     def edition(self, fresh: bool=False) -> str:
         """ get QuickSight Edition
         :fresh: set to True if you want it fresh (not cached)
@@ -197,6 +206,13 @@ class QuickSight(CidBase):
             logger.debug(exc, exc_info=True)
         return result
 
+    def get_supported_dashboard_definition(self, dashboard_id: str):
+        return next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard_id), None)
+
+
+    def get_supported_dashboard_ids(self):
+        return [v['dashboardId'] for v in self.supported_dashboards.values()]
+
 
     def discover_dashboard(self, dashboardId: str, refresh: bool = False) -> Dashboard:
         """Discover a single dashboard: describe and pull downstream info (datasets, related templates and views) """
@@ -210,7 +226,7 @@ class QuickSight(CidBase):
             raise CidCritical(f'Dashboard {dashboardId} was not found')
         # Look for dashboard definition by DashboardId in the catalog of supported dashboards (the currently available definitions in their latest public version)
         # This definition can be used to determine the gap between the latest public version and the currently deployed version
-        _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
+        _definition = self.get_supported_dashboard_definition(dashboard.id)
         if not _definition:
             # Look for dashboard definition by templateId.
             # This is for a specific use-case when a dashboard with another id points to managed template
@@ -586,7 +602,7 @@ class QuickSight(CidBase):
         except Exception as exc:
             logger.debug(exc, exc_info=True)
 
-    def discover_dashboards(self, refresh_overrides: List[str]=[], refresh: bool = False) -> None:
+    def discover_dashboards(self, refresh_overrides: List[str]=[], refresh: bool = False, scan_all: bool = False) -> None:
         """ Discover deployed dashboards
         :param refresh_overrides: a list of dashboard ids to refresh
         :param refresh: force refresh all dashboards
@@ -597,44 +613,34 @@ class QuickSight(CidBase):
             for dashboard_id in refresh_overrides:
                 if dashboard_id in self._dashboards:
                     del self._dashboards[dashboard_id]
-        logger.info('Discovering deployed dashboards')
-        deployed_dashboards=self.list_dashboards()
-        logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
-        logger.debug(deployed_dashboards)
-        bar = tqdm(deployed_dashboards, desc='Discovering Dashboards', leave=False)
-        for dashboard in bar:
+        logger.debug('Discovering deployed dashboards')
+        all_dashboards_ids = [d.get('DashboardId') for d in self.list_dashboards()]
+        if scan_all:
+            dashboards_ids = all_dashboards_ids
+        else:
+            dashboards_ids = [ d for d in self.get_supported_dashboard_ids() if d in all_dashboards_ids ]
+        logger.info(f'Found {len(dashboards_ids)} deployed dashboards')
+        bar = tqdm(dashboards_ids, desc='Discovering Dashboards', leave=False)
+        for dashboard_id in bar:
             # Discover found dashboards
-            dashboard_name = dashboard.get('Name')
-            dashboard_id = dashboard.get('DashboardId')
-            bar.set_description(f'Discovering {dashboard_name[:10]:<10}', refresh=True)
-            logger.info(f'Discovering "{dashboard_name}"')
+            bar.set_description(f'Discovering {dashboard_id[:10]:<10}', refresh=True)
+            logger.debug(f'Discovering "{dashboard_id}"')
             refresh = dashboard_id in refresh_overrides
-            self.discover_dashboard(dashboard_id, refresh=refresh)
+            try:
+                self.discover_dashboard(dashboard_id, refresh=refresh)
+            except CidCritical:
+                pass
 
     def list_dashboards(self) -> list:
-        parameters = {
-            'AwsAccountId': self.account_id
-        }
         try:
-            result = self.client.list_dashboards(**parameters)
-            if result.get('Status') != 200:
-                raise CidCritical(f'list_dashboards returns: {result}')
-            else:
-                logger.debug(result)
-                return result.get('DashboardSummaryList')
+            return list(self.client.get_paginator('list_dashboards').paginate(AwsAccountId=self.account_id).search('DashboardSummaryList'))
         except Exception as exc:
             logger.debug(exc, exc_info=True)
             return []
 
     def list_data_sources(self) -> list:
-        parameters = {
-            'AwsAccountId': self.account_id
-        }
-        data_sources = []
         try:
-            for page in self.client.get_paginator('list_data_sources').paginate(**parameters):
-                data_sources += page.get('DataSources',[])
-            return data_sources
+            return list(self.client.get_paginator('list_data_sources').paginate(AwsAccountId=self.account_id).search('DataSources'))
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing data sources')
             raise
@@ -732,15 +738,8 @@ class QuickSight(CidBase):
                 return group
 
     def list_data_sets(self):
-        parameters = {
-            'AwsAccountId': self.account_id
-        }
         try:
-            result = self.client.list_data_sets(**parameters)
-            if result.get('Status') != 200:
-                raise CidCritical(f'list_data_sets: {result}')
-            else:
-                return result.get('DataSetSummaries')
+            return list(self.client.get_paginator('list_data_sets').paginate(AwsAccountId=self.account_id).search('DataSetSummaries'))
         except self.client.exceptions.AccessDeniedException:
             raise
         except Exception as exc:
@@ -943,13 +942,12 @@ class QuickSight(CidBase):
         return result
 
 
-    def describe_dataset(self, id, timeout: int=1) -> Dataset:
+    def describe_dataset(self, id, timeout: int=10) -> Dataset:
         """ Describes an Amazon QuickSight dataset """
         if self._datasets and id in self._datasets:
             return self._datasets.get(id)
         self._datasets = self._datasets or {}
         poll_interval = 1
-        _dataset = None
         deadline = time.time() + timeout
         while time.time() <= deadline:
             try:
@@ -965,15 +963,14 @@ class QuickSight(CidBase):
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
                 return None
             except self.client.exceptions.ClientError as exc:
-                logger.error(f'Error when trying to describe dataset {id}: {exc}')
+                logger.warning(f'Error when trying to describe dataset {id}: {exc}')
                 return None
-
         return self._datasets.get(id, None)
 
     def get_dataset_last_ingestion(self, dataset_id) -> str:
         """returns human friendly status of the latest ingestion"""
         try:
-            ingestions = self.client.list_ingestions(
+            ingestions = self.client.list_ingestions( # latest come first, so no pagination required    
                 DataSetId=dataset_id,
                 AwsAccountId=self.account_id,
             ).get('Ingestions', [])
