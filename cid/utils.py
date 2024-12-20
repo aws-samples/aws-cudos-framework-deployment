@@ -193,16 +193,16 @@ def get_yesno_parameter(param_name: str, message: str, default: str=None, break_
 
 def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True):
     """
-    Check if parameters are provided in the command line and if not, ask user 
+    Check if parameters are provided in the command line and if not, ask user
 
     :param message: text message for user
     :param choices: a list or dict for choice. None for text entry. Keys and Values must be strings.
     :param default: a default text template
     :param none_as_disabled: if True and choices is a dict, all choices with None as a value will be disabled
-    :param template_variables: a dict with varibles for template
+    :param template_variables: a dict with variables for template
     :param break_on_ctrl_c: if True, exit() if user pressed CTRL+C
 
-    :returns: a value choosed by user or provided in command line    
+    :returns: a value choose by user or provided in command line
     """
     logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
