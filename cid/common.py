@@ -433,9 +433,7 @@ class Cid():
 
         self.ensure_subscription()
 
-        # In case if we cannot discover datasets, we need to discover dashboards
-        # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
-        self.qs.dashboards
+        self.qs.pre_discover()
 
         dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
         category_filter = [cat for cat in get_parameters().get('category', '').upper().split(',') if cat]
@@ -724,7 +722,6 @@ class Cid():
                         logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
-                        
                         refresh_overrides = [
                             dashboard.id
                         ]
