@@ -595,7 +595,7 @@ class Athena(CidBase):
         ''')
 
     def find_tables_with_columns(self, columns: list, database_name: str=None, catalog_name: str=None, max_items: int=10000):
-        """ This function searches a table with a given set of columns
+        """ This function return interator of tables with a given set of columns.
         """
         iterator = self.client.get_paginator('list_table_metadata').paginate(
             DatabaseName=database_name or self.DatabaseName,
@@ -604,6 +604,9 @@ class Athena(CidBase):
                 'MaxItems': max_items, # sometimes customers can have 1'000s of tables (due to a crawler going crazy for example)
             },
         )
-        return iterator.search(f"""
-            TableMetadataList[?{' && '.join(["contains(Columns[].Name, '"+col+"' )" for col in columns])}].Name
-        """)
+        # We cannot rely on search to find directly columns as there might be Nulls. So intrating old fasion.
+        for table in iterator.search('TableMetadataList'):
+            column_names = [c['Name'] for c in table.get('Columns', [])]
+            if all([(col in column_names) for col in columns]):
+                yield table
+
