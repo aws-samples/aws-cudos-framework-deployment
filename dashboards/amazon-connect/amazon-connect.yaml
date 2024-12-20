@@ -3517,9 +3517,10 @@ dashboards:
               ColumnName: item_description
               DataSetIdentifier: summary_view
             Configuration:
-              CustomFilterListConfiguration:
-                MatchOperator: DOES_NOT_CONTAIN
-                NullOption: ALL_VALUES
+              CustomFilterConfiguration:
+                CategoryValue: ''
+                MatchOperator: DOES_NOT_EQUAL
+                NullOption: NON_NULLS_ONLY
             FilterId: 8137eccf-52c5-4664-bbe5-aef4fce0c74c
         ScopeConfiguration:
           SelectedSheets:
@@ -17934,4 +17935,4 @@ views:
                                                                                                                                                     ,'AmazonConnectVoiceID'
                                                                                                                                                     ,'CustomerProfiles')))
       GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
-      
+
