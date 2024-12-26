@@ -532,11 +532,13 @@ class ProxyView():
             else:
                 raise NotImplementedError(f'CUR1 field {field} has no known equivalent')
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('1'):
-            if field.startswith('resource_tags_'):
-                return f"resource_tags['{field[len('resource_tags_'):]}']"
-            if field.startswith('cost_category_'):
-                return f"cost_category['{field[len('cost_category_'):]}']"
-            return cur1to2_mapping.get(field, field)
+            for tag_type in 'resource_tags', 'cost_category':
+                if field.startswith(tag_type + '_'):
+                    short_field_name = field[len(tag_type + '_'):]
+                    if short_field_name.encode('unicode-escape').decode('ascii') != short_field_name:
+                        # name contains unicode characters that must be escaped
+                        short_field_name = f'"{short_field_name}"'
+                    return f"{tag_type}['{short_field_name}']"
 
 
     def column_surely_exist(self, field_to_expose):
