@@ -508,8 +508,11 @@ class ProxyView():
                 keys_set = set(self.exposed_maps.get(field, set()))
                 keys_set.update(self.fields_to_expose_in_maps.get(map_field, set()))
                 for key in keys_set:
-                    if self.cur.column_exists(f'{map_field}_{key}'):
-                        map_mapping[key] = f'{map_field}_{key}'
+                    map_field_key = f'{map_field}_{key}'
+                    if self.cur.column_exists():
+                        if map_field_key.encode('unicode-escape').decode('ascii') != map_field_key: # field name contains unicode characters that must be escaped
+                            map_field_key = f'"{map_field_key}"'
+                        map_mapping[key] = map_field_key
                     else:
                         map_mapping[key] = empty['string'] # all known maps have string vaules for now
                 if not map_mapping:
@@ -535,9 +538,6 @@ class ProxyView():
             for tag_type in 'resource_tags', 'cost_category':
                 if field.startswith(tag_type + '_'):
                     short_field_name = field[len(tag_type + '_'):]
-                    if short_field_name.encode('unicode-escape').decode('ascii') != short_field_name:
-                        # name contains unicode characters that must be escaped
-                        short_field_name = f'"{short_field_name}"'
                     return f"{tag_type}['{short_field_name}']"
 
 
