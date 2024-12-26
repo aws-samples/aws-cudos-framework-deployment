@@ -509,7 +509,7 @@ class ProxyView():
                 keys_set.update(self.fields_to_expose_in_maps.get(map_field, set()))
                 for key in keys_set:
                     map_field_key = f'{map_field}_{key}'
-                    if self.cur.column_exists():
+                    if self.cur.column_exists(map_field_key):
                         if map_field_key.encode('unicode-escape').decode('ascii') != map_field_key: # field name contains unicode characters that must be escaped
                             map_field_key = f'"{map_field_key}"'
                         map_mapping[key] = map_field_key
