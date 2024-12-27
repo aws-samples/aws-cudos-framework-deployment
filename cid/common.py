@@ -3,6 +3,7 @@ import json
 import urllib
 import logging
 import functools
+import webbrowser
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
@@ -10,7 +11,6 @@ from importlib.metadata import entry_points
 from functools import cached_property
 
 import yaml
-import click
 import requests
 from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
@@ -655,17 +655,15 @@ class Cid():
 
         dashboard = self.qs.discover_dashboard(dashboard_id)
 
-        click.echo('Getting dashboard status...', nl=False)
-        if dashboard is not None:
-            if dashboard.version.get('Status') not in ['CREATION_SUCCESSFUL']:
-                print(json.dumps(dashboard.version.get('Errors'),
-                      indent=4, sort_keys=True, default=str))
-                click.echo(
-                    f'\nDashboard is unhealthy, please check errors above.')
-            click.echo('healthy, opening...')
-            click.launch(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
-        else:
-            click.echo('not deployed.')
+        logger.info('Getting dashboard status...')
+        if not dashboard:
+            logger.error(f'{dashboard_id} is not deployed.')
+            return None
+        if dashboard.version.get('Status') not in ['CREATION_SUCCESSFUL', 'UPDATE_IN_PROGRESS', 'UPDATE_SUCCESSFUL']:
+            cid_print(json.dumps(dashboard.version.get('Errors'), indent=4, sort_keys=True, default=str))
+            cid_print(f'Dashboard {dashboard_id} is unhealthy, please check errors above.')
+        logger.info('healthy, opening...')
+        webbrowser.open(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
 
         return dashboard_id
 
@@ -724,11 +722,7 @@ class Cid():
                         logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
-                        
-                        refresh_overrides = [
-                            dashboard.id
-                        ]
-                        self.qs.discover_dashboards(refresh_overrides = refresh_overrides)
+                        self.qs.discover_dashboards(refresh_overrides=[dashboard.id])
                 self.qs.clear_dashboard_selection()
                 dashboard_id = None
             else:

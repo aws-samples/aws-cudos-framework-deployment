@@ -4,7 +4,6 @@ import logging
 from typing import Dict
 
 import yaml
-import click
 
 from cid.helpers.quicksight.resource import CidQsResource
 from cid.helpers.quicksight.definition import Definition as CidQsDefinition
