@@ -147,7 +147,7 @@ def export_analysis(qs, athena, glue):
             "ImportMode": dataset.raw['ImportMode'],
         }
 
-        for key, value in dataset_data['PhysicalTableMap'].items():
+        for key, value in dataset_data['PhysicalTableMap'].items(): # iterate all sub tables
             if 'RelationalTable' in value \
                 and 'DataSourceArn' in value['RelationalTable'] \
                 and 'Schema' in value['RelationalTable']:
@@ -183,22 +183,26 @@ def export_analysis(qs, athena, glue):
                 #FIXME add value['Source']['DataSetArn'] to the list of dataset_arn
                 raise CidCritical(f"DataSet {dataset.raw['Name']} contains unsupported join. Please replace join of {value.get('Alias')} from DataSet to DataSource")
 
+        # Checking if datasets is based on CUR. It is rather are rare case as typically views depend on CUR.
         cur_version = False
+        cur_fields = None
         for dep_view in dependency_views[:]:
             version = cur_helper.table_is_cur(name=dep_view)
             if version:
                 dependency_views.remove(dep_view)
-                cur_version = True
+                cur_version = version
+                cur_fields = True # FIXME: check the list of fields in datasets and fields in cur. Put a list instead of 'cur2: True'
+
         datasets[dataset_name] = {
             'data': dataset_data,
             'dependsOn': {'views': dependency_views},
             'schedules': ['default'], #FIXME: need to read a real schedule
         }
-        # FIXME: add a list of all columns used in the view
+
         if cur_version == '1':
-            datasets[dataset_name]['dependsOn']['cur'] = True
+            datasets[dataset_name]['dependsOn']['cur'] = cur_fields
         elif cur_version == '2':
-            datasets[dataset_name]['dependsOn']['cur2'] = True
+            datasets[dataset_name]['dependsOn']['cur2'] = cur_fields
 
     all_views =     [view_and_database[0] for view_and_database in all_views_and_databases]
     all_databases = [view_and_database[1] for view_and_database in all_views_and_databases]
@@ -227,19 +231,28 @@ def export_analysis(qs, athena, glue):
         deps = view_data.get('dependsOn', {})
         non_cur_dep_views = []
         for dep_view in deps.get('views', []):
-            dep_view_name = dep_view.split('.')[-1]
-            if dep_view_name in cur_tables or cur_helper.table_is_cur(name=dep_view_name):
-                cur_version = cur_helper.table_is_cur(name=dep_view_name)
+            if '.' in dep_view:
+                dep_view_name = dep_view.split('.')[1].replace('"','')
+                dep_view_database = dep_view.split('.')[0].replace('"','')
+            else:
+                dep_view_name = dep_view
+                dep_view_database = athena.DatabaseName
+
+            if dep_view_name in cur_tables or cur_helper.table_is_cur(name=dep_view_name, database=dep_view_database):
+
+                cur_helper.set_cur(name=dep_view_name, database=dep_view_database)
+                cur_helper
                 logger.debug(f'{dep_view_name} is cur')
                 view_data['dependsOn']['cur'] = True
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
                     # cur tables treated separately as we don't manage CUR table here
-                    if dep_view_name != 'cur':
-                        backslash = "\\" # workaround f-string limitation
-                        view_data['data'] = view_data['data'].replace(f'{dep_view_name}', f'"${backslash}cur{cur_version}_database{backslash}"."${backslash}cur{cur_version}_table_name{backslash}"')
-                    else:
-                        pass # FIXME: this replace is too dangerous as cur can be a part of other words. Need to find some other way
+                    cur_replacement = {
+                        '2': '"${cur2_database}"."${cur2_table_name}"',
+                        '1': '"${cur_database}"."${cur_table_name}"',
+                    }[cur_version]
+                    view_data['data'] = re.sub(fr'(?<![a-zA-Z0-9_-.]){dep_view}(?![a-zA-Z0-9_-.])', cur_replacement, view_data['data'])
+                
                 cur_tables.append(dep_view_name)
             else:
                 logger.debug(f'{dep_view_name} is not cur')
