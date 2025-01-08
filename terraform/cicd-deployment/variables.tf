@@ -214,6 +214,8 @@ variable "global_values" {
     aws_region = string
     # Quicksight user to share the dashboard with
     quicksight_user = string
+    # GitHub tag version using for the deployment (e.g. 4.0.7)
+    tag_version = string
   })
 
   description = "Global configuration values for AWS environment"
@@ -223,6 +225,7 @@ variable "global_values" {
     source_account_ids     = ""
     aws_region             = ""
     quicksight_user        = null
+    tag_version            = ""
   }
 
   validation {
@@ -238,5 +241,10 @@ variable "global_values" {
   validation {
     condition     = var.global_values.quicksight_user != null
     error_message = "The quicksight_user value must be provided."
+  }
+
+  validation {
+    condition     = var.global_values.tag_version == "" || can(regex("^\\d+\\.\\d+\\.\\d+$", var.global_values.tag_version))
+    error_message = "The tag_version must be in the format X.Y.Z where X, Y, and Z are digits (e.g., 4.0.7)"
   }
 }
