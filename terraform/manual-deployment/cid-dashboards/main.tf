@@ -1,7 +1,7 @@
 resource "aws_cloudformation_stack" "cudos_dashboard" {
   # checkov:skip=CKV_AWS_124:SNS topic not required for this use case
-  name     = "cudos-dashboard-stack"
-  provider = aws
+  name         = "cudos-dashboard-stack"
+  provider     = aws
   capabilities = ["CAPABILITY_NAMED_IAM", "CAPABILITY_IAM"]
   template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/cid-cfn.yml"
   parameters = {
