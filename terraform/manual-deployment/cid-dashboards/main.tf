@@ -3,7 +3,7 @@ resource "aws_cloudformation_stack" "cudos_dashboard" {
   name     = "cudos-dashboard-stack"
   provider = aws
   capabilities = ["CAPABILITY_NAMED_IAM", "CAPABILITY_IAM"]
-  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/cid-cfn.yml"
+  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/cid-cfn.yml"
   parameters = {
     PrerequisitesQuickSight            = var.cudos_dashboard.prerequisites_quicksight
     PrerequisitesQuickSightPermissions = var.cudos_dashboard.prerequisites_quicksight_permissions

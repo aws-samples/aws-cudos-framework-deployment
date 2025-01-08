@@ -67,6 +67,8 @@ variable "global_values" {
     source_account_ids = string
     # AWS region where the dashboard will be deployed
     aws_region = string
+    # GitHub tag version using for the deployment (e.g. 4.0.7)
+    tag_version = string
   })
 
   description = "Global configuration values for AWS environment"
@@ -75,6 +77,7 @@ variable "global_values" {
     destination_account_id = null
     source_account_ids     = ""
     aws_region             = ""
+    tag_version            = ""
   }
 
   validation {
@@ -85,5 +88,9 @@ variable "global_values" {
   validation {
     condition     = can(regex("^((\\d{12})\\,?)*$", var.global_values.source_account_ids))
     error_message = "SourceAccountIds must be comma-separated 12-digit account IDs"
+  }
+  validation {
+    condition     = var.global_values.tag_version == "" || can(regex("^\\d+\\.\\d+\\.\\d+$", var.global_values.tag_version))
+    error_message = "The tag_version must be in the format X.Y.Z where X, Y, and Z are digits (e.g., 4.0.7)"
   }
 }
