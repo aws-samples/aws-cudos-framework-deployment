@@ -235,7 +235,6 @@ All stacks are configured with the following timeout settings:
     source_account_ids     = "123456789012,987654321098"
     aws_region             = "us-east-1"
     quicksight_user        = "user@example.com"
-    tag_version            = "4.0.7"
   }
 ```
 ## Validation Rules
