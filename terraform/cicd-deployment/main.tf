@@ -2,7 +2,7 @@ resource "aws_cloudformation_stack" "data_exports_child" {
   # checkov:skip=CKV_AWS_124:SNS topic not required for this use case
   provider     = aws.destination_account
   name         = "data-exports-aggregation-child"
-  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/data-exports-aggregation.yaml"
+  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/data-exports-aggregation.yaml"
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
   parameters = {
     DestinationAccountId = var.global_values.destination_account_id
@@ -25,7 +25,7 @@ resource "aws_cloudformation_stack" "data_exports_management" {
   ]
   name         = "data-exports-aggregation-mgmt"
   provider     = aws
-  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/data-exports-aggregation.yaml"
+  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/data-exports-aggregation.yaml"
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
   parameters = {
     DestinationAccountId = var.global_values.destination_account_id
@@ -50,7 +50,7 @@ resource "aws_cloudformation_stack" "cudos_dashboard" {
     aws_cloudformation_stack.data_exports_child
   ]
   capabilities = ["CAPABILITY_NAMED_IAM", "CAPABILITY_IAM"]
-  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/cid-cfn.yml"
+  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/cid-cfn.yml"
   parameters = {
     PrerequisitesQuickSight            = var.cudos_dashboard.prerequisites_quicksight
     PrerequisitesQuickSightPermissions = var.cudos_dashboard.prerequisites_quicksight_permissions
