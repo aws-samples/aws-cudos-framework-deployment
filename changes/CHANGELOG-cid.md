@@ -1,6 +1,9 @@
 # What's new in the Cost Intelligence Dashboard (CID) 
 
-## CID - 3.3
+## CID - 3.5
+* Removed link to deprecated feedback form
+
+## CID - 3.4
 * All sheets
 	* Added Payer Accounts control
 
