@@ -175,7 +175,7 @@ dashboards:
       - DataSetIdentifier: sus_s3_storage_all
         Expression: ifelse(${GroupByPara} = 'Linked Account', {linked_account_id}, {resource_tags_user_application})
         Name: KPiAdjustedUsage
-      - DataSetIdentifier:
+      - DataSetIdentifier: sus_s3_storage_all
         Expression: |-
           ifelse(${IncludeKPI} = 'No', {usage_quantity} ,
           ifelse(${GroupByPara} = 'Linked Account', {usage_quantity} / accbuskpi ,
