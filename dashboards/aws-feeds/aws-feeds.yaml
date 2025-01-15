@@ -2842,7 +2842,7 @@ dashboards:
                   #61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\"\
                   \ target=\"_blank\">\n        <b>\n          <u>AWS Feeds Dashboard</u>\n\
                   \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block\
-                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.1.0</b>\n\
+                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v0.2.0</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
                   \ font-size=\"22.4px\">\n      <b>AWS Feeds Dashboard: What's New, Blog\
                   \ Posts, Videos and Security Bulletins</b>\n    </inline>\n  </block>\n\
@@ -2855,11 +2855,7 @@ dashboards:
                   \ target=\"_blank\">AWS Well-Architected Labs</a>\n    </inline>\n   \
                   \ \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
                   \ target=\"_blank\">CID YouTube Channel</a>\n    </inline>\n  </block>\n\
-                  \  <br/>\n  <block align=\"right\">\n    If you like Cloud Intelligence\
-                  \ Dashboards we kindly ask you to fill out this\n    <inline color=\"\
-                  #61d1d6\">\n      <a href=\"https://eventbox.dev/survey/AJ0EIZ7\" target=\"\
-                  _blank\">customer survey</a>\n    </inline>\n  </block>\n  <br/>\n  <block\
-                  \ align=\"right\">Powered by: Amazon QuickSight, Amazon Athena, Amazon\
+                  \ <br/>\n  <block align=\"right\">Powered by: Amazon QuickSight, Amazon Athena, Amazon\
                   \ S3</block>\n  <br/>\n  <block align=\"right\">\n    If you wish to provide\
                   \ feedback or report an error please email:\n    <inline color=\"#61d1d6\"\
                   >\_</inline>\n    <inline color=\"#61d1d6\">\n      <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CID%20Dashboard%20Feedback\"\

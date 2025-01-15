@@ -61,6 +61,7 @@ class AbstractCUR(CidBase):
     ]
     _metadata = None
     _database = None
+    _tag_and_cost_category = None
 
     def __init__(self, athena, glue):
         self.athena = athena
@@ -178,7 +179,21 @@ class AbstractCUR(CidBase):
         if self.version == '1':
             return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
         elif self.version == '2':
-            raise NotImplemented('Need to run a query to get all fields of resource_tags')
+            if self._tag_and_cost_category is not None: # the query can take few mins so we try to cache it
+                logging.debug(f'Using cached tags.')
+                return self._tag_and_cost_category
+            cid_print(f'Scanning resource_tags in {self.table_name} (can take a while).')
+            keys = self.athena.query(sql=f'''
+                    SELECT DISTINCT key
+                    FROM  {self.table_name}
+                    CROSS JOIN UNNEST(map_keys(resource_tags)) AS t(key)
+                    WHERE billing_period >= DATE_FORMAT(DATE_ADD('month', -1, CURRENT_DATE), '%Y-%m')
+                    AND line_item_usage_start_date > DATE_ADD('day', -7, CURRENT_DATE)
+                ''',
+                database=self.database,
+            )
+            self._tag_and_cost_category = sorted([f"resource_tags['{k[0]}']" for k in keys])
+            return self._tag_and_cost_category
         else:
             raise NotImplemented('cur version not known')
 
