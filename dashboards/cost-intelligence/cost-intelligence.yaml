@@ -12330,7 +12330,7 @@ dashboards:
                   >\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
                   \ target=\"_blank\">\n        <b>\n          <u>Cost Intelligence Dashboard</u>\n\
                   \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block\
-                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v3.3</b>\n\
+                  \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v3.4</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
                   \ font-size=\"22.4px\">\n      <b>Cost and Usage Dashboard FinOps Solution</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
@@ -12344,11 +12344,7 @@ dashboards:
                   \ target=\"_blank\">AWS Well-Architected Labs</a>\n    </inline>\n   \
                   \ \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
                   \ target=\"_blank\">CID YouTube Channel</a>\n    </inline>\n  </block>\n\
-                  \  <br/>\n  <block align=\"right\">\n    If you like Cloud Intelligence\
-                  \ Dashboards we kindly ask you to fill out this\n    <inline color=\"\
-                  #61d1d6\">\n      <a href=\"https://eventbox.dev/survey/AJ0EIZ7\" target=\"\
-                  _blank\">customer survey</a>\n    </inline>\n  </block>\n  <br/>\n  <block\
-                  \ align=\"right\">Powered by: Amazon QuickSight, Amazon Athena, Amazon\
+                  \  <br/>\n  <block align=\"right\">Powered by: Amazon QuickSight, Amazon Athena, Amazon\
                   \ S3</block>\n  <br/>\n  <block align=\"right\">\n    Have a question?\
                   \ Ask the community\n    <a href=\"https://repost.aws/tags/TANKNkVH-tSUa2jYNx4F159g/cloud-intelligence-dashboards\"\
                   \ target=\"_blank\">on re:Post</a>\n    .\n  </block>\n  <br/>\n  <block\

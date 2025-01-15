@@ -1,7 +1,7 @@
 {
     "DatabaseName": "${athena_database_name}",
     "TableInput": {
-        "Name": "${athenaTableName}",
+        "Name": "${athena_table_name}",
         "StorageDescriptor": {
             "Location": "${s3FolderPath}",
             "Columns": [

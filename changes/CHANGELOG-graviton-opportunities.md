@@ -1,5 +1,16 @@
 # What's new in the Graviton Opportunities Dashboard
 
+**Important:** Graviton Opportunities Dashboard has changed it's name Graviton Savings Dashboard.
+
+Please delete the legacy version of this dashboard by running 
+```
+cid-cmd delete --dashboard-id graviton-opportunities
+``` 
+Please deploy the new version of this dashboard by running 
+```
+cid-cmd deploy --dashboard-id graviton-savings
+```
+
 ## Graviton Opportunities Dashboard v1.1.1:
 ```
 cid-cmd update --dashboard-id graviton-opportunities

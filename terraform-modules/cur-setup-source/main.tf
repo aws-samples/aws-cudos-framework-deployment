@@ -126,7 +126,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     condition {
       test     = "StringLike"
-      values   = ["arn:${data.aws_partition.this.partition}:cur:*:${data.aws_caller_identity.this.account_id}:definition/*"]
+      values   = ["arn:${data.aws_partition.this.partition}:cur:us-east-1:${data.aws_caller_identity.this.account_id}:definition/*"]
       variable = "aws:SourceArn"
     }
     condition {
@@ -150,7 +150,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     condition {
       test     = "StringLike"
-      values   = ["arn:${data.aws_partition.this.partition}:cur:*:${data.aws_caller_identity.this.account_id}:definition/*"]
+      values   = ["arn:${data.aws_partition.this.partition}:cur:us-east-1:${data.aws_caller_identity.this.account_id}:definition/*"]
       variable = "aws:SourceArn"
     }
     condition {
@@ -219,10 +219,12 @@ resource "aws_iam_role" "replication" {
   name_prefix        = "${var.resource_prefix}-replication"
   path               = "/${var.resource_prefix}/"
   assume_role_policy = data.aws_iam_policy_document.s3_assume_role.json
-  inline_policy {
-    name   = "S3Replication"
-    policy = data.aws_iam_policy_document.replication.json
-  }
+}
+
+resource "aws_iam_role_policy" "replication" {
+  name   = "${var.resource_prefix}-replication-policy"
+  role   = aws_iam_role.replication.id
+  policy = data.aws_iam_policy_document.replication.json
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {

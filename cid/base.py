@@ -23,7 +23,9 @@ class CidBase():
 
     @property
     def domain(self) -> str:
-        if self.region.startswith('cn-'):
+        if self.partition == 'aws-us-gov':
+            return 'amazonaws-us-gov.com'
+        if self.partition == 'aws-cn':
             return 'amazonaws.cn'
         return 'aws.amazon.com'
 

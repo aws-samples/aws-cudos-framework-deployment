@@ -11,6 +11,13 @@ class Datasource(CidQsResource):
         return self.parameters.get('AthenaParameters', {})
 
     @property
+    def role_name(self) -> dict:
+        role_arn = self.parameters.get('AthenaParameters', {}).get('RoleArn')
+        if not role_arn:
+            return None
+        return role_arn.split('/')[-1]
+
+    @property
     def id(self) -> str:
         return self.get_property('DataSourceId')
 
