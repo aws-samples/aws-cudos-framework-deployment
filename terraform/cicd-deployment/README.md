@@ -132,7 +132,7 @@ All stacks are configured with the following timeout settings:
 | Variable | Type | Default | Description | Validation |
 |----------|------|---------|-------------|------------|
 | mgmt_resource_prefix | string | "cid" | Prefix for management account resources | Must match pattern ^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$ |
-| mgmt_manage_cur2 | string | "no" | Enable CUR 2.0 in management account | Must be "yes" or "no" |
+| mgmt_manage_cur2 | string | "yes" | Enable CUR 2.0 in management account | Must be "yes" or "no" |
 | mgmt_manage_focus | string | "no" | Enable FOCUS in management account | Must be "yes" or "no" |
 | mgmt_manage_coh | string | "no" | Enable Cost Optimization Hub in management account | Must be "yes" or "no" |
 | mgmt_enable_scad | string | "yes" | Enable Split Cost Allocation Data in management account | Must be "yes" or "no" |
