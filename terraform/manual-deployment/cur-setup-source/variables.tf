@@ -20,7 +20,7 @@ variable "data_exports_management" {
 
   default = {
     mgmt_resource_prefix  = "cid"
-    mgmt_manage_cur2      = "no"
+    mgmt_manage_cur2      = "yes"
     mgmt_manage_focus     = "no"
     mgmt_manage_coh       = "no"
     mgmt_enable_scad      = "yes"
