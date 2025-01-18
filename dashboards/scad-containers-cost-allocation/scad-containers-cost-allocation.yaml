@@ -292,7 +292,7 @@ views:
         - split_line_item_public_on_demand_unused_cost #: double
         - product_instance_family
         - product_instance_type
-        - product_instance_type_family
+        - product['instance_type_family']
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".scad_cca_summary_view AS
       SELECT
