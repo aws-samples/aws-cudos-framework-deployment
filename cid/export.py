@@ -239,20 +239,21 @@ def export_analysis(qs, athena, glue):
                 dep_view_database = athena.DatabaseName
 
             if dep_view_name in cur_tables or cur_helper.table_is_cur(name=dep_view_name, database=dep_view_database):
-
-                cur_helper.set_cur(name=dep_view_name, database=dep_view_database)
-                cur_helper
                 logger.debug(f'{dep_view_name} is cur')
-                view_data['dependsOn']['cur'] = True
+                cur_helper.set_cur(name=dep_view_name, database=dep_view_database)
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
                     # cur tables treated separately as we don't manage CUR table here
                     cur_replacement = {
                         '2': '"${cur2_database}"."${cur2_table_name}"',
                         '1': '"${cur_database}"."${cur_table_name}"',
-                    }[cur_version]
+                    }[cur_helper.version]
                     view_data['data'] = re.sub(fr'(?<![a-zA-Z0-9_-.]){dep_view}(?![a-zA-Z0-9_-.])', cur_replacement, view_data['data'])
-                
+                fields = []
+                for field in cur_helper.fields():
+                    if field in view_data['data']:
+                        fields.append(field)
+                view_data['dependsOn']['cur'] = fields or True
                 cur_tables.append(dep_view_name)
             else:
                 logger.debug(f'{dep_view_name} is not cur')
