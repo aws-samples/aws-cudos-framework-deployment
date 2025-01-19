@@ -9,13 +9,14 @@
 The time and data granularity levels remain the same, but now in a single view instead of 2 views
 * The hourly and resource-level interactive visuals in the "Cluster Breakdown" sheet have been removed, and converged with the visuals in the "Workloads Explorer" tab, which now have hourly and resource-level data, in addition to the current granularity levels in these visuals
 
-Note:
-Starting this version (v2.0.0), the `scad_cca_hourly_resource_view` QuickSight dataset and Athena view are no longer used by the dashboard.  
+Notes:  
+* For this version (v2.0.0), the minimum required `cid-cmd` version is 4.0.9
+* Starting this version (v2.0.0), the `scad_cca_hourly_resource_view` QuickSight dataset and Athena view are no longer used by the dashboard.  
 Following an upgrade to this version (v2.0.0), after verifying functionality of the dashboard, you can delete the `scad_cca_hourly_resource_view` QuickSight dataset and Athena view (in this order).  
 They won't be deleted automatically, and will continue refreshing and incurring cost if you don't delete them.  
 Deleting the `scad_cca_hourly_resource_view` QuickSight dataset and Athena view is not necessary on a new installation of the dashboard, only following an upgrade.  
 Deleteing a QuickSight dataset: https://docs.aws.amazon.com/quicksight/latest/user/delete-a-data-set.html  
-Deleting an Athena view: https://docs.aws.amazon.com/athena/latest/ug/drop-view.html  
+Deleting an Athena view: https://docs.aws.amazon.com/athena/latest/ug/drop-view.html
 
 ## SCAD Containers Cost Allocation Dashboard - v1.0.0
 * Added support to view Net Amortized Cost in "View Cost As" control in all sheets
