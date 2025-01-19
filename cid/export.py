@@ -43,17 +43,7 @@ def escape_id(id_):
 def choose_analysis(qs):
     """ Choose analysis """
     try:
-        analyzes = []
-        logger.info("Discovering analyses")
-        paginator = qs.client.get_paginator('list_analyses')
-        response_iterator = paginator.paginate(
-            AwsAccountId=qs.account_id,
-            PaginationConfig={'MaxItems': 100}
-        )
-        for page in response_iterator:
-            analyzes.extend(page.get('AnalysisSummaryList'))
-        if len(analyzes) == 100:
-            logger.info('Too many analyses. Will show first 100')
+        analyzes =  qs.client.get_paginator('list_analyses').paginate(AwsAccountId=qs.account_id).search('AnalysisSummaryList')
     except qs.client.exceptions.AccessDeniedException:
         logger.info("AccessDeniedException while discovering analyses")
         return None
@@ -239,21 +229,22 @@ def export_analysis(qs, athena, glue):
                 dep_view_database = athena.DatabaseName
 
             if dep_view_name in cur_tables or cur_helper.table_is_cur(name=dep_view_name, database=dep_view_database):
-                logger.debug(f'{dep_view_name} is cur')
-                cur_helper.set_cur(name=dep_view_name, database=dep_view_database)
+                cur_helper.set_cur(table=dep_view_name, database=dep_view_database)
+                cid_print(f'    {dep_view_name} is CUR {cur_helper.version}')
                 # replace cur table name with a variable
                 if isinstance(view_data.get('data'), str):
                     # cur tables treated separately as we don't manage CUR table here
                     cur_replacement = {
-                        '2': '"${cur2_database}"."${cur2_table_name}"',
-                        '1': '"${cur_database}"."${cur_table_name}"',
+                        '2': ["${cur2_database}","${cur2_table_name}"],
+                        '1': ["${cur_database}","${cur_table_name}"],
                     }[cur_helper.version]
-                    view_data['data'] = re.sub(fr'(?<![a-zA-Z0-9_-.]){dep_view}(?![a-zA-Z0-9_-.])', cur_replacement, view_data['data'])
+                    view_data['data'] = re.sub(r'\b' + re.escape(dep_view) + r'\b', cur_replacement[1], view_data['data'])
+                    view_data['data'] = re.sub(r'\b' + re.escape(dep_view_database) + r'\b', cur_replacement[0], view_data['data'])
                 fields = []
-                for field in cur_helper.fields():
+                for field in cur_helper.fields:
                     if field in view_data['data']:
                         fields.append(field)
-                view_data['dependsOn']['cur'] = fields or True
+                view_data['dependsOn'][f'cur{cur_helper.version}'] = fields or True
                 cur_tables.append(dep_view_name)
             else:
                 logger.debug(f'{dep_view_name} is not cur')
