@@ -393,10 +393,10 @@ class Athena(CidBase):
 
 
     def delete_table(self, name: str, catalog: str=None, database: str=None):
-        if get_yesno_parameter(
+        if not get_yesno_parameter(
                 param_name=f'confirm-{name}',
                 message=f'Delete Athena table {name}?',
-                default='no') != 'yes':
+                default='no'):
             return False
 
         try:
@@ -416,10 +416,10 @@ class Athena(CidBase):
         return True
 
     def delete_view(self, name: str, catalog: str=None, database: str=None):
-        if get_yesno_parameter(
+        if not get_yesno_parameter(
                 param_name=f'confirm-{name}',
                 message=f'Delete Athena view {name}?',
-                default='no') != 'yes':
+                default='no'):
             return False
 
         try:

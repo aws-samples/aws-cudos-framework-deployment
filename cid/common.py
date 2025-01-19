@@ -362,12 +362,11 @@ class Cid():
             prefix = '' if value.get('global') else param_prefix
             if isinstance(value, str):
                 params[key] = value
-            elif isinstance(value, dict) and str(value.get('type')).endswith('tag_and_cost_category_fields'):
-                cur_version = '2' if str(value.get('type')).startswith('cur2.') else '1'
+            elif isinstance(value, dict) and value.get('type') == 'cur.tag_and_cost_category_fields':
                 params[key] = get_parameter(
                     param_name=prefix + key,
                     message=f"Required parameter: {key} ({value.get('description')})",
-                    choices=self.get_cur(cur_version).tag_and_cost_category_fields + ["'none'"],
+                    choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
             elif isinstance(value, dict) and value.get('type') == 'athena':
                 if get_parameters().get(prefix + key): # priority to user input
@@ -392,7 +391,6 @@ class Cid():
                             message=f"Required parameter: {key} ({value.get('description')})",
                             choices=options,
                             default=default if default in options else None,
-                            fuzzy=False,
                         )
             elif isinstance(value, dict):
                 params[key] = value.get('value')
@@ -480,7 +478,7 @@ class Cid():
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
         dashboard = None
         try:
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboard_id)
         except CidCritical:
             pass
 
@@ -532,12 +530,11 @@ class Cid():
             if get_yesno_parameter(
                 param_name=f'confirm-recursive',
                 message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
-                default='yes') != 'yes':
-                #return
-                print('as you wish')
-            else:
-                logger.info("Switch to recursive mode")
-                recursive = True
+                choices=['yes', 'no'],
+                default='yes'):
+                return
+            logger.info("Switch to recursive mode")
+            recursive = True
 
         if recursive:
             self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
@@ -656,7 +653,7 @@ class Cid():
         if not dashboard_id:
             dashboard_id = self.qs.select_dashboard(force=True)
 
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboard_id)
 
         click.echo('Getting dashboard status...', nl=False)
         if dashboard is not None:
@@ -685,7 +682,7 @@ class Cid():
                 if not dashboard_id:
                     print('No dashboard selected')
                     return
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboard_id)
 
             if dashboard is not None:
                 dashboard.display_status()
@@ -750,7 +747,7 @@ class Cid():
                 return
 
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
-            datasets = self.qs.discover_dashboard(dashboardId=dashboard_id).datasets # save for later
+            datasets = self.qs.discover_dashboard(dashboard_id).datasets # save for later
         else:
             dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
             datasets = {d: None for d in (dashboard_definition or {}).get('dependsOn', {}).get('datasets', [])}
@@ -798,7 +795,7 @@ class Cid():
                     if get_yesno_parameter(
                         param_name=f'confirm-{dataset.name}',
                         message=f'Delete QuickSight Dataset {dataset.name}?',
-                        default='no') == 'yes':
+                        default='no'):
                         print(f'Deleting dataset {dataset.name} ({dataset.id})')
                         self.qs.delete_dataset(dataset.id)
                     else:
@@ -855,7 +852,7 @@ class Cid():
     def cleanup(self, **kwargs):
         """Delete unused resources (QuickSight datasets not used in Dashboards)"""
 
-        self.qs.discover_dashboards()
+        self.qs.pre_discover()
         self.qs.discover_datasets()
         references = {}
         for dashboard in self.qs.dashboards.values():
@@ -893,9 +890,9 @@ class Cid():
                 return
         else:
             # Describe dashboard by the ID given, no discovery
-            self.qs.discover_dashboard(dashboardId=dashboard_id)
+            self.qs.discover_dashboard(dashboard_id)
 
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboard_id)
 
         if dashboard is None:
             print('not deployed.')
@@ -1066,7 +1063,7 @@ class Cid():
     def check_dashboard_version_compatibility(self, dashboard_id):
         """ Returns True | False | None if could not check """
         try:
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboard_id)
         except CidCritical:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
@@ -1086,7 +1083,7 @@ class Cid():
 
     def update_dashboard(self, dashboard_id, dashboard_definition):
 
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboard_id)
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return
@@ -1146,8 +1143,7 @@ class Cid():
                             param_name=f'{dataset_name}-dataset-id',
                             message=f'Multiple "{dataset_name}" datasets detected, please select one',
                             choices=[v.id for v in datasets],
-                            default=datasets[0].id,
-                            fuzzy=False,
+                            default=datasets[0].id
                         )
                     known_datasets.update({dataset_name: dataset_id})
                 print(f'Updating dataset: "{dataset_name}"')
@@ -1364,7 +1360,7 @@ class Cid():
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
-        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur')
+        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur')
         cur2_required = dataset_definition.get('dependsOn', dict()).get('cur2')
         athena_datasource = None
 
