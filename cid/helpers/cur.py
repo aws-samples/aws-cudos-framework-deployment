@@ -177,7 +177,7 @@ class AbstractCUR(CidBase):
     def tag_and_cost_category_fields(self) -> list:
         """ Returns all tags and cost category fields. """
         if self.version == '1':
-            return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
+            return [field for field in self.fields if field.startswith('resource_tags_') or field.startswith('cost_category_')]
         elif self.version == '2':
             if self._tag_and_cost_category is not None: # the query can take few mins so we try to cache it
                 logging.debug(f'Using cached tags.')
