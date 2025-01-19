@@ -1,8 +1,8 @@
-boto3>=1.34.90
+boto3>=1.35.86
 Click>=8.0
 PyYAML
 requests
 six>=1.15
 tqdm
 tzlocal>=4.0
-questionary>=1.10
+InquirerPy

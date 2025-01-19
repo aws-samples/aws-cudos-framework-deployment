@@ -525,11 +525,11 @@ class Cid():
 
         compatible = self.check_dashboard_version_compatibility(dashboard_id)
         if not recursive and compatible == False:
-            if get_parameter(
+            if get_yesno_parameter(
                 param_name=f'confirm-recursive',
                 message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
                 choices=['yes', 'no'],
-                default='yes') != 'yes':
+                default='yes'):
                 return
             logger.info("Switch to recursive mode")
             recursive = True
@@ -784,16 +784,14 @@ class Cid():
                         logger.debug(f'Picking the first of dataset databases: {dataset.schemas}')
                         self.athena.DatabaseName = schema
 
-                    if get_parameter(
+                    if get_yesno_parameter(
                         param_name=f'confirm-{dataset.name}',
                         message=f'Delete QuickSight Dataset {dataset.name}?',
-                        choices=['yes', 'no'],
-                        default='no') == 'yes':
+                        default='no'):
                         print(f'Deleting dataset {dataset.name} ({dataset.id})')
                         self.qs.delete_dataset(dataset.id)
                     else:
-                        logger.info(f'Skipping dataset {dataset.name}')
-                        print      (f'Skipping dataset {dataset.name}')
+                        cid_print(f'Skipping dataset {dataset.name}')
                         return False
                 if not dataset.datasources:
                     continue

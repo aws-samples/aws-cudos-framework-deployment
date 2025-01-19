@@ -23,11 +23,11 @@ ebs_all AS (
 	FROM
 		"${cur2_database}"."${cur2_table_name}"
 	WHERE (line_item_product_code = 'AmazonEC2') AND (line_item_line_item_type = 'Usage')
-	AND bill_payer_account_id <> ''
-	AND line_item_usage_account_id <> ''
+	AND coalesce(bill_payer_account_id, '') <> ''
+	AND coalesce(line_item_usage_account_id, '') <> ''
 	AND (CAST("concat"("billing_period", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '3' MONTH))
-	AND product['volume_api_name'] <> ''
-	AND line_item_usage_type NOT LIKE '%Snap%'
+	AND coalesce(product['volume_api_name'], '') <> ''
+	AND coalesce(line_item_usage_type, '') NOT LIKE '%Snap%'
 	AND line_item_usage_type LIKE '%EBS%'
 ),
 
@@ -39,7 +39,7 @@ ebs_spend AS (
 	, bill_payer_account_id AS payer_account_id
 	, line_item_usage_account_id AS linked_account_id
 	, line_item_resource_id AS resource_id
-	, product_volume_api_name AS volume_api_name
+	, coalesce(product_volume_api_name, '') AS volume_api_name
 	, SUM (CASE
 			WHEN (((pricing_unit = 'GB-Mo' or pricing_unit = 'GB-month') or pricing_unit = 'GB-month') AND  line_item_usage_type LIKE '%EBS:VolumeUsage%')
 			THEN  line_item_usage_amount ELSE 0 END) "usage_storage_gb_mo"
