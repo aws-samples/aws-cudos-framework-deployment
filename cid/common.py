@@ -528,7 +528,6 @@ class Cid():
             if get_yesno_parameter(
                 param_name=f'confirm-recursive',
                 message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
-                choices=['yes', 'no'],
                 default='yes'):
                 return
             logger.info("Switch to recursive mode")
