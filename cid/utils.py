@@ -188,8 +188,12 @@ def get_yesno_parameter(param_name: str, message: str, default: str=None, break_
     if default is not None:
         default = default.lower()
         default = 'yes' if mapping.get(default) else 'no'
-    res = get_parameter(param_name, message=message, choices=['yes', 'no'], default=default, break_on_ctrl_c=break_on_ctrl_c, fuzzy=False)
-    params[param_name] = (res == 'yes')
+
+    if _all_yes:
+        params[param_name] = True
+    else:
+        res = get_parameter(param_name, message=message, choices=['yes', 'no'], default=default, break_on_ctrl_c=break_on_ctrl_c, fuzzy=False)
+        params[param_name] = (res == 'yes')
     return params[param_name]
 
 
