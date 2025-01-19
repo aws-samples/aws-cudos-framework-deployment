@@ -1351,7 +1351,7 @@ class Cid():
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
-        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur')
+        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur1')
         cur2_required = dataset_definition.get('dependsOn', dict()).get('cur2')
         athena_datasource = None
 
