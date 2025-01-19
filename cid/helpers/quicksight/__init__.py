@@ -1272,12 +1272,11 @@ class QuickSight(CidBase):
                         DataSetRefreshProperties={'RefreshConfiguration': refresh_configuration}
                     )
                     logger.debug(f'Refresh schedule configuration with id {schedule["ScheduleId"]} for dataset {dataset_id} is updated.')
-                except self.client.exceptions.ResourceNotFoundException:
-                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]}. Dataset {dataset_id} does not exist.')
-                except self.client.exceptions.AccessDeniedException:
-                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]}. Please add quicksight:UpdateDataSet permission.')
-                except Exception as exc:
-                    logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
+                except self.client.exceptions.ClientError as exc:
+                    if 'configuration provided is same as the existing configuration for the dataset.' in str(exc):
+                        logger.debug('RefreshConfiguration already set')
+                    else:
+                        logger.error(f'Unable to update refresh schedule configuration with id {schedule["ScheduleId"]} for dataset "{dataset_id}": {str(exc)}')
 
             # Verify that all schedule parameters are set
             schedule["ScheduleId"] = schedule.get("ScheduleId", "cid")

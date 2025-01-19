@@ -362,11 +362,12 @@ class Cid():
             prefix = '' if value.get('global') else param_prefix
             if isinstance(value, str):
                 params[key] = value
-            elif isinstance(value, dict) and value.get('type') == 'cur.tag_and_cost_category_fields':
+            elif isinstance(value, dict) and str(value.get('type')).endswith('tag_and_cost_category_fields'):
+                cur_version = '2' if str(value.get('type')).startswith('cur2.') else '1'
                 params[key] = get_parameter(
                     param_name=prefix + key,
                     message=f"Required parameter: {key} ({value.get('description')})",
-                    choices=self.cur.tag_and_cost_category_fields + ["'none'"],
+                    choices=self.get_cur(cur_version).tag_and_cost_category_fields + ["'none'"],
                 )
             elif isinstance(value, dict) and value.get('type') == 'athena':
                 if get_parameters().get(prefix + key): # priority to user input
@@ -1363,7 +1364,7 @@ class Cid():
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
-        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur')
+        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur')
         cur2_required = dataset_definition.get('dependsOn', dict()).get('cur2')
         athena_datasource = None
 
