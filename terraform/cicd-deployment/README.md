@@ -103,6 +103,48 @@ Stack Creation Order:
 - Data Exports Management depends on Data Exports Child
 - CUDOS Dashboard depends on both Data Exports Management and Child stacks
 
+## Alternative Manual Deployment
+
+If you don't have a pipeline configured, you can split the deployment into three separate stages. This approach requires manually deploying the components in sequence:
+
+### Directory Structure for Manual Deployment
+Split the existing code into three separate folders:
+
+project-root/
+├── 1-data-exports-child/
+├── 2-data-exports-management/
+└── 3-cudos-dashboard/
+
+### Required Changes
+1. Move relevant resources from `main.tf` into separate `main.tf` files in each folder
+2. Split `variables.tf` based on the component requirements
+3. Copy global_values configuration to each folder's `variables.tf` or create `.tfvars` for that. 
+4. Remove provider blocks from resource definitions as they'll be handled at the root level
+
+### Deployment Sequence
+Follow this strict order for deployment:
+
+1. Data Exports Child Stack
+   - Deploy first as other components depend on it
+   - Contains CUR, FOCUS, and COH data configurations
+
+2. Data Exports Management Stack
+   - Deploy after successful completion of Child Stack
+   - Contains management-specific configurations
+
+3. CUDOS Dashboard Stack
+   - Deploy last after both previous stacks are complete
+   - Contains QuickSight and dashboard configurations
+
+### Important Considerations
+- Maintain identical global_values across all three deployments
+- Wait for each stack to complete before proceeding to the next
+- Keep all stack timeouts at 60 minutes
+- Ensure all IAM capabilities are properly configured in each deployment
+- Verify prerequisites before deploying each component
+
+This manual approach provides more control over the deployment process and helps in troubleshooting, but requires careful attention to the deployment sequence and configuration consistency.
+
 ## Timeouts
 
 All stacks are configured with the following timeout settings:
@@ -201,41 +243,37 @@ All stacks are configured with the following timeout settings:
 
 ### Example Usage
 
+### Global Values Configuration
+
+The following values should be configured in your `.tfvars` file as global_values. Only these values need to be configured in the tfvars file, as all other variables are pre-configured with default values in `variables.tf` file
+
 ```hcl
-  data_exports_child = {
-    resource_prefix  = "myprefix"
-    manage_cur2      = "yes"
-    manage_focus     = "yes"
-    manage_coh       = "yes"
-    enable_scad      = "yes"
-    role_path        = "/"
-    time_granularity = "HOURLY"
-  }
-
-  data_exports_management = {
-    mgmt_resource_prefix  = "mgmt-prefix"
-    mgmt_manage_cur2      = "yes"
-    mgmt_manage_focus     = "no"
-    mgmt_manage_coh       = "yes"
-    mgmt_enable_scad      = "yes"
-    mgmt_role_path        = "/"
-    mgmt_time_granularity = "HOURLY"
-  }
-  cudos_dashboard            = {
-    prerequisites_quicksight = "yes"
-    deploy_cudos_v5          = "yes"
-    primary_tag_name         = "department"
-    secondary_tag_name       = "project"
-    # ... other configurations
-  }
-
-  global_values            = {
-    destination_account_id = "123456789012"
-    source_account_ids     = "123456789012,987654321098"
-    aws_region             = "us-east-1"
-    quicksight_user        = "user@example.com"
-  }
+global_values = {
+  destination_account_id = "123456789012"
+  source_account_ids     = "123456789012,987654321098"
+  aws_region             = "us-east-1"
+  quicksight_user        = "user@example.com"
+}
 ```
+Each field in global_values represents:
+
+* destination_account_id: The AWS account ID where the dashboard(s) will be deployed
+
+* source_account_ids: Comma-separated list of AWS account IDs that are source/payer/management accounts
+
+* aws_region: The AWS region where resources will be deployed
+
+* quicksight_user: QuickSight user name configured
+
+### Note on Configuration Management:
+By default, only the global values need to be configured in your .tfvars file, as all other variables are pre-configured with default values in `variables.tf`. However, we strongly recommend:
+
+* Reviewing all default values in `variables.tf` to ensure they meet your requirements
+
+* Either modifying the default values directly in `variables.tf`, or
+
+* Adding additional variable declarations in your `.tfvars` file to override specific defaults as needed
+
 ## Validation Rules
 - Destination account ID must be exactly 12 digits
 - Source account IDs must be comma-separated 12-digit numbers
