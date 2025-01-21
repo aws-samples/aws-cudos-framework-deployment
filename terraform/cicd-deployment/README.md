@@ -15,7 +15,7 @@ The configuration creates three main CloudFormation stacks:
 - AWS account with appropriate permissions
 - Terraform installed
 - AWS provider configured
-- Required variables defined in a terraform.tfvars file
+- Required variables defined in a `terraform.tfvars` file
 
 ## Stack Details
 
@@ -124,15 +124,15 @@ project-root/
 ### Deployment Sequence
 Follow this strict order for deployment:
 
-1. Data Exports Child Stack
+1. `Data Exports Child Stack`
    - Deploy first as other components depend on it
    - Contains CUR, FOCUS, and COH data configurations
 
-2. Data Exports Management Stack
+2. `Data Exports Management Stack`
    - Deploy after successful completion of Child Stack
    - Contains management-specific configurations
 
-3. CUDOS Dashboard Stack
+3. `CUDOS Dashboard Stack`
    - Deploy last after both previous stacks are complete
    - Contains QuickSight and dashboard configurations
 
@@ -266,7 +266,7 @@ Each field in global_values represents:
 * quicksight_user: QuickSight user name configured
 
 ### Note on Configuration Management:
-By default, only the global values need to be configured in your .tfvars file, as all other variables are pre-configured with default values in `variables.tf`. However, we strongly recommend:
+By default, only the global values need to be configured in your `.tfvars` file, as all other variables are pre-configured with default values in `variables.tf`. However, we strongly recommend:
 
 * Reviewing all default values in `variables.tf` to ensure they meet your requirements
 
