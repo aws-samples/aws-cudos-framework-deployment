@@ -88,10 +88,11 @@ terraform apply
 ## Dependencies
 
 The stacks have the following hierarchical dependencies:
-
+```
 ➤ CUDOS Dashboard
    ↳ Data Exports Management
    ↳ Data Exports Child
+```
 
 Stack Creation Order:
 1. Data Exports Child
@@ -110,10 +111,12 @@ If you don't have a pipeline configured, you can split the deployment into three
 ### Directory Structure for Manual Deployment
 Split the existing code into three separate folders:
 
+```
 project-root/
 ├── 1-data-exports-child/
 ├── 2-data-exports-management/
 └── 3-cudos-dashboard/
+```
 
 ### Required Changes
 1. Move relevant resources from `main.tf` into separate `main.tf` files in each folder
