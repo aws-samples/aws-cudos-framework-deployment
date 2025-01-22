@@ -2557,8 +2557,7 @@ dashboards:
               <ul>
                 <li>Estimated cost values are based on the last 30 days of usage data.</li>
                 <li class="ql-indent-0">
-                  Optionally, you can prevent increased cluster costs by disabling EKS Extended Support by setting the upgrade policy of an EKS cluster to standard support. This way, the cluster will be automatically upgraded to the next Kubernetes version when its current version reaches the end of the standard support period. Additional details can be found here:
-                  <a href="https://docs.aws.amazon.com/eks/latest/userguide/disable-extended-support.html" target="_blank">EKS - Disable Extended Support</a>
+                  Amazon EKS controls for Kubernetes version policy allows you to choose the end of standard support behavior for your EKS clusters. With these controls you can decide which clusters should enter extended support and which clusters should be automatically upgraded at the end of standard support for a Kubernetes version. Learn more in EKS <a href="https://docs.aws.amazon.com/eks/latest/userguide/view-upgrade-policy.html" target="_blank">documentation</a>.
                 </li>
               </ul>
             </text-box>
