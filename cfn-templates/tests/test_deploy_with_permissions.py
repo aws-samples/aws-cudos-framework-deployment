@@ -263,7 +263,7 @@ def create_cid_as_finops(update):
     #finops_cfn = admin_cfn #FIXME !!!
     params = dict(
         StackName="CID-CUR-Destination",
-        TemplateURL=upload_to_s3('cfn-templates/data-exports-aggregation.yaml'),
+        TemplateURL='https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/data-exports/latest/data-exports-aggregation.yaml',
         Parameters=[
             {"ParameterKey": 'DestinationAccountId', "ParameterValue": account_id},
             {"ParameterKey": 'ResourcePrefix', "ParameterValue": 'cid'},
