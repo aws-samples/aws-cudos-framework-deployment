@@ -54,7 +54,7 @@ dashboards:
         Expression: ifelse(isNull({year_3_start}), 0, {year_3_pricing})
         Name: Year_3_Pricing_Fallback
       - DataSetIdentifier: rds_extended_support_view
-        Expression: ifelse(isNull({year_3_start}), {year_1_start}, {year_3_start})
+        Expression: '{year_3_start}'
         Name: Year_3_Start_Fallback
       ColumnConfigurations:
       - Column:
