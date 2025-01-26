@@ -104,6 +104,14 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
+### cur\_bucket\_name
+
+Description: S3 Bucket name for CUR
+
+Type: `string`
+
+Default: `null`
+
 ### cur\_name\_suffix
 
 Description: Suffix used to name the CUR report
