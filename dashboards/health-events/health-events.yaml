@@ -6614,7 +6614,7 @@ dashboards:
                       CustomValuesConfiguration:
                         CustomValues:
                           IntegerValues:
-                          - 60
+                          - 180
                         IncludeNullValue: false
                   - DestinationParameterName: Payer
                     Value:
