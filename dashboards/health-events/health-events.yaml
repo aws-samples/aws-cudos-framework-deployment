@@ -3274,7 +3274,7 @@ dashboards:
                   ColumnName: resource_status_icon
                   DataSetIdentifier: health_events_view
                 SourceSheetControlId: 5407cea2-231d-46e8-ab72-0a91db08dc1b
-            CommitMode: MANUAL
+            CommitMode: AUTO
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -5014,11 +5014,10 @@ dashboards:
                 TargetValues: []
                 TrendGroups: []
                 Values:
-                - NumericalMeasureField:
-                    AggregationFunction:
-                      SimpleNumericalAggregation: DISTINCT_COUNT
+                - CategoricalMeasureField:
+                    AggregationFunction: DISTINCT_COUNT
                     Column:
-                      ColumnName: 2298e52c-99d2-4f14-be43-5bcbe698e230.event_arn
+                      ColumnName: event_arn
                       DataSetIdentifier: health_events_view
                     FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.0.1712331220246
               KPIOptions:
@@ -5340,11 +5339,10 @@ dashboards:
                 TargetValues: []
                 TrendGroups: []
                 Values:
-                - NumericalMeasureField:
-                    AggregationFunction:
-                      SimpleNumericalAggregation: COUNT
+                - CategoricalMeasureField:
+                    AggregationFunction: COUNT
                     Column:
-                      ColumnName: e10942ea-441f-4c63-8d01-2aad5d349e2f
+                      ColumnName: affected_entity_value_unique
                       DataSetIdentifier: health_events_view
                     FieldId: e10942ea-441f-4c63-8d01-2aad5d349e2f.0.1731350459369
               KPIOptions:
