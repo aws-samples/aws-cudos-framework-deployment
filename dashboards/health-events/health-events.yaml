@@ -101,9 +101,6 @@ dashboards:
           ")
         Name: Description 5
       - DataSetIdentifier: health_events_view
-        Expression: "left({Description 1}, 300)\r\n"
-        Name: Description Brief
-      - DataSetIdentifier: health_events_view
         Expression: |-
           //issue | accountNotification | scheduledChange | investigation
           ifelse(
@@ -209,11 +206,25 @@ dashboards:
       - DataSetIdentifier: health_events_view
         Expression: |-
           ifelse(
-              ${ReportSummaryDescriptionFormat} = "Brief", {Description Brief},
+              ${ReportSummaryDescriptionFormat} = "Brief", left({Description 1}, ${SummaryDescriptionLength}),
               ${ReportSummaryDescriptionFormat} = "Full", Description,
-              {Description 1}
+              ""
           )
         Name: description_summary_report
+      - DataSetIdentifier: health_events_view
+        Expression: "concat(\"\u25CF  Currently filtering events with a Last Update on or\
+          \ after \", formatDate(addDateTime(-1*${LastUpdateDaysAgo}, \"DD\", now()), \"\
+          MMM-dd-yyyy\"), \" (\",  toString(${LastUpdateDaysAgo}) , \" days ago) and with\
+          \ a Start Date on or after \", formatDate(addDateTime(${RelativeStartFromNowDays},\
+          \ \"DD\", now()), \"MMM-dd-yyyy\"), \".\n\u25CF  The oldest event found has a\
+          \ Last Update date of \", formatDate(minOver({last_updated_time},[], PRE_FILTER),\
+          \ \"MMM-dd-yyyy\"), \" (\", toString(dateDiff(minOver({last_updated_time},[],\
+          \ PRE_FILTER), now(), \"DD\")), \" days ago) and the earliest Start Date is \"\
+          , formatDate(minOver({start_time},[], PRE_FILTER), \"MMM-dd-yyyy\"), \" (\", toString(dateDiff(minOver({start_time},[],\
+          \ PRE_FILTER), now(), \"DD\")), \" days ago) .\n\u25CF  Adjust the sliders above\
+          \ to modify the date ranges if you are not seeing all expected events or if you\
+          \ see more events than you want to analyze.\")"
+        Name: effective_date_scope
       - DataSetIdentifier: health_events_view
         Expression: left({event_category_icon}, 1)
         Name: event_category_icon_only
@@ -289,6 +300,9 @@ dashboards:
       - DataSetIdentifier: health_events_view
         Expression: formatDate({Start week}, "yyyy-MM-dd")
         Name: start_week_string
+      - DataSetIdentifier: health_events_view
+        Expression: '1'
+        Name: util
       - DataSetIdentifier: health_events_view
         Expression: dateDiff(now(), {start_time}, "DD") >= ${StartTimeWarn}
         Name: warn_days_after
@@ -1582,6 +1596,8 @@ dashboards:
               - daf8eda1-209e-4982-8b65-ef8829dba819
               - 8e0f5850-a299-4358-a97e-94a37247e702
               - cb19273f-22c8-41dd-b235-5700e0ff0ff0
+              - 8e3dceb2-b6a4-4de6-9314-a8a868cef9a6
+              - cf2642d7-cbd5-4119-951c-eb8baa836799
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: fbaf3d1d-9a37-41e9-8014-eb67ba777fb5
@@ -2176,7 +2192,7 @@ dashboards:
       - IntegerParameterDeclaration:
           DefaultValues:
             StaticValues:
-            - 60
+            - 180
           Name: LastUpdateDaysAgo
           ParameterValueType: SINGLE_VALUED
           ValueWhenUnset:
@@ -2194,6 +2210,14 @@ dashboards:
             StaticValues:
             - -14
           Name: RelativeStartFromNowDays
+          ParameterValueType: SINGLE_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - IntegerParameterDeclaration:
+          DefaultValues:
+            StaticValues:
+            - 300
+          Name: SummaryDescriptionLength
           ParameterValueType: SINGLE_VALUED
           ValueWhenUnset:
             ValueWhenUnsetOption: RECOMMENDED_VALUE
@@ -2416,336 +2440,354 @@ dashboards:
                 ElementId: ea057f15-a4ab-40ff-9b37-bd4543678f79
                 ElementType: TEXT_BOX
                 RowIndex: 5
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: 006e69de-a43d-49c3-a6ea-1f510a6069e5
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 10
+                RowIndex: 11
                 RowSpan: 5
               - ColumnIndex: 5
                 ColumnSpan: 4
                 ElementId: 6329b321-1d79-44f8-87d4-33676bba85b3
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 10
+                RowIndex: 11
                 RowSpan: 5
               - ColumnIndex: 9
                 ColumnSpan: 4
                 ElementId: 5407cea2-231d-46e8-ab72-0a91db08dc1b
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 10
+                RowIndex: 11
                 RowSpan: 5
               - ColumnIndex: 13
                 ColumnSpan: 8
                 ElementId: 67078a62-8e58-41c0-9e09-bee58e293d37
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 10
+                RowIndex: 11
                 RowSpan: 2
               - ColumnIndex: 21
                 ColumnSpan: 11
                 ElementId: 7387225d-6eaa-4ce1-8ed1-0c27aac1c866
                 ElementType: TEXT_BOX
-                RowIndex: 10
+                RowIndex: 11
                 RowSpan: 2
               - ColumnIndex: 32
                 ColumnSpan: 4
                 ElementId: 31251f7a-2c05-498e-a17c-2defd7108ba2
                 ElementType: VISUAL
-                RowIndex: 10
+                RowIndex: 11
                 RowSpan: 2
               - ColumnIndex: 13
                 ColumnSpan: 8
                 ElementId: 02d1801f-3a02-4d57-9076-670d47f31135
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 12
+                RowIndex: 13
                 RowSpan: 2
               - ColumnIndex: 21
                 ColumnSpan: 8
                 ElementId: 77f06096-9989-4cb8-9848-6671dde9b3fc
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 12
+                RowIndex: 13
                 RowSpan: 2
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: c6bfd995-30bb-456a-8e72-250d122206f4
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 12
+                RowIndex: 13
                 RowSpan: 2
               - ColumnIndex: 13
                 ColumnSpan: 8
                 ElementId: ca6cd14c-b87b-4e7a-8962-704ab51484c5
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 14
+                RowIndex: 15
                 RowSpan: 2
               - ColumnIndex: 21
                 ColumnSpan: 8
                 ElementId: 517b90e8-4a9a-42f0-a4b1-d002b19ba52b
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 14
+                RowIndex: 15
                 RowSpan: 2
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: d3ad78f3-8f17-4272-8258-eda2e6e68885
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 14
+                RowIndex: 15
                 RowSpan: 2
               - ColumnIndex: 0
                 ColumnSpan: 7
                 ElementId: ef290895-6ccb-4f56-a986-81bd7354364f
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 15
+                RowIndex: 16
                 RowSpan: 3
               - ColumnIndex: 7
                 ColumnSpan: 6
                 ElementId: 35f0df6a-8d98-4e00-9260-6f6fcc035478
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 15
+                RowIndex: 16
                 RowSpan: 3
               - ColumnIndex: 13
                 ColumnSpan: 8
                 ElementId: c591215c-71b6-406c-b255-1bd0f98f76d7
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 16
+                RowIndex: 17
                 RowSpan: 2
               - ColumnIndex: 21
                 ColumnSpan: 8
                 ElementId: 67fe95a7-39af-4abc-bc8b-3e60001b461e
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 16
+                RowIndex: 17
                 RowSpan: 2
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: d60f79e1-8098-4795-b213-b50c1b1a04d3
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 16
+                RowIndex: 17
                 RowSpan: 2
+              - ColumnIndex: 0
+                ColumnSpan: 29
+                ElementId: d92fa8ab-975e-4c58-8c99-7c8c0c96b3ab
+                ElementType: VISUAL
+                RowIndex: 19
+                RowSpan: 4
+              - ColumnIndex: 29
+                ColumnSpan: 4
+                ElementId: 8e3dceb2-b6a4-4de6-9314-a8a868cef9a6
+                ElementType: VISUAL
+                RowIndex: 19
+                RowSpan: 4
+              - ColumnIndex: 33
+                ColumnSpan: 3
+                ElementId: cf2642d7-cbd5-4119-951c-eb8baa836799
+                ElementType: VISUAL
+                RowIndex: 19
+                RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: f334b94b-89cf-4056-9cb3-4f295a7e6b72
                 ElementType: TEXT_BOX
-                RowIndex: 18
-                RowSpan: 5
+                RowIndex: 23
+                RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 7
                 ElementId: c4cf05b8-a8a6-4394-b70b-a1946e0376a2
                 ElementType: TEXT_BOX
-                RowIndex: 23
+                RowIndex: 29
                 RowSpan: 1
               - ColumnIndex: 7
                 ColumnSpan: 7
                 ElementId: ca89b617-0893-4ce7-ad71-c98c1d960594
                 ElementType: TEXT_BOX
-                RowIndex: 23
+                RowIndex: 29
                 RowSpan: 1
               - ColumnIndex: 14
                 ColumnSpan: 7
                 ElementId: a09a3b0a-ee3d-4897-ad10-d89b611475eb
                 ElementType: TEXT_BOX
-                RowIndex: 23
+                RowIndex: 29
                 RowSpan: 1
               - ColumnIndex: 21
                 ColumnSpan: 7
                 ElementId: 6bb7fa55-f5cf-451d-9437-72f994b10930
                 ElementType: TEXT_BOX
-                RowIndex: 23
+                RowIndex: 29
                 RowSpan: 1
               - ColumnIndex: 28
                 ColumnSpan: 8
                 ElementId: 4c6c8390-a47b-4dd1-a1bd-07b5011cccae
                 ElementType: TEXT_BOX
-                RowIndex: 23
+                RowIndex: 29
                 RowSpan: 1
               - ColumnIndex: 0
                 ColumnSpan: 3
                 ElementId: 10f6509d-6668-4cb9-8e3d-61f0c3c9d059
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 3
                 ColumnSpan: 4
                 ElementId: 8565b8c0-2db8-4b73-9ad6-e97e8f779247
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 7
                 ColumnSpan: 3
                 ElementId: 3a1640f4-545a-470e-838d-aeb1f2998733
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 10
                 ColumnSpan: 4
                 ElementId: 741be374-cf87-4706-9de3-1525f310e430
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 14
                 ColumnSpan: 3
                 ElementId: e61d9f40-55cc-4dd9-9dcb-8eadcfb35d66
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 17
                 ColumnSpan: 4
                 ElementId: 30d3e6bd-8742-4e54-9152-f0dc9167c23a
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 21
                 ColumnSpan: 3
                 ElementId: 0cc5b4a1-3776-40cc-ba97-fad07e4392e0
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 24
                 ColumnSpan: 4
                 ElementId: e3691913-1c7d-47a7-a79a-25f99b735344
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 28
                 ColumnSpan: 3
                 ElementId: c6d5beb6-9771-461c-814a-0baaf34e32ea
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 31
                 ColumnSpan: 5
                 ElementId: 17c75fb9-452f-4bed-84e4-39ab35c6521c
                 ElementType: VISUAL
-                RowIndex: 24
+                RowIndex: 30
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 20
                 ElementId: cac4df37-6414-4372-bfd3-b4ec434256f9
                 ElementType: VISUAL
-                RowIndex: 27
+                RowIndex: 33
                 RowSpan: 7
               - ColumnIndex: 20
                 ColumnSpan: 16
                 ElementId: 15055ee5-a062-4759-8682-23e344d78b2f
                 ElementType: VISUAL
-                RowIndex: 27
+                RowIndex: 33
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 36b8a81c-0dc5-4810-8ea7-458a0e978d11
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 34
+                RowIndex: 40
                 RowSpan: 5
               - ColumnIndex: 4
                 ColumnSpan: 20
                 ElementId: b7e7bde6-1b7b-468b-befd-91b81c59802e
                 ElementType: VISUAL
-                RowIndex: 34
+                RowIndex: 40
                 RowSpan: 10
               - ColumnIndex: 24
                 ColumnSpan: 12
                 ElementId: 47dd688d-0f57-489b-a6e5-9c6f1094ce44
                 ElementType: VISUAL
-                RowIndex: 34
+                RowIndex: 40
                 RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 2eb5a86c-9e96-47f9-a46d-f2789753d181
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 39
+                RowIndex: 45
                 RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: cbbd002f-4bca-40eb-8177-bfde520c2eac
                 ElementType: VISUAL
-                RowIndex: 44
+                RowIndex: 50
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 71b90d22-ab7f-4fde-9ce4-15a51505e885
                 ElementType: TEXT_BOX
-                RowIndex: 53
+                RowIndex: 59
                 RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 12
                 ElementId: 8e0f5850-a299-4358-a97e-94a37247e702
                 ElementType: VISUAL
-                RowIndex: 59
-                RowSpan: 4
+                RowIndex: 65
+                RowSpan: 5
               - ColumnIndex: 12
                 ColumnSpan: 10
                 ElementId: cd098797-ad5d-4ab4-84ad-f188e3b2462e
                 ElementType: VISUAL
-                RowIndex: 59
-                RowSpan: 7
+                RowIndex: 65
+                RowSpan: 8
               - ColumnIndex: 22
                 ColumnSpan: 14
                 ElementId: 05aea380-d759-4f6b-ae00-e0e38cd86955
                 ElementType: VISUAL
-                RowIndex: 59
+                RowIndex: 65
                 RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 4
                 ElementId: 77c8c5ea-df2a-47a7-bb0c-8c79dac0ff23
                 ElementType: VISUAL
-                RowIndex: 63
+                RowIndex: 70
                 RowSpan: 3
               - ColumnIndex: 4
                 ColumnSpan: 4
                 ElementId: dc491b68-8503-4c65-aa98-b7a74b7a26d0
                 ElementType: VISUAL
-                RowIndex: 63
+                RowIndex: 70
                 RowSpan: 3
               - ColumnIndex: 8
                 ColumnSpan: 4
                 ElementId: dba75577-3dfd-469e-9936-f39251871e5e
                 ElementType: VISUAL
-                RowIndex: 63
+                RowIndex: 70
                 RowSpan: 3
               - ColumnIndex: 22
                 ColumnSpan: 14
                 ElementId: 2017ae95-9627-4368-a4d6-3f303a731e5a
                 ElementType: VISUAL
-                RowIndex: 64
+                RowIndex: 70
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 2
                 ElementId: 6215c215-1ad8-49ac-ac67-6c681edc6b4f
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 66
+                RowIndex: 73
                 RowSpan: 15
               - ColumnIndex: 2
                 ColumnSpan: 20
                 ElementId: daf8eda1-209e-4982-8b65-ef8829dba819
                 ElementType: VISUAL
-                RowIndex: 66
+                RowIndex: 73
                 RowSpan: 15
               - ColumnIndex: 22
                 ColumnSpan: 14
                 ElementId: dade3a15-f573-47bb-a5d0-0b8d39a76fcd
                 ElementType: VISUAL
-                RowIndex: 68
-                RowSpan: 13
+                RowIndex: 74
+                RowSpan: 14
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: cb19273f-22c8-41dd-b235-5700e0ff0ff0
                 ElementType: VISUAL
-                RowIndex: 81
+                RowIndex: 88
                 RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 62a02a8c-e2fe-4450-a1c5-88a852d5de8c
                 ElementType: TEXT_BOX
-                RowIndex: 86
+                RowIndex: 93
                 RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: b6840313-7bb9-4677-8d2e-86107c7a6967
                 ElementType: VISUAL
-                RowIndex: 91
+                RowIndex: 98
                 RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 23154baf-7cfe-4700-b237-d04c31d9fa52
                 ElementType: VISUAL
-                RowIndex: 101
+                RowIndex: 108
                 RowSpan: 14
         Name: Summary
         ParameterControls:
@@ -2890,12 +2932,12 @@ dashboards:
         - List:
             DisplayOptions:
               InfoIconLabelOptions:
-                InfoIconText: Brief is 300 chars and Extended is 2048 chars.
+                InfoIconText: Use the slider to adjust the length for "brief."
                 Visibility: VISIBLE
               SearchOptions:
                 Visibility: HIDDEN
               SelectAllOptions:
-                Visibility: VISIBLE
+                Visibility: HIDDEN
               TitleOptions:
                 FontConfiguration:
                   FontSize:
@@ -2905,10 +2947,10 @@ dashboards:
             SelectableValues:
               Values:
               - Brief
-              - Extended
               - Full
+              - None
             SourceParameterName: ReportSummaryDescriptionFormat
-            Title: Report Summary Description Format
+            Title: Report Summary Brief Description Format
             Type: SINGLE_SELECT
         - Dropdown:
             CascadingControlConfiguration:
@@ -3092,6 +3134,7 @@ dashboards:
                   ColumnName: event_title
                   DataSetIdentifier: health_events_view
                 SourceSheetControlId: ca6cd14c-b87b-4e7a-8962-704ab51484c5
+            CommitMode: AUTO
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -3231,6 +3274,7 @@ dashboards:
                   ColumnName: resource_status_icon
                   DataSetIdentifier: health_events_view
                 SourceSheetControlId: 5407cea2-231d-46e8-ab72-0a91db08dc1b
+            CommitMode: MANUAL
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -3337,6 +3381,21 @@ dashboards:
             SourceParameterName: RelativeStartFromNowDays
             StepSize: 1.0
             Title: Relative Start Day (+/- days from now)
+        - Slider:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: MEDIUM
+                Visibility: VISIBLE
+            MaximumValue: 2000.0
+            MinimumValue: 50.0
+            ParameterControlId: a388a4d6-0291-4364-a8ed-f62f9dd63d8e
+            SourceParameterName: SummaryDescriptionLength
+            StepSize: 50.0
+            Title: Summary Description Length (characters)
         - TextField:
             DisplayOptions:
               InfoIconLabelOptions:
@@ -3355,35 +3414,48 @@ dashboards:
         - Configuration:
             GridLayout:
               Elements:
-              - ColumnSpan: 3
+              - ColumnIndex: 0
+                ColumnSpan: 3
                 ElementId: 31b7727c-45ad-4552-b956-294b3ddf5dbf
                 ElementType: PARAMETER_CONTROL
+                RowIndex: 0
                 RowSpan: 1
-              - ColumnSpan: 3
+              - ColumnIndex: 3
+                ColumnSpan: 3
                 ElementId: d64296a1-ed3a-4aa8-b6c6-5727f8ae103d
                 ElementType: PARAMETER_CONTROL
+                RowIndex: 0
+                RowSpan: 1
+              - ColumnIndex: 6
+                ColumnSpan: 3
+                ElementId: a388a4d6-0291-4364-a8ed-f62f9dd63d8e
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 0
                 RowSpan: 1
         SheetId: 7df9865b-fdcd-4aa4-af55-b29fe714f382
         TextBoxes:
         - Content: "<text-box>\n  <br/>\n  <br/>\n  <br/>\n  <inline color=\"#f1591f\" font-size=\"\
-            28px\">\n    <b>EVENT DETAIL</b>\n  </inline>\n  <br/>\n  <inline color=\"#889dde\"\
+            28px\">\n    <b>EVENT DETAIL</b>\n  </inline>\n  <br/>\n  <inline color=\"Accent\"\
             \ font-size=\"20px\">\n    <b>The visuals below provide details of a single\
             \ event or a group of related events.\_</b>\n  </inline>\n  <br/>\n  <br/>\n\
-            \  <ul>\n    <li>\n      <inline font-size=\"16px\">\n        <b>\n        \
-            \  <i>Note: You must filter to a\_</i>\n        </b>\n      </inline>\n    \
-            \  <inline font-size=\"16px\">\n        <b>\n          <i>\n            <u>single\
-            \ event or group of events related by Service, Event Code, and Start Time</u>\n\
-            \          </i>\n        </b>\n      </inline>\n      <inline font-size=\"16px\"\
-            >\n        <b>\n          <i>\_to display the details.\_\_</i>\n        </b>\n\
-            \      </inline>\n    </li>\n    <li>\n      <inline font-size=\"16px\">\n \
-            \       <b>Unique Event IDs are specific to a region. There may be multiple\
-            \ unique Event IDs of the same service and date when you have impacted resources\
-            \ across regions.</b>\n      </inline>\n    </li>\n    <li>\n      <inline font-size=\"\
-            16px\">\n        <b>Use filters and chart-specific focus drill downs from above\
-            \ to narrow the scope to a single event or group of related events.</b>\n  \
-            \    </inline>\n    </li>\n    <li>\n      <inline font-size=\"16px\">\n   \
-            \     <b>Some events have long descriptions; use the control to paginate; the\
-            \ first page is a summary.</b>\n      </inline>\n    </li>\n  </ul>\n</text-box>"
+            \  <ul>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n\
+            \        <b>\n          <i>Note: You must filter to a\_</i>\n        </b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\n        <b>\n         \
+            \ <i>\n            <u>single event or group of events related by Service, Event\
+            \ Code, and Start Time</u>\n          </i>\n        </b>\n      </inline>\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>\_to display the\
+            \ details.\_\_</i>\n        </b>\n      </inline>\n    </li>\n    <li class=\"\
+            ql-indent-0\">\n      <inline font-size=\"16px\">\n        <b>\n          <i>Unique\
+            \ Event IDs are specific to a region. There may be multiple unique Event IDs\
+            \ of the same service and date when you have impacted resources across regions.</i>\n\
+            \        </b>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>Use filters and\
+            \ chart-specific focus drill downs from above to narrow the scope to a single\
+            \ event or group of related events.</i>\n        </b>\n      </inline>\n   \
+            \ </li>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n\
+            \        <b>\n          <i>Some events have long descriptions; use the control\
+            \ to paginate; the first page is a summary.</i>\n        </b>\n      </inline>\n\
+            \    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 71b90d22-ab7f-4fde-9ce4-15a51505e885
         - Content: "<text-box>\n  <inline font-size=\"40px\">AWS Health Events Dashboard</inline>\n\
             \  <br/>\n  <br/>\n  <inline font-size=\"18px\">The Summary tab provides high\
@@ -3401,19 +3473,31 @@ dashboards:
           SheetTextBoxId: d95d2567-88bb-4513-8b70-628fb81b86c3
         - Content: "<text-box>\n  <br/>\n  <br/>\n  <br/>\n  <inline color=\"#f1591f\" font-size=\"\
             28px\">\n    <b>IMPACT DISCOVERY</b>\n  </inline>\n  <br/>\n  <inline color=\"\
-            #889dde\" font-size=\"20px\">\n    <b>These visuals offer different perspectives,\
-            \ dimensions and groupings. You can further refine the focus to reveal event\
-            \ details and derive resource lists for reporting.\_</b>\n  </inline>\n  <br/>\n\
-            \  <br/>\n  <ul>\n    <li>\n      <inline font-size=\"16px\">\n        <b>Use\
-            \ the filters above and/or click on metrics within the charts below to narrow\
-            \ the focus.</b>\n      </inline>\n    </li>\n    <li>\n      <inline font-size=\"\
-            16px\">\n        <b>Some charts can convey multiple relationships; use the\_\
-            </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <b>\n    \
-            \      <i>Primary Aggregation</i>\n        </b>\n      </inline>\n      <inline\
-            \ font-size=\"16px\">\n        <b>\_and\_</b>\n      </inline>\n      <inline\
-            \ font-size=\"16px\">\n        <b>\n          <i>Group By</i>\n        </b>\n\
-            \      </inline>\n      <inline font-size=\"16px\">\n        <b>\_option selectors\
-            \ to analyze different combinations.</b>\n      </inline>\n    </li>\n  </ul>\n\
+            Accent\" font-size=\"20px\">\n    <b>These interactive visuals offer different\
+            \ perspectives, dimensions and groupings, and dynamic filtering.\_</b>\n  </inline>\n\
+            \  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"\
+            16px\">\n        <b>\n          <i>Use the filters above and/or click into the\
+            \ charts below to refine the focus, reveal event details, and derive resource\
+            \ lists for reporting.</i>\n        </b>\n      </inline>\n    </li>\n    <li\
+            \ class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n        <b>\n \
+            \         <i>Some charts can convey multiple relationships; use the\_</i>\n\
+            \        </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>\n            <u>Primary Aggregation</u>\n          </i>\n   \
+            \     </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>\_and\_</i>\n        </b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\n        <b>\n          <i>\n            <u>Group By</u>\n         \
+            \ </i>\n        </b>\n      </inline>\n      <inline font-size=\"16px\">\n \
+            \       <b>\n          <i>\_option selectors to analyze different combinations.</i>\n\
+            \        </b>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>The KPIs immediately\
+            \ below reflect event and resource impact counts\_</i>\n        </b>\n     \
+            \ </inline>\n      <inline font-size=\"16px\">\n        <b>\n          <i>\n\
+            \            <u>based on distinct ARNs within each Event Status</u>\n      \
+            \    </i>\n        </b>\n      </inline>\n      <i>\n        <u>\_</u>\n   \
+            \   </i>\n      <inline font-size=\"16px\">\n        <b>\n          <i>\n  \
+            \          <u>category</u>\n          </i>\n        </b>\n      </inline>\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>\_and may represent\
+            \ multiple event entries.</i>\n        </b>\n      </inline>\n    </li>\n  </ul>\n\
             </text-box>"
           SheetTextBoxId: f334b94b-89cf-4056-9cb3-4f295a7e6b72
         - Content: |-
@@ -3474,62 +3558,102 @@ dashboards:
             \  <br/>\n  <br/>\n  <inline color=\"#dbdbdb\" font-size=\"14px\">\n    <b>NOTE:</b>\n\
             \  </inline>\n  <inline color=\"#dbdbdb\" font-size=\"14px\">\_</inline>\n \
             \ <inline color=\"#dbdbdb\" font-size=\"14px\">\n    <i>Multiple events may\
-            \ be related but differentiated by region. Any event can reference multiple\
+            \ be related but differentiated by region and any event can reference multiple\
             \ resources and accounts. Visuals aggregate distinct events or resources using\
             \ various grouping dimensions such that impacted resource count numbers may\
             \ vary between charts.</i>\n  </inline>\n</text-box>"
           SheetTextBoxId: 8311021e-e8a1-4485-96a7-94480102ed58
-        - Content: |-
-            <text-box>
-              <br/>
-              <br/>
-              <br/>
-              <inline color="#f1591f" font-size="28px">
-                <b/>
-              </inline>
-              <inline color="#f1591f" font-size="28px">
-                <b>REPORT EXPORT</b>
-              </inline>
-              <br/>
-              <inline color="#889dde" font-size="18px">
-                <b>The tables below are designed for easy exporting to CSV or Excel. The first is a summary based on the filter scope and the second itemizes all resources within that scope.</b>
-              </inline>
-              <br/>
-              <br/>
-              <ul>
-                <li>
-                  <inline font-size="16px">
-                    <b>Filter the tables via the mechanisms above.</b>
-                  </inline>
-                </li>
-                <li>
-                  <inline font-size="16px">
-                    <b>Note: A single event may have multiple entries if the descriptions vary across regions or accounts.</b>
-                  </inline>
-                </li>
-              </ul>
-            </text-box>
+        - Content: "<text-box>\n  <br/>\n  <br/>\n  <inline color=\"#f1591f\" font-size=\"\
+            28px\">\n    <b>REPORT EXPORT</b>\n  </inline>\n  <br/>\n  <inline font-size=\"\
+            20px\">\n    <b>The tables below are designed for exporting to CSV or Excel.\
+            \ The first is a summary based on the filter scope and the second itemizes all\
+            \ resources within that scope.</b>\n  </inline>\n  <br/>\n  <br/>\n  <ul>\n\
+            \    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n       \
+            \ <b>Filter the tables via the mechanisms above.</b>\n      </inline>\n    </li>\n\
+            \    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n       \
+            \ <b>You can alter the length of the description with the\_</b>\n      </inline>\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>Report Summary\
+            \ Description Format</i>\n        </b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\n        <b>\_contol at the top.</b>\n      </inline>\n    </li>\n \
+            \   <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>Note: A single event may have multiple entries if the descriptions\
+            \ vary across regions or accounts.</i>\n        </b>\n      </inline>\n    </li>\n\
+            \  </ul>\n</text-box>"
           SheetTextBoxId: 62a02a8c-e2fe-4450-a1c5-88a852d5de8c
         - Content: "<text-box>\n  <br/>\n  <br/>\n  <br/>\n  <inline color=\"#f1591f\" font-size=\"\
-            28px\">\n    <b>FILTERS</b>\n  </inline>\n  <br/>\n  <inline color=\"#889dde\"\
+            28px\">\n    <b>FILTERS</b>\n  </inline>\n  <br/>\n  <inline color=\"Accent\"\
             \ font-size=\"20px\">\n    <b>Adjust the scope using the filters below. Reset\
             \ all filters and visual focuses by using the provided reset button.</b>\n \
-            \ </inline>\n  <br/>\n  <br/>\n  <ul>\n    <li>\n      <inline font-size=\"\
-            16px\">\n        <b>Adjust\_</b>\n      </inline>\n      <inline font-size=\"\
-            16px\">\n        <b>\n          <i>Relative Start Date</i>\n        </b>\n \
-            \     </inline>\n      <inline font-size=\"16px\">\n        <b>\_to filter a\
-            \ longer/shorter history or project into the future (default is on or after\
-            \ 14 days ago)</b>\n      </inline>\n    </li>\n    <li>\n      <inline font-size=\"\
-            16px\">\n        <b>Adjust\_</b>\n      </inline>\n      <inline font-size=\"\
-            16px\">\n        <b>\n          <i>Last Update</i>\n        </b>\n      </inline>\n\
-            \      <inline font-size=\"16px\">\n        <b>\_to include/exclude events based\
-            \ on their most recent update in AWS Health (tip: align with the last time you\
-            \ reviewed the dashboard to see only new updates since then)</b>\n      </inline>\n\
-            \    </li>\n  </ul>\n</text-box>"
+            \ </inline>\n  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\">\n    \
+            \  <inline font-size=\"16px\">\n        <b>\n          <i>Adjust\_</i>\n   \
+            \     </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>\n            <u>Relative Start Date</u>\n          </i>\n   \
+            \     </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>\_to filter a longer/shorter history or project into the future.</i>\n\
+            \        </b>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>Adjust Last Update\
+            \ to include/exclude events based on their most recent update in AWS Health\
+            \ (tip: align with the last time you reviewed the dashboard to see only new\
+            \ updates since then).</i>\n        </b>\n      </inline>\n    </li>\n    <li\
+            \ class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n        <b>\n \
+            \         <i>Note: If this is your first time using the dashboard, consider\
+            \ adjusting the\_</i>\n        </b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\n        <b>\n          <i>\n            <u>Relative Start Date</u>\n\
+            \          </i>\n        </b>\n      </inline>\n      <inline font-size=\"16px\"\
+            >\n        <b>\n          <i>\_further back and increase the\_</i>\n       \
+            \ </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <b>\n  \
+            \        <i>\n            <u>Last Update</u>\n          </i>\n        </b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\n        <b>\n         \
+            \ <i>\_to a large number of days ago.</i>\n        </b>\n      </inline>\n \
+            \   </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: ea057f15-a4ab-40ff-9b37-bd4543678f79
         - Content: "<text-box>\_\_\_</text-box>"
           SheetTextBoxId: 7387225d-6eaa-4ce1-8ed1-0c27aac1c866
         Visuals:
+        - KPIVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldWells:
+                TargetValues: []
+                TrendGroups: []
+                Values:
+                - CategoricalMeasureField:
+                    AggregationFunction: DISTINCT_COUNT
+                    Column:
+                      ColumnName: event_arn
+                      DataSetIdentifier: health_events_view
+                    FieldId: 50f79e1c-9f7b-4c14-9162-d2be7bbacd20.event_arn.0.1736878870118
+              KPIOptions:
+                Comparison:
+                  ComparisonMethod: PERCENT_DIFFERENCE
+                PrimaryValueDisplayType: ACTUAL
+                PrimaryValueFontConfiguration:
+                  FontColor: '#DFE3E4'
+                  FontSize:
+                    Relative: MEDIUM
+                SecondaryValueFontConfiguration:
+                  FontSize:
+                    Relative: EXTRA_LARGE
+                Sparkline:
+                  Type: AREA
+                  Visibility: VISIBLE
+                VisualLayoutOptions:
+                  StandardLayout:
+                    Type: VERTICAL
+              SortConfiguration: {}
+            ColumnHierarchies: []
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="16px">
+                      <b>Distinct events</b>
+                    </inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: cf2642d7-cbd5-4119-951c-eb8baa836799
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -3700,7 +3824,7 @@ dashboards:
               SortConfiguration: {}
               TableOptions:
                 CellStyle:
-                  Height: 117
+                  Height: 156
                   HorizontalTextAlignment: LEFT
                   TextWrap: WRAP
                   VerticalTextAlignment: TOP
@@ -4090,6 +4214,10 @@ dashboards:
                   Element:
                     FieldId: 842ccebe-a9b9-453a-b704-c972f6706b09.1.1725475951282
                     FieldValue: Current
+                - Color: '#0078D7'
+                  Element:
+                    FieldId: 842ccebe-a9b9-453a-b704-c972f6706b09.1.1725475951282
+                    FieldValue: Unimpaired
             ColumnHierarchies: []
             Subtitle:
               FormatText:
@@ -4102,8 +4230,9 @@ dashboards:
               Visibility: VISIBLE
             Title:
               FormatText:
-                RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <parameter>${ChartGrouping}</parameter>\n\
-                  \  </inline>\n  <inline font-size=\"16px\">\_drill down</inline>\n</visual-title>"
+                RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <i>\n    \
+                  \  <parameter>${ChartGrouping}</parameter>\n    </i>\n  </inline>\n  <inline\
+                  \ font-size=\"16px\">\_grouping drill down</inline>\n</visual-title>"
               Visibility: VISIBLE
             VisualId: 47dd688d-0f57-489b-a6e5-9c6f1094ce44
         - TableVisual:
@@ -4386,7 +4515,7 @@ dashboards:
                   PositiveColor: '#DE3B00'
               TableOptions:
                 CellStyle:
-                  Height: 102
+                  Height: 75
                 HeaderStyle:
                   BackgroundColor: '#0A2533'
                   Height: 25
@@ -4885,10 +5014,11 @@ dashboards:
                 TargetValues: []
                 TrendGroups: []
                 Values:
-                - CategoricalMeasureField:
-                    AggregationFunction: DISTINCT_COUNT
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: DISTINCT_COUNT
                     Column:
-                      ColumnName: event_arn
+                      ColumnName: 2298e52c-99d2-4f14-be43-5bcbe698e230.event_arn
                       DataSetIdentifier: health_events_view
                     FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.event_arn.0.1712331220246
               KPIOptions:
@@ -5210,10 +5340,11 @@ dashboards:
                 TargetValues: []
                 TrendGroups: []
                 Values:
-                - CategoricalMeasureField:
-                    AggregationFunction: COUNT
+                - NumericalMeasureField:
+                    AggregationFunction:
+                      SimpleNumericalAggregation: COUNT
                     Column:
-                      ColumnName: affected_entity_value_unique
+                      ColumnName: e10942ea-441f-4c63-8d01-2aad5d349e2f
                       DataSetIdentifier: health_events_view
                     FieldId: e10942ea-441f-4c63-8d01-2aad5d349e2f.0.1731350459369
               KPIOptions:
@@ -5394,22 +5525,17 @@ dashboards:
                 - State: COLLAPSED
                   Target:
                     FieldDataPathValues:
-                    - FieldId: 41eef918-50d8-4716-bb98-686fa62951d4.4.1731362907643
+                    - FieldId: 50f79e1c-9f7b-4c14-9162-d2be7bbacd20.ingestion_time.5.1738071662143
                       FieldValue: '2024-10-04 00:00:00.000'
                     - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.0.1710538119763
                       FieldValue: '2024-10-31 00:00:00.000'
                 - State: COLLAPSED
                   Target:
                     FieldDataPathValues:
-                    - FieldId: 41eef918-50d8-4716-bb98-686fa62951d4.4.1731362907643
+                    - FieldId: 50f79e1c-9f7b-4c14-9162-d2be7bbacd20.ingestion_time.5.1738071662143
                       FieldValue: '2024-10-20 00:00:00.000'
                     - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.0.1710538119763
                       FieldValue: '2024-10-31 00:00:00.000'
-                - State: COLLAPSED
-                  Target:
-                    FieldDataPathValues:
-                    - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.last_updated_time.1.1710538151056
-                      FieldValue: '2024-09-26 00:00:00.000'
                 - State: COLLAPSED
                   Target:
                     FieldDataPathValues:
@@ -5424,7 +5550,7 @@ dashboards:
                 - DataPathList:
                   - FieldId: 41eef918-50d8-4716-bb98-686fa62951d4.4.1731362907643
                     FieldValue: Account
-                  Width: 237px
+                  Width: 193px
                 - DataPathList:
                   - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.0.1710538119763
                     FieldValue: start_time
@@ -5436,22 +5562,18 @@ dashboards:
                 - DataPathList:
                   - DataPathType: {}
                     FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.resource_status_icon.3.1725942093811
-                    FieldValue: "\U0001F7E9 Resolved"
-                  - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.3.1710948862356
-                    FieldValue: affected_entity_value
-                  Width: 99px
-                - DataPathList:
-                  - DataPathType: {}
-                    FieldId: 2e0668d4-20f6-4138-8e95-5afca2811c62.resource_status_icon.3.1725942093811
                     FieldValue: "\U0001F7E5 Pending"
                   - FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.affected_entity_value.3.1710948862356
                     FieldValue: affected_entity_value
                   Width: 92px
                 SelectedFieldOptions:
-                - CustomLabel: Last update
+                - CustomLabel: Event update
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.last_updated_time.1.1710538151056
                   Visibility: VISIBLE
                 - FieldId: 41eef918-50d8-4716-bb98-686fa62951d4.4.1731362907643
+                  Visibility: VISIBLE
+                - CustomLabel: Ingest time
+                  FieldId: 50f79e1c-9f7b-4c14-9162-d2be7bbacd20.ingestion_time.5.1738071662143
                   Visibility: VISIBLE
                 - CustomLabel: Start time
                   FieldId: 02cfb3b6-9cc6-48a7-8848-72b03cec3519.start_time.0.1710538119763
@@ -5481,6 +5603,11 @@ dashboards:
                         ColumnName: Account
                         DataSetIdentifier: health_events_view
                       FieldId: 41eef918-50d8-4716-bb98-686fa62951d4.4.1731362907643
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: ingestion_time
+                        DataSetIdentifier: health_events_view
+                      FieldId: 50f79e1c-9f7b-4c14-9162-d2be7bbacd20.ingestion_time.5.1738071662143
                   - DateDimensionField:
                       Column:
                         ColumnName: start_time
@@ -5863,6 +5990,10 @@ dashboards:
                   Element:
                     FieldId: a0eda20e-cd03-4295-88a7-008b2804e76a.2.1720821190724
                     FieldValue: Current
+                - Color: '#0078D7'
+                  Element:
+                    FieldId: a0eda20e-cd03-4295-88a7-008b2804e76a.2.1720821190724
+                    FieldValue: Unimpaired
             ColumnHierarchies: []
             Subtitle:
               FormatText:
@@ -6038,6 +6169,10 @@ dashboards:
                   Element:
                     FieldId: be95ee21-3edb-4a9c-93d4-7cd392782e71.3.1711658988228
                     FieldValue: Resolved
+                - Color: '#0078D7'
+                  Element:
+                    FieldId: be95ee21-3edb-4a9c-93d4-7cd392782e71.3.1711658988228
+                    FieldValue: Unimpaired
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
@@ -6303,7 +6438,6 @@ dashboards:
                   SelectedFieldsConfiguration:
                     SelectedFields:
                     - 2e0668d4-20f6-4138-8e95-5afca2811c62.region.1.1724900502304
-                    - 64a4aef3-422a-4f0e-bc29-1e175ea5a98d.3.1725887031295
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
                       TargetVisuals:
@@ -6340,8 +6474,6 @@ dashboards:
               FieldOptions:
                 Order: []
                 SelectedFieldOptions:
-                - FieldId: 64a4aef3-422a-4f0e-bc29-1e175ea5a98d.3.1725887031295
-                  Visibility: HIDDEN
                 - CustomLabel: Page
                   FieldId: 5cafacea-3183-400d-b8fc-86b25df089e1.2.1724906416060
                   Visibility: HIDDEN
@@ -6355,11 +6487,6 @@ dashboards:
               FieldWells:
                 TableAggregatedFieldWells:
                   GroupBy:
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: Event ID Icon
-                        DataSetIdentifier: health_events_view
-                      FieldId: 64a4aef3-422a-4f0e-bc29-1e175ea5a98d.3.1725887031295
                   - NumericalDimensionField:
                       Column:
                         ColumnName: description_page_number
@@ -6536,9 +6663,10 @@ dashboards:
                       Style: SOLID
                       Thickness: 4
                   FontConfiguration:
-                    FontColor: '#000000'
                     FontSize:
                       Relative: EXTRA_LARGE
+                    FontWeight:
+                      Name: BOLD
                   Height: 66
                   HorizontalTextAlignment: CENTER
                 HeaderStyle:
@@ -6554,6 +6682,100 @@ dashboards:
             Title:
               Visibility: HIDDEN
             VisualId: 31251f7a-2c05-498e-a17c-2defd7108ba2
+        - TableVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldOptions:
+                Order: []
+                SelectedFieldOptions:
+                - FieldId: d110d323-7f94-4fb9-af7b-d8ae99bb23e0.0.1736876096647
+                  Width: 1228px
+              FieldWells:
+                TableAggregatedFieldWells:
+                  GroupBy:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: effective_date_scope
+                        DataSetIdentifier: health_events_view
+                      FieldId: d110d323-7f94-4fb9-af7b-d8ae99bb23e0.0.1736876096647
+                  Values: []
+              SortConfiguration: {}
+              TableOptions:
+                CellStyle:
+                  Border:
+                    UniformBorder:
+                      Style: NONE
+                  FontConfiguration:
+                    FontSize:
+                      Absolute: 16px
+                    FontStyle: ITALIC
+                    FontWeight:
+                      Name: NORMAL
+                  Height: 107
+                HeaderStyle:
+                  TextWrap: WRAP
+                  Visibility: HIDDEN
+                RowAlternateColorOptions:
+                  RowAlternateColors:
+                  - '#0A2533'
+                  Status: DISABLED
+                  UsePrimaryBackgroundColor: ENABLED
+            Subtitle:
+              Visibility: HIDDEN
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="20px">
+                      <b>Date range filter summary</b>
+                    </inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: d92fa8ab-975e-4c58-8c99-7c8c0c96b3ab
+        - KPIVisual:
+            Actions: []
+            ChartConfiguration:
+              FieldWells:
+                TargetValues: []
+                TrendGroups: []
+                Values:
+                - CategoricalMeasureField:
+                    AggregationFunction: COUNT
+                    Column:
+                      ColumnName: event_arn
+                      DataSetIdentifier: health_events_view
+                    FieldId: 50f79e1c-9f7b-4c14-9162-d2be7bbacd20.event_arn.0.1736878870118
+              KPIOptions:
+                Comparison:
+                  ComparisonMethod: PERCENT_DIFFERENCE
+                PrimaryValueDisplayType: ACTUAL
+                PrimaryValueFontConfiguration:
+                  FontColor: '#DFE3E4'
+                  FontSize:
+                    Relative: MEDIUM
+                SecondaryValueFontConfiguration:
+                  FontSize:
+                    Relative: EXTRA_LARGE
+                Sparkline:
+                  Type: AREA
+                  Visibility: VISIBLE
+                VisualLayoutOptions:
+                  StandardLayout:
+                    Type: VERTICAL
+              SortConfiguration: {}
+            ColumnHierarchies: []
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: |-
+                  <visual-title>
+                    <inline font-size="16px">
+                      <b>Total events in range</b>
+                    </inline>
+                  </visual-title>
+              Visibility: VISIBLE
+            VisualId: 8e3dceb2-b6a4-4de6-9314-a8a868cef9a6
       - ContentType: INTERACTIVE
         FilterControls:
         - Dropdown:
@@ -8190,7 +8412,7 @@ dashboards:
                 Narrative: "<narrative>\n  <block align=\"center\">\n    <inline color=\"\
                   Accent\" font-size=\"68.8px\">\n      <b>Heath Events Dashboard</b>\n\
                   \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ color=\"#dbdbdb\" font-size=\"54.88px\">\n      <b>v2.0.4</b>\n    </inline>\n\
+                  \ color=\"#dbdbdb\" font-size=\"54.88px\">\n      <b>v2.1.0</b>\n    </inline>\n\
                   \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"\
                   22.4px\">\_\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"\
                   >\n    <inline font-size=\"22.4px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/health-events\"\
@@ -8510,7 +8732,7 @@ views:
       , CAST(current_timestamp AS timestamp) "qs_refresh"
       FROM
         "hed_latest"
-      WHERE ("ingestion_time" >= ("date_trunc"('day', current_timestamp) - INTERVAL  '90' DAY))
+      WHERE NOT ("ingestion_time" < ("date_trunc"('day', current_timestamp) - INTERVAL  '90' DAY) AND "status_code" = 'closed')
 
     parameters:
       data_collection_database_name:
