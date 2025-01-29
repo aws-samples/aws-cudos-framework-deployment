@@ -3134,7 +3134,6 @@ dashboards:
                   ColumnName: event_title
                   DataSetIdentifier: health_events_view
                 SourceSheetControlId: ca6cd14c-b87b-4e7a-8962-704ab51484c5
-            CommitMode: AUTO
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -3274,7 +3273,6 @@ dashboards:
                   ColumnName: resource_status_icon
                   DataSetIdentifier: health_events_view
                 SourceSheetControlId: 5407cea2-231d-46e8-ab72-0a91db08dc1b
-            CommitMode: MANUAL
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
@@ -6705,7 +6703,7 @@ dashboards:
                       Style: NONE
                   FontConfiguration:
                     FontSize:
-                      Absolute: 16px
+                      Relative: MEDIUM
                     FontStyle: ITALIC
                     FontWeight:
                       Name: NORMAL
