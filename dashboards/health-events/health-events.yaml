@@ -3274,7 +3274,7 @@ dashboards:
                   ColumnName: resource_status_icon
                   DataSetIdentifier: health_events_view
                 SourceSheetControlId: 5407cea2-231d-46e8-ab72-0a91db08dc1b
-            CommitMode: AUTO
+            CommitMode: MANUAL
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN
