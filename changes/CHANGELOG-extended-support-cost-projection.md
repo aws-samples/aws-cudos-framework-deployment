@@ -1,5 +1,21 @@
 # What's new in Extended Support Cost Projection
 
+## Extended Support Cost Projection - v4.0.2
+
+**Important:** This version requires the data collection version 3.2.0+. Update to this version requires a forced and recursive update.
+
+If you have modified the Extended Support Cost Projection dashboard visuals, these changes will be overridden when the dashboard is updated. Consider backing-up the existing dashboard by creating an analysis from it if you want to keep a reference to customised visuals so you can re-apply them after the update takes place.
+
+To update run these commands in your CloudShell (recommended) or other terminal:
+
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id extended-support-cost-projection
+```
+
+- Fixing existing behaviour for engine, engine version and cluster version controls where selections are being retained across sheets, resulting in mixed values being displayed in controls. New individual parameters and controls are now defined for RDS engine and engine version, EKS cluster version, and OpenSearch engine version. Filters on each sheet are associated to their new corresponding parameters.
+
 ## Extended Support Cost Projection - v4.0.1
 
 **Important:** This version requires the data collection version 3.2.0+. Update to this version requires a forced and recursive update.
