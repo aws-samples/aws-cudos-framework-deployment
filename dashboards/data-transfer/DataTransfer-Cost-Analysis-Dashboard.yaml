@@ -146,19 +146,6 @@ datasets:
     schedules:
     - default
 views:
-  account_map:
-    dependsOn:
-      cur: true
-    data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".account_map AS
-      SELECT DISTINCT
-        line_item_usage_account_id account_id
-      , MAX_BY(line_item_usage_account_name, line_item_usage_start_date) account_name
-      , MAX_BY(bill_payer_account_id, line_item_usage_start_date) parent_account_id
-      , MAX_BY(bill_payer_account_name, line_item_usage_start_date) parent_account_name
-      FROM
-        "cid_data_export".""$\cur2_database\"."$\cur2_table_name\""
-      GROUP BY line_item_usage_account_id
   data_transfer_view:
     dependsOn:
       cur2:
