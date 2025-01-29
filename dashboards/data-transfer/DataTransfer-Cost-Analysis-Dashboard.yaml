@@ -163,8 +163,6 @@ views:
         - line_item_unblended_rate
         - pricing_public_on_demand_rate
         - product_usagetype
-        - year
-        - month
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".data_transfer_view AS
       SELECT
@@ -185,16 +183,20 @@ views:
       , product_to_location to_location
       , product_from_location_type from_location_type
       , line_item_resource_id resource_id
+      , line_item_blended_rate blended_rate
+      , line_item_unblended_rate unblended_rate
+      , pricing_public_on_demand_rate public_ondemand_rate
+      , product['transfer_type'] data_transfer_type
       , ("sum"((CASE WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) / 1024) TBs
       , "sum"((CASE WHEN (line_item_line_item_type = 'Usage') THEN line_item_usage_amount ELSE 0 END)) usage_quantity
       , "sum"(line_item_blended_cost) blended_cost
       , "sum"(line_item_unblended_cost) unblended_cost
       , "sum"(pricing_public_on_demand_cost) public_cost
-      , line_item_blended_rate blended_rate
-      , line_item_unblended_rate unblended_rate
-      , pricing_public_on_demand_rate public_ondemand_rate
-      , product['transfer_type'] data_transfer_type
       FROM
         "${cur2_database}"."${cur2_table_name}"
-      WHERE ((((line_item_usage_type LIKE '%Bytes%') AND (((line_item_usage_type LIKE '%In%') OR (line_item_usage_type LIKE '%Out%')) OR (line_item_usage_type LIKE '%Regional%'))) AND (line_item_line_item_type IN ('PrivateRateDiscount', 'Usage', 'EdpDiscount'))) AND ((((year = "format_datetime"(current_timestamp, 'YYYY')) AND (month = "format_datetime"(current_timestamp, 'MM'))) OR ((year = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '2' MONTH), 'YYYY')) AND ((month = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '2' MONTH), 'MM')) OR (month = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '2' MONTH), 'M'))))) OR ((year = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '1' MONTH), 'YYYY')) AND ((month = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '1' MONTH), 'MM')) OR (month = "format_datetime"(("date_trunc"('month', current_timestamp) - INTERVAL  '1' MONTH), 'M'))))))
-      GROUP BY line_item_product_code, line_item_usage_start_date, bill_billing_period_start_date, line_item_usage_account_id, bill_payer_account_id, product['product_name'], line_item_line_item_type, line_item_operation, product['region'], product_product_family, product_servicecode, product['servicename'], line_item_usage_type, product_from_location, product_to_location, product_from_location_type, line_item_resource_id, line_item_blended_rate, product['transfer_type'], product_usagetype, pricing_public_on_demand_cost, pricing_public_on_demand_rate, line_item_unblended_rate, line_item_unblended_cost, line_item_blended_cost
+      WHERE
+         line_item_usage_type LIKE '%Bytes%'
+         AND (line_item_usage_type LIKE '%In%' OR line_item_usage_type LIKE '%Out%' OR line_item_usage_type LIKE '%Regional%')
+         AND (line_item_line_item_type = 'Usage' OR line_item_line_item_type LIKE '%Discount')
+         AND cast(concat(billing_period, '-01') as timestamp) >= "date_trunc"('month', current_timestamp) - INTERVAL '2' MONTH
+      GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
