@@ -9,30 +9,28 @@
     <atom:link href="https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/refs/heads/rss_feed/changes/cloud-intelligence-dashboards.rss"
                  rel="self"
                  type="application/rss+xml"/>
-    <lastBuildDate>Fri, 29 Nov 2024 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 31 Jan 2025 12:00:00 GMT</lastBuildDate>
     <language>en-us</language>
 
     <item>
       <title>CUDOS update v5.5</title>
       <link>https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi</link>
-      <pubDate>Fri, 31 Jan 2024 12:00:00 GMT</pubDate>
+      <pubDate>Fri, 31 Jan 2025 12:00:00 GMT</pubDate>
       <category><![CDATA[Update]]></category>
       <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cudos.md#cudos---55</guid>
       <description>CUDOS update to v5.5</description>
       <content:encoded><![CDATA[
-    <ul>
-        <li>DynamoDB: Refactored visuals to improve user experience and simplify navigation. 'DynamoDB Accounts by Category' visuals replaced with 'DynamoDB Cost per Account' and 'DynamoDB Cost per Usage Type Group'</li>
-        <li>DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservations Savings Estimation' which allows to calculate estimated savings for Amazon DynamoDB reserved capacity based on custom commitment amount.</li>
-        <li>DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservation Coverage and Usage Monitoring' which allows monitor reserved capacity coverage per region and capacity type dimensions</li>
-        <li>DynamoDB: New visual 'Infrequent Access Tables Cost and Cost Efficiency Gain/Loss vs Standard Storage' which shows efficiency gains from Infrequent Access tables and also tables which could be migrated to Standard table class</li>
-        <li>Monitoring and Observability: New section 'AWS Config Periodic Recording Savings Opportunities' which shows potential savings from migration to periodic configuration item recording</li>
-        <li>Monitoring and Observability: New section 'Account and Regions without AWS Config' which allows to identify account and regions with AWS service usage and where AWS Config is not enabled</li>
-        <li>Analytics: Improved 'QuickSight Usage Type Group' calculated field to accommodate the latest QuickSight pricing constructs</li>
-        <li>AI/ML: Added Guardrails to the 'Bedrock UsageType Group' calculated field</li>
-        <li>Databases: Updated action filter on 'RI Coverage per region | engine | instance type or family' to be applied to 'Top 20 instances' allowing to focus on resources which belong to particular RI dimension</li>
-        <li>Compute: Bug fix for 'EKS Extended Support Cost per Account' visual. Added missing filter for Last 30 days.
-    </ul>
-  ]]> 
+        * DynamoDB: Refactored visuals to improve user experience and simplify navigation. 'DynamoDB Accounts by Category' visuals replaced with 'DynamoDB Cost per Account' and 'DynamoDB Cost per Usage Type Group'
+        * DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservations Savings Estimation' which allows to calculate estimated savings for Amazon DynamoDB reserved capacity based on custom commitment amount.
+        * DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservation Coverage and Usage Monitoring' which allows monitor reserved capacity coverage per region and capacity type dimensions
+        * DynamoDB: New visual 'Infrequent Access Tables Cost and Cost Efficiency Gain/Loss vs Standard Storage' which shows efficiency gains from Infrequent Access tables and also tables which could be migrated to Standard table class
+        * Monitoring and Observability: New section 'AWS Config Periodic Recording Savings Opportunities' which shows potential savings from migration to periodic configuration item recording
+        * Monitoring and Observability: New section 'Account and Regions without AWS Config' which allows to identify account and regions with AWS service usage and where AWS Config is not enabled
+        * Analytics: Improved 'QuickSight Usage Type Group' calculated field to accommodate the latest QuickSight pricing constructs
+        * AI/ML: Added Guardrails to the 'Bedrock UsageType Group' calculated field
+        * Databases: Updated action filter on 'RI Coverage per region | engine | instance type or family' to be applied to 'Top 20 instances' allowing to focus on resources which belong to particular RI dimension
+        * Compute: Bug fix for 'EKS Extended Support Cost per Account' visual. Added missing filter for Last 30 days.
+]]> 
     </content:encoded>
     </item>
     <item>

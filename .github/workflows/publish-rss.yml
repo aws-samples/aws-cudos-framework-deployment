@@ -1,0 +1,29 @@
+name: Sync RSS to S3
+
+on:
+  push:
+    branches:
+      - rss_feed
+    paths:
+      - 'aws-cudos-framework-deployment/changes/cloud-intelligence-dashboards.rss'
+
+jobs:
+  sync-to-s3:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: ${{ secrets.AWS_SESSION_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Copy RSS file to S3
+        run: |
+          aws s3 cp aws-cudos-framework-deployment/changes/cloud-intelligence-dashboards.rss s3://cid-feed/feed/cloud-intelligence-dashboards.rss
