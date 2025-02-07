@@ -30,6 +30,7 @@
         * AI/ML: Added Guardrails to the 'Bedrock UsageType Group' calculated field
         * Databases: Updated action filter on 'RI Coverage per region | engine | instance type or family' to be applied to 'Top 20 instances' allowing to focus on resources which belong to particular RI dimension
         * Compute: Bug fix for 'EKS Extended Support Cost per Account' visual. Added missing filter for Last 30 days.
+        
 ]]> 
     </content:encoded>
     </item>
