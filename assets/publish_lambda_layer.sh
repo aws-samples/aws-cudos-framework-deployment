@@ -37,7 +37,7 @@ rm -vf ./$layer
 # Publish cfn (only works for the release)
 if aws s3 ls "s3://aws-managed-cost-intelligence-dashboards" >/dev/null 2>&1; then
   echo "Updating cid-cfn.yml"
-  aws s3 sync ./cfn-templates/ s3://aws-managed-cost-intelligence-dashboards/cfn/                   --exclude 'cfn-templates/cur-aggregation.yaml' --exclude 'cfn-templates/data-exports-aggregation.yaml'
+  aws s3 sync ./cfn-templates/ s3://aws-managed-cost-intelligence-dashboards/cfn/                   --exclude './cfn-templates/cur-aggregation.yaml' --exclude './cfn-templates/data-exports-aggregation.yaml'
   # Publish additional copy into respective version folder
   aws s3 sync ./cfn-templates/ "s3://aws-managed-cost-intelligence-dashboards/cfn/${CID_VERSION}/"  --exclude 'cfn-templates/cur-aggregation.yaml' --exclude 'cfn-templates/data-exports-aggregation.yaml'
 
