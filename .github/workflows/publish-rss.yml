@@ -21,8 +21,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          role-session-name: ${{ secrets.AWS_SESSION_NAME }}
+          role-to-assume: ${{ secrets.AWS_RSS_ROLE }}
+          role-session-name: ${{ secrets.AWS_RSS_SESSION_NAME }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Copy RSS file to S3
         run: |
