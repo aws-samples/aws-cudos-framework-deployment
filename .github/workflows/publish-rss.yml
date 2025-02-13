@@ -3,7 +3,7 @@ name: Sync RSS to S3
 on:
   push:
     branches:
-      - rss_feed
+      - main
     paths:
       - 'aws-cudos-framework-deployment/changes/cloud-intelligence-dashboards.rss'
 
