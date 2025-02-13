@@ -439,6 +439,7 @@ Resources:
           Action:
           - quicksight:CreateDataSet
           - quicksight:DeleteDataSet
+          - quicksight:UpdateDataSet
           - quicksight:PassDataSet
           - quicksight:DescribeDataSet
           - quicksight:DescribeDataSetPermissions

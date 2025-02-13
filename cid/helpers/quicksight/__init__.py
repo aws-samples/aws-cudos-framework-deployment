@@ -1,5 +1,4 @@
 import re
-import io
 import json
 import uuid
 import time
@@ -114,6 +113,15 @@ class QuickSight(CidBase):
             logger.info(f'Using QuickSight identity region: {self._identityRegion}')
         return self._identityRegion
 
+    def pre_discover(self) -> str:
+        """ Pre discover assets
+        :fresh: check if we need to discover datasets and discover dashboards dastasets if we are not allowed to get datasets
+        """
+        try:
+            self.client.list_data_sets(AwsAccountId=self.account_id)
+        except self.client.exceptions.AccessDeniedException:
+            self.discover_dashboards(scan_all=True) # we need to discover datasets via dashboards if we cannot do that directly via api
+
     def edition(self, fresh: bool=False) -> str:
         """ get QuickSight Edition
         :fresh: set to True if you want it fresh (not cached)
@@ -124,6 +132,11 @@ class QuickSight(CidBase):
         if status != 'ACCOUNT_CREATED':
             return None
         return self._subscription_info.get('Edition')
+
+    @property
+    def supported_dashboard_ids(self) -> list:
+        return [v['dashboardId'] for v in self.supported_dashboards.values()]
+
 
     @property
     def supported_dashboards(self) -> dict:
@@ -197,152 +210,27 @@ class QuickSight(CidBase):
             logger.debug(exc, exc_info=True)
         return result
 
+    def get_supported_dashboard_definition(self, dashboard_id: str):
+        return next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard_id), None)
 
-    def discover_dashboard(self, dashboardId: str, refresh: bool = False) -> Dashboard:
+
+    def get_supported_dashboard_ids(self):
+        return [v['dashboardId'] for v in self.supported_dashboards.values()]
+
+
+    def discover_dashboard(self, dashboard_id: str, refresh: bool = False) -> Dashboard:
         """Discover a single dashboard: describe and pull downstream info (datasets, related templates and views) """
-
-        def _safe_int(value, default=None):
-            """Safe int from string"""
-            return int(str(value)) if str(value).isdecimal() else default
-
-        dashboard = self.describe_dashboard(DashboardId=dashboardId)
-        if not dashboard:
-            raise CidCritical(f'Dashboard {dashboardId} was not found')
-        # Look for dashboard definition by DashboardId in the catalog of supported dashboards (the currently available definitions in their latest public version)
-        # This definition can be used to determine the gap between the latest public version and the currently deployed version
-        _definition = next((v for v in self.supported_dashboards.values() if v['dashboardId'] == dashboard.id), None)
-        if not _definition:
-            # Look for dashboard definition by templateId.
-            # This is for a specific use-case when a dashboard with another id points to managed template
-            source_arn = dashboard.raw.get('Version', {}).get('SourceEntityArn', '')
-            if source_arn:
-                template_id = source_arn.split('/version/')[0].split('/')[-1]
-                template_account = source_arn.split(':').pop(4)
-                logger.info(template_id)
-                _definition = next((v for v in self.supported_dashboards.values() if 'templateId' in v and v['templateId'] == template_id), None)
-        if not _definition:
-            logger.info(f'Unsupported dashboard "{dashboard.name}" ({dashboard.template_arn})')
+        if dashboard_id not in self.supported_dashboard_ids and not get_parameters().get('detect-dashboards-by-template'):
+            logger.trace(f'Skipping {dashboard_id} as it is not supported dashboard id. To detect by template use --detect-dashboards-by-template yes')
             return None
+        logger.trace(f'Describing {dashboard_id}')
+        dashboard = self.describe_dashboard(DashboardId=dashboard_id)
+        if not dashboard:
+            raise CidCritical(f'Dashboard {dashboard_id} was not found')
 
-        logger.info(f'Supported dashboard "{dashboard.name}" ({dashboard.template_arn})')
-        dashboard.definition = _definition
-        logger.info(f'Found definition for "{dashboard.name}" ({dashboard.template_arn})')
-
-        # Check for extra information from resource definition
-        version_obj = _definition.get('versions', dict())
-        min_template_version = _safe_int(version_obj.get('minTemplateVersion'))
-        default_description_version = version_obj.get('minTemplateDescription')
-
-        # Fetch template referenced as dashboard source (if any)
-        _template_arn = dashboard.version.get('SourceEntityArn')
-        if _template_arn and isinstance(_template_arn, str) \
-            and len(_template_arn.split(':')) > 5 \
-            and _template_arn.split(':')[5].startswith('template/'):
-
-            params = {
-                "template_id": _template_arn.split('/')[1],
-                "account_id": _template_arn.split(':')[4],
-                "region": _template_arn.split(':')[3]
-            }
-
-            if '/version/' in _template_arn:
-                params['version_number'] = _safe_int(_template_arn.split('/version/')[-1])
-            elif min_template_version:
-                logger.info(f"Using default version number {min_template_version} in place")
-                params['version_number'] = min_template_version
-
-            if 'version_number' in params:
-                try:
-                    _template = self.describe_template(**params)
-                    if isinstance(_template, CidQsTemplate):
-                        dashboard.deployed_template = _template
-                except Exception as exc:
-                    logger.debug(exc, exc_info=True)
-                    logger.info(f'Unable to describe template for {dashboardId}, {exc}')
-            else:
-                logger.info("Minimum template version could not be found for Dashboard {dashboardId}: {_template_arn}, deployed template could not be described")
-        else: # Dashboard is not template based but definition based
-            try:
-                dashboard.deployed_definition = self.describe_dashboard_definition(dashboard_id=dashboardId, refresh=refresh)
-            except CidError as exc:
-                logger.info('Exception on reading dashboard definition {dashboardId}: {exc}. Not critical. Continue.')
-
-        if 'data' in _definition:
-            # Resolve source definition (the latest definition publicly available)
-            data_stream = io.StringIO(_definition["data"])
-            definition_data = yaml.safe_load(data_stream)
-            dashboard.source_definition = CidQsDefinition(definition_data)
-
-        # Fetch datasets (works for both TEMPLATE and DEFINITION based dashboards)
-        for dataset in dashboard.version.get('DataSetArns', []):
-            dataset_id = dataset.split('/')[-1]
-            try:
-                _dataset = self.describe_dataset(id=dataset_id)
-                if not isinstance(_dataset, Dataset):
-                    logger.info(f'Dataset "{dataset_id}" is missing')
-                else:
-                    logger.info(f"Detected dataset: \"{_dataset.name}\" ({_dataset.id} in {dashboard.name})")
-                    dashboard.datasets.update({_dataset.name: _dataset.id})
-            except self.client.exceptions.AccessDeniedException:
-                logger.info(f'Access denied describing DataSetId {dataset_id} for Dashboard {dashboardId}')
-            except self.client.exceptions.InvalidParameterValueException:
-                logger.info(f'Invalid dataset {dataset_id}')
-        logger.info(f"{dashboard.name} has {len(dashboard.datasets)} datasets")
-
-        # Fetch the latest version of source_template referenced in definition
-        source_template_account_id = _definition.get('sourceAccountId')
-        template_id = _definition.get('templateId')
-        region = _definition.get('region', 'us-east-1')
-        if template_id:
-            try:
-                logger.debug(f'Loading latest source template {template_id} from source account {source_template_account_id} in {region}')
-                template = self.describe_template(template_id, account_id=source_template_account_id, region=region)
-                dashboard.source_template = template
-            except Exception as exc:
-                logger.debug(exc, exc_info=True)
-                logger.info(f'Unable to describe template {template_id} in {source_template_account_id} ({region})')
-
-        # Checking for version override in template definition
-        for dashboard_template in [dashboard.deployed_template, dashboard.source_template]:
-            if not isinstance(dashboard_template, CidQsTemplate)\
-                or int(dashboard_template.version) <= 0 \
-                or not version_obj:
-                continue
-
-            logger.debug("versions object found in template")
-            version_map = version_obj.get('versionMap', dict())
-            description_override = version_map.get(int(dashboard_template.version))
-
-            try:
-                if description_override:
-                    logger.info(f"Template description is overridden with: {description_override}")
-                    description_override = str(description_override)
-                    dashboard_template.raw['Version']['Description'] = description_override
-                else:
-                    if min_template_version and default_description_version:
-                        if int(dashboard_template.version) <= min_template_version:
-                            logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
-                            dashboard_template.raw['Version']['Description'] = default_description_version
-            except ValueError as val_error:
-                logger.debug(val_error,  exc_info=True)
-                logger.info("The provided values of the versions object are not well formed, please use int for template version and str for template description")
-            except Exception as exc:
-                logger.debug(exc, exc_info=True)
-                logger.info("Unable to override template description")
-
-        # Fetch all views recursively (works for both TEMPLATE and DEFINITION based dashboards)
-        all_views = []
-        def _recursive_add_view(view):
-            all_views.append(view)
-            for dep_view in (self.supported_views.get(view) or {}).get('dependsOn', {}).get('views', []):
-                _recursive_add_view(dep_view)
-        for dataset_name in dashboard.datasets:
-            for view in (self.supported_datasets.get(dataset_name) or {}).get('dependsOn', {}).get('views', []):
-                _recursive_add_view(view)
-        dashboard.views = all_views
-        self._dashboards = self._dashboards or {}
-        self._dashboards[dashboardId] = dashboard
-        logger.info(f'"{dashboard.name}" ({dashboardId}) discover complete')
+        if dashboard.supported:
+            self._dashboards = self._dashboards or {}
+            self._dashboards[dashboard_id] = dashboard
         return dashboard
 
     def ensure_group_exists(self, groupname='cid-owners', description='Created by Cloud Intelligence Dashboards'):
@@ -363,6 +251,28 @@ class QuickSight(CidBase):
             raise CidCritical('Cannot access groups. (AccessDenied). Please use quicksight-user parameter '
                 'or ensure you have permissions quicksight::DescribeGroup and quicksight::CreateGroup') from exc
         return group
+
+    def set_tags(self, arn, **tags):
+        try:
+            self.client.tag_resource(
+                ResourceArn=arn,
+                Tags=[{'Key': key, 'Value': str(value)} for key, value in (tags or {}).items()]
+            )
+            return True
+        except self.client.exceptions.AccessDeniedException as exc:
+            logger.debug(f'Cannot tag {arn} (AccessDenied).')
+            return False
+
+
+    def get_tags(self, arn):
+        ''' get tags
+        returns empty dict if no access
+        '''
+        try:
+            return {t['Key']: t['Value'] for t in self.client.list_tags_for_resource(ResourceArn=arn).get('Tags', [])}
+        except self.client.exceptions.AccessDeniedException as exc:
+            logger.debug(f'Cannot get tags from {arn} (AccessDenied).')
+            return {}
 
 
     def get_principal_arn(self):
@@ -586,7 +496,7 @@ class QuickSight(CidBase):
         except Exception as exc:
             logger.debug(exc, exc_info=True)
 
-    def discover_dashboards(self, refresh_overrides: List[str]=[], refresh: bool = False) -> None:
+    def discover_dashboards(self, refresh_overrides: List[str]=[], refresh: bool = False, scan_all: bool = False) -> None:
         """ Discover deployed dashboards
         :param refresh_overrides: a list of dashboard ids to refresh
         :param refresh: force refresh all dashboards
@@ -597,44 +507,34 @@ class QuickSight(CidBase):
             for dashboard_id in refresh_overrides:
                 if dashboard_id in self._dashboards:
                     del self._dashboards[dashboard_id]
-        logger.info('Discovering deployed dashboards')
-        deployed_dashboards=self.list_dashboards()
-        logger.info(f'Found {len(deployed_dashboards)} deployed dashboards')
-        logger.debug(deployed_dashboards)
-        bar = tqdm(deployed_dashboards, desc='Discovering Dashboards', leave=False)
-        for dashboard in bar:
+        logger.debug('Discovering deployed dashboards')
+        all_dashboards_ids = [d.get('DashboardId') for d in self.list_dashboards()]
+        if scan_all:
+            dashboards_ids = all_dashboards_ids
+        else:
+            dashboards_ids = [ d for d in self.get_supported_dashboard_ids() if d in all_dashboards_ids ]
+        logger.info(f'Found {len(dashboards_ids)} deployed dashboards')
+        bar = tqdm(dashboards_ids, desc='Discovering Dashboards', leave=False)
+        for dashboard_id in bar:
             # Discover found dashboards
-            dashboard_name = dashboard.get('Name')
-            dashboard_id = dashboard.get('DashboardId')
-            bar.set_description(f'Discovering {dashboard_name[:10]:<10}', refresh=True)
-            logger.info(f'Discovering "{dashboard_name}"')
+            bar.set_description(f'Discovering {dashboard_id[:10]:<10}', refresh=True)
+            logger.debug(f'Discovering "{dashboard_id}"')
             refresh = dashboard_id in refresh_overrides
-            self.discover_dashboard(dashboard_id, refresh=refresh)
+            try:
+                self.discover_dashboard(dashboard_id, refresh=refresh)
+            except CidCritical:
+                pass
 
     def list_dashboards(self) -> list:
-        parameters = {
-            'AwsAccountId': self.account_id
-        }
         try:
-            result = self.client.list_dashboards(**parameters)
-            if result.get('Status') != 200:
-                raise CidCritical(f'list_dashboards returns: {result}')
-            else:
-                logger.debug(result)
-                return result.get('DashboardSummaryList')
+            return list(self.client.get_paginator('list_dashboards').paginate(AwsAccountId=self.account_id).search('DashboardSummaryList'))
         except Exception as exc:
             logger.debug(exc, exc_info=True)
             return []
 
     def list_data_sources(self) -> list:
-        parameters = {
-            'AwsAccountId': self.account_id
-        }
-        data_sources = []
         try:
-            for page in self.client.get_paginator('list_data_sources').paginate(**parameters):
-                data_sources += page.get('DataSources',[])
-            return data_sources
+            return list(self.client.get_paginator('list_data_sources').paginate(AwsAccountId=self.account_id).search('DataSources'))
         except self.client.exceptions.AccessDeniedException:
             logger.info('Access denied listing data sources')
             raise
@@ -655,7 +555,10 @@ class QuickSight(CidBase):
         if not self.dashboards:
             return None
         choices = {}
-        for dashboard in self.dashboards.values():
+        bar = tqdm(self.dashboards.values(), desc='Reading Dashboards', leave=False)
+        for dashboard in bar:
+            # Discover found dashboards
+            bar.set_description(f'Reading {dashboard.name[:10]:<10}', refresh=True)
             health = '' if dashboard.health else ' UNHEALTHY'
             status = '' if dashboard.status == 'up to date' else ' ' + dashboard.status.upper()
             key = f'{dashboard.name} ({dashboard.arn.split("/")[-1]}){health}{status}'
@@ -732,39 +635,11 @@ class QuickSight(CidBase):
                 return group
 
     def list_data_sets(self):
-        parameters = {
-            'AwsAccountId': self.account_id
-        }
-        try:
-            result = self.client.list_data_sets(**parameters)
-            if result.get('Status') != 200:
-                raise CidCritical(f'list_data_sets: {result}')
-            else:
-                return result.get('DataSetSummaries')
-        except self.client.exceptions.AccessDeniedException:
-            raise
-        except Exception as exc:
-            logger.debug(exc, exc_info=True)
-            return None
+        return self.client.get_paginator('list_data_sets').paginate(AwsAccountId=self.account_id).search('DataSetSummaries')
 
 
     def list_folders(self) -> list:
-        parameters = {
-            'AwsAccountId': self.account_id
-        }
-        try:
-            result = self.client.list_folders(**parameters)
-            if result.get('Status') != 200:
-                 raise CidCritical(f'list_folders: {result}')
-            else:
-                logger.debug(f"Folder_list: {result.get('FolderSummaryList')}")
-                return result.get('FolderSummaryList')
-        except self.client.exceptions.AccessDeniedException:
-            logger.info('Access denied listing folders')
-            raise
-        except Exception as exc:
-            logger.debug(exc, exc_info=True)
-            return None
+        return self.client.get_paginator('list_folders').paginate(AwsAccountId=self.account_id).search('FolderSummaryList')
 
 
     def describe_folder(self, folder_id: str) -> dict:
@@ -773,13 +648,7 @@ class QuickSight(CidBase):
             'FolderId': folder_id
         }
         try:
-            result = self.client.describe_folder(**parameters)
-            logger.debug(f"DescribeFolder: {result}")
-            if result.get('Status') != 200:
-                raise CidCritical(f'describe_folder : {result}')
-            else:
-                logger.debug(result.get('Folder'))
-                return result.get('Folder')
+            return self.client.describe_folder(**parameters).get('Folder')
         except Exception as exc:
             logger.debug(exc, exc_info=True)
             return None
@@ -841,7 +710,7 @@ class QuickSight(CidBase):
         except Exception as exc:
             logger.error(f'Error in describe_dashboard: {exc}')
             raise
-    
+
     # Create a method to retrieve the definition for a given dashboard
     def describe_dashboard_definition(self, dashboard_id: str, refresh: bool = False) -> CidQsDefinition:
         """ Describes an Amazon QuickSight dashboard definition """
@@ -912,7 +781,7 @@ class QuickSight(CidBase):
 
 
     def get_datasets(self, id: str=None, name: str=None) -> List[Dataset]:
-        """ get dataset that match parameters """
+        """ get dataset that match parameters from already discovered"""
         result = []
         for dataset in self.datasets.values():
             if id is not None and dataset.id != id:
@@ -943,13 +812,12 @@ class QuickSight(CidBase):
         return result
 
 
-    def describe_dataset(self, id, timeout: int=1) -> Dataset:
+    def describe_dataset(self, id, timeout: int=10) -> Dataset:
         """ Describes an Amazon QuickSight dataset """
         if self._datasets and id in self._datasets:
             return self._datasets.get(id)
         self._datasets = self._datasets or {}
         poll_interval = 1
-        _dataset = None
         deadline = time.time() + timeout
         while time.time() <= deadline:
             try:
@@ -965,15 +833,14 @@ class QuickSight(CidBase):
                 logger.debug(f'No quicksight:DescribeDataSet permission or missing DataSetId {id}')
                 return None
             except self.client.exceptions.ClientError as exc:
-                logger.error(f'Error when trying to describe dataset {id}: {exc}')
+                logger.warning(f'Error when trying to describe dataset {id}: {exc}')
                 return None
-
         return self._datasets.get(id, None)
 
     def get_dataset_last_ingestion(self, dataset_id) -> str:
         """returns human friendly status of the latest ingestion"""
         try:
-            ingestions = self.client.list_ingestions(
+            ingestions = self.client.list_ingestions( # latest come first, so no pagination required    
                 DataSetId=dataset_id,
                 AwsAccountId=self.account_id,
             ).get('Ingestions', [])
@@ -1013,7 +880,14 @@ class QuickSight(CidBase):
                     logger.debug(exc, exc_info=True)
                     continue
         except self.client.exceptions.AccessDeniedException:
-            logger.info('Access denied listing datasets')
+            logger.info('AccessDenied listing datasets. Will try to find all datasets in dashboards as failover method.')
+            for dashboard in self.dashboards.values():
+                for dataset_id in dashboard.get_dataset_ids():
+                    try:
+                        self.describe_dataset(dataset_id)
+                    except Exception as exc:
+                        logger.debug(exc, exc_info=True)
+                        continue
         except Exception as exc:
             logger.debug(exc, exc_info=True)
             logger.info('No datasets found')
@@ -1380,6 +1254,8 @@ class QuickSight(CidBase):
             'VersionNumber': created_version
         }
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
+        self.set_tags(dashboard.arn, cid_version=dashboard.cid_version) # try to update version tag
+
         self.discover_dashboard(dashboard.id)
         if not dashboard.health:
             failure_reason = dashboard.version.get('Errors')
@@ -1451,6 +1327,8 @@ class QuickSight(CidBase):
         updated_version = int(update_status['VersionArn'].split('/')[-1])
 
         dashboard = self.describe_dashboard(poll=True, DashboardId=dashboard.id, VersionNumber=updated_version)
+        self.set_tags(dashboard.arn, cid_version=dashboard.cid_version) # try to update version tag
+
         if not dashboard.health:
             failure_reason = dashboard.version.get('Errors')
             raise Exception(failure_reason)

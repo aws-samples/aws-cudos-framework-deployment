@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script builids a lambda layer. Outpits relative path of layer zip.
+# This script builds a lambda layer. Outputs relative path of layer zip.
 export CID_VERSION=$(python3 -c "from cid import _version;print(_version.__version__)")
 rm -rf build
 

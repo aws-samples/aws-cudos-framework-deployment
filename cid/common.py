@@ -3,6 +3,7 @@ import json
 import urllib
 import logging
 import functools
+import webbrowser
 from string import Template
 from typing import Dict
 from pkg_resources import resource_string
@@ -10,7 +11,6 @@ from importlib.metadata import entry_points
 from functools import cached_property
 
 import yaml
-import click
 import requests
 from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetrievalError
 
@@ -433,9 +433,7 @@ class Cid():
 
         self.ensure_subscription()
 
-        # In case if we cannot discover datasets, we need to discover dashboards
-        # TODO: check if datasets returns explicit permission denied and only then discover dashboards as a workaround
-        self.qs.dashboards
+        self.qs.pre_discover()
 
         dashboard_id = dashboard_id or get_parameters().get('dashboard-id')
         category_filter = [cat for cat in get_parameters().get('category', '').upper().split(',') if cat]
@@ -478,7 +476,7 @@ class Cid():
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
         dashboard = None
         try:
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboard_id)
         except CidCritical:
             pass
 
@@ -527,11 +525,10 @@ class Cid():
 
         compatible = self.check_dashboard_version_compatibility(dashboard_id)
         if not recursive and compatible == False:
-            if get_parameter(
+            if get_yesno_parameter(
                 param_name=f'confirm-recursive',
                 message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
-                choices=['yes', 'no'],
-                default='yes') != 'yes':
+                default='yes'):
                 return
             logger.info("Switch to recursive mode")
             recursive = True
@@ -653,19 +650,17 @@ class Cid():
         if not dashboard_id:
             dashboard_id = self.qs.select_dashboard(force=True)
 
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboard_id)
 
-        click.echo('Getting dashboard status...', nl=False)
-        if dashboard is not None:
-            if dashboard.version.get('Status') not in ['CREATION_SUCCESSFUL']:
-                print(json.dumps(dashboard.version.get('Errors'),
-                      indent=4, sort_keys=True, default=str))
-                click.echo(
-                    f'\nDashboard is unhealthy, please check errors above.')
-            click.echo('healthy, opening...')
-            click.launch(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
-        else:
-            click.echo('not deployed.')
+        logger.info('Getting dashboard status...')
+        if not dashboard:
+            logger.error(f'{dashboard_id} is not deployed.')
+            return None
+        if dashboard.version.get('Status') not in ['CREATION_SUCCESSFUL', 'UPDATE_IN_PROGRESS', 'UPDATE_SUCCESSFUL']:
+            cid_print(json.dumps(dashboard.version.get('Errors'), indent=4, sort_keys=True, default=str))
+            cid_print(f'Dashboard {dashboard_id} is unhealthy, please check errors above.')
+        logger.info('healthy, opening...')
+        webbrowser.open(self.qs_url.format(dashboard_id=dashboard_id, **self.qs_url_params))
 
         return dashboard_id
 
@@ -682,7 +677,7 @@ class Cid():
                 if not dashboard_id:
                     print('No dashboard selected')
                     return
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboard_id)
 
             if dashboard is not None:
                 dashboard.display_status()
@@ -724,11 +719,7 @@ class Cid():
                         logger.info(f'Updating dashboard: {dashboard.id} with Recursive = {recursive}')
                         self._deploy(dashboard_id, recursive=recursive, update=True)
                         logger.info('Rediscover dashboards after update')
-                        
-                        refresh_overrides = [
-                            dashboard.id
-                        ]
-                        self.qs.discover_dashboards(refresh_overrides = refresh_overrides)
+                        self.qs.discover_dashboards(refresh_overrides=[dashboard.id])
                 self.qs.clear_dashboard_selection()
                 dashboard_id = None
             else:
@@ -747,7 +738,7 @@ class Cid():
                 return
 
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
-            datasets = self.qs.discover_dashboard(dashboardId=dashboard_id).datasets # save for later
+            datasets = self.qs.discover_dashboard(dashboard_id).datasets # save for later
         else:
             dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
             datasets = {d: None for d in (dashboard_definition or {}).get('dependsOn', {}).get('datasets', [])}
@@ -792,16 +783,14 @@ class Cid():
                         logger.debug(f'Picking the first of dataset databases: {dataset.schemas}')
                         self.athena.DatabaseName = schema
 
-                    if get_parameter(
+                    if get_yesno_parameter(
                         param_name=f'confirm-{dataset.name}',
                         message=f'Delete QuickSight Dataset {dataset.name}?',
-                        choices=['yes', 'no'],
-                        default='no') == 'yes':
+                        default='no'):
                         print(f'Deleting dataset {dataset.name} ({dataset.id})')
                         self.qs.delete_dataset(dataset.id)
                     else:
-                        logger.info(f'Skipping dataset {dataset.name}')
-                        print      (f'Skipping dataset {dataset.name}')
+                        cid_print(f'Skipping dataset {dataset.name}')
                         return False
                 if not dataset.datasources:
                     continue
@@ -854,7 +843,7 @@ class Cid():
     def cleanup(self, **kwargs):
         """Delete unused resources (QuickSight datasets not used in Dashboards)"""
 
-        self.qs.discover_dashboards()
+        self.qs.pre_discover()
         self.qs.discover_datasets()
         references = {}
         for dashboard in self.qs.dashboards.values():
@@ -892,9 +881,9 @@ class Cid():
                 return
         else:
             # Describe dashboard by the ID given, no discovery
-            self.qs.discover_dashboard(dashboardId=dashboard_id)
+            self.qs.discover_dashboard(dashboard_id)
 
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboard_id)
 
         if dashboard is None:
             print('not deployed.')
@@ -1065,7 +1054,7 @@ class Cid():
     def check_dashboard_version_compatibility(self, dashboard_id):
         """ Returns True | False | None if could not check """
         try:
-            dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+            dashboard = self.qs.discover_dashboard(dashboard_id)
         except CidCritical:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return None
@@ -1085,7 +1074,7 @@ class Cid():
 
     def update_dashboard(self, dashboard_id, dashboard_definition):
 
-        dashboard = self.qs.discover_dashboard(dashboardId=dashboard_id)
+        dashboard = self.qs.discover_dashboard(dashboard_id)
         if not dashboard:
             print(f'Dashboard "{dashboard_id}" is not deployed')
             return
@@ -1362,7 +1351,7 @@ class Cid():
         # Read dataset definition from template
         data = self.get_data_from_definition('dataset', dataset_definition)
         template = Template(json.dumps(data))
-        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur')
+        cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur1')
         cur2_required = dataset_definition.get('dependsOn', dict()).get('cur2')
         athena_datasource = None
 
