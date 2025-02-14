@@ -13,24 +13,54 @@
     <language>en-us</language>
 
     <item>
+      <title>Extended Support Cost Projection Dashboard - v4.0.0</title>
+      <link>https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/extended-support-cost-projection</link>
+      <pubDate>23 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Update]]></category>
+      <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/rss_feed/changes/CHANGELOG-extended-support-cost-projection.md#extended-support-cost-projection---v310</guid>
+      <description>Extended Support Cost Projection Dashboard update to v4.0.0</description>
+      <content:encoded><![CDATA[
+        In this release we have introduced projection of extended support costs for Amazon OpenSearch. The dashboard provides a clear view on OpenSearch and ElasticSearch domains reaching extended support in the next 3, 6, 12 months, and beyond.
+        
+        Important: This version requires the data collection version 3.2.0+. Update to this version requires a forced and recursive update. If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.
+        To update run these commands in your CloudShell (recommended) or other terminal:
+
+        pip3 install --upgrade cid-cmd
+        cid-cmd update --dashboard-id extended-support-cost-projection --force --recursive
+
+        ]]> 
+    </content:encoded>
+    </item>
+
+
+    <item>
       <title>CUDOS update v5.5</title>
       <link>https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi</link>
-      <pubDate>Fri, 31 Jan 2025 12:00:00 GMT</pubDate>
+      <pubDate>29 Nov 2025 12:00:00 GMT</pubDate>
       <category><![CDATA[Update]]></category>
       <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cudos.md#cudos---55</guid>
       <description>CUDOS update to v5.5</description>
       <content:encoded><![CDATA[
         * DynamoDB: Refactored visuals to improve user experience and simplify navigation. 'DynamoDB Accounts by Category' visuals replaced with 'DynamoDB Cost per Account' and 'DynamoDB Cost per Usage Type Group'
-        * DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservations Savings Estimation' which allows to calculate estimated savings for Amazon DynamoDB reserved capacity based on custom commitment amount.
-        * DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservation Coverage and Usage Monitoring' which allows monitor reserved capacity coverage per region and capacity type dimensions
-        * DynamoDB: New visual 'Infrequent Access Tables Cost and Cost Efficiency Gain/Loss vs Standard Storage' which shows efficiency gains from Infrequent Access tables and also tables which could be migrated to Standard table class
-        * Monitoring and Observability: New section 'AWS Config Periodic Recording Savings Opportunities' which shows potential savings from migration to periodic configuration item recording
-        * Monitoring and Observability: New section 'Account and Regions without AWS Config' which allows to identify account and regions with AWS service usage and where AWS Config is not enabled
-        * Analytics: Improved 'QuickSight Usage Type Group' calculated field to accommodate the latest QuickSight pricing constructs
-        * AI/ML: Added Guardrails to the 'Bedrock UsageType Group' calculated field
-        * Databases: Updated action filter on 'RI Coverage per region | engine | instance type or family' to be applied to 'Top 20 instances' allowing to focus on resources which belong to particular RI dimension
-        * Compute: Bug fix for 'EKS Extended Support Cost per Account' visual. Added missing filter for Last 30 days.
         
+        * DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservations Savings Estimation' which allows to calculate estimated savings for Amazon DynamoDB reserved capacity based on custom commitment amount.
+        
+        * DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservation Coverage and Usage Monitoring' which allows monitor reserved capacity coverage per region and capacity type dimensions
+        
+        * DynamoDB: New visual 'Infrequent Access Tables Cost and Cost Efficiency Gain/Loss vs Standard Storage' which shows efficiency gains from Infrequent Access tables and also tables which could be migrated to Standard table class
+        
+        * Monitoring and Observability: New section 'AWS Config Periodic Recording Savings Opportunities' which shows potential savings from migration to periodic configuration item recording
+        
+        * Monitoring and Observability: New section 'Account and Regions without AWS Config' which allows to identify account and regions with AWS service usage and where AWS Config is not enabled
+        
+        * Analytics: Improved 'QuickSight Usage Type Group' calculated field to accommodate the latest QuickSight pricing constructs
+        
+        * AI/ML: Added Guardrails to the 'Bedrock UsageType Group' calculated field
+        
+        * Databases: Updated action filter on 'RI Coverage per region | engine | instance type or family' to be applied to 'Top 20 instances' allowing to focus on resources which belong to particular RI dimension
+        
+        * Compute: Bug fix for 'EKS Extended Support Cost per Account' visual. Added missing filter for Last 30 days.
+
 ]]> 
     </content:encoded>
     </item>
