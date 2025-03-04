@@ -20120,52 +20120,7 @@ dashboards:
                     SelectedColumns:
                     - ColumnName: contact_id
                       DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
-                    - ColumnName: contact_id
-                      DataSetIdentifier: resource_connect_view
                     SelectedFields:
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
-                    - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
                     - f6d2cc33-0cbb-4c33-84ff-0c80e98fbf21.contact_id.3.1724177779721
                   TargetVisualsConfiguration:
                     SameSheetTargetVisualConfiguration:
