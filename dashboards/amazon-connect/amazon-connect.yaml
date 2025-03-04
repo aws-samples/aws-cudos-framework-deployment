@@ -5220,7 +5220,7 @@ dashboards:
         - Content: "<text-box>\n  <inline font-family=\"Amazon Ember\" font-size=\"20px\"\
             >Amazon Connect Cost Overview</inline>\n  <br/>\n  This dashboard provides an\
             \ overview of Amazon Connect service costs and usage patterns across its features.\
-            \ All costs shown are\n  <a href=\"https://aws.amazon.com/blogs/aws-cloud-financial-management/understanding-your-aws-cost-datasets-a-cheat-sheet/\"\
+            \ All costs shown are\n <inline color=\"PrimaryBackground\">_</inline>\n <a href=\"https://aws.amazon.com/blogs/aws-cloud-financial-management/understanding-your-aws-cost-datasets-a-cheat-sheet/\"\
             \ target=\"_blank\">unblended</a>\n  \_and filtered by Usage charge type by\
             \ default. Use the filters above to customize your view by including additional\
             \ services or modifying charge types.\n  <inline color=\"#333333\" font-size=\"\
