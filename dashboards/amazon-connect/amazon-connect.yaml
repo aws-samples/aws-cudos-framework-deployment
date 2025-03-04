@@ -8,7 +8,7 @@ dashboards:
     dashboardId: amazon-connect-cost-insight-dashboard
     category: Additional
     theme: CLASSIC
-  data: |-
+    data: |-
       AnalysisDefaults:
         DefaultNewSheetConfiguration:
           InteractiveLayoutConfiguration:
@@ -21124,7 +21124,7 @@ dashboards:
             Title:
               Visibility: VISIBLE
             VisualId: 29cb7f06-d065-435f-bc0b-9ead21dcaf3a
-datasets: {}
+datasets:
   resource_connect_view:
     data:
       DataSetId: 9a724a6b-6951-466f-a16c-d2a0866c3dce
