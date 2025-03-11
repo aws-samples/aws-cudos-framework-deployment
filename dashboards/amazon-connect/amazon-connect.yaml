@@ -2868,7 +2868,6 @@ dashboards:
             Configuration:
               CustomFilterConfiguration:
                 CategoryValue: inbound-mins
-										
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: 7cff43e6-1936-48b8-bdbe-51f9ade77896
