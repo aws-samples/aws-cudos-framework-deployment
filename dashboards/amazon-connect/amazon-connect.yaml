@@ -2866,7 +2866,7 @@ dashboards:
               ColumnName: '#connect_usage_type_group'
               DataSetIdentifier: resource_connect_view
             Configuration:
-              FilterListConfiguration:
+              CustomFilterConfiguration:
                 CategoryValues: inbound-mins
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
