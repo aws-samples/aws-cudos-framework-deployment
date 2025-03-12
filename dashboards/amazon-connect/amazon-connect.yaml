@@ -2866,9 +2866,8 @@ dashboards:
               ColumnName: '#connect_usage_type_group'
               DataSetIdentifier: resource_connect_view
             Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - outbound-mins(telecom)
+              CustomFilterConfiguration:
+                CategoryValue: inbound-mins
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: 7cff43e6-1936-48b8-bdbe-51f9ade77896
@@ -21051,7 +21050,7 @@ dashboards:
                 Narrative: "<narrative>\n  <block align=\"center\">\n    <inline font-size=\"\
                   68.8px\">Amazon Connect Cost Insight Dashboard</inline>\n  </block>\n\
                   \  <br/>\n  <block align=\"center\">\n    <inline font-size=\"68.8px\"\
-                  >\n      <b>v1.1.0</b>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"\
+                  >\n      <b>v1.1.1</b>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"\
                   center\"/>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"\
                   right\"/>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"\
                   right\"/>\n  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"\

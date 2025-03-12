@@ -1,5 +1,8 @@
 # What's new in Amazon Connect Dashboard
 
+## Amazon Connect Dashboard - v1.1.1
+* minor fixes
+
 ## Amazon Connect Dashboard - v1.1.0
 * new visual on MoM Connect usage trends
 * new tab Contact Center to track other services on Connect accounts
