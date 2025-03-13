@@ -772,7 +772,15 @@ views:
     parameters:
       s3FolderPath:
         default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_rds_database'
-        description: Compute Optimiser RDS report S3 path
+        description: Compute Optimizer RDS report S3 path
+
+  compute_optimizer_ecs_service_lines:
+    type: Glue_Table
+    File: co/ecs_service.json
+    parameters:
+      s3FolderPath:
+        default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_ecs_service'
+        description: Compute Optimizer ECS report S3 path
 
   compute_optimizer_auto_scale_lines:
     type: Glue_Table
@@ -834,6 +842,12 @@ views:
       views:
         - compute_optimizer_rds_instance_lines
 
+  compute_optimizer_ecs_service_options:
+    File: co/ecs_service_options.sql
+    dependsOn:
+      views:
+        - compute_optimizer_ecs_service_lines
+
   compute_optimizer_all_options:
     File: co/all_options.sql
     dependsOn:
@@ -844,7 +858,7 @@ views:
         - compute_optimizer_lambda_options
         - compute_optimizer_rds_instance_options
         - compute_optimizer_rds_storage_options
-
+        - compute_optimizer_ecs_service_options
 
   # Shared views
   account_map:

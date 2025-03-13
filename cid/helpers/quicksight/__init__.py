@@ -621,7 +621,15 @@ class QuickSight(CidBase):
     def select_group(self):
         """ Select a group from the list of groups """
         try:
-            groups = self.identityClient.list_groups(AwsAccountId=self.account_id, Namespace='default').get('GroupList')
+            groups = []
+            paginator = self.identityClient.get_paginator('list_groups')
+            page_iterator = paginator.paginate(
+                AwsAccountId=self.account_id,
+                Namespace='default'
+            )
+            
+            for page in page_iterator:
+                groups.extend(page.get('GroupList', []))
         except self.client.exceptions.AccessDeniedException as exc:
             raise CidCritical('AccessDenied for listing groups, your can explicitly provide --quicksight-group parameter') from exc
 

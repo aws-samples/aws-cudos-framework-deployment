@@ -18,4 +18,7 @@ UNION    SELECT *
 UNION    SELECT *
    FROM
      compute_optimizer_rds_storage_options
+UNION    SELECT *
+   FROM
+     compute_optimizer_ecs_service_options
 )

@@ -222,7 +222,7 @@ class CUR(AbstractCUR):
             try:
                 metadata = self.athena.get_table_metadata(table_name, cur_database)
             except self.athena.client.exceptions.MetadataException as exc:
-                raise CidCritical(f'Provided cur-table-name "{table_name}" in database "{cur_database or self.athena.DatabaseName}" is not found. Please make sure the table exists.') from exc
+                raise CidCritical(f'Provided cur-table-name "{table_name}" in database "{cur_database or self.athena.DatabaseName}" is not found. Please make sure the table exists. This could also indicate a LakeFormation permission issue, see our FAQ for help.') from exc
             res, message = self.table_is_cur(table=metadata, return_reason=True)
             if not res:
                 raise CidCritical(f'Table {table_name} does not look like CUR. {message}')
