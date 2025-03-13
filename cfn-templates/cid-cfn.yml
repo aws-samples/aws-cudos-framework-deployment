@@ -241,6 +241,15 @@ Parameters:
     Description: Choose 'yes' if you want to keep the Legacy CUR table
     Default: "no"
     AllowedValues: ["yes", "no"]
+  CreateLocalAssetsBucket:
+    Type: String
+    Description: Choose 'yes' if you want to copy reference assets to a local assets buckets (recommended for China and Gov regions)
+    Default: "no"
+    AllowedValues: ["yes", "no"]
+  ReferenceAssetsBucket:
+    Type: String
+    Description: Source bucket to sync from
+    Default: 'aws-managed-cost-intelligence-dashboards-us-east-1'
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -307,6 +316,7 @@ Conditions:
       - !Equals [!Ref "AWS::Region", "us-gov-east-1"]
       - !Equals [!Ref "AWS::Region", "us-gov-west-1"]
   LambdaLayerBucketPrefixIsManaged: !Equals [!Ref LambdaLayerBucketPrefix, 'aws-managed-cost-intelligence-dashboards']
+  NeedLocalAssets: !Equals [ !Ref CreateLocalAssetsBucket, "yes" ]
 
 Mappings:
   RegionMap: # CID has AWS managed buckets for deploy. Region must support QuickSight ( curl https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonQuickSight/current/region_index.json -s | jq '.regions | keys' )
@@ -1836,6 +1846,155 @@ Resources:
           - id: 'W92'
             reason: "No need for reserved concurrency"
 
+  LocalAssetsBucket:
+    Type: AWS::S3::Bucket
+    Condition: NeedLocalAssets
+    Properties:
+      BucketName: !Sub "cid-${AWS::AccountId}-local-assets"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      AccessControl: BucketOwnerFullControl
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045 #Not needed AWS::S3::BucketPolicy
+      cfn_nag:
+        rules_to_suppress:
+          - id: 'W35'
+            reason: "Data buckets would generate too much logs"
+          - id: 'W51'
+            reason: "No policy needed"
+  PullAssetsLambdaRole:
+    Type: AWS::IAM::Role
+    Condition: NeedLocalAssets
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3SyncPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                Resource:
+                  - !Sub 'arn:aws:s3:::${ReferenceAssetsBucket}'
+                  - !Sub 'arn:aws:s3:::${ReferenceAssetsBucket}/*'
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:CopyObject
+                  - s3:DeleteObject
+                  - s3:DeleteObjects
+                  - s3:DeleteObjectVersion
+                  - s3:DeleteObjectVersionTagging
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                Resource:
+                  - !Sub 'arn:aws:s3:::${LocalAssetsBucket}'
+                  - !Sub 'arn:aws:s3:::${LocalAssetsBucket}/*'
+
+  PullAssetsLambda:
+    Type: AWS::Lambda::Function
+    Condition: NeedLocalAssets
+    Properties:
+      FunctionName:  !Sub 'CidPullAssets${Suffix}'
+      Handler: index.handler
+      Role: !GetAtt PullAssetsLambdaRole.Arn
+      Runtime: python3.12
+      Timeout: 300
+      MemorySize: 256
+      Code:
+        ZipFile: |
+          import json
+          import logging
+          import boto3
+          import cfnresponse
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          def handler(event, context):
+              logger.info(f'Received event: {json.dumps(event)}')
+              request_type = event['RequestType']
+              resource_props = event.get('ResourceProperties', {})
+              old_keys = event.get("OldResourceProperties", {}).get("Keys", [])
+              try:
+                  source_bucket = resource_props['SourceBucket']
+                  destination_bucket = resource_props['DestinationBucket']
+                  keys = resource_props.get('Keys', [])
+              except KeyError as e:
+                  logger.error(f"Missing required property: {e}")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': f"Missing required property: {str(e)}"})
+                  return
+              try:
+                  if request_type == 'Create' or request_type == 'Update':
+                      sync_buckets(source_bucket, destination_bucket, keys, old_keys)
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, destination_bucket)
+                  elif request_type == 'Delete':
+                      clean_bucket(destination_bucket)
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, destination_bucket)
+                  else:
+                      raise ValueError(f"Unsupported request type: {request_type}")
+              except Exception as e:
+                  logger.error(f"Error on {request_type}: {str(e)}")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+
+          def sync_buckets(source_bucket, destination_bucket, keys, old_keys):
+              """Sync contents from source bucket to destination bucket
+              """
+              s3_client = boto3.client('s3')
+              for key in old_keys:
+                  if key not in keys:
+                      try:
+                          s3_client.delete_object(Bucket=destination_bucket, Key=key)
+                      except Exception as e:
+                          logger.info(f"Skipping deletion of {destination_bucket}/{key}: {str(e)}")
+              for key in keys:
+                  s3_client.copy_object(
+                      CopySource={'Bucket': source_bucket, 'Key': key},
+                      Bucket=destination_bucket,
+                      Key=key
+                  )
+                  logger.info(f"Done copy from {source_bucket}/{key} to {destination_bucket}/{key}")
+
+          def clean_bucket(bucket_name):
+              """Delete all objects in the bucket
+              """
+              boto3.resource('s3').Bucket(bucket_name).object_versions.delete()
+              logger.info(f"Done cleanup {bucket_name}")
+
+  SyncLocalAssets:
+    Type: Custom::BucketSync
+    Condition: NeedLocalAssets
+    Properties:
+      ServiceToken: !GetAtt PullAssetsLambda.Arn
+      SourceBucket: !Ref ReferenceAssetsBucket
+      DestinationBucket: !Ref LocalAssetsBucket
+      Keys:
+           - 'cid-resource-lambda-layer/cid-4.0.10.zip' #replace version here if needed
+
   CidResourceLambdaLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
@@ -1843,14 +2002,18 @@ Resources:
       Description: An AWS managed layer with a cid-cmd package installed
       Content:
         S3Bucket: !If
-          - LambdaLayerBucketPrefixIsManaged
-          - !FindInMap [RegionMap, !Ref 'AWS::Region', BucketName]
-          - !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}' # Region added for backward compatibility
+          - NeedLocalAssets
+          - !Ref SyncLocalAssets
+          - Fn::If:
+            - LambdaLayerBucketPrefixIsManaged
+            - !FindInMap [RegionMap, !Ref 'AWS::Region', BucketName]
+            - !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}' # Region added for backward compatibility
         S3Key: 'cid-resource-lambda-layer/cid-4.0.10.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11
         - python3.12
+
 
   CostIntelligenceDashboard:
     Type: Custom::CidDashboard
