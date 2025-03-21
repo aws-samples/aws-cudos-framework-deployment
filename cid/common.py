@@ -851,7 +851,7 @@ class Cid():
                 if dataset_id not in references:
                     references[dataset_id] = []
                 references[dataset_id].append(dashboard.id)
-        for dataset in self.qs._datasets.values():
+        for dataset in list(self.qs._datasets.values()):
             if dataset.id in references:
                 cid_print(f'Dataset {dataset.name} ({dataset.id}) is in use ({", ".join(references[dataset.id])})')
                 continue
