@@ -1,5 +1,11 @@
 # What's new in the Compute Optimizer Dashboard (COD)
 
+## Compute Optimizer Dashboard - v4.0.0
+* Added ECS Compute Optimizer sheets
+
+## Compute Optimizer Dashboard - v3.1.0
+* Removed link to deprecated feedback form
+
 ## Compute Optimizer Dashboard - v3.0.0
 * Added RDS Compute Optimizer sheets
 

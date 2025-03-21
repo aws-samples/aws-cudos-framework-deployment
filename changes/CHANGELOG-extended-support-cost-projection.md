@@ -1,5 +1,61 @@
 # What's new in Extended Support Cost Projection
 
+## Extended Support Cost Projection - v4.0.2
+
+**Important:** This version requires the data collection version 3.2.0+. Update to this version requires a forced and recursive update.
+
+If you have modified the Extended Support Cost Projection dashboard visuals, these changes will be overridden when the dashboard is updated. Consider backing-up the existing dashboard by creating an analysis from it if you want to keep a reference to customised visuals so you can re-apply them after the update takes place.
+
+To update run these commands in your CloudShell (recommended) or other terminal:
+
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id extended-support-cost-projection
+```
+
+- Fixing existing behaviour for engine, engine version and cluster version controls where selections are being retained across sheets, resulting in mixed values being displayed in controls. New individual parameters and controls are now defined for RDS engine and engine version, EKS cluster version, and OpenSearch engine version. Filters on each sheet are associated to their new corresponding parameters.
+
+## Extended Support Cost Projection - v4.0.1
+
+**Important:** This version requires the data collection version 3.2.0+. Update to this version requires a forced and recursive update.
+
+If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.
+
+To update run these commands in your CloudShell (recommended) or other terminal:
+
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id extended-support-cost-projection --force --recursive
+```
+
+- Adding/Adjusting RDS, EKS and OpenSearch release calendar dates.
+- Removing year 3 start date fallback to year 1-2 start date for RDS engine versions that do not have year 3 start date. This aligns the information displayed for year 3 start date with the zero estimated cost change applied in version 4.0.0.
+
+
+## Extended Support Cost Projection - v4.0.0
+
+**Important:** This version requires the data collection version 3.2.0+. Update to this version requires a forced update. Since this is a major version upgrade, the `cid-cmd` tool will ask to confirm a recursive update or not. Please make sure to confirm the recursive update by answering **yes** to continue the update process and have the new OpenSearch dataset and Athena view deployed for the dashboard.
+
+If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.
+
+To update run these commands in your CloudShell (recommended) or other terminal:
+
+```
+python3 -m ensurepip --upgrade
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id extended-support-cost-projection --force
+```
+
+- Adding Extended Support OpenSearch sheet.
+- Setting date range for cost estimation to be the last 30 days of usage. Estimated cost values are now always based on resource usage for the last 30 days.
+- Adjusting RDS "Year 3" estimated cost to be zero when the database engine version extended support only lasts for 2 years.
+- Adjusting visuals by adding labels that indicate the values and information displayed corresponds to the last 30 days.
+- Removing date range filter control from all sheets.
+- Adding new filter controls for engine, engine version and cluster version in the RDS, EKS and OpenSearch sheets.
+
+
 ## Extended Support Cost Projection - v3.1.0
 
 **Important:** This version requires the data collection version 3.2.0+. Update to this version requires a forced and recursive update. If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.

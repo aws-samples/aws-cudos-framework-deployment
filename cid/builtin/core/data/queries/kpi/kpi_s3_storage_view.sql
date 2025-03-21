@@ -31,7 +31,7 @@
 			, CASE
 				  WHEN line_item_product_code = 'AmazonGlacier' AND line_item_operation = 'Storage' THEN 'Amazon Glacier'
 				  WHEN line_item_product_code = 'AmazonS3' AND product['volume_type'] LIKE '%Intelligent%' AND line_item_operation LIKE '%IntelligentTiering%' THEN 'Intelligent-Tiering'
-				  ELSE product['volume_type']
+				  ELSE coalesce(product['volume_type'], '')
 			  END AS storage_class_type
 			, pricing_unit
 			, sum(line_item_usage_amount) AS usage_quantity
@@ -44,8 +44,8 @@
 			, sum(CASE WHEN (pricing_unit = 'GB-Mo' AND line_item_operation like '%Storage%') THEN line_item_usage_amount ELSE 0 END) AS s3_all_storage_usage_quantity
 			FROM "${cur2_database}"."${cur2_table_name}"
 				, inputs
-			WHERE bill_payer_account_id <> ''
-			  AND line_item_resource_id <> ''
+			WHERE coalesce(bill_payer_account_id, '') <> ''
+			  AND coalesce(line_item_resource_id, '') <> ''
 			  AND line_item_line_item_type LIKE '%Usage%'
 			  AND (line_item_product_code LIKE '%AmazonGlacier%' OR line_item_product_code LIKE '%AmazonS3%')
 			GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13

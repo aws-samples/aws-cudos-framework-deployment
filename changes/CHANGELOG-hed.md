@@ -1,4 +1,19 @@
 # What's new in Health Events Dashboard (HED)
+## v2.1.0
+* Modified Athena query to include events ingested more than 90 days ago if they are not of closed status. Although not a breaking change for the dasboard, you should update with the `--force --recursive` flags to incorporate it.
+* Added guidance text for date range filtering
+* Minor cosmetic and usability changes
+
+## v2.0.4
+* Fix resetting description free text filter issue
+* Minor cosmetic and usability changes
+
+## v2.0.3
+* Fix case where reported resource name is not a full unique ARN to derive unique instance counts
+* Easier filtering by date ranges
+* Layout changes to event detail section
+* Minor cosmetic and usage guidance changes
+
 ## v2.0.2
 * Fix Event Category filter on Events Explorer tab
 * Minor cosmetic changes

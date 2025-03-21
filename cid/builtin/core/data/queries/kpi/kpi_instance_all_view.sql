@@ -19,8 +19,8 @@
 		   , "bill_payer_account_id" "payer_account_id"
 		   , "line_item_usage_account_id" "linked_account_id"
 		   , "line_item_resource_id" "resource_id"
-		   , "line_item_line_item_type" "charge_type"
-		   , (CASE WHEN ("savings_plan_savings_plan_a_r_n" <> '') THEN 'SavingsPlan' WHEN ("reservation_reservation_a_r_n" <> '') THEN 'Reserved' WHEN ("line_item_usage_type" LIKE '%Spot%') THEN 'Spot' ELSE 'OnDemand' END) "purchase_option"
+		   , coalesce("line_item_line_item_type", '') "charge_type"
+		   , (CASE WHEN (coalesce("savings_plan_savings_plan_a_r_n", '') <> '') THEN 'SavingsPlan' WHEN (coalesce("reservation_reservation_a_r_n", '') <> '') THEN 'Reserved' WHEN ("line_item_usage_type" LIKE '%Spot%') THEN 'Spot' ELSE 'OnDemand' END) "purchase_option"
 		   , "line_item_product_code" "product_code"
 		   , CASE
 				WHEN ("line_item_product_code" in ('AmazonSageMaker','MachineLearningSavingsPlans')) THEN 'Machine Learning'
@@ -31,20 +31,22 @@
 				WHEN (("line_item_product_code" = 'AmazonRedshift')) THEN 'Redshift'
 				WHEN (("line_item_product_code" = 'AmazonDynamoDB') AND (line_item_operation = 'CommittedThroughput')) THEN 'DynamoDB'
 				ELSE 'Other' END "commit_service_group"
-			, savings_plan_offering_type "savings_plan_offering_type"
+		   , coalesce("savings_plan_offering_type", '') "savings_plan_offering_type"
 		   , product['region'] "region"
 		   , line_item_operation "operation"
 		   , line_item_usage_type "usage_type"
 		   , CASE WHEN ("line_item_product_code" in ('AmazonRDS','AmazonElastiCache')) THEN "lower"("split_part"("product_instance_type", '.', 2)) ELSE "lower"("split_part"("product_instance_type", '.', 1)) END "instance_type_family"
-		   , "product_instance_type" "instance_type"
-		   , product['operating_system']  "platform"
+		   , coalesce("product_instance_type", '') "instance_type"
+		   , coalesce(product['operating_system'], '') "platform"
 		   , product['tenancy'] "tenancy"
 		   , product['physical_processor'] "processor"
-		   , (CASE WHEN (("line_item_line_item_type" LIKE '%Usage%') AND (product['physical_processor'] LIKE '%Graviton%')) THEN 'Graviton' WHEN (("line_item_line_item_type" LIKE '%Usage%') AND (product['physical_processor'] LIKE '%AMD%')) THEN 'AMD' 
+		   , (CASE 
+			WHEN (("line_item_line_item_type" LIKE '%Usage%') AND (product['physical_processor'] LIKE '%Graviton%')) THEN 'Graviton'
+			WHEN (("line_item_line_item_type" LIKE '%Usage%') AND (product['physical_processor'] LIKE '%AMD%')) THEN 'AMD'
 			WHEN line_item_product_code IN ('AmazonES','AmazonElastiCache') AND (product_instance_type LIKE '%6g%' OR product_instance_type LIKE '%7g%' OR product_instance_type LIKE '%4g%') THEN 'Graviton'
 			WHEN line_item_product_code IN ('AWSLambda') AND line_item_usage_type LIKE '%ARM%' THEN 'Graviton'
 			WHEN line_item_usage_type LIKE '%Fargate%' AND line_item_usage_type LIKE '%ARM%' THEN 'Graviton'
-		   ELSE 'Other' END) "adjusted_processor"
+			ELSE 'Other' END) "adjusted_processor"
 		   , product['database_engine'] "database_engine"
 		   , product['deployment_option'] "deployment_option"
 		   , product['license_model'] "license_model"
@@ -56,7 +58,7 @@
 			  WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN 0
 			  WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN ("reservation_effective_cost")
 			  WHEN ("line_item_line_item_type" = 'RIFee') THEN (("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee"))
-			  WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE ("line_item_unblended_cost" ) END)) "amortized_cost"
+			  WHEN (("line_item_line_item_type" = 'Fee') AND (coalesce("reservation_reservation_a_r_n", '') <> '')) THEN 0 ELSE ("line_item_unblended_cost" ) END)) "amortized_cost"
 		   , "sum"((CASE
 				WHEN ("line_item_usage_type" LIKE '%Spot%' AND "pricing_public_on_demand_cost" > 0) THEN "pricing_public_on_demand_cost"
  				WHEN ("line_item_line_item_type" = 'SavingsPlanCoveredUsage') THEN ("pricing_public_on_demand_cost")
@@ -65,7 +67,7 @@
 			  WHEN ("line_item_line_item_type" = 'SavingsPlanUpfrontFee') THEN 0
 			  WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN ("pricing_public_on_demand_cost")
 			  WHEN ("line_item_line_item_type" = 'RIFee') THEN ("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee")
-			  WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0 ELSE ("line_item_unblended_cost" ) END)) "adjusted_amortized_cost"
+			  WHEN (("line_item_line_item_type" = 'Fee') AND (coalesce("reservation_reservation_a_r_n", '') <> '')) THEN 0 ELSE ("line_item_unblended_cost" ) END)) "adjusted_amortized_cost"
 		   , "sum"("pricing_public_on_demand_cost") "public_cost"
 		   FROM "${cur2_database}"."${cur2_table_name}"
 		   WHERE
@@ -73,23 +75,23 @@
 		   AND ("bill_payer_account_id" <>'')
 		   AND ("line_item_resource_id" <>'')
 		   AND ("product_servicecode" <> 'AWSDataTransfer') 
-		   AND ("line_item_usage_type" NOT LIKE '%DataXfer%')
+		   AND (coalesce("line_item_usage_type", '') NOT LIKE '%DataXfer%')
 		   AND (("line_item_line_item_type" LIKE '%Usage%') OR ("line_item_line_item_type" = 'RIFee') OR ("line_item_line_item_type" = 'SavingsPlanRecurringFee')) 
 		   AND (
-					(("line_item_product_code" = 'AmazonEC2') AND ("product_instance_type" <> '') AND ("line_item_operation" LIKE '%RunInstances%'))
-				OR(("line_item_product_code" = 'AmazonElastiCache') AND ("product_instance_type" <> '')) 
-				OR (("line_item_product_code" = 'AmazonES') AND ("product_instance_type" <> ''))		
-				OR (("line_item_product_code" = 'AmazonRDS') AND ("product_instance_type" <> ''))
-				OR (("line_item_product_code" = 'AmazonRedshift') AND ("product_instance_type" <> '')) 
-				OR (("line_item_product_code" = 'AmazonDynamoDB') AND ("line_item_operation" in ('CommittedThroughput','PayPerRequestThroughput')) AND (("line_item_usage_type" LIKE '%ReadCapacityUnit-Hrs%') or ("line_item_usage_type" LIKE '%WriteCapacityUnit-Hrs%')) AND ("line_item_usage_type" NOT LIKE '%Repl%')) 
+					(("line_item_product_code" = 'AmazonEC2') AND (coalesce("product_instance_type", '') <> '') AND ("line_item_operation" LIKE '%RunInstances%'))
+				OR(("line_item_product_code" = 'AmazonElastiCache') AND (coalesce("product_instance_type", '') <> ''))
+				OR (("line_item_product_code" = 'AmazonES') AND (coalesce("product_instance_type", '') <> ''))
+				OR (("line_item_product_code" = 'AmazonRDS') AND (coalesce("product_instance_type", '') <> ''))
+				OR (("line_item_product_code" = 'AmazonRedshift') AND (coalesce("product_instance_type", '') <> ''))
+				OR (("line_item_product_code" = 'AmazonDynamoDB') AND ("line_item_operation" in ('CommittedThroughput','PayPerRequestThroughput')) AND (("line_item_usage_type" LIKE '%ReadCapacityUnit-Hrs%') or ("line_item_usage_type" LIKE '%WriteCapacityUnit-Hrs%')) AND (coalesce("line_item_usage_type", '') NOT LIKE '%Repl%')) 
 				OR (("line_item_product_code" = 'AWSLambda') AND ("line_item_usage_type" LIKE '%Lambda-Provisioned-GB-Second%'))
 				OR (("line_item_product_code" = 'AWSLambda') AND ("line_item_usage_type" LIKE '%Lambda-GB-Second%'))
 				OR (("line_item_product_code" = 'AWSLambda') AND ("line_item_usage_type" LIKE '%Lambda-Provisioned-Concurrency%'))
 				OR ("line_item_usage_type" LIKE '%Fargate%')
-				OR (("line_item_product_code" = 'AmazonSageMaker') AND ("product_instance_type" <> '')) 					
+				OR (("line_item_product_code" = 'AmazonSageMaker') AND (coalesce("product_instance_type", '') <> ''))
 				OR ("line_item_product_code" = 'ComputeSavingsPlans')
-				OR ("line_item_product_code" = 'MachineLearningSavingsPlans')				
-			)) 					
+				OR ("line_item_product_code" = 'MachineLearningSavingsPlans')
+			))
 
 		   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,17,18,19,20,21,22,23,24,25
 		   )
