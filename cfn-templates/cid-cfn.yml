@@ -1929,6 +1929,9 @@ Resources:
         ZipFile: |
           import json
           import logging
+          import tempfile
+          import urllib.request
+          from io import BytesIO
           import boto3
           import cfnresponse
 
@@ -1961,30 +1964,47 @@ Resources:
                   logger.error(f"Error on {request_type}: {str(e)}")
                   cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
 
+          def get_content(source_bucket, key):
+              """ Download the content using public bucket to temporary file
+              """
+              object_url = f"https://{source_bucket}.s3.amazonaws.com/{key}"
+              logger.info(f"Downloading from {object_url}")
+              with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                  with urllib.request.urlopen(object_url) as response:
+                      while True:
+                          chunk = response.read(8192)
+                          if not chunk:
+                              break
+                          temp_file.write(chunk)
+                  return temp_file.name
+
           def sync_buckets(source_bucket, destination_bucket, keys, old_keys):
-              """Sync contents from source bucket to destination bucket
+              """Sync contents from source bucket to destination bucket using HTTPS download and upload
               """
               s3_client = boto3.client('s3')
+              # Delete keys that are no longer needed
               for key in old_keys:
                   if key not in keys:
                       try:
                           s3_client.delete_object(Bucket=destination_bucket, Key=key)
+                          logger.info(f"Deleted {destination_bucket}/{key}")
                       except Exception as e:
                           logger.info(f"Skipping deletion of {destination_bucket}/{key}: {str(e)}")
+              # Download from public URL and upload to destination bucket
               for key in keys:
-                  s3_client.copy_object(
-                      CopySource={'Bucket': source_bucket, 'Key': key},
-                      Bucket=destination_bucket,
-                      Key=key
-                  )
-                  logger.info(f"Done copy from {source_bucket}/{key} to {destination_bucket}/{key}")
+                  try:
+                      temp_file_path = get_content(source_bucket, key)
+                      s3_client.upload_file(temp_file_path, destination_bucket, key)
+                      logger.info(f"Done uploading to {destination_bucket}/{key}")
+                  except Exception as e:
+                      logger.error(f"Error processing {key}: {str(e)}")
+                      raise e
 
           def clean_bucket(bucket_name):
               """Delete all objects in the bucket
               """
               boto3.resource('s3').Bucket(bucket_name).object_versions.delete()
               logger.info(f"Done cleanup {bucket_name}")
-
   SyncLocalAssets:
     Type: Custom::BucketSync
     Condition: NeedLocalAssets
