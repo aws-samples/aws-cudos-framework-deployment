@@ -1978,6 +1978,16 @@ Resources:
                           temp_file.write(chunk)
                   return temp_file.name
 
+          def get_content_from_s3(source_bucket, key):
+              s3_client = boto3.client('s3')
+              with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                  s3_client.download_file(
+                      Bucket=source_bucket,
+                      Key=key,
+                      Filename=temp_file.name
+                  )
+                  return temp_file.name
+
           def sync_buckets(source_bucket, destination_bucket, keys, old_keys):
               """Sync contents from source bucket to destination bucket using HTTPS download and upload
               """
@@ -1993,7 +2003,12 @@ Resources:
               # Download from public URL and upload to destination bucket
               for key in keys:
                   try:
-                      temp_file_path = get_content(source_bucket, key)
+                      try:
+                          temp_file_path = get_content_from_s3(source_bucket, key)
+                      except Exception as e:
+                          logger.warning(f"Error processing {key}: {str(e)}")
+                          logger.info(f"Trying public url")
+                          temp_file_path = get_content(source_bucket, key)
                       s3_client.upload_file(temp_file_path, destination_bucket, key)
                       logger.info(f"Done uploading to {destination_bucket}/{key}")
                   except Exception as e:
