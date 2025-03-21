@@ -456,9 +456,8 @@ Resources:
           - quicksight:DeleteRefreshSchedule
           - quicksight:DescribeRefreshSchedule
           - quicksight:ListRefreshSchedules
-          - quicksight:CreateDataSetRefreshProperties
+          - quicksight:PutDataSetRefreshProperties
           - quicksight:DescribeDataSetRefreshProperties
-          - quicksight:UpdateDataSetRefreshProperties
           - quicksight:DeleteDataSetRefreshProperties
           Effect: Allow
           Resource:

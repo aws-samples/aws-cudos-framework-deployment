@@ -148,10 +148,10 @@ class AbstractCUR(CidBase):
         """ Ensure column is in the cur. If it is not there - add column """
         pass
 
-    def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
+    def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False, database: str=None) -> bool:
         """ return cur version if table metadata fits CUR definition. """
         try:
-            table = table or self.athena.get_table_metadata(name)
+            table = table or self.athena.get_table_metadata(name, database)
         except Exception as exc: #pylint: disable=broad-exception-caught
             logger.warning(exc)
             return False if not return_reason else (False, f'cannot get table {name}. {exc}.')
@@ -201,8 +201,10 @@ class AbstractCUR(CidBase):
 class CUR(AbstractCUR):
     """This Class represents CUR table (1 or 2 versions)"""
 
-    def __init__(self, athena, glue):
+    def __init__(self, athena, glue, database: str=None, table: str=None):
         super().__init__(athena, glue)
+        if database and table:
+            self.set_cur(database, table)
 
     @property
     def metadata(self) -> dict:
@@ -213,12 +215,16 @@ class CUR(AbstractCUR):
         # good place to set a database for athena
         return self._metadata
 
-    def find_cur(self):
+
+    def set_cur(self, database: str=None, table: str=None):
+        self._database, self._metadata = self.find_cur(database, table)
+
+    def find_cur(self, database: str=None, table: str=None):
         """Choose CUR"""
         metadata = None
-        cur_database = get_parameters().get('cur-database')
-        if get_parameters().get('cur-table-name'):
-            table_name = get_parameters().get('cur-table-name')
+        cur_database = database or get_parameters().get('cur-database')
+        if table or get_parameters().get('cur-table-name'):
+            table_name = table or get_parameters().get('cur-table-name')
             try:
                 metadata = self.athena.get_table_metadata(table_name, cur_database)
             except self.athena.client.exceptions.MetadataException as exc:
