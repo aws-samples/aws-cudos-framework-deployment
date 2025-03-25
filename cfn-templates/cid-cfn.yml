@@ -1899,10 +1899,9 @@ Resources:
                   - s3:GetObject
                   - s3:ListBucket
                   - s3:ListBucketVersions
-                Resource: '*'
-                Condition:
-                  StringEquals:
-                    's3:ResourceBucket': !Ref ReferenceAssetsBucket
+                Resource: 
+                  - !Sub 'arn:${AWS::Partition}:s3:::${ReferenceAssetsBucket}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${ReferenceAssetsBucket}/*'
               - Effect: Allow
                 Action:
                   - s3:PutObject
