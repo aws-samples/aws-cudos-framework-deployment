@@ -8,7 +8,7 @@
 1. [Architecture of Foundational Dashboards](#Architecture-of-Foundational-Dashboards)
 1. [Cost](#Cost)
 1. [Prerequisites](#Prerequisites)
-1. [Deployment] Steps(#Deployment-Steps)
+1. [Deployment Steps](#Deployment-Steps)
 1. [Cleanup](#Cleanup)
 1. [FAQ](#FAQ)
 1. [Changelogs](#Changelogs)
