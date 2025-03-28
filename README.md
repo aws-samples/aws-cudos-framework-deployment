@@ -24,7 +24,6 @@ Cloud Intelligence Dashboards Framework provides AWS customers with [more then 2
 * Advanced Dashboards - Require CID Data Collection and CUR
 * Additional Dashboards - Require various custom datasources or created for very specific use cases.
 
- 
 ## Architecture of Foundational Dashboards
 
 ![Foundational Architecture](assets/images/foundational-architecture.png  "Foundational")
