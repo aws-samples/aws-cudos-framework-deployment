@@ -4,16 +4,16 @@
 
 
 ## Table of Contents
-
-1. [Overview](#overview)
-    - [Cost](#cost)
-2. [Prerequisites](#prerequisites)
-    - [Operating System](#operating-system)
-3. [Deployment Steps](#deployment-steps)
-4. [Deployment Validation](#deployment-validation)
-5. [Running the Guidance](#running-the-guidance)
-6. [Next Steps](#next-steps)
-7. [Cleanup](#cleanup)
+1. [Overview](#Overview)
+1. [Architecture of Foundational Dashboards](#Architecture-of-Foundational-Dashboards)
+1. [Cost](#Cost)
+1. [Prerequisites](#Prerequisites)
+1. [Deployment] Steps(#Deployment-Steps)
+1. [Cleanup](#Cleanup)
+1. [FAQ](#FAQ)
+1. [Changelogs](#Changelogs)
+1. [Feedback](#Feedback)
+1. [Notices](#Notices)
 
 
 ## Overview
