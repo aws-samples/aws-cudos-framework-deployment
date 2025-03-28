@@ -2,8 +2,119 @@
 
 [![PyPI version](https://badge.fury.io/py/cid-cmd.svg)](https://badge.fury.io/py/cid-cmd)
 
-## Welcome to Cloud Intelligence Dashboards (CUDOS Framework) automation repository
-This repository contains CloudFormation templates, Terraform modules, and a Command Line tool (cid-cmd) for managing various dashboards provided in AWS Well Architected LAB [Cloud Intelligence Dashboards](https://www.wellarchitectedlabs.com/cloud-intelligence-dashboards/).
+
+## Table of Contents
+
+1. [Overview](#overview)
+    - [Cost](#cost)
+2. [Prerequisites](#prerequisites)
+    - [Operating System](#operating-system)
+3. [Deployment Steps](#deployment-steps)
+4. [Deployment Validation](#deployment-validation)
+5. [Running the Guidance](#running-the-guidance)
+6. [Next Steps](#next-steps)
+7. [Cleanup](#cleanup)
+
+
+## Overview
+The Cloud Intelligence Dashboards is an open-source framework, lovingly cultivated and maintained by a group of customer-obsessed AWSers, that gives customers the power to get high-level and granular insight into their cost and usage data. Supported by the Well-Architected framework, the dashboards can be deployed by any customer using a CloudFormation template or a command-line tool in their environment in under 30 minutes. These dashboards help you to drive financial accountability, optimize cost, track usage goals, implement best-practices for governance, and achieve operational excellence across all your organization.
+
+Cloud Intelligence Dashboards Framework provides AWS customers with [more then 20 Dashboards](https://catalog.workshops.aws/awscid/dashboards/).
+* Foundational Dashboards - A set of main Dashboards that only require Cost and Usage Report(CUR)
+* Advanced Dashboards - Require CID Data Collection and CUR
+* Additional Dashboards - Require various custom datasources or created for very specific use cases.
+
+We recommend first to deploy Foundational Dashboards and then continue with Advanced and Additional when needed.
+
+## Architecture of Foundational Dashboards
+
+![Foundational Architecture](assets/images/foundational-architecture.png  "Foundational")
+
+1. AWS Data Exports delivers daily the Cost & Usage Report (CUR2) to an Amazon S3 Bucket in the Management Account.
+2. Amazon S3 replication rule copies Export data to a dedicated Data Collection Account S3 bucket automatically.
+3. Amazon Athena allows querying data directly from the S3 bucket using an AWS Glue table schema definition.
+4. Amazon QuickSight creates datasets from Amazon Athena , refreshes daily and caches in SPICE(Super-fast, Parallel, In-memory Calculation Engine) for Amazon QuickSight
+5. User Teams (Executives, FinOps, Engineers) can access Cloud Intelligence Dashboards in Amazon QuickSight. Access is secured through AWS IAM, IIC (SSO), and optional Row Level Security.
+
+
+## Cost
+The following table provides a sample cost breakdown for deploying of Foundational Dashboards with the default parameters in the US East (N. Virginia) Region for one month. 
+
+| AWS Service                     | Dimensions                    |  Cost [USD]      |
+|---------------------------------|-------------------------------|------------------|
+| S3 (CUR Storage)                | Monthly storage               | $5-10/month*     |
+| AWS Glue Crawler                | Monthly operation.            | $3/month*        |
+| AWS Athena                      | Data scanned monthly          | $15/month*       |
+| QuickSight Enterprise (Authors) | 3 authors  ($24/month/author) | $72/month**      |
+| QuickSight Enterprise (Readers) | 15 readers ($3/month/reader)  | $45/month**      |
+| QuickSight SPICE Capacity       | 100 GB                        | $10-20/month*    |
+| **Total Estimated Monthly Cost** |                              | **$100-$200**    |
+
+* Costs are relative to the size of your Cost and Usage Report (CUR) data
+** Costs are relative to number of Users
+
+**Additional Notes:**
+- Free trial available for 30 days for 4 QuickSight users
+- Actual costs may vary based on specific usage and data volume
+
+Pleas use AWS Pricing Calculator for precise estimation.
+
+## Prerequisites
+You need access to AWS Accounts. We recommend deployment of the Dashboards in a dedicated Data Collection Account, other than your Management (Payer) Account. We provide provides a CloudFormation templates to copy CUR 2.0 data from your Management Account to a dedicated one. You can use it to aggregate data from multiple Management (Payer) Accounts or multiple Linked Accounts.
+
+If you do not have access to the Management/Payer Account, you can still collect the data across multiple Linked accounts using the same approach.
+
+
+## Deployment Steps
+Please refer to the deployment documentation [here](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy).
+
+## Cleanup
+Please refer to the documentation [here](https://catalog.workshops.aws/awscid/en-US/dashboards/teardown).
+
+## FAQ
+Please refer to the documentation [here](https://catalog.workshops.aws/awscid/en-US/faqs).
+
+## Changelogs
+For dashboards please check Change Logs [here]()
+For CID deployment tool, including Cli and CFN please check [Releases]()
+
+## Feedback
+Please reference to [this page](https://catalog.workshops.aws/awscid/en-US/feedback-support)
+
+## SECURITY
+[SECURITY.md](SECURITY.md)
+
+
+## Notices
+Dashboards and their content: (a) are for informational purposes only, (b) represents current AWS product offerings and practices, which are subject to change without notice, and (c) does not create any commitments or assurances from AWS and its affiliates, suppliers or licensors. AWS content, products or services are provided “as is” without warranties, representations, or conditions of any kind, whether express or implied. The responsibilities and liabilities of AWS to its customers are controlled by AWS agreements, and this document is not part of, nor does it modify, any agreement between AWS and its customers.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 There are several ways we can manage dashboards:
 1. [CloudFormation Template](./cfn-templates/cid-cfn.yml) (using cid-cmd tool in lambda)
@@ -12,21 +123,6 @@ There are several ways we can manage dashboards:
 
 We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home).
 
-## Supported dashboards
----
-| Dashboard documentation | Demo URL | Prerequisites URL |
-| --- | --- | --- |
-| [CUDOS Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi#cudos-dashboard) | [demo](https://cid.workshops.aws.dev/demo?dashboard=cudos) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy) (Steps 1 and 2) |
-| [Cost Intelligence Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi#cost-intelligence-dashboard-(cid)) | [demo](https://cid.workshops.aws.dev/demo?dashboard=cost_intelligence_dashboard) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy) (Steps 1 and 2) |
-| [Trusted Advisor Organisation (TAO) Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/trusted-advisor) | [demo](https://cid.workshops.aws.dev/demo?dashboard=tao-dashboard) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/trusted-advisor/prerequisites) |
-| [Trends Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/additional/trends) | [demo](https://cid.workshops.aws.dev/demo?dashboard=trends-dashboard) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy) (Steps 1 and 2) |
-| [KPI Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi#kpi-dashboard) | [demo](https://cid.workshops.aws.dev/demo?dashboard=kpi) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy) (Steps 1 and 2) |
-| [Compute Optimizer Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/compute-optimizer) | [demo](https://cid.workshops.aws.dev/demo?dashboard=compute-optimizer-dashboard) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/compute-optimizer/prerequisites) |
-| [Cost Anomaly Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/cost-anomaly) | [demo](https://cid.workshops.aws.dev/demo?dashboard=aws-cost-anomalies) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/cost-anomaly/prerequisites) |
-| [Data Transfer Cost Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/additional/data-transfer) | [demo](https://cid.workshops.aws.dev/demo?dashboard=datatransfer-cost-analysis-dashboard) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy) (Steps 1 and 2) |
-| [AWS Budgets Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/aws-budgets) | [demo](https://cid.workshops.aws.dev/demo?dashboard=aws-budgets) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/aws-budgets#deploy-via-cid-tool) |
-
-See more dashboards on the [workshop page](https://catalog.workshops.aws/awscid/en-US/dashboards).
 
 ## Before you start
 1. :heavy_exclamation_mark: Complete the prerequisites for respective dashboard (see above).
