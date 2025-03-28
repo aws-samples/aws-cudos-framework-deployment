@@ -462,7 +462,7 @@ crawlers: {}
 views:
   euc_dashboard_metrics:
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".euc_dashboard_metrics AS
+      CREATE VIEW "${athena_database_name}".euc_dashboard_metrics AS
       SELECT
         CAST(null AS varchar) "WorkspaceId"
       , CAST(null AS varchar) "UserName"
