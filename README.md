@@ -50,8 +50,8 @@ The following table provides a sample cost breakdown for deploying of Foundation
 | QuickSight SPICE Capacity       | 100 GB                        | $10-20/month*    |
 | **Total Estimated Monthly Cost** |                              | **$100-$200**    |
 
-* Costs are relative to the size of your Cost and Usage Report (CUR) data
-** Costs are relative to number of Users
+\* Costs are relative to the size of your Cost and Usage Report (CUR) data  
+\** Costs are relative to number of Users
 
 **Additional Notes:**
 - Free trial available for 30 days for 4 QuickSight users
