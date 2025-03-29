@@ -8,6 +8,7 @@
 1. [Architecture of Foundational Dashboards](#Architecture-of-Foundational-Dashboards)
 1. [Cost](#Cost)
 1. [Prerequisites](#Prerequisites)
+1. [Regions](#Regions)
 1. [Deployment Steps](#Deployment-Steps)
 1. [Cleanup](#Cleanup)
 1. [FAQ](#FAQ)
@@ -64,6 +65,37 @@ You need access to AWS Accounts. We recommend deployment of the Dashboards in a 
 If you do not have access to the Management/Payer Account, you can still collect the data across multiple Linked accounts using the same approach.
 
 The ownership of CID is usually with the FinOps team, who do not have administrative access. However, they require specific privileges to install and operate CID dashboards. To assist the Admin team in granting the necessary privileges to the CID owners, a CFN template is provided. This template, located at [CFN template](cfn-templates/cid-admin-policies.yaml), takes an IAM role name as a parameter and adds the required policies to the role.
+
+
+## Regions
+Make sure you are installing data collection in the same region where you are going to use the data to avoid cross region charges.
+CFN deployment is only available in a limited number of regions, while CLI deployment is region agnostic.
+
+| Region Name | Region Code | Support CLI  | Support CFN |
+|-------------|-------------|-----------|
+| Africa (Cape Town) | af-south-1 | :heavy_check_mark: |   |
+| Asia Pacific (Tokyo) | ap-northeast-1 | :heavy_check_mark: | :heavy_check_mark: |
+| Asia Pacific (Seoul) | ap-northeast-2 | :heavy_check_mark: | :heavy_check_mark: |
+| Asia Pacific (Mumbai) | ap-south-1 | :heavy_check_mark: | :heavy_check_mark: |
+| Asia Pacific (Singapore) | ap-southeast-1 | :heavy_check_mark: | :heavy_check_mark: |
+| Asia Pacific (Sydney) | ap-southeast-2 | :heavy_check_mark: | :heavy_check_mark: |
+| Asia Pacific (Jakarta) | ap-southeast-3 | :heavy_check_mark: |   |
+| Canada (Central) | ca-central-1 | :heavy_check_mark: | :heavy_check_mark: |
+| China (Beijing) | cn-north-1 | :heavy_check_mark: |   |
+| Europe (Frankfurt) | eu-central-1 | :heavy_check_mark: | :heavy_check_mark: |
+| Europe (Zurich) | eu-central-2 | :heavy_check_mark: |   |
+| Europe (Stockholm) | eu-north-1 | :heavy_check_mark: | :heavy_check_mark: |
+| Europe (Milan) | eu-south-1 | :heavy_check_mark: |   |
+| Europe (Spain) | eu-south-2 | :heavy_check_mark: |   |
+| Europe (Ireland) | eu-west-1 | :heavy_check_mark: | :heavy_check_mark: |
+| Europe (London) | eu-west-2 | :heavy_check_mark: | :heavy_check_mark: |
+| Europe (Paris) | eu-west-3 | :heavy_check_mark: | :heavy_check_mark: |
+| South America (São Paulo) | sa-east-1 | :heavy_check_mark: | :heavy_check_mark: |
+| US East (N. Virginia) | us-east-1 | :heavy_check_mark: | :heavy_check_mark: |
+| US East (Ohio) | us-east-2 | :heavy_check_mark: | :heavy_check_mark: |
+| AWS GovCloud (US-East) | us-gov-east-1 | :heavy_check_mark: |   |
+| AWS GovCloud (US-West) | us-gov-west-1 | :heavy_check_mark: |   |
+| US West (Oregon) | us-west-2 | :heavy_check_mark: | :heavy_check_mark: |
 
 
 ## Deployment Steps
