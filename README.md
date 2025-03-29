@@ -72,7 +72,7 @@ Make sure you are installing data collection in the same region where you are go
 CFN deployment is only available in a limited number of regions, while CLI deployment is region agnostic.
 
 | Region Name | Region Code | Support CLI  | Support CFN |
-|:------------ | :-------------| :-------------| :-------------
+|:------------ | :-------------| :-------------| :------------- |
 | Africa (Cape Town) | af-south-1 | :heavy_check_mark: |   |
 | Asia Pacific (Tokyo) | ap-northeast-1 | :heavy_check_mark: | :heavy_check_mark: |
 | Asia Pacific (Seoul) | ap-northeast-2 | :heavy_check_mark: | :heavy_check_mark: |
