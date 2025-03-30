@@ -1,0 +1,331 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Cost Forecast Dashboard - Visualize AWS Cost Explorer forecasts to predict future spending'
+
+Parameters:
+  QuickSightUserName:
+    Type: String
+    Description: QuickSight user name
+    Default: ''
+  
+  QuickSightIdentityRegion:
+    Type: String
+    Description: QuickSight identity region
+    Default: 'us-east-1'
+  
+  AthenaDatabase:
+    Type: String
+    Description: Athena database name
+    Default: 'athenacurcfn_cost_forecast'
+  
+  AthenaWorkGroup:
+    Type: String
+    Description: Athena workgroup name
+    Default: 'primary'
+  
+  CURTableName:
+    Type: String
+    Description: CUR table name
+    Default: 'cost_and_usage_report'
+  
+  ForecastTableName:
+    Type: String
+    Description: Forecast data table name
+    Default: 'cost_forecast_data'
+  
+  S3BucketName:
+    Type: String
+    Description: S3 bucket name for forecast data
+    Default: ''
+  
+  QuickSightTheme:
+    Type: String
+    Description: QuickSight theme
+    Default: 'MIDNIGHT'
+    AllowedValues:
+      - 'CLASSIC'
+      - 'MIDNIGHT'
+      - 'SEASIDE'
+      - 'RAINIER'
+
+Resources:
+  CostForecastLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CostExplorerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ce:GetCostForecast
+                  - ce:GetDimensionValues
+                Resource: '*'
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+        - PolicyName: AthenaAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - glue:CreateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:UpdateTable
+                Resource: '*'
+
+  CostForecastFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt CostForecastLambdaRole.Arn
+      Runtime: python3.9
+      Timeout: 300
+      MemorySize: 256
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3BucketName
+          ATHENA_DATABASE: !Ref AthenaDatabase
+          ATHENA_WORKGROUP: !Ref AthenaWorkGroup
+          FORECAST_TABLE: !Ref ForecastTableName
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          import csv
+          import datetime
+          import time
+          from io import StringIO
+
+          def handler(event, context):
+              # Configuration
+              s3_bucket = os.environ['S3_BUCKET']
+              athena_database = os.environ['ATHENA_DATABASE']
+              athena_workgroup = os.environ['ATHENA_WORKGROUP']
+              forecast_table = os.environ['FORECAST_TABLE']
+              
+              # Initialize clients
+              ce_client = boto3.client('ce')
+              s3_client = boto3.client('s3')
+              athena_client = boto3.client('athena')
+              
+              # Get parameters from event or use defaults
+              time_period = event.get('time_period', 30)
+              metrics = event.get('metrics', ['UNBLENDED_COST'])
+              dimensions = event.get('dimensions', ['SERVICE'])
+              granularity = event.get('granularity', 'MONTHLY')
+              
+              # Calculate time period
+              today = datetime.date.today()
+              start_date = today.strftime('%Y-%m-%d')
+              
+              if isinstance(time_period, int):
+                  end_date = (today + datetime.timedelta(days=time_period)).strftime('%Y-%m-%d')
+              else:
+                  end_date = time_period
+              
+              # Prepare CSV output
+              csv_output = StringIO()
+              csv_writer = csv.writer(csv_output)
+              csv_writer.writerow(['Dimension', 'Value', 'Metric', 'StartDate', 'EndDate', 'MeanValue', 'LowerBound', 'UpperBound'])
+              
+              # Process each dimension
+              for dimension in dimensions:
+                  # Get dimension values
+                  dimension_values_response = ce_client.get_dimension_values(
+                      TimePeriod={
+                          'Start': (today - datetime.timedelta(days=30)).strftime('%Y-%m-%d'),
+                          'End': today.strftime('%Y-%m-%d')
+                      },
+                      Dimension=dimension
+                  )
+                  
+                  dimension_values = [item['Value'] for item in dimension_values_response.get('DimensionValues', [])]
+                  
+                  # For each dimension value, get forecast for each metric
+                  for value in dimension_values:
+                      for metric in metrics:
+                          try:
+                              forecast_response = ce_client.get_cost_forecast(
+                                  TimePeriod={
+                                      'Start': start_date,
+                                      'End': end_date
+                                  },
+                                  Metric=metric,
+                                  Granularity=granularity,
+                                  PredictionIntervalLevel=95,
+                                  Filter={
+                                      "Dimensions": {
+                                          "Key": dimension,
+                                          "Values": [value]
+                                      }
+                                  }
+                              )
+                              
+                              # Process forecast results
+                              for result in forecast_response.get('ForecastResultsByTime', []):
+                                  row = [
+                                      dimension,
+                                      value,
+                                      metric,
+                                      result['TimePeriod']['Start'],
+                                      result['TimePeriod']['End'],
+                                      result['MeanValue'],
+                                      result.get('PredictionIntervalLowerBound', ''),
+                                      result.get('PredictionIntervalUpperBound', '')
+                                  ]
+                                  csv_writer.writerow(row)
+                          except Exception as e:
+                              print(f"Error getting forecast for {dimension}={value}, metric={metric}: {str(e)}")
+                              continue
+              
+              # Upload CSV to S3
+              timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+              s3_key = f"forecasts/forecast_{timestamp}.csv"
+              s3_client.put_object(
+                  Bucket=s3_bucket,
+                  Key=s3_key,
+                  Body=csv_output.getvalue(),
+                  ContentType='text/csv'
+              )
+              
+              # Create manifest file for QuickSight
+              manifest = {
+                  "fileLocations": [
+                      {
+                          "URIs": [
+                              f"s3://{s3_bucket}/{s3_key}"
+                          ]
+                      }
+                  ],
+                  "globalUploadSettings": {
+                      "format": "CSV",
+                      "delimiter": ",",
+                      "textqualifier": "\"",
+                      "containsHeader": "true"
+                  }
+              }
+              
+              manifest_key = "forecasts/manifest.json"
+              s3_client.put_object(
+                  Bucket=s3_bucket,
+                  Key=manifest_key,
+                  Body=json.dumps(manifest, indent=4),
+                  ContentType='application/json'
+              )
+              
+              # Create or update Athena table
+              create_table_query = f"""
+              CREATE EXTERNAL TABLE IF NOT EXISTS {athena_database}.{forecast_table} (
+                  dimension string,
+                  value string,
+                  metric string,
+                  startdate string,
+                  enddate string,
+                  meanvalue double,
+                  lowerbound double,
+                  upperbound double
+              )
+              ROW FORMAT DELIMITED
+              FIELDS TERMINATED BY ','
+              STORED AS TEXTFILE
+              LOCATION 's3://{s3_bucket}/forecasts/'
+              TBLPROPERTIES ('skip.header.line.count'='1')
+              """
+              
+              response = athena_client.start_query_execution(
+                  QueryString=create_table_query,
+                  QueryExecutionContext={
+                      'Database': athena_database
+                  },
+                  WorkGroup=athena_workgroup
+              )
+              
+              # Wait for query to complete
+              query_execution_id = response['QueryExecutionId']
+              state = 'RUNNING'
+              
+              while state in ['RUNNING', 'QUEUED']:
+                  response = athena_client.get_query_execution(QueryExecutionId=query_execution_id)
+                  state = response['QueryExecution']['Status']['State']
+                  
+                  if state in ['RUNNING', 'QUEUED']:
+                      time.sleep(1)
+              
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps({
+                      'message': 'Forecast data processed successfully',
+                      'csv_location': f"s3://{s3_bucket}/{s3_key}",
+                      'manifest_location': f"s3://{s3_bucket}/{manifest_key}"
+                  })
+              }
+
+  CostForecastScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Scheduled rule to trigger cost forecast generation"
+      ScheduleExpression: "rate(7 days)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt CostForecastFunction.Arn
+          Id: "CostForecastFunction"
+          Input: !Sub |
+            {
+              "time_period": 90,
+              "metrics": ["UNBLENDED_COST"],
+              "dimensions": ["SERVICE", "LINKED_ACCOUNT", "REGION"],
+              "granularity": "MONTHLY"
+            }
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CostForecastFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt CostForecastScheduledRule.Arn
+
+Outputs:
+  CostForecastFunction:
+    Description: "Lambda function for cost forecast generation"
+    Value: !GetAtt CostForecastFunction.Arn
+  
+  S3BucketForForecastData:
+    Description: "S3 bucket for forecast data"
+    Value: !Ref S3BucketName
+  
+  ManifestLocation:
+    Description: "QuickSight manifest location"
+    Value: !Sub "s3://${S3BucketName}/forecasts/manifest.json"
+  
+  DeployDashboardCommand:
+    Description: "Command to deploy the dashboard using cid-cmd"
+    Value: !Sub "cid-cmd deploy --dashboard-id cost-forecast-dashboard"

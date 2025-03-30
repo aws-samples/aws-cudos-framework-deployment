@@ -1,0 +1,108 @@
+{
+  "DataSetId": "cost-forecast-dataset",
+  "Name": "Cost Forecast Dataset",
+  "PhysicalTableMap": {
+    "cost-forecast-table": {
+      "CustomSql": {
+        "DataSourceArn": "${athena_datasource_arn}",
+        "Name": "Cost Forecast",
+        "SqlQuery": "SELECT dimension, value, metric, start_date, end_date, mean_value, lower_bound, upper_bound, metric_name, dimension_name FROM ${athena_database_name}.cost_forecast",
+        "Columns": [
+          {
+            "Name": "dimension",
+            "Type": "STRING"
+          },
+          {
+            "Name": "value",
+            "Type": "STRING"
+          },
+          {
+            "Name": "metric",
+            "Type": "STRING"
+          },
+          {
+            "Name": "start_date",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "end_date",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "mean_value",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "lower_bound",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "upper_bound",
+            "Type": "DECIMAL"
+          },
+          {
+            "Name": "metric_name",
+            "Type": "STRING"
+          },
+          {
+            "Name": "dimension_name",
+            "Type": "STRING"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {
+    "cost-forecast-logical-table": {
+      "Alias": "cost_forecast",
+      "DataTransforms": [
+        {
+          "CreateColumnsOperation": {
+            "Columns": [
+              {
+                "ColumnName": "forecast_range",
+                "ColumnId": "forecast_range",
+                "Expression": "ifelse(datediff(end_date, start_date) <= 1, 'Daily', 'Monthly')"
+              },
+              {
+                "ColumnName": "variance",
+                "ColumnId": "variance",
+                "Expression": "upper_bound - lower_bound"
+              },
+              {
+                "ColumnName": "variance_percentage",
+                "ColumnId": "variance_percentage",
+                "Expression": "ifelse(mean_value = 0, 0, (upper_bound - lower_bound) / mean_value * 100)"
+              },
+              {
+                "ColumnName": "confidence_level",
+                "ColumnId": "confidence_level",
+                "Expression": "ifelse(variance_percentage < 10, 'High', ifelse(variance_percentage < 25, 'Medium', 'Low'))"
+              },
+              {
+                "ColumnName": "forecast_month",
+                "ColumnId": "forecast_month",
+                "Expression": "formatDate(start_date, 'yyyy-MM')"
+              },
+              {
+                "ColumnName": "forecast_quarter",
+                "ColumnId": "forecast_quarter",
+                "Expression": "concat('Q', toString(quarter(start_date)), ' ', toString(year(start_date)))"
+              },
+              {
+                "ColumnName": "trend_indicator",
+                "ColumnId": "trend_indicator",
+                "Expression": "runningSum(mean_value)"
+              }
+            ]
+          }
+        }
+      ],
+      "Source": {
+        "PhysicalTableId": "cost-forecast-table"
+      }
+    }
+  },
+  "ImportMode": "DIRECT_QUERY",
+  "Permissions": []
+}
