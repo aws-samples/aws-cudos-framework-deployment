@@ -73,6 +73,26 @@
                 "ColumnName": "variance_percentage",
                 "ColumnId": "variance_percentage",
                 "Expression": "ifelse(mean_value = 0, 0, (upper_bound - lower_bound) / mean_value * 100)"
+              },
+              {
+                "ColumnName": "confidence_level",
+                "ColumnId": "confidence_level",
+                "Expression": "ifelse(variance_percentage < 10, 'High', ifelse(variance_percentage < 25, 'Medium', 'Low'))"
+              },
+              {
+                "ColumnName": "forecast_month",
+                "ColumnId": "forecast_month",
+                "Expression": "formatDate(start_date, 'yyyy-MM')"
+              },
+              {
+                "ColumnName": "forecast_quarter",
+                "ColumnId": "forecast_quarter",
+                "Expression": "concat('Q', toString(quarter(start_date)), ' ', toString(year(start_date)))"
+              },
+              {
+                "ColumnName": "trend_indicator",
+                "ColumnId": "trend_indicator",
+                "Expression": "runningSum(mean_value)"
               }
             ]
           }
