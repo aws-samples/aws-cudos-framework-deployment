@@ -1,0 +1,382 @@
+dashboards:
+  cost_forecast_dashboard:
+    name: "AWS Cost Forecast Dashboard"
+    category: "Advanced"
+    dashboardId: "cost-forecast-dashboard"
+    description: "Visualize AWS Cost Explorer forecasts to predict future spending"
+    dependsOn:
+      datasets:
+        - cost_forecast_dataset
+    parameters:
+      theme:
+        description: "QuickSight Theme"
+        default: "MIDNIGHT"
+    data:
+      AwsAccountId: "{account_id}"
+      DashboardId: "cost-forecast-dashboard"
+      Name: "AWS Cost Forecast Dashboard"
+      Permissions:
+        - Principal: "arn:{partition}:quicksight:{region}:{account_id}:user/default/{user_name}"
+          Actions:
+            - "quicksight:DescribeDashboard"
+            - "quicksight:ListDashboardVersions"
+            - "quicksight:UpdateDashboardPermissions"
+            - "quicksight:QueryDashboard"
+            - "quicksight:UpdateDashboard"
+            - "quicksight:DeleteDashboard"
+            - "quicksight:DescribeDashboardPermissions"
+            - "quicksight:UpdateDashboardPublishedVersion"
+      DashboardPublishOptions:
+        AdHocFilteringOption:
+          AvailabilityStatus: ENABLED
+        ExportToCSVOption:
+          AvailabilityStatus: ENABLED
+        SheetControlsOption:
+          VisibilityState: EXPANDED
+      ThemeArn: "arn:{partition}:quicksight:{region}:{account_id}:theme/{theme}"
+      Definition:
+        DataSetIdentifierDeclarations:
+          - DataSetArn: "{cost_forecast_dataset_arn}"
+            Identifier: "cost_forecast_dataset"
+        Sheets:
+          - Name: "Cost Forecast Overview"
+            SheetId: "cost-forecast-overview"
+            Visuals:
+              - LineChartVisual:
+                  VisualId: "forecast-trend-chart"
+                  Title:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Cost Forecast Trend"
+                  ChartConfiguration:
+                    FieldWells:
+                      LineChartAggregatedFieldWells:
+                        Category:
+                          - CategoricalDimensionField:
+                              FieldId: "start_date"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "start_date"
+                        Values:
+                          - NumericalMeasureField:
+                              FieldId: "mean_value"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "mean_value"
+                              AggregationFunction: "SUM"
+                          - NumericalMeasureField:
+                              FieldId: "lower_bound"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "lower_bound"
+                              AggregationFunction: "SUM"
+                          - NumericalMeasureField:
+                              FieldId: "upper_bound"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "upper_bound"
+                              AggregationFunction: "SUM"
+                    SortConfiguration:
+                      CategorySort:
+                        - FieldSort:
+                            FieldId: "start_date"
+                            Direction: "ASCENDING"
+                    Legend:
+                      Visibility: "VISIBLE"
+                      Position: "RIGHT"
+                    XAxisDisplayOptions:
+                      TickLabelOptions:
+                        RotationAngle: 0
+                    PrimaryYAxisDisplayOptions:
+                      AxisLineVisibility: "VISIBLE"
+                      GridLineVisibility: "VISIBLE"
+                      DataLabelOptions:
+                        Visibility: "VISIBLE"
+                        FormatConfiguration:
+                          NumericFormatConfiguration:
+                            FormatConfiguration:
+                              CurrencyDisplayFormatConfiguration:
+                                DecimalPlacesConfiguration:
+                                  DecimalPlaces: 0
+                    Series:
+                      - SeriesId: "mean_value"
+                        AxisBinding: "PRIMARY_Y"
+                        LineStyleSettings:
+                          LineWidth: "MEDIUM"
+                          LineStyle: "SOLID"
+                        MarkerStyleSettings:
+                          Visibility: "HIDDEN"
+                      - SeriesId: "lower_bound"
+                        AxisBinding: "PRIMARY_Y"
+                        LineStyleSettings:
+                          LineWidth: "THIN"
+                          LineStyle: "DASHED"
+                        MarkerStyleSettings:
+                          Visibility: "HIDDEN"
+                      - SeriesId: "upper_bound"
+                        AxisBinding: "PRIMARY_Y"
+                        LineStyleSettings:
+                          LineWidth: "THIN"
+                          LineStyle: "DASHED"
+                        MarkerStyleSettings:
+                          Visibility: "HIDDEN"
+                  Actions: []
+                  ColumnHierarchies: []
+                  Subtitle:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Showing forecast with 95% confidence interval"
+              - PieChartVisual:
+                  VisualId: "forecast-by-dimension"
+                  Title:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Forecast by Dimension"
+                  ChartConfiguration:
+                    FieldWells:
+                      PieChartAggregatedFieldWells:
+                        Category:
+                          - CategoricalDimensionField:
+                              FieldId: "value"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "value"
+                        Values:
+                          - NumericalMeasureField:
+                              FieldId: "mean_value"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "mean_value"
+                              AggregationFunction: "SUM"
+                    SortConfiguration:
+                      CategoryItemsLimit:
+                        OtherCategories: "INCLUDE"
+                    Legend:
+                      Visibility: "VISIBLE"
+                      Position: "RIGHT"
+                    DataLabels:
+                      Visibility: "VISIBLE"
+                      CategoryLabelVisibility: "VISIBLE"
+                      MeasureLabelVisibility: "VISIBLE"
+                      Position: "INSIDE"
+                  Actions: []
+                  ColumnHierarchies: []
+                  Subtitle:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Distribution of forecasted costs"
+              - TableVisual:
+                  VisualId: "forecast-details-table"
+                  Title:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Forecast Details"
+                  ChartConfiguration:
+                    FieldWells:
+                      TableAggregatedFieldWells:
+                        GroupBy:
+                          - CategoricalDimensionField:
+                              FieldId: "dimension_name"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "dimension_name"
+                          - CategoricalDimensionField:
+                              FieldId: "value"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "value"
+                          - CategoricalDimensionField:
+                              FieldId: "metric_name"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "metric_name"
+                          - CategoricalDimensionField:
+                              FieldId: "start_date"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "start_date"
+                        Values:
+                          - NumericalMeasureField:
+                              FieldId: "mean_value"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "mean_value"
+                              AggregationFunction: "SUM"
+                          - NumericalMeasureField:
+                              FieldId: "lower_bound"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "lower_bound"
+                              AggregationFunction: "SUM"
+                          - NumericalMeasureField:
+                              FieldId: "upper_bound"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "upper_bound"
+                              AggregationFunction: "SUM"
+                    SortConfiguration:
+                      RowSort:
+                        - FieldSort:
+                            FieldId: "start_date"
+                            Direction: "ASCENDING"
+                    TableOptions:
+                      HeaderStyle:
+                        TextWrap: "WRAP"
+                        Height: 25
+                      CellStyle:
+                        TextWrap: "WRAP"
+                        Height: 25
+                    TotalOptions:
+                      TotalsVisibility: "VISIBLE"
+                      Placement: "END"
+                  Actions: []
+                  ColumnHierarchies: []
+                  Subtitle:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Detailed forecast data with confidence intervals"
+          - Name: "Forecast Analysis"
+            SheetId: "forecast-analysis"
+            Visuals:
+              - BarChartVisual:
+                  VisualId: "forecast-by-service"
+                  Title:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Forecast by Service"
+                  ChartConfiguration:
+                    FieldWells:
+                      BarChartAggregatedFieldWells:
+                        Category:
+                          - CategoricalDimensionField:
+                              FieldId: "value"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "value"
+                              FilterControl:
+                                SourceFilterId: "service-filter"
+                        Values:
+                          - NumericalMeasureField:
+                              FieldId: "mean_value"
+                              Column:
+                                DataSetIdentifier: "cost_forecast_dataset"
+                                ColumnName: "mean_value"
+                              AggregationFunction: "SUM"
+                    SortConfiguration:
+                      CategorySort:
+                        - FieldSort:
+                            FieldId: "mean_value"
+                            Direction: "DESCENDING"
+                      CategoryItemsLimit:
+                        ItemCount: 10
+                    Legend:
+                      Visibility: "VISIBLE"
+                      Position: "RIGHT"
+                    DataLabels:
+                      Visibility: "VISIBLE"
+                      CategoryLabelVisibility: "VISIBLE"
+                      MeasureLabelVisibility: "VISIBLE"
+                  Actions: []
+                  ColumnHierarchies: []
+                  Subtitle:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Top 10 services by forecasted cost"
+              - KPIVisual:
+                  VisualId: "total-forecast-kpi"
+                  Title:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Total Forecasted Cost"
+                  ChartConfiguration:
+                    FieldWells:
+                      Values:
+                        - NumericalMeasureField:
+                            FieldId: "mean_value"
+                            Column:
+                              DataSetIdentifier: "cost_forecast_dataset"
+                              ColumnName: "mean_value"
+                            AggregationFunction: "SUM"
+                    KPIOptions:
+                      PrimaryValueDisplayType: "ACTUAL"
+                      PrimaryValueFontConfiguration:
+                        FontSize:
+                          Relative: "LARGE"
+                  Actions: []
+                  ColumnHierarchies: []
+              - KPIVisual:
+                  VisualId: "forecast-variance-kpi"
+                  Title:
+                    Visibility: "VISIBLE"
+                    FormatText:
+                      PlainText: "Forecast Variance"
+                  ChartConfiguration:
+                    FieldWells:
+                      Values:
+                        - NumericalMeasureField:
+                            FieldId: "variance_percentage"
+                            Column:
+                              DataSetIdentifier: "cost_forecast_dataset"
+                              ColumnName: "variance_percentage"
+                            AggregationFunction: "AVG"
+                    KPIOptions:
+                      PrimaryValueDisplayType: "ACTUAL"
+                      PrimaryValueFontConfiguration:
+                        FontSize:
+                          Relative: "LARGE"
+                  Actions: []
+                  ColumnHierarchies: []
+        FilterGroups:
+          - FilterGroupId: "filter-group-1"
+            Filters:
+              - CategoryFilter:
+                  FilterId: "dimension-filter"
+                  Column:
+                    DataSetIdentifier: "cost_forecast_dataset"
+                    ColumnName: "dimension"
+                  Configuration:
+                    FilterListConfiguration:
+                      MatchOperator: "EQUALS"
+                      CategoryValues:
+                        - "SERVICE"
+                        - "LINKED_ACCOUNT"
+                        - "REGION"
+              - CategoryFilter:
+                  FilterId: "service-filter"
+                  Column:
+                    DataSetIdentifier: "cost_forecast_dataset"
+                    ColumnName: "value"
+                  Configuration:
+                    FilterListConfiguration:
+                      MatchOperator: "EQUALS"
+              - CategoryFilter:
+                  FilterId: "metric-filter"
+                  Column:
+                    DataSetIdentifier: "cost_forecast_dataset"
+                    ColumnName: "metric"
+                  Configuration:
+                    FilterListConfiguration:
+                      MatchOperator: "EQUALS"
+                      CategoryValues:
+                        - "UNBLENDED_COST"
+        CalculatedFields: []
+        ParameterDeclarations: []
+
+datasets:
+  cost_forecast_dataset:
+    name: "Cost Forecast Dataset"
+    providedBy: "cid.builtin.core"
+    File: "datasets/forecast/cost_forecast_dataset.json"
+    dependsOn:
+      views:
+        - cost_forecast
+
+views:
+  cost_forecast:
+    name: "Cost Forecast View"
+    providedBy: "cid.builtin.core"
+    File: "queries/forecast/cost_forecast_view.sql"
+    parameters:
+      forecast_table_name:
+        description: "Name of the table containing forecast data"
+        default: "cost_forecast_data"

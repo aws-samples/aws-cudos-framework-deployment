@@ -25,6 +25,7 @@ We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cl
 | [Cost Anomaly Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/cost-anomaly) | [demo](https://cid.workshops.aws.dev/demo?dashboard=aws-cost-anomalies) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/cost-anomaly/prerequisites) |
 | [Data Transfer Cost Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/additional/data-transfer) | [demo](https://cid.workshops.aws.dev/demo?dashboard=datatransfer-cost-analysis-dashboard) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy) (Steps 1 and 2) |
 | [AWS Budgets Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/aws-budgets) | [demo](https://cid.workshops.aws.dev/demo?dashboard=aws-budgets) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/aws-budgets#deploy-via-cid-tool) |
+| [Cost Forecast Dashboard](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/cost-forecast) | [demo](https://cid.workshops.aws.dev/demo?dashboard=cost-forecast-dashboard) | [link](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/cost-forecast#deploy-via-cid-tool) |
 
 See more dashboards on the [workshop page](https://catalog.workshops.aws/awscid/en-US/dashboards).
 

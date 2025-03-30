@@ -1,16 +1,5 @@
 Resources:
-  - Url: cost-anomalies/cost-anomalies.yaml
-  - Url: sustainability-proxy-metrics/sustainability-proxy-metrics.yaml
-  - Url: data-transfer/DataTransfer-Cost-Analysis-Dashboard.yaml
-  - Url: aws-marketplace/aws-marketplace-spg.yaml
-  - Url: extended-support-cost-projection/extended-support-cost-projection.yaml
-  - Url: graviton-savings-dashboard/graviton_savings_dashboard.yaml
-  - Url: graviton-savings-dashboard/graviton_legacy.yaml # deprecated
-  - Url: amazon-connect/amazon-connect.yaml
-  - Url: support-cases-radar/support-cases-radar.yaml
-  - Url: health-events/health-events.yaml
-  - Url: scad-containers-cost-allocation/scad-containers-cost-allocation.yaml
-  - Url: aws-feeds/aws-feeds.yaml
-  - Url: focus/focus.yaml
-  - Url: cora/cora.yaml
-  - Url: aws-budgets/aws-budgets.yaml
+  - Name: "Cost Forecast Dashboard"
+    Description: "Visualize AWS Cost Explorer forecasts to predict future spending"
+    Url: "cost-forecast/resources.yaml"
+    Category: "Advanced"
