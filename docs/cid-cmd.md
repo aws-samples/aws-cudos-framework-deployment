@@ -92,3 +92,11 @@ CID resources file (yaml)
 Share dashboard with all users in the current account.
 values:  ['yes/no']
 
+
+## GovCloud
+
+- For instructions on setting up CUR dashboard in GovCloud, please refer to [this guide](../cid-govcloud/docs/setup-cid.md)
+
+- For instructions on setting up the Compute Optimizer dashboard in GovCloud, please refer to [this guide](../cid-govcloud/docs/setup-co.md)
+
+- For instructions on setting up federated authentication, please refer to [this guide](../cid-govcloud/docs/setup-auth.md)

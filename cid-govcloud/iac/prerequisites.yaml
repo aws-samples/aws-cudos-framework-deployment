@@ -1,0 +1,123 @@
+# Copyright © Amazon.com and Affiliates: This deliverable is considered Developed Content as defined in the AWS Service Terms and the SOW between the parties dated 2022.
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deployment of CID dashboard prerequisites
+
+Parameters:
+  CidBucket:
+    Description: A pre-exist bucket without path where the Athena query results will go to
+    Type: String
+    Default: aws-athena-query-results-111111111111-gov-west-1
+  QuickSightDataSourceRoleName:
+    Type: String
+    Default: CidQuickSightDataSourceRole
+    Description: IAM Role Name to be used on QuickSight Datasource Creation
+  AthenaWorkgroup:
+    Type: String
+    Default: CID
+  DatabaseName:
+    Type: String
+    Description: The Glue/Athena database name
+    Default: cid
+  RolePath:
+    Description: Path for roles where PermissionBoundaries can limit location
+    Type: String
+    Default: project/
+  Prefix:
+    Description: The prefix for Lambda function names and IAM resources
+    Type: String
+    Default: project
+
+Resources:
+
+  CidDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      DatabaseInput:
+        Name: !Ref DatabaseName
+      CatalogId: !Sub ${AWS::AccountId}
+
+  MyAthenaWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name: !Ref AthenaWorkgroup
+      Description: Used for CloudIntelligenceDashboards
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        ResultConfiguration:
+          EncryptionConfiguration:
+            EncryptionOption: SSE_S3
+          OutputLocation: !Sub s3://${CidBucket}/
+
+  QuickSightDataSourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - quicksight.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: !Sub /${RolePath}
+      RoleName: !Sub ${Prefix}-${QuickSightDataSourceRoleName}
+      Policies:
+        - PolicyName: AthenaAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowAthenaReads
+                Effect: Allow
+                Action:
+                  - athena:ListDataCatalogs
+                  - athena:ListDatabases
+                  - athena:ListTableMetadata
+                Resource: '*'
+                
+              - Sid: AllowAthena
+                Effect: Allow
+                Action:
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:StartQueryExecution
+                  - athena:GetQueryResultsStream
+                  - athena:GetTableMetadata
+                Resource:
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - !Sub arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${MyAthenaWorkGroup}
+
+              - Sid: AllowS3
+                Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                  - s3:ListBucketMultipartUploads
+                  - s3:ListMultipartUploadParts
+                  - s3:AbortMultipartUpload
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::${CidBucket}
+                  - !Sub arn:${AWS::Partition}:s3:::${CidBucket}/*
+
+              - Sid: AllowGlue
+                Effect: Allow
+                Action:
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetTable
+                  - glue:GetTables
+                Resource:
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
+                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
+
+Outputs:
+  QuickSightDataSourceRoleArn:
+    Description: Dashboard data source arn
+    Value: !GetAtt QuickSightDataSourceRole.Arn
