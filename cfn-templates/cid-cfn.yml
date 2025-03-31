@@ -39,6 +39,8 @@ Metadata:
           - DeployCUDOSDashboard
           - DataBucketsKmsKeysArns
           - ShareDashboard
+          - CreateLocalAssetsBucket
+          - ReferenceAssetsBucket
       - Label:
           default: 'Legacy'
         Parameters:
@@ -98,6 +100,10 @@ Metadata:
         default: "Secondary Tag for Compute Optimizer dashboard"
       KeepLegacyCURTable:
         default: "Keep Legacy CUR Table"
+      CreateLocalAssetsBucket:
+        default: "Create Local Assets Bucket"
+      ReferenceAssetsBucket:
+        default: "Reference Assets Bucket Name"
   cfn-lint:
     config:
       ignore_checks:
@@ -243,7 +249,7 @@ Parameters:
     AllowedValues: ["yes", "no"]
   CreateLocalAssetsBucket:
     Type: String
-    Description: Choose 'yes' if you want to copy reference assets to a local assets buckets (recommended for China and Gov regions)
+    Description: Choose 'yes' if you want to copy reference CID Assets to a local assets buckets (for a set of regions including China and Gov it will be done automatically).
     Default: "no"
     AllowedValues: ["yes", "no"]
   ReferenceAssetsBucket:
@@ -316,7 +322,18 @@ Conditions:
       - !Equals [!Ref "AWS::Region", "us-gov-east-1"]
       - !Equals [!Ref "AWS::Region", "us-gov-west-1"]
   LambdaLayerBucketPrefixIsManaged: !Equals [!Ref LambdaLayerBucketPrefix, 'aws-managed-cost-intelligence-dashboards']
-  NeedLocalAssets: !Equals [ !Ref CreateLocalAssetsBucket, "yes" ]
+  NeedLocalAssets:
+    Fn::Or:
+      - !Equals [ !Ref CreateLocalAssetsBucket, "yes" ] #explicity requested local assets
+      - Fn::Or: # or region where CID do not have a public bucket
+        - !Equals [!Ref "AWS::Region", "af-south-1"]
+        - !Equals [!Ref "AWS::Region", "ap-southeast-3"]
+        - !Equals [!Ref "AWS::Region", "eu-central-2"]
+        - !Equals [!Ref "AWS::Region", "eu-south-1"]
+        - !Equals [!Ref "AWS::Region", "eu-south-2"]
+        - !Equals [!Ref "AWS::Region", "cn-north-1"]
+        - !Equals [!Ref "AWS::Region", "us-gov-east-1"]
+        - !Equals [!Ref "AWS::Region", "us-gov-west-1"]
 
 Mappings:
   RegionMap: 
