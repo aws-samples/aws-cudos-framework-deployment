@@ -341,7 +341,6 @@ Mappings:
     # regions without public buckets
     af-south-1:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
     ap-southeast-3: {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
-    cn-north-1:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
     eu-central-2:   {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
     eu-south-1:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
     eu-south-2:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
