@@ -8,7 +8,7 @@
       "Type" : "String"
     },
     "AdminUser" : {
-      "Default" : "GovApp2Admin/test-Isengard",
+      "Default" : "quicksight/username",
       "Description" : "The QuickSight admin username",
       "Type" : "String"
     },
