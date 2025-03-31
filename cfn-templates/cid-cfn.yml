@@ -248,7 +248,7 @@ Parameters:
     AllowedValues: ["yes", "no"]
   ReferenceAssetsBucket:
     Type: String
-    Description: Source bucket to sync from
+    Description: Source bucket for CID Assets to sync from.
     Default: 'aws-managed-cost-intelligence-dashboards-us-east-1'
 
 Conditions:
