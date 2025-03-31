@@ -4,7 +4,7 @@ resource "aws_cloudformation_stack" "data_exports_management" {
     var.data_exports_child_deployed
   ]
   name         = "data-exports-aggregation-mgmt"
-  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/data-exports-aggregation.yaml"
+  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/data-exports/latest/data-exports-aggregation.yaml"
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
   parameters = {
     DestinationAccountId = var.global_values.destination_account_id
