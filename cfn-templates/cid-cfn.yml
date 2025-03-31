@@ -2052,7 +2052,7 @@ Resources:
       SourceBucket: !Ref ReferenceAssetsBucket
       DestinationBucket: !Ref LocalAssetsBucket
       Keys:
-        - 'cid-resource-lambda-layer/cid-4.0.11.zip' #replace version here if needed
+        - 'cid-resource-lambda-layer/cid-4.0.12.zip' #replace version here if needed
 
   CidResourceLambdaLayer:
     Type: AWS::Lambda::LayerVersion
