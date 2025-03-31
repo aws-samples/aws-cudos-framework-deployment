@@ -4,7 +4,7 @@ This Terraform configuration deploys the AWS Cost Intelligence Dashboards (CUDOS
 
 ## Infrastructure Components
 
-The configuration creates three main CloudFormation stacks:
+The configuration creates three main CloudFormation stacks, devided over the three submodules:
 
 1. Data Exports Child Stack
 2. Data Exports Management Stack
@@ -99,30 +99,22 @@ Stack Creation Order:
 2. Data Exports Management
 3. CUDOS Dashboard
 
-
-
 - Data Exports Management depends on Data Exports Child
 - CUDOS Dashboard depends on both Data Exports Management and Child stacks
 
-## Alternative Manual Deployment
+## Alternative Deployment in three steps
 
-If you don't have a pipeline configured, you can split the deployment into three separate stages. This approach requires manually deploying the components in sequence:
+If you don't have a (single) pipeline configured to do this, you can split the deployment into three separate stages. This approach requires deploying the components in sequence:
 
-### Directory Structure for Manual Deployment
-Split the existing code into three separate folders:
+### Directory Structure available for Deployment
+Use the existing code in the three separate module folders:
 
 ```
-project-root/
-├── 1-data-exports-child/
-├── 2-data-exports-management/
-└── 3-cudos-dashboard/
+modules/
+├── data-exports-child/
+├── data-exports-management/
+└── cudos-dashboard/
 ```
-
-### Required Changes
-1. Move relevant resources from `main.tf` into separate `main.tf` files in each folder
-2. Split `variables.tf` based on the component requirements
-3. Copy global_values configuration to each folder's `variables.tf` or create `.tfvars` for that. 
-4. Remove provider blocks from resource definitions as they'll be handled at the root level
 
 ### Deployment Sequence
 Follow this strict order for deployment:
@@ -146,7 +138,7 @@ Follow this strict order for deployment:
 - Ensure all IAM capabilities are properly configured in each deployment
 - Verify prerequisites before deploying each component
 
-This manual approach provides more control over the deployment process and helps in troubleshooting, but requires careful attention to the deployment sequence and configuration consistency.
+This approach provides more control over the deployment process and helps in troubleshooting, but requires careful attention to the deployment sequence and configuration consistency.
 
 ## Timeouts
 
