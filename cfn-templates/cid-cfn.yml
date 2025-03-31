@@ -319,7 +319,8 @@ Conditions:
   NeedLocalAssets: !Equals [ !Ref CreateLocalAssetsBucket, "yes" ]
 
 Mappings:
-  RegionMap: # CID has AWS managed buckets for deploy. Region must support QuickSight ( curl https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonQuickSight/current/region_index.json -s | jq '.regions | keys' )
+  RegionMap: 
+    # CID has AWS managed buckets for deploy. Region must support QuickSight ( curl https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonQuickSight/current/region_index.json -s | jq '.regions | keys' )
     ap-northeast-1: {BucketName: aws-managed-cost-intelligence-dashboards-ap-northeast-1}
     ap-northeast-2: {BucketName: aws-managed-cost-intelligence-dashboards-ap-northeast-2}
     ap-south-1:     {BucketName: aws-managed-cost-intelligence-dashboards-ap-south-1}
@@ -336,11 +337,19 @@ Mappings:
     us-east-2:      {BucketName: aws-managed-cost-intelligence-dashboards-us-east-2}
     us-west-1:      {BucketName: aws-managed-cost-intelligence-dashboards-us-west-1}
     us-west-2:      {BucketName: aws-managed-cost-intelligence-dashboards-us-west-2}
-    cn-north-1:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1} # Dummy entry
-    #todo: add af-south-1
-    #todo: add ap-southeast-3
-    #todo: add eu-south-1
-    #todo: add eu-central-2
+
+    # regions without public buckets
+    af-south-1:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
+    ap-southeast-3: {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
+    cn-north-1:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
+    eu-central-2:   {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
+    eu-south-1:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
+    eu-south-2:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
+
+    # specific regions
+    cn-north-1:     {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1} # China
+    us-gov-east-1:  {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1} # GovCloud (by default must be in commercial region)
+    us-gov-west-1:  {BucketName: aws-managed-cost-intelligence-dashboards-us-east-1}
 
 
 Resources:
