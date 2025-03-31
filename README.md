@@ -43,8 +43,8 @@ The following table provides a sample cost breakdown for deploying of Foundation
 | AWS Service                     | Dimensions                    |  Cost [USD]      |
 |---------------------------------|-------------------------------|------------------|
 | S3 (CUR Storage)                | Monthly storage               | $5-10/month*     |
-| AWS Glue Crawler                | Monthly operation.            | $3/month*        |
-| AWS Athena                      | Data scanned monthly          | $15/month*       |
+| AWS Glue Crawler                | Daily scans                   | $3/month*        |
+| AWS Athena                      | Daily scans                   | $15/month*       |
 | QuickSight Enterprise (Authors) | 3 authors  ($24/month/author) | $72/month**      |
 | QuickSight Enterprise (Readers) | 15 readers ($3/month/reader)  | $45/month**      |
 | QuickSight SPICE Capacity       | 100 GB                        | $10-20/month*    |
