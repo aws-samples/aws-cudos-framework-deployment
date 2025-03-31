@@ -604,7 +604,7 @@ class Athena(CidBase):
                 'MaxItems': max_items, # sometimes customers can have 1'000s of tables (due to a crawler going crazy for example)
             },
         )
-        # We cannot rely on search to find directly columns as there might be Nulls. So intrating old fasion.
+        # We cannot rely on search to find directly columns as there might be Nulls. So iterating old fashion.
         for table in iterator.search('TableMetadataList'):
             column_names = [c['Name'] for c in table.get('Columns', [])]
             if all([(col in column_names) for col in columns]):
