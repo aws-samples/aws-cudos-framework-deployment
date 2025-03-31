@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v4.0.11
+Description: Deployment of Cloud Intelligence Dashboards v4.0.12
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -2042,7 +2042,7 @@ Resources:
             - LambdaLayerBucketPrefixIsManaged
             - !FindInMap [RegionMap, !Ref 'AWS::Region', BucketName]
             - !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}' # Region added for backward compatibility
-        S3Key: 'cid-resource-lambda-layer/cid-4.0.11.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-4.0.12.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11

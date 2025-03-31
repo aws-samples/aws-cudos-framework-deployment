@@ -525,7 +525,7 @@ class Cid():
 
         compatible = self.check_dashboard_version_compatibility(dashboard_id)
         if not recursive and compatible == False:
-            if get_yesno_parameter(
+            if not get_yesno_parameter(
                 param_name=f'confirm-recursive',
                 message=f'This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',
                 default='yes'):
@@ -851,7 +851,7 @@ class Cid():
                 if dataset_id not in references:
                     references[dataset_id] = []
                 references[dataset_id].append(dashboard.id)
-        for dataset in self.qs._datasets.values():
+        for dataset in list(self.qs._datasets.values()):
             if dataset.id in references:
                 cid_print(f'Dataset {dataset.name} ({dataset.id}) is in use ({", ".join(references[dataset.id])})')
                 continue
