@@ -157,11 +157,11 @@ dashboards:
         Expression: |-
           maxOver(
               {Savings Estimate, Monthly},
-              [{RI Product}, {RI Serivice}, date, Account, {RI Quantaty}, {RI Instance Type}, region],
+              [{RI Product}, {RI Service}, date, Account, {RI Quantaty}, {RI Instance Type}, region],
               PRE_AGG
           )
           /*
-          RI Serivice
+          RI Service
           Account
           RI Product
           RI Instance Type
@@ -254,7 +254,7 @@ dashboards:
               contains({current_resource_type}, 'Rds'), 'RDS',
               replace({current_resource_type}, 'ReservedInstances', '')
           )
-        Name: RI Serivice
+        Name: RI Service
       - DataSetIdentifier: cora_view
         Expression: |-
           ifelse(
@@ -321,10 +321,10 @@ dashboards:
           ifelse(
               {resource_arn} <> '', {resource_arn},
               contains({current_resource_type}, 'ReservedInstances'),
-                  ifelse({RI Serivice} = 'Ec2',
+                  ifelse({RI Service} = 'Ec2',
                       'Compute',
                       concat(
-                          {RI Serivice}, ':',
+                          {RI Service}, ':',
                           region,':',
                           {RI Product}, ':',
                           //{RI Beneft Account}, ':',
@@ -384,104 +384,6 @@ dashboards:
           )
         Name: Type of Saving
       ColumnConfigurations:
-      - Column:
-          ColumnName: Resource
-          DataSetIdentifier: cora_view
-        FormatConfiguration:
-          StringFormatConfiguration:
-            NullValueFormatConfiguration:
-              NullString: n/a
-      - ColorsConfiguration:
-          CustomColors:
-          - Color: '#FC850D'
-            FieldValue: EC2 Instance
-          - Color: '#8A50B3'
-            FieldValue: RDS Reserved Instances
-        Column:
-          ColumnName: Resource Type
-          DataSetIdentifier: cora_view
-      - ColorsConfiguration:
-          CustomColors:
-          - Color: '#8A50B3'
-            FieldValue: Migrate To Graviton
-          - Color: '#0A87AF'
-            FieldValue: Rightsize
-          - Color: '#FC850D'
-            FieldValue: Purchase ReservedInstances
-          - Color: '#C2C4E3'
-            FieldValue: Purchase SavingsPlans
-          - Color: '#F65D6A'
-            FieldValue: Stop
-          - Color: '#7FD4B9'
-            FieldValue: Upgrade
-        Column:
-          ColumnName: Action Type
-          DataSetIdentifier: cora_view
-      - Column:
-          ColumnName: Savings Estimate, Monthly
-          DataSetIdentifier: cora_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              CurrencyDisplayFormatConfiguration:
-                DecimalPlacesConfiguration:
-                  DecimalPlaces: 0
-                NegativeValueConfiguration:
-                  DisplayMode: POSITIVE
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                NumberScale: AUTO
-                SeparatorConfiguration:
-                  DecimalSeparator: DOT
-                  ThousandsSeparator:
-                    Symbol: SPACE
-                    Visibility: VISIBLE
-                Symbol: USD
-      - Column:
-          ColumnName: Saving Size
-          DataSetIdentifier: cora_view
-        FormatConfiguration:
-          NumberFormatConfiguration:
-            FormatConfiguration:
-              CurrencyDisplayFormatConfiguration:
-                DecimalPlacesConfiguration:
-                  DecimalPlaces: 2
-                NegativeValueConfiguration:
-                  DisplayMode: POSITIVE
-                NullValueFormatConfiguration:
-                  NullString: 'null'
-                SeparatorConfiguration:
-                  DecimalSeparator: DOT
-                  ThousandsSeparator:
-                    Symbol: COMMA
-                    Visibility: VISIBLE
-                Symbol: USD
-      - Column:
-          ColumnName: Max Savings Per Resource
-          DataSetIdentifier: cora_view
-        Role: DIMENSION
-      - Column:
-          ColumnName: Name
-          DataSetIdentifier: cora_view
-        FormatConfiguration:
-          StringFormatConfiguration:
-            NullValueFormatConfiguration:
-              NullString: '-'
-      - Column:
-          ColumnName: Max Savings By RI Options
-          DataSetIdentifier: cora_view
-        Role: DIMENSION
-      - ColorsConfiguration:
-          CustomColors:
-          - Color: '#8A50B3'
-            FieldValue: OpenSearch
-          - Color: '#7FD4B9'
-            FieldValue: RDS
-          - Color: '#0A87AF'
-            FieldValue: ElasticCache
-        Column:
-          ColumnName: RI Serivice
-          DataSetIdentifier: cora_view
       - ColorsConfiguration:
           CustomColors:
           - Color: '#E673C9'
@@ -504,8 +406,29 @@ dashboards:
             FieldValue: Upgrade EBS
           - Color: '#8A50B3'
             FieldValue: Migrate To Graviton EC2
+          - Color: '#8B5011'
+            FieldValue: Delete EBS
         Column:
           ColumnName: Action And Resource
+          DataSetIdentifier: cora_view
+      - ColorsConfiguration:
+          CustomColors:
+          - Color: '#8A50B3'
+            FieldValue: Migrate To Graviton
+          - Color: '#0A87AF'
+            FieldValue: Rightsize
+          - Color: '#FF8700'
+            FieldValue: Purchase ReservedInstances
+          - Color: '#C2C4E3'
+            FieldValue: Purchase SavingsPlans
+          - Color: '#F65D6A'
+            FieldValue: Stop
+          - Color: '#7FD4B9'
+            FieldValue: Upgrade
+          - Color: '#8B5011'
+            FieldValue: Delete
+        Column:
+          ColumnName: Action Type
           DataSetIdentifier: cora_view
       - Column:
           ColumnName: Current Monthly Cost
@@ -524,6 +447,87 @@ dashboards:
                   DecimalSeparator: DOT
                   ThousandsSeparator:
                     Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - Column:
+          ColumnName: Max Savings By RI Options
+          DataSetIdentifier: cora_view
+        Role: DIMENSION
+      - Column:
+          ColumnName: Max Savings Per Resource
+          DataSetIdentifier: cora_view
+        Role: DIMENSION
+      - Column:
+          ColumnName: Name
+          DataSetIdentifier: cora_view
+        FormatConfiguration:
+          StringFormatConfiguration:
+            NullValueFormatConfiguration:
+              NullString: '-'
+      - ColorsConfiguration:
+          CustomColors:
+          - Color: '#8A50B3'
+            FieldValue: OpenSearch
+          - Color: '#7FD4B9'
+            FieldValue: RDS
+          - Color: '#0A87AF'
+            FieldValue: ElasticCache
+        Column:
+          ColumnName: RI Service
+          DataSetIdentifier: cora_view
+      - Column:
+          ColumnName: Resource
+          DataSetIdentifier: cora_view
+        FormatConfiguration:
+          StringFormatConfiguration:
+            NullValueFormatConfiguration:
+              NullString: n/a
+      - ColorsConfiguration:
+          CustomColors:
+          - Color: '#FC850D'
+            FieldValue: EC2 Instance
+          - Color: '#8A50B3'
+            FieldValue: RDS Reserved Instances
+        Column:
+          ColumnName: Resource Type
+          DataSetIdentifier: cora_view
+      - Column:
+          ColumnName: Saving Size
+          DataSetIdentifier: cora_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 2
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: COMMA
+                    Visibility: VISIBLE
+                Symbol: USD
+      - Column:
+          ColumnName: Savings Estimate, Monthly
+          DataSetIdentifier: cora_view
+        FormatConfiguration:
+          NumberFormatConfiguration:
+            FormatConfiguration:
+              CurrencyDisplayFormatConfiguration:
+                DecimalPlacesConfiguration:
+                  DecimalPlaces: 0
+                NegativeValueConfiguration:
+                  DisplayMode: POSITIVE
+                NullValueFormatConfiguration:
+                  NullString: 'null'
+                NumberScale: AUTO
+                SeparatorConfiguration:
+                  DecimalSeparator: DOT
+                  ThousandsSeparator:
+                    Symbol: SPACE
                     Visibility: VISIBLE
                 Symbol: USD
       - ColorsConfiguration:
@@ -601,9 +605,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
               VisualIds:
-              - 23398bbc-2b17-4637-980d-f92df3828078
+              - 1e34b6c6-4d4e-4f86-930b-dd878f08c753
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5e95949c-21c3-479c-a00b-a3830636807b
@@ -622,9 +626,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - 843682a4-7c9f-4a04-b498-d4a342b1649c
+              - 84672669-a37d-4d3f-a204-fa7eade2e4b9
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 565891cb-c5c1-4d90-898c-64e10618c0c2
@@ -643,9 +647,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
               VisualIds:
-              - 23398bbc-2b17-4637-980d-f92df3828078
+              - 1e34b6c6-4d4e-4f86-930b-dd878f08c753
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 644cfe67-a68c-4273-b24f-c1e5cf3ed802
@@ -664,9 +668,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - 62635099-7d24-45a4-bb1f-312ef791d415
+              - 7fd72147-2482-4dda-845e-4fa7cf5a4a56
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: b4bf2ff0-5be7-4424-919a-0da8fe1fb0bf
@@ -714,9 +718,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
               VisualIds:
-              - 23398bbc-2b17-4637-980d-f92df3828078
+              - 1e34b6c6-4d4e-4f86-930b-dd878f08c753
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 52e5c291-d226-45b8-9311-6eaa8df9e0af
@@ -740,7 +744,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 1b7850e5-132d-4dc0-b05e-9a72401d2397
@@ -757,19 +761,19 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - 843682a4-7c9f-4a04-b498-d4a342b1649c
-              - b978ce2e-4272-4691-b4fa-4999720c027a
-              - 36f57492-dd0a-4185-81f4-9e4bd8bcd4ff
-              - 87277975-7900-475e-87f1-cc48e4e06368
-              - cba5bb7c-1afb-43d1-a8f3-85497bd9d812
-              - 62635099-7d24-45a4-bb1f-312ef791d415
-              - 2fb38e30-b9f8-4bd3-bbd7-92dd575482c6
-              - 5cb0d3cb-2832-42e7-80f8-01e1b4a40fac
-              - 8512e04e-306d-422b-a523-5784a7954f41
-              - 3552fb7a-03cf-4598-ab1a-9bf55660ae72
-              - 8b5cecfe-f5c7-44ca-af59-210d1e0101c4
+              - 84672669-a37d-4d3f-a204-fa7eade2e4b9
+              - f95d944f-8c83-4a00-b68b-81f2056f9b48
+              - 176eb9f4-fd5a-4316-b9b2-47fc6a56af47
+              - 62208956-b684-41bd-871b-8dd7b4f1840d
+              - ba304682-d766-4c0e-bbfd-edd6e6705dde
+              - 7fd72147-2482-4dda-845e-4fa7cf5a4a56
+              - 0116975b-8047-4f45-8e70-5c94de9c22bf
+              - df2618c9-23a0-4c7f-93f3-fa41e9af823d
+              - c3b8bea2-2ac7-4aac-a6f5-41711b593d61
+              - e4be624f-065a-4194-aea6-39ffd5adb83b
+              - ad1678d5-ba11-4dd5-a442-6bc066624e88
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: b8b3c3d6-ab63-4c51-8513-04a3a5128a0c
@@ -819,9 +823,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - 62635099-7d24-45a4-bb1f-312ef791d415
+              - 7fd72147-2482-4dda-845e-4fa7cf5a4a56
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4dd9ac04-5cbf-4b25-a322-878add789a76
@@ -841,7 +845,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 4a4ce841-a110-4942-9251-be0dd07a2005
@@ -860,9 +864,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
               VisualIds:
-              - 23398bbc-2b17-4637-980d-f92df3828078
+              - 1e34b6c6-4d4e-4f86-930b-dd878f08c753
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 31cbd4dc-edb3-46cc-a130-3e1d546954da
@@ -883,7 +887,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 84fa3887-5ff4-44d7-8790-236768948d89
@@ -905,7 +909,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a7dd6a1c-c133-4014-8981-48943a0d670a
@@ -935,14 +939,24 @@ dashboards:
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
                 SelectAllOptions: FILTER_ALL_VALUES
+            DefaultFilterControlConfiguration:
+              ControlOptions:
+                DefaultListOptions:
+                  DisplayOptions:
+                    SearchOptions:
+                      Visibility: HIDDEN
+                    SelectAllOptions:
+                      Visibility: HIDDEN
+                    TitleOptions:
+                      FontConfiguration:
+                        FontSize:
+                          Relative: MEDIUM
+                      Visibility: VISIBLE
+                  Type: MULTI_SELECT
+              Title: Restart
             FilterId: 4a80d2c3-a04e-4040-a988-6e65ae6b0279
         ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
-              VisualIds:
-              - b978ce2e-4272-4691-b4fa-4999720c027a
+          AllSheets: {}
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 3a83c207-494a-41be-8eb8-51ff3511c4b6
@@ -990,9 +1004,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - 62635099-7d24-45a4-bb1f-312ef791d415
+              - 7fd72147-2482-4dda-845e-4fa7cf5a4a56
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 962eb253-7f4b-4a57-b935-9abb58164215
@@ -1011,7 +1025,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 151deca1-7984-4f06-b4b8-47860fe140ff
@@ -1030,9 +1044,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - b978ce2e-4272-4691-b4fa-4999720c027a
+              - f95d944f-8c83-4a00-b68b-81f2056f9b48
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5ddb871c-98d1-4f92-a905-6117d9871756
@@ -1096,7 +1110,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a737e107-0d94-446b-957e-2e6baa35f950
@@ -1115,16 +1129,16 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - 8a6719fc-ce49-4a9e-88f7-afb13d56d12f
-              - 36f57492-dd0a-4185-81f4-9e4bd8bcd4ff
-              - 87277975-7900-475e-87f1-cc48e4e06368
-              - cba5bb7c-1afb-43d1-a8f3-85497bd9d812
-              - 8512e04e-306d-422b-a523-5784a7954f41
-              - 3552fb7a-03cf-4598-ab1a-9bf55660ae72
-              - 8b5cecfe-f5c7-44ca-af59-210d1e0101c4
-              - 62635099-7d24-45a4-bb1f-312ef791d415
+              - e66fac0f-9a4c-4831-847f-96de8081a952
+              - 176eb9f4-fd5a-4316-b9b2-47fc6a56af47
+              - 62208956-b684-41bd-871b-8dd7b4f1840d
+              - ba304682-d766-4c0e-bbfd-edd6e6705dde
+              - c3b8bea2-2ac7-4aac-a6f5-41711b593d61
+              - e4be624f-065a-4194-aea6-39ffd5adb83b
+              - ad1678d5-ba11-4dd5-a442-6bc066624e88
+              - 7fd72147-2482-4dda-845e-4fa7cf5a4a56
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 18b0de66-eb9f-4007-bd23-845538056793
@@ -1143,9 +1157,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - 843682a4-7c9f-4a04-b498-d4a342b1649c
+              - 84672669-a37d-4d3f-a204-fa7eade2e4b9
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a93b7654-f6fa-48c6-a3c8-d0283324432b
@@ -1166,7 +1180,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: e568a6a6-e406-4ac3-bbb9-8078d95c63d7
@@ -1185,9 +1199,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
               VisualIds:
-              - 23398bbc-2b17-4637-980d-f92df3828078
+              - 1e34b6c6-4d4e-4f86-930b-dd878f08c753
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: e0b130ce-8966-4507-9d0e-eafbdde225b1
@@ -1233,14 +1247,14 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+              SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 21999f48-7dd9-4af6-a3e4-cab1202609d9
         Filters:
         - CategoryFilter:
             Column:
-              ColumnName: RI Serivice
+              ColumnName: RI Service
               DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
@@ -1256,7 +1270,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c46cc870-59c4-40c9-945f-af5aa0ee37e4
@@ -1267,21 +1281,15 @@ dashboards:
               DataSetIdentifier: cora_view
             Configuration:
               CustomFilterListConfiguration:
-                CategoryValues:
-                - Purchase SavingsPlans
-                - Purchase ReservedInstances
-                - Migrate To Graviton
-                - Rightsize
-                - Upgrade
-                - Stop
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
             FilterId: 7294732e-d080-4eb6-85a1-c1ac90d60b42
         ScopeConfiguration:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c8059706-1319-4013-8730-9ac58cbf33bd
@@ -1301,7 +1309,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 0c2319aa-98b5-4017-9b15-baad46130a6e
@@ -1323,7 +1331,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 85c8b346-962a-4d09-8e4d-21e39d84b296
@@ -1340,13 +1348,13 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
               VisualIds:
-              - 96305727-9b80-4e9b-b5ed-ab36ef25762e
-              - 1ea3235b-4025-4b5e-967b-f80adfa10bc8
-              - 67fad3ac-617b-4ed5-88b2-cf7abab70019
-              - 4b2ab6f4-8e9b-4b28-bc20-30fab0c5680a
-              - d2c0cfe2-59d7-436c-8f9b-f03fa3cd1222
+              - e9be21d0-9ef5-4f4c-b077-feb6fbd2c674
+              - e0ebe6cd-8766-49b1-b988-72cfcce0efda
+              - a740b447-be80-49ec-bd1a-5348a74a204d
+              - a5319016-998b-4e02-a6d4-587aea8b9e0f
+              - 9ccec494-1d3e-4097-b6c8-0b896a76f132
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c51844c5-a2a9-4193-a213-0966e23fed51
@@ -1367,9 +1375,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
               VisualIds:
-              - b40347a3-0e65-4dd0-8abc-92151fda2ecd
+              - 0ff87ba8-c019-4ab0-a13b-438282f77249
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 882e06f1-6022-4346-b595-5f2723f81680
@@ -1386,14 +1394,14 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
               VisualIds:
-              - 67fad3ac-617b-4ed5-88b2-cf7abab70019
-              - 4b2ab6f4-8e9b-4b28-bc20-30fab0c5680a
-              - 866e8df6-fa19-4d58-a10b-1667afc6f4cd
-              - 1ea3235b-4025-4b5e-967b-f80adfa10bc8
-              - b40347a3-0e65-4dd0-8abc-92151fda2ecd
-              - d2c0cfe2-59d7-436c-8f9b-f03fa3cd1222
+              - a740b447-be80-49ec-bd1a-5348a74a204d
+              - a5319016-998b-4e02-a6d4-587aea8b9e0f
+              - 13a6e66e-d26c-4d0a-beb5-414a906d6626
+              - e0ebe6cd-8766-49b1-b988-72cfcce0efda
+              - 0ff87ba8-c019-4ab0-a13b-438282f77249
+              - 9ccec494-1d3e-4097-b6c8-0b896a76f132
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: dc5082b3-2414-4fd1-aab0-83cce0e068c7
@@ -1414,7 +1422,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 9fd0f3f1-deef-4e10-8d14-201c10758149
@@ -1436,7 +1444,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: d0d6a2f0-6db5-4c9d-8cbb-09d7ea68d1c6
@@ -1455,9 +1463,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
               VisualIds:
-              - 866e8df6-fa19-4d58-a10b-1667afc6f4cd
+              - 13a6e66e-d26c-4d0a-beb5-414a906d6626
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 5ddc1cdd-ae66-4eba-b137-95ac64ad8066
@@ -1476,30 +1484,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: c12ea559-573f-4270-85f4-167a263730cb
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: action_type
-              DataSetIdentifier: cora_view
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - Rightsize
-                - Stop
-                - Upgrade
-                - MigrateToGraviton
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: f03a24b5-7b56-4e7c-843d-9758f0e1aedc
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: c693e122-09de-4f80-bd5d-e9bf0a1b539e
+              SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 8152741e-8136-44ed-b5b2-f97186ef2d10
@@ -1516,13 +1501,13 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: c693e122-09de-4f80-bd5d-e9bf0a1b539e
+              SheetId: e8856e99-eb19-47b7-8f34-d90813e58cd8
               VisualIds:
-              - e0be8875-16ac-49f4-a12c-3d3040050995
-              - 1347b2ec-67f6-483c-bf91-a17cd4fe35fd
-              - 5bf23934-9679-4896-9731-4848ac9b4c00
-              - 2b143a90-d809-484a-b88c-6865b8bcc912
-              - 2dbc1740-cb3c-4a79-93ff-cae5ab060f3e
+              - d950cc4a-9a78-420e-ab19-5c2a6603b89f
+              - 4382f537-0667-4c32-8e05-705892833e90
+              - 458402e2-5270-422c-b2cc-62961c36e08f
+              - 74500ef5-8e81-41a6-9bba-5c4fb36771ba
+              - 5f5a5862-7a03-49cf-abbf-3f1e10a1528e
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 7c5d4c45-8216-49ae-9bfc-5d57fa81f1db
@@ -1570,9 +1555,9 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
               VisualIds:
-              - 843682a4-7c9f-4a04-b498-d4a342b1649c
+              - 84672669-a37d-4d3f-a204-fa7eade2e4b9
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 7c85f204-dd15-46a7-9ceb-a56c6f54d2cc
@@ -1621,12 +1606,12 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: SELECTED_VISUALS
-              SheetId: c693e122-09de-4f80-bd5d-e9bf0a1b539e
+              SheetId: e8856e99-eb19-47b7-8f34-d90813e58cd8
               VisualIds:
-              - aa19d9ff-dfb0-4631-945e-34b84a17dd28
-              - e0be8875-16ac-49f4-a12c-3d3040050995
-              - 5bf23934-9679-4896-9731-4848ac9b4c00
-              - 2dbc1740-cb3c-4a79-93ff-cae5ab060f3e
+              - 75c42f15-1f90-4a34-87bb-157b890d7499
+              - d950cc4a-9a78-420e-ab19-5c2a6603b89f
+              - 458402e2-5270-422c-b2cc-62961c36e08f
+              - 5f5a5862-7a03-49cf-abbf-3f1e10a1528e
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 1abbd527-e04b-4051-bf67-b7cf1263ed4d
@@ -1687,6 +1672,7 @@ dashboards:
                 - Stop
                 - Upgrade
                 - Migrate To Graviton
+                - Delete
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
             FilterId: a0c40a43-55b5-46ab-a5f3-a78dceb95f06
@@ -1694,7 +1680,7 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: c693e122-09de-4f80-bd5d-e9bf0a1b539e
+              SheetId: e8856e99-eb19-47b7-8f34-d90813e58cd8
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: ef4743c0-59ed-43ba-a721-7aff87842b23
@@ -1711,7 +1697,28 @@ dashboards:
           SelectedSheets:
             SheetVisualScopingConfigurations:
             - Scope: ALL_VISUALS
-              SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: 8ae4a4d7-8a98-404f-ba4b-23328d5c564e
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: Resource
+              DataSetIdentifier: cora_view
+            Configuration:
+              CustomFilterConfiguration:
+                CategoryValue: ''
+                MatchOperator: CONTAINS
+                NullOption: NON_NULLS_ONLY
+            FilterId: 28841d86-5a5c-4188-ac1d-023d9d1c49fc
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
+              VisualIds:
+              - 84672669-a37d-4d3f-a204-fa7eade2e4b9
         Status: ENABLED
       Options:
         WeekStart: MONDAY
@@ -1783,6 +1790,9 @@ dashboards:
       - ContentType: INTERACTIVE
         FilterControls:
         - CrossSheet:
+            FilterControlId: 8ef3bab5-fe6c-4b92-bd73-b28d547e5571
+            SourceFilterId: 4a80d2c3-a04e-4040-a988-6e65ae6b0279
+        - CrossSheet:
             FilterControlId: 46abbf0e-787e-4ed4-ad67-61d3bbdc8035
             SourceFilterId: ace0f0e3-2c98-41b8-bc40-19334879a330
         - CrossSheet:
@@ -1806,23 +1816,6 @@ dashboards:
         - CrossSheet:
             FilterControlId: 7abc704c-fd9f-4762-b816-b04cc1634345
             SourceFilterId: 48cc55cd-0600-4129-9355-785298fef358
-        - List:
-            DisplayOptions:
-              InfoIconLabelOptions:
-                Visibility: HIDDEN
-              SearchOptions:
-                Visibility: HIDDEN
-              SelectAllOptions:
-                Visibility: HIDDEN
-              TitleOptions:
-                FontConfiguration:
-                  FontSize:
-                    Relative: MEDIUM
-                Visibility: VISIBLE
-            FilterControlId: 8ef3bab5-fe6c-4b92-bd73-b28d547e5571
-            SourceFilterId: 4a80d2c3-a04e-4040-a988-6e65ae6b0279
-            Title: Restart
-            Type: MULTI_SELECT
         - List:
             DisplayOptions:
               InfoIconLabelOptions:
@@ -1863,17 +1856,19 @@ dashboards:
                     Relative: MEDIUM
                 Visibility: VISIBLE
             FilterControlId: 4c850985-1036-40b8-9a0e-35940095787c
-            SelectableValues:
-              Values:
-              - Migrate To Graviton
-              - Purchase ReservedInstances
-              - Purchase SavingsPlans
-              - Rightsize
-              - Stop
-              - Upgrade
             SourceFilterId: 7294732e-d080-4eb6-85a1-c1ac90d60b42
             Title: Action Type
             Type: MULTI_SELECT
+        - TextField:
+            DisplayOptions:
+              PlaceholderOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration: {}
+                Visibility: VISIBLE
+            FilterControlId: 316ea033-eaa0-4108-ad2f-b4375060bdad
+            SourceFilterId: 28841d86-5a5c-4188-ac1d-023d9d1c49fc
+            Title: Resource equals
         Layouts:
         - Configuration:
             GridLayout:
@@ -1932,61 +1927,61 @@ dashboards:
                 RowSpan: 3
               - ColumnIndex: 22
                 ColumnSpan: 4
-                ElementId: 8b5cecfe-f5c7-44ca-af59-210d1e0101c4
+                ElementId: ad1678d5-ba11-4dd5-a442-6bc066624e88
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 18
-                ElementId: 8512e04e-306d-422b-a523-5784a7954f41
+                ElementId: c3b8bea2-2ac7-4aac-a6f5-41711b593d61
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 8
               - ColumnIndex: 18
                 ColumnSpan: 17
-                ElementId: 87277975-7900-475e-87f1-cc48e4e06368
+                ElementId: 62208956-b684-41bd-871b-8dd7b4f1840d
                 ElementType: VISUAL
                 RowIndex: 5
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 11
-                ElementId: cba5bb7c-1afb-43d1-a8f3-85497bd9d812
+                ElementId: ba304682-d766-4c0e-bbfd-edd6e6705dde
                 ElementType: VISUAL
                 RowIndex: 13
                 RowSpan: 7
               - ColumnIndex: 11
                 ColumnSpan: 13
-                ElementId: 36f57492-dd0a-4185-81f4-9e4bd8bcd4ff
+                ElementId: 176eb9f4-fd5a-4316-b9b2-47fc6a56af47
                 ElementType: VISUAL
                 RowIndex: 13
                 RowSpan: 7
               - ColumnIndex: 24
                 ColumnSpan: 11
-                ElementId: 62635099-7d24-45a4-bb1f-312ef791d415
+                ElementId: 7fd72147-2482-4dda-845e-4fa7cf5a4a56
                 ElementType: VISUAL
                 RowIndex: 13
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 8a6719fc-ce49-4a9e-88f7-afb13d56d12f
+                ElementId: e66fac0f-9a4c-4831-847f-96de8081a952
                 ElementType: VISUAL
                 RowIndex: 20
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: b978ce2e-4272-4691-b4fa-4999720c027a
+                ElementId: f95d944f-8c83-4a00-b68b-81f2056f9b48
                 ElementType: VISUAL
                 RowIndex: 32
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 843682a4-7c9f-4a04-b498-d4a342b1649c
+                ElementId: 84672669-a37d-4d3f-a204-fa7eade2e4b9
                 ElementType: VISUAL
                 RowIndex: 40
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 2fb38e30-b9f8-4bd3-bbd7-92dd575482c6
+                ElementId: 0116975b-8047-4f45-8e70-5c94de9c22bf
                 ElementType: VISUAL
                 RowIndex: 52
                 RowSpan: 3
@@ -1998,7 +1993,7 @@ dashboards:
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 3552fb7a-03cf-4598-ab1a-9bf55660ae72
+                ElementId: e4be624f-065a-4194-aea6-39ffd5adb83b
                 ElementType: VISUAL
                 RowIndex: 58
                 RowSpan: 16
@@ -2016,13 +2011,13 @@ dashboards:
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 5cb0d3cb-2832-42e7-80f8-01e1b4a40fac
+                ElementId: df2618c9-23a0-4c7f-93f3-fa41e9af823d
                 ElementType: VISUAL
                 RowIndex: 77
                 RowSpan: 18
               - ColumnIndex: 0
                 ColumnSpan: 7
-                ElementId: 5eda81ea-848b-4980-b455-70160ee1fe9b
+                ElementId: 332b3311-1429-4791-a41d-9ff3762cbedf
                 ElementType: VISUAL
                 RowIndex: 95
                 RowSpan: 4
@@ -2186,7 +2181,63 @@ dashboards:
             ParameterControlId: 638831ee-272a-4273-bb57-1af1cf3b5ee5
             SourceParameterName: Tag1Name
             Title: Tag Name
-        SheetId: 58620c2d-8d53-4cfb-bc7f-a2bbe3b6659d
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements:
+              - ColumnSpan: 3
+                ElementId: 3d11854b-bd24-4d13-b098-13e59ff32b42
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 9f95ab5f-2d22-42ea-a6fe-6dff1de9dc0d
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: fbcf686a-a5a1-4a4c-bec2-6720de7d42f7
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 354bcc22-7d7d-467d-aeab-1e85019cd498
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 638831ee-272a-4273-bb57-1af1cf3b5ee5
+                ElementType: PARAMETER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 46abbf0e-787e-4ed4-ad67-61d3bbdc8035
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: eb9d8dbe-2508-42d6-9def-1994d976efd8
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 537491ff-85f0-49d4-8507-2294c2432e22
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 6c14e15f-54c2-4cfb-b7a7-03a72ec2e901
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 5bddc540-b508-4348-8345-03bb14c00ad8
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 07d358cb-9c91-4a09-8a16-991bd03b6c1c
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 3
+                ElementId: 7abc704c-fd9f-4762-b816-b04cc1634345
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+              - ColumnSpan: 2
+                ElementId: 316ea033-eaa0-4108-ad2f-b4375060bdad
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+        SheetId: 668f4ed1-cf50-4898-832e-0e8d2ff9009d
         TextBoxes:
         - Content: |-
             <text-box>
@@ -2264,7 +2315,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Number of Actions</visual-title>
               Visibility: VISIBLE
-            VisualId: 8b5cecfe-f5c7-44ca-af59-210d1e0101c4
+            VisualId: ad1678d5-ba11-4dd5-a442-6bc066624e88
         - ScatterPlotVisual:
             Actions:
             - ActionOperations:
@@ -2416,7 +2467,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Recommendations (Logarithmic Scale)</visual-title>
               Visibility: VISIBLE
-            VisualId: 3552fb7a-03cf-4598-ab1a-9bf55660ae72
+            VisualId: e4be624f-065a-4194-aea6-39ffd5adb83b
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -2507,7 +2558,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Top Actions and Resource Types</visual-title>
               Visibility: VISIBLE
-            VisualId: 8512e04e-306d-422b-a523-5784a7954f41
+            VisualId: c3b8bea2-2ac7-4aac-a6f5-41711b593d61
         - TableVisual:
             Actions:
             - ActionOperations:
@@ -2687,7 +2738,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Recommendations</visual-title>
               Visibility: VISIBLE
-            VisualId: 5cb0d3cb-2832-42e7-80f8-01e1b4a40fac
+            VisualId: df2618c9-23a0-4c7f-93f3-fa41e9af823d
         - SankeyDiagramVisual:
             Actions:
             - ActionOperations:
@@ -2746,7 +2797,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Actions Per Resource</visual-title>
               Visibility: VISIBLE
-            VisualId: 62635099-7d24-45a4-bb1f-312ef791d415
+            VisualId: 7fd72147-2482-4dda-845e-4fa7cf5a4a56
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -2837,7 +2888,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Top Potential Savings Per Action Type</visual-title>
               Visibility: VISIBLE
-            VisualId: cba5bb7c-1afb-43d1-a8f3-85497bd9d812
+            VisualId: ba304682-d766-4c0e-bbfd-edd6e6705dde
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -2877,12 +2928,12 @@ dashboards:
                     FieldValue: current_resource_summary
                   Width: 123px
                 - DataPathList:
-                  - FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
-                    FieldValue: Savings Estimate, Monthly
-                  Width: 111px
-                - DataPathList:
                   - FieldId: 1a755052-ca9e-46b0-8d92-2e6366e24f53.12.1724614980872
                     FieldValue: Tags
+                  Width: 111px
+                - DataPathList:
+                  - FieldId: 14aaaefb-b162-4e5d-b85b-c65fbe05b68b.4.1721464132831
+                    FieldValue: Savings Estimate, Monthly
                   Width: 111px
                 - DataPathList:
                   - FieldId: 4a981f61-ba7d-45bb-8eec-1afb78a30bc6.3.1721464109798
@@ -3125,7 +3176,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Actions Per Resource</visual-title>
               Visibility: VISIBLE
-            VisualId: 843682a4-7c9f-4a04-b498-d4a342b1649c
+            VisualId: 84672669-a37d-4d3f-a204-fa7eade2e4b9
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3160,14 +3211,14 @@ dashboards:
                         ColumnName: Date
                         DataSetIdentifier: cora_view
                       FieldId: 6ef47644-91f9-4a04-872b-5f1f889e12c2.2.1721892263314
-                      HierarchyId: 1820c42e-e5cc-423f-b202-7fc3e8000eb3
+                      HierarchyId: 8a141495-9db7-492b-b1ae-2ac4f7e441ca
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action Type
                         DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722635069586
-                      HierarchyId: 8de25b2e-0c6a-4212-8319-f904a2bc5c68
+                      HierarchyId: 97de5c23-91e1-4812-840f-24897e19e3be
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3216,7 +3267,7 @@ dashboards:
             ColumnHierarchies:
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: 1820c42e-e5cc-423f-b202-7fc3e8000eb3
+                HierarchyId: 8a141495-9db7-492b-b1ae-2ac4f7e441ca
             - ExplicitHierarchy:
                 Columns:
                 - ColumnName: Action Type
@@ -3232,7 +3283,7 @@ dashboards:
                 - ColumnName: region
                   DataSetIdentifier: cora_view
                 DrillDownFilters: []
-                HierarchyId: 8de25b2e-0c6a-4212-8319-f904a2bc5c68
+                HierarchyId: 97de5c23-91e1-4812-840f-24897e19e3be
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>Click to Filter by Date. Use \u2191\u2193buttons\
@@ -3242,7 +3293,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Top Potential Savings Over Time</visual-title>
               Visibility: VISIBLE
-            VisualId: 8a6719fc-ce49-4a9e-88f7-afb13d56d12f
+            VisualId: e66fac0f-9a4c-4831-847f-96de8081a952
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -3509,7 +3560,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Savings Per Action Type</visual-title>
               Visibility: VISIBLE
-            VisualId: b978ce2e-4272-4691-b4fa-4999720c027a
+            VisualId: f95d944f-8c83-4a00-b68b-81f2056f9b48
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -3526,6 +3577,12 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: STACKED
+              CategoryAxis:
+                ScrollbarOptions:
+                  VisibleRange:
+                    PercentRange:
+                      From: 80.0
+                      To: 100.0
               DataLabels:
                 DataLabelTypes:
                 - DataPathLabelType:
@@ -3547,7 +3604,7 @@ dashboards:
                         ColumnName: Resource Type
                         DataSetIdentifier: cora_view
                       FieldId: 2a69e181-1b3e-4bc0-8579-60881f39b59e.2.1722635633864
-                      HierarchyId: f2b88daa-6e96-4be6-8e93-c045a4e29687
+                      HierarchyId: 5ebe804c-cbc8-43dc-91f1-d10a0e3b70fb
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -3612,7 +3669,7 @@ dashboards:
                 - ColumnName: Action Type
                   DataSetIdentifier: cora_view
                 DrillDownFilters: []
-                HierarchyId: f2b88daa-6e96-4be6-8e93-c045a4e29687
+                HierarchyId: 5ebe804c-cbc8-43dc-91f1-d10a0e3b70fb
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Click To Filter. Use GroupBy Parameter.</visual-subtitle>
@@ -3625,7 +3682,7 @@ dashboards:
                     <parameter>${GroupBy}</parameter>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 36f57492-dd0a-4185-81f4-9e4bd8bcd4ff
+            VisualId: 176eb9f4-fd5a-4316-b9b2-47fc6a56af47
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -3663,7 +3720,7 @@ dashboards:
               FormatText:
                 RichText: "<visual-title>\_Details of Cost Esitmation Calculations\_</visual-title>"
               Visibility: VISIBLE
-            VisualId: 2fb38e30-b9f8-4bd3-bbd7-92dd575482c6
+            VisualId: 0116975b-8047-4f45-8e70-5c94de9c22bf
         - PieChartVisual:
             Actions:
             - ActionOperations:
@@ -3743,7 +3800,7 @@ dashboards:
               FormatText:
                 RichText: "<visual-title>Top Actions Potential Savings \_</visual-title>"
               Visibility: VISIBLE
-            VisualId: 87277975-7900-475e-87f1-cc48e4e06368
+            VisualId: 62208956-b684-41bd-871b-8dd7b4f1840d
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -3781,7 +3838,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Last Refresh</visual-title>
               Visibility: VISIBLE
-            VisualId: 5eda81ea-848b-4980-b455-70160ee1fe9b
+            VisualId: 332b3311-1429-4791-a41d-9ff3762cbedf
       - ContentType: INTERACTIVE
         FilterControls:
         - CrossSheet:
@@ -3802,6 +3859,9 @@ dashboards:
         - CrossSheet:
             FilterControlId: 53d735e4-673d-4d4e-bed1-997a82886de5
             SourceFilterId: 6c775da6-35fc-4731-9efe-0f09440f5cf7
+        - CrossSheet:
+            FilterControlId: 38e97f90-659b-4171-a5c0-2fe315d50c66
+            SourceFilterId: ac519ad8-bb31-4cfa-9979-9cf59a7809f1
         - List:
             DisplayOptions:
               InfoIconLabelOptions:
@@ -3818,6 +3878,7 @@ dashboards:
             FilterControlId: 2330a0e5-5624-461e-a0ce-9b76f17793a7
             SelectableValues:
               Values:
+              - Delete
               - Migrate To Graviton
               - Rightsize
               - Stop
@@ -3853,37 +3914,37 @@ dashboards:
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 12
-                ElementId: 5bf23934-9679-4896-9731-4848ac9b4c00
+                ElementId: 458402e2-5270-422c-b2cc-62961c36e08f
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 8
               - ColumnIndex: 12
                 ColumnSpan: 12
-                ElementId: e0be8875-16ac-49f4-a12c-3d3040050995
+                ElementId: d950cc4a-9a78-420e-ab19-5c2a6603b89f
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 8
               - ColumnIndex: 24
                 ColumnSpan: 11
-                ElementId: 2dbc1740-cb3c-4a79-93ff-cae5ab060f3e
+                ElementId: 5f5a5862-7a03-49cf-abbf-3f1e10a1528e
                 ElementType: VISUAL
                 RowIndex: 4
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: aa19d9ff-dfb0-4631-945e-34b84a17dd28
+                ElementId: 75c42f15-1f90-4a34-87bb-157b890d7499
                 ElementType: VISUAL
                 RowIndex: 12
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 2b143a90-d809-484a-b88c-6865b8bcc912
+                ElementId: 74500ef5-8e81-41a6-9bba-5c4fb36771ba
                 ElementType: VISUAL
                 RowIndex: 23
                 RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 1347b2ec-67f6-483c-bf91-a17cd4fe35fd
+                ElementId: 4382f537-0667-4c32-8e05-705892833e90
                 ElementType: VISUAL
                 RowIndex: 33
                 RowSpan: 18
@@ -3955,7 +4016,11 @@ dashboards:
                 ElementId: ea8782d9-3580-435b-96cb-a0cd5c3c575b
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
-        SheetId: c693e122-09de-4f80-bd5d-e9bf0a1b539e
+              - ColumnSpan: 2
+                ElementId: 38e97f90-659b-4171-a5c0-2fe315d50c66
+                ElementType: FILTER_CONTROL
+                RowSpan: 1
+        SheetId: e8856e99-eb19-47b7-8f34-d90813e58cd8
         TextBoxes:
         - Content: "<text-box>\n  Recommendations:\n  <br/>\n  <ul>\n    <li>Add a special\
             \ Cost Allocation Tag 'FinopsException' and use it to exclude from this analysis</li>\n\
@@ -4036,7 +4101,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Top Actions By Action Type</visual-title>
               Visibility: VISIBLE
-            VisualId: 2dbc1740-cb3c-4a79-93ff-cae5ab060f3e
+            VisualId: 5f5a5862-7a03-49cf-abbf-3f1e10a1528e
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -4153,7 +4218,7 @@ dashboards:
                     <parameter>${GroupBy}</parameter>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 2b143a90-d809-484a-b88c-6865b8bcc912
+            VisualId: 74500ef5-8e81-41a6-9bba-5c4fb36771ba
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -4189,14 +4254,14 @@ dashboards:
                         ColumnName: Date
                         DataSetIdentifier: cora_view
                       FieldId: 83060b15-be3c-4fb1-b889-c9786ae8136f.2.1723398490784
-                      HierarchyId: fd406a84-a95f-43f9-8687-4e6e54d2c9e0
+                      HierarchyId: 79ccbe0a-7f9d-4250-9441-4db5d3c55948
                   Colors:
                   - CategoricalDimensionField:
                       Column:
                         ColumnName: Action And Resource
                         DataSetIdentifier: cora_view
                       FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.2.1723399967970
-                      HierarchyId: 433cd15b-33be-4de8-9a9e-2aa5ce88b277
+                      HierarchyId: 6d4884f7-4601-4970-9fe4-5d26b391b64c
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -4257,10 +4322,10 @@ dashboards:
                 - ColumnName: Group By
                   DataSetIdentifier: cora_view
                 DrillDownFilters: []
-                HierarchyId: 433cd15b-33be-4de8-9a9e-2aa5ce88b277
+                HierarchyId: 6d4884f7-4601-4970-9fe4-5d26b391b64c
             - DateTimeHierarchy:
                 DrillDownFilters: []
-                HierarchyId: fd406a84-a95f-43f9-8687-4e6e54d2c9e0
+                HierarchyId: 79ccbe0a-7f9d-4250-9441-4db5d3c55948
             Subtitle:
               FormatText:
                 RichText: "<visual-subtitle>Click to Filter by Date. Use \u2191\u2193buttons\
@@ -4270,7 +4335,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Timeline</visual-title>
               Visibility: VISIBLE
-            VisualId: aa19d9ff-dfb0-4631-945e-34b84a17dd28
+            VisualId: 75c42f15-1f90-4a34-87bb-157b890d7499
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -4311,7 +4376,7 @@ dashboards:
                         ColumnName: Action And Resource
                         DataSetIdentifier: cora_view
                       FieldId: ded84f07-b1ff-4784-bd88-29dc5757df2a.0.1723397411394
-                      HierarchyId: c265db5d-bad0-45c9-aaf0-abcedf4df662
+                      HierarchyId: 251e7074-6f86-4345-ae23-739110af6e6a
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -4362,7 +4427,7 @@ dashboards:
                 - ColumnName: region
                   DataSetIdentifier: cora_view
                 DrillDownFilters: []
-                HierarchyId: c265db5d-bad0-45c9-aaf0-abcedf4df662
+                HierarchyId: 251e7074-6f86-4345-ae23-739110af6e6a
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Click to Filter</visual-subtitle>
@@ -4375,7 +4440,7 @@ dashboards:
                     <parameter>${GroupBy}</parameter>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: e0be8875-16ac-49f4-a12c-3d3040050995
+            VisualId: d950cc4a-9a78-420e-ab19-5c2a6603b89f
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -4587,7 +4652,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Resources</visual-title>
               Visibility: VISIBLE
-            VisualId: 1347b2ec-67f6-483c-bf91-a17cd4fe35fd
+            VisualId: 4382f537-0667-4c32-8e05-705892833e90
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -4598,7 +4663,25 @@ dashboards:
                       DataSetIdentifier: cora_view
                     - ColumnName: Resource Type
                       DataSetIdentifier: cora_view
+                    - ColumnName: Resource Type
+                      DataSetIdentifier: cora_view
+                    - ColumnName: Resource Type
+                      DataSetIdentifier: cora_view
+                    - ColumnName: Resource Type
+                      DataSetIdentifier: cora_view
+                    - ColumnName: Resource Type
+                      DataSetIdentifier: cora_view
+                    - ColumnName: Resource Type
+                      DataSetIdentifier: cora_view
+                    - ColumnName: Resource Type
+                      DataSetIdentifier: cora_view
                     SelectedFields:
+                    - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
+                    - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
+                    - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
+                    - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
+                    - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
+                    - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
                     - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
                     - 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
                   TargetVisualsConfiguration:
@@ -4621,7 +4704,7 @@ dashboards:
                         ColumnName: Resource Type
                         DataSetIdentifier: cora_view
                       FieldId: 688c77c3-41f0-4726-ad4c-2001a2d67a4e.2.1723877548439
-                      HierarchyId: 556e96ff-14cd-43ff-ac21-ef500d59b331
+                      HierarchyId: 4a4ea314-880e-45ba-bc36-91adab4afc22
                   Colors:
                   - CategoricalDimensionField:
                       Column:
@@ -4672,7 +4755,7 @@ dashboards:
                 - ColumnName: Resource Type
                   DataSetIdentifier: cora_view
                 DrillDownFilters: []
-                HierarchyId: 556e96ff-14cd-43ff-ac21-ef500d59b331
+                HierarchyId: 4a4ea314-880e-45ba-bc36-91adab4afc22
             Subtitle:
               FormatText:
                 RichText: <visual-subtitle>Click To Focus on Resource Type</visual-subtitle>
@@ -4681,7 +4764,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Top Actions By Resource And Action</visual-title>
               Visibility: VISIBLE
-            VisualId: 5bf23934-9679-4896-9731-4848ac9b4c00
+            VisualId: 458402e2-5270-422c-b2cc-62961c36e08f
       - ContentType: INTERACTIVE
         FilterControls:
         - CrossSheet:
@@ -4840,13 +4923,13 @@ dashboards:
                 RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 34
-                ElementId: 555cfe57-0edb-430e-8bcf-8b3ba9d46dfb
+                ElementId: c7b7bc65-d949-4288-ba41-8e376d591d75
                 ElementType: VISUAL
                 RowIndex: 6
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 34
-                ElementId: 23398bbc-2b17-4637-980d-f92df3828078
+                ElementId: 1e34b6c6-4d4e-4f86-930b-dd878f08c753
                 ElementType: VISUAL
                 RowIndex: 18
                 RowSpan: 12
@@ -4920,7 +5003,7 @@ dashboards:
                 ElementId: 9cd490a9-4403-4898-bcc8-e9ae04a82529
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
-        SheetId: 121d4d77-ea39-4c59-83d5-00251614463e
+        SheetId: 8de061cd-1796-43c5-9df7-eb849ce11566
         TextBoxes:
         - Content: |-
             <text-box>
@@ -5166,7 +5249,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Estimated Savings for SP Per Upfront and Term Options</visual-title>
               Visibility: VISIBLE
-            VisualId: 555cfe57-0edb-430e-8bcf-8b3ba9d46dfb
+            VisualId: c7b7bc65-d949-4288-ba41-8e376d591d75
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -5424,7 +5507,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Savings Plan Details</visual-title>
               Visibility: VISIBLE
-            VisualId: 23398bbc-2b17-4637-980d-f92df3828078
+            VisualId: 1e34b6c6-4d4e-4f86-930b-dd878f08c753
       - ContentType: INTERACTIVE
         FilterControls:
         - CrossSheet:
@@ -5531,7 +5614,7 @@ dashboards:
               - RDS
               - Redshift
             SourceFilterId: 7701abdc-1125-4c33-95f4-f6c1234ed25c
-            Title: RI Serivice equals
+            Title: RI Service equals
             Type: MULTI_SELECT
         - List:
             DisplayOptions:
@@ -5576,7 +5659,7 @@ dashboards:
                 RowSpan: 2
               - ColumnIndex: 17
                 ColumnSpan: 18
-                ElementId: d2c0cfe2-59d7-436c-8f9b-f03fa3cd1222
+                ElementId: 9ccec494-1d3e-4097-b6c8-0b896a76f132
                 ElementType: VISUAL
                 RowIndex: 2
                 RowSpan: 5
@@ -5606,37 +5689,37 @@ dashboards:
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 13
-                ElementId: 4b2ab6f4-8e9b-4b28-bc20-30fab0c5680a
+                ElementId: a5319016-998b-4e02-a6d4-587aea8b9e0f
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 8
               - ColumnIndex: 13
                 ColumnSpan: 10
-                ElementId: 67fad3ac-617b-4ed5-88b2-cf7abab70019
+                ElementId: a740b447-be80-49ec-bd1a-5348a74a204d
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 8
               - ColumnIndex: 23
                 ColumnSpan: 12
-                ElementId: 1ea3235b-4025-4b5e-967b-f80adfa10bc8
+                ElementId: e0ebe6cd-8766-49b1-b988-72cfcce0efda
                 ElementType: VISUAL
                 RowIndex: 7
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 96305727-9b80-4e9b-b5ed-ab36ef25762e
+                ElementId: e9be21d0-9ef5-4f4c-b077-feb6fbd2c674
                 ElementType: VISUAL
                 RowIndex: 15
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 35
-                ElementId: 866e8df6-fa19-4d58-a10b-1667afc6f4cd
+                ElementId: 13a6e66e-d26c-4d0a-beb5-414a906d6626
                 ElementType: VISUAL
                 RowIndex: 23
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 32
-                ElementId: b40347a3-0e65-4dd0-8abc-92151fda2ecd
+                ElementId: 0ff87ba8-c019-4ab0-a13b-438282f77249
                 ElementType: VISUAL
                 RowIndex: 35
                 RowSpan: 12
@@ -5716,7 +5799,7 @@ dashboards:
                 ElementId: 35711965-687a-4ce7-b167-aea88c7c5f0d
                 ElementType: PARAMETER_CONTROL
                 RowSpan: 1
-        SheetId: ea6091ca-97ed-4a89-b439-b46a55423a92
+        SheetId: 49ad187b-f82d-40a2-a14a-226bbd39f52a
         TextBoxes:
         - Content: |-
             <text-box>
@@ -5798,7 +5881,7 @@ dashboards:
                   Rows:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: RI Serivice
+                        ColumnName: RI Service
                         DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
                   - CategoricalDimensionField:
@@ -5881,7 +5964,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Top Potential RI Savings by Service</visual-title>
               Visibility: VISIBLE
-            VisualId: d2c0cfe2-59d7-436c-8f9b-f03fa3cd1222
+            VisualId: 9ccec494-1d3e-4097-b6c8-0b896a76f132
         - TableVisual:
             Actions: []
             ChartConfiguration:
@@ -5912,7 +5995,7 @@ dashboards:
                   GroupBy:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: RI Serivice
+                        ColumnName: RI Service
                         DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
                   - CategoricalDimensionField:
@@ -5988,18 +6071,36 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Reserved Instances Potential Savings</visual-title>
               Visibility: VISIBLE
-            VisualId: b40347a3-0e65-4dd0-8abc-92151fda2ecd
+            VisualId: 0ff87ba8-c019-4ab0-a13b-438282f77249
         - BarChartVisual:
             Actions:
             - ActionOperations:
               - FilterOperation:
                   SelectedFieldsConfiguration:
                     SelectedColumns:
-                    - ColumnName: RI Serivice
+                    - ColumnName: RI Service
                       DataSetIdentifier: cora_view
-                    - ColumnName: RI Serivice
+                    - ColumnName: RI Service
+                      DataSetIdentifier: cora_view
+                    - ColumnName: RI Service
+                      DataSetIdentifier: cora_view
+                    - ColumnName: RI Service
+                      DataSetIdentifier: cora_view
+                    - ColumnName: RI Service
+                      DataSetIdentifier: cora_view
+                    - ColumnName: RI Service
+                      DataSetIdentifier: cora_view
+                    - ColumnName: RI Service
+                      DataSetIdentifier: cora_view
+                    - ColumnName: RI Service
                       DataSetIdentifier: cora_view
                     SelectedFields:
+                    - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
+                    - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
+                    - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
+                    - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
+                    - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
+                    - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
                     - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
                     - 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
                   TargetVisualsConfiguration:
@@ -6029,10 +6130,10 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: RI Serivice
+                        ColumnName: RI Service
                         DataSetIdentifier: cora_view
                       FieldId: 2d12188a-c04d-4640-8a2f-2d136232eb9a.2.1722374846766
-                      HierarchyId: eb0c2087-2b2f-4a4f-9760-0c19576504b7
+                      HierarchyId: 7b238189-496e-4faf-9464-92d2b145da3f
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -6080,21 +6181,21 @@ dashboards:
             ColumnHierarchies:
             - ExplicitHierarchy:
                 Columns:
-                - ColumnName: RI Serivice
+                - ColumnName: RI Service
                   DataSetIdentifier: cora_view
                 - ColumnName: RI Product
                   DataSetIdentifier: cora_view
                 - ColumnName: Account
                   DataSetIdentifier: cora_view
                 DrillDownFilters: []
-                HierarchyId: eb0c2087-2b2f-4a4f-9760-0c19576504b7
+                HierarchyId: 7b238189-496e-4faf-9464-92d2b145da3f
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Top Potential Savings History</visual-title>
               Visibility: VISIBLE
-            VisualId: 96305727-9b80-4e9b-b5ed-ab36ef25762e
+            VisualId: e9be21d0-9ef5-4f4c-b077-feb6fbd2c674
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -6135,7 +6236,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: RI Serivice
+                        ColumnName: RI Service
                         DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722375011114
                   Values:
@@ -6191,7 +6292,7 @@ dashboards:
               FormatText:
                 RichText: <visual-title>Top Potential Savings by Region</visual-title>
               Visibility: VISIBLE
-            VisualId: 1ea3235b-4025-4b5e-967b-f80adfa10bc8
+            VisualId: e0ebe6cd-8766-49b1-b988-72cfcce0efda
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -6224,7 +6325,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: RI Serivice
+                        ColumnName: RI Service
                         DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722375011114
                   Values:
@@ -6280,7 +6381,7 @@ dashboards:
                     <parameter>${GroupBy}</parameter>
                   </visual-title>
               Visibility: VISIBLE
-            VisualId: 67fad3ac-617b-4ed5-88b2-cf7abab70019
+            VisualId: a740b447-be80-49ec-bd1a-5348a74a204d
         - BarChartVisual:
             Actions:
             - ActionOperations:
@@ -6309,7 +6410,7 @@ dashboards:
                   Category:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: RI Serivice
+                        ColumnName: RI Service
                         DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.2.1722374850680
                   Colors:
@@ -6321,7 +6422,7 @@ dashboards:
                       FormatConfiguration:
                         NullValueFormatConfiguration:
                           NullString: 'null'
-                      HierarchyId: 796cefd0-eab0-412d-834c-5d769c71dbac
+                      HierarchyId: 03079314-3c04-4041-884b-b63031b27049
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -6376,14 +6477,14 @@ dashboards:
                 - ColumnName: Account
                   DataSetIdentifier: cora_view
                 DrillDownFilters: []
-                HierarchyId: 796cefd0-eab0-412d-834c-5d769c71dbac
+                HierarchyId: 03079314-3c04-4041-884b-b63031b27049
             Subtitle:
               Visibility: VISIBLE
             Title:
               FormatText:
                 RichText: <visual-title>Top Potential RI Savings by Service</visual-title>
               Visibility: VISIBLE
-            VisualId: 4b2ab6f4-8e9b-4b28-bc20-30fab0c5680a
+            VisualId: a5319016-998b-4e02-a6d4-587aea8b9e0f
         - PivotTableVisual:
             Actions:
             - ActionOperations:
@@ -6416,7 +6517,7 @@ dashboards:
                   Width: 255px
                 - DataPathList:
                   - FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
-                    FieldValue: RI Serivice
+                    FieldValue: RI Service
                   Width: 135px
                 - DataPathList:
                   - FieldId: 4475723f-2fdd-4adf-a931-85cb282a19e2.9.1722374183483
@@ -6465,7 +6566,7 @@ dashboards:
                   Rows:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: RI Serivice
+                        ColumnName: RI Service
                         DataSetIdentifier: cora_view
                       FieldId: 97e1d0ee-fb74-4957-a7d6-226ac97afcc3.7.1722345292560
                   - CategoricalDimensionField:
@@ -6615,7 +6716,7 @@ dashboards:
               FormatText:
                 RichText: "<visual-title>Details of Potential Savings\_</visual-title>"
               Visibility: VISIBLE
-            VisualId: 866e8df6-fa19-4d58-a10b-1667afc6f4cd
+            VisualId: 13a6e66e-d26c-4d0a-beb5-414a906d6626
       - ContentType: INTERACTIVE
         Layouts:
         - Configuration:
@@ -6642,7 +6743,7 @@ dashboards:
         - Configuration:
             GridLayout:
               Elements: []
-        SheetId: ae77b1ca-314e-41de-ade8-a6ac36dccccc
+        SheetId: d6c820aa-877e-4b70-abcb-99e218f3dd4a
         TextBoxes:
         - Content: "<text-box>\n  <inline font-size=\"32px\">Notes</inline>\n  <br/>\n \
             \ <inline font-size=\"14px\">Customers are responsible for making their own\
@@ -6669,7 +6770,7 @@ dashboards:
             \    <inline font-size=\"24px\">ecommended\_</inline>\n    <inline font-size=\"\
             24px\">\n      <b>A</b>\n    </inline>\n    <inline font-size=\"24px\">ctions</inline>\n\
             \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
-            >v0.0.5</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
+            >v0.0.7</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"24px\">\n      <a href=\"\
             https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
             \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
@@ -6683,15 +6784,15 @@ dashboards:
             \ align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built by: Iakov Gan</block>\n\
             \  <br/>\n  <block align=\"right\">\n    Learn more\n    <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
             \ target=\"_blank\">\_</a>\n    about AWS Cloud Intelligence Dashboards (CID)\
-            \ on\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
-            \ target=\"_blank\">\n        <u>\_AWS Well-Architected Labs</u>\n      </a>\n\
-            \    </inline>\n    \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"\
+            \ on [\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+            \ target=\"_blank\">\n        <u>AWS Well-Architected Labs</u>\n      </a>\n\
+            \    </inline>\n    ]\_and [\n    <inline color=\"#61d1d6\">\n      <a href=\"\
             https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\" target=\"_blank\"\
-            >\n        <u>CID YouTube Channel</u>\n      </a>\n    </inline>\n  </block>\n\
-            \  <br/>\n  <block align=\"right\">\n    If you wish to provide feedback please\
-            \ or report an error please email:\n    <inline color=\"#61d1d6\">\_</inline>\n\
-            \    <inline background-color=\"#21a0d7\" color=\"#61d1d6\">\n      <a href=\"\
-            mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
+            >\n        <u>[CID YouTube Channel</u>\n      </a>\n    </inline>\n    ]\n \
+            \ </block>\n  <br/>\n  <block align=\"right\">\n    If you wish to provide feedback\
+            \ please or report an error please email:\n    <inline color=\"#61d1d6\">\_\
+            </inline>\n    <inline background-color=\"#21a0d7\" color=\"#61d1d6\">\n   \
+            \   <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
             \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
             \  </block>\n  <br/>\n  <block align=\"right\">Powered by: Amazon QuickSight,\
             \ Amazon Athena, Amazon S3, AWS Cost Optimization Hub</block>\n  <br/>\n  <block\

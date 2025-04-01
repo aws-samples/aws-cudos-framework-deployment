@@ -439,6 +439,7 @@ Resources:
           Action:
           - quicksight:CreateDataSet
           - quicksight:DeleteDataSet
+          - quicksight:UpdateDataSet
           - quicksight:PassDataSet
           - quicksight:DescribeDataSet
           - quicksight:DescribeDataSetPermissions
@@ -454,9 +455,8 @@ Resources:
           - quicksight:DeleteRefreshSchedule
           - quicksight:DescribeRefreshSchedule
           - quicksight:ListRefreshSchedules
-          - quicksight:CreateDataSetRefreshProperties
+          - quicksight:PutDataSetRefreshProperties
           - quicksight:DescribeDataSetRefreshProperties
-          - quicksight:UpdateDataSetRefreshProperties
           - quicksight:DeleteDataSetRefreshProperties
           Effect: Allow
           Resource:
@@ -696,6 +696,7 @@ Resources:
           - s3:PutBucketOwnershipControls
           - s3:PutBucketPolicy
           - s3:PutBucketPublicAccessBlock
+          - s3:PutBucketTagging
           - s3:PutBucketVersioning
           - s3:PutEncryptionConfiguration
           - s3:PutLifecycleConfiguration

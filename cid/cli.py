@@ -129,6 +129,7 @@ def deploy(ctx, **kwargs):
      --quicksight-datasource-role-arn TEXT IAM Role used for DataSource Creation (if not provided, will use the default QS Role). Must have access to Athena and S3 buckets.
      --allow-buckets                       Comma separated list of buckets names to add to the default Cid QuickSight role
      --quicksight-user TEXT                QuickSight user
+     --quicksight-group TEXT               QuickSight group
      --dataset-{dataset_name}-id TEXT      QuickSight dataset id for a specific dataset
      --view-{view_name}-{parameter} TEXT   a custom parameter for a view creation, can use variable: {account_id}
      --account-map-source TEXT             csv, dummy, organization (if autodiscovery impossible)
@@ -235,6 +236,7 @@ def cleanup(ctx, **kwargs):
 @click.option('--folder-id', help='QuickSight folder id (existing)', default=None)
 @click.option('--folder-name', help='QuickSight folder name (new)', default=None)
 @click.option('--quicksight-user', help='QuickSight user', default=None)
+@click.option('--quicksight-group', help='QuickSight group', default=None)
 @cid_command
 def share(ctx, dashboard_id, **kwargs):
     """Share QuickSight resources (Dashboard, Datasets, DataSource)"""

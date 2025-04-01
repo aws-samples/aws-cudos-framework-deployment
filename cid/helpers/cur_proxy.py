@@ -508,8 +508,11 @@ class ProxyView():
                 keys_set = set(self.exposed_maps.get(field, set()))
                 keys_set.update(self.fields_to_expose_in_maps.get(map_field, set()))
                 for key in keys_set:
-                    if self.cur.column_exists(f'{map_field}_{key}'):
-                        map_mapping[key] = f'{map_field}_{key}'
+                    map_field_key = f'{map_field}_{key}'
+                    if self.cur.column_exists(map_field_key):
+                        if map_field_key.encode('unicode-escape').decode('ascii') != map_field_key: # field name contains unicode characters that must be escaped
+                            map_field_key = f'"{map_field_key}"'
+                        map_mapping[key] = map_field_key
                     else:
                         map_mapping[key] = empty['string'] # all known maps have string vaules for now
                 if not map_mapping:
@@ -532,11 +535,10 @@ class ProxyView():
             else:
                 raise NotImplementedError(f'CUR1 field {field} has no known equivalent')
         if self.current_cur_version.startswith('2') and self.target_cur_version.startswith('1'):
-            if field.startswith('resource_tags_'):
-                return f"resource_tags['{field[len('resource_tags_'):]}']"
-            if field.startswith('cost_category_'):
-                return f"cost_category['{field[len('cost_category_'):]}']"
-            return cur1to2_mapping.get(field, field)
+            for tag_type in 'resource_tags', 'cost_category':
+                if field.startswith(tag_type + '_'):
+                    short_field_name = field[len(tag_type + '_'):]
+                    return f"{tag_type}['{short_field_name}']"
 
 
     def column_surely_exist(self, field_to_expose):

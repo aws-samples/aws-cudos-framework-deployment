@@ -73,6 +73,7 @@
       WHEN ("line_item_line_item_type" = 'DiscountedUsage') THEN "reservation_effective_cost"
       WHEN ("line_item_line_item_type" = 'RIFee') THEN ("reservation_unused_amortized_upfront_fee_for_billing_period" + "reservation_unused_recurring_fee")
       WHEN (("line_item_line_item_type" = 'Fee') AND ("reservation_reservation_a_r_n" <> '')) THEN 0
+      WHEN (("line_item_line_item_type" = 'Refund') AND ("line_item_product_code" = 'ComputeSavingsPlans')) THEN 0
       ELSE "line_item_unblended_cost"
     END) "amortized_cost"
   , sum(CASE
@@ -92,5 +93,5 @@
   WHERE
     (("bill_billing_period_start_date" >= ("date_trunc"('month', current_timestamp) - INTERVAL  '7' MONTH))
     AND (CAST("concat"("billing_period", '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '7' MONTH))
-    AND "line_item_operation" NOT IN ('EKSPod-EC2','ECSTask-EC2'))
+    AND coalesce("line_item_operation", '') NOT IN ('EKSPod-EC2','ECSTask-EC2'))
   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34
