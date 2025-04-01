@@ -595,7 +595,7 @@ class Athena(CidBase):
         ''')
 
     def find_tables_with_columns(self, columns: list, database_name: str=None, catalog_name: str=None, max_items: int=10000):
-        """ This function return interator of tables with a given set of columns.
+        """ Returns an iterator that yields only tables containing all specified columns.
         """
         iterator = self.client.get_paginator('list_table_metadata').paginate(
             DatabaseName=database_name or self.DatabaseName,
