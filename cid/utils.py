@@ -247,6 +247,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
                 long_instruction='Type to search or use arrows ↑↓ to navigate',
                 match_exact=True,
                 default=default,
+                exact_symbol='',
             ).execute()
         else:
             result = inquirer.select(
