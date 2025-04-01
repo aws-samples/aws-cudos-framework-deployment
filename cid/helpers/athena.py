@@ -137,7 +137,8 @@ class Athena(CidBase):
                 param_name='athena-workgroup',
                 message="Select Amazon Athena workgroup to use",
                 choices=[wgr['Name'] for wgr in workgroups],
-                default=default_workgroup
+                default=default_workgroup,
+                fuzzy=False,
             )
             if ' (create new)' in selected_workgroup:
                 selected_workgroup = selected_workgroup.replace(' (create new)', '')
