@@ -2084,6 +2084,7 @@ Resources:
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
         dashboard-id: cost_intelligence_dashboard
+        resources: !If [IsChinaOrGovCloudRegion, 'https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/hub/cost-intelligence/cost-intelligence.yaml', !Ref 'AWS::NoValue']
 
   CUDOSDashboard: # Legacy
     Type: Custom::CidDashboard
@@ -2124,6 +2125,7 @@ Resources:
       ServiceToken: !GetAtt CidExec.Arn
       Dashboard:
         dashboard-id: kpi_dashboard
+        resources: !If [IsChinaOrGovCloudRegion, 'https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/hub/kpi_dashboard/kpi_dashboard.yaml', !Ref 'AWS::NoValue']
       Tags: # Hacky way to manage conditional dependencies
         - Key: IgnoreNeedCostIntelligenceDashboard
           Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
