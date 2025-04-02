@@ -73,7 +73,7 @@ class Glue(CidBase):
                 self.client.update_crawler(**crawler_definition)
             except self.client.exceptions.ClientError as exc:
                 if 'Service is unable to assume provided role' in str(exc):
-                    logger.info('attempt{attempt}: Retrying ') # sometimes newly created roles cannot be assumed right away
+                    logger.info(f'attempt{attempt}: Retrying ') # sometimes newly created roles cannot be assumed right away
                     time.sleep(3)
                     continue
                 logger.error(crawler_definition)

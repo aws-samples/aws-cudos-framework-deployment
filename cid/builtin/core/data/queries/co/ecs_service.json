@@ -1,0 +1,485 @@
+{
+    "DatabaseName": "${athena_database_name}",
+    "TableInput": {
+        "Name": "${athena_table_name}",
+        "StorageDescriptor": {
+            "Location": "${s3FolderPath}",
+            "Columns": [
+                {
+                    "Name": "accountid",
+                    "Type": "string"
+                },
+                {
+                    "Name": "servicearn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "lookbackperiodindays",
+                    "Type": "string"
+                },
+                {
+                    "Name": "lastrefreshtimestamp_utc",
+                    "Type": "string"
+                },
+                {
+                    "Name": "launchtype",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentperformancerisk",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentserviceconfiguration_taskdefinitionarn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentserviceconfiguration_autoscalingconfiguration",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentserviceconfiguration_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentserviceconfiguration_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_1_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_2_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_3_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentserviceContainerConfiguration_4_containerName",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_5_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_6_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_7_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_8_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_9_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_10_containername",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_1_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_1_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_2_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_2_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_3_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_3_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_4_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_4_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_5_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_5_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_6_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_6_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_7_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_7_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_8_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_8_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_9_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_9_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_10_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_10_memoryreservation",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_1_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_2_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_3_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_4_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_5_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_6_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_7_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_8_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_9_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "currentservicecontainerconfiguration_10_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_cpu_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetrics_memory_maximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "finding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_iscpuoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_iscpuunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_ismemoryoverprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "findingreasoncodes_ismemoryunderprovisioned",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendations_count",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_memory",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_cpu",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_savingsopportunitypercentage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_estimatedmonthlysavings_currency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_estimatedmonthlysavings_value",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_1",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_2",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_3",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_4",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_5",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_6",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_7",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_8",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_9",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containername_10",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_1",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_1",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_2",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_2",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_3",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_3",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_4",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_4",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_5",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_5",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_6",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_6",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_7",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_7",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_8",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_8",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_9",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_9",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemory_10",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containermemoryreservation_10",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_1",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_2",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_3",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_4",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_5",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_6",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_7",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_8",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_9",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_containercpu_10",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_projectedutilizationmetrics_cpu_maximum_upperboundvalue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_projectedutilizationmetrics_cpu_maximum_lowerboundvalue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_projectedutilizationmetrics_memory_maximum_upperboundvalue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_projectedutilizationmetrics_memory_maximum_lowerboundvalue",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errorcode",
+                    "Type": "string"
+                },
+                {
+                    "Name": "errormessage",
+                    "Type": "string"
+                },
+                {
+                    "Name": "tags",
+                    "Type": "string"
+                },
+                {
+                    "Name": "effectiverecommendationpreferencessavingsestimationmodesource",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_estimatedmonthlysavingsafterdiscounts_value",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_estimatedmonthlysavingsafterdiscounts_currency",
+                    "Type": "string"
+                },
+                {
+                    "Name": "recommendationoptions_1_savingsopportunitypercentageafterdiscounts",
+                    "Type": "string"
+                }
+            ],
+            "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+            "NumberOfBuckets": -1,
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            "Parameters": {},
+            "SerdeInfo": {
+                "Parameters": {
+                    "quoteChar": "\"",
+                    "separatorChar": ",",
+                    "serialization.format": "1"
+                },
+                "SerializationLibrary": "org.apache.hadoop.hive.serde2.OpenCSVSerde"
+            }
+        },
+        "Parameters": {
+            "EXTERNAL": "TRUE",
+            "skip.header.line.count": "1"
+        },
+        "PartitionKeys": [],
+        "TableType": "EXTERNAL_TABLE"
+    }
+}

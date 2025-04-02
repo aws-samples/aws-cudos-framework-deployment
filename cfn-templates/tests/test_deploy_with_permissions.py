@@ -263,7 +263,7 @@ def create_cid_as_finops(update):
     #finops_cfn = admin_cfn #FIXME !!!
     params = dict(
         StackName="CID-CUR-Destination",
-        TemplateURL=upload_to_s3('cfn-templates/data-exports-aggregation.yaml'),
+        TemplateURL='https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/data-exports/latest/data-exports-aggregation.yaml',
         Parameters=[
             {"ParameterKey": 'DestinationAccountId', "ParameterValue": account_id},
             {"ParameterKey": 'ResourcePrefix', "ParameterValue": 'cid'},
@@ -293,7 +293,9 @@ def create_cid_as_finops(update):
             {"ParameterKey": 'QuickSightUser', "ParameterValue": get_qs_user()},
             {"ParameterKey": 'CURVersion', "ParameterValue": '2.0'},
             {"ParameterKey": 'DeployCUDOSv5', "ParameterValue": 'yes'},
-            {"ParameterKey": 'LambdaLayerBucketPrefix', "ParameterValue": TMP_BUCKET_PREFIX},
+            {"ParameterKey": 'CreateLocalAssetsBucket', "ParameterValue": 'yes'},
+            {"ParameterKey": 'ReferenceAssetsBucket', "ParameterValue": TMP_BUCKET},
+
         ],
         Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
     )

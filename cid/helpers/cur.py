@@ -148,10 +148,10 @@ class AbstractCUR(CidBase):
         """ Ensure column is in the cur. If it is not there - add column """
         pass
 
-    def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False) -> bool:
+    def table_is_cur(self, table: dict=None, name: str=None, return_reason: bool=False, database: str=None) -> bool:
         """ return cur version if table metadata fits CUR definition. """
         try:
-            table = table or self.athena.get_table_metadata(name)
+            table = table or self.athena.get_table_metadata(name, database)
         except Exception as exc: #pylint: disable=broad-exception-caught
             logger.warning(exc)
             return False if not return_reason else (False, f'cannot get table {name}. {exc}.')
@@ -177,7 +177,7 @@ class AbstractCUR(CidBase):
     def tag_and_cost_category_fields(self) -> list:
         """ Returns all tags and cost category fields. """
         if self.version == '1':
-            return [field for field in self.fields if field.startswith('resource_tags_user_') or field.startswith('cost_category_')]
+            return [field for field in self.fields if field.startswith('resource_tags_') or field.startswith('cost_category_')]
         elif self.version == '2':
             if self._tag_and_cost_category is not None: # the query can take few mins so we try to cache it
                 logging.debug(f'Using cached tags.')
@@ -201,8 +201,10 @@ class AbstractCUR(CidBase):
 class CUR(AbstractCUR):
     """This Class represents CUR table (1 or 2 versions)"""
 
-    def __init__(self, athena, glue):
+    def __init__(self, athena, glue, database: str=None, table: str=None):
         super().__init__(athena, glue)
+        if database and table:
+            self.set_cur(database, table)
 
     @property
     def metadata(self) -> dict:
@@ -213,16 +215,20 @@ class CUR(AbstractCUR):
         # good place to set a database for athena
         return self._metadata
 
-    def find_cur(self):
+
+    def set_cur(self, database: str=None, table: str=None):
+        self._database, self._metadata = self.find_cur(database, table)
+
+    def find_cur(self, database: str=None, table: str=None):
         """Choose CUR"""
         metadata = None
-        cur_database = get_parameters().get('cur-database')
-        if get_parameters().get('cur-table-name'):
-            table_name = get_parameters().get('cur-table-name')
+        cur_database = database or get_parameters().get('cur-database')
+        if table or get_parameters().get('cur-table-name'):
+            table_name = table or get_parameters().get('cur-table-name')
             try:
                 metadata = self.athena.get_table_metadata(table_name, cur_database)
             except self.athena.client.exceptions.MetadataException as exc:
-                raise CidCritical(f'Provided cur-table-name "{table_name}" in database "{cur_database or self.athena.DatabaseName}" is not found. Please make sure the table exists.') from exc
+                raise CidCritical(f'Provided cur-table-name "{table_name}" in database "{cur_database or self.athena.DatabaseName}" is not found. Please make sure the table exists. This could also indicate a LakeFormation permission issue, see our FAQ for help.') from exc
             res, message = self.table_is_cur(table=metadata, return_reason=True)
             if not res:
                 raise CidCritical(f'Table {table_name} does not look like CUR. {message}')

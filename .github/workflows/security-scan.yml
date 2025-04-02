@@ -105,31 +105,6 @@ jobs:
         run: |
           cfn-lint ./cfn-templates/cid-admin-policies.yaml
 
-  cfn-scan-cur-aggregation:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git clone the repository
-        uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.1'
-      - name: Install CFN tools
-        run: |
-          gem install cfn-nag
-      - name: CFN Nag scan
-        run: |
-          cfn_nag_scan --input-path  ./cfn-templates/cur-aggregation.yaml
-      - name: Install cfn-lint
-        run: |
-          pip install cfn-lint
-      - name: CFN Lint
-        run: |
-          cfn-lint ./cfn-templates/cur-aggregation.yaml
 
   terraform-scan:
     runs-on: ubuntu-latest
