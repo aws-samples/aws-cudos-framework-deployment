@@ -215,7 +215,7 @@ class Dashboard(CidQsResource):
                 logger.debug(f'Access denied describing DataSetId {dataset_id} for Dashboard {self.id}')
             except self.qs.client.exceptions.InvalidParameterValueException:
                 logger.debug(f'Invalid dataset {dataset_id}')
-        logger.info(f"{self.name} has {len(self.datasets)} datasets")
+        logger.info(f"{self.name} has {len(self._datasets)} datasets")
         return self._datasets
 
     @property
