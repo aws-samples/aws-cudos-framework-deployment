@@ -14,39 +14,83 @@
                     "Type": "string"
                 },
                 {
-                    "Name": "lookbackperiodindays",
+                    "Name": "resourceid",
+                    "Type": "string"
+                },
+                {
+                    "Name": "resourcetype",
                     "Type": "string"
                 },
                 {
                     "Name": "lastrefreshtimestamp_utc",
                     "Type": "string"
-                },               
+                },
                 {
-                    "Name": "currentlicenseconfiguration_numberofcores",
+                    "Name": "lookbackperiodindays",
                     "Type": "string"
                 },
                 {
-                    "Name": "currentlicenseconfiguration_instancetype",
+                    "Name": "recommendations_count",
                     "Type": "string"
                 },
                 {
-                    "Name": "currentlicenseconfiguration_operatingsystem",
+                    "Name": "savingsopportunitypercentage",
                     "Type": "string"
                 },
                 {
-                    "Name": "currentlicenseconfiguration_licensename",
+                    "Name": "estimatedmonthlysavingscurrency",
                     "Type": "string"
                 },
                 {
-                    "Name": "currentlicenseconfiguration_licenseedition",
+                    "Name": "estimatedmonthlysavingsvalue",
                     "Type": "string"
                 },
                 {
-                    "Name": "currentlicenseconfiguration_licensemodel",
+                    "Name": "savingsopportunitypercentageafterdiscounts",
                     "Type": "string"
                 },
                 {
-                    "Name": "currentlicenseconfiguration_licenseversion",
+                    "Name": "estimatedmonthlysavingscurrencyafterdiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "estimatedmonthlysavingsvalueafterdiscounts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetricscpumaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetricsmemorymaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetricsnetworkoutbytespersecondmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetricsnetworkinbytespersecondmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetricsdatabaseconnectionsmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetricsebsvolumereadiopsmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationetricsebsvolumewriteiopsmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetricsvolumereadopspersecondmaximum",
+                    "Type": "string"
+                },
+                {
+                    "Name": "utilizationmetricsvolumewriteopspersecondmaximum",
                     "Type": "string"
                 },
                 {
@@ -54,43 +98,7 @@
                     "Type": "string"
                 },
                 {
-                    "Name": "findingreasoncodes_isinvalidcloudwatchapplicationinsightssetup",
-                    "Type": "string"
-                },
-                {
-                    "Name": "findingreasoncodes_iscloudwatchapplicationinsightserror",
-                    "Type": "string"
-                },
-                {
-                    "Name": "findingreasoncodes_islicenseoverprovisioned",
-                    "Type": "string"
-                },
-                {
-                    "Name": "findingreasoncodes_isoptimized",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_1_operatingsystem",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_1_licenseedition",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_1_licensemodel",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_1_savingsopportunitypercentage",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_1_estimatedmonthlysavingscurrency",
-                    "Type": "string"
-                },
-                {
-                    "Name": "recommendationoptions_1_estimatedmonthlysavingsvalue",
+                    "Name": "findingdescription",
                     "Type": "string"
                 },
                 {
