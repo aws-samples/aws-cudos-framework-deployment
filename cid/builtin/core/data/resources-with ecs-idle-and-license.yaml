@@ -782,6 +782,22 @@ views:
         default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_ecs_service'
         description: Compute Optimizer ECS report S3 path
 
+  compute_optimizer_license_lines:
+    type: Glue_Table
+    File: co/license.json
+    parameters:
+      s3FolderPath:
+        default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_license'
+        description: Compute Optimizer license report S3 path
+
+  compute_optimizer_idle_lines:
+    type: Glue_Table
+    File: co/idle.json
+    parameters:
+      s3FolderPath:
+        default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_idle'
+        description: Compute Optimizer idle report S3 path
+
   compute_optimizer_auto_scale_lines:
     type: Glue_Table
     File: co/auto_scale.json
@@ -805,22 +821,6 @@ views:
       s3FolderPath:
         default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_lambda'
         description: Compute Optimizer Lambda report S3 path
-
-  compute_optimizer_license_lines:
-    type: Glue_Table
-    File: co/license.json
-    parameters:
-      s3FolderPath:
-        default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_license'
-        description: Compute Optimizer license report S3 path
-
-  compute_optimizer_idle_lines:
-    type: Glue_Table
-    File: co/idle.json
-    parameters:
-      s3FolderPath:
-        default: 's3://cid-data-{account_id}/compute_optimizer/compute_optimizer_idle'
-        description: Compute Optimizer idle report S3 path
 
   compute_optimizer_ec2_instance_options:
     File: co/ec2_instance_options.sql
