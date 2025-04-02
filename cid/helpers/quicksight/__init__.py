@@ -1262,7 +1262,7 @@ class QuickSight(CidBase):
             'VersionNumber': created_version
         }
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
-        self.set_tags(dashboard.arn, cid_version=dashboard.cid_version) # try to update version tag
+        self.set_tags(dashboard.arn, cid_version_tag=dashboard.cid_version) # try to update version tag
 
         self.discover_dashboard(dashboard.id)
         if not dashboard.health:
@@ -1335,7 +1335,6 @@ class QuickSight(CidBase):
         updated_version = int(update_status['VersionArn'].split('/')[-1])
 
         dashboard = self.describe_dashboard(poll=True, DashboardId=dashboard.id, VersionNumber=updated_version)
-        self.set_tags(dashboard.arn, cid_version=dashboard.cid_version) # try to update version tag
 
         if not dashboard.health:
             failure_reason = dashboard.version.get('Errors')
@@ -1350,6 +1349,7 @@ class QuickSight(CidBase):
         logger.debug(result)
         if result['Status'] != 200:
             raise Exception(result)
+        self.set_tags(dashboard.arn, cid_version_tag=dashboard.latest_available_cid_version) # update version tag to the latest
 
         return result
 
