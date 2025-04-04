@@ -238,6 +238,10 @@ datasets:
               Type: STRING
             - Name: account_name
               Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: parent_account_name
+              Type: STRING
         c00dd88a-e0c2-498c-b7e0-0a4e1053a4ed:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -445,6 +449,8 @@ datasets:
               - amortized_cost
               - account_id
               - account_name
+              - parent_account_id
+              - parent_account_name
           Source:
             JoinInstruction:
               LeftOperand: 9cff1849-cd58-40d4-9f6c-689073f9df37
