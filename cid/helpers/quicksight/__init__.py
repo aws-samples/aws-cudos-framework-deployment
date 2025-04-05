@@ -1301,6 +1301,21 @@ class QuickSight(CidBase):
             }
         elif definition.get('definition'):
             create_parameters['Definition'] = definition.get('definition')
+            currency = get_parameters().get('currency-symbol', 'USD')
+            if currency != 'USD' and currency:
+                if currency not in "USD|GBP|EUR|JPY|KRW|DKK|TWD|INR".split('|'):
+                    raise CidCritical(f'Currency {currency} is not supported. USD|GBP|EUR|JPY|KRW|DKK|TWD|INR')
+                cid_print(f'Setting currency = <BOLD>{currency}<END>')
+                def _set_currency(data):
+                    """Recursively set currency"""
+                    if isinstance(data, dict):
+                        if 'CurrencyDisplayFormatConfiguration' in data:
+                            data['CurrencyDisplayFormatConfiguration']['Symbol'] = currency
+                        return {k: _set_currency(v) for k, v in data.items()}
+                    elif isinstance(data, list):
+                        return [_set_currency(item) for item in data]
+                    return data
+                create_parameters['Definition'] = _set_currency(create_parameters['Definition'])
             dataset_references = []
             for identifier, arn in definition.get('datasets', {}).items():
                 # Fetch dataset by name (preferably) OR by id
