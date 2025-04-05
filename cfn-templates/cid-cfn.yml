@@ -104,6 +104,8 @@ Metadata:
         default: "Create Local Assets Bucket"
       ReferenceAssetsBucket:
         default: "Reference Assets Bucket Name"
+      CurrencySymbol:
+        default: "Currency Symbol"
   cfn-lint:
     config:
       ignore_checks:
@@ -256,6 +258,12 @@ Parameters:
     Type: String
     Description: Source bucket for CID Assets to sync from.
     Default: 'aws-managed-cost-intelligence-dashboards-us-east-1'
+  CurrencySymbol:
+    Type: String
+    Description: 'Currency Symbol. Please align with Currency of your CUR. Only supported for China region.'
+    Default: "USD"
+    AllowedValues: ["USD", "GBP", "EUR", "JPY", "KRW", "DKK", "TWD", "INR"]
+
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -1864,6 +1872,7 @@ Resources:
           account_map_source: 'dummy' #initial
           share_with_account: !Ref ShareDashboard
           account_map_database_name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          currency_symbol: !Ref CurrencySymbol
     Metadata:
       cfn_nag:
         rules_to_suppress:
