@@ -8,6 +8,10 @@ Parameters:
     Description: A pre-exist bucket without path where the Athena query results will go to
     Type: String
     Default: aws-athena-query-results-111111111111-gov-west-1
+  DataBucket:
+    Description: A pre-exist bucket without path where the data resides
+    Type: String
+    Default: cid-cur-111111111111-gov-west-1
   QuickSightDataSourceRoleName:
     Type: String
     Default: CidQuickSightDataSourceRole
@@ -27,6 +31,18 @@ Parameters:
     Description: The prefix for Lambda function names and IAM resources
     Type: String
     Default: project
+  CrawlerName:
+    Type: String
+    Description: Name of the Glue crawler
+    Default: project-quicksight-cid-crawler
+  TablePrefix:
+    Type: String
+    Description: Prefix for the table names created by the crawler
+    Default: cur
+  CrawlerSchedule:
+    Type: String
+    Description: Cron expression for crawler schedule (leave empty for on-demand)
+    Default: cron(0 0 * * ? *)
 
 Resources:
 
@@ -63,6 +79,7 @@ Resources:
               - sts:AssumeRole
       Path: !Sub /${RolePath}
       RoleName: !Sub ${Prefix}-${QuickSightDataSourceRoleName}
+      # PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/path/permission-boundary
       Policies:
         - PolicyName: AthenaAccess
           PolicyDocument:
@@ -103,6 +120,19 @@ Resources:
                   - !Sub arn:${AWS::Partition}:s3:::${CidBucket}
                   - !Sub arn:${AWS::Partition}:s3:::${CidBucket}/*
 
+              - Sid: AllowCUR
+                Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:ListBucketMultipartUploads
+                  - s3:ListMultipartUploadParts
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::${DataBucket}
+                  - !Sub arn:${AWS::Partition}:s3:::${DataBucket}/*
+
               - Sid: AllowGlue
                 Effect: Allow
                 Action:
@@ -117,7 +147,60 @@ Resources:
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}
                   - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*
 
+  GlueCrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: !Sub /${RolePath}
+      RoleName: !Sub ${Prefix}-${CrawlerName}
+      # PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/path/permission-boundary
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: glue.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSGlueServiceRole
+      Policies:
+        - PolicyName: S3BucketAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::\${DataBucket}*
+                  - !Sub arn:${AWS::Partition}:s3:::\${DataBucket}
+
+  GlueCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: !Ref CrawlerName
+      Role: !GetAtt GlueCrawlerRole.Arn
+      DatabaseName: !Ref DatabaseName
+      TablePrefix: !Ref TablePrefix
+      Schedule:
+        ScheduleExpression: !Ref CrawlerSchedule
+      Targets:
+        S3Targets:
+          - Path: !Ref DataBucket
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: LOG
+      Configuration: '{"Version":1.0,"CrawlerOutput":{"Partitions":{"AddOrUpdateBehavior":"InheritFromTable"},"Tables":{"AddOrUpdateBehavior":"MergeNewColumns"}}}'
+
 Outputs:
   QuickSightDataSourceRoleArn:
     Description: Dashboard data source arn
     Value: !GetAtt QuickSightDataSourceRole.Arn
+
+  CrawlerRoleARN:
+    Description: ARN of the IAM role created for the Glue crawler
+    Value: !GetAtt GlueCrawlerRole.Arn
+
+  CrawlerName:
+    Description: Name of the created Glue crawler
+    Value: !Ref GlueCrawler
