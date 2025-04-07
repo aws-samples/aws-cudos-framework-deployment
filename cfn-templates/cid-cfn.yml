@@ -272,7 +272,6 @@ Parameters:
       - "DKK" # Danish Krone      kr
       - "TWD" # Taiwan Dollar     NT
       - "INR" # Indian Rupee      ₹
- 
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
