@@ -262,7 +262,17 @@ Parameters:
     Type: String
     Description: 'Currency Symbol. Please align with Currency of your CUR. Only supported for China region.'
     Default: "USD"
-    AllowedValues: ["USD", "GBP", "EUR", "JPY", "KRW", "DKK", "TWD", "INR"] # Only currency symbols supported by QS
+    AllowedValues: 
+      # Only currency symbols supported by QS
+      - "USD" # US Dollar         $
+      - "GBP" # British Pound     £
+      - "EUR" # Euro              €
+      - "JPY" # Japanese Yen      ¥
+      - "KRW" # South Korean Won  ₩
+      - "DKK" # Danish Krone      kr
+      - "TWD" # Taiwan Dollar     NT
+      - "INR" # Indian Rupee      ₹
+ 
 
 
 Conditions:
