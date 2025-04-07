@@ -6,7 +6,7 @@ dashboards:
       - eucdashboard_metrics
     name: Amazon End User Computing Dashboard
     dashboardId: euc-dashboard
-    category: Additional
+    category: Advanced
     theme: MIDNIGHT
     templateId: euc-dashboard
 datasets:
