@@ -44,11 +44,11 @@ def choose_analysis(qs):
     """ Choose analysis """
     try:
         analyzes =  qs.client.get_paginator('list_analyses').paginate(AwsAccountId=qs.account_id).search('AnalysisSummaryList')
+        analyzes = list(filter(lambda a: a['Status']=='CREATION_SUCCESSFUL', analyzes)) # get only correct ones
     except qs.client.exceptions.AccessDeniedException:
         logger.info("AccessDeniedException while discovering analyses")
         return None
 
-    analyzes = list(filter(lambda a: a['Status']=='CREATION_SUCCESSFUL', analyzes ))
     if not analyzes:
         raise CidCritical("No analyses was found, please save your dashboard as an analyse first")
     choices = {a['Name']:a for a in sorted(analyzes, key=lambda a: a['LastUpdatedTime'])[::-1]}
