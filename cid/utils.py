@@ -209,6 +209,8 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     :param template_variables: a dict with variables for template
     :param break_on_ctrl_c: if True, exit() if user pressed CTRL+C
     :param fuzzy: if we need to use fuzzy input
+    :param multi: if we need multiple items as output
+    :param order: if we need to make order
 
     :returns: a value from user or provided in command line
     """
