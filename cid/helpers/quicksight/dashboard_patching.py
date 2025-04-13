@@ -54,7 +54,7 @@ def add_filter_to_dashboard_definition(dashboard_definition, field_names):
                                     "Type": "MULTI_SELECT"
                                 }
                             },
-                            "Title": (field_name).upper()
+                            "Title": (field_name).replace('_', ' ').title() # FIXME: can be better for acronyms
                         },
                         "FilterId": filter_id
                     }
