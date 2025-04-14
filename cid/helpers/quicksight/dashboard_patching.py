@@ -1,30 +1,49 @@
 ''' Patching dashboard definition
 '''
-
+from typing import Dict, List, Any
 from uuid import uuid4
 
+MAX_GRID_WIDTH = 12 # QuickSight Span width for controls
 
-def uuid():
-    ''' cid flavored uuid, just in case we will need to identify this later
-    '''
+
+def uuid() -> str:
+    """Generate a CID-flavored UUID."""
     return 'c1d' + str(uuid4())[3:]
 
-def add_filter_to_dashboard_definition(dashboard_definition, field_names):
+def get_most_used_dataset(dashboard_definition: Dict[str, Any]) -> str:
+    """Get an identifier of a most used dataset."""
+    dataset_identifiers = sorted([
+        (str(dashboard_definition).count(d["Identifier"]), d["Identifier"])
+        for d in dashboard_definition.get("DataSetIdentifierDeclarations", [])
+    ])
+    return dataset_identifiers[-1][1] if dataset_identifiers else None
+
+def format_field_name(field_name: str) -> str:
+    """Format field name for display in the filter title."""
+    # FIXME: Add special handling for acronyms
+    return field_name.replace('_', ' ').title()
+
+def align_grid_position(elements: List[Dict[str, Any]]) -> None:
+    """Align grid positions for control layout elements."""
+    row = col = 0
+    for element in elements:
+        if col + element["ColumnSpan"] > MAX_GRID_WIDTH:
+            col = 0
+            row += 1
+        element["ColumnIndex"] = col
+        element["RowIndex"] = row
+        col += element["ColumnSpan"]
+
+def add_filter_to_dashboard_definition(dashboard_definition: Dict[str, Any], field_names: List[str]) -> Dict[str, Any]:
     """ Add a filter on the specified fields to all datasets in a QuickSight definition
 
     param dashboard_definition (dict): The QuickSight definition JSON
     param field_names (list[str]): The list of field name to filter on
     returns: The modified QuickSight definition
     """
-    # get the most used dataset
-    dataset_identifiers = sorted([
-            (str(dashboard_definition).count(d["Identifier"]), d["Identifier"])
-            for d in dashboard_definition.get("DataSetIdentifierDeclarations", [])
-        ]
-    )
-    dataset_identifier = dataset_identifiers[-1][1] #take the dataset, the most frequently used
+    dataset_identifier = get_most_used_dataset(dashboard_definition)
     filter_ids = []
-    # FIXME: try to do linked
+    # FIXME: try to do linked filter controls
     for field_name in reversed(field_names):
         filter_group_id = uuid()
         filter_id = uuid()
@@ -60,7 +79,7 @@ def add_filter_to_dashboard_definition(dashboard_definition, field_names):
                                     "Type": "MULTI_SELECT"
                                 }
                             },
-                            "Title": (field_name).replace('_', ' ').title() # FIXME: can be better for acronyms
+                            "Title": format_field_name(field_name)
                         },
                         "FilterId": filter_id
                     }
@@ -78,7 +97,7 @@ def add_filter_to_dashboard_definition(dashboard_definition, field_names):
     return dashboard_definition
 
 
-def add_filter_control_to_sheets(dashboard_definition, filter_ids):
+def add_filter_control_to_sheets(dashboard_definition: Dict[str, Any], filter_ids: List[str]):
     """Add a filter control to each sheet except 'about'"""
     for sheet in dashboard_definition.get("Sheets", []):
         if sheet.get("Name") == "About":
@@ -112,12 +131,5 @@ def add_filter_control_to_sheets(dashboard_definition, filter_ids):
             })
 
         #Align elements in the Control Layout
-        row = col = 0
-        for element in sheet["SheetControlLayouts"][0]["Configuration"]["GridLayout"]["Elements"]:
-            if col + element["ColumnSpan"] > 12:
-                col = 0
-                row = row + 1
-            element["ColumnIndex"] = col
-            element["RowIndex"] = row
-            col = col + element["ColumnSpan"]
+        align_grid_position(sheet["SheetControlLayouts"][0]["Configuration"]["GridLayout"]["Elements"])
 
