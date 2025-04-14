@@ -1,7 +1,13 @@
 ''' Patching dashboard definition
 '''
 
-import uuid
+from uuid import uuid4
+
+
+def uuid():
+    ''' cid flavored uuid, just in case we will need to identify this later
+    '''
+    return 'c1d' + str(uuid4())[3:]
 
 def add_filter_to_dashboard_definition(dashboard_definition, field_names):
     """ Add a filter on the specified fields to all datasets in a QuickSight definition
@@ -19,9 +25,9 @@ def add_filter_to_dashboard_definition(dashboard_definition, field_names):
     dataset_identifier = dataset_identifiers[-1][1] #take the dataset, the most frequently used
     filter_ids = []
     # FIXME: try to do linked
-    for field_name in field_names:
-        filter_group_id = str(uuid.uuid4())
-        filter_id = str(uuid.uuid4())
+    for field_name in reversed(field_names):
+        filter_group_id = uuid()
+        filter_id = uuid()
         new_filter = {
             "CrossDataset": "ALL_DATASETS",
             "FilterGroupId": filter_group_id,
@@ -89,7 +95,7 @@ def add_filter_control_to_sheets(dashboard_definition, filter_ids):
             }]
 
         for filter_id in filter_ids:
-            control_id = str(uuid.uuid4())
+            control_id = uuid()
             sheet["FilterControls"].insert(0, {
                 'CrossSheet': {
                     "FilterControlId": control_id,
