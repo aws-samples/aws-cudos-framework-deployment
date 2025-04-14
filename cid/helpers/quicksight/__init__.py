@@ -4,7 +4,6 @@ import uuid
 import time
 import datetime
 import logging
-import yaml
 from string import Template
 from typing import Dict, List, Union
 from pkg_resources import resource_string
@@ -15,6 +14,7 @@ from cid.base import CidBase
 from cid.helpers import diff, timezone, randtime
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
+from cid.helpers.quicksight.dashboard_patching import add_filter_to_dashboard_definition
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.helpers.quicksight.definition import Definition as CidQsDefinition
@@ -1335,6 +1335,25 @@ class QuickSight(CidBase):
 
             create_parameters['SourceEntity'] = {}
             create_parameters['Definition']['DataSetIdentifierDeclarations'] = dataset_references
+
+            # Get a list of common columns for all datasets to update the filters
+            common_columns = None
+            for dataset_reference in dataset_references:
+                dataset = self.describe_dataset(dataset_reference['DataSetArn'].split('/')[-1])
+                all_columns = dataset.raw['OutputColumns']
+                logger.debug(f'{dataset_references}: {all_columns}')
+                if common_columns is None:
+                    common_columns = all_columns
+                else:
+                    common_columns = [c for c in all_columns if c in common_columns]
+            non_taxonomy_cols = [
+                'product_code', 'service', 'operation', 'charge_type', 'usage_type', 'reservation_a_r_n',
+                'item_description', 'pricing_unit', 'region', 'pricing_term', 'linked_account_id', 'savings_plan_a_r_n',
+            ]
+            taxonomy_columns_candidates = [c['Name'] for c in common_columns if c['Type'] == 'STRING' and c['Name'] not in non_taxonomy_cols]
+            taxonomy = get_parameter('taxonomy', message='Enter taxonomy fields for dashboards filter',  choices=taxonomy_columns_candidates, multi=True, order=True)
+            if taxonomy:
+                create_parameters['Definition'] = add_filter_to_dashboard_definition(create_parameters['Definition'], taxonomy)
         else:
             logger.debug(f'Definition = {definition}')
             raise CidCritical('Dashboard definition must contain sourceTemplate or definition')
