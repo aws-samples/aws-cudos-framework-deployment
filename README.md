@@ -31,8 +31,6 @@ We recommend starting with deployment of [Foundational Dashboards](https://catal
 
 [![Documentation >](assets/images/documentation.svg)](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy)
 
-[![Deployment Guide >](assets/images/deployment-guide-button.svg)](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy)
-
 
 ## Architecture of Foundational Dashboards
 
@@ -110,6 +108,9 @@ There are several ways we can deploy dashboards:
 1. [CloudFormation Template](./cfn-templates/cid-cfn.yml) using cid-cmd tool in Amazon Lambda. (Recommended)
 
 Please refer to the deployment documentation [here](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy).
+
+[![Deployment Guide >](assets/images/deployment-guide-button.svg)](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy)
+
 
 ## Cleanup
 Please refer to the documentation [here](https://catalog.workshops.aws/awscid/en-US/dashboards/teardown).
