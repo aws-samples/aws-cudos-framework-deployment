@@ -28,6 +28,8 @@ Cloud Intelligence Dashboards Framework provides AWS customers with [more then 2
 
 We recommend starting with deployment of [Foundational Dashboards](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy). Then deploy [Data Collection](https://catalog.workshops.aws/awscid/en-US/data-collection) and [Advanced Dashboards](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced). Check for [Additional](https://catalog.workshops.aws/awscid/en-US/dashboards/additional) Dashboards.
 
+[![Deployment Guide >](assets/images/deployment-guide-button.svg)](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy)
+
 ## Architecture of Foundational Dashboards
 
 ![Foundational Architecture](assets/images/foundational-architecture.png  "Foundational Architecture")
