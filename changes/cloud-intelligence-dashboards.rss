@@ -1,129 +1,399 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"
-     xmlns:atom="http://www.w3.org/2005/Atom"
-     xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>AWS Cloud Intelligence Dashboards</title>
     <link>https://catalog.workshops.aws/awscid/en-US</link>
-    <description>The Cloud Intelligence Dashboards is an open-source framework from AWS to get high-level and granular insight into their cost and usage data</description>
-    <atom:link href="https://raw.githubusercontent.com/aws-samples/aws-cudos-framework-deployment/refs/heads/rss_feed/changes/cloud-intelligence-dashboards.rss"
-                 rel="self"
-                 type="application/rss+xml"/>
-    <lastBuildDate>Fri, 31 Jan 2025 12:00:00 GMT</lastBuildDate>
+    <atom:link href="https://cid.workshops.aws.dev/feed/cloud-intelligence-dashboards.rss" rel="self" type="application/rss+xml"/>
+    <description>The Cloud Intelligence Dashboards is an open-source framework from AWS to get
+      high-level and granular insight into their cost and usage data</description>
+    <lastBuildDate>Mon, 21 Apr 2025 12:00:00 GMT</lastBuildDate>
     <language>en-us</language>
-
     <item>
-      <title>Extended Support Cost Projection Dashboard - v4.0.0</title>
-      <link>https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/extended-support-cost-projection</link>
-      <pubDate>23 Jan 2025 12:00:00 GMT</pubDate>
-      <category><![CDATA[Update]]></category>
-      <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/rss_feed/changes/CHANGELOG-extended-support-cost-projection.md#extended-support-cost-projection---v310</guid>
-      <description>Extended Support Cost Projection Dashboard update to v4.0.0</description>
+      <title>[Update] Compute Optimizer Dashboard v5.0.0</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-cod.md#compute-optimizer-dashboard---v500
+      </link>
+      <pubDate>Tue, 01 Apr 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">35694f6f-1a4c-41a8-8fa5-9dbb6c7c87e2</guid>
+      <description>Compute Optimizer Dashboard v5.0.0</description>
       <content:encoded><![CDATA[
-        In this release we have introduced projection of extended support costs for Amazon OpenSearch. The dashboard provides a clear view on OpenSearch and ElasticSearch domains reaching extended support in the next 3, 6, 12 months, and beyond.
-        
-        Important: This version requires the data collection version 3.2.0+. Update to this version requires a forced and recursive update. If you have modified the Extended Support Cost Projection dashboard view queries, they will be overridden when the dashboard is updated. Consider backing-up the existing view queries if they contain custom changes you want to keep so you can re-apply them after the update takes place.
-        To update run these commands in your CloudShell (recommended) or other terminal:
-
-        pip3 install --upgrade cid-cmd
-        cid-cmd update --dashboard-id extended-support-cost-projection --force --recursive
-
-        ]]> 
+      <div>
+        <ul>
+          <li>Added support for <strong>License Optimization Recommendations</strong>.</li>
+          <li>Added support for <strong>Idle resources recommendations</strong>.</li>
+        </ul>
+      </div>
+    ]]></content:encoded>    
+    </item>
+    <item>
+      <title>[Update] CORA Dashboard v0.0.7</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-cora.md#cora---v007
+      </link>
+      <pubDate>Wed, 29 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">eee79a49-0e53-432a-bdc6-50a9ecf7f0fa</guid>
+      <description>CORA Dashboard v0.0.7</description>
+      <content:encoded><![CDATA[
+      <div>
+        <ul>
+          <li>Added support for <strong>Idle recommendations</strong>.</li>
+          <li>Added <strong>Resource ID filter</strong> on the <em>Usage Optimization</em> tab.</li>
+        </ul>
+      </div>
+    ]]></content:encoded>    
+    </item>
+    <item>
+      <title>[Update] Health Event Dashboard v2.1.0</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-hed.md#v210
+      </link>
+      <pubDate>Tue, 28 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">d80e1eec-6a25-4719-b1c2-cf34d3822e7f</guid>
+      <description>Health Event Dashboard v2.1.0</description>
+      <content:encoded><![CDATA[
+  <div>
+    <ul>
+      <li>
+        Modified Athena query to include events ingested more than 90 days ago if they are not of closed status.
+        Although not a breaking change for the dashboard, you should update with the
+        <code>--force --recursive</code> flags to incorporate it.
+      </li>
+      <li>
+        Added guidance text for date range filtering.
+      </li>
+      <li>
+        Minor cosmetic and usability changes.
+      </li>
+    </ul>
+  </div>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>[Update] Extended Support Cost Projection Dashboard v4.0.0</title>
+      <link>
+        https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-extended-support-cost-projection.md#extended-support-cost-projection---v402</link>
+      <pubDate>Thu, 23 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Update]]></category>
+      <guid isPermaLink="false">e8b37795-d8e2-4de5-b72d-4e9c2c39b6f6</guid>
+      <description>Extended Support Cost Projection Dashboard v4.0.0</description>
+      <content:encoded><![CDATA[
+  <p>
+    In this release, we have introduced projection of extended support costs for 
+    <strong>Amazon OpenSearch</strong>. The dashboard provides a clear view on 
+    <strong>OpenSearch</strong> and <strong>ElasticSearch</strong> domains reaching 
+    extended support in the next <strong>3, 6, 12 months</strong>, and beyond.
+  </p>
+  
+  <p>
+    <strong>Important:</strong> This version requires the data collection version 
+    <strong>3.2.0+</strong>. Update to this version requires a forced and recursive update. 
+    If you have modified the Extended Support Cost Projection dashboard view queries, 
+    they will be overridden when the dashboard is updated. Consider backing up the existing 
+    view queries if they contain custom changes you want to keep so you can re-apply them after 
+    the update takes place.
+  </p>
+  
+  <p>
+    To update, run these commands in your CloudShell (recommended) or another terminal:
+  </p>
+  
+  <pre>
+pip3 install --upgrade cid-cmd
+cid-cmd update --dashboard-id extended-support-cost-projection --force --recursive
+  </pre>
+]]>
     </content:encoded>
     </item>
-
-
     <item>
-      <title>CUDOS update v5.5</title>
-      <link>https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi</link>
-      <pubDate>29 Nov 2025 12:00:00 GMT</pubDate>
-      <category><![CDATA[Update]]></category>
-      <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cudos.md#cudos---55</guid>
-      <description>CUDOS update to v5.5</description>
-      <content:encoded><![CDATA[
-        * DynamoDB: Refactored visuals to improve user experience and simplify navigation. 'DynamoDB Accounts by Category' visuals replaced with 'DynamoDB Cost per Account' and 'DynamoDB Cost per Usage Type Group'
-        
-        * DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservations Savings Estimation' which allows to calculate estimated savings for Amazon DynamoDB reserved capacity based on custom commitment amount.
-        
-        * DynamoDB: New section 'DynamoDB Provisioned Capacity - Reservation Coverage and Usage Monitoring' which allows monitor reserved capacity coverage per region and capacity type dimensions
-        
-        * DynamoDB: New visual 'Infrequent Access Tables Cost and Cost Efficiency Gain/Loss vs Standard Storage' which shows efficiency gains from Infrequent Access tables and also tables which could be migrated to Standard table class
-        
-        * Monitoring and Observability: New section 'AWS Config Periodic Recording Savings Opportunities' which shows potential savings from migration to periodic configuration item recording
-        
-        * Monitoring and Observability: New section 'Account and Regions without AWS Config' which allows to identify account and regions with AWS service usage and where AWS Config is not enabled
-        
-        * Analytics: Improved 'QuickSight Usage Type Group' calculated field to accommodate the latest QuickSight pricing constructs
-        
-        * AI/ML: Added Guardrails to the 'Bedrock UsageType Group' calculated field
-        
-        * Databases: Updated action filter on 'RI Coverage per region | engine | instance type or family' to be applied to 'Top 20 instances' allowing to focus on resources which belong to particular RI dimension
-        
-        * Compute: Bug fix for 'EKS Extended Support Cost per Account' visual. Added missing filter for Last 30 days.
-
-]]> 
+      <title>[Update] Compute Optimizer Dashboard v3.1.0</title>
+      <link>
+        https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cod.md#compute-optimizer-dashboard---v310
+      </link>
+      <pubDate>Fri, 10 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">0b1703d0-4ef0-47be-9c8e-f6b91ed2f181</guid>
+      <description>Compute Optimizer Dashboard v3.1.0</description>
+      <content:encoded><![CDATA[Removed link to deprecated feedback form]]>
     </content:encoded>
     </item>
     <item>
-      <title>SCAD Containers Cost Allocation Dashboard update to v1.0.0</title>
-      <link>https://catalog.workshops.aws/awscid/en-US/dashboards/additional/scad-containers-cost-allocation</link>
-      <pubDate>Thu, 25 Apr 2024 12:00:00 GMT</pubDate>
-      <category><![CDATA[Update]]></category>
-      <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-scad-cca.md#scad-containers-cost-allocation-dashboard---v100</guid>
-      <description>SCAD Containers Cost Allocation Dashboard update to v1.0.0</description>
-      <content:encoded>Added support to view Net Amortized Cost in "View Cost As" control in all sheets. Removed "Exclude last 1 month" from all date range controls to prevent "No Data" (because Split Cost Allocation Data for EKS starts filling data only in current month)
-        Fixed issue where all split cost and usage metrics were lower than they should be, for pods on EC2 instances that were running for less than a full hour
-        Fixed aggregation issues for usage metrics in Athena views</content:encoded>
+      <title>[Update] KPI Dashboard v2.1.0</title>
+      <link>
+        https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-kpi.md#kpi---210
+      </link>
+      <pubDate>Fri, 10 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">94a85c27-53f1-4867-b882-e96ad7b019f8</guid>
+      <description>KPI Dashboard v2.1.0</description>
+      <content:encoded><![CDATA[Removed link to deprecated feedback form]]>
+    </content:encoded>
     </item>
-
     <item>
-      <title>CUDOS update to v5.4</title>
+      <title>[Update] Cost Intelligence Dashboard v3.5.0</title>
+      <link>
+        https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cid.md#cid---35
+      </link>
+      <pubDate>Fri, 10 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">f67bdfc1-211e-4f3f-970f-654d6e9070ae</guid>
+      <description>Cost Intelligence Dashboard v3.5.0</description>
+      <content:encoded><![CDATA[Removed link to deprecated feedback form]]>
+    </content:encoded>
+    </item>
+    <item>
+      <title>[Update] Amazon Connect Cost Insight Dashboard v1.1.0</title>
+      <link>
+        https://catalog.workshops.aws/awscid/en-US/dashboards/additional/amazon-connect-cost-insight-dashboard
+      </link>
+      <pubDate>Fri, 10 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">3df5ff83-f28c-46aa-9ac8-04b9b15f8759</guid>
+      <description>Amazon Connect Cost Insight Dashboard v1.1.0</description>
+      <content:encoded><![CDATA[Removed link to deprecated feedback form]]>
+    </content:encoded>
+    </item>
+    <item>
+      <title>[New Dashboard] Amazon Connect Cost Insight Dashboard</title>
+      <link>
+        https://catalog.workshops.aws/awscid/en-US/dashboards/additional/amazon-connect-cost-insight-dashboard
+      </link>
+      <pubDate>Wed, 18 Dec 2024 12:00:00 GMT</pubDate>
+      <category><![CDATA[New Dashboard]]></category>
+      <guid isPermaLink="false">9aaae12e-0fd3-4bb4-988f-7a1b45d5db87</guid>
+      <description>Announcing release of Amazon Connect Cost Insight Dashboard</description>
+      <content:encoded><![CDATA[
+  <div>
+    <p>
+      The Amazon Connect Cost Insight Dashboard leverages AWS Cost and Usage Report data to provide visualizations that help optimize cloud spending and enhance operational efficiency within the Amazon Connect contact center infrastructure.
+    </p>
+    <p>
+      The dashboard is organized into 6 intuitive tabs:
+    </p>
+    <ul>
+      <li>
+        <strong>Overview:</strong> A high-level summary of Amazon Connect and Contact Center Telecom charges.
+      </li>
+      <li>
+        <strong>Connect:</strong> Detailed view of Amazon Connect Voice service usage and costs.
+      </li>
+      <li>
+        <strong>Telecom Spend:</strong> Breakdown of contact center Telecommunications costs by number types and countries.
+      </li>
+      <li>
+        <strong>Daily Usage:</strong> 30-day trending data for costs and usage patterns with drill downs to inbound/outbound minutes and phone numbers usage.
+      </li>
+      <li>
+        <strong>Call Details:</strong> Key metrics about call patterns, durations, and regional distribution.
+      </li>
+      <li>
+        <strong>Contact Search:</strong> Detailed analysis of individual contacts and their characteristics, allowing you to focus on a particular contact and see detailed information.
+      </li>
+    </ul>
+    <p>
+      Each tab progressively moves from broad insights to specific details, helping you effectively monitor your contact center operations.
+    </p>
+    <p>
+      <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/additional/amazon-connect-cost-insight-dashboard#example-dashboard" target="_blank">
+        Learn more
+      </a>
+    </p>
+  </div>
+]]>
+    </content:encoded>
+    </item>
+    <item>
+      <title>[New Dashboard] AWS Support Cases Radar</title>
+      <link>
+        https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/support-cases-radar
+      </link>
+      <pubDate>Tue, 17 Dec 2024 12:00:00 GMT</pubDate>
+      <category><![CDATA[New Dashboard]]></category>
+      <guid isPermaLink="false">3a6331f1-c25b-49f0-91d1-4ce4dcd57f86</guid>
+      <description>Announcing release of AWS Support Cases Radar Dashboard</description>
+      <content:encoded><![CDATA[
+  <div>
+    <p>
+      The AWS Support Cases Radar Dashboard provides a centralized platform to consolidate, monitor, and analyze AWS Support Cases across all linked accounts and multiple AWS organizations.
+    </p>
+    <p>
+      With a unified view of all support cases, this dashboard empowers cloud governance teams to enhance operational efficiency and maximize the value delivered by AWS Support.
+    </p>
+    <p>
+      <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/support-cases-radar" target="_blank">
+        Learn more
+      </a>
+    </p>
+  </div>
+]]>
+    </content:encoded>
+    </item>
+    <item>
+      <title>[Update] CUDOS v5.5.0</title>
+      <link>
+        https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cudos.md#cudos---55</link>
+      <pubDate>Fri, 29 Nov 2024 12:00:00 GMT</pubDate>
+      <category><![CDATA[Update]]></category>
+      <guid isPermaLink="false">05a02b9d-3a28-42d2-8f2f-419b27b5ce4b</guid>
+      <description>CUDOS v5.5.0</description>
+      <content:encoded><![CDATA[
+  <div>
+    <h2>Release Updates</h2>
+    <ul>
+      <li>
+        <strong>DynamoDB:</strong> Refactored visuals to improve user experience and simplify navigation.<br/>
+        Replaced <em>'DynamoDB Accounts by Category'</em> visuals with <em>'DynamoDB Cost per Account'</em> and <em>'DynamoDB Cost per Usage Type Group'</em>.
+      </li>
+      <li>
+        <strong>DynamoDB:</strong> New section <em>'DynamoDB Provisioned Capacity - Reservations Savings Estimation'</em> which allows calculating estimated savings for Amazon DynamoDB reserved capacity based on a custom commitment amount.
+      </li>
+      <li>
+        <strong>DynamoDB:</strong> New section <em>'DynamoDB Provisioned Capacity - Reservation Coverage &amp; Usage Monitoring'</em> which allows monitoring reserved capacity coverage per region and capacity type dimensions.
+      </li>
+      <li>
+        <strong>DynamoDB:</strong> New visual <em>'Infrequent Access Tables Cost and Cost Efficiency Gain/Loss vs Standard Storage'</em> which shows efficiency gains from Infrequent Access tables and identifies tables that could be migrated to Standard table class.
+      </li>
+      <li>
+        <strong>Monitoring and Observability:</strong> New section <em>'AWS Config Periodic Recording Savings Opportunities'</em> which shows potential savings from migrating to periodic configuration item recording.
+      </li>
+      <li>
+        <strong>Monitoring and Observability:</strong> New section <em>'Account and Regions without AWS Config'</em> which identifies accounts and regions with AWS service usage where AWS Config is not enabled.
+      </li>
+      <li>
+        <strong>Analytics:</strong> Improved <em>'QuickSight Usage Type Group'</em> calculated field to accommodate the latest QuickSight pricing constructs.
+      </li>
+      <li>
+        <strong>AI/ML:</strong> Added guardrails to the <em>'Bedrock UsageType Group'</em> calculated field.
+      </li>
+      <li>
+        <strong>Databases:</strong> Updated action filter on <em>'RI Coverage per region | engine | instance type or family'</em> applied to <em>'Top 20 instances'</em> to focus on resources belonging to a particular RI dimension.
+      </li>
+      <li>
+        <strong>Compute:</strong> Bug fix for <em>'EKS Extended Support Cost per Account'</em> visual by adding a missing filter for the Last 30 days.
+      </li>
+    </ul>
+  </div>
+]]>
+    </content:encoded>
+    </item>
+    <item>
+      <title>[Update] FOCUS Dashboard v0.2.0</title>
+      <link>https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-focus.md#focus-dashboard-v020</link>
+      <pubDate>Fri, 19 Apr 2024 12:00:00 GMT</pubDate>
+      <category><![CDATA[Update]]></category>
+      <guid isPermaLink="false">39499a91-d6be-4f6f-9f79-b0fcd9267ce3</guid>
+      <description>FOCUS Dashboard update v0.2.0</description>
+      <content:encoded><![CDATA[
+  <div>
+    <ul>
+      <li>Aligned with GA release of <strong>FOCUS 1.0</strong> in <em>AWS Data Exports</em>.</li>
+      <li>
+        <strong>MoM Trends:</strong> Bug fix for action filter and conditional formatting in the 
+        <em>'Effective Cost per Sub Account in USD'</em> visual.
+      </li>
+    </ul>
+  </div>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>[Update] SCAD Containers Cost Allocation Dashboard v2.0.0</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-scad-cca.md#scad-containers-cost-allocation-dashboard---v200</link>
+      <pubDate>Sat, 18 Jan 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[Update]]></category>
+      <guid isPermaLink="false">79c8c314-f4f5-4743-b49d-2b53f9e33b9f</guid>
+      <description>SCAD Containers Cost Allocation Dashboard v2.0.0</description>
+      <content:encoded><![CDATA[
+  <div>
+    <h2>Update: AWS Split Cost Allocation Data (SCAD) for ECS</h2>
+    <ul>
+      <li>
+        All visuals now include SCAD ECS data (including AWS Batch on ECS), in addition to SCAD EKS data.
+      </li>
+      <li>
+        The <strong>"EKS Breakdown"</strong> sheet has been renamed to <strong>"Cluster Breakdown"</strong>.
+      </li>
+      <li>
+        <strong>CUR 2.0 support:</strong> The dashboard now defaults to CUR 2.0, and still supports legacy CUR.
+      </li>
+      <li>
+        The <code>scad_cca_summary_view</code> and <code>scad_cca_hourly_resource_view</code> Athena views have been merged into a single view.
+      </li>
+      <li>
+        Time and data granularity levels remain the same, now accessible from the unified view.
+      </li>
+      <li>
+        Hourly and resource-level visuals in the "Cluster Breakdown" sheet have been removed and combined with the "Workloads Explorer" tab, which now supports these levels alongside its existing granularity.
+      </li>
+    </ul>
+  </div>
+]]>
+</content:encoded>
+    </item>
+    <item>
+      <title>[Update] CUDOS v5.4.0</title>
       <link>https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi</link>
-      <pubDate>Thu, 25 Apr 2024 12:00:00 GMT</pubDate>
+      <pubDate>Fri, 24 May 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[Update]]></category>
-      <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cudos.md#cudos---54</guid>
-      <description>CUDOS update to v5.4</description>
-      <content:encoded>CUDOS  is an in-depth, granular, and recommendation-driven dashboard to help customers dive deep into cost and usage. [new tab] Security: Introducing Security tab with cost and usage details for Security services. New tab includes visuals 'Security Spend per Service', 'Security Spend per Account' and respective detailed view sections for Amazon Cognito and Amazon GuardDuty
-Security: New Amazon Cognito section with visuals 'Amazon Cognito Spend and Projected Cost for M2M App Clients and Tokens', 'Amazon Cognito Spend and Projected Cost for M2M App Clients and Tokens per Account' and 'Amazon Cognito Detailed View'
-Security: New Amazon GuardDuty section with visuals 'Amazon GuardDuty Spend per UsageType', 'Amazon GuardDuty Spend per Account' and 'Accounts and Regions where Amazon GuardDuty is not enabled'
-Databases: Bugfix for Storage Type categorization on 'Daily Storage Cost'
-DynamoDB: Improved 'TOP 15 Candidates for Infrequent Access Tables Last 30 Days' visual to exclude tables after they migrated to Infrequent Access.</content:encoded>
+      <guid isPermaLink="false">6f2ce2d1-1695-4c3d-bdf5-2762dcd46d63</guid>
+      <description>CUDOS v5.4.0</description>
+      <content:encoded>CUDOS is an in-depth, granular, and recommendation-driven dashboard to help
+        customers dive deep into cost and usage. [new tab] Security: Introducing Security tab with
+        cost and usage details for Security services. New tab includes visuals 'Security Spend per
+        Service', 'Security Spend per Account' and respective detailed view sections for Amazon
+        Cognito and Amazon GuardDuty
+        Security: New Amazon Cognito section with visuals 'Amazon Cognito Spend and Projected Cost
+        for M2M App Clients and Tokens', 'Amazon Cognito Spend and Projected Cost for M2M App
+        Clients and Tokens per Account' and 'Amazon Cognito Detailed View'
+        Security: New Amazon GuardDuty section with visuals 'Amazon GuardDuty Spend per UsageType',
+        'Amazon GuardDuty Spend per Account' and 'Accounts and Regions where Amazon GuardDuty is not
+        enabled'
+        Databases: Bugfix for Storage Type categorization on 'Daily Storage Cost'
+        DynamoDB: Improved 'TOP 15 Candidates for Infrequent Access Tables Last 30 Days' visual to
+        exclude tables after they migrated to Infrequent Access.</content:encoded>
     </item>
 
     <item>
-      <title>Health Events Dashboard v2.0.0</title>
+      <title>[Update] Health Events Dashboard v2.0.0</title>
       <link>https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/health-events</link>
-      <pubDate>Thu, 25 Apr 2024 12:00:00 GMT</pubDate>
+      <pubDate>Mon, 30 Sep 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[Update]]></category>
-      <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-hed.md#v200</guid>
+      <guid isPermaLink="false">75f32556-7e88-4297-a087-14b4c6ad2a95</guid>
       <description>Health Events Dashboard v2.0.0</description>
-      <content:encoded>AWS Health integrates with 200+ AWS services to aggregate important information in a timely manner. AWS Health notifies you about service events, planned changes, and other account matters to help you manage your resources and take actions where necessary. Reorganized Summary tab for better flow and easy creation of targeted inventory reports of impacted resources
-Requires update with cid-cli parameters: --force --recursive.</content:encoded>
+      <content:encoded>AWS Health integrates with 200+ AWS services to aggregate important
+        information in a timely manner. AWS Health notifies you about service events, planned
+        changes, and other account matters to help you manage your resources and take actions where
+        necessary. Reorganized Summary tab for better flow and easy creation of targeted inventory
+        reports of impacted resources
+        Requires update with cid-cli parameters: --force --recursive.</content:encoded>
     </item>
-
     <item>
-      <title>CID Data Collection Framework update to v3.3.2</title>
+      <title>[Update] CID Data Collection Framework v3.3.2</title>
       <link>https://github.com/awslabs/cid-framework/releases</link>
-      <pubDate>Thu, 25 Apr 2024 12:00:00 GMT</pubDate>
+      <pubDate>Fri, 26 Apr 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[Update]]></category>
-      <guid isPermaLink="false">https://github.com/awslabs/cid-framework/releases/tag/3.3.2</guid>
+      <guid isPermaLink="true">https://github.com/awslabs/cid-framework/releases/tag/3.3.2</guid>
       <description>CID Data Collection Framework update to v3.3.2</description>
-      <content:encoded>DCF centralizes data from the AWS Organization including compute, storage, databases, analytics, networking,
+      <content:encoded>DCF centralizes data from the AWS Organization including compute, storage,
+        databases, analytics, networking,
         mobile, developer tools, management tools, security and enterprise applications.
-CHANGES: Health Events metadata schema issues - force JSON to string by @esc1144 in #192
-Create cost_anomaly_data table when module is deployed by @rarmist in #194
-Refactoring of Pricing Module, adding table for services availablity by @iakov-aws in #198
-increase MemorySize of inventory-lambda by @habibmasri in #202</content:encoded>
+        CHANGES: Health Events metadata schema issues - force JSON to string by @esc1144 in #192
+        Create cost_anomaly_data table when module is deployed by @rarmist in #194
+        Refactoring of Pricing Module, adding table for services availablity by @iakov-aws in #198
+        increase MemorySize of inventory-lambda by @habibmasri in #202</content:encoded>
     </item>
-
     <item>
-      <title>New SCAD Containers Cost Allocation Dashboard</title>
-      <link>https://catalog.workshops.aws/awscid/en-US/dashboards/additional/scad-containers-cost-allocation</link>
+      <title>[New Dashboard] SCAD Containers Cost Allocation Dashboard v1.0.0</title>
+      <link>
+        https://catalog.workshops.aws/awscid/en-US/dashboards/additional/scad-containers-cost-allocation</link>
       <pubDate>Thu, 25 Apr 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[New dashboard]]></category>
-      <guid isPermaLink="false">https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-scad-cca.md#scad-containers-cost-allocation-dashboard---v001</guid>
+      <guid isPermaLink="false">8e97f6a0-0dc2-4ed2-81df-cd43734f0a7d</guid>
       <description>Introducing SCAD Containers Cost Allocation Dashboard</description>
-      <content:encoded>Initial release&lt;br&gt; &lt;br&gt; Released to GA.&lt;br&gt; &lt;br&gt; -------</content:encoded>
+      <content:encoded>Initial release&lt;br&gt; &lt;br&gt; Released to GA.&lt;br&gt; &lt;br&gt;
+        -------</content:encoded>
     </item>
 
   </channel>
