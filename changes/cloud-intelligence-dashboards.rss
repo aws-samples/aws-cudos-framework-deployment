@@ -4,8 +4,7 @@
     <title>AWS Cloud Intelligence Dashboards</title>
     <link>https://catalog.workshops.aws/awscid/en-US</link>
     <atom:link href="https://cid.workshops.aws.dev/feed/cloud-intelligence-dashboards.rss" rel="self" type="application/rss+xml"/>
-    <description>The Cloud Intelligence Dashboards is an open-source framework from AWS to get
-      high-level and granular insight into their cost and usage data</description>
+    <description>The Cloud Intelligence Dashboards is an open-source framework, lovingly cultivated and maintained by a group of customer-obsessed AWSers, that gives customers the power to get high-level and granular insight into their cost and usage data. Supported by the Well-Architected framework, the dashboards can be deployed by any customer using a CloudFormation template or a command-line tool in their environment in under 30 minutes. These dashboards help you to drive financial accountability, optimize cost, track usage goals, implement best-practices for governance, and achieve operational excellence across all your organization.</description>
     <lastBuildDate>Mon, 21 Apr 2025 12:00:00 GMT</lastBuildDate>
     <language>en-us</language>
     <item>
