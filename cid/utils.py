@@ -207,7 +207,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     :param none_as_disabled: if True and choices is a dict, all choices with None as a value will be disabled
     :param template_variables: a dict with variables for template
     :param break_on_ctrl_c: if True, exit() if user pressed CTRL+C
-    :param fuzzy: if True, exit() if user pressed CTRL+C
+    :param fuzzy: if we need to use fuzzy input
 
     :returns: a value from user or provided in command line
     """
@@ -244,15 +244,16 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             result = inquirer.fuzzy(
                 message=f'[{param_name}] {message}:',
                 choices=choices,
-                long_instruction='use arrows or start typing',
+                long_instruction='Type to search or use arrows ↑↓ to navigate',
                 match_exact=True,
                 default=default,
+                exact_symbol='',
             ).execute()
         else:
             result = inquirer.select(
                 message=f'[{param_name}] {message}:',
                 choices=choices,
-                long_instruction='use arrows or start typing',
+                long_instruction='Use arrows ↑↓ to navigate',
                 default=default,
             ).execute()
     else: # it is a text entry

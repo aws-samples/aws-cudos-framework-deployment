@@ -1262,7 +1262,7 @@ class QuickSight(CidBase):
             'VersionNumber': created_version
         }
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
-        self.set_tags(dashboard.arn, cid_version=dashboard.cid_version) # try to update version tag
+        self.set_tags(dashboard.arn, cid_version_tag=dashboard.cid_version) # try to update version tag
 
         self.discover_dashboard(dashboard.id)
         if not dashboard.health:
@@ -1301,6 +1301,21 @@ class QuickSight(CidBase):
             }
         elif definition.get('definition'):
             create_parameters['Definition'] = definition.get('definition')
+            currency = get_parameters().get('currency-symbol', 'USD')
+            if currency != 'USD' and currency:
+                if currency not in "USD|GBP|EUR|JPY|KRW|DKK|TWD|INR".split('|'):
+                    raise CidCritical(f'Currency {currency} is not supported. USD|GBP|EUR|JPY|KRW|DKK|TWD|INR')
+                cid_print(f'Setting currency = <BOLD>{currency}<END>')
+                def _set_currency(data):
+                    """Recursively set currency"""
+                    if isinstance(data, dict):
+                        if 'CurrencyDisplayFormatConfiguration' in data:
+                            data['CurrencyDisplayFormatConfiguration']['Symbol'] = currency
+                        return {k: _set_currency(v) for k, v in data.items()}
+                    elif isinstance(data, list):
+                        return [_set_currency(item) for item in data]
+                    return data
+                create_parameters['Definition'] = _set_currency(create_parameters['Definition'])
             dataset_references = []
             for identifier, arn in definition.get('datasets', {}).items():
                 # Fetch dataset by name (preferably) OR by id
@@ -1335,7 +1350,6 @@ class QuickSight(CidBase):
         updated_version = int(update_status['VersionArn'].split('/')[-1])
 
         dashboard = self.describe_dashboard(poll=True, DashboardId=dashboard.id, VersionNumber=updated_version)
-        self.set_tags(dashboard.arn, cid_version=dashboard.cid_version) # try to update version tag
 
         if not dashboard.health:
             failure_reason = dashboard.version.get('Errors')
@@ -1350,6 +1364,7 @@ class QuickSight(CidBase):
         logger.debug(result)
         if result['Status'] != 200:
             raise Exception(result)
+        self.set_tags(dashboard.arn, cid_version_tag=dashboard.latest_available_cid_version) # update version tag to the latest
 
         return result
 
