@@ -29,9 +29,9 @@ dashboards:
       - DataSetIdentifier: sus_carbon_emissions
         Expression: |-
           ifelse(
-              {account_name} = "null",
+              isNull({account_name}),
               {account_id},
-              {account_id}
+              {account_name}
           )
         Name: calc_account_name
       - DataSetIdentifier: sus_compute_ec2
