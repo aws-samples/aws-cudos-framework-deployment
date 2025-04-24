@@ -8,6 +8,25 @@
     <lastBuildDate>Mon, 21 Apr 2025 12:00:00 GMT</lastBuildDate>
     <language>en-us</language>
     <item>
+      <title>[Update] Sustainability Proxy and Carbon emissions data Dashboard v4.0.0</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHAMGELOG-sustainability-proxy-metrics.md#sustainability-proxy-and-carbon-emissions-data-dashboard---v400
+      </link>
+      <pubDate>Wed, 23 Apr 2025 17:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">03f52db0-7991-4edd-bb0c-3da50a807ee0</guid>
+      <description>Sustainability Proxy and Carbon emissions data Dashboard v4.0.0</description>
+      <content:encoded><![CDATA[
+    <div>
+      <ul>
+        <li><strong>Removed</strong> option for using <code>experimental-programmatic-access-ccft</code> (Deprecated).</li>
+        <li><strong>Added</strong> dependency on the <em>Carbon Data export</em>.</li>
+        <li><strong>Updated</strong> datasets to gain data from the <em>Carbon Data export</em>.</li>
+      </ul>
+    </div>
+    ]]></content:encoded>    
+    </item>
+    <item>
       <title>[Update] Compute Optimizer Dashboard v5.0.0</title>
       <link>
         https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-cod.md#compute-optimizer-dashboard---v500
