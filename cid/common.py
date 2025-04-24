@@ -534,6 +534,7 @@ class Cid():
             recursive = True
 
         if recursive:
+            logger.info('creating datasets')
             self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
 
         # Find datasets for template or definition
@@ -580,7 +581,7 @@ class Cid():
 
                 if not matching_datasets:
                     reco = ''
-                    logger.warning(f'Dataset {dataset_name} is not found')
+                    logger.warning(f'Dataset {dataset_name} is not found.')
                     if utils.exec_env()['shell'] == 'lambda':
                         # We are in lambda
                         reco = 'You can try deleting existing dataset and re-run.'
@@ -1112,11 +1113,16 @@ class Cid():
             if _ds_id:
                 self.qs.describe_dataset(_ds_id)
 
-        found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
+        found_datasets = utils.intersection(required_datasets, [v['Name'] for v in self.qs.list_data_sets()])
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
+        logger.debug('found_datasets = %s', found_datasets)
+        logger.debug('missing_datasets = %s', missing_datasets)
+
+        update = update or get_parameters().get('update')
         # Update existing datasets
         if update:
+            logger.debug('updating datasets')
             for dataset_name in found_datasets[:]:
                 if dataset_name in known_datasets.keys():
                     _found_dsc = self.qs.get_datasets(id=known_datasets.get(dataset_name))
@@ -1698,6 +1704,23 @@ class Cid():
         compiled_definition = json.loads(template.safe_substitute(params))
         self.glue.create_or_update_crawler(crawler_definition=compiled_definition)
 
+    def cur_tags_json(self) -> str:
+
+        tags = {
+            ''
+        }
+        return f'''
+            json_format(
+                CAST (
+                    MAP_FROM_ENTRIES (
+                        ARRAY[
+                            ('bu', resource_tags['user_b_e']),
+                            ('be', resource_tags['user_b_u'])
+                        ]
+                    )
+                AS JSON)
+            )
+        '''
 
     def get_view_query(self, view_name: str) -> str:
         """ Returns a fully compiled AHQ """
@@ -1735,6 +1758,8 @@ class Cid():
             'cur1_table_name': self.cur1.table_name if cur1_required else None,
             'cur2_database':   self.cur2.database   if cur2_required else None,
             'cur2_table_name': self.cur2.table_name if cur2_required else None,
+            'cur_tags_json':   self.cur_tags_json,
+
         }
 
         columns_tpl = self.get_template_parameters(
