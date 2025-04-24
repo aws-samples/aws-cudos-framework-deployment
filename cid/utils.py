@@ -237,16 +237,17 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
                     )
                 )
                 choices = _choices
+        elif isinstance(choices, list):
+            choices = [Choice(c) for c in choices]
         print()
         if not isatty():
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
         if fuzzy:
             result = inquirer.fuzzy(
                 message=f'[{param_name}] {message}:',
-                choices=choices,
+                choices=sorted(choices, key=lambda c: (c.name != default)), # make default first
                 long_instruction='Type to search or use arrows ↑↓ to navigate',
                 match_exact=True,
-                default=default,
                 exact_symbol='',
             ).execute()
         else:
