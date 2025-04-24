@@ -9,16 +9,28 @@ logger = logging.getLogger(__name__)
 
 class Dataset(CidQsResource):
 
+    def __init__(self, raw: dict, qs=None) -> None:
+        super().__init__(raw)
+        self.qs = qs
+
+    def describe(self) -> str:
+        if not self.qs:
+            raise Exception('Need to define me with qs')
+        self.raw = self.qs.client.describe_data_set(AwsAccountId=self.account_id, DataSetId=self.id).get('DataSet')
+        return self
+
     @property
     def id(self) -> str:
         return self.get_property('DataSetId')
 
     @property
     def columns(self) -> list:
+        if not 'OutputColumns' in self.raw: self.describe()
         return self.get_property('OutputColumns')
 
     @property
     def datasources(self) -> list:
+        if not 'PhysicalTableMap' in self.raw: self.describe()
         _datasources = []
         try:
             for table_map in self.raw.get('PhysicalTableMap', {}).values():
@@ -32,6 +44,7 @@ class Dataset(CidQsResource):
 
     @property
     def schemas(self) -> list:
+        if not 'PhysicalTableMap' in self.raw: self.describe()
         schemas = []
         try:
             for table_map in self.get_property('PhysicalTableMap').values():

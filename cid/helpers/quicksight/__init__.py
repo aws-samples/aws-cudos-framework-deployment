@@ -829,7 +829,7 @@ class QuickSight(CidBase):
         deadline = time.time() + timeout
         while time.time() <= deadline:
             try:
-                _dataset = Dataset(self.client.describe_data_set(AwsAccountId=self.account_id, DataSetId=id).get('DataSet'))
+                _dataset = Dataset(self.client.describe_data_set(AwsAccountId=self.account_id, DataSetId=id).get('DataSet'), qs=self)
                 logger.info(f'Saving dataset details "{_dataset.name}" ({_dataset.id})')
                 self._datasets[_dataset.id] = _dataset
                 break
@@ -883,7 +883,7 @@ class QuickSight(CidBase):
         try:
             for dataset in self.list_data_sets():
                 try:
-                    self.describe_dataset(dataset.get('DataSetId'))
+                    self._datasets[dataset['DataSetId']] = Dataset(dataset, qs=self)
                 except Exception as exc:
                     logger.debug(exc, exc_info=True)
                     continue
@@ -1351,9 +1351,10 @@ class QuickSight(CidBase):
                 'item_description', 'pricing_unit', 'region', 'pricing_term', 'linked_account_id', 'savings_plan_a_r_n',
             ]
             taxonomy_columns_candidates = [c['Name'] for c in common_columns if c['Type'] == 'STRING' and c['Name'] not in non_taxonomy_cols]
-            taxonomy = get_parameter('taxonomy', message='Enter taxonomy fields for dashboards filter',  choices=taxonomy_columns_candidates, multi=True, order=True)
-            if taxonomy:
-                create_parameters['Definition'] = add_filter_to_dashboard_definition(create_parameters['Definition'], taxonomy)
+            if taxonomy_columns_candidates:
+                taxonomy = get_parameter('taxonomy', message='Enter taxonomy fields for dashboards filter',  choices=taxonomy_columns_candidates, multi=True, order=True)
+                if taxonomy:
+                    create_parameters['Definition'] = add_filter_to_dashboard_definition(create_parameters['Definition'], taxonomy)
         else:
             logger.debug(f'Definition = {definition}')
             raise CidCritical('Dashboard definition must contain sourceTemplate or definition')
