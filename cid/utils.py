@@ -227,16 +227,10 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         if _all_yes and ('yes' in choices):
             return 'yes'
         if isinstance(choices, dict):
-            _choices = []
-            for key, value in choices.items():
-                _choices.append(
-                    Choice(
-                        name=key,
-                        value=value,
-                        enabled=not (none_as_disabled and value is None),
-                    )
-                )
-                choices = _choices
+            choices = [
+                Choice(name=key, value=value, enabled=not (none_as_disabled and value is None))
+                for key, value in choices.items()
+            ]
         elif isinstance(choices, list):
             choices = [Choice(c) for c in choices]
         print()
