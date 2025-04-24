@@ -246,8 +246,11 @@ class CUR(AbstractCUR):
                     database_name=database,
                 )
                 all_cur_tables += [(database, table) for table in tables]
-            except self.athena.client.exceptions.AccessDenied:
-                logger.info(f'Cannot read from athena database {database}')
+            except self.athena.client.exceptions.ClientError as exc:
+                if 'AccessDenied' in str(exc):
+                    logger.info(f'Cannot read from athena database {database}')
+                else:
+                    raise
 
         if not all_cur_tables:
             # FIXME : distinguish a case where we have NONE tables in any database. This might be because
