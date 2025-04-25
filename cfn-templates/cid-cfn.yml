@@ -263,7 +263,7 @@ Parameters:
     Type: String
     Description: 'Currency Symbol. Please align with Currency of your CUR. Only supported for China region.'
     Default: "USD"
-    AllowedValues: 
+    AllowedValues:
       # Only currency symbols supported by QS
       - "USD" # US Dollar         $
       - "GBP" # British Pound     £
@@ -294,7 +294,10 @@ Conditions:
         - !Equals [ !Ref DeployKPIDashboard, "yes" ]
   NeedAthenaWorkgroup:  !Equals [ !Ref AthenaWorkgroup, "" ]
   NeedAthenaQueryResultsBucket:  !Equals [ !Ref AthenaQueryResultsBucket, "" ]
-  NeedDatabase: !Equals [ !Ref DatabaseName, "" ]
+  NeedDatabase:
+    Fn::And:
+      - !Equals [ !Ref DatabaseName, "" ]
+      - !Condition NeedLegacyCUR
   NeedCURTable:
     Fn::And:
       - !Equals [ !Ref CURTableName, "" ]
@@ -1873,14 +1876,14 @@ Resources:
           athena_workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
           quicksight_datasource_id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
           quicksight_datasource_role_arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
-          athena_database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          athena_database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
           glue_data_catalog: !Ref GlueDataCatalog
           cur_table_name: !If [ UseCUR2, 'cur2', !If [ NeedCURTable, !Ref MyCURTable, !Ref CURTableName ] ]
           cur_database: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
           quicksight_user: !Ref QuickSightUser
           account_map_source: 'dummy' #initial
           share_with_account: !Ref ShareDashboard
-          account_map_database_name: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
+          account_map_database_name: !If [ UseCUR2, !ImportValue cid-DataExports-Database, !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ] ]
           currency_symbol: !Ref CurrencySymbol
     Metadata:
       cfn_nag:
@@ -2212,3 +2215,4 @@ Outputs:
     Description: Technical Value - CidExecArn
     Value: !GetAtt CidExec.Arn
     Export: { Name: !Sub 'cid${Suffix}-CidExecArn'}
+
