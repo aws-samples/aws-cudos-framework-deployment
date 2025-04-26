@@ -174,6 +174,7 @@ def patch_currency(definition, currency_symbol):
             raise CidCritical(f'Currency {currency_symbol} is not supported. USD|GBP|EUR|JPY|KRW|DKK|TWD|INR')
         logger.info(f'Setting currency_symbol = <BOLD>{currency_symbol}<END>')
         definition = _set_currency_symbol(definition)
+    return definition
 
 
 def patch_group_by(definition, fields):
@@ -197,3 +198,4 @@ def patch_group_by(definition, fields):
                 for field in reversed(fields):
                     control.get('SelectableValues', {}).get('Values',[]).insert(0, format_field_name(field))
                     logger.trace(f'added {field} to {sheet["Name"]} / {control["Title"]}')
+    return definition

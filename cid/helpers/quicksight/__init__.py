@@ -1,9 +1,9 @@
 import re
 import json
-import uuid
 import time
 import datetime
 import logging
+from uuid import uuid4
 from string import Template
 from typing import Dict, List, Union
 from pkg_resources import resource_string
@@ -356,7 +356,7 @@ class QuickSight(CidBase):
         ).decode('utf-8'))
         data_source_permissions = json.loads(data_source_permissions_tpl.safe_substitute(columns_tpl))
         datasource_name = datasource_id or "CID Athena"
-        datasource_id = datasource_id or str(uuid.uuid4())
+        datasource_id = datasource_id or str(uuid4())
         params = {
             "AwsAccountId": self.account_id,
             "DataSourceId": datasource_id,
@@ -1301,7 +1301,6 @@ class QuickSight(CidBase):
             }
         elif definition.get('definition'):
             create_parameters['Definition'] = definition.get('definition')
-           
             create_parameters['Definition'] = patch_currency(
                 create_parameters['Definition'],
                 currency_symbol=get_parameters().get('currency-symbol', 'USD')
