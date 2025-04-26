@@ -1515,6 +1515,14 @@ class Cid():
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
 
+        # patch dataset for tags
+        resource_tags = json.loads(get_parameters().get('resource-tags', '{}'))
+        custom_fields = {
+            'tag_' + tag_name : F"parseJson(tags_json, '$.[\"{tag_name}\"]')"
+            for tag_name in resource_tags.keys()
+        }
+        compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
+
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
         if isinstance(found_dataset, Dataset):
             update_dataset = False
@@ -1705,22 +1713,31 @@ class Cid():
         self.glue.create_or_update_crawler(crawler_definition=compiled_definition)
 
     def cur_tags_json(self) -> str:
-
-        tags = {
-            ''
-        }
-        return f'''
+        '''
+        global parameters: resource_tags_text:
+                '{
+                    "bu": "resource_tags['user_b_u'])",
+                    "be": "resource_tags['user_b_e'])"
+                }'
+        '''
+        resource_tags = json.loads(get_parameters().get('resource-tags', '{}'))
+        if not resource_tags:
+            return '{}'
+        logger.debug(f'cur_tags_json = {resource_tags}')
+        array = ',\n                        '.join([f"{{'{name}', {value}}}" for name, value in resource_tags.items()])
+        res = f'''
             json_format(
                 CAST (
                     MAP_FROM_ENTRIES (
                         ARRAY[
-                            ('bu', resource_tags['user_b_e']),
-                            ('be', resource_tags['user_b_u'])
+                            {array}
                         ]
                     )
                 AS JSON)
             )
         '''
+        logger.debug(f'cur_tags_json = {res}')
+        return res
 
     def get_view_query(self, view_name: str) -> str:
         """ Returns a fully compiled AHQ """

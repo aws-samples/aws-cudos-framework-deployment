@@ -14,7 +14,7 @@ from cid.base import CidBase
 from cid.helpers import diff, timezone, randtime
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
-from cid.helpers.quicksight.dashboard_patching import add_filter_to_dashboard_definition
+from cid.helpers.quicksight.dashboard_patching import add_filter_to_dashboard_definition, patch_currency, patch_group_by
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.helpers.quicksight.definition import Definition as CidQsDefinition
@@ -1301,21 +1301,11 @@ class QuickSight(CidBase):
             }
         elif definition.get('definition'):
             create_parameters['Definition'] = definition.get('definition')
-            currency = get_parameters().get('currency-symbol', 'USD')
-            if currency != 'USD' and currency:
-                if currency not in "USD|GBP|EUR|JPY|KRW|DKK|TWD|INR".split('|'):
-                    raise CidCritical(f'Currency {currency} is not supported. USD|GBP|EUR|JPY|KRW|DKK|TWD|INR')
-                cid_print(f'Setting currency = <BOLD>{currency}<END>')
-                def _set_currency(data):
-                    """Recursively set currency"""
-                    if isinstance(data, dict):
-                        if 'CurrencyDisplayFormatConfiguration' in data:
-                            data['CurrencyDisplayFormatConfiguration']['Symbol'] = currency
-                        return {k: _set_currency(v) for k, v in data.items()}
-                    elif isinstance(data, list):
-                        return [_set_currency(item) for item in data]
-                    return data
-                create_parameters['Definition'] = _set_currency(create_parameters['Definition'])
+           
+            create_parameters['Definition'] = patch_currency(
+                create_parameters['Definition'],
+                currency_symbol=get_parameters().get('currency-symbol', 'USD')
+            )
             dataset_references = []
             for identifier, arn in definition.get('datasets', {}).items():
                 # Fetch dataset by name (preferably) OR by id
@@ -1355,6 +1345,8 @@ class QuickSight(CidBase):
                 taxonomy = get_parameter('taxonomy', message='Enter taxonomy fields for dashboards filter',  choices=taxonomy_columns_candidates, multi=True, order=True)
                 if taxonomy:
                     create_parameters['Definition'] = add_filter_to_dashboard_definition(create_parameters['Definition'], taxonomy)
+                    create_parameters['Definition'] = patch_group_by(create_parameters['Definition'], taxonomy)
+                    
         else:
             logger.debug(f'Definition = {definition}')
             raise CidCritical('Dashboard definition must contain sourceTemplate or definition')

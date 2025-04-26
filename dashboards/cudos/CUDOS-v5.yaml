@@ -2336,13 +2336,23 @@ dashboards:
         Name: Glacier Migration Savings Opportunity
       - DataSetIdentifier: summary_view
         Expression: |-
-          ifelse(${GroupBy}='Product_Code', {product_code},${GroupBy}='Purchase_Option',{purchase_option},${GroupBy}= 'Service',service, ${GroupBy}='Instance_Type_Family' ,{instance_type_family},${GroupBy}='Account',Account,
-          ${GroupBy}='Availability_Zone', {availability_zone},${GroupBy}='Operation', operation,
-          ${GroupBy}='Region',region,
-          ${GroupBy}= 'Charge_Type', {charge_type},
-          ${GroupBy}= 'Usage_Type',{usage_type},${GroupBy}= 'Platform', platform,
-          ${GroupBy}='Product_Family_Group',{Product Family Group},${GroupBy}='Charge_Category',{charge_category},
-          service)
+          ifelse(
+              ${GroupBy}='Product_Code', {product_code},
+              ${GroupBy}='Purchase_Option', {purchase_option},
+              ${GroupBy}='Service', service,
+              ${GroupBy}='Instance_Type_Family', {instance_type_family},
+              ${GroupBy}='Account', Account,
+              ${GroupBy}='Availability_Zone', {availability_zone},
+              ${GroupBy}='Operation', operation,
+              ${GroupBy}='Region',region,
+              ${GroupBy}='Charge_Type', {charge_type},
+              ${GroupBy}='Usage_Type', {usage_type},
+              ${GroupBy}='Platform', platform,
+              ${GroupBy}='Product_Family_Group', {Product Family Group},
+              ${GroupBy}='Charge_Category', {charge_category},
+              // Add ${GroupBy} here
+              service
+          )
         Name: Group By Fields
       - DataSetIdentifier: summary_view
         Expression: |-

@@ -1,4 +1,6 @@
 import logging
+from uuid import uuid4
+from copy import deepcopy
 
 import yaml
 
@@ -9,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Dataset(CidQsResource):
 
-    def __init__(self, raw: dict, qs=None) -> None:
+    def __init__(self, raw: dict, qs=None, athena=None) -> None:
         super().__init__(raw)
         self.qs = qs
 
@@ -55,6 +57,98 @@ class Dataset(CidQsResource):
         except Exception as e:
             logger.debug(e, exc_info=True)
         return sorted(list(set(schemas)))
+
+    @staticmethod
+    def patch(dataset, custom_fields, athena):
+        def _get_athena_columns(table, database=None):
+            '''returns athena columns'''
+            return [
+                line[0].split()
+                for line in athena.query(
+                    f'SHOW COLUMNS FROM {table}',
+                    include_header=True, database=database
+                )
+            ]
+
+        def _replace_columns(existing_columns, new_columns):
+            '''replace columns but keep the order'''
+            existing_columns = [
+                existing_col
+                for existing_col in existing_columns
+                if existing_col in new_columns
+            ] # filter out old
+            for col in new_columns: # add new
+                if col not in existing_columns:
+                    existing_columns.append(col)
+            return existing_columns
+
+        def _athena_to_qs_type(col, athena_type):
+            '''athena type to QS'''
+            if 'varchar'   in athena_type: return {'Name': col, 'Type': 'STRING'}
+            if 'timestamp' in athena_type: return {'Name': col, 'Type': 'DATETIME'}
+            if 'bigint'    in athena_type: return {'Name': col, 'Type': 'INTEGER'}
+            if 'double'    in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
+            print(f'WARNING: unknown type {athena_type}')
+            return {'Name': col, 'Type': 'STRING'}
+
+        dataset = deepcopy(dataset)
+
+        # update each PhysicalTableMap with all columns from athena views
+        all_columns = []
+        for pt in dataset.raw['PhysicalTableMap'].values():
+            table_name = pt['RelationalTable']['Name']
+            database = pt['RelationalTable']['Schema']
+            columns = _get_athena_columns(table_name, database)
+            logger.trace(f'columns = {columns}')
+
+            new_columns = [_athena_to_qs_type(name, athena_type) for name, athena_type in columns]
+            #for col in new_columns:
+            #    if col['Name'] in [existing_col['Name'] for existing_col in all_columns]: #FIXME not all_columns so far but must be all cols before modification
+            #        col['Name'] = f'{col["Name"]}[{table_name}]'
+            pt['RelationalTable']['InputColumns'] = _replace_columns(pt['RelationalTable']['InputColumns'], new_columns)
+            all_columns += pt['RelationalTable']['InputColumns']
+
+
+        # get route logical table
+        route_lt = None
+        for lt in list(dataset['LogicalTableMap'].keys()):
+            if not any(lt in str(_lt["Source"]) for _lt in dataset['LogicalTableMap'].values()):
+                route_lt = lt
+
+        # add all needed calc fields
+        existing_create_columns = [dt.get("CreateColumnsOperation", {}).get('Columns', [None])[0] for dt in route_lt.get('DataTransforms', []) if dt.get("CreateColumnsOperation")]
+        for col_name, expression in custom_fields.items():
+            existing_create_column = next((c for c in existing_create_columns if c["ColumnName"] == col_name), None)
+            if existing_create_column:
+                existing_create_column['Expression'] = expression
+            else:
+                route_lt['DataTransforms'].insert(0, {
+                    "CreateColumnsOperation": {
+                        "Columns": [
+                            {
+                                "ColumnName": col_name,
+                                "ColumnId": str(uuid4()),
+                                "Expression": expression
+                            }
+                        ]
+                    }
+                })
+                all_columns.append(col_name)
+
+        # update OutputColumns
+        dataset.raw['OutputColumns'] = _replace_columns(dataset.raw['OutputColumns'], all_columns)
+
+        # update ProjectedColumns
+        for ltm in dataset.raw['LogicalTableMap'].values():
+            if 'DataTransforms' in ltm and 'ProjectOperation' in ltm['DataTransforms'][0] and 'ProjectedColumns' in ltm['DataTransforms'][0]['ProjectOperation']:
+                ltm['DataTransforms'][0]['ProjectOperation']['ProjectedColumns'] = [existing_col['Name'] for existing_col in dataset.raw['OutputColumns']]
+
+        # filter out all columns that cannot be used for dataset creation
+        update_ = {key: value for key, value in dataset.raw.items() if key in 'DataSetId, Name, PhysicalTableMap, LogicalTableMap, ImportMode, ColumnGroups, FieldFolders, RowLevelPermissionDataSet, RowLevelPermissionTagConfiguration, ColumnLevelPermissionRules, DataSetUsageConfiguration, DatasetParameters'.split(', ')}
+        logger.trace(f'update_ = {update_}')
+
+        return update_
+
 
     def to_diffable_structure(self):
         """ return diffable text """
