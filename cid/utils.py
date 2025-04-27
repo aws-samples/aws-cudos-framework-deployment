@@ -10,10 +10,13 @@ from typing import Any, Dict
 from functools import lru_cache as cache
 from collections.abc import Iterable
 
+import yaml
 import requests
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
+from InquirerPy.prompts import InputPrompt
+from prompt_toolkit.validation import ValidationError, Validator
 from boto3.session import Session
 from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError, ProfileNotFound
 
@@ -229,38 +232,32 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     if choices is not None:
         if _all_yes and ('yes' in choices):
             return 'yes'
-        if isinstance(choices, dict):
-            _choices = []
-            for key, value in choices.items():
-                _choices.append(
-                    Choice(
-                        name=key,
-                        value=value,
-                        enabled=not (none_as_disabled and value is None),
-                    )
-                )
-                choices = _choices
         print()
         if not isatty():
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
         if multi and order:
-            result = select_and_order(message, choices)
-        elif fuzzy:
-            result = inquirer.fuzzy(
-                message=f'[{param_name}] {message}:',
-                choices=choices,
-                long_instruction='Type to search or use arrows ↑↓ to navigate',
-                match_exact=True,
-                default=default,
-                exact_symbol='',
-            ).execute()
+            result = select_and_order(message, choices, (default if isinstance(default, list) else [default]) or [])
         else:
-            result = inquirer.select(
-                message=f'[{param_name}] {message}:',
-                choices=choices,
-                long_instruction='Use arrows ↑↓ to navigate',
-                default=default,
-            ).execute()
+            if isinstance(choices, dict):
+                choices = [Choice(name=key, value=value, enabled=not (none_as_disabled and value is None)) for key, value in choices.items()]
+            elif isinstance(choices, list):
+                choices = [Choice(name=key, value=key, enabled=True) for key in choices]
+
+            if fuzzy:
+                result = inquirer.fuzzy(
+                    message=f'[{param_name}] {message}:',
+                    choices=sorted(choices, key=lambda x: (x.value != default)),  # Make default as the first one
+                    long_instruction='Type to search or use arrows ↑↓ to navigate',
+                    match_exact=True,
+                    exact_symbol='',
+                ).execute()
+            else:
+                result = inquirer.select(
+                    message=f'[{param_name}] {message}:',
+                    choices=choices,
+                    long_instruction='Use arrows ↑↓ to navigate',
+                    default=default,
+                ).execute()
     else: # it is a text entry
         if isinstance(default, str) and template_variables:
             print(template_variables)
@@ -337,7 +334,8 @@ def merge_objects(obj1, obj2, depth=2):
 def select_items(message, all_items, selected_items=[]):
     """Let user select which items they want from all available items"""
     return inquirer.checkbox(
-        message=f"{message} (use SPACE to select, use ENTER to continue):",
+        message=f"{message}:",
+        long_instruction='(use SPACE to select, ENTER to continue, arrows ↑↓ to navigate)',
         choices=[Choice(item, name=item, enabled=item in selected_items) for item in all_items],
         transformer=lambda result: f"{len(result)} items selected"
     ).execute()
@@ -345,61 +343,42 @@ def select_items(message, all_items, selected_items=[]):
 
 def order_items(items):
     """Let user arrange the selected items"""
-    ordered_items = items.copy()
-    action = None
-    selected_item = None
-    while True:
-        choices = [
-            Choice(value={"action": "select", "index": i}, name=f"{i+1}. {item}")
-            for i, item in enumerate(ordered_items)
-        ]
-        choices.append(Separator())
-        choices.append(Choice(value={"action": "back"},   name="⬅ Go back"))
-        choices.append(Choice(value={"action": "finish"}, name="✔ Looks good"))
-        print(selected_item)
-        default = next((c.value for c in choices if isinstance(c, Choice) and c.name.split()[-1]==selected_item), choices[-1].value)
-        selection = inquirer.select(
-            message="Select an item to reorder or confirm that it looks good to continue:",
-            choices=choices,
-            default=default,
+
+    class EmptyInputValidator(Validator):
+        def validate(self, document):
+            try:
+                data = yaml.safe_load(document.text)
+            except:
+                raise ValidationError(
+                    message="Incorrect yaml syntax",
+                    cursor_position=document.cursor_position,
+                )
+            if 'Dimensions' not in data:
+                raise ValidationError(
+                    message="Dimensions key not found",
+                    cursor_position=document.cursor_position,
+                )
+            for line in data['Dimensions']:
+                if not line.strip() in items:
+                    raise ValidationError(
+                        message=f"{line} is not in {items}",
+                        cursor_position=document.cursor_position,
+                    )
+            return True
+    try:
+        result = InputPrompt(
+            message="You can edit order as yaml:",
+            multiline=True,
+            default=yaml.safe_dump({'Dimensions': items}),
+            validate=EmptyInputValidator(),
+            long_instruction="Press Enter for a new line. Submit with Esc+Enter. Back = Ctrl+C."
         ).execute()
-        if selection["action"] in  ("finish", "back"):
-            action = selection["action"]
-            break
-        item_index = selection["index"]
-        selected_item = ordered_items[item_index]
-
-        # Ask what action the user wants to take with this item
-        actions = []
-        if item_index > 0:
-            actions.append(Choice(value="top", name="⊤ Move to top"))
-            actions.append(Choice(value="up", name="⬆ Move up one position"))
-        if item_index < len(ordered_items) - 1:
-            actions.append(Choice(value="down", name="⬇ Move down one position"))
-            actions.append(Choice(value="bottom", name="⟘ Move to bottom"))
-        actions.append(Choice(value="cancel", name="Cancel (no change)"))
-        action = inquirer.select(
-            message=f"What would you like to do with '{selected_item}'?",
-            choices=actions
-        ).execute()
-
-        # Perform the selected action
-        if action == "top" and item_index > 0: # Remove from current position and insert at the top
-            ordered_items.insert(0, ordered_items.pop(item_index))
-        elif action == "up" and item_index > 0: # Swap with the item above
-            ordered_items[item_index], ordered_items[item_index-1] = ordered_items[item_index-1], ordered_items[item_index]
-        elif action == "down" and item_index < len(ordered_items) - 1: # Swap with the item below
-            ordered_items[item_index], ordered_items[item_index+1] = ordered_items[item_index+1], ordered_items[item_index]
-        elif action == "bottom" and item_index < len(ordered_items) - 1: # Remove from current position and append to the end
-            ordered_items.append(ordered_items.pop(item_index))
-        elif action == "cancel":
-            pass
-
-    return action, ordered_items
+        return None, yaml.safe_load(result)['Dimensions']
+    except: # KeyboardInterrupt
+        return 'back', items
 
 
-def select_and_order(message, all_items):
-    selected_items = []
+def select_and_order(message, all_items, selected_items=[]):
     while True:
         selected_items = select_items(message, all_items, selected_items)
         if not selected_items:
