@@ -2,7 +2,7 @@ CREATE OR REPLACE VIEW hourly_view AS
     SELECT DISTINCT
       "line_item_product_code" "product_code"
     , "product_servicecode" "service"
-    , ${tags_json} tags_json --replace with ''
+    , ${cur_tags_json} tags_json --replace with ''
     , "line_item_operation" "operation"
     , "line_item_line_item_type" "charge_type"
     , "line_item_usage_type" "usage_type"

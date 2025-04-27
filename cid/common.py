@@ -545,7 +545,7 @@ class Cid():
             dataset = None
             # First try to find the dataset with the id
             try:
-                dataset = self.qs.describe_dataset(id=dataset_name)
+                dataset = self.qs.describe_dataset(id=dataset_name, timeout=0)
             except Exception as exc:
                 logger.debug(f'Failed to describe_dataset {dataset_name} {exc}')
 
@@ -1113,7 +1113,10 @@ class Cid():
             if _ds_id:
                 self.qs.describe_dataset(_ds_id)
 
-        found_datasets = utils.intersection(required_datasets, [v['Name'] for v in self.qs.list_data_sets()])
+        try:
+            found_datasets = utils.intersection(required_datasets, [v['Name'] for v in self.qs.list_data_sets()])
+        except:
+            found_datasets = utils.intersection(required_datasets, known_datasets.keys())
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
         logger.debug('found_datasets = %s', found_datasets)
@@ -1516,10 +1519,10 @@ class Cid():
             compiled_dataset.update({'DataSetId': dataset_id})
 
         # patch dataset for tags
-        resource_tags = json.loads(get_parameters().get('resource-tags', '{}'))
+        resource_tags = get_parameters().get('resource-tags', [])
         custom_fields = {
-            'tag_' + tag_name : F"parseJson(tags_json, '$.[\"{tag_name}\"]')"
-            for tag_name in resource_tags.keys()
+            name: f"parseJson(tags_json, '$.{name}')" # This syntax does not work:  $[\"{name}\"]
+            for name in resource_tags
         }
         compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
 
@@ -1715,16 +1718,30 @@ class Cid():
     def cur_tags_json(self) -> str:
         '''
         global parameters: resource_tags_text:
-                '{
-                    "bu": "resource_tags['user_b_u'])",
-                    "be": "resource_tags['user_b_e'])"
-                }'
+            '{
+                "bu": "resource_tags['user_b_u'])",
+                "be": "resource_tags['user_b_e'])"
+            }'
         '''
-        resource_tags = json.loads(get_parameters().get('resource-tags', '{}'))
+        def _tag_to_name(tag):
+            return tag.replace("'user_","'tag_").replace("'aws_","'tag_aws_").split("['")[-1].split("']")[0]
+        resource_tags = get_parameters().get('resource-tags', None)
+        tags_and_names = {_tag_to_name(tag): tag for tag in sorted(self.cur.tag_and_cost_category_fields)}
+        if resource_tags is None:
+            cid_print('Reading tags')
+            unset_parameter('resource-tags')
+            resource_tags = get_parameter(
+                'resource-tags',
+                message='enter tags',
+                multi=True, order=True,
+                choices=sorted(list(set(tags_and_names.keys()))),
+                default=resource_tags
+            )
+
         if not resource_tags:
             return '{}'
-        logger.debug(f'cur_tags_json = {resource_tags}')
-        array = ',\n                        '.join([f"{{'{name}', {value}}}" for name, value in resource_tags.items()])
+        logger.debug(f'selected_tag_names = {resource_tags}')
+        array = ',\n                        '.join([f"('{name}', {tags_and_names[name]})" for name in resource_tags])
         res = f'''
             json_format(
                 CAST (
@@ -1775,7 +1792,7 @@ class Cid():
             'cur1_table_name': self.cur1.table_name if cur1_required else None,
             'cur2_database':   self.cur2.database   if cur2_required else None,
             'cur2_table_name': self.cur2.table_name if cur2_required else None,
-            'cur_tags_json':   self.cur_tags_json,
+            'cur_tags_json':   self.cur_tags_json(),
 
         }
 

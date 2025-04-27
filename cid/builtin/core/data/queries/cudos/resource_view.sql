@@ -2,7 +2,7 @@ CREATE OR REPLACE VIEW resource_view AS
       SELECT DISTINCT
         "date_trunc"('day', "line_item_usage_start_date") "usage_date"
       , "bill_payer_account_id" "payer_account_id"
-      , ${tags_json} tags_json --replace with ''
+      , ${cur_tags_json} tags_json --replace with ''
       , "line_item_usage_account_id" "linked_account_id"
       , "bill_billing_entity" "billing_entity"
       , product['product_name'] "product_name"

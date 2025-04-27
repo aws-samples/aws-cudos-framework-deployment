@@ -95,7 +95,7 @@ class Dataset(CidQsResource):
 
         # update each PhysicalTableMap with all columns from athena views
         all_columns = []
-        for pt in dataset.raw['PhysicalTableMap'].values():
+        for pt in dataset['PhysicalTableMap'].values():
             table_name = pt['RelationalTable']['Name']
             database = pt['RelationalTable']['Schema']
             columns = _get_athena_columns(table_name, database)
@@ -109,20 +109,20 @@ class Dataset(CidQsResource):
             all_columns += pt['RelationalTable']['InputColumns']
 
 
-        # get route logical table
-        route_lt = None
+        # Get root logical table (the one that is not joined to any other logical table)
+        root_lt = None
         for lt in list(dataset['LogicalTableMap'].keys()):
             if not any(lt in str(_lt["Source"]) for _lt in dataset['LogicalTableMap'].values()):
-                route_lt = lt
+                root_lt = dataset['LogicalTableMap'][lt]
 
-        # add all needed calc fields
-        existing_create_columns = [dt.get("CreateColumnsOperation", {}).get('Columns', [None])[0] for dt in route_lt.get('DataTransforms', []) if dt.get("CreateColumnsOperation")]
+        # Add all needed calc fields
+        existing_create_columns = [dt.get("CreateColumnsOperation", {}).get('Columns', [None])[0] for dt in root_lt.get('DataTransforms', []) if dt.get("CreateColumnsOperation")]
         for col_name, expression in custom_fields.items():
             existing_create_column = next((c for c in existing_create_columns if c["ColumnName"] == col_name), None)
             if existing_create_column:
                 existing_create_column['Expression'] = expression
             else:
-                route_lt['DataTransforms'].insert(0, {
+                root_lt['DataTransforms'].insert(0, {
                     "CreateColumnsOperation": {
                         "Columns": [
                             {
@@ -134,17 +134,11 @@ class Dataset(CidQsResource):
                     }
                 })
                 all_columns.append(col_name)
-
-        # update OutputColumns
-        dataset.raw['OutputColumns'] = _replace_columns(dataset.raw['OutputColumns'], all_columns)
-
-        # update ProjectedColumns
-        for ltm in dataset.raw['LogicalTableMap'].values():
-            if 'DataTransforms' in ltm and 'ProjectOperation' in ltm['DataTransforms'][0] and 'ProjectedColumns' in ltm['DataTransforms'][0]['ProjectOperation']:
-                ltm['DataTransforms'][0]['ProjectOperation']['ProjectedColumns'] = [existing_col['Name'] for existing_col in dataset.raw['OutputColumns']]
+                projected_cols = next(ds['ProjectOperation']["ProjectedColumns"] for ds in root_lt['DataTransforms'] if 'ProjectOperation' in ds)
+                projected_cols.append(col_name)
 
         # filter out all columns that cannot be used for dataset creation
-        update_ = {key: value for key, value in dataset.raw.items() if key in 'DataSetId, Name, PhysicalTableMap, LogicalTableMap, ImportMode, ColumnGroups, FieldFolders, RowLevelPermissionDataSet, RowLevelPermissionTagConfiguration, ColumnLevelPermissionRules, DataSetUsageConfiguration, DatasetParameters'.split(', ')}
+        update_ = {key: value for key, value in dataset.items() if key in 'DataSetId, Name, PhysicalTableMap, LogicalTableMap, ImportMode, ColumnGroups, FieldFolders, RowLevelPermissionDataSet, RowLevelPermissionTagConfiguration, ColumnLevelPermissionRules, DataSetUsageConfiguration, DatasetParameters'.split(', ')}
         logger.trace(f'update_ = {update_}')
 
         return update_

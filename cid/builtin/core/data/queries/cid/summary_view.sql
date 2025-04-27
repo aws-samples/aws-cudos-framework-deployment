@@ -2,7 +2,7 @@
   SELECT
     split_part("billing_period", '-', 1) "year"
   , split_part("billing_period", '-', 2) "month"
-  , ${tags_json} tags_json --replace with ''
+  , ${cur_tags_json} tags_json --replace with 
   , "bill_billing_period_start_date" "billing_period"
   , CASE
         WHEN ("date_trunc"('month',"line_item_usage_start_date")) >= ("date_trunc"('month', current_timestamp) - INTERVAL  '3' MONTH)
