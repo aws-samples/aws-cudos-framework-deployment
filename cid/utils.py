@@ -30,6 +30,8 @@ _all_yes = False # parameters from command line
 PYPI_URL = "https://pypi.org/pypi/cid-cmd/json"
 
 def get_latest_tool_version():
+    ''' call PyPI url to get the latest version of the package
+    '''
     res_json = {}
     try:
         r = requests.get(PYPI_URL,timeout=3)
@@ -77,12 +79,18 @@ def exec_env():
 
 
 def intersection(a: Iterable, b: Iterable) -> Iterable:
+    """ intersection of 2 arrays
+    """
     return sorted(set(a).intersection(b))
 
 def difference(a: Iterable, b: Iterable) -> Iterable:
+    """ difference of 2 arrays
+    """
     return sorted(list(set(a).difference(b)))
 
 def get_aws_region() -> str:
+    """ get aws region
+    """
     return get_boto_session().region_name
 
 def get_boto_session(**kwargs) -> Session:
@@ -227,6 +235,8 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
                 value = value.format(**template_variables)
             except KeyError:
                 pass
+        if multi and isinstance(value, str):
+            value = value.split(',')
         return value
 
     if choices is not None:
@@ -237,6 +247,8 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
         if multi and order:
             result = select_and_order(message, choices, (default if isinstance(default, list) else [default]) or [])
+        elif multi and not order:
+            result = select_items(message, choices, (default if isinstance(default, list) else [default]) or [])
         else:
             if isinstance(choices, dict):
                 choices = [Choice(name=key, value=value, enabled=not (none_as_disabled and value is None)) for key, value in choices.items()]
