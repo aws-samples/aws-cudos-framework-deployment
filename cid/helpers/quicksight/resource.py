@@ -1,8 +1,6 @@
 class CidQsResource():
     def __init__(self, raw: dict) -> None:
         self.raw: dict = raw
-        # Resource definition
-        self.definition = dict()
 
     @property
     def name(self) -> str:

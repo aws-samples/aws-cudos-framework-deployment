@@ -71,7 +71,7 @@ class IAM(CidBase):
                         RoleName=role_name,
                         PolicyArn=policy_arn,
                     )
-                    logger.info('Attached {policy_arn} to the role {role_name}')
+                    logger.info(f'Attached {policy_arn} to the role {role_name}')
                 except self.client.exceptions.ClientError as exc:
                     logger.warning(f'Unable to attach policy {policy_arn} to {role_name}: {exc}')
 

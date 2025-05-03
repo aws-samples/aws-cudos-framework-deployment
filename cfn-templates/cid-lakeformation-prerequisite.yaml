@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CID LakeFormation Prerequisite Stack v0.0.1'
+
+Resources:
+  LakeFormationTag:
+    Type: AWS::LakeFormation::Tag
+    Properties:
+      CatalogId: !Ref 'AWS::AccountId'
+      TagKey: CidAssetsAccess
+      TagValues:
+        - Allow
+        - Deny
+
+Outputs:
+  CidLakeFormationTagKey:
+    Description: Technical Value - CidExecArn
+    Value: CidAssetsAccess
+    Export: { Name: 'cid-LakeFormation-TagKey'}
+  CidLakeFormationTagValue:
+    Description: Technical Value - CidExecArn
+    Value: Allow
+    Export: { Name: 'cid-LakeFormation-TagValue'}

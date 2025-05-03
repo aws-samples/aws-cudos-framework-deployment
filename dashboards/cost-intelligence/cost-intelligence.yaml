@@ -1,5 +1,5 @@
 dashboards:
-  COST-INTELLIGENCE:
+  CID: # keep it the same as in resources.yaml
     dependsOn:
       datasets:
       - compute_savings_plan_eligible_spend
@@ -7,7 +7,7 @@ dashboards:
       - s3_view
       - summary_view
     name: Cost Intelligence
-    dashboardId: cost-intelligence
+    dashboardId: cost_intelligence_dashboard
     category: Custom
     theme: MIDNIGHT
     data: |-
