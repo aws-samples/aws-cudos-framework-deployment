@@ -1340,10 +1340,7 @@ class QuickSight(CidBase):
                     common_columns = all_columns
                 else:
                     common_columns = [c for c in all_columns if c in common_columns]
-            non_taxonomy_cols = [
-                'product_code', 'service', 'operation', 'charge_type', 'usage_type', 'reservation_a_r_n',
-                'item_description', 'pricing_unit', 'region', 'pricing_term', 'linked_account_id', 'savings_plan_a_r_n',
-            ]
+            non_taxonomy_cols = definition.get('nonTaxonomyColumns', [])
             taxonomy_columns_candidates = [c['Name'] for c in common_columns if c['Type'] == 'STRING' and c['Name'] not in non_taxonomy_cols]
             if taxonomy_columns_candidates:
                 taxonomy = get_parameter('taxonomy', message='Enter taxonomy fields for dashboards filter',  choices=taxonomy_columns_candidates, multi=True, order=True)
