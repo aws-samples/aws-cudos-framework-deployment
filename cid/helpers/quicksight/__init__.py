@@ -118,7 +118,7 @@ class QuickSight(CidBase):
         :fresh: check if we need to discover datasets and discover dashboards dastasets if we are not allowed to get datasets
         """
         try:
-            next(self.client.list_data_sets(AwsAccountId=self.account_id), None)
+            self.client.list_data_sets(AwsAccountId=self.account_id)
         except self.client.exceptions.AccessDeniedException:
             self.discover_dashboards(scan_all=True) # we need to discover datasets via dashboards if we cannot do that directly via api
 
@@ -820,7 +820,7 @@ class QuickSight(CidBase):
         return result
 
 
-    def describe_dataset(self, id, timeout: int=10) -> Dataset:
+    def describe_dataset(self, id, timeout: int=0) -> Dataset:
         """ Describes an Amazon QuickSight dataset """
         if self._datasets and id in self._datasets:
             return self._datasets.get(id)
@@ -833,11 +833,12 @@ class QuickSight(CidBase):
                 logger.info(f'Saving dataset details "{_dataset.name}" ({_dataset.id})')
                 self._datasets[_dataset.id] = _dataset
                 break
-            except self.client.exceptions.ResourceNotFoundException:
+            except self.client.exceptions.ResourceNotFoundException as exc:
                 logger.info(f'DataSetId {id} not found yet (ResourceNotFoundException). will wait {deadline - time.time()}')
 
                 if time.time() > deadline:
-                    raise CidError('DataSetId {id} Not found ResourceNotFoundException')
+                    logger.debug(f'DataSetId {id} Not found ResourceNotFoundException')
+                    break
                 time.sleep(poll_interval)
                 continue
             except self.client.exceptions.AccessDeniedException:

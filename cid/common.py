@@ -1526,7 +1526,7 @@ class Cid():
         }
         compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
 
-        found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
+        found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
         if isinstance(found_dataset, Dataset):
             update_dataset = False
             if update:
@@ -1728,18 +1728,16 @@ class Cid():
         resource_tags = get_parameters().get('resource-tags', None)
         tags_and_names = {_tag_to_name(tag): tag for tag in sorted(self.cur.tag_and_cost_category_fields)}
         if resource_tags is None:
-            cid_print('Reading tags')
-            unset_parameter('resource-tags')
             resource_tags = get_parameter(
                 'resource-tags',
-                message='enter tags',
-                multi=True, order=True,
+                message='Enter Cost Allocation Tags to be added to datasets(WARNING: this can affect performance. Choose only the strict minimum)',
+                multi=True,
                 choices=sorted(list(set(tags_and_names.keys()))),
                 default=resource_tags
             )
 
         if not resource_tags:
-            return '{}'
+            return "'{}'"
         logger.debug(f'selected_tag_names = {resource_tags}')
         array = ',\n                        '.join([f"('{name}', {tags_and_names[name]})" for name in resource_tags])
         res = f'''
