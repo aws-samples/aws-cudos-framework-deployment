@@ -348,7 +348,8 @@ class Athena(CidBase):
 
     def get_query_results(self, query_id):
         """ Get Query Results """
-        return self.client.get_query_results(QueryExecutionId=query_id)
+        paginator = self.client.get_paginator("get_query_results")
+        return paginator.paginate(QueryExecutionId=query_id).build_full_result()
 
     def parse_response_as_table(self, response, include_header=False):
         """ Return a query response as a table. """
