@@ -1,5 +1,6 @@
 import os
 import sys
+import csv
 import copy
 import math
 import inspect
@@ -77,6 +78,10 @@ def exec_env():
         shell = 'powershell'
     return {'os': os_, 'shell': shell, 'terminal': terminal}
 
+def split_respecting_quotes(s):
+    """ split respecting quotes
+    """
+    return next(csv.reader([s]))
 
 def intersection(a: Iterable, b: Iterable) -> Iterable:
     """ intersection of 2 arrays
@@ -236,7 +241,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             except KeyError:
                 pass
         if multi and isinstance(value, str):
-            value = value.split(',')
+            value = split_respecting_quotes(value)
         return value
 
     if choices is not None:
@@ -247,7 +252,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
         if multi and order:
             result = select_and_order(message, choices, (default if isinstance(default, list) else [default]) or [])
-        elif multi and not order:
+        elif multi:
             result = select_items(message, choices, (default if isinstance(default, list) else [default]) or [])
         else:
             if isinstance(choices, dict):
@@ -353,7 +358,7 @@ def select_items(message, all_items, selected_items=[]):
     ).execute()
 
 
-def order_items(items):
+def order_items(items, name='Dimensions'):
     """Let user arrange the selected items"""
 
     class EmptyInputValidator(Validator):
@@ -365,29 +370,27 @@ def order_items(items):
                     message="Incorrect yaml syntax",
                     cursor_position=document.cursor_position,
                 )
-            if 'Dimensions' not in data:
+            if name not in data:
                 raise ValidationError(
-                    message="Dimensions key not found",
+                    message=f"{name} key not found",
                     cursor_position=document.cursor_position,
                 )
-            for line in data['Dimensions']:
-                if not line.strip() in items:
-                    raise ValidationError(
-                        message=f"{line} is not in {items}",
-                        cursor_position=document.cursor_position,
-                    )
+            if isinstance(items, list):
+                for line in data[name]:
+                    if not line.strip() in items:
+                        raise ValidationError(
+                            message=f"{line} is not in {items}",
+                            cursor_position=document.cursor_position,
+                        )
             return True
-    try:
-        result = InputPrompt(
-            message="You can edit order as yaml:",
-            multiline=True,
-            default=yaml.safe_dump({'Dimensions': items}),
-            validate=EmptyInputValidator(),
-            long_instruction="Press Enter for a new line. Submit with Esc+Enter. Back = Ctrl+C."
-        ).execute()
-        return None, yaml.safe_load(result)['Dimensions']
-    except: # KeyboardInterrupt
-        return 'back', items
+    result = InputPrompt(
+        message="You can edit order as yaml:",
+        multiline=True,
+        default=yaml.safe_dump({name: items}),
+        validate=EmptyInputValidator(),
+        long_instruction="Press Enter for a new line. Submit with Esc+Enter. Back = Ctrl+C."
+    ).execute()
+    return yaml.safe_load(result)[name]
 
 
 def select_and_order(message, all_items, selected_items=[]):
@@ -395,7 +398,8 @@ def select_and_order(message, all_items, selected_items=[]):
         selected_items = select_items(message, all_items, selected_items)
         if not selected_items:
             return []
-        action, selected_items = order_items(selected_items)
-        if action == 'back':
+        try:
+            selected_items = order_items(selected_items)
+        except KeyboardInterrupt:
             continue
         return selected_items
