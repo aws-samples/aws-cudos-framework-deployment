@@ -1544,7 +1544,6 @@ class Cid():
                             param_name='dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override',
                             message=f'The existing dataset is different. Override?',
                             choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
-                            default='retry diff'
                         )
                         if choice == 'retry diff':
                             unset_parameter('dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override')
@@ -1562,7 +1561,6 @@ class Cid():
                             param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
                             message=f'Cannot get sql diff for {found_dataset.name}. Continue?',
                             choices=['override', 'exit'],
-                            default='override'
                             ) != 'override':
                             raise CidCritical(f'User choice is not to update {found_dataset.name}.')
                         update_dataset = True
