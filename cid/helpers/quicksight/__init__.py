@@ -820,9 +820,9 @@ class QuickSight(CidBase):
         return result
 
 
-    def describe_dataset(self, id, timeout: int=0) -> Dataset:
+    def describe_dataset(self, id, timeout: int=0, no_cache=False) -> Dataset:
         """ Describes an Amazon QuickSight dataset """
-        if self._datasets and id in self._datasets:
+        if self._datasets and id in self._datasets and not no_cache:
             return self._datasets.get(id)
         self._datasets = self._datasets or {}
         poll_interval = 1
@@ -1278,7 +1278,11 @@ class QuickSight(CidBase):
         return dashboard
 
 
-    def _build_params_for_create_update_dash(self, definition: dict, permissions: bool=True) -> Dict:
+    def _build_params_for_create_update_dash(self, definition: dict) -> Dict:
+        """
+        definition: cid dashboard definition. NOT QS DEFINITION.
+        returns: what we need tof create or update API
+        """
 
         create_parameters = {
             'AwsAccountId': self.account_id,
@@ -1341,14 +1345,20 @@ class QuickSight(CidBase):
                     common_columns = all_columns
                 else:
                     common_columns = [c for c in all_columns if c in common_columns]
+            logger.debug(f'all_datasets: {all_columns}')
             non_taxonomy_cols = definition.get('nonTaxonomyColumns', [])
+            logger.debug(f'non_taxonomy_cols: {non_taxonomy_cols}')
             taxonomy_columns_candidates = [c['Name'] for c in common_columns if c['Type'] == 'STRING' and c['Name'] not in non_taxonomy_cols]
             if taxonomy_columns_candidates:
-                taxonomy = get_parameter('taxonomy', message='Enter taxonomy fields for dashboards filter',  choices=taxonomy_columns_candidates, multi=True, order=True)
+                taxonomy = get_parameter('taxonomy',
+                    message='Enter taxonomy fields for dashboards filter',
+                    choices=taxonomy_columns_candidates,
+                    multi=True,
+                    order=True,
+                )
                 if taxonomy:
                     create_parameters['Definition'] = add_filter_to_dashboard_definition(create_parameters['Definition'], taxonomy)
                     create_parameters['Definition'] = patch_group_by(create_parameters['Definition'], taxonomy)
-                    
         else:
             logger.debug(f'Definition = {definition}')
             raise CidCritical('Dashboard definition must contain sourceTemplate or definition')

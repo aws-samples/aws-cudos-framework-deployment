@@ -59,7 +59,13 @@ class Dataset(CidQsResource):
         return sorted(list(set(schemas)))
 
     @staticmethod
-    def patch(dataset, custom_fields, athena):
+    def patch(dataset, custom_fields={}, athena=None):
+        ''' patch dataset to add custom fields and all athena fields
+        dataset: qs dataset definition
+        custom_fields: a dict with name of custom field as a key and a code as value
+        athena: cid athena helper
+        returns updated dataset definition
+        '''
         def _get_athena_columns(table, database=None):
             '''returns athena columns'''
             return [
@@ -78,12 +84,13 @@ class Dataset(CidQsResource):
                 if existing_col in new_columns
             ] # filter out old
             for col in new_columns: # add new
-                if col not in existing_columns:
+                if col['Name'] not in [c['Name'] for c in existing_columns]:
                     existing_columns.append(col)
+                #REFACTOR: what if col is there but another type?
             return existing_columns
 
         def _athena_to_qs_type(col, athena_type):
-            '''athena type to QS'''
+            '''map athena type to QS type'''
             if 'varchar'   in athena_type: return {'Name': col, 'Type': 'STRING'}
             if 'timestamp' in athena_type: return {'Name': col, 'Type': 'DATETIME'}
             if 'bigint'    in athena_type: return {'Name': col, 'Type': 'INTEGER'}
@@ -93,7 +100,17 @@ class Dataset(CidQsResource):
 
         dataset = deepcopy(dataset)
 
-        # update each PhysicalTableMap with all columns from athena views
+        # Get root logical table (the one that is not joined to any other logical table)
+        root_lt = None
+        for lt in list(dataset['LogicalTableMap'].keys()):
+            if not any(lt in str(_lt["Source"]) for _lt in dataset['LogicalTableMap'].values()):
+                root_lt = dataset['LogicalTableMap'][lt]
+                break
+        else:
+            raise ValueError(f'Unable to find a root logical table in the dataset {dataset}')
+        projected_cols = next(ds['ProjectOperation']["ProjectedColumns"] for ds in root_lt['DataTransforms'] if 'ProjectOperation' in ds)
+
+        # Update each PhysicalTableMap with all columns from athena views
         all_columns = []
         for pt in dataset['PhysicalTableMap'].values():
             table_name = pt['RelationalTable']['Name']
@@ -106,14 +123,7 @@ class Dataset(CidQsResource):
             #    if col['Name'] in [existing_col['Name'] for existing_col in all_columns]: #FIXME not all_columns so far but must be all cols before modification
             #        col['Name'] = f'{col["Name"]}[{table_name}]'
             pt['RelationalTable']['InputColumns'] = _replace_columns(pt['RelationalTable']['InputColumns'], new_columns)
-            all_columns += pt['RelationalTable']['InputColumns']
-
-
-        # Get root logical table (the one that is not joined to any other logical table)
-        root_lt = None
-        for lt in list(dataset['LogicalTableMap'].keys()):
-            if not any(lt in str(_lt["Source"]) for _lt in dataset['LogicalTableMap'].values()):
-                root_lt = dataset['LogicalTableMap'][lt]
+            all_columns += [col['Name'] for col in pt['RelationalTable']['InputColumns']]
 
         # Add all needed calc fields
         existing_create_columns = [dt.get("CreateColumnsOperation", {}).get('Columns', [None])[0] for dt in root_lt.get('DataTransforms', []) if dt.get("CreateColumnsOperation")]
@@ -134,8 +144,11 @@ class Dataset(CidQsResource):
                     }
                 })
                 all_columns.append(col_name)
-                projected_cols = next(ds['ProjectOperation']["ProjectedColumns"] for ds in root_lt['DataTransforms'] if 'ProjectOperation' in ds)
-                projected_cols.append(col_name)
+
+        # Add all new cols to projected columns
+        for col in set(all_columns):
+            if col not in projected_cols:
+                projected_cols.append(col)
 
         # filter out all columns that cannot be used for dataset creation
         update_ = {key: value for key, value in dataset.items() if key in 'DataSetId, Name, PhysicalTableMap, LogicalTableMap, ImportMode, ColumnGroups, FieldFolders, RowLevelPermissionDataSet, RowLevelPermissionTagConfiguration, ColumnLevelPermissionRules, DataSetUsageConfiguration, DatasetParameters'.split(', ')}
