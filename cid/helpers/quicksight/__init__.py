@@ -687,6 +687,8 @@ class QuickSight(CidBase):
             poll_interval
         """
         poll_interval = kwargs.get('poll_interval', 5)
+        if 'DashboardId' not in kwargs:
+            raise ValueError('DashboardId must be provided')
         try:
             dashboard: Dashboard = None
             current_status = None
