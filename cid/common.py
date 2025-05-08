@@ -755,19 +755,19 @@ class Cid():
 
         try:
             # Execute query
-            print('Deleting dashboard')
+            cid_print('Deleting dashboard')
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
-            print(f'Dashboard {dashboard_id} deleted')
+            cid_print(f'Dashboard {dashboard_id} deleted')
             self.track('deleted', dashboard_id)
         except self.qs.client.exceptions.ResourceNotFoundException:
-            print('not found')
+            cid_print('not found')
         except Exception as e:
             # Catch exception and dump a reason
             logger.debug(e, exc_info=True)
-            print(f'failed with an error message: {e}')
+            cid_print(f'failed with an error message: {e}')
             return dashboard_id
 
-        print('Processing dependencies')
+        cid_print('Processing dependencies')
         for dataset_name, dataset_id in datasets.items():
             self.delete_dataset(name=dataset_name, id=dataset_id)
 
