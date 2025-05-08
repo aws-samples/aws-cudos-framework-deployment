@@ -533,21 +533,30 @@ class Cid():
             logger.info("Switch to recursive mode")
             recursive = True
 
+        logger.debug(f'found  dashboard_datasets= {dashboard_datasets}')
+
         if recursive:
             logger.info('creating datasets')
-            self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
+            dashboard_datasets = self.create_datasets(required_datasets_names, known_datasets=dashboard_datasets, recursive=recursive, update=update)
 
         # Find datasets for template or definition
         if not dashboard_definition.get('datasets'):
             dashboard_definition['datasets'] = {}
 
+        logger.debug(f'found  dashboard_datasets= {dashboard_datasets}')
+
         for dataset_name in required_datasets_names:
             dataset = None
-            # First try to find the dataset with the id
-            try:
-                dataset = self.qs.describe_dataset(id=dataset_name, timeout=0)
-            except Exception as exc:
-                logger.debug(f'Failed to describe_dataset {dataset_name} {exc}')
+            # First try existing datasets
+            if dashboard_datasets.get(dataset_name):
+                dataset = self.qs.describe_dataset(id=dashboard_datasets.get(dataset_name), no_cache=True)
+
+            if not isinstance(dataset, Dataset):
+                # Second chance:  try to find the dataset with the id that is the name
+                try:
+                    dataset = self.qs.describe_dataset(id=dataset_name, no_cache=True)
+                except Exception as exc:
+                    logger.debug(f'Failed to describe_dataset {dataset_name} {exc}')
 
             if isinstance(dataset, Dataset):
                 logger.debug(f'Found dataset {dataset_name} with id match = {dataset.arn}')
@@ -1113,12 +1122,19 @@ class Cid():
             if _ds_id:
                 self.qs.describe_dataset(_ds_id)
 
+        existing_datasets = {}
         try:
-            found_datasets = utils.intersection(required_datasets, [v['Name'] for v in self.qs.list_data_sets()])
+            existing_datasets = {v['Name']: v['Id'] for v in self.qs.list_data_sets()}
+            found_datasets = utils.intersection(required_datasets, existing_datasets.keys())
+            for dataset_name in found_datasets:
+                if dataset_name not in known_datasets:
+                    known_datasets[dataset_name] = found_datasets[dataset_name]
         except:
             found_datasets = utils.intersection(required_datasets, known_datasets.keys())
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
+
+        logger.debug('known_datasets = %s', known_datasets)
         logger.debug('found_datasets = %s', found_datasets)
         logger.debug('missing_datasets = %s', missing_datasets)
 
@@ -1145,12 +1161,12 @@ class Cid():
                             choices=[v.id for v in datasets],
                             default=datasets[0].id
                         )
-                    known_datasets.update({dataset_name: dataset_id})
-                print(f'Updating dataset: "{dataset_name}"')
+                    known_datasets[dataset_name] = dataset_id
+                cid_print(f'Updating dataset: "{dataset_name}"')
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
                     if not dataset_definition:
-                        print(f'Dataset definition not found, skipping {dataset_name}')
+                        cid_print(f'Dataset definition not found, skipping {dataset_name}')
                         continue
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
@@ -1170,9 +1186,9 @@ class Cid():
 
 
         # Look by DataSetId from dataset_template file
-        if len(missing_datasets):
+        if missing_datasets:
             # Look for previously saved deployment info
-            print('\nLooking by DataSetId defined in template...', end='')
+            cid_print('Looking by DataSetId defined in template...')
             for dataset_name in missing_datasets[:]:
                 try:
                     dataset_definition = self.get_definition(type='dataset', name=dataset_name, noparams=True)
@@ -1181,6 +1197,7 @@ class Cid():
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
                             missing_datasets.remove(dataset_name)
+                            known_datasets[dataset_name] = ds.id
                             print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
 
                 except FileNotFoundError:
@@ -1197,7 +1214,7 @@ class Cid():
             print('complete')
 
         # If there still datasets missing try automatic creation
-        if len(missing_datasets):
+        if missing_datasets:
             missing_str = ', '.join(missing_datasets)
             print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
             for dataset_name in missing_datasets[:]:
@@ -1215,6 +1232,7 @@ class Cid():
                 try:
                     if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
                         missing_datasets.remove(dataset_name)
+                        known_datasets[dataset_name] = dataset_id
                         print(f'Dataset "{dataset_name}" created')
                     else:
                         print(f'Dataset "{dataset_name}" creation failed, collect debug log for more info')
@@ -1227,12 +1245,12 @@ class Cid():
                     raise
 
         # Last chance to enter DataSetIds manually by user
-        if len(missing_datasets):
+        if missing_datasets:
             missing_str = '\n - '.join(missing_datasets)
             print(f'\nThere are still {len(missing_datasets)} datasets missing: \n - {missing_str}')
             print(f"\nCan't move forward without full list, please manually create datasets and provide DataSetIds")
             # Loop over the list unless we get it empty
-            while len(missing_datasets):
+            while missing_datasets:
                 # Make a copy and then get an item from the list
                 dataset_name = missing_datasets.copy().pop()
                 _id = get_parameter(
@@ -1248,6 +1266,7 @@ class Cid():
                         continue
                     self.qs._datasets.update({dataset_name: _dataset})
                     missing_datasets.remove(dataset_name)
+                    known_datasets[dataset_name] = _dataset.id
                     print(f'\tFound valid "{_dataset.name}" dataset, using')
                     logger.info(f'\tFound valid "{_dataset.name}" ({_dataset.id}) dataset, using')
                 except Exception as e:
@@ -1255,7 +1274,8 @@ class Cid():
                     print(f"\tProvided DataSetId '{id}' can't be found\n")
                     unset_parameter(f'{dataset_name}-dataset-id')
                     continue
-            print('\n')
+        return known_datasets
+
 
     def get_data_from_definition(self, asset_type, definition):
         """ Returns an json object for json resource file and a text for all other definitions
