@@ -689,13 +689,14 @@ class QuickSight(CidBase):
         poll_interval = kwargs.get('poll_interval', 5)
         if 'DashboardId' not in kwargs:
             raise ValueError('DashboardId must be provided')
+        dashboard_id = kwargs.get("DashboardId")
         try:
             dashboard: Dashboard = None
             current_status = None
             # Poll for the current status of query as long as its not finished
             while current_status in [None, 'CREATION_IN_PROGRESS', 'UPDATE_IN_PROGRESS']:
                 if current_status:
-                    logger.info(f'Dashboard {dashboard.name} status is {current_status}, waiting for {poll_interval} seconds')
+                    logger.info(f'Dashboard {dashboard.id} status is {current_status}, waiting for {poll_interval} seconds')
                     # Sleep before polling again
                     time.sleep(poll_interval)
                 elif poll:
@@ -706,14 +707,16 @@ class QuickSight(CidBase):
                     logger.debug('Got ThrottlingException will sleep for 5 sec')
                     time.sleep(5)
                     continue
-                logger.debug(response)
+                logger.debug(f'response for create = {response}')
                 dashboard = Dashboard(response, qs=self)
                 current_status = dashboard.version.get('Status')
+                logger.info(f'status = {current_status}')
                 if not poll:
                     break
             logger.info(f'Dashboard {dashboard.name} status is {current_status}')
             return dashboard
         except self.client.exceptions.ResourceNotFoundException:
+            logger.debug(f'ResourceNotFoundException {dashboard_id} returning None')
             return None
         except self.client.exceptions.UnsupportedUserEditionException as exc:
             raise CidCritical('Error: Amazon QuickSight Enterprise Edition is required') from exc
@@ -1268,13 +1271,13 @@ class QuickSight(CidBase):
 
         try:
             logger.info(f'Creating dashboard "{definition.get("name")}"')
-            logger.debug(create_parameters)
+            logger.debug(f'create_parameters = {create_parameters}')
             create_status = self.client.create_dashboard(**create_parameters)
             logger.debug(create_status)
         except self.client.exceptions.ResourceExistsException:
             logger.info(f'Dashboard {definition.get("name")} already exists')
             raise
-        created_version = int(create_status['VersionArn'].split('/')[-1])
+        created_version = int(create_status['VersionArn'].split('/')[-1]) # 'arn:aws:quicksight:us-east-1:217869122917:dashboard/cudos-v5/version/1
 
         # Poll for the current status of query as long as its not finished
         describe_parameters = {
@@ -1282,6 +1285,7 @@ class QuickSight(CidBase):
             'VersionNumber': created_version
         }
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
+        logger.debug('dashboard={dashboard}')
         self.set_tags(dashboard.arn, cid_version_tag=dashboard.cid_version) # try to update version tag
 
         self.discover_dashboard(dashboard.id)
