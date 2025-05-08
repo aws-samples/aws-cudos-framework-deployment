@@ -756,7 +756,8 @@ class QuickSight(CidBase):
             self.client.delete_dashboard(**params)
         except self.client.exceptions.ResourceNotFoundException:
             logger.info(f' ResourceNotFoundException for {dashboard_id}. Already deleted?')
-        del self._dashboards[dashboard_id]
+        if self._dashboards and dashboard_id in self._dashboards:
+            del self._dashboards[dashboard_id]
         #Wait till it is deleted
         for i in range(60):
             if not self.describe_dashboard(DashboardId=dashboard_id, poll=False):
