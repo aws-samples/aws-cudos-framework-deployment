@@ -750,7 +750,7 @@ class QuickSight(CidBase):
         result = self.client.delete_dashboard(**params)
         #Wait till it is deleted
         for i in range(60):
-            if not self.describe_dashboard(dashboard_id):
+            if not self.describe_dashboard(DashboardId=dashboard_id):
                 break
             logger.info(f'Waiting for deletion of {dashboard_id}')
             time.sleep(1)
