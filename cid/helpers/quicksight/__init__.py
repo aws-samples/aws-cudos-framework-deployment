@@ -752,10 +752,12 @@ class QuickSight(CidBase):
         for i in range(60):
             if not self.describe_dashboard(dashboard_id):
                 break
+            logger.info(f'Waiting for deletion of {dashboard_id}')
             time.sleep(1)
         else:
             raise CidError(f'Was unable to delete {dashboard_id}')
         del self._dashboards[dashboard_id]
+        logger.info(f'Deleted dashboard {dashboard_id}')
         return result
 
     def delete_data_source(self, datasource_id):
