@@ -748,6 +748,13 @@ class QuickSight(CidBase):
         }
         logger.info(f'Deleting dashboard {dashboard_id}')
         result = self.client.delete_dashboard(**params)
+        #Wait till it is deleted
+        for i in range(60):
+            if not self.describe_dashboard(dashboard_id):
+                break
+            time.sleep(1)
+        else:
+            raise CidError(f'Was unable to delete {dashboard_id}')
         del self._dashboards[dashboard_id]
         return result
 
