@@ -98,40 +98,6 @@ class Dashboard(CidQsResource):
         return self._source_template
 
     @property
-    def _patch_template_version(self, template):
-        # Checking for version override in template definition
-        # Check for extra information from resource definition
-        version_obj = self.definition.get('versions', dict())
-        min_template_version = _safe_int(version_obj.get('minTemplateVersion'))
-        default_description_version = version_obj.get('minTemplateDescription')
-
-        if not isinstance(template, CidQsTemplate)\
-            or int(template.version) <= 0 \
-            or not version_obj:
-            return
-
-        logger.debug("versions object found in template")
-        version_map = version_obj.get('versionMap', dict())
-        description_override = version_map.get(int(template.version))
-
-        try:
-            if description_override:
-                logger.info(f"Template description is overridden with: {description_override}")
-                description_override = str(description_override)
-                template.raw['Version']['Description'] = description_override
-            else:
-                if min_template_version and default_description_version:
-                    if int(template.version) <= min_template_version:
-                        logger.info(f"The template version does not provide cid_version in description, using the default template description: {default_description_version}")
-                        template.raw['Version']['Description'] = default_description_version
-        except ValueError as val_error:
-            logger.debug(val_error,  exc_info=True)
-            logger.info("The provided values of the versions object are not well formed, please use int for template version and str for template description")
-        except Exception as exc:
-            logger.debug(exc, exc_info=True)
-            logger.info("Unable to override template description")
-
-    @property
     def deployed_template(self) -> CidQsTemplate:
         ''' Fetch template referenced as current dashboard source (if any)
         '''

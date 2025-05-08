@@ -30,6 +30,10 @@ dashboards:
     versions:
       minTemplateVersion: 1
       minTemplateDescription: "v5.0.0"
+    nonTaxonomyColumns: [
+        'product_code', 'service', 'operation', 'charge_type', 'usage_type', 'reservation_a_r_n',
+        'item_description', 'pricing_unit', 'region', 'pricing_term', 'linked_account_id', 'savings_plan_a_r_n',
+    ]
 
   CID:
     category: 'Foundational'
@@ -45,6 +49,10 @@ dashboards:
     versions:
       minTemplateVersion: 3
       minTemplateDescription: "v3.1.0"
+    nonTaxonomyColumns: [
+        'product_code', 'service', 'operation', 'charge_type', 'usage_type', 'reservation_a_r_n',
+        'item_description', 'pricing_unit', 'region', 'pricing_term', 'linked_account_id', 'savings_plan_a_r_n',
+    ]
 
   KPI:
     category: 'Foundational'
@@ -62,6 +70,10 @@ dashboards:
     versions:
       minTemplateVersion: 9
       minTemplateDescription: "v1.2.1"
+    nonTaxonomyColumns: [
+        'product_code', 'service', 'operation', 'charge_type', 'usage_type', 'reservation_a_r_n',
+        'item_description', 'pricing_unit', 'region', 'pricing_term', 'linked_account_id', 'savings_plan_a_r_n',
+    ]
 
   TAO:
     category: 'Advanced'

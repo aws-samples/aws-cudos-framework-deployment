@@ -533,20 +533,30 @@ class Cid():
             logger.info("Switch to recursive mode")
             recursive = True
 
+        logger.debug(f'found  dashboard_datasets= {dashboard_datasets}')
+
         if recursive:
-            self.create_datasets(required_datasets_names, dashboard_datasets, recursive=recursive, update=update)
+            logger.info('creating datasets')
+            dashboard_datasets = self.create_datasets(required_datasets_names, known_datasets=dashboard_datasets, recursive=recursive, update=update)
 
         # Find datasets for template or definition
         if not dashboard_definition.get('datasets'):
             dashboard_definition['datasets'] = {}
 
+        logger.debug(f'found  dashboard_datasets= {dashboard_datasets}')
+
         for dataset_name in required_datasets_names:
             dataset = None
-            # First try to find the dataset with the id
-            try:
-                dataset = self.qs.describe_dataset(id=dataset_name)
-            except Exception as exc:
-                logger.debug(f'Failed to describe_dataset {dataset_name} {exc}')
+            # First try existing datasets
+            if dashboard_datasets.get(dataset_name):
+                dataset = self.qs.describe_dataset(id=dashboard_datasets.get(dataset_name), no_cache=True)
+
+            if not isinstance(dataset, Dataset):
+                # Second chance:  try to find the dataset with the id that is the name
+                try:
+                    dataset = self.qs.describe_dataset(id=dataset_name, no_cache=True)
+                except Exception as exc:
+                    logger.debug(f'Failed to describe_dataset {dataset_name} {exc}')
 
             if isinstance(dataset, Dataset):
                 logger.debug(f'Found dataset {dataset_name} with id match = {dataset.arn}')
@@ -580,7 +590,7 @@ class Cid():
 
                 if not matching_datasets:
                     reco = ''
-                    logger.warning(f'Dataset {dataset_name} is not found')
+                    logger.warning(f'Dataset {dataset_name} is not found.')
                     if utils.exec_env()['shell'] == 'lambda':
                         # We are in lambda
                         reco = 'You can try deleting existing dataset and re-run.'
@@ -745,19 +755,19 @@ class Cid():
 
         try:
             # Execute query
-            print('Deleting dashboard')
+            cid_print('Deleting dashboard')
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
-            print(f'Dashboard {dashboard_id} deleted')
+            cid_print(f'Dashboard {dashboard_id} deleted')
             self.track('deleted', dashboard_id)
         except self.qs.client.exceptions.ResourceNotFoundException:
-            print('not found')
+            cid_print('not found')
         except Exception as e:
             # Catch exception and dump a reason
             logger.debug(e, exc_info=True)
-            print(f'failed with an error message: {e}')
+            cid_print(f'failed with an error message: {e}')
             return dashboard_id
 
-        print('Processing dependencies')
+        cid_print('Processing dependencies')
         for dataset_name, dataset_id in datasets.items():
             self.delete_dataset(name=dataset_name, id=dataset_id)
 
@@ -1112,11 +1122,26 @@ class Cid():
             if _ds_id:
                 self.qs.describe_dataset(_ds_id)
 
-        found_datasets = utils.intersection(required_datasets, [v.name for v in self.qs.datasets.values()])
+        existing_datasets = {}
+        try:
+            existing_datasets = {v['Name']: v['Id'] for v in self.qs.list_data_sets()}
+            found_datasets = utils.intersection(required_datasets, existing_datasets.keys())
+            for dataset_name in found_datasets:
+                if dataset_name not in known_datasets:
+                    known_datasets[dataset_name] = found_datasets[dataset_name]
+        except:
+            found_datasets = utils.intersection(required_datasets, known_datasets.keys())
         missing_datasets = utils.difference(required_datasets, found_datasets)
 
+
+        logger.debug('known_datasets = %s', known_datasets)
+        logger.debug('found_datasets = %s', found_datasets)
+        logger.debug('missing_datasets = %s', missing_datasets)
+
+        update = update or get_parameters().get('update')
         # Update existing datasets
         if update:
+            logger.debug('updating datasets')
             for dataset_name in found_datasets[:]:
                 if dataset_name in known_datasets.keys():
                     _found_dsc = self.qs.get_datasets(id=known_datasets.get(dataset_name))
@@ -1136,12 +1161,12 @@ class Cid():
                             choices=[v.id for v in datasets],
                             default=datasets[0].id
                         )
-                    known_datasets.update({dataset_name: dataset_id})
-                print(f'Updating dataset: "{dataset_name}"')
+                    known_datasets[dataset_name] = dataset_id
+                cid_print(f'Updating dataset: "{dataset_name}"')
                 try:
                     dataset_definition = self.get_definition("dataset", name=dataset_name)
                     if not dataset_definition:
-                        print(f'Dataset definition not found, skipping {dataset_name}')
+                        cid_print(f'Dataset definition not found, skipping {dataset_name}')
                         continue
                 except Exception as e:
                     logger.critical('dashboard definition is broken, unable to proceed.')
@@ -1161,9 +1186,9 @@ class Cid():
 
 
         # Look by DataSetId from dataset_template file
-        if len(missing_datasets):
+        if missing_datasets:
             # Look for previously saved deployment info
-            print('\nLooking by DataSetId defined in template...', end='')
+            cid_print('Looking by DataSetId defined in template...')
             for dataset_name in missing_datasets[:]:
                 try:
                     dataset_definition = self.get_definition(type='dataset', name=dataset_name, noparams=True)
@@ -1172,6 +1197,7 @@ class Cid():
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
                             missing_datasets.remove(dataset_name)
+                            known_datasets[dataset_name] = ds.id
                             print(f"\n\tFound {dataset_name} as {raw_template.get('DataSetId')}")
 
                 except FileNotFoundError:
@@ -1188,7 +1214,7 @@ class Cid():
             print('complete')
 
         # If there still datasets missing try automatic creation
-        if len(missing_datasets):
+        if missing_datasets:
             missing_str = ', '.join(missing_datasets)
             print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
             for dataset_name in missing_datasets[:]:
@@ -1206,6 +1232,7 @@ class Cid():
                 try:
                     if self.create_or_update_dataset(dataset_definition, dataset_id, recursive=recursive, update=update):
                         missing_datasets.remove(dataset_name)
+                        known_datasets[dataset_name] = dataset_id
                         print(f'Dataset "{dataset_name}" created')
                     else:
                         print(f'Dataset "{dataset_name}" creation failed, collect debug log for more info')
@@ -1218,12 +1245,12 @@ class Cid():
                     raise
 
         # Last chance to enter DataSetIds manually by user
-        if len(missing_datasets):
+        if missing_datasets:
             missing_str = '\n - '.join(missing_datasets)
             print(f'\nThere are still {len(missing_datasets)} datasets missing: \n - {missing_str}')
             print(f"\nCan't move forward without full list, please manually create datasets and provide DataSetIds")
             # Loop over the list unless we get it empty
-            while len(missing_datasets):
+            while missing_datasets:
                 # Make a copy and then get an item from the list
                 dataset_name = missing_datasets.copy().pop()
                 _id = get_parameter(
@@ -1239,6 +1266,7 @@ class Cid():
                         continue
                     self.qs._datasets.update({dataset_name: _dataset})
                     missing_datasets.remove(dataset_name)
+                    known_datasets[dataset_name] = _dataset.id
                     print(f'\tFound valid "{_dataset.name}" dataset, using')
                     logger.info(f'\tFound valid "{_dataset.name}" ({_dataset.id}) dataset, using')
                 except Exception as e:
@@ -1246,7 +1274,8 @@ class Cid():
                     print(f"\tProvided DataSetId '{id}' can't be found\n")
                     unset_parameter(f'{dataset_name}-dataset-id')
                     continue
-            print('\n')
+        return known_datasets
+
 
     def get_data_from_definition(self, asset_type, definition):
         """ Returns an json object for json resource file and a text for all other definitions
@@ -1509,7 +1538,15 @@ class Cid():
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
 
-        found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'))
+        # patch dataset for tags
+        resource_tags = get_parameters().get('resource-tags', [])
+        custom_fields = {
+            name: f"parseJson(tags_json, '$.{name}')" # This syntax does not work:  $[\"{name}\"]
+            for name in resource_tags
+        }
+        compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
+
+        found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
         if isinstance(found_dataset, Dataset):
             update_dataset = False
             if update:
@@ -1696,6 +1733,44 @@ class Cid():
         compiled_definition = json.loads(template.safe_substitute(params))
         self.glue.create_or_update_crawler(crawler_definition=compiled_definition)
 
+    def cur_tags_json(self) -> str:
+        '''
+        global parameters: resource_tags_text:
+            '{
+                "bu": "resource_tags['user_b_u'])",
+                "be": "resource_tags['user_b_e'])"
+            }'
+        '''
+        def _tag_to_name(tag):
+            return tag.replace("'user_","'tag_").replace("'aws_","'tag_aws_").split("['")[-1].split("']")[0]
+        resource_tags = get_parameters().get('resource-tags', None)
+        tags_and_names = {_tag_to_name(tag): tag for tag in sorted(self.cur.tag_and_cost_category_fields)}
+        if resource_tags is None:
+            resource_tags = get_parameter(
+                'resource-tags',
+                message='Enter Cost Allocation Tags to be added to datasets(WARNING: this can affect performance. Choose only the strict minimum)',
+                multi=True,
+                choices=sorted(list(set(tags_and_names.keys()))),
+                default=resource_tags
+            )
+
+        if not resource_tags:
+            return "'{}'"
+        logger.debug(f'selected_tag_names = {resource_tags}')
+        array = ',\n                        '.join([f"('{name}', {tags_and_names[name]})" for name in resource_tags])
+        res = f'''
+            json_format(
+                CAST (
+                    MAP_FROM_ENTRIES (
+                        ARRAY[
+                            {array}
+                        ]
+                    )
+                AS JSON)
+            )
+        '''
+        logger.debug(f'cur_tags_json = {res}')
+        return res
 
     def get_view_query(self, view_name: str) -> str:
         """ Returns a fully compiled AHQ """
@@ -1733,6 +1808,8 @@ class Cid():
             'cur1_table_name': self.cur1.table_name if cur1_required else None,
             'cur2_database':   self.cur2.database   if cur2_required else None,
             'cur2_table_name': self.cur2.table_name if cur2_required else None,
+            'cur_tags_json':   self.cur_tags_json(),
+
         }
 
         columns_tpl = self.get_template_parameters(
