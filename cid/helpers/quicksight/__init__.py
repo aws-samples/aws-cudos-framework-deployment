@@ -749,18 +749,21 @@ class QuickSight(CidBase):
             'DashboardId': dashboard_id
         }
         logger.info(f'Deleting dashboard {dashboard_id}')
-        result = self.client.delete_dashboard(**params)
+        try:
+            self.client.delete_dashboard(**params)
+        except self.qs.client.exceptions.ResourceNotFoundException:
+            logger.info(f' ResourceNotFoundException for {dashboard_id}. Already deleted?')
+        del self._dashboards[dashboard_id]
         #Wait till it is deleted
         for i in range(60):
             if not self.describe_dashboard(DashboardId=dashboard_id, poll=False):
+                logger.info(f'Deleted dashboard {dashboard_id}')
                 break
             logger.info(f'Waiting for deletion of {dashboard_id}')
             time.sleep(1)
         else:
             raise CidError(f'Was unable to delete {dashboard_id}')
-        del self._dashboards[dashboard_id]
-        logger.info(f'Deleted dashboard {dashboard_id}')
-        return result
+        return
 
     def delete_data_source(self, datasource_id):
         """ Deletes an Amazon QuickSight dashboard """
