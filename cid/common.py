@@ -313,45 +313,66 @@ class Cid():
             self.load_catalog(catalog_url)
         if get_parameters().get('resources'):
             source = get_parameters().get('resources')
-            self.load_resource_file(source)
+            self.load_resource_file(source, os.getcwd())
         self.resources = self.resources_with_global_parameters(self.resources)
 
-    def load_resource_file(self, source):
+    def resolve_relative_path(self, source, parent_source=None):
+        if not source.startswith('https://'): # it is a relative path
+            if not parent_source:
+                parent_source = os.getcwd()
+                logger.error(f'Parent not provided to get {source}. trying current folder {parent_source}')
+            if parent_source.startswith('https://'):
+                source = urllib.parse.urljoin(parent_source, source)
+            else: # it is a local file, so expand that
+                parent_source = os.path.abspath(os.path.expanduser(parent_source))
+                if os.path.isfile(parent_source):
+                    parent_source = os.path.dirname(parent_source)
+                source = os.path.abspath(os.path.join(parent_source, source))
+                if not os.path.isfile(source):
+                    raise CidCritical(f'Cannot find {source} file')
+        return source
+
+
+    def load_text_file(self, source, parent_source=None):
+        ''' return a text from local or remote file
+        '''
+        source = self.resolve_relative_path(source, parent_source)
+        if source.startswith('https://'):
+            return self.get_page(source).text
+        else:
+            with open(source, encoding='utf-8') as file_:
+                return file_.read()
+
+
+    def load_resource_file(self, source, parent_source=None):
         ''' load additional resources from resource file
         '''
-        logger.debug(f'Loading resources from {source}')
+        logger.debug(f'Loading resources from {source} from {parent_source}')
         resources = {}
         try:
-            if source.startswith('https://'):
-                resources = yaml.safe_load(self.get_page(source).text)
-                if not isinstance(resources, dict):
-                    raise CidCritical(f'Failed to load {source}. Got {type(resources)} ({repr(resources)[:150]}...)')
-            else:
-                with open(source, encoding='utf-8') as file_:
-                    resources = yaml.safe_load(file_)
+            text = self.load_text_file(source, parent_source)
+            resources = yaml.safe_load(text)
         except Exception as exc:
             logger.warning(f'Failed to load resources from {source}: {exc}')
             return
         resources.get('views', {}).pop('account_map', None) # Exclude account map as it is a special view
+        for groups_of_resources in resources.values(): # add source metadata to each loaded resource
+            for res in groups_of_resources.values():
+                res['source'] = self.resolve_relative_path(source, parent_source)
         self.resources = merge_objects(self.resources, resources, depth=1)
 
     def load_catalog(self, catalog_url):
         ''' load additional resources from catalog
         '''
         try:
-            if 'https://' in catalog_url:
-                text = self.get_page(catalog_url).text
-            else:
-                with open(catalog_url, encoding='utf-8') as catalog_file:
-                    text = catalog_file.read()
+            text = self.load_text_file(catalog_url, os.getcwd())
             catalog = yaml.safe_load(text)
         except (requests.exceptions.RequestException, yaml.error.MarkedYAMLError) as exc:
             logger.warning(f'Failed to load a catalog url: {exc}')
             logger.debug(exc, exc_info=True)
             return
         for resource_ref in catalog.get('Resources', []):
-            url = urllib.parse.urljoin(catalog_url, resource_ref.get("Url"))
-            self.load_resource_file(url)
+            self.load_resource_file(resource_ref.get("Url"), catalog_url)
 
 
     def get_template_parameters(self, parameters: dict, param_prefix: str='', others: dict=None):
@@ -509,17 +530,13 @@ class Cid():
                 raise CidCritical(exc) # Cannot proceed without a valid template
             dashboard_definition['sourceTemplate'] = source_template
             print(f'\nLatest template: {source_template.arn}/version/{source_template.version}')
-        elif dashboard_definition.get('data'):
-            data = dashboard_definition.get('data')
-            params = self.get_template_parameters(dashboard_definition.get('parameters', dict()))
+        elif dashboard_definition.get('data') or dashboard_definition.get('file') or dashboard_definition.get('url'):
+            data = self.get_data_from_definition(dashboard_definition)
             if isinstance(data, dict):
-                #TODO: need to apply template to data structure as well
-                data = yaml.safe_dump(data)
-            if isinstance(data, str):
-                data = Template(data).safe_substitute(params)
+                data = yaml.safe_dump(data, width=100000) # dump without line breaks
+            params = self.get_template_parameters(dashboard_definition.get('parameters', dict()))
+            data = Template(data).safe_substitute(params)
             dashboard_definition['definition'] = yaml.safe_load(data)
-        elif dashboard_definition.get('file'):
-            raise NotImplementedError('File option is not implemented')
         else:
             raise CidCritical('Definition of dashboard resource must contain data or template_id')
 
@@ -739,6 +756,7 @@ class Cid():
     def delete(self, dashboard_id, **kwargs):
         """Delete QuickSight dashboard"""
 
+        # select
         if not dashboard_id:
             if not self.qs.dashboards:
                 print('No deployed dashboards')
@@ -747,14 +765,15 @@ class Cid():
             if not dashboard_id:
                 return
 
+        # save datasets to destroy later
         if self.qs.dashboards and dashboard_id in self.qs.dashboards:
             datasets = self.qs.discover_dashboard(dashboard_id).datasets # save for later
         else:
             dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
             datasets = {d: None for d in (dashboard_definition or {}).get('dependsOn', {}).get('datasets', [])}
 
+        # delete dash
         try:
-            # Execute query
             cid_print('Deleting dashboard')
             self.qs.delete_dashboard(dashboard_id=dashboard_id)
             cid_print(f'Dashboard {dashboard_id} deleted')
@@ -1192,7 +1211,7 @@ class Cid():
             for dataset_name in missing_datasets[:]:
                 try:
                     dataset_definition = self.get_definition(type='dataset', name=dataset_name, noparams=True)
-                    raw_template = self.get_data_from_definition('dataset', dataset_definition)
+                    raw_template = self.get_data_from_definition(dataset_definition)
                     if raw_template:
                         ds = self.qs.describe_dataset(raw_template.get('DataSetId'))
                         if isinstance(ds, Dataset) and ds.name == dataset_name:
@@ -1277,27 +1296,19 @@ class Cid():
         return known_datasets
 
 
-    def get_data_from_definition(self, asset_type, definition):
+    def get_data_from_definition(self, definition):
         """ Returns an json object for json resource file and a text for all other definitions
         """
-        subfolder = {
-            'dataset': 'datasets',
-            'view': 'queries',
-            'table': 'queries',
-        }.get(asset_type)
         data = None
-        file_name = definition.get('File')
-        if definition.get('Data'):
-            data = definition.get('Data')
-        elif definition.get('data'):
-            data = definition.get('data')
-        elif file_name:
-            text = resource_string(
-                definition.get('providedBy'), f'data/{subfolder}/{file_name}'
-            ).decode('utf-8')
-            if file_name.endswith('.json') or file_name.endswith('.jsn'):
+        if definition.get('Data') or definition.get('data'):
+            data = definition.get('Data') or definition.get('data')
+        elif definition.get('url') or definition.get('File') or definition.get('file'):
+            source = definition.get('url') or definition.get('File') or definition.get('file')
+            assert definition.get('source'), str(definition)
+            text =  self.load_text_file(source, definition.get('source'))
+            if source.endswith('.json') or source.endswith('.jsn'):
                 data = json.loads(text)
-            elif file_name.endswith('.yaml') or file_name.endswith('.yml'):
+            elif source.endswith('.yaml') or source.endswith('.yml'):
                 data = yaml.safe_load(text)
             else:
                 data = text
@@ -1378,7 +1389,7 @@ class Cid():
 
     def create_or_update_dataset(self, dataset_definition: dict, dataset_id: str=None,recursive: bool=True, update: bool=False) -> bool:
         # Read dataset definition from template
-        data = self.get_data_from_definition('dataset', dataset_definition)
+        data = self.get_data_from_definition(dataset_definition)
         template = Template(json.dumps(data))
         cur1_required = dataset_definition.get('dependsOn', dict()).get('cur') or dataset_definition.get('dependsOn', dict()).get('cur1')
         cur2_required = dataset_definition.get('dependsOn', dict()).get('cur2')
@@ -1564,6 +1575,7 @@ class Cid():
                             param_name='dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override',
                             message=f'The existing dataset is different. Override?',
                             choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
+                            yes_choice='proceed and override'
                         )
                         if choice == 'retry diff':
                             unset_parameter('dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override')
@@ -1701,7 +1713,7 @@ class Cid():
     def create_or_update_crawler(self, crawler_name, location):
         """ Create or Update Crawler """
         crawler_definition = self.get_definition("crawler", name=crawler_name)
-        data = self.get_data_from_definition('crawler', crawler_definition)
+        data = self.get_data_from_definition(crawler_definition)
         template = Template(json.dumps(data))
 
         # Filter roles trusted by Glue
@@ -1791,7 +1803,7 @@ class Cid():
         #    raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
-        data = self.get_data_from_definition('view', view_definition)
+        data = self.get_data_from_definition(view_definition)
         if isinstance(data, dict):
             template = Template(yaml.safe_dump(data))
         else:

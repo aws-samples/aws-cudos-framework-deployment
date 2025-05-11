@@ -44,6 +44,11 @@ def get_latest_tool_version():
         return res_json.get("info", {}).get("version", "UNDEFINED")
 
 @cache(maxsize=None)
+def all_yes():
+    return _all_yes
+
+
+@cache(maxsize=None)
 def isatty():
     """ return True if executed in a Terminal that allows user input """
     if exec_env()['terminal'] == 'gitbash': # We cannot trust isatty on Git Bash on Windows
@@ -214,7 +219,7 @@ def get_yesno_parameter(param_name: str, message: str, default: str=None, break_
     return params[param_name]
 
 
-def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True, fuzzy=True, multi=False, order=False):
+def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True, fuzzy=True, multi=False, order=False, yes_choice='yes'):
     """
     Check if parameters are provided in the command line and if not, ask user
 
@@ -234,7 +239,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     param_name = param_name.replace('_', '-')
     if params.get(param_name):
         value = params[param_name]
-        logger.info(f'Using {param_name}={value}, from parameters')
+        logger.debug(f'Using {param_name}={value}, from parameters')
         if isinstance(value, str) and template_variables:
             try:
                 value = value.format(**template_variables)
@@ -245,8 +250,9 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         return value
 
     if choices is not None:
-        if _all_yes and ('yes' in choices):
-            return 'yes'
+        if _all_yes and (yes_choice in choices):
+            logger.debug(f'Using {yes_choice}, as -y flag is active')
+            return yes_choice
         print()
         if not isatty():
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')

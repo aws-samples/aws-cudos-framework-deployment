@@ -45,6 +45,31 @@ def align_grid_position(elements: List[Dict[str, Any]]) -> None:
         element["RowIndex"] = row
         col += element["ColumnSpan"]
 
+def delete_parameter_control(dashboard_definition: Dict[str, Any], parameter_name) -> Dict[str, Any]:
+    ''' delete parameter controls
+    '''
+    def _delete_control_id(data, control_id):
+        """_delete_control_id"""
+        if isinstance(data, dict):
+            if control_id in data.values():
+                return '<delete_me_from_list>'
+            return {k: v for k,v in {k: _delete_control_id(v, control_id) for k, v in data.items()}.items() if v != '<delete_me_from_list>'}
+        elif isinstance(data, list):
+            return [item for item in [_delete_control_id(item, control_id) for item in data] if not item == '<delete_me_from_list>']
+        return data
+
+    for sheet in dashboard_definition.get("Sheets", []):
+        if sheet.get("Name") == "About":
+            continue # Skip about
+        for control in sheet.get('ParameterControls', []):
+            control_params = list(control.values())[0]
+            if control_params['Title'].lower() == parameter_name.lower():
+                control_id = control_params['ParameterControlId']
+                logger.debug(f'deleting control {control_id}')
+                _delete_control_id(dashboard_definition, control_id)
+
+    return dashboard_definition
+
 def add_filter_to_dashboard_definition(dashboard_definition: Dict[str, Any], field_names: List[str]) -> Dict[str, Any]:
     """ Add a filter on the specified fields to all datasets in a QuickSight definition
 
@@ -52,6 +77,18 @@ def add_filter_to_dashboard_definition(dashboard_definition: Dict[str, Any], fie
     param field_names (list[str]): The list of field name to filter on
     returns: The modified QuickSight definition
     """
+    # delete all old redundant controls
+    mapping = {
+        'payer_account_id': 'payer accounts',
+        'parent_account_id': 'payer accounts',
+        'account_id':  'Linked Account IDs',
+        'linked_account_id': 'Linked Account IDs',
+        'account_name': 'Account Names',
+    }
+    for field_name in field_names:
+        if field_name in mapping:
+           dashboard_definition = delete_parameter_control(dashboard_definition, mapping.get(field_name))
+
     dataset_identifier = get_most_used_dataset(dashboard_definition)
     filter_ids = []
     # FIXME: try to do linked filter controls
@@ -199,3 +236,9 @@ def patch_group_by(definition, fields):
                     control.get('SelectableValues', {}).get('Values',[]).insert(0, format_field_name(field))
                     logger.trace(f'added {field} to {sheet["Name"]} / {control["Title"]}')
     return definition
+
+
+def _try():
+    import yaml
+    data = yaml.safe_load(open('./dashboards/cudos/CUDOS-v5.yaml'))
+    definition = yaml.safe_load(data['dashboards']['CUDOSv5']['data'])
