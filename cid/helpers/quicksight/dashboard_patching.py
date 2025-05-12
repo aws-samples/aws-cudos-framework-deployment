@@ -29,10 +29,24 @@ def format_field_name(field_name: str) -> str:
     """Format field name for display in the filter title.
         assert format_field_name('account_name') == 'Account Name'
         assert format_field_name('a_c_r_o_n_y_m') == 'ACRONYM'
+        assert format_field_name('tag_a_c_r_o_n_y_m') == 'Tag ACRONYM'
     """
-    if all(len(part) == 1 for part in field_name.split('_')):  # Check for acronym
-        return  field_name.replace('_', '').upper()
-    return field_name.replace('_', ' ').title()
+    parts = field_name.split('_')
+    result = []
+    i = 0
+    while i < len(parts):
+        # Check if current part is the start of an acronym sequence
+        if i < len(parts) and len(parts[i]) == 1:  # Collect all single-letter parts
+            acronym_parts = []
+            while i < len(parts) and len(parts[i]) == 1:
+                acronym_parts.append(parts[i])
+                i += 1
+            if acronym_parts:  # If we found an acronym, add it to the result
+                result.append(''.join(acronym_parts).upper())
+        else: # Handle regular part
+            result.append(parts[i].title())
+            i += 1
+    return ' '.join(result)
 
 def align_grid_position(elements: List[Dict[str, Any]]) -> None:
     """Align grid positions for control layout elements."""
@@ -49,7 +63,9 @@ def delete_parameter_control(dashboard_definition: Dict[str, Any], parameter_nam
     ''' delete parameter controls
     '''
     def _delete_control_id(data, control_id):
-        """_delete_control_id"""
+        """Delete all elements that have a reference to control id
+        warning: there no deletion of dependencies
+        """
         if isinstance(data, dict):
             if control_id in data.values():
                 return '<delete_me_from_list>'
@@ -85,6 +101,18 @@ def delete_parameter_control(dashboard_definition: Dict[str, Any], parameter_nam
                 control_id = control_params['ParameterControlId']
                 logger.debug(f'deleting control {control_id}')
                 dashboard_definition = _delete_control_id(dashboard_definition, control_id)
+
+    # set default parameters to default
+    def set_default_parameters(data):
+        """Recursively set currency_symbol"""
+        if isinstance(data, dict):
+            if "ValueWhenUnsetOption" in data:
+                data['ValueWhenUnsetOption'] = 'RECOMMENDED_VALUE'
+            return {k: set_default_parameters(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [set_default_parameters(item) for item in data]
+        return data
+    dashboard_definition = set_default_parameters(dashboard_definition)
 
     return dashboard_definition
 
@@ -159,11 +187,11 @@ def add_filter_to_dashboard_definition(dashboard_definition: Dict[str, Any], fie
         filter_ids.append(filter_id)
         dashboard_definition["FilterGroups"] = dashboard_definition.get("FilterGroups", []) + [new_filter]
 
-    add_filter_control_to_sheets(dashboard_definition, filter_ids)
+    add_filter_control_to_sheets(dashboard_definition, filter_ids, field_names, dataset_identifier)
     return dashboard_definition
 
 
-def add_filter_control_to_sheets(dashboard_definition: Dict[str, Any], filter_ids: List[str]):
+def add_filter_control_to_sheets(dashboard_definition: Dict[str, Any], filter_ids: List[str], field_names: List[str], dataset_identifier):
     """Add a filter control to each sheet except 'about'"""
     for sheet in dashboard_definition.get("Sheets", []):
         if sheet.get("Name") == "About":
@@ -179,14 +207,29 @@ def add_filter_control_to_sheets(dashboard_definition: Dict[str, Any], filter_id
                 }
             }]
 
-        for filter_id in filter_ids:
-            control_id = uuid()
-            sheet["FilterControls"].insert(0, {
+        control_ids = [uuid() for _ in filter_ids]
+        for filter_id, control_id in zip(filter_ids, control_ids):
+            control = {
                 'CrossSheet': {
                     "FilterControlId": control_id,
                     "SourceFilterId": filter_id,
                 }
-            })
+            }
+            if len(filter_ids) > 0: # link values filtering with other controls
+                control['CrossSheet']['CascadingControlConfiguration'] = {
+                    "SourceControls": [
+                        {
+                            "SourceSheetControlId": control_id_,
+                            "ColumnToMatch": {
+                                "DataSetIdentifier": dataset_identifier,
+                                "ColumnName": field_name_,
+                            }
+                        }
+                        for filter_id_, control_id_, field_name_ in zip(filter_ids, control_ids, field_names)
+                        if filter_id != filter_id_
+                    ]
+                }
+            sheet["FilterControls"].insert(0, control)
             sheet["SheetControlLayouts"][0]["Configuration"]["GridLayout"]["Elements"].insert(0, {
                 "ColumnIndex": 0, # just to start
                 "ColumnSpan": 2, # can be a parameter?
