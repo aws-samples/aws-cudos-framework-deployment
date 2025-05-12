@@ -103,16 +103,16 @@ def delete_parameter_control(dashboard_definition: Dict[str, Any], parameter_nam
                 dashboard_definition = _delete_control_id(dashboard_definition, control_id)
 
     # set default parameters to default
-    def set_default_parameters(data):
+    def _set_default_parameters(data):
         """Recursively set currency_symbol"""
         if isinstance(data, dict):
             if "ValueWhenUnsetOption" in data:
                 data['ValueWhenUnsetOption'] = 'RECOMMENDED_VALUE'
-            return {k: set_default_parameters(v) for k, v in data.items()}
+            return {k: _set_default_parameters(v) for k, v in data.items()}
         elif isinstance(data, list):
-            return [set_default_parameters(item) for item in data]
+            return [_set_default_parameters(item) for item in data]
         return data
-    dashboard_definition = set_default_parameters(dashboard_definition)
+    dashboard_definition = _set_default_parameters(dashboard_definition)
 
     return dashboard_definition
 
