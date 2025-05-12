@@ -53,20 +53,38 @@ def delete_parameter_control(dashboard_definition: Dict[str, Any], parameter_nam
         if isinstance(data, dict):
             if control_id in data.values():
                 return '<delete_me_from_list>'
-            return {k: v for k,v in {k: _delete_control_id(v, control_id) for k, v in data.items()}.items() if v != '<delete_me_from_list>'}
+            res = {}
+            delete_detected = False
+            for k, v in data.items():
+                v2 = _delete_control_id(v, control_id)
+                if v2 == '<delete_me_from_list>':
+                    delete_detected = True
+                else:
+                    res[k] = v2
+            if  delete_detected and not res: return '<delete_me_from_list>'
+            return res
         elif isinstance(data, list):
-            return [item for item in [_delete_control_id(item, control_id) for item in data] if not item == '<delete_me_from_list>']
+            res = []
+            delete_detected = False
+            for v in data:
+                v2 = _delete_control_id(v, control_id)
+                if v2 == '<delete_me_from_list>':
+                    delete_detected = True
+                else:
+                    res.append(v2)
+            if  delete_detected and not res: return '<delete_me_from_list>'
+            return res
         return data
 
     for sheet in dashboard_definition.get("Sheets", []):
         if sheet.get("Name") == "About":
             continue # Skip about
         for control in sheet.get('ParameterControls', []):
-            control_params = list(control.values())[0]
-            if control_params['Title'].lower() == parameter_name.lower():
+            control_params =  next(iter(control.values()), {})
+            if control_params.get('Title', '').lower() == parameter_name.lower():
                 control_id = control_params['ParameterControlId']
                 logger.debug(f'deleting control {control_id}')
-                _delete_control_id(dashboard_definition, control_id)
+                dashboard_definition = _delete_control_id(dashboard_definition, control_id)
 
     return dashboard_definition
 
@@ -229,7 +247,7 @@ def patch_group_by(definition, fields):
     for parameter in set(managed_parameters):
         for sheet in definition['Sheets']:
             for control_dict in sheet.get('ParameterControls',[]):
-                control = list(control_dict.values())[0]
+                control = next(iter(control_dict.values()), {})
                 if control.get('SourceParameterName') != parameter:
                     continue
                 for field in reversed(fields):

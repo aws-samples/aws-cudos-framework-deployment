@@ -237,6 +237,9 @@ class Dashboard(CidQsResource):
 
     @property
     def latest_available_cid_version(self) -> int:
+        if 'version' in self._definition:
+            return CidVersion(self._definition['version'])
+
         if self.source_template:
             return self.source_template.cid_version
         elif self.source_definition:
