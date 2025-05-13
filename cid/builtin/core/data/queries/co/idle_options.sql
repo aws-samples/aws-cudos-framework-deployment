@@ -23,7 +23,7 @@ CREATE OR REPLACE VIEW compute_optimizer_idle_options AS
         utilizationmetricsnetworkinbytespersecondmaximum, ';',
         utilizationmetricsdatabaseconnectionsmaximum, ';',
         utilizationmetricsebsvolumereadiopsmaximum, ';',
-        utilizationetricsebsvolumewriteiopsmaximum, ';',
+        utilizationmetricsebsvolumewriteiopsmaximum, ';',
         utilizationmetricsvolumereadopspersecondmaximum, ';',
         utilizationmetricsvolumewriteopspersecondmaximum
         ) utilizationmetrics
