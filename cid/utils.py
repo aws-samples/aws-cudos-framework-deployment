@@ -202,7 +202,6 @@ def get_parameters():
     global params
     return dict(params)
 
-
 def get_yesno_parameter(param_name: str, message: str, default: str=None, break_on_ctrl_c=True):
     logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
@@ -370,6 +369,11 @@ def merge_objects(obj1, obj2, depth=2):
 
 def select_items(message, all_items, selected_items=[]):
     """Let user select which items they want from all available items"""
+    # preserve the order:
+    valid_selected = [item for item in selected_items if item in all_items]
+    remaining = [item for item in all_items if item not in valid_selected]
+    all_items = valid_selected + remaining
+
     return inquirer.checkbox(
         message=f"{message}:",
         long_instruction='(use SPACE to select, ENTER to continue, arrows ↑↓ to navigate)',
