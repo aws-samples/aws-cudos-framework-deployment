@@ -451,10 +451,15 @@ class Cid():
             set_defaults(defaults)
 
     def dump_default_parameters(self):
+
+        stop_list = ['profile-name', 'region', 'aws-access-key-id', 'aws-secret-access-key', 'aws-session-token', 'athena-database', 'athena-workgroup']
         current_defaults = self.parameters_controller.load_parameters(
             context=get_parameters().get('dashboard-id')
         )
         current_defaults = current_defaults | get_parameters()
+        for key in list(current_defaults.keys()):
+            if key in stop_list:
+                del current_defaults[key]
         logger.trace(f'dumping parameters {current_defaults}')
         self.parameters_controller.dump_parameters(current_defaults, context=get_parameters().get('dashboard-id'))
 
