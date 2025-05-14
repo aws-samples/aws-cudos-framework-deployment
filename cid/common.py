@@ -18,8 +18,9 @@ from botocore.exceptions import ClientError, NoCredentialsError, CredentialRetri
 from cid import utils
 from cid.base import CidBase
 from cid.plugin import Plugin
-from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects, IsolatedParameters
+from cid.utils import get_parameter, get_parameters, set_parameters, unset_parameter, get_yesno_parameter, cid_print, isatty, merge_objects, IsolatedParameters, set_defaults
 from cid.helpers.account_map import AccountMap
+from cid.helpers.parameter_store import ParametersController
 from cid.helpers import Athena, S3, IAM, CUR, ProxyCUR, Glue, QuickSight, Dashboard, Dataset, Datasource, csv2view, Organizations, CFN
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid._version import __version__
@@ -124,6 +125,11 @@ class Cid():
     def cur2(self):
         """ get/create a cur2 """
         return self.get_cur('2')
+
+    @cached_property
+    def parameters_controller(self):
+        """ get/create parameters_controller """
+        return ParametersController(self.athena)
 
     def get_cur(self, target_cur_version):
         """ get a cur """
@@ -436,6 +442,23 @@ class Cid():
         self._deploy(dashboard_id, recursive, update, **kwargs)
 
 
+    def load_default_parameters(self):
+        defaults = self.parameters_controller.load_parameters(
+            context=get_parameters().get('dashboard-id')
+        )
+        if defaults:
+            logger.debug(f'loaded default from Athena {defaults}')
+            set_defaults(defaults)
+
+    def dump_default_parameters(self):
+        current_defaults = self.parameters_controller.load_parameters(
+            context=get_parameters().get('dashboard-id')
+        )
+        current_defaults = current_defaults | get_parameters()
+        logger.trace(f'dumping parameters {current_defaults}')
+        self.parameters_controller.dump_parameters(current_defaults, context=get_parameters().get('dashboard-id'))
+
+
     def ensure_subscription(self):
         for _ in range(3):
             try:
@@ -492,6 +515,8 @@ class Cid():
         if not dashboard_id:
             print('No dashboard selected')
             return
+
+        self.load_default_parameters()
 
         # Get selected dashboard definition
         dashboard_definition = self.get_definition("dashboard", id=dashboard_id)
@@ -663,6 +688,7 @@ class Cid():
             set_parameters({'share-method': 'account'})
             self.share(dashboard_id)
 
+        self.dump_default_parameters()
         return dashboard_id
 
 
@@ -862,9 +888,9 @@ class Cid():
                 print(f'Deleting view:  {view_name}')
                 self.athena.delete_view(view_name)
 
-        # manage dependancies
-        for dependancy_view in list(set(definition.get('dependsOn', {}).get('views', []))):
-            self.delete_view(dependancy_view)
+        # manage dependencies
+        for dependency_view in list(set(definition.get('dependsOn', {}).get('views', []))):
+            self.delete_view(dependency_view)
 
         return True
 
@@ -1128,6 +1154,7 @@ class Cid():
             logger.debug(exc, exc_info=True)
             print(f'failed with an error message: {exc}')
 
+        self.dump_default_parameters()
         return dashboard_id
 
 

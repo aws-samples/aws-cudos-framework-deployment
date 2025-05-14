@@ -25,6 +25,7 @@ from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
+defaults = {} # params from parameter storage
 params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
@@ -58,7 +59,7 @@ def isatty():
 @cache(maxsize=None)
 def exec_env():
     """ return os, shell and terminal
-    supported environments: lambda, cloudsell, macos terminals, windows/cmd, windows/powershell, windows/gitbash
+    supported environments: lambda, CloudShell, macos terminals, windows/cmd, windows/powershell, windows/gitbash
     """
     terminal = 'unknown'
     shell = 'unknown'
@@ -183,6 +184,10 @@ def cid_print(value, **kwargs) -> None:
         logger.debug('cid_print: {exc}')
     print(msg, **kwargs)
 
+def set_defaults(data: dict) -> None:
+    global defaults
+    if data:
+        defaults.update(data)
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():
@@ -194,6 +199,7 @@ def set_parameters(parameters: dict, all_yes: bool=None) -> None:
         logger.debug(f'all_yes={all_yes}')
 
 def get_parameters():
+    global params
     return dict(params)
 
 
@@ -235,8 +241,16 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
 
     :returns: a value from user or provided in command line
     """
+    global defaults, params
     logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
+
+    # override defaults from code with outside defaults
+    if param_name in defaults:
+        default = defaults.get(param_name)
+        if multi and isinstance(multi, str):
+            default = split_respecting_quotes(default)
+
     if params.get(param_name):
         value = params[param_name]
         logger.debug(f'Using {param_name}={value}, from parameters')

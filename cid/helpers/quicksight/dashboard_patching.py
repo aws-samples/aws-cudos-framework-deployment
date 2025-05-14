@@ -242,6 +242,160 @@ def add_filter_control_to_sheets(dashboard_definition: Dict[str, Any], filter_id
         #Align elements in the Control Layout
         align_grid_position(sheet["SheetControlLayouts"][0]["Configuration"]["GridLayout"]["Elements"])
 
+def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
+    # 1. Remove all filters
+    filter_ids = []
+    def _delete_field_name(data, field_name):
+        """Delete all elements that have a reference to control id
+        warning: there no deletion of dependencies
+        """
+        if isinstance(data, dict):
+            if data.get("CategoryFilter", {}).get("Column", {}).get("ColumnName") == field_name:
+                filter_ids.append(data.get("CategoryFilter", {}).get("FilterId"))
+                return '<delete_me_from_list>'
+            res = {}
+            delete_detected = False
+            for k, v in data.items():
+                v2 = _delete_field_name(v, field_name)
+                if v2 == '<delete_me_from_list>':
+                    delete_detected = True
+                else:
+                    res[k] = v2
+            if  delete_detected and not res: return '<delete_me_from_list>'
+            return res
+        elif isinstance(data, list):
+            res = []
+            delete_detected = False
+            for v in data:
+                v2 = _delete_field_name(v, field_name)
+                if v2 == '<delete_me_from_list>':
+                    delete_detected = True
+                else:
+                    res.append(v2)
+            if  delete_detected and not res: return '<delete_me_from_list>'
+            return res
+        return data
+    for field_name in field_names:
+        dashboard_definition = _delete_field_name(dashboard_definition, field_name)
+
+    import yaml;
+    with open('debug1-1.yaml', 'w') as f:
+        f.write(yaml.dump(dashboard_definition))
+
+    # 1.2 remove all control ids
+    control_ids = []
+    def _delete_filter_id(data, filter_id):
+        """Delete all elements that have a reference to control id
+        warning: there no deletion of dependencies
+        """
+        if isinstance(data, dict):
+            if data.get("CrossSheet", {}).get("SourceFilterId", {}) == filter_id:
+                control_ids.append(data.get("CrossSheet", {}).get("FilterControlId"))
+                return '<delete_me_from_list>'
+            res = {}
+            delete_detected = False
+            for k, v in data.items():
+                v2 = _delete_filter_id(v, filter_id)
+                if v2 == '<delete_me_from_list>':
+                    delete_detected = True
+                else:
+                    res[k] = v2
+            if  delete_detected and not res: return '<delete_me_from_list>'
+            return res
+        elif isinstance(data, list):
+            res = []
+            delete_detected = False
+            for v in data:
+                v2 = _delete_filter_id(v, filter_id)
+                if v2 == '<delete_me_from_list>':
+                    delete_detected = True
+                else:
+                    res.append(v2)
+            if  delete_detected and not res: return '<delete_me_from_list>'
+            return res
+        return data
+    for filter_id in filter_ids:
+        dashboard_definition = _delete_filter_id(dashboard_definition, filter_id)
+
+    import yaml;
+    with open('debug1-2.yaml', 'w') as f:
+        f.write(yaml.dump(dashboard_definition))
+
+
+    # 1.3 remove all control ids
+    def _delete_control_id(data, control_id):
+        """Delete all elements that have a reference to control id
+        warning: there no deletion of dependencies
+        """
+        if isinstance(data, dict):
+            if data.get("ElementId", 'na') == control_id:
+                print(f'Deleting {data}')
+                return '<delete_me_from_list>'
+            res = {}
+            for k, v in data.items():
+                res[k] = _delete_control_id(v, control_id)
+            return res
+        elif isinstance(data, list):
+            res = []
+            for v in data:
+                v2 = _delete_control_id(v, control_id)
+                if v2 != '<delete_me_from_list>':
+                    res.append(v2)
+            return res
+        return data
+    for control_id in control_ids:
+        dashboard_definition = _delete_control_id(dashboard_definition, control_id)
+
+    import yaml;
+    with open('debug1-3.yaml', 'w') as f:
+        f.write(yaml.dump(dashboard_definition))
+
+    # 1.5 empty filter groups
+    if "FilterGroups" in dashboard_definition:
+        dashboard_definition["FilterGroups"] = [ fg
+           for fg in dashboard_definition.get("FilterGroups", [])
+           if 'Filters' in fg
+        ]
+
+    import yaml;
+    with open('debug1-4.yaml', 'w') as f:
+        f.write(yaml.dump(dashboard_definition))
+
+    # 1.4 Set positions
+    for sheet in dashboard_definition.get("Sheets", []):
+        if sheet.get("Name") == "About":
+            continue # Skip about
+        if 'SheetControlLayouts' not in sheet:
+            continue
+        align_grid_position(sheet["SheetControlLayouts"][0]["Configuration"]["GridLayout"]["Elements"])
+
+    # 2. Remove from calc fields
+    managed_parameters = []
+    for cf in dashboard_definition['CalculatedFields']:
+        param_name = 'GroupBy' # FIXME Can be dynamic?
+        if f'// Add ${{{param_name}}}' in cf['Expression']:
+            managed_parameters.append(param_name)
+            for field in reversed(field_names):
+                cf['Expression'] = '\n'.join([line for line in cf['Expression'].splitlines() if f'{{{field}}}' not in line]) # this will delete all not just one entry! 
+            logger.trace(f'Added {field_names} to {cf}')
+    # remove field to all controls
+    for parameter in set(managed_parameters):
+        for sheet in dashboard_definition['Sheets']:
+            for control_dict in sheet.get('ParameterControls',[]):
+                control = next(iter(control_dict.values()), {})
+                if control.get('SourceParameterName') != parameter:
+                    continue
+                for field in reversed(field_names):
+                    val = format_field_name(field)
+                    control_list = control.get('SelectableValues', {}).get('Values',[])
+                    if val in control_list:
+                        control_list.remove(val)
+                    logger.trace(f'added {field} to {sheet["Name"]} / {control["Title"]}')
+    import yaml
+    with open('debug2.yaml', 'w') as f:
+        f.write(yaml.dump(dashboard_definition))
+    return dashboard_definition
+
 
 def patch_currency(definition, currency_symbol):
     ''' patch dashboard by adding currency symbol where the currency is configured already.
