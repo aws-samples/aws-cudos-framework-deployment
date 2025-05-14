@@ -247,8 +247,9 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     # override defaults from code with outside defaults
     if param_name in defaults:
         default = defaults.get(param_name)
-        if multi and isinstance(multi, str):
+        if multi and isinstance(default, str):
             default = split_respecting_quotes(default)
+        logger.debug(f'using default {param_name} = {default}')
 
     if params.get(param_name):
         value = params[param_name]
