@@ -55,7 +55,7 @@ def choose_analysis(qs):
     choice = get_parameter(
         'analysis-name',
         message='Select Analysis you want to share.',
-        choices=choices.keys(),
+        choices=list(choices.keys()),
     )
     return choices[choice]['AnalysisId']
 

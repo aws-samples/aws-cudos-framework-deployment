@@ -182,13 +182,20 @@ class AbstractCUR(CidBase):
             if self._tag_and_cost_category is not None: # the query can take few mins so we try to cache it
                 logging.debug(f'Using cached tags.')
                 return self._tag_and_cost_category
-            cid_print(f'Scanning resource_tags in {self.table_name} (can take a while).')
-            keys = self.athena.query(sql=f'''
-                    SELECT DISTINCT key
-                    FROM  {self.table_name}
-                    CROSS JOIN UNNEST(map_keys(resource_tags)) AS t(key)
-                    WHERE billing_period >= DATE_FORMAT(DATE_ADD('month', -1, CURRENT_DATE), '%Y-%m')
+            cid_print(f'Scanning resource_tags in {self.table_name}.')
+            number_of_rows_scanned = 100000 # empiric value
+            keys = self.athena.query(
+                sql=f'''
+                SELECT DISTINCT key
+                FROM (
+                    SELECT resource_tags
+                    FROM {self.table_name}
+                    WHERE billing_period >= DATE_FORMAT(DATE_ADD('day', -7, CURRENT_DATE), '%Y-%m')
                     AND line_item_usage_start_date > DATE_ADD('day', -7, CURRENT_DATE)
+                    AND cardinality(resource_tags) > 0
+                    LIMIT {number_of_rows_scanned}
+                ) t
+                CROSS JOIN UNNEST(map_keys(resource_tags)) AS t(key)
                 ''',
                 database=self.database,
             )
@@ -246,8 +253,11 @@ class CUR(AbstractCUR):
                     database_name=database,
                 )
                 all_cur_tables += [(database, table) for table in tables]
-            except self.athena.client.exceptions.AccessDenied:
-                logger.info(f'Cannot read from athena database {database}')
+            except self.athena.client.exceptions.ClientError as exc:
+                if 'AccessDenied' in str(exc):
+                    logger.info(f'Cannot read from athena database {database}')
+                else:
+                    raise
 
         if not all_cur_tables:
             # FIXME : distinguish a case where we have NONE tables in any database. This might be because

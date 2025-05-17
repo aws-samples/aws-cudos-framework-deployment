@@ -1,5 +1,6 @@
 import os
 import sys
+import csv
 import copy
 import math
 import inspect
@@ -10,9 +11,13 @@ from typing import Any, Dict
 from functools import lru_cache as cache
 from collections.abc import Iterable
 
+import yaml
 import requests
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
+from InquirerPy.separator import Separator
+from InquirerPy.prompts import InputPrompt
+from prompt_toolkit.validation import ValidationError, Validator
 from boto3.session import Session
 from botocore.exceptions import NoCredentialsError, CredentialRetrievalError, NoRegionError, ProfileNotFound
 
@@ -20,12 +25,15 @@ from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
 
+defaults = {} # params from parameter storage
 params = {} # parameters from command line
 _all_yes = False # parameters from command line
 
 PYPI_URL = "https://pypi.org/pypi/cid-cmd/json"
 
 def get_latest_tool_version():
+    ''' call PyPI url to get the latest version of the package
+    '''
     res_json = {}
     try:
         r = requests.get(PYPI_URL,timeout=3)
@@ -37,6 +45,11 @@ def get_latest_tool_version():
         return res_json.get("info", {}).get("version", "UNDEFINED")
 
 @cache(maxsize=None)
+def all_yes():
+    return _all_yes
+
+
+@cache(maxsize=None)
 def isatty():
     """ return True if executed in a Terminal that allows user input """
     if exec_env()['terminal'] == 'gitbash': # We cannot trust isatty on Git Bash on Windows
@@ -46,7 +59,7 @@ def isatty():
 @cache(maxsize=None)
 def exec_env():
     """ return os, shell and terminal
-    supported environments: lambda, cloudsell, macos terminals, windows/cmd, windows/powershell, windows/gitbash
+    supported environments: lambda, CloudShell, macos terminals, windows/cmd, windows/powershell, windows/gitbash
     """
     terminal = 'unknown'
     shell = 'unknown'
@@ -71,14 +84,24 @@ def exec_env():
         shell = 'powershell'
     return {'os': os_, 'shell': shell, 'terminal': terminal}
 
+def split_respecting_quotes(s):
+    """ split respecting quotes
+    """
+    return next(csv.reader([s]))
 
 def intersection(a: Iterable, b: Iterable) -> Iterable:
+    """ intersection of 2 arrays
+    """
     return sorted(set(a).intersection(b))
 
 def difference(a: Iterable, b: Iterable) -> Iterable:
+    """ difference of 2 arrays
+    """
     return sorted(list(set(a).difference(b)))
 
 def get_aws_region() -> str:
+    """ get aws region
+    """
     return get_boto_session().region_name
 
 def get_boto_session(**kwargs) -> Session:
@@ -161,6 +184,14 @@ def cid_print(value, **kwargs) -> None:
         logger.debug('cid_print: {exc}')
     print(msg, **kwargs)
 
+def set_defaults(data: dict) -> None:
+    global defaults
+    if data:
+        defaults.update(data)
+
+def get_defaults() -> None:
+    global defaults
+    return dict(defaults)
 
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():
@@ -172,8 +203,8 @@ def set_parameters(parameters: dict, all_yes: bool=None) -> None:
         logger.debug(f'all_yes={all_yes}')
 
 def get_parameters():
+    global params
     return dict(params)
-
 
 def get_yesno_parameter(param_name: str, message: str, default: str=None, break_on_ctrl_c=True):
     logger.debug(f'getting param {param_name}')
@@ -197,7 +228,7 @@ def get_yesno_parameter(param_name: str, message: str, default: str=None, break_
     return params[param_name]
 
 
-def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True, fuzzy=True):
+def get_parameter(param_name, message, choices=None, default=None, none_as_disabled=False, template_variables={}, break_on_ctrl_c=True, fuzzy=True, multi=False, order=False, yes_choice='yes'):
     """
     Check if parameters are provided in the command line and if not, ask user
 
@@ -208,49 +239,66 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     :param template_variables: a dict with variables for template
     :param break_on_ctrl_c: if True, exit() if user pressed CTRL+C
     :param fuzzy: if we need to use fuzzy input
+    :param multi: if we need multiple items as output
+    :param order: if we need to make order
 
     :returns: a value from user or provided in command line
     """
+    global defaults, params
     logger.debug(f'getting param {param_name}')
     param_name = param_name.replace('_', '-')
+
+    # override defaults from code with outside defaults
+    if param_name in defaults:
+        default = defaults.get(param_name)
+        if multi and isinstance(default, str):
+            default = split_respecting_quotes(default)
+        logger.debug(f'using default {param_name} = {default}')
+
     if params.get(param_name):
         value = params[param_name]
-        logger.info(f'Using {param_name}={value}, from parameters')
+        logger.debug(f'Using {param_name}={value}, from parameters')
         if isinstance(value, str) and template_variables:
             try:
                 value = value.format(**template_variables)
             except KeyError:
                 pass
+        if multi and isinstance(value, str):
+            value = split_respecting_quotes(value)
         return value
 
     if choices is not None:
-        if _all_yes and ('yes' in choices):
-            return 'yes'
-        if isinstance(choices, dict):
-            choices = [
-                Choice(name=key, value=value, enabled=not (none_as_disabled and value is None))
-                for key, value in choices.items()
-            ]
-        elif isinstance(choices, list):
-            choices = [Choice(c) for c in choices]
+        if _all_yes and (yes_choice in choices):
+            logger.debug(f'Using {yes_choice}, as -y flag is active')
+            return yes_choice
         print()
         if not isatty():
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
-        if fuzzy:
-            result = inquirer.fuzzy(
-                message=f'[{param_name}] {message}:',
-                choices=sorted(choices, key=lambda c: (c.name != default)), # make default first
-                long_instruction='Type to search or use arrows ↑↓ to navigate',
-                match_exact=True,
-                exact_symbol='',
-            ).execute()
+        if multi and order:
+            result = select_and_order(message, choices, (default if isinstance(default, list) else [default]) or [])
+        elif multi:
+            result = select_items(message, choices, (default if isinstance(default, list) else [default]) or [])
         else:
-            result = inquirer.select(
-                message=f'[{param_name}] {message}:',
-                choices=choices,
-                long_instruction='Use arrows ↑↓ to navigate',
-                default=default,
-            ).execute()
+            if isinstance(choices, dict):
+                choices = [Choice(name=key, value=value, enabled=not (none_as_disabled and value is None)) for key, value in choices.items()]
+            elif isinstance(choices, list):
+                choices = [Choice(name=key, value=key, enabled=True) for key in choices]
+
+            if fuzzy:
+                result = inquirer.fuzzy(
+                    message=f'[{param_name}] {message}:',
+                    choices=sorted(choices, key=lambda x: (x.value != default)),  # Make default as the first one
+                    long_instruction='Type to search or use arrows ↑↓ to navigate',
+                    match_exact=True,
+                    exact_symbol='',
+                ).execute()
+            else:
+                result = inquirer.select(
+                    message=f'[{param_name}] {message}:',
+                    choices=choices,
+                    long_instruction='Use arrows ↑↓ to navigate',
+                    default=default,
+                ).execute()
     else: # it is a text entry
         if isinstance(default, str) and template_variables:
             print(template_variables)
@@ -322,3 +370,65 @@ def merge_objects(obj1, obj2, depth=2):
         return obj1 + obj2
     else:
         return obj2  # If types don't match or if one of them is not a dict or list, prefer the second object.
+
+
+def select_items(message, all_items, selected_items=[]):
+    """Let user select which items they want from all available items"""
+    # preserve the order:
+    valid_selected = [item for item in selected_items if item in all_items]
+    remaining = [item for item in all_items if item not in valid_selected]
+    all_items = valid_selected + remaining
+
+    return inquirer.checkbox(
+        message=f"{message}:",
+        long_instruction='(use SPACE to select, ENTER to continue, arrows ↑↓ to navigate)',
+        choices=[Choice(item, name=item, enabled=item in selected_items) for item in all_items],
+        transformer=lambda result: f"{len(result)} items selected"
+    ).execute()
+
+
+def order_items(items, name='Dimensions'):
+    """Let user arrange the selected items"""
+
+    class EmptyInputValidator(Validator):
+        def validate(self, document):
+            try:
+                data = yaml.safe_load(document.text)
+            except:
+                raise ValidationError(
+                    message="Incorrect yaml syntax",
+                    cursor_position=document.cursor_position,
+                )
+            if name not in data:
+                raise ValidationError(
+                    message=f"{name} key not found",
+                    cursor_position=document.cursor_position,
+                )
+            if isinstance(items, list):
+                for line in data[name]:
+                    if not line.strip() in items:
+                        raise ValidationError(
+                            message=f"{line} is not in {items}",
+                            cursor_position=document.cursor_position,
+                        )
+            return True
+    result = InputPrompt(
+        message="You can edit order as yaml:",
+        multiline=True,
+        default=yaml.safe_dump({name: items}),
+        validate=EmptyInputValidator(),
+        long_instruction="Press Enter for a new line. Submit with Esc+Enter. Back = Ctrl+C."
+    ).execute()
+    return yaml.safe_load(result)[name]
+
+
+def select_and_order(message, all_items, selected_items=[]):
+    while True:
+        selected_items = select_items(message, all_items, selected_items)
+        if not selected_items:
+            return []
+        try:
+            selected_items = order_items(selected_items)
+        except KeyboardInterrupt:
+            continue
+        return selected_items
