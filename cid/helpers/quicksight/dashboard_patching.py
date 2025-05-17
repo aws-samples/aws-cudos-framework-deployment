@@ -247,6 +247,8 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
          * add_filter_to_dashboard_definition
          * patch group by
     '''
+    if not field_names:
+        return dashboard_definition
     # 1. Remove all filters added by add_filter_to_dashboard_definition
 
     # 1.1 remove filters

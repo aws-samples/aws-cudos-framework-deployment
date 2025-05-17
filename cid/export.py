@@ -9,6 +9,7 @@ Here are the types of objects that are processed:
     * Glue Crawlers
 
 '''
+import os
 import re
 import time
 import logging
@@ -16,9 +17,10 @@ import logging
 import yaml
 import boto3
 
-from cid.helpers import Dataset, QuickSight, Athena, Glue
-from cid.helpers import CUR
-from cid.utils import get_parameter, get_parameters, cid_print
+from cid.helpers import Dataset, QuickSight, Athena, Glue, CUR 
+from cid.helpers.quicksight.definition import Definition
+from cid.helpers.quicksight.dashboard_patching import remove_fields
+from cid.utils import get_parameter, get_parameters, cid_print, get_defaults
 from cid.exceptions import CidCritical
 
 logger = logging.getLogger(__name__)
@@ -70,7 +72,7 @@ def get_theme(analysis):
     return None
 
 
-def export_analysis(qs, athena, glue):
+def export_analysis(qs, athena, glue, load_parameters_callback=None):
     """ Export analysis to yaml resource File
     """
 
@@ -93,11 +95,26 @@ def export_analysis(qs, athena, glue):
 
     logger.info("analyzing datasets")
     resources = {}
-    resources['dashboards'] = {}
-    resources['datasets'] = {}
-    resources['crawlers'] = {}
 
-    theme_id = get_theme(analysis)
+    output = get_parameter(
+        'output',
+        message='Enter a filename (.yaml)',
+        default=f"{analysis['Name'].replace(' ', '-')}.yaml"
+    )
+    if os.path.exists(output):
+        try:
+            resources = yaml.safe_load(open(output).read())
+        except Exception as exc:
+            logger.warning(f'Error loading {output}: {exc}. Will continue.')
+
+    resources['dashboards'] = resources.get('dashboards') or {}
+    resources['datasets'] = resources.get('datasets') or {}
+    resources['crawlers'] = resources.get('crawlers') or {}
+
+    if resources['dashboards']:
+        dashboard_key = list(resources['dashboards'].keys())[0] # not supported multi dashboards
+    else:
+        dashboard_key = analysis['Name'].upper()
 
     cur_helper = CUR(athena=athena, glue=glue)
 
@@ -324,7 +341,10 @@ def export_analysis(qs, athena, glue):
         resources['views'][key] = view_data
 
     logger.debug('Building dashboard resource')
-    dashboard_id = get_parameter(
+    dashboard_resource = resources.get('dashboards', {}).get(dashboard_key) or {}
+
+
+    dashboard_id = dashboard_resource.get('dashboardId') or get_parameter(
         'dashboard-id',
         message='dashboard id (will be used in dashboard URL. Use lowercase, hyphens(not underscores) and make it short but understandable for humans)',
         default=escape_id(analysis['Name'].lower().replace(' ', '-').replace('_', '-'))
@@ -334,22 +354,24 @@ def export_analysis(qs, athena, glue):
         cid_print('Best practices enforced: {dashboard_id} -> {new_dashboard_id}')
         dashboard_id = new_dashboard_id
 
-    dashboard_resource = {}
-    print(datasets)
     dashboard_resource['dependsOn'] = {
         # Historically CID uses dataset names as dataset reference. IDs of manually created resources have uuid format.
         # We can potentially reconsider this and use IDs at some point
         'datasets': sorted(list(set(list(datasets.keys()) + resources_datasets)))
     }
-    dashboard_resource['name'] = analysis['Name']
+    dashboard_resource['name'] = dashboard_resource.get('name')
     dashboard_resource['dashboardId'] = dashboard_id
-    dashboard_resource['category'] = get_parameters().get('category', 'Custom')
+    dashboard_resource['category'] = get_parameters().get('category', dashboard_resource.get('category', 'Custom'))
+
+    theme_id = get_theme(analysis)
     if theme_id:
          dashboard_resource['theme'] = theme_id
 
     dashboard_export_method = None
-    if get_parameters().get('template-id'):
+    if get_parameters().get('template-id') or dashboard_resource.get('templateId'):
         dashboard_export_method = 'template'
+    elif dashboard_resource.get('file') or dashboard_resource.get('data'):
+        dashboard_export_method = 'definition'
     else:
         dashboard_export_method = get_parameter(
             'dashboard-export-method',
@@ -437,24 +459,44 @@ def export_analysis(qs, athena, glue):
             AnalysisId=analysis_id,
         )['Definition']
 
+        if load_parameters_callback:
+            load_parameters_callback()
+        taxonomy_fields = get_parameters().get('taxonomy') or get_defaults().get('taxonomy')
+        if taxonomy_fields:
+            definition = remove_fields(definition, taxonomy_fields)
+
         definition.pop('QueryExecutionMode', None) # QueryExecutionMode is supported for export but not for create or update as of 2024-10-17
         definition.pop('QueryExecutionOptions', None) # QueryExecutionOptions is supported for export but not for create or update as of 2024-10-17
+
+        try:
+            qs_def = Definition(raw=definition)
+            version = str(qs_def.cid_version)
+            if version:
+                cid_print(f'detected version {version}')
+                dashboard_resource['version'] = version
+        except Exception as exc:
+            logger.warning(f'failed to read version from about tab')
 
         for dataset in definition.get('DataSetIdentifierDeclarations', []):
             # Hide region and account number of the source account
             dataset["DataSetArn"] = f'arn:{qs.partition}:quicksight:::dataset/' + dataset["DataSetArn"].split('/')[-1]
-        dashboard_resource['data'] = yaml.safe_dump(definition)
 
-    resources['dashboards'][analysis['Name'].upper()] = dashboard_resource
+        if get_parameters().get('one-file'):
+            dashboard_resource['data'] = yaml.safe_dump(definition)
+        else:
+            directory = os.path.dirname(output)
+            filename = os.path.basename(output)
+            base, ext = os.path.splitext(filename)
+            output_definition = f"./{base}-definition{ext}"
+            definition_path = os.path.abspath(os.path.join(directory, output_definition))
+            with open(definition_path, 'w') as f_:
+                f_.write(yaml.safe_dump(definition))
+            dashboard_resource['file'] = output_definition
+
+    resources['dashboards'][dashboard_key] = dashboard_resource
 
     for name, dataset in datasets.items():
         resources['datasets'][name] = dataset
-
-    output = get_parameter(
-        'output',
-        message='Enter a filename (.yaml)',
-        default=f"{analysis['Name'].replace(' ', '-')}.yaml"
-    )
 
     with open(output, "w", encoding='utf-8') as output_file:
         output_file.write(yaml.safe_dump(resources, sort_keys=False))
