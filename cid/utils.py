@@ -189,6 +189,10 @@ def set_defaults(data: dict) -> None:
     if data:
         defaults.update(data)
 
+def get_defaults() -> None:
+    global defaults
+    return dict(defaults)
+
 def set_parameters(parameters: dict, all_yes: bool=None) -> None:
     for k, v in parameters.items():
         params[k.replace('_', '-')] = v

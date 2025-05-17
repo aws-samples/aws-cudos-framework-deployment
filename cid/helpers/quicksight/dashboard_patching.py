@@ -243,7 +243,13 @@ def add_filter_control_to_sheets(dashboard_definition: Dict[str, Any], filter_id
         align_grid_position(sheet["SheetControlLayouts"][0]["Configuration"]["GridLayout"]["Elements"])
 
 def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
-    # 1. Remove all filters
+    ''' remove fields. reverts actions of:
+         * add_filter_to_dashboard_definition
+         * patch group by
+    '''
+    # 1. Remove all filters added by add_filter_to_dashboard_definition
+
+    # 1.1 remove filters
     filter_ids = []
     def _delete_field_name(data, field_name):
         """Delete all elements that have a reference to control id
@@ -278,15 +284,11 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
     for field_name in field_names:
         dashboard_definition = _delete_field_name(dashboard_definition, field_name)
 
-    import yaml;
-    with open('debug1-1.yaml', 'w') as f:
-        f.write(yaml.dump(dashboard_definition))
 
-    # 1.2 remove all control ids
+    # 1.2 remove all filters controls
     control_ids = []
     def _delete_filter_id(data, filter_id):
-        """Delete all elements that have a reference to control id
-        warning: there no deletion of dependencies
+        """Delete all elements that have a reference to filter id
         """
         if isinstance(data, dict):
             if data.get("CrossSheet", {}).get("SourceFilterId", {}) == filter_id:
@@ -317,19 +319,13 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
     for filter_id in filter_ids:
         dashboard_definition = _delete_filter_id(dashboard_definition, filter_id)
 
-    import yaml;
-    with open('debug1-2.yaml', 'w') as f:
-        f.write(yaml.dump(dashboard_definition))
 
-
-    # 1.3 remove all control ids
+    # 1.3 remove all links to removed controls
     def _delete_control_id(data, control_id):
         """Delete all elements that have a reference to control id
-        warning: there no deletion of dependencies
         """
         if isinstance(data, dict):
             if data.get("ElementId", 'na') == control_id:
-                print(f'Deleting {data}')
                 return '<delete_me_from_list>'
             res = {}
             for k, v in data.items():
@@ -346,22 +342,14 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
     for control_id in control_ids:
         dashboard_definition = _delete_control_id(dashboard_definition, control_id)
 
-    import yaml;
-    with open('debug1-3.yaml', 'w') as f:
-        f.write(yaml.dump(dashboard_definition))
-
-    # 1.5 empty filter groups
+    # 1.4 empty filter groups
     if "FilterGroups" in dashboard_definition:
         dashboard_definition["FilterGroups"] = [ fg
            for fg in dashboard_definition.get("FilterGroups", [])
            if 'Filters' in fg
         ]
 
-    import yaml;
-    with open('debug1-4.yaml', 'w') as f:
-        f.write(yaml.dump(dashboard_definition))
-
-    # 1.4 Set positions
+    # 1.5 Set positions
     for sheet in dashboard_definition.get("Sheets", []):
         if sheet.get("Name") == "About":
             continue # Skip about
@@ -369,16 +357,18 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
             continue
         align_grid_position(sheet["SheetControlLayouts"][0]["Configuration"]["GridLayout"]["Elements"])
 
-    # 2. Remove from calc fields
+    # 2. Remove from group by
+    # 2.1 Remove from calc fields
     managed_parameters = []
     for cf in dashboard_definition['CalculatedFields']:
         param_name = 'GroupBy' # FIXME Can be dynamic?
         if f'// Add ${{{param_name}}}' in cf['Expression']:
             managed_parameters.append(param_name)
             for field in reversed(field_names):
-                cf['Expression'] = '\n'.join([line for line in cf['Expression'].splitlines() if f'{{{field}}}' not in line]) # this will delete all not just one entry! 
+                expression = f"'{format_field_name(field)}', {{{field}}}," # must be the same as in patch_group_by
+                cf['Expression'] = '\n'.join([line for line in cf['Expression'].splitlines() if expression not in line])
             logger.trace(f'Added {field_names} to {cf}')
-    # remove field to all controls
+    # 2.2 Remove field to all controls lists
     for parameter in set(managed_parameters):
         for sheet in dashboard_definition['Sheets']:
             for control_dict in sheet.get('ParameterControls',[]):
@@ -391,9 +381,7 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
                     if val in control_list:
                         control_list.remove(val)
                     logger.trace(f'added {field} to {sheet["Name"]} / {control["Title"]}')
-    import yaml
-    with open('debug2.yaml', 'w') as f:
-        f.write(yaml.dump(dashboard_definition))
+
     return dashboard_definition
 
 
@@ -430,6 +418,8 @@ def patch_currency(definition, currency_symbol):
 
 
 def patch_group_by(definition, fields):
+    ''' find all group by elements and add fields in calc fields and parameter controls
+    '''
     # Add new fields to the code of Calc functions
     managed_parameters = []
     for cf in definition['CalculatedFields']:
@@ -437,7 +427,7 @@ def patch_group_by(definition, fields):
         if f'// Add ${{{param_name}}}' in cf['Expression']:
             managed_parameters.append(param_name)
             for field in reversed(fields):
-                new_line = f"${{{param_name}}}='{format_field_name(field)}', {{{field}}},"
+                new_line = f"${{{param_name}}}='{format_field_name(field)}', {{{field}}}," # must be the same as in remove_fields
                 cf['Expression'] = re.sub('^(\s*)(// Add)', f'\\1{new_line}\n\\1\\2', cf['Expression'], flags=re.MULTILINE)
             logger.trace(f'Added {fields} to {cf}')
     # Add new field to all controls
