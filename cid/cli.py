@@ -156,6 +156,7 @@ def export(ctx, **kwargs):
     Command options:
         --analysis-name              Analysis you want to share (not needed if analysis-id is provided).
         --analysis-id                ID of analysis you want to share (open analysis in browser and copy id from url)
+        --one-file (no|yes)          Default=no, if set export generates a single file if omitted (default) the dashboard will be in a separate file     
         --template-id                Template Id
         --dashboard-id               Target Dashboard Id
         --template-version           Version description vX.Y.Z
@@ -165,7 +166,7 @@ def export(ctx, **kwargs):
         --export-known-datasets
             (no|yes)                 If 'yes' the export will include DataSets that are already in resources file. Default = no
         --category TEXT              The dashboards category. Default = Custom
-        --output                     A filename (.yaml)
+        --output                     A filename (.yaml) If provided an existing file it will be analyzed for default values and overridden 
     """
     ctx.obj.export(**kwargs)
 
