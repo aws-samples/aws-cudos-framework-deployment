@@ -363,8 +363,9 @@ class Cid():
             return
         resources.get('views', {}).pop('account_map', None) # Exclude account map as it is a special view
         for groups_of_resources in resources.values(): # add source metadata to each loaded resource
-            for res in groups_of_resources.values():
-                res['source'] = self.resolve_relative_path(source, parent_source)
+            if isinstance(groups_of_resources, dict):
+                for res in groups_of_resources.values():
+                    res['source'] = self.resolve_relative_path(source, parent_source)
         self.resources = merge_objects(self.resources, resources, depth=1)
 
     def load_catalog(self, catalog_url):

@@ -351,7 +351,7 @@ def export_analysis(qs, athena, glue):
     )
     new_dashboard_id = dashboard_id.lower().replace(' ', '-').replace('_', '-')
     if dashboard_id != new_dashboard_id:
-        cid_print('Best practices enforced: {dashboard_id} -> {new_dashboard_id}')
+        cid_print(f'Best practices enforced: {dashboard_id} -> {new_dashboard_id}')
         dashboard_id = new_dashboard_id
 
     dashboard_resource['dependsOn'] = {
