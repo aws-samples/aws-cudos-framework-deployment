@@ -83,10 +83,13 @@ def export_analysis(qs, athena, glue):
     if not analysis_id:
         analysis_id = get_parameter(
             'analysis-id',
-            message='Enter ID of analysis you want to share (open analysis in browser and copy id from url)',
+            message='Enter ID of analysis you want to share (open analysis in browser and copy id from url or the full url of the analysis)',
         )
     if not analysis_id:
         raise CidCritical("Need a parameter --analysis-id or --analysis-name")
+
+    if analysis_id.startswith('https://') and '/analyses/' in analysis_id:
+        analysis_id = analysis_id.split('/analyses/')[1].split('/')[0]
 
     analysis = qs.client.describe_analysis(
         AwsAccountId=qs.account_id,
