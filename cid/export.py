@@ -17,9 +17,9 @@ import logging
 import yaml
 import boto3
 
-from cid.helpers import Dataset, QuickSight, Athena, Glue, CUR 
+from cid.helpers import Dataset, QuickSight, Athena, Glue, CUR
 from cid.helpers.quicksight.definition import Definition
-from cid.helpers.quicksight.dashboard_patching import remove_fields
+from cid.helpers.quicksight.dashboard_patching import remove_fields, detect_global_filter_fields
 from cid.utils import get_parameter, get_parameters, cid_print, get_defaults
 from cid.exceptions import CidCritical
 
@@ -72,7 +72,7 @@ def get_theme(analysis):
     return None
 
 
-def export_analysis(qs, athena, glue, load_parameters_callback=None):
+def export_analysis(qs, athena, glue):
     """ Export analysis to yaml resource File
     """
 
@@ -459,10 +459,15 @@ def export_analysis(qs, athena, glue, load_parameters_callback=None):
             AnalysisId=analysis_id,
         )['Definition']
 
-        if load_parameters_callback:
-            load_parameters_callback()
-        taxonomy_fields = get_parameters().get('taxonomy') or get_defaults().get('taxonomy')
+        taxonomy_fields = detect_global_filter_fields(definition)
+        taxonomy_fields = get_parameter('taxonomy',
+            message='leave only taxonomy filed you want to keep in export',
+            choices=taxonomy_fields,
+            default=[],
+            multi=True
+        )
         if taxonomy_fields:
+            cid_print(f'removing taxonomy {taxonomy_fields}')
             definition = remove_fields(definition, taxonomy_fields)
 
         definition.pop('QueryExecutionMode', None) # QueryExecutionMode is supported for export but not for create or update as of 2024-10-17

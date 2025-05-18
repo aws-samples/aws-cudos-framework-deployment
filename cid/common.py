@@ -279,7 +279,7 @@ class Cid():
 
     @command
     def export(self, **kwargs):
-        export_analysis(self.qs, self.athena, glue=self.glue, load_parameters_callback=self.load_default_parameters)
+        export_analysis(self.qs, self.athena, glue=self.glue)
 
     def track(self, action, dashboard_id):
         """ Send dashboard_id and account_id to adoption tracker """

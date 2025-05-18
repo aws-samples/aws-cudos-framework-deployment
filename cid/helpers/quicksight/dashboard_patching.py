@@ -386,6 +386,20 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
 
     return dashboard_definition
 
+def detect_global_filter_fields(dashboard_definition):
+    ''' returns fields that were added as global all sheets and all datasets list filters
+    '''
+    cols = []
+    for fg in dashboard_definition.get('FilterGroups', []):
+        filter = fg['Filters'][0]
+        if fg.get('CrossDataset') !=  'ALL_DATASETS' \
+            or 'AllSheets' not in fg.get('ScopeConfiguration', {}) \
+            or not filter.get('CategoryFilter', {}).get('Configuration', {}).get('FilterListConfiguration'):
+            continue
+        col_name = filter.get('CategoryFilter', {}).get('Column', {}).get('ColumnName')
+        cols.append(col_name)
+    return cols
+
 
 def patch_currency(definition, currency_symbol):
     ''' patch dashboard by adding currency symbol where the currency is configured already.
