@@ -363,8 +363,9 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
     # 2.1 Remove from calc fields
     managed_parameters = []
     for cf in dashboard_definition['CalculatedFields']:
-        param_name = 'GroupBy' # FIXME Can be dynamic?
-        if f'// Add ${{{param_name}}}' in cf['Expression']:
+        param_match = re.search(r'// Add \${([a-zA-Z0-9_\s]+)}', cf['Expression']) # search for '// Add ${GroupBy}'
+        if param_match:
+            param_name = param_match.group(1)
             managed_parameters.append(param_name)
             for field in reversed(field_names):
                 expression = f"'{format_field_name(field)}', {{{field}}}," # must be the same as in patch_group_by
@@ -397,8 +398,21 @@ def detect_global_filter_fields(dashboard_definition):
             or not filter.get('CategoryFilter', {}).get('Configuration', {}).get('FilterListConfiguration'):
             continue
         col_name = filter.get('CategoryFilter', {}).get('Column', {}).get('ColumnName')
+        filter_id = filter.get('FilterId')
+
+        # Check if this filter is on all sheets
+        found_in_all = True
+        for sheet in dashboard_definition.get("Sheets", []):
+            if sheet.get("Name") == "About":
+                continue # Skip about
+            for fc in sheet.get('FilterControls', []):
+                if fc.get('CrossSheet', {}).get('SourceFilterId') == filter_id:
+                    break
+            else:
+                found_in_all = False
+        if not found_in_all:
+            break
         cols.append(col_name)
-    return cols
 
 
 def patch_currency(definition, currency_symbol):
@@ -439,12 +453,15 @@ def patch_group_by(definition, fields):
     # Add new fields to the code of Calc functions
     managed_parameters = []
     for cf in definition['CalculatedFields']:
-        param_name = 'GroupBy' # Can be dynamic?
+        param_match = re.search(r'// Add \${([a-zA-Z0-9_\s]+)}', cf['Expression']) # search for '// Add ${GroupBy}'
+        if not param_match:
+            continue
+        param_name = param_match.group(1)
         if f'// Add ${{{param_name}}}' in cf['Expression']:
             managed_parameters.append(param_name)
             for field in reversed(fields):
                 new_line = f"${{{param_name}}}='{format_field_name(field)}', {{{field}}}," # must be the same as in remove_fields
-                cf['Expression'] = re.sub('^(\s*)(// Add)', f'\\1{new_line}\n\\1\\2', cf['Expression'], flags=re.MULTILINE)
+                cf['Expression'] = re.sub(f'^(\s*)(// Add ${{{param_name}}})', f'\\1{new_line}\n\\1\\2', cf['Expression'], flags=re.MULTILINE)
             logger.trace(f'Added {fields} to {cf}')
     # Add new field to all controls
     for parameter in set(managed_parameters):
