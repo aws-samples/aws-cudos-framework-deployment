@@ -510,6 +510,7 @@ views:
   summary_view:
     File: queries/cid/summary_view.sql
     dependsOn:
+      tags: json
       cur2:
         - bill_billing_entity
         - bill_billing_period_start_date
@@ -555,6 +556,7 @@ views:
   ec2_running_cost:
     File: queries/cid/ec2_running_cost.sql
     dependsOn:
+      tags: json
       cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
@@ -572,6 +574,7 @@ views:
   compute_savings_plan_eligible_spend:
     File: queries/cid/compute_savings_plan_eligible_spend.sql
     dependsOn:
+      tags: json
       cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
@@ -587,6 +590,7 @@ views:
   s3_view:
     File: queries/cid/s3.sql
     dependsOn:
+      tags: json
       cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
@@ -627,6 +631,7 @@ views:
   hourly_view:
     File: queries/cudos/hourly_view.sql
     dependsOn:
+      tags: json
       cur2:
         - bill_billing_period_start_date
         - bill_payer_account_id
@@ -651,6 +656,7 @@ views:
   resource_view:
     File: queries/cudos/resource_view.sql
     dependsOn:
+      tags: json
       cur2:
         - bill_billing_entity
         - bill_payer_account_id

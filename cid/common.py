@@ -1778,7 +1778,7 @@ class Cid():
         compiled_definition = json.loads(template.safe_substitute(params))
         self.glue.create_or_update_crawler(crawler_definition=compiled_definition)
 
-    def cur_tags_json(self) -> str:
+    def cur_tags_json(self, cur) -> str:
         '''
         global parameters: resource_tags_text:
             '{
@@ -1787,9 +1787,14 @@ class Cid():
             }'
         '''
         def _tag_to_name(tag):
-            return tag.replace("'user_","'tag_").replace("'aws_","'tag_aws_").split("['")[-1].split("']")[0]
+            return (tag
+                .replace('resource_tags_', '')
+                .replace("'user_","'tag_")
+                .replace("'aws_","'tag_aws_")
+                .split("['")[-1].split("']")[0]
+            )
         resource_tags = get_parameters().get('resource-tags', None)
-        tags_and_names = {_tag_to_name(tag): tag for tag in sorted(self.cur.tag_and_cost_category_fields)}
+        tags_and_names = {_tag_to_name(tag): tag for tag in sorted(cur.tag_and_cost_category_fields)}
         if resource_tags is None:
             resource_tags = get_parameter(
                 'resource-tags',
@@ -1814,7 +1819,7 @@ class Cid():
                 AS JSON)
             )
         '''
-        logger.debug(f'cur_tags_json = {res}')
+        logger.trace(f'cur_tags_json = {res}')
         return res
 
     def get_view_query(self, view_name: str) -> str:
@@ -1823,6 +1828,8 @@ class Cid():
         view_definition = self.get_definition("view", name=view_name)
         cur1_required = view_definition.get('dependsOn', dict()).get('cur') or view_definition.get('dependsOn', dict()).get('cur1')
         cur2_required = view_definition.get('dependsOn', dict()).get('cur2')
+        cur_tags_json_required = view_definition.get('dependsOn', dict()).get('tags') == 'json'
+
         #if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
         #    view_definition['File'] = view_definition.get('spriFile')
         #elif cur_required and self.cur.has_savings_plans and view_definition.get('spFile'):
@@ -1853,8 +1860,10 @@ class Cid():
             'cur1_table_name': self.cur1.table_name if cur1_required else None,
             'cur2_database':   self.cur2.database   if cur2_required else None,
             'cur2_table_name': self.cur2.table_name if cur2_required else None,
-            'cur_tags_json':   self.cur_tags_json(),
-
+            'cur_tags_json':
+                self.cur_tags_json(self.cur2 if cur2_required else self.cur1)
+                if cur_tags_json_required
+                else None,
         }
 
         columns_tpl = self.get_template_parameters(
