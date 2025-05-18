@@ -160,6 +160,7 @@ def export(ctx, **kwargs):
         --template-id                Template Id
         --dashboard-id               Target Dashboard Id
         --template-version           Version description vX.Y.Z
+        --taxonomy                   list of fields that export will keep as global filters. Only if these global filters exist.
         --reader-account             Account id with whom you want to share with or *
         --dashboard-export-method
                (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSight Template)
