@@ -46,6 +46,18 @@ This foundational architecture is recommended for starting and allows deployment
 ## Architecture of Advanced Dashboards
 ![Advanced Architecture](assets/images/advanced-architecture.png  "Foundational Architecture")
 
+### Cost Explorer Forecast Integration
+
+The framework includes an automated solution for collecting AWS Cost Explorer forecast data:
+
+- **Automated Data Collection**: Periodically collects forecast data from AWS Cost Explorer API
+- **Dashboard Integration**: Makes forecast data available to any dashboard in the framework
+- **Customizable Parameters**: Configurable forecast period, confidence level, and granularity
+- **Athena Integration**: Stores data in a format compatible with Athena queries
+- **Scheduling**: Uses EventBridge to run the collection on a regular basis
+
+For deployment and configuration details, see [Cost Forecast Automation](docs/cost_forecast_automation.md) and [Testing Guide](docs/cost_forecast_testing.md).
+
 1. [AWS Data Exports](https://aws.amazon.com/aws-cost-management/aws-data-exports/) delivers daily the Cost & Usage Report (CUR2) to an [Amazon S3 Bucket](https://aws.amazon.com/s3/) in the Management Account.
 2. [Amazon S3](https://aws.amazon.com/s3/) replication rule copies Export data to a dedicated Data Collection Account S3 bucket automatically.
 3. [Amazon Athena](https://aws.amazon.com/athena/) allows querying data directly from the S3 bucket using an [AWS Glue](https://aws.amazon.com/glue/) table schema definition.
