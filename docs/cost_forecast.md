@@ -20,25 +20,43 @@ Before deploying the Cost Forecast Dashboard, ensure you have:
 
 ## Deployment Options
 
-### Option 1: Using cid-cmd tool (Recommended)
+### Option 1: Main CloudFormation Deployment
 
-1. Generate forecast data using the built-in forecast command:
+The Cost Forecast Dashboard can be deployed along with other dashboards using the main CloudFormation template by setting the `DeployCostForecastDashboard` parameter to `yes`.
 
+```bash
+aws cloudformation deploy \
+  --template-file cfn-templates/cid-cfn.yml \
+  --stack-name cudos-framework \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides DeployCostForecastDashboard=yes
 ```
+
+### Option 2: Using cid-cmd tool
+
+Deploy the dashboard directly using the cid-cmd tool:
+
+```bash
+cid-cmd deploy --dashboard-id cost-forecast-dashboard
+```
+
+## Data Collection
+
+This dashboard requires Cost Explorer forecast data to be collected separately. For automated data collection, please refer to the [Cloud Intelligence Dashboards Data Collection](https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/) repository.
+
+### Manual Data Collection
+
+You can also generate forecast data manually using the built-in forecast command:
+
+```bash
 cid-cmd forecast
 ```
 
-2. Follow the interactive prompts to:
-   - Select the forecast time period
-   - Choose metrics and dimensions
-   - Set granularity (daily or monthly)
-   - Upload results to S3
-
-3. Deploy the dashboard:
-
-```
-cid-cmd deploy --dashboard-id cost-forecast-dashboard
-```
+Follow the interactive prompts to:
+- Select the forecast time period
+- Choose metrics and dimensions
+- Set granularity (daily or monthly)
+- Upload results to S3
 
 ## Dashboard Sections
 

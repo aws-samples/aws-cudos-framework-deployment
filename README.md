@@ -48,15 +48,16 @@ This foundational architecture is recommended for starting and allows deployment
 
 ### Cost Explorer Forecast Integration
 
-The framework includes an automated solution for collecting AWS Cost Explorer forecast data:
+The framework includes a dashboard for visualizing AWS Cost Explorer forecast data:
 
-- **Automated Data Collection**: Periodically collects forecast data from AWS Cost Explorer API
-- **Dashboard Integration**: Makes forecast data available to any dashboard in the framework
-- **Customizable Parameters**: Configurable forecast period, confidence level, and granularity
-- **Athena Integration**: Stores data in a format compatible with Athena queries
-- **Scheduling**: Uses EventBridge to run the collection on a regular basis
+- **Cost Visualization**: Visualize AWS Cost Explorer forecasts with confidence intervals
+- **Multi-dimension Analysis**: Analyze forecasts by service, account, region, and other dimensions
+- **Dashboard Integration**: Integrates with other CUDOS dashboards to provide comprehensive cost insights
+- **Multiple Metrics**: Support for different cost metrics (Unblended, Amortized, etc.)
 
-For deployment and configuration details, see [Cost Forecast Automation](docs/cost_forecast_automation.md) and [Testing Guide](docs/cost_forecast_testing.md).
+The dashboard is available as part of this repository, but **data collection** must be implemented separately through the [Cloud Intelligence Dashboards Data Collection](https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/) repository.
+
+For dashboard deployment details, see [Cost Forecast Dashboard](docs/cost_forecast.md).
 
 1. [AWS Data Exports](https://aws.amazon.com/aws-cost-management/aws-data-exports/) delivers daily the Cost & Usage Report (CUR2) to an [Amazon S3 Bucket](https://aws.amazon.com/s3/) in the Management Account.
 2. [Amazon S3](https://aws.amazon.com/s3/) replication rule copies Export data to a dedicated Data Collection Account S3 bucket automatically.

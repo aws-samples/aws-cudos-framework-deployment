@@ -1,470 +1,865 @@
 {
-  "Version": "2020-09-30",
-  "SheetId": "cost-forecast-overview",
-  "Layouts": [
-    {
-      "Configuration": {
-        "GridLayout": {
-          "Elements": [
-            {
-              "ElementId": "forecast-trend-chart",
-              "ElementType": "VISUAL",
-              "ColumnIndex": 0,
-              "ColumnSpan": 8,
-              "RowIndex": 0,
-              "RowSpan": 6
-            },
-            {
-              "ElementId": "forecast-kpi-cards",
-              "ElementType": "VISUAL",
-              "ColumnIndex": 8,
-              "ColumnSpan": 4,
-              "RowIndex": 0,
-              "RowSpan": 2
-            },
-            {
-              "ElementId": "forecast-by-service",
-              "ElementType": "VISUAL",
-              "ColumnIndex": 8,
-              "ColumnSpan": 4,
-              "RowIndex": 2,
-              "RowSpan": 4
-            },
-            {
-              "ElementId": "forecast-details-table",
-              "ElementType": "VISUAL",
-              "ColumnIndex": 0,
-              "ColumnSpan": 12,
-              "RowIndex": 6,
-              "RowSpan": 6
-            }
-          ],
-          "CanvasSizeOptions": {
-            "ScreenCanvasSizeOptions": {
-              "ResizeOption": "RESPONSIVE",
-              "OptimizedViewPortWidth": "1600px"
-            }
-          }
-        }
-      }
-    }
-  ],
-  "ParameterDeclarations": [
-    {
-      "Name": "DateRangeFilter",
-      "DataType": "DATETIME",
-      "DefaultValues": {
-        "RollingDate": {
-          "Expression": "rolling(P3M, startOfMonth)",
-          "ExpressionContext": "end"
-        }
-      },
-      "ValueWhenUnset": {
-        "RollingDate": {
-          "Expression": "rolling(P3M, startOfMonth)",
-          "ExpressionContext": "end"
-        }
-      }
+  "Version": "2019-09-01",
+  "Dashboard": {
+    "Name": "AWS Cost Explorer Forecast Dashboard",
+    "DashboardId": "cost-forecast-dashboard",
+    "Version": {
+      "Status": "PUBLISHED",
+      "VersionNumber": 1
     },
-    {
-      "Name": "DimensionFilter",
-      "DataType": "STRING",
-      "DefaultValues": {
-        "StaticValues": [
-          "SERVICE"
+    "Sheets": [
+      {
+        "SheetId": "forecast-main-sheet",
+        "Name": "Cost Forecast Overview",
+        "Visuals": [
+          {
+            "VisualId": "time-series-forecast",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Cost Forecast with Confidence Interval"
+              }
+            },
+            "ChartConfiguration": {
+              "LineChartConfiguration": {
+                "FieldWells": {
+                  "LineChartAggregatedFieldWells": {
+                    "Category": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_dataset",
+                        "FieldId": "date"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_dataset",
+                        "FieldId": "cost"
+                      }
+                    ],
+                    "Colors": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_dataset",
+                        "FieldId": "data_type"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "CategorySort": [
+                    {
+                      "FieldId": "date",
+                      "Direction": "ASC"
+                    }
+                  ]
+                },
+                "Type": "LINE",
+                "DataLabels": {
+                  "Visibility": "HIDDEN"
+                },
+                "ForecastConfiguration": {
+                  "ForecastProperties": {
+                    "UpperBoundary": "upper_bound",
+                    "LowerBoundary": "lower_bound",
+                    "PredictionInterval": 80
+                  }
+                }
+              }
+            }
+          },
+          {
+            "VisualId": "total-forecast-kpi",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Total Forecast Cost"
+              }
+            },
+            "ChartConfiguration": {
+              "KPIConfiguration": {
+                "FieldWells": {
+                  "Values": [
+                    {
+                      "DataSetIdentifier": "cost_forecast_dataset",
+                      "FieldId": "cost"
+                    }
+                  ]
+                },
+                "SortConfiguration": {},
+                "PrimaryValueDisplayType": "COMPARISON"
+              }
+            }
+          },
+          {
+            "VisualId": "forecast-by-service",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Forecasted Cost by Service"
+              }
+            },
+            "ChartConfiguration": {
+              "BarChartConfiguration": {
+                "FieldWells": {
+                  "BarChartAggregatedFieldWells": {
+                    "Category": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "service"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "cost"
+                      }
+                    ],
+                    "Colors": []
+                  }
+                },
+                "SortConfiguration": {
+                  "CategorySort": [],
+                  "CategoryItemsLimit": {
+                    "OtherCategories": "INCLUDE",
+                    "ItemsLimit": 10
+                  },
+                  "ColorSort": []
+                },
+                "Orientation": "HORIZONTAL",
+                "DataLabels": {
+                  "Visibility": "VISIBLE",
+                  "FormatConfiguration": {
+                    "NumericFormatConfiguration": {
+                      "FormatString": "$#,##0.00"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "VisualId": "forecast-monthly-trend",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Monthly Cost with Year-over-Year Comparison"
+              }
+            },
+            "ChartConfiguration": {
+              "ComboChartConfiguration": {
+                "FieldWells": {
+                  "ComboChartAggregatedFieldWells": {
+                    "Category": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "month_date"
+                      }
+                    ],
+                    "BarValues": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "cost"
+                      }
+                    ],
+                    "LineValues": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "prior_year_cost"
+                      }
+                    ],
+                    "Colors": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "data_type"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "CategorySort": [
+                    {
+                      "FieldId": "month_date",
+                      "Direction": "ASC"
+                    }
+                  ]
+                },
+                "PrimaryYAxisDisplayOptions": {
+                  "AxisDisplayOptions": {
+                    "TickLabelOptions": {
+                      "FormatConfiguration": {
+                        "NumericFormatConfiguration": {
+                          "FormatString": "$#,##0.00"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "VisualId": "anomaly-detection-indicator",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Potential Forecast Anomalies"
+              }
+            },
+            "ChartConfiguration": {
+              "TableConfiguration": {
+                "FieldWells": {
+                  "TableAggregatedFieldWells": {
+                    "GroupBy": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "month_date"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "cost"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "mom_percent_change"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "is_anomaly"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "RowSort": [
+                    {
+                      "FieldId": "is_anomaly",
+                      "Direction": "DESC"
+                    },
+                    {
+                      "FieldId": "month_date",
+                      "Direction": "ASC"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "Layouts": [
+          {
+            "Configuration": {
+              "GridLayout": {
+                "Elements": [
+                  {
+                    "ElementId": "time-series-forecast",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 0,
+                    "ColumnSpan": 16,
+                    "RowIndex": 0,
+                    "RowSpan": 8
+                  },
+                  {
+                    "ElementId": "total-forecast-kpi",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 0,
+                    "ColumnSpan": 4,
+                    "RowIndex": 8,
+                    "RowSpan": 4
+                  },
+                  {
+                    "ElementId": "forecast-by-service",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 4,
+                    "ColumnSpan": 12,
+                    "RowIndex": 8,
+                    "RowSpan": 8
+                  },
+                  {
+                    "ElementId": "forecast-monthly-trend",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 0,
+                    "ColumnSpan": 10,
+                    "RowIndex": 16,
+                    "RowSpan": 8
+                  },
+                  {
+                    "ElementId": "anomaly-detection-indicator",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 10,
+                    "ColumnSpan": 6,
+                    "RowIndex": 16,
+                    "RowSpan": 8
+                  }
+                ],
+                "CanvasSizeOptions": {
+                  "ResizeOption": "RESPONSIVE",
+                  "OptimizedViewPortWidth": 1600
+                }
+              }
+            }
+          }
+        ],
+        "ContentType": "INTERACTIVE",
+        "FilterControls": [
+          {
+            "FilterControlId": "data-type-filter",
+            "Title": "Data Type",
+            "SourceFilterId": "data-type-filter",
+            "Type": "MULTI_SELECT"
+          },
+          {
+            "FilterControlId": "metric-filter",
+            "Title": "Cost Metric",
+            "SourceFilterId": "metric-filter",
+            "Type": "SINGLE_SELECT"
+          },
+          {
+            "FilterControlId": "granularity-filter",
+            "Title": "Granularity",
+            "SourceFilterId": "granularity-filter",
+            "Type": "SINGLE_SELECT"
+          },
+          {
+            "FilterControlId": "date-range-filter",
+            "Title": "Date Range",
+            "SourceFilterId": "date-range-filter",
+            "Type": "DATE_RANGE"
+          }
+        ],
+        "Filters": [
+          {
+            "FilterId": "data-type-filter",
+            "FilterName": "Data Type Filter",
+            "CascadingControlConfiguration": {},
+            "DefaultFilterControlConfiguration": {},
+            "CrossDataset": "SINGLE_DATASET",
+            "DefaultFilterStateConfiguration": {
+              "CategoryFilter": {
+                "CategoryValues": ["HISTORICAL", "FORECAST"]
+              }
+            }
+          },
+          {
+            "FilterId": "metric-filter",
+            "FilterName": "Metric Filter",
+            "CascadingControlConfiguration": {},
+            "DefaultFilterControlConfiguration": {},
+            "CrossDataset": "SINGLE_DATASET",
+            "DefaultFilterStateConfiguration": {
+              "CategoryFilter": {
+                "CategoryValues": ["UNBLENDED_COST"]
+              }
+            }
+          },
+          {
+            "FilterId": "granularity-filter",
+            "FilterName": "Granularity Filter",
+            "CascadingControlConfiguration": {},
+            "DefaultFilterControlConfiguration": {},
+            "CrossDataset": "SINGLE_DATASET",
+            "DefaultFilterStateConfiguration": {
+              "CategoryFilter": {
+                "CategoryValues": ["DAILY", "MONTHLY"]
+              }
+            }
+          },
+          {
+            "FilterId": "date-range-filter",
+            "FilterName": "Date Range Filter",
+            "CascadingControlConfiguration": {},
+            "DefaultFilterControlConfiguration": {},
+            "CrossDataset": "SINGLE_DATASET",
+            "DefaultFilterStateConfiguration": {
+              "RelativeDateFilter": {
+                "AnchorDateConfiguration": {
+                  "ParameterName": "relative_date_filter"
+                },
+                "RelativeDateFilterFunction": {
+                  "TimeGranularity": "MONTH",
+                  "RelativeDateFilterFunctionType": "LAST_N",
+                  "N": 6
+                }
+              }
+            }
+          }
         ]
       },
-      "ValueWhenUnset": {
-        "StaticValues": [
-          "SERVICE"
+      {
+        "SheetId": "forecast-analysis-sheet",
+        "Name": "Cost Trend Analysis",
+        "Visuals": [
+          {
+            "VisualId": "yoy-comparison-chart",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Year-over-Year Cost Comparison"
+              }
+            },
+            "ChartConfiguration": {
+              "LineChartConfiguration": {
+                "FieldWells": {
+                  "LineChartAggregatedFieldWells": {
+                    "Category": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "month"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "cost"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "prior_year_cost"
+                      }
+                    ],
+                    "Colors": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "year"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "CategorySort": [
+                    {
+                      "FieldId": "month",
+                      "Direction": "ASC"
+                    }
+                  ]
+                },
+                "Type": "LINE",
+                "DataLabels": {
+                  "Visibility": "VISIBLE",
+                  "FormatConfiguration": {
+                    "NumericFormatConfiguration": {
+                      "FormatString": "$#,##0.00"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "VisualId": "mom-growth-chart",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Month-over-Month Growth Rate (%)"
+              }
+            },
+            "ChartConfiguration": {
+              "BarChartConfiguration": {
+                "FieldWells": {
+                  "BarChartAggregatedFieldWells": {
+                    "Category": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "month_date"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "mom_percent_change"
+                      }
+                    ],
+                    "Colors": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "data_type"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "CategorySort": [
+                    {
+                      "FieldId": "month_date",
+                      "Direction": "ASC"
+                    }
+                  ]
+                },
+                "Orientation": "VERTICAL",
+                "DataLabels": {
+                  "Visibility": "VISIBLE",
+                  "FormatConfiguration": {
+                    "NumericFormatConfiguration": {
+                      "FormatString": "#,##0.00%"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "VisualId": "monthly-forecast-table",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Monthly Forecast Details"
+              }
+            },
+            "ChartConfiguration": {
+              "TableConfiguration": {
+                "FieldWells": {
+                  "TableAggregatedFieldWells": {
+                    "GroupBy": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "month_date"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "data_type"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "cost"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "lower_bound"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "upper_bound"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "mom_percent_change"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_trend_dataset",
+                        "FieldId": "yoy_percent_change"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "RowSort": [
+                    {
+                      "FieldId": "month_date",
+                      "Direction": "ASC"
+                    },
+                    {
+                      "FieldId": "data_type",
+                      "Direction": "DESC"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "Layouts": [
+          {
+            "Configuration": {
+              "GridLayout": {
+                "Elements": [
+                  {
+                    "ElementId": "yoy-comparison-chart",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 0,
+                    "ColumnSpan": 16,
+                    "RowIndex": 0,
+                    "RowSpan": 8
+                  },
+                  {
+                    "ElementId": "mom-growth-chart",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 0,
+                    "ColumnSpan": 8,
+                    "RowIndex": 8,
+                    "RowSpan": 8
+                  },
+                  {
+                    "ElementId": "monthly-forecast-table",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 8,
+                    "ColumnSpan": 8,
+                    "RowIndex": 8,
+                    "RowSpan": 8
+                  }
+                ],
+                "CanvasSizeOptions": {
+                  "ResizeOption": "RESPONSIVE",
+                  "OptimizedViewPortWidth": 1600
+                }
+              }
+            }
+          }
+        ],
+        "ContentType": "INTERACTIVE",
+        "FilterControls": [
+          {
+            "FilterControlId": "data-type-filter",
+            "Title": "Data Type",
+            "SourceFilterId": "data-type-filter",
+            "Type": "MULTI_SELECT"
+          },
+          {
+            "FilterControlId": "metric-filter",
+            "Title": "Cost Metric",
+            "SourceFilterId": "metric-filter",
+            "Type": "SINGLE_SELECT"
+          },
+          {
+            "FilterControlId": "date-range-filter",
+            "Title": "Date Range",
+            "SourceFilterId": "date-range-filter",
+            "Type": "DATE_RANGE"
+          }
+        ]
+      },
+      {
+        "SheetId": "service-breakdown-sheet",
+        "Name": "Cost Breakdown by Service",
+        "Visuals": [
+          {
+            "VisualId": "service-treemap",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Forecasted Cost by Service"
+              }
+            },
+            "ChartConfiguration": {
+              "TreeMapConfiguration": {
+                "FieldWells": {
+                  "TreeMapAggregatedFieldWells": {
+                    "Groups": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "service"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "cost"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "CategorySort": [
+                    {
+                      "FieldId": "cost",
+                      "Direction": "DESC"
+                    }
+                  ]
+                },
+                "DataLabels": {
+                  "Visibility": "VISIBLE",
+                  "FormatConfiguration": {
+                    "NumericFormatConfiguration": {
+                      "FormatString": "$#,##0.00"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "VisualId": "service-trend-chart",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Cost Trend by Service"
+              }
+            },
+            "ChartConfiguration": {
+              "LineChartConfiguration": {
+                "FieldWells": {
+                  "LineChartAggregatedFieldWells": {
+                    "Category": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "month_date"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "cost"
+                      }
+                    ],
+                    "Colors": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "service"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "CategorySort": [
+                    {
+                      "FieldId": "month_date",
+                      "Direction": "ASC"
+                    }
+                  ]
+                },
+                "Type": "LINE",
+                "DataLabels": {
+                  "Visibility": "HIDDEN"
+                }
+              }
+            }
+          },
+          {
+            "VisualId": "service-details-table",
+            "Title": {
+              "Visibility": "VISIBLE",
+              "FormatText": {
+                "PlainText": "Service Forecast Details"
+              }
+            },
+            "ChartConfiguration": {
+              "TableConfiguration": {
+                "FieldWells": {
+                  "TableAggregatedFieldWells": {
+                    "GroupBy": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "service"
+                      },
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "data_type"
+                      }
+                    ],
+                    "Values": [
+                      {
+                        "DataSetIdentifier": "cost_forecast_service_dataset",
+                        "FieldId": "cost"
+                      }
+                    ]
+                  }
+                },
+                "SortConfiguration": {
+                  "RowSort": [
+                    {
+                      "FieldId": "cost",
+                      "Direction": "DESC"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "Layouts": [
+          {
+            "Configuration": {
+              "GridLayout": {
+                "Elements": [
+                  {
+                    "ElementId": "service-treemap",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 0,
+                    "ColumnSpan": 8,
+                    "RowIndex": 0,
+                    "RowSpan": 8
+                  },
+                  {
+                    "ElementId": "service-details-table",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 8,
+                    "ColumnSpan": 8,
+                    "RowIndex": 0,
+                    "RowSpan": 8
+                  },
+                  {
+                    "ElementId": "service-trend-chart",
+                    "ElementType": "VISUAL",
+                    "ColumnIndex": 0,
+                    "ColumnSpan": 16,
+                    "RowIndex": 8,
+                    "RowSpan": 8
+                  }
+                ],
+                "CanvasSizeOptions": {
+                  "ResizeOption": "RESPONSIVE",
+                  "OptimizedViewPortWidth": 1600
+                }
+              }
+            }
+          }
+        ],
+        "ContentType": "INTERACTIVE",
+        "FilterControls": [
+          {
+            "FilterControlId": "data-type-filter",
+            "Title": "Data Type",
+            "SourceFilterId": "data-type-filter",
+            "Type": "MULTI_SELECT"
+          },
+          {
+            "FilterControlId": "service-filter",
+            "Title": "Service",
+            "SourceFilterId": "service-filter",
+            "Type": "MULTI_SELECT"
+          },
+          {
+            "FilterControlId": "date-range-filter",
+            "Title": "Date Range",
+            "SourceFilterId": "date-range-filter",
+            "Type": "DATE_RANGE"
+          }
+        ],
+        "Filters": [
+          {
+            "FilterId": "service-filter",
+            "FilterName": "Service Filter",
+            "CascadingControlConfiguration": {},
+            "DefaultFilterControlConfiguration": {},
+            "CrossDataset": "SINGLE_DATASET"
+          }
         ]
       }
-    }
-  ],
-  "FilterGroups": [
-    {
-      "FilterGroupId": "forecast-filters",
-      "Filters": [
-        {
-          "FilterId": "date-filter",
-          "Column": {
-            "ColumnName": "start_date",
-            "DataSetIdentifier": "cost_forecast_dataset"
-          },
-          "FilterType": "PARAMETRIC",
-          "CustomFilterConfiguration": {
-            "ParameterName": "DateRangeFilter"
-          }
-        },
-        {
-          "FilterId": "dimension-filter",
-          "Column": {
-            "ColumnName": "dimension",
-            "DataSetIdentifier": "cost_forecast_dataset"
-          },
-          "FilterType": "PARAMETRIC",
-          "CustomFilterConfiguration": {
-            "ParameterName": "DimensionFilter"
-          }
+    ],
+    "ParameterDeclarations": [
+      {
+        "ParameterName": "relative_date_filter",
+        "DateTimeParameterDeclaration": {
+          "Name": "Relative Date Filter",
+          "DefaultValues": {}
         }
-      ],
-      "ScopeConfiguration": {
-        "SelectedSheets": {
-          "SheetVisualScopingConfigurations": [
+      }
+    ],
+    "FilterGroups": [
+      {
+        "FilterGroupId": "main-filter-group",
+        "Filters": [
+          "data-type-filter",
+          "metric-filter",
+          "granularity-filter",
+          "date-range-filter"
+        ],
+        "ScopeConfiguration": {
+          "SelectedSheets": [
             {
-              "SheetId": "cost-forecast-overview",
-              "Visuals": [
-                "forecast-trend-chart",
-                "forecast-by-service",
-                "forecast-kpi-cards",
-                "forecast-details-table"
-              ]
+              "SheetId": "forecast-main-sheet"
+            },
+            {
+              "SheetId": "forecast-analysis-sheet"
+            },
+            {
+              "SheetId": "service-breakdown-sheet"
             }
           ]
         }
       }
-    }
-  ],
-  "VisualCustomActions": [],
-  "Visuals": [
-    {
-      "LineChartVisual": {
-        "VisualId": "forecast-trend-chart",
-        "Title": {
-          "Visibility": "VISIBLE",
-          "FormatText": {
-            "PlainText": "Cost Forecast Over Time"
-          }
-        },
-        "Subtitle": {
-          "Visibility": "VISIBLE",
-          "FormatText": {
-            "PlainText": "With confidence intervals"
-          }
-        },
-        "ChartConfiguration": {
-          "FieldWells": {
-            "LineChartAggregatedFieldWells": {
-              "Category": [
-                {
-                  "CategoricalDimensionField": {
-                    "FieldId": "start_date",
-                    "Column": {
-                      "ColumnName": "start_date",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    }
-                  }
-                }
-              ],
-              "Values": [
-                {
-                  "NumericalMeasureField": {
-                    "FieldId": "mean_value",
-                    "Column": {
-                      "ColumnName": "mean_value",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    },
-                    "AggregationFunction": "SUM"
-                  }
-                },
-                {
-                  "NumericalMeasureField": {
-                    "FieldId": "lower_bound",
-                    "Column": {
-                      "ColumnName": "lower_bound",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    },
-                    "AggregationFunction": "SUM"
-                  }
-                },
-                {
-                  "NumericalMeasureField": {
-                    "FieldId": "upper_bound",
-                    "Column": {
-                      "ColumnName": "upper_bound",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    },
-                    "AggregationFunction": "SUM"
-                  }
-                }
-              ]
-            }
-          },
-          "SortConfiguration": {
-            "CategorySort": [
-              {
-                "FieldSort": {
-                  "FieldId": "start_date",
-                  "Direction": "ASCENDING"
-                }
-              }
-            ]
-          },
-          "Tooltip": {
-            "TooltipVisibility": "VISIBLE",
-            "SelectedTooltipType": "DETAILED"
-          },
-          "AxisDisplayOptions": {
-            "XAxisDisplayOptions": {
-              "TickLabelOptions": {
-                "RotationAngle": 0
-              }
-            }
-          },
-          "DataLabels": {
-            "Visibility": "VISIBLE",
-            "MeasureLabelVisibility": "VISIBLE",
-            "Overlap": "DISABLE_OVERLAP"
-          },
-          "Legend": {
-            "Visibility": "VISIBLE",
-            "Position": "RIGHT",
-            "Width": "120px"
-          },
-          "VisualPalette": {
-            "ColorMap": [
-              {
-                "FieldValue": "mean_value",
-                "Color": "#2CA02C"
-              },
-              {
-                "FieldValue": "lower_bound",
-                "Color": "#D62728"
-              },
-              {
-                "FieldValue": "upper_bound",
-                "Color": "#FF7F0E"
-              }
-            ]
-          }
-        },
-        "Actions": []
-      }
-    },
-    {
-      "PieChartVisual": {
-        "VisualId": "forecast-by-service",
-        "Title": {
-          "Visibility": "VISIBLE",
-          "FormatText": {
-            "PlainText": "Forecast by Service"
-          }
-        },
-        "ChartConfiguration": {
-          "FieldWells": {
-            "PieChartAggregatedFieldWells": {
-              "Category": [
-                {
-                  "CategoricalDimensionField": {
-                    "FieldId": "value",
-                    "Column": {
-                      "ColumnName": "value",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    }
-                  }
-                }
-              ],
-              "Values": [
-                {
-                  "NumericalMeasureField": {
-                    "FieldId": "mean_value",
-                    "Column": {
-                      "ColumnName": "mean_value",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    },
-                    "AggregationFunction": "SUM"
-                  }
-                }
-              ]
-            }
-          },
-          "SortConfiguration": {
-            "CategorySort": [
-              {
-                "FieldSort": {
-                  "FieldId": "mean_value",
-                  "Direction": "DESCENDING"
-                }
-              }
-            ],
-            "CategoryItemsLimit": {
-              "OtherCategories": "INCLUDE"
-            }
-          },
-          "DonutOptions": {
-            "ArcOptions": {
-              "ArcThickness": "MEDIUM"
-            }
-          },
-          "DataLabels": {
-            "Visibility": "VISIBLE",
-            "CategoryLabelVisibility": "VISIBLE",
-            "MeasureLabelVisibility": "VISIBLE",
-            "Position": "OUTSIDE"
-          },
-          "Legend": {
-            "Visibility": "VISIBLE"
-          }
-        },
-        "Actions": []
-      }
-    },
-    {
-      "KPIVisual": {
-        "VisualId": "forecast-kpi-cards",
-        "Title": {
-          "Visibility": "VISIBLE",
-          "FormatText": {
-            "PlainText": "Forecast Summary"
-          }
-        },
-        "ChartConfiguration": {
-          "FieldWells": {
-            "Values": [
-              {
-                "NumericalMeasureField": {
-                  "FieldId": "mean_value",
-                  "Column": {
-                    "ColumnName": "mean_value",
-                    "DataSetIdentifier": "cost_forecast_dataset"
-                  },
-                  "AggregationFunction": "SUM"
-                }
-              }
-            ],
-            "TargetValues": []
-          },
-          "SortConfiguration": {},
-          "KPIOptions": {
-            "PrimaryValueDisplayType": "ACTUAL",
-            "PrimaryValueFontConfiguration": {
-              "FontSize": {
-                "Relative": "MEDIUM"
-              }
-            }
-          }
-        },
-        "Actions": []
-      }
-    },
-    {
-      "TableVisual": {
-        "VisualId": "forecast-details-table",
-        "Title": {
-          "Visibility": "VISIBLE",
-          "FormatText": {
-            "PlainText": "Forecast Details"
-          }
-        },
-        "ChartConfiguration": {
-          "FieldWells": {
-            "TableAggregatedFieldWells": {
-              "GroupBy": [
-                {
-                  "CategoricalDimensionField": {
-                    "FieldId": "start_date",
-                    "Column": {
-                      "ColumnName": "start_date",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    }
-                  }
-                },
-                {
-                  "CategoricalDimensionField": {
-                    "FieldId": "dimension",
-                    "Column": {
-                      "ColumnName": "dimension",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    }
-                  }
-                },
-                {
-                  "CategoricalDimensionField": {
-                    "FieldId": "value",
-                    "Column": {
-                      "ColumnName": "value",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    }
-                  }
-                }
-              ],
-              "Values": [
-                {
-                  "NumericalMeasureField": {
-                    "FieldId": "mean_value",
-                    "Column": {
-                      "ColumnName": "mean_value",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    },
-                    "AggregationFunction": "SUM"
-                  }
-                },
-                {
-                  "NumericalMeasureField": {
-                    "FieldId": "lower_bound",
-                    "Column": {
-                      "ColumnName": "lower_bound",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    },
-                    "AggregationFunction": "SUM"
-                  }
-                },
-                {
-                  "NumericalMeasureField": {
-                    "FieldId": "upper_bound",
-                    "Column": {
-                      "ColumnName": "upper_bound",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    },
-                    "AggregationFunction": "SUM"
-                  }
-                },
-                {
-                  "NumericalMeasureField": {
-                    "FieldId": "variance",
-                    "Column": {
-                      "ColumnName": "variance",
-                      "DataSetIdentifier": "cost_forecast_dataset"
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "SortConfiguration": {
-            "RowSort": [
-              {
-                "FieldSort": {
-                  "FieldId": "start_date",
-                  "Direction": "ASCENDING"
-                }
-              },
-              {
-                "FieldSort": {
-                  "FieldId": "mean_value",
-                  "Direction": "DESCENDING"
-                }
-              }
-            ]
-          },
-          "TableOptions": {
-            "CellStyle": {
-              "Height": 25
-            },
-            "HeaderStyle": {
-              "TextWrap": "WRAP"
-            }
-          }
-        },
-        "Actions": []
-      }
-    }
-  ],
-  "CalculatedFields": [
-    {
-      "DataSetIdentifier": "cost_forecast_dataset",
-      "Name": "variance",
-      "Expression": "upper_bound - lower_bound"
-    }
-  ]
+    ],
+    "ThemeArn": "arn:aws:quicksight::aws:theme/MIDNIGHT"
+  }
 }

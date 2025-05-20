@@ -7,7 +7,7 @@ Resources:
     Type: 'AWS::QuickSight::Dashboard'
     Properties:
       Name: 'AWS Cost Explorer Forecast Dashboard'
-      Description: 'Visualize and analyze AWS Cost Explorer forecasts with confidence intervals'
+      Description: 'Visualize and analyze AWS Cost Explorer forecasts with confidence intervals to predict future spending'
       DashboardId: 'cost-forecast-dashboard'
       Version:
         VersionNumber: 1
@@ -28,6 +28,8 @@ dashboards:
     dependsOn:
       datasets:
         - "cost_forecast_dataset"
+        - "cost_forecast_trend_dataset"
+        - "cost_forecast_service_dataset"
     parameters:
       currency:
         description: "Currency symbol"
@@ -39,19 +41,51 @@ dashboards:
 # Dashboard Datasets
 datasets:
   cost_forecast_dataset:
-    name: "Cost Forecast Dataset"
+    name: "Cost Forecast Main Dataset"
     providedBy: "cid.builtin.core"
     dependsOn:
       views:
-        - "cost_forecast"
+        - "cost_forecast_view"
+
+  cost_forecast_trend_dataset:
+    name: "Cost Forecast Trend Dataset"
+    providedBy: "cid.builtin.core"
+    dependsOn:
+      views:
+        - "cost_forecast_trend_view"
+
+  cost_forecast_service_dataset:
+    name: "Cost Forecast Service Dataset"
+    providedBy: "cid.builtin.core"
+    dependsOn:
+      views:
+        - "cost_forecast_service_view"
 
 # Dashboard Views
 views:
-  cost_forecast:
+  cost_forecast_view:
     name: "Cost Forecast View"
     providedBy: "cid.builtin.core"
-    File: "queries/forecast/cost_forecast_view.sql"
+    File: "dashboards/cost-forecast/cost_forecast_view.sql"
     parameters:
-      forecast_table_name:
-        description: "Name of the table containing forecast data"
-        default: "cost_forecast_data"
+      cur_table_name:
+        description: "Name of the CUR table"
+        default: "{cur_table_name}"
+
+  cost_forecast_trend_view:
+    name: "Cost Forecast Trend View"
+    providedBy: "cid.builtin.core"
+    File: "dashboards/cost-forecast/cost_forecast_trend_view.sql"
+    parameters:
+      cur_table_name:
+        description: "Name of the CUR table"
+        default: "{cur_table_name}"
+
+  cost_forecast_service_view:
+    name: "Cost Forecast Service View"
+    providedBy: "cid.builtin.core"
+    File: "dashboards/cost-forecast/cost_forecast_service_view.sql"
+    parameters:
+      cur_table_name:
+        description: "Name of the CUR table"
+        default: "{cur_table_name}"
