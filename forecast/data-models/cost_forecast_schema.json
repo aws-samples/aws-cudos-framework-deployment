@@ -1,0 +1,96 @@
+{
+  "name": "cost_forecast_schema",
+  "description": "Schema for AWS Cost Explorer forecast data",
+  "version": "1.0.0",
+  "fields": [
+    {
+      "name": "dimension",
+      "type": "string",
+      "description": "The dimension by which the forecast is grouped (e.g., SERVICE, LINKED_ACCOUNT)",
+      "required": true,
+      "examples": ["SERVICE", "LINKED_ACCOUNT", "REGION", "ALL"]
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "description": "The value of the dimension (e.g., the specific service name or account ID)",
+      "required": true,
+      "examples": ["Amazon EC2", "Amazon S3", "ALL"]
+    },
+    {
+      "name": "metric",
+      "type": "string",
+      "description": "The cost metric being forecasted",
+      "required": true,
+      "enum": ["UNBLENDED_COST", "BLENDED_COST", "AMORTIZED_COST", "NET_UNBLENDED_COST", "NET_AMORTIZED_COST", "USAGE_QUANTITY", "NORMALIZED_USAGE_AMOUNT"]
+    },
+    {
+      "name": "startdate",
+      "type": "date",
+      "format": "yyyy-MM-dd",
+      "description": "The start date of the forecast time period",
+      "required": true
+    },
+    {
+      "name": "enddate",
+      "type": "date",
+      "format": "yyyy-MM-dd",
+      "description": "The end date of the forecast time period",
+      "required": true
+    },
+    {
+      "name": "meanvalue",
+      "type": "decimal",
+      "description": "The mean forecasted cost/usage value",
+      "required": true
+    },
+    {
+      "name": "lowerbound",
+      "type": "decimal",
+      "description": "The lower bound of the forecast confidence interval",
+      "required": true
+    },
+    {
+      "name": "upperbound",
+      "type": "decimal",
+      "description": "The upper bound of the forecast confidence interval",
+      "required": true
+    },
+    {
+      "name": "metric_name",
+      "type": "string",
+      "description": "Human-readable name of the metric",
+      "required": false,
+      "examples": ["Unblended Cost", "Blended Cost"]
+    },
+    {
+      "name": "dimension_name",
+      "type": "string",
+      "description": "Human-readable name of the dimension",
+      "required": false,
+      "examples": ["AWS Service", "Account ID", "Region"]
+    }
+  ],
+  "partitioning": [
+    {
+      "field": "year",
+      "type": "string",
+      "source": "extract-year-from-startdate"
+    },
+    {
+      "field": "month",
+      "type": "string",
+      "source": "extract-month-from-startdate"
+    }
+  ],
+  "storage": {
+    "format": "JSON",
+    "s3Location": "s3://{bucket}/{prefix}/partitioned/year={year}/month={month}",
+    "athenaTableName": "cost_forecast_data"
+  },
+  "additionalProperties": {
+    "refreshFrequency": "DAILY",
+    "retentionPeriod": "13_MONTHS",
+    "confidenceLevel": "80_PERCENT"
+  }
+}

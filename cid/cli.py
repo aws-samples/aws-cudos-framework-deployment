@@ -291,6 +291,24 @@ def create_cur_proxy(ctx, cur_version, fields, **kwargs):
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
+def forecast(ctx, **kwargs):
+    """Generate AWS Cost Explorer forecasts
+    
+    \b
+    Command options:
+     --time-period TEXT                    Time period for forecast (30, 90, 180, 365 days or custom)
+     --end-date TEXT                       End date for custom time period (YYYY-MM-DD)
+     --metrics TEXT                        Comma-separated list of metrics to forecast
+     --dimensions TEXT                     Comma-separated list of dimensions to forecast
+     --granularity TEXT                    Granularity of forecast (DAILY or MONTHLY)
+     --s3-bucket TEXT                      S3 bucket to upload results
+    """
+    ctx.obj.forecast(**kwargs)
+
+
+@click.option('-v', '--verbose', count=True)
+@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
+@cid_command
 def teardown(ctx, **kwargs):
     """Delete all CID assets
 
@@ -302,5 +320,3 @@ def teardown(ctx, **kwargs):
 
 if __name__ == '__main__':
     main()
-
-

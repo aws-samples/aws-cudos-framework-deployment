@@ -26,7 +26,7 @@ from cid._version import __version__
 from cid.export import export_analysis
 from cid.logger import set_cid_logger
 from cid.exceptions import CidError, CidCritical
-from cid.commands import InitQsCommand
+from cid.commands import InitQsCommand, ForecastCommand
 
 logger = logging.getLogger(__name__)
 
@@ -1760,6 +1760,11 @@ class Cid():
         """Create account mapping Athena views"""
         for v in ['account_map', 'aws_accounts']:
             self.create_or_update_account_map(v)
+
+    @command
+    def forecast(self, **kwargs):
+        """Generate AWS Cost Explorer forecasts"""
+        return ForecastCommand(cid=self, **kwargs).execute()
 
     @command
     def teardown(self, **kwargs):
