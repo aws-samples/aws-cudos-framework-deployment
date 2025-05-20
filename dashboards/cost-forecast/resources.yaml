@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Cost Explorer Forecast Dashboard Resources'
+
+Resources:
+  # Dashboard Definition
+  CostForecastDashboard:
+    Type: 'AWS::QuickSight::Dashboard'
+    Properties:
+      Name: 'AWS Cost Explorer Forecast Dashboard'
+      Description: 'Visualize and analyze AWS Cost Explorer forecasts with confidence intervals to predict future spending'
+      DashboardId: 'cost-forecast-dashboard'
+      Version:
+        VersionNumber: 1
+        Status: PUBLISHED
+        SourceEntityArn: !Sub 'arn:${AWS::Partition}:quicksight:${AWS::Region}:${AWS::AccountId}:template/cost-forecast-template'
+      Tags:
+        - Key: 'Category'
+          Value: 'Cost Management'
+        - Key: 'CID'
+          Value: 'True'
+
+# Dashboard Definition
+dashboards:
+  cost-forecast-dashboard:
+    name: "AWS Cost Explorer Forecast Dashboard"
+    description: "A dashboard that visualizes AWS Cost Explorer forecasts with confidence intervals to predict future spending"
+    category: "Advanced"
+    dependsOn:
+      datasets:
+        - "cost_forecast_dataset"
+        - "cost_forecast_trend_dataset"
+        - "cost_forecast_service_dataset"
+    parameters:
+      currency:
+        description: "Currency symbol"
+        default: "USD"
+      theme:
+        description: "Dashboard theme"
+        default: "MIDNIGHT"
+
+# Dashboard Datasets
+datasets:
+  cost_forecast_dataset:
+    name: "Cost Forecast Main Dataset"
+    providedBy: "cid.builtin.core"
+    dependsOn:
+      views:
+        - "cost_forecast_view"
+
+  cost_forecast_trend_dataset:
+    name: "Cost Forecast Trend Dataset"
+    providedBy: "cid.builtin.core"
+    dependsOn:
+      views:
+        - "cost_forecast_trend_view"
+
+  cost_forecast_service_dataset:
+    name: "Cost Forecast Service Dataset"
+    providedBy: "cid.builtin.core"
+    dependsOn:
+      views:
+        - "cost_forecast_service_view"
+
+# Dashboard Views
+views:
+  cost_forecast_view:
+    name: "Cost Forecast View"
+    providedBy: "cid.builtin.core"
+    File: "dashboards/cost-forecast/cost_forecast_view.sql"
+    parameters:
+      cur_table_name:
+        description: "Name of the CUR table"
+        default: "{cur_table_name}"
+
+  cost_forecast_trend_view:
+    name: "Cost Forecast Trend View"
+    providedBy: "cid.builtin.core"
+    File: "dashboards/cost-forecast/cost_forecast_trend_view.sql"
+    parameters:
+      cur_table_name:
+        description: "Name of the CUR table"
+        default: "{cur_table_name}"
+
+  cost_forecast_service_view:
+    name: "Cost Forecast Service View"
+    providedBy: "cid.builtin.core"
+    File: "dashboards/cost-forecast/cost_forecast_service_view.sql"
+    parameters:
+      cur_table_name:
+        description: "Name of the CUR table"
+        default: "{cur_table_name}"

@@ -46,6 +46,19 @@ This foundational architecture is recommended for starting and allows deployment
 ## Architecture of Advanced Dashboards
 ![Advanced Architecture](assets/images/advanced-architecture.png  "Foundational Architecture")
 
+### Cost Explorer Forecast Integration
+
+The framework includes a dashboard for visualizing AWS Cost Explorer forecast data:
+
+- **Cost Visualization**: Visualize AWS Cost Explorer forecasts with confidence intervals
+- **Multi-dimension Analysis**: Analyze forecasts by service, account, region, and other dimensions
+- **Dashboard Integration**: Integrates with other CUDOS dashboards to provide comprehensive cost insights
+- **Multiple Metrics**: Support for different cost metrics (Unblended, Amortized, etc.)
+
+The dashboard is available as part of this repository, but **data collection** must be implemented separately through the [Cloud Intelligence Dashboards Data Collection](https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/) repository.
+
+For dashboard deployment details, see [Cost Forecast Dashboard](docs/cost_forecast.md).
+
 1. [AWS Data Exports](https://aws.amazon.com/aws-cost-management/aws-data-exports/) delivers daily the Cost & Usage Report (CUR2) to an [Amazon S3 Bucket](https://aws.amazon.com/s3/) in the Management Account.
 2. [Amazon S3](https://aws.amazon.com/s3/) replication rule copies Export data to a dedicated Data Collection Account S3 bucket automatically.
 3. [Amazon Athena](https://aws.amazon.com/athena/) allows querying data directly from the S3 bucket using an [AWS Glue](https://aws.amazon.com/glue/) table schema definition.

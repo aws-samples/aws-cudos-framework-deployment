@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Integration patch for AWS Cost Forecast Dashboard in main CUDOS CloudFormation template'
+
+# This file contains the changes needed to integrate the Cost Forecast Dashboard into the main CFN template
+
+## 1. Add to Parameters section:
+  DeployCostForecastDashboard:
+    Type: String
+    Description: Deploy Cost Explorer Forecast Dashboard
+    Default: "no"
+    AllowedValues: ["yes", "no"]
+    
+## 2. Add to ParameterLabels section:
+  DeployCostForecastDashboard:
+    default: "Deploy Cost Forecast Dashboard"
+
+## 3. Add to Label group in AWS::CloudFormation::Interface > ParameterGroups:
+# Add to the following parameter group:
+# - Label:
+#     default: CUDOS, Cost-Intelligence-Dashboard and KPI-Dashboard. Require deployment of CUR via CloudFormation (cur-aggregation.yaml) or manually (Dashboard data will appear within 24h after CUR creation).
+#   Parameters:
+#     - CURVersion
+#     - DeployCUDOSv5
+#     - DeployCostIntelligenceDashboard
+#     - DeployKPIDashboard
+#     - DeployCostForecastDashboard  <-- Add this line
+
+## 4. Add to Conditions section:
+  NeedCostForecastDashboard: !Equals [ !Ref DeployCostForecastDashboard, "yes" ]
+
+  # Also add to UseCUR2:
+  # UseCUR2:
+  #   Fn::And:
+  #     - !Equals [!Ref CURVersion, '2.0']
+  #     - Fn::Or:
+  #       - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+  #       - !Equals [ !Ref DeployCUDOSv5, "yes" ]
+  #       - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+  #       - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+  #       - !Equals [ !Ref DeployCostForecastDashboard, "yes" ] <-- Add this line
+
+## 5. Add to Resources section:
+  CostForecastDashboard:
+    Type: Custom::CidDashboard
+    Condition: NeedCostForecastDashboard
+    DependsOn:
+      - Setup
+    Properties:
+      Name: !Sub 'CostForecastDashboard${Suffix}'
+      ServiceToken: !GetAtt CidExec.Arn
+      Dashboard:
+        dashboard-id: cost-forecast-dashboard
+        resources: !If [IsChinaOrGovCloudRegion, 'https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/hub/cost-forecast/resources.yaml', !Ref 'AWS::NoValue']
+      Tags:
+        - Key: IgnoreDependencies
+          Value: !If [NeedCostIntelligenceDashboard, !Ref CostIntelligenceDashboard, '']
+
+## 6. Add to Outputs section:
+  CostForecastDashboardURL:
+    Description: "URL of Cost Forecast Dashboard"
+    Condition: NeedCostForecastDashboard
+    Value: !GetAtt CostForecastDashboard.DashboardURL
+
+## 7. Add to NeedLakeFormationEnabled condition:
+  # NeedLakeFormationEnabled:
+  #   Fn::And:
+  #     - !Equals [ !Ref LakeFormationEnabled, "yes" ]
+  #     - Fn::Or:
+  #       - !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
+  #       - !Equals [ !Ref DeployCUDOSv5, "yes" ]
+  #       - !Equals [ !Ref DeployCostIntelligenceDashboard, "yes" ]
+  #       - !Equals [ !Ref DeployKPIDashboard, "yes" ]
+  #       - !Equals [ !Ref DeployCostForecastDashboard, "yes" ] <-- Add this line
