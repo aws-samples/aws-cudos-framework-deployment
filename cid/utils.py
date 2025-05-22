@@ -387,7 +387,60 @@ def select_items(message, all_items, selected_items=[]):
     ).execute()
 
 
-def order_items(items, name='Dimensions'):
+def order_items(items):
+    """Let user arrange the selected items"""
+    ordered_items = items.copy()
+    action = None
+    selected_item = None
+    while True:
+        choices = [
+            Choice(value={"action": "select", "index": i}, name=f"{i+1}. {item}")
+            for i, item in enumerate(ordered_items)
+        ]
+        choices.append(Separator())
+        choices.append(Choice(value={"action": "back"},   name="⬅ Go back"))
+        choices.append(Choice(value={"action": "finish"}, name="✔ Looks good"))
+        print(selected_item)
+        default = next((c.value for c in choices if isinstance(c, Choice) and c.name.split()[-1]==selected_item), choices[-1].value)
+        selection = inquirer.select(
+            message="Select an item to reorder or confirm that it looks good to continue:",
+            choices=choices,
+            default=default,
+        ).execute()
+        if selection["action"] == 'back':
+            raise KeyboardInterrupt('getting back')
+        if selection["action"] == 'finish':
+            break
+        item_index = selection["index"]
+        selected_item = ordered_items[item_index]
+        # Ask what action the user wants to take with this item
+        actions = []
+        if item_index > 0:
+            actions.append(Choice(value="top", name="⬆⬆ Move to top"))
+            actions.append(Choice(value="up", name="⬆  Move up one position"))
+        if item_index < len(ordered_items) - 1:
+            actions.append(Choice(value="down", name="⬇  Move down one position"))
+            actions.append(Choice(value="bottom", name="⬇⬇ Move to bottom"))
+        actions.append(Choice(value="cancel", name="Cancel (no change)"))
+        action = inquirer.select(
+            message=f"What would you like to do with '{selected_item}'?",
+            choices=actions
+        ).execute()
+        # Perform the selected action
+        if action == "top" and item_index > 0: # Remove from current position and insert at the top
+            ordered_items.insert(0, ordered_items.pop(item_index))
+        elif action == "up" and item_index > 0: # Swap with the item above
+            ordered_items[item_index], ordered_items[item_index-1] = ordered_items[item_index-1], ordered_items[item_index]
+        elif action == "down" and item_index < len(ordered_items) - 1: # Swap with the item below
+            ordered_items[item_index], ordered_items[item_index+1] = ordered_items[item_index+1], ordered_items[item_index]
+        elif action == "bottom" and item_index < len(ordered_items) - 1: # Remove from current position and append to the end
+            ordered_items.append(ordered_items.pop(item_index))
+        elif action == "cancel":
+            pass
+
+    return ordered_items
+
+def order_items_with_yaml(items, name='Dimensions'):
     """Let user arrange the selected items"""
 
     class EmptyInputValidator(Validator):
