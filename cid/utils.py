@@ -274,10 +274,8 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         print()
         if not isatty():
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
-        if multi and order:
+        if multi:
             result = select_and_order(message, choices, (default if isinstance(default, list) else [default]) or [])
-        elif multi:
-            result = select_items(message, choices, (default if isinstance(default, list) else [default]) or [])
         else:
             if isinstance(choices, dict):
                 choices = [Choice(name=key, value=value, enabled=not (none_as_disabled and value is None)) for key, value in choices.items()]
@@ -387,101 +385,77 @@ def select_items(message, all_items, selected_items=[]):
     ).execute()
 
 
-def order_items(items):
-    """Let user arrange the selected items"""
-    ordered_items = items.copy()
-    action = None
-    selected_item = None
+def select_and_order(message, all_items, selected_items=None):
+    """Let user select and arrange items from a list"""
+    selected_items = (selected_items or []).copy()
+    unselected_items = [item for item in all_items if item not in selected_items]
+
     while True:
-        choices = [
-            Choice(value={"action": "select", "index": i}, name=f"{i+1}. {item}")
-            for i, item in enumerate(ordered_items)
-        ]
+        choices = []
+        if selected_items:
+            for i, item in enumerate(selected_items):
+                choices.append(Choice(
+                    value={"action": "manage_selected", "index": i, "item": item},
+                    name=f"✓ [{i+1}] {item}"
+                ))
+        else:
+            choices.append(Separator("--- Selected Items (empty) ---"))
+        if unselected_items:
+            choices.append(Separator("--- Items Available To Add ---"))
+        for item in unselected_items:
+            choices.append(Choice(
+                value={"action": "add_item", "item": item},
+                name=f"  {item}"
+            ))
         choices.append(Separator())
-        choices.append(Choice(value={"action": "back"},   name="⬅ Go back"))
+        choices.append(Choice(value={"action": "back"}, name="⬅ Go back"))
         choices.append(Choice(value={"action": "finish"}, name="✔ Looks good"))
-        print(selected_item)
-        default = next((c.value for c in choices if isinstance(c, Choice) and c.name.split()[-1]==selected_item), choices[-1].value)
         selection = inquirer.select(
-            message="Select an item to reorder or confirm that it looks good to continue:",
+            message=message,
             choices=choices,
-            default=default,
         ).execute()
+
         if selection["action"] == 'back':
             raise KeyboardInterrupt('getting back')
         if selection["action"] == 'finish':
             break
-        item_index = selection["index"]
-        selected_item = ordered_items[item_index]
-        # Ask what action the user wants to take with this item
-        actions = []
-        if item_index > 0:
-            actions.append(Choice(value="top", name="⬆⬆ Move to top"))
-            actions.append(Choice(value="up", name="⬆  Move up one position"))
-        if item_index < len(ordered_items) - 1:
-            actions.append(Choice(value="down", name="⬇  Move down one position"))
-            actions.append(Choice(value="bottom", name="⬇⬇ Move to bottom"))
-        actions.append(Choice(value="cancel", name="Cancel (no change)"))
-        action = inquirer.select(
-            message=f"What would you like to do with '{selected_item}'?",
-            choices=actions
-        ).execute()
-        # Perform the selected action
-        if action == "top" and item_index > 0: # Remove from current position and insert at the top
-            ordered_items.insert(0, ordered_items.pop(item_index))
-        elif action == "up" and item_index > 0: # Swap with the item above
-            ordered_items[item_index], ordered_items[item_index-1] = ordered_items[item_index-1], ordered_items[item_index]
-        elif action == "down" and item_index < len(ordered_items) - 1: # Swap with the item below
-            ordered_items[item_index], ordered_items[item_index+1] = ordered_items[item_index+1], ordered_items[item_index]
-        elif action == "bottom" and item_index < len(ordered_items) - 1: # Remove from current position and append to the end
-            ordered_items.append(ordered_items.pop(item_index))
-        elif action == "cancel":
-            pass
+        print('\033[K\033[F', end='')  # Clear line
+        if selection["action"] == 'add_item':
+            # Add unselected item to selected list
+            item_to_add = selection["item"]
+            selected_items.append(item_to_add)
+            unselected_items.remove(item_to_add)
+        elif selection["action"] == 'manage_selected':
+            # Manage selected item (move or delete)
+            item_index = selection["index"]
+            selected_item = selection["item"]
+            # Ask what action the user wants to take with this item
+            actions = []
+            if item_index > 0:
+                actions.append(Choice(value="top", name=f"⬆⬆ Move {selected_item} to top"))
+                actions.append(Choice(value="up", name=f"⬆  Move {selected_item} up one position"))
+            if item_index < len(selected_items) - 1:
+                actions.append(Choice(value="down", name=f"⬇  Move {selected_item} down one position"))
+                actions.append(Choice(value="bottom", name=f"⬇⬇ Move {selected_item} to bottom"))
+            actions.append(Choice(value="delete", name=f"❌  Remove {selected_item} from selection"))
+            actions.append(Choice(value="cancel", name="Cancel (no change)"))
+            action = inquirer.select(
+                message=f"What would you like to do with '{selected_item}'?",
+                choices=actions,
+            ).execute()
 
-    return ordered_items
-
-def order_items_with_yaml(items, name='Dimensions'):
-    """Let user arrange the selected items"""
-
-    class EmptyInputValidator(Validator):
-        def validate(self, document):
-            try:
-                data = yaml.safe_load(document.text)
-            except:
-                raise ValidationError(
-                    message="Incorrect yaml syntax",
-                    cursor_position=document.cursor_position,
-                )
-            if name not in data:
-                raise ValidationError(
-                    message=f"{name} key not found",
-                    cursor_position=document.cursor_position,
-                )
-            if isinstance(items, list):
-                for line in data[name]:
-                    if not line.strip() in items:
-                        raise ValidationError(
-                            message=f"{line} is not in {items}",
-                            cursor_position=document.cursor_position,
-                        )
-            return True
-    result = InputPrompt(
-        message="You can edit order as yaml:",
-        multiline=True,
-        default=yaml.safe_dump({name: items}),
-        validate=EmptyInputValidator(),
-        long_instruction="Press Enter for a new line. Submit with Esc+Enter. Back = Ctrl+C."
-    ).execute()
-    return yaml.safe_load(result)[name]
-
-
-def select_and_order(message, all_items, selected_items=[]):
-    while True:
-        selected_items = select_items(message, all_items, selected_items)
-        if not selected_items:
-            return []
-        try:
-            selected_items = order_items(selected_items)
-        except KeyboardInterrupt:
-            continue
-        return selected_items
+            if action == "top" and item_index > 0:
+                selected_items.insert(0, selected_items.pop(item_index))
+            elif action == "up" and item_index > 0:
+                selected_items[item_index], selected_items[item_index-1] = selected_items[item_index-1], selected_items[item_index]
+            elif action == "down" and item_index < len(selected_items) - 1:
+                selected_items[item_index], selected_items[item_index+1] = selected_items[item_index+1], selected_items[item_index]
+            elif action == "bottom" and item_index < len(selected_items) - 1:
+                selected_items.append(selected_items.pop(item_index))
+            elif action == "delete":
+                removed_item = selected_items.pop(item_index)
+                unselected_items.append(removed_item)
+            elif action == "cancel":
+                pass
+            print('\033[K\033[F', end='')  # Clear line
+    return selected_items
