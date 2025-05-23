@@ -1,5 +1,5 @@
 dashboards:
-  KPI DASHBOARD:
+  KPI:
     dependsOn:
       datasets:
       - kpi_ebs_snap
@@ -12313,7 +12313,7 @@ dashboards:
                   \ target=\"_blank\">\_Amazon Data Lifecycle Manager</a>\n      \_to automate\
                   \ the creation, retention, and deletion of snapshots that you use to back\
                   \ up your Amazon EBS volumes.\n    </li>\n    <li>\n      Use the\n  \
-                  \    <a href=\"https://wellarchitectedlabs.com/cost/300_labs/300_optimization_data_collection/\"\
+                  \    <a href=\"https://catalog.workshops.aws/awscid/en-US/data-collection\"\
                   \ target=\"_blank\">\_Well-Architected Optimization Data Collection Lab</a>\n\
                   \      \_to gather Snapshot inventory for additional analysis\n    </li>\n\
                   \  </ul>\n</narrative>"
@@ -17761,7 +17761,7 @@ dashboards:
               Computations: []
               CustomNarrative:
                 Narrative: "<narrative>\n  <br/>\n  <block align=\"center\">\n    <inline\
-                  \ color=\"#61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_enterprise_dashboards/\"\
+                  \ color=\"#61d1d6\" font-size=\"68.8px\">\n      <a href=\"https://wellarchitectedlabs.com/cloud-intelligence-dashboards/\"\
                   \ target=\"_blank\">\n        <b>\n          <u>KPI Dashboard</u>\n  \
                   \      </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block\
                   \ align=\"center\">\n    <inline font-size=\"68.8px\">\n      <b>v2.2.0</b>\n\
@@ -17788,7 +17788,7 @@ dashboards:
                   \  <br/>\n  <block align=\"right\">Contributors:  Anjali Dhanerwal,  Yash\
                   \ Bindlish</block>\n  <br/>\n  <block align=\"right\">\n    Learn more\
                   \ about AWS Cloud Intelligence Dashboards (CID) on\n    <inline color=\"\
-                  #61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+                  #61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cloud-intelligence-dashboards/\"\
                   \ target=\"_blank\">AWS Well-Architected Labs</a>\n    </inline>\n   \
                   \ \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\"\
                   \ target=\"_blank\">CID YouTube Channel</a>\n    </inline>\n  </block>\n\

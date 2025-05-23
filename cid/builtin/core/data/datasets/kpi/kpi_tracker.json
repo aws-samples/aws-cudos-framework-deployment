@@ -16,14 +16,6 @@
                     {
                         "Name": "account_name",
                         "Type": "STRING"
-                    },
-                    {
-                        "Name": "parent_account_id",
-                        "Type": "STRING"
-                    },
-                    {
-                        "Name": "parent_account_name",
-                        "Type": "STRING"
                     }
                 ]
             }
@@ -473,9 +465,7 @@
                             "rds_sql_server_cost",
                             "rds_oracle_cost",
                             "account_id",
-                            "account_name",
-                            "parent_account_id",
-                            "parent_account_name"
+                            "account_name"
                         ]
                     }
                 }

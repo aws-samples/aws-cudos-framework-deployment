@@ -241,14 +241,6 @@
                     {
                         "Name": "account_name",
                         "Type": "STRING"
-                    },
-                    {
-                        "Name": "parent_account_id",
-                        "Type": "STRING"
-                    },
-                    {
-                        "Name": "parent_account_name",
-                        "Type": "STRING"
                     }
                 ]
             }
@@ -308,9 +300,7 @@
                             "s3_get_object_usage_quantity",
                             "s3_copy_object_usage_quantity",
                             "account_id",
-                            "account_name",
-                            "parent_account_id",
-                            "parent_account_name"
+                            "account_name"
                         ]
                     }
                 }
