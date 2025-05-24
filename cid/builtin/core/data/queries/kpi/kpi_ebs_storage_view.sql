@@ -8,6 +8,7 @@ ebs_all AS (
 	, line_item_usage_start_date
 	, bill_payer_account_id
 	, line_item_usage_account_id
+	, ${cur_tags_json} tags_json
 	, line_item_resource_id
 	, product['volume_api_name'] product_volume_api_name
 	, line_item_usage_type
@@ -32,6 +33,7 @@ ebs_spend AS (
 	, date_trunc('month',line_item_usage_start_date) AS usage_date
 	, bill_payer_account_id AS payer_account_id
 	, line_item_usage_account_id AS linked_account_id
+	, tags_json
 	, line_item_resource_id AS resource_id
 	, coalesce(product_volume_api_name, '') AS volume_api_name
 	, SUM (CASE
@@ -46,7 +48,7 @@ ebs_spend AS (
 	, SUM (CASE WHEN (pricing_unit = 'GiBps-mo' AND  line_item_usage_type LIKE '%Throughput%') THEN  (line_item_unblended_cost) ELSE 0 END) "cost_throughput_gibps_mo"
 	FROM
 		ebs_all
-	GROUP BY 1, 2, 3, 4, 5,6
+	GROUP BY 1, 2, 3, 4, 5, 6, 7
 ),
 
 ebs_spend_with_unit_cost AS (
@@ -109,6 +111,7 @@ ebs_spend_with_unit_cost AS (
 	billing_period
 	, payer_account_id
 	, linked_account_id
+	, tags_json
 	, resource_id
 	, volume_api_name
 	, storage_summary
@@ -140,4 +143,4 @@ ebs_spend_with_unit_cost AS (
 		END) AS ebs_gp3_potential_savings
 FROM
 	ebs_spend_with_unit_cost
-GROUP BY 1, 2, 3, 4, 5, 6
+GROUP BY 1, 2, 3, 4, 5, 6, 7

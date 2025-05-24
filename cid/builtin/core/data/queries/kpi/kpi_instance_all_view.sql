@@ -15,6 +15,7 @@
 		   , "bill_payer_account_id" "payer_account_id"
 		   , "line_item_usage_account_id" "linked_account_id"
 		   , "line_item_resource_id" "resource_id"
+		   , ${cur_tags_json} tags_json
 		   , coalesce("line_item_line_item_type", '') "charge_type"
 		   , (CASE WHEN (coalesce("savings_plan_savings_plan_a_r_n", '') <> '') THEN 'SavingsPlan' WHEN (coalesce("reservation_reservation_a_r_n", '') <> '') THEN 'Reserved' WHEN ("line_item_usage_type" LIKE '%Spot%') THEN 'Spot' ELSE 'OnDemand' END) "purchase_option"
 		   , "line_item_product_code" "product_code"
@@ -89,7 +90,7 @@
 				OR ("line_item_product_code" = 'MachineLearningSavingsPlans')
 			))
 
-		   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,17,18,19,20,21,22,23,24,25
+		   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26
 		   )
 		SELECT
 			cur_all.*

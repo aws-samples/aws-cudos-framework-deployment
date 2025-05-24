@@ -16,6 +16,7 @@
 			, line_item_usage_start_date AS usage_start_date
 			, bill_payer_account_id AS payer_account_id
 			, line_item_usage_account_id AS linked_account_id
+			, ${cur_tags_json} tags_json
 			, line_item_resource_id AS resource_id
 			, s3_standard_savings
 			, line_item_operation AS operation
@@ -42,7 +43,7 @@
 			  AND coalesce(line_item_resource_id, '') <> ''
 			  AND line_item_line_item_type LIKE '%Usage%'
 			  AND (line_item_product_code LIKE '%AmazonGlacier%' OR line_item_product_code LIKE '%AmazonS3%')
-			GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13
+			GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
 		),
 
 		-- Step 3: Return most recent request date to understand if bucket is in active use
@@ -64,6 +65,7 @@
 			, date_trunc('month', usage_start_date) AS "usage_date"
 			, payer_account_id
 			, linked_account_id
+			, tags_json
 			, s3.resource_id
 			, most_recent_request.last_request_date AS "last_requests"
 			,s3_standard_savings
@@ -114,7 +116,7 @@
 			FROM s3_usage_all_time s3
 			LEFT JOIN most_recent_request ON most_recent_request.resource_id = s3.resource_id
 			WHERE CAST(concat(s3.year, '-', s3.month, '-01') AS date) >= (date_trunc('month', current_date) - INTERVAL '3' MONTH)
-			GROUP BY 1, 2, 3, 4, 5, 6,7
+			GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
 		)
 
 
@@ -124,6 +126,7 @@
 		, usage_date
 		, payer_account_id
 		, linked_account_id
+		, tags_json
 		, resource_id
 		, CASE
 			WHEN resource_id LIKE '%backup%' THEN 'backup'

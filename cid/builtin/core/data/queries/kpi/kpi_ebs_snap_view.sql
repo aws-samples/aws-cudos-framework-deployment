@@ -10,6 +10,7 @@ CREATE OR REPLACE VIEW kpi_ebs_snap AS
 		   , line_item_usage_start_date usage_start_date
 		   , bill_payer_account_id payer_account_id
 		   , line_item_usage_account_id linked_account_id
+		   , ${cur_tags_json} tags_json
 		   , line_item_resource_id resource_id
 		   , (CASE WHEN (line_item_usage_type LIKE '%EBS:SnapshotArchive%') THEN 'Snapshot_Archive' WHEN (line_item_usage_type LIKE '%EBS:Snapshot%') THEN 'Snapshot' ELSE "line_item_operation" END) snapshot_type
 		   , line_item_usage_amount
@@ -37,6 +38,7 @@ CREATE OR REPLACE VIEW kpi_ebs_snap AS
 		   , request_dates.start_date
 		   , payer_account_id
 		   , linked_account_id
+		   , tags_json
 		   , snapshot_type
 		   , resource_id
 		   , "sum"(line_item_usage_amount) usage_quantity
@@ -48,5 +50,5 @@ CREATE OR REPLACE VIEW kpi_ebs_snap AS
 			 (snapshot_usage_all_time snapshot
 		   LEFT JOIN request_dates ON (request_dates.request_dates_resource_id = snapshot.resource_id))
 		   WHERE (CAST("concat"(snapshot.year, '-', snapshot.month, '-01') AS date) >= ("date_trunc"('month', current_date) - INTERVAL  '3' MONTH))
-		   GROUP BY 1, 2, 3, 4, 5, 6
+		   GROUP BY 1, 2, 3, 4, 5, 6, 7
 		)
