@@ -126,10 +126,14 @@ def add_filter_to_dashboard_definition(dashboard_definition: Dict[str, Any], fie
     # delete all old redundant controls
     mapping = {
         'payer_account_id': 'payer accounts',
+        'payer_account_id': 'Payer Account ID',
+        'payer_account_id': 'Payer Account IDs',
         'parent_account_id': 'payer accounts',
-        'account_id':  'Linked Account IDs',
         'linked_account_id': 'Linked Account IDs',
+        'account_id':  'Linked Account IDs',
+        'account_id':  'Account ID',
         'account_name': 'Account Names',
+        'account_name': 'Account Name',
     }
     for field_name in field_names:
         if field_name in mapping:
