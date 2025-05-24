@@ -37,11 +37,14 @@ dashboards:
         Name: Exclude Min Start Date
       - DataSetIdentifier: kpi_ebs_snap
         Expression: |-
-          ifelse(${GroupBy}='Account ID',{account_id},
-          ${GroupBy}='Account Name',{account_name},
-          ${GroupBy}= 'Payer Account ID', {payer_account_id},
-          ${GroupBy}= 'All', All,
-          All)
+          ifelse(
+            ${GroupBy}='Account ID',{account_id},
+            ${GroupBy}='Account Name',{account_name},
+            ${GroupBy}='Payer Account ID', {payer_account_id},
+            ${GroupBy}='All', All,
+            // Add ${GroupBy}
+            All
+          )
         Name: Group by
       - DataSetIdentifier: kpi_ebs_snap
         Expression: minOver({start_date},[{payer_account_id}],PRE_FILTER)
@@ -58,6 +61,7 @@ dashboards:
           ${GroupBy}='Account Name',{account_name},
           ${GroupBy}= 'Payer Account ID', {payer_account_id},
           ${GroupBy}= 'All', All,
+          // Add ${GroupBy}
           All)
         Name: Group by
       - DataSetIdentifier: kpi_ebs_storage_all
@@ -240,6 +244,7 @@ dashboards:
           ${GroupBy}='Account Name',{account_name},
           ${GroupBy}= 'Payer Account ID', {payer_account_id},
           ${GroupBy}= 'All', All,
+          // Add ${GroupBy}
           All)
         Name: Group by
       - DataSetIdentifier: kpi_instance_all
@@ -382,6 +387,7 @@ dashboards:
           ${GroupBy}='Account Name',{account_name},
           ${GroupBy}= 'Payer Account ID', {payer_account_id},
           ${GroupBy}= 'All', All,
+          // Add ${GroupBy}
           All)
         Name: Group by
       - DataSetIdentifier: kpi_s3_storage_all
@@ -634,6 +640,7 @@ dashboards:
           ${GroupBy}='Account Name',{account_name},
           ${GroupBy}= 'Payer Account ID', {payer_account_id},
           ${GroupBy}= 'All', All,
+          // Add ${GroupBy}
           All)
         Name: Group by
       - DataSetIdentifier: kpi_tracker
@@ -928,6 +935,7 @@ dashboards:
           ${GroupBy}='Account Name',{account_name},
           ${GroupBy}= 'Payer Account ID', {payer_account_id},
           ${GroupBy}= 'All', All,
+          // Add ${GroupBy}
           All)
         Name: Group by
       - DataSetIdentifier: summary_view

@@ -1820,6 +1820,8 @@ class Cid():
         tags_and_names = {_tag_to_name(tag):tag  for tag in sorted(options)}
         logger.info(f'tags_and_names = {tags_and_names}')
         logger.info(f'resource_tags = {resource_tags}')
+        if isinstance(resource_tags, str):
+            resource_tags = resource_tags.split(',')
         if resource_tags is None:
             resource_tags = get_parameter(
                 param_name,
