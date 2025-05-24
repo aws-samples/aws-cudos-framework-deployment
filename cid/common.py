@@ -396,6 +396,26 @@ class Cid():
                     message=f"Required parameter: {key} ({value.get('description')})",
                     choices=self.cur.tag_and_cost_category_fields + ["'none'"],
                 )
+            elif isinstance(value, dict) and value.get('type') == 'tags_json': # a json
+                if get_parameters().get(prefix + key): # priority to user input
+                    params[key] = get_parameters().get(prefix + key)
+                    if isinstance(params[key], str):
+                        params[key] = params[key].split(',')
+                else:
+                    if 'query' not in value:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: parameter with type Athena must have query value.')
+                    query = Template(value['query']).safe_substitute(others)
+                    try:
+                        res_list = self.athena.query(query)
+                    except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}.') from exc
+                    if not res_list:
+                        raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results. {value.get("error")}')
+                    options = ['-'.join(res) for res in res_list]
+                    return self.generic_tags_json(
+                        param_name=key,
+                        options=options,
+                    )
             elif isinstance(value, dict) and value.get('type') == 'athena':
                 if get_parameters().get(prefix + key): # priority to user input
                     params[key] = get_parameters().get(prefix + key)
@@ -1785,13 +1805,9 @@ class Cid():
         compiled_definition = json.loads(template.safe_substitute(params))
         self.glue.create_or_update_crawler(crawler_definition=compiled_definition)
 
-    def cur_tags_json(self, cur) -> str:
-        '''
-        global parameters: resource_tags_text:
-            '{
-                "bu": "resource_tags['user_b_u'])",
-                "be": "resource_tags['user_b_e'])"
-            }'
+
+    def generic_tags_json(self, param_name='resource-tags', options=[]) -> str:
+        ''' returns an sql for json tag
         '''
         def _tag_to_name(tag):
             return (tag
@@ -1800,13 +1816,13 @@ class Cid():
                 .replace("'aws_","'tag_aws_")
                 .split("['")[-1].split("']")[0]
             )
-        resource_tags = get_parameters().get('resource-tags', None)
-        tags_and_names = {_tag_to_name(tag):tag  for tag in sorted(cur.tag_and_cost_category_fields)}
+        resource_tags = get_parameters().get(param_name, None)
+        tags_and_names = {_tag_to_name(tag):tag  for tag in sorted(options)}
         logger.info(f'tags_and_names = {tags_and_names}')
         logger.info(f'resource_tags = {resource_tags}')
         if resource_tags is None:
             resource_tags = get_parameter(
-                'resource-tags',
+                param_name,
                 message='Enter Cost Allocation Tags to be added to datasets(WARNING: this can affect performance. Choose only the strict minimum)',
                 multi=True,
                 choices=sorted(list(set(tags_and_names.keys()))),
@@ -1830,6 +1846,12 @@ class Cid():
         '''
         logger.trace(f'cur_tags_json = {res}')
         return res
+
+    def cur_tags_json(self, cur) -> str:
+        return self.generic_tags_json(
+            param_name='resource-tags',
+            options=cur.tag_and_cost_category_fields,
+        )
 
     def get_view_query(self, view_name: str) -> str:
         """ Returns a fully compiled AHQ """
