@@ -190,8 +190,8 @@ class AbstractCUR(CidBase):
                 FROM (
                     SELECT resource_tags
                     FROM {self.table_name}
-                    WHERE billing_period >= DATE_FORMAT(DATE_ADD('day', -7, CURRENT_DATE), '%Y-%m')
-                    AND line_item_usage_start_date > DATE_ADD('day', -7, CURRENT_DATE)
+                    WHERE billing_period >= DATE_FORMAT(DATE_ADD('day', -60, CURRENT_DATE), '%Y-%m')
+                    AND line_item_usage_start_date > DATE_ADD('day', -60, CURRENT_DATE)
                     AND cardinality(resource_tags) > 0
                     LIMIT {number_of_rows_scanned}
                 ) t

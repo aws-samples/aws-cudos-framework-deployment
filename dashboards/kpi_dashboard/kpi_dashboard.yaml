@@ -11983,8 +11983,7 @@ dashboards:
             Title: Account Name
             Type: MULTI_SELECT
         - TextArea:
-            Delimiter: '
-              '
+            Delimiter: ','
             DisplayOptions:
               InfoIconLabelOptions:
                 Visibility: HIDDEN

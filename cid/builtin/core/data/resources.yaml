@@ -201,6 +201,7 @@ datasets:
         - DataExports
       views:
         - kpi_ebs_snap
+        - account_map
     schedules:
       - default
   kpi_ebs_storage_all:
@@ -209,7 +210,8 @@ datasets:
       dataProviders:
         - DataExports
       views:
-       - kpi_ebs_storage_all
+        - kpi_ebs_storage_all
+        - account_map
     schedules:
       - default
   kpi_instance_all:
@@ -723,38 +725,29 @@ views:
     File: queries/kpi/kpi_ebs_snap_view.sql
     dependsOn:
       cur2: true
-      views:
-        - account_map
 
   kpi_ebs_storage_all:
     File: queries/kpi/kpi_ebs_storage_view.sql
     dependsOn:
       cur2: true
-      views:
-        - account_map
 
   kpi_instance_all:
     File: queries/kpi/kpi_instance_all_view.sql
     dependsOn:
       cur2: true
       views:
-        - account_map
         - kpi_instance_mapping
 
   kpi_s3_storage_all:
       File: queries/kpi/kpi_s3_storage_view.sql
       dependsOn:
         cur2: true
-        views:
-          - account_map
-
 
   kpi_tracker:
       File: queries/kpi/last_kpi_tracker_view.sql
       dependsOn:
         cur2: true
         views:
-          - account_map
           - kpi_ebs_snap
           - kpi_ebs_storage_all
           - kpi_instance_all
@@ -909,8 +902,8 @@ views:
         - compute_optimizer_idle_options
 
   # Shared views
-  account_map:
-    File: queries/shared/account_map.sql
+  #account_map:
+  #  File: queries/shared/account_map.sql
   business_units_map:
     File: queries/shared/business_units_map.sql
   aws_accounts:

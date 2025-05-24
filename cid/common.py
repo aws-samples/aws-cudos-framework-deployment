@@ -1583,13 +1583,20 @@ class Cid():
             compiled_dataset.update({'DataSetId': dataset_id})
 
         # patch dataset for tags
-        resource_tags = get_parameters().get('resource-tags', [])
-        custom_fields = {
-            name: f"parseJson(tags_json, '$.{name}')" # This syntax does not work:  $[\"{name}\"]
-            for name in resource_tags
-        }
-        compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
+        cur_tags_json_required = False
+        for dep_view_name in dataset_definition.get('dependsOn', {}).get('views', []):
+            if self.resources['views'].get(dep_view_name, {}).get('dependsOn', {}).get('cur_tags_json'):
+                cur_tags_json_required = True
 
+        custom_fields = {}
+        resource_tags = get_parameters().get('resource-tags', [])
+        if cur_tags_json_required and resource_tags: 
+            custom_fields = {
+                name: f"parseJson(tags_json, '$.{name}')" # This syntax does not work:  $[\"{name}\"]
+                for name in resource_tags
+            }
+        compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
+        print(json.dumps(compiled_dataset))
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
         if isinstance(found_dataset, Dataset):
             update_dataset = False
@@ -1794,7 +1801,9 @@ class Cid():
                 .split("['")[-1].split("']")[0]
             )
         resource_tags = get_parameters().get('resource-tags', None)
-        tags_and_names = {_tag_to_name(tag): tag for tag in sorted(cur.tag_and_cost_category_fields)}
+        tags_and_names = {_tag_to_name(tag):tag  for tag in sorted(cur.tag_and_cost_category_fields)}
+        logger.info(f'tags_and_names = {tags_and_names}')
+        logger.info(f'resource_tags = {resource_tags}')
         if resource_tags is None:
             resource_tags = get_parameter(
                 'resource-tags',
