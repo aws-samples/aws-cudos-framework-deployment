@@ -131,6 +131,7 @@ class Dataset(CidQsResource):
             existing_create_column = next((c for c in existing_create_columns if c["ColumnName"] == col_name), None)
             if existing_create_column:
                 existing_create_column['Expression'] = expression
+                logger.trace(f'Custom field {col_name} updated to {repr(expression)}')
             else:
                 root_lt['DataTransforms'].insert(0, {
                     "CreateColumnsOperation": {
@@ -143,6 +144,7 @@ class Dataset(CidQsResource):
                         ]
                     }
                 })
+                logger.trace(f'Custom field {col_name} added with code {repr(expression)}')
                 all_columns.append(col_name)
 
         # Add all new cols to projected columns

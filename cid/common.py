@@ -1605,18 +1605,22 @@ class Cid():
         # patch dataset for tags
         cur_tags_json_required = False
         for dep_view_name in dataset_definition.get('dependsOn', {}).get('views', []):
-            if self.resources['views'].get(dep_view_name, {}).get('dependsOn', {}).get('cur_tags_json'):
+            dep_tag_conf = self.resources['views'].get(dep_view_name, {}).get('dependsOn', {}).get('tags', None)
+            if dep_tag_conf:
                 cur_tags_json_required = True
 
         custom_fields = {}
         resource_tags = get_parameters().get('resource-tags', [])
-        if cur_tags_json_required and resource_tags: 
+        if isinstance(resource_tags, str): resource_tags = resource_tags.split(',')
+        logger.debug(f'dataset {compiled_dataset.get("Name")} resource_tags = {resource_tags}')
+        if cur_tags_json_required and resource_tags:
             custom_fields = {
                 name: f"parseJson(tags_json, '$.{name}')" # This syntax does not work:  $[\"{name}\"]
                 for name in resource_tags
             }
+        logger.debug(f'custom_fields = {custom_fields}')
         compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
-        print(json.dumps(compiled_dataset))
+        logger.trace(f"compiled_dataset = {json.dumps(compiled_dataset)}")
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
         if isinstance(found_dataset, Dataset):
             update_dataset = False
@@ -1657,7 +1661,17 @@ class Cid():
                             raise CidCritical(f'User choice is not to update {found_dataset.name}.')
                         update_dataset = True
                     break
-            if update_dataset:
+
+            identical = False # check if dataset needs an update
+            if isinstance(found_dataset, Dataset):
+                identical = True
+                for key in 'PhysicalTableMap LogicalTableMap OutputColumns ImportMode DataSetUsageConfiguration RowLevelPermissionDataSet FieldFolders RowLevelPermissionTagConfiguration DatasetParameters'.split():
+                    if found_dataset.raw.get(key) != compiled_dataset.get(key):
+                        logger.trace(f'not identical {key} {found_dataset.raw.get(key)} != {compiled_dataset.get(key)}')
+                        identical = False
+                logger.trace(f'identical to existing = {identical}')
+
+            if update_dataset and not identical:
                 self.qs.update_dataset(compiled_dataset)
                 if compiled_dataset.get("ImportMode") == "SPICE":
                     dataset_id = compiled_dataset.get('DataSetId')
