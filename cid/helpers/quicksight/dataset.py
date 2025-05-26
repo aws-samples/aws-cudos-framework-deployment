@@ -90,7 +90,11 @@ class Dataset(CidQsResource):
             return existing_columns
 
         def _athena_to_qs_type(col, athena_type):
-            '''map athena type to QS type'''
+            '''map athena type to QS type
+             The following data types are supported in SPICE: Date, Decimal-fixed, Decimal-float, Integer, and String.
+            https://docs.aws.amazon.com/quicksight/latest/user/supported-data-types.html
+            https://docs.aws.amazon.com/quicksight/latest/user/supported-data-types-and-values.html
+            '''
             if 'string'    in athena_type: return {'Name': col, 'Type': 'STRING'}
             if 'varchar'   in athena_type: return {'Name': col, 'Type': 'STRING'}
             if 'char'      in athena_type: return {'Name': col, 'Type': 'STRING'}
@@ -101,7 +105,7 @@ class Dataset(CidQsResource):
             if 'int'       in athena_type: return {'Name': col, 'Type': 'INTEGER'}
             if 'decimal'   in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
             if 'double'    in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
-            if 'real'      in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
+            if 'real'      in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'} #is it better fit for fixed vs float Decimals
             print(f'WARNING: unknown type {athena_type} for {col}')
             return {'Name': col, 'Type': 'STRING'}
 
