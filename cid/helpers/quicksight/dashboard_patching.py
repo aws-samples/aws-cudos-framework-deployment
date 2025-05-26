@@ -367,7 +367,7 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
     # 2.1 Remove from calc fields
     managed_parameters = []
     for cf in dashboard_definition['CalculatedFields']:
-        param_match = re.search(r'// Add \${([a-zA-Z0-9_\s]+)}', cf['Expression']) # search for '// Add ${GroupBy}'
+        param_match = re.search(r'// Add \${(.+?)}', cf['Expression']) # search for '// Add ${GroupBy}'
         if param_match:
             param_name = param_match.group(1)
             managed_parameters.append(param_name)
@@ -457,7 +457,7 @@ def patch_group_by(definition, fields):
     # Add new fields to the code of Calc functions
     managed_parameters = []
     for cf in definition['CalculatedFields']:
-        param_match = re.search(r'// Add \${([a-zA-Z0-9_\s]+)}', cf['Expression']) # search for '// Add ${GroupBy}'
+        param_match = re.search(r'// Add \${(.+?)}', cf['Expression']) # search for '// Add ${GroupBy}'
         if not param_match:
             continue
         param_name = param_match.group(1)
@@ -465,7 +465,7 @@ def patch_group_by(definition, fields):
             managed_parameters.append(param_name)
             for field in reversed(fields):
                 new_line = f"${{{param_name}}}='{format_field_name(field)}', {{{field}}}," # must be the same as in remove_fields
-                cf['Expression'] = re.sub(f'^(\s*)(// Add ${{{param_name}}})', f'\\1{new_line}\n\\1\\2', cf['Expression'], flags=re.MULTILINE)
+                cf['Expression'] = re.sub(rf'^(\s*)(// Add \${{{param_name}}})', f'\\1{new_line}\n\\1\\2', cf['Expression'], flags=re.MULTILINE)
             logger.trace(f'Added {fields} to {cf}')
     # Add new field to all controls
     for parameter in set(managed_parameters):

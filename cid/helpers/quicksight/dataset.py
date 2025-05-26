@@ -91,11 +91,18 @@ class Dataset(CidQsResource):
 
         def _athena_to_qs_type(col, athena_type):
             '''map athena type to QS type'''
+            if 'string'    in athena_type: return {'Name': col, 'Type': 'STRING'}
             if 'varchar'   in athena_type: return {'Name': col, 'Type': 'STRING'}
+            if 'char'      in athena_type: return {'Name': col, 'Type': 'STRING'}
             if 'timestamp' in athena_type: return {'Name': col, 'Type': 'DATETIME'}
+            if 'date'      in athena_type: return {'Name': col, 'Type': 'DATETIME'}
+            if 'time'      in athena_type: return {'Name': col, 'Type': 'DATETIME'}
             if 'bigint'    in athena_type: return {'Name': col, 'Type': 'INTEGER'}
+            if 'int'       in athena_type: return {'Name': col, 'Type': 'INTEGER'}
+            if 'decimal'   in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
             if 'double'    in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
-            print(f'WARNING: unknown type {athena_type}')
+            if 'real'      in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
+            print(f'WARNING: unknown type {athena_type} for {col}')
             return {'Name': col, 'Type': 'STRING'}
 
         dataset = deepcopy(dataset)

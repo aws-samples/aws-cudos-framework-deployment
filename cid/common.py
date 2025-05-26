@@ -273,6 +273,7 @@ class Cid():
             # FIXME: can be recursive?
             for key, value in res.items():
                 if isinstance(value, str):
+                    print ('DEBUG', repr(params))
                     res[key] = Template(value).safe_substitute(params)
         return res
 
@@ -412,7 +413,7 @@ class Cid():
                     if not res_list:
                         raise CidCritical(f'Failed fetching parameter {prefix}{key}, {value}. Athena returns empty results. {value.get("error")}')
                     options = ['-'.join(res) for res in res_list]
-                    return self.generic_tags_json(
+                    params[key] = self.generic_tags_json(
                         param_name=key,
                         options=options,
                     )
@@ -893,7 +894,7 @@ class Cid():
             logger.info(f'View {view_name} is not managed by CID. Skipping.')
             return False
         logger.info(f'Deleting view "{view_name}"')
-        definition = self.get_definition("view", name=view_name)
+        definition = self.get_definition("view", name=view_name, noparams=True)
         if not definition:
             logger.info(f'Definition not found for view: "{view_name}"')
             return False
@@ -1605,10 +1606,9 @@ class Cid():
         # patch dataset for tags
         cur_tags_json_required = False
         for dep_view_name in dataset_definition.get('dependsOn', {}).get('views', []):
-            dep_tag_conf = self.resources['views'].get(dep_view_name, {}).get('dependsOn', {}).get('tags', None)
-            if dep_tag_conf:
-                cur_tags_json_required = True
-
+            cur_tags_json_required = 'tags_json' in str(self.resources['views'].get(dep_view_name, {}))
+            if cur_tags_json_required:
+                break
         custom_fields = {}
         resource_tags = get_parameters().get('resource-tags', [])
         if isinstance(resource_tags, str): resource_tags = resource_tags.split(',')
@@ -1711,7 +1711,7 @@ class Cid():
 
         # Create a view
         logger.info(f'Getting view definition {view_name}')
-        view_definition = self.get_definition("view", name=view_name)
+        view_definition = self.get_definition("view", name=view_name, noparams=True)
         if not view_definition and view_name in self.athena._metadata.keys():
             logger.info(f"Definition is unavailable but view exists: {view_name}, skipping")
             return
@@ -1824,12 +1824,16 @@ class Cid():
         ''' returns an sql for json tag
         '''
         def _tag_to_name(tag):
-            return (tag
+            tag_name = (tag
                 .replace('resource_tags_', '')
                 .replace("'user_","'tag_")
                 .replace("'aws_","'tag_aws_")
                 .split("['")[-1].split("']")[0]
             )
+            if not tag_name.startswith('tag_'):
+                tag_name = 'tag_' + tag_name
+            return tag_name.replace(':', '_')
+
         resource_tags = get_parameters().get(param_name, None)
         tags_and_names = {_tag_to_name(tag):tag  for tag in sorted(options)}
         logger.info(f'tags_and_names = {tags_and_names}')
@@ -1842,7 +1846,7 @@ class Cid():
                 message='Enter Cost Allocation Tags to be added to datasets(WARNING: this can affect performance. Choose only the strict minimum)',
                 multi=True,
                 choices=sorted(list(set(tags_and_names.keys()))),
-                default=resource_tags
+                default=resource_tags or [],
             )
 
         if not resource_tags:

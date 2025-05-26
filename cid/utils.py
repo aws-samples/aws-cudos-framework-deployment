@@ -392,6 +392,10 @@ def select_and_order(message, all_items, selected_items=None):
 
     while True:
         choices = []
+        #choices.append(Choice(value={"action": "back"}, name="⬅ Go back"))
+        choices.append(Choice(value={"action": "finish"}, name="✔ Looks good"))
+        choices.append(Separator())
+
         if selected_items:
             for i, item in enumerate(selected_items):
                 choices.append(Choice(
@@ -407,9 +411,6 @@ def select_and_order(message, all_items, selected_items=None):
                 value={"action": "add_item", "item": item},
                 name=f"  {item}"
             ))
-        choices.append(Separator())
-        choices.append(Choice(value={"action": "back"}, name="⬅ Go back"))
-        choices.append(Choice(value={"action": "finish"}, name="✔ Looks good"))
         selection = inquirer.select(
             message=message,
             choices=choices,
