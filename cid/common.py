@@ -1606,8 +1606,10 @@ class Cid():
         # patch dataset for tags
         cur_tags_json_required = False
         for dep_view_name in dataset_definition.get('dependsOn', {}).get('views', []):
-            cur_tags_json_required = 'tags_json' in str(self.resources['views'].get(dep_view_name, {}))
-            if cur_tags_json_required:
+            cur_tags_json_required = 'tags_json' in str()
+            if self.resources['views'].get(dep_view_name, {}).get('dependsOn',{}).get('tags') == 'json' \
+                or self.resources['views'].get(dep_view_name, {}).get('parameters',{}).get('resource-tags'):
+                cur_tags_json_required = True
                 break
         custom_fields = {}
         resource_tags = get_parameters().get('resource-tags', [])
@@ -1826,12 +1828,16 @@ class Cid():
         def _tag_to_name(tag):
             tag_name = (tag
                 .replace('resource_tags_', '')
+                .replace('cost_category_', '')
                 .replace("'user_","'tag_")
                 .replace("'aws_","'tag_aws_")
                 .split("['")[-1].split("']")[0]
             )
             if not tag_name.startswith('tag_'):
-                tag_name = 'tag_' + tag_name
+                if tag.startswith('cost_category'):
+                    tag_name = 'cost_category_' + tag_name
+                else:
+                    tag_name = 'tag_' + tag_name
             return tag_name.replace(':', '_')
 
         resource_tags = get_parameters().get(param_name, None)

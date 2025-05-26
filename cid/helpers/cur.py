@@ -175,40 +175,43 @@ class AbstractCUR(CidBase):
 
     @property
     def tag_and_cost_category_fields(self) -> list:
-        """ Returns all tags and cost category fields. """
+        """ Returns all SQL selectable fields with tags and cost category."""
         if self.version == '1':
             return [field for field in self.fields if field.startswith('resource_tags_') or field.startswith('cost_category_')]
         elif self.version == '2':
             if self._tag_and_cost_category is not None: # the query can take few mins so we try to cache it
                 logging.debug(f'Using cached tags.')
                 return self._tag_and_cost_category
-            cid_print(f'Scanning resource_tags in {self.table_name}.')
+
+            self._tag_and_cost_category = []
             number_of_rows_scanned = 100000 # empiric value
-            res = self.athena.query(
-                sql=f'''
-                    SELECT 
-                        key,
-                        COUNT(DISTINCT value) as unique_values
-                    FROM (
-                        SELECT resource_tags
-                        FROM "{self.database}"."{self.table_name}"
-                        WHERE billing_period >= DATE_FORMAT(DATE_ADD('day', -60, CURRENT_DATE), '%Y-%m')
-                        AND line_item_usage_start_date > DATE_ADD('day', -60, CURRENT_DATE)
-                        AND cardinality(resource_tags) > 0
-                        LIMIT {number_of_rows_scanned}
-                    ) t
-                    CROSS JOIN UNNEST(resource_tags) AS t(key, value)
-                    GROUP BY key
-                    ORDER BY unique_values DESC;
-                ''',
-                database=self.database,
-            )
-            max_width = max(len(str(line[0])) for line in res)
-            cid_print(f' <BOLD>{"Tag":<{max_width}} | Distinct Values <END> ')
-            for line in res:
-                if int(line[1]) > 10:
-                    cid_print(f' <BOLD>{line[0]:<{max_width}}<END> | {line[1]} ')
-            self._tag_and_cost_category = sorted([f"resource_tags['{line[0]}']" for line in res])
+            for tag_type in ["resource_tags", 'cost_category']:
+                cid_print(f'Scanning {tag_type} in {self.table_name}.')
+                res = self.athena.query(
+                    sql=f'''
+                        SELECT
+                            key,
+                            COUNT(DISTINCT value) as unique_values
+                        FROM (
+                            SELECT {tag_type}
+                            FROM "{self.database}"."{self.table_name}"
+                            WHERE billing_period >= DATE_FORMAT(DATE_ADD('day', -60, CURRENT_DATE), '%Y-%m')
+                            AND line_item_usage_start_date > DATE_ADD('day', -60, CURRENT_DATE)
+                            AND cardinality({tag_type}) > 0
+                            LIMIT {number_of_rows_scanned}
+                        ) t
+                        CROSS JOIN UNNEST({tag_type}) AS t(key, value)
+                        GROUP BY key
+                        ORDER BY unique_values DESC;
+                    ''',
+                    database=self.database,
+                )
+                max_width = max(len(str(line[0])) for line in res)
+                cid_print(f' <BOLD>{tag_type:<{max_width}} | Distinct Values <END> ')
+                for line in res:
+                    if int(line[1]) > 10:
+                        cid_print(f' <BOLD>{line[0]:<{max_width}}<END> | {line[1]} ')
+                self._tag_and_cost_category += sorted([f"{tag_type}['{line[0]}']" for line in res])
             return self._tag_and_cost_category
         else:
             raise NotImplemented('cur version not known')
