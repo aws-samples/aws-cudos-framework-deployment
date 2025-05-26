@@ -106,7 +106,7 @@ class Dataset(CidQsResource):
             if 'decimal'   in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
             if 'double'    in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
             if 'real'      in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'} #is it better fit for fixed vs float Decimals
-            print(f'WARNING: unknown type {athena_type} for {col}')
+            logger.warning(f'Unknown Athena type {athena_type} for {col}. Will use STRING. This might affect dashboard.')
             return {'Name': col, 'Type': 'STRING'}
 
         dataset = deepcopy(dataset)
