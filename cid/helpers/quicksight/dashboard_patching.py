@@ -46,7 +46,10 @@ def format_field_name(field_name: str) -> str:
         else: # Handle regular part
             result.append(parts[i].title())
             i += 1
-    return ' '.join(result)
+    title = ' '.join(result)
+    if title.startswith('Cost Category '):
+        title = title.replace('Cost Category ', 'CC ') # this is too long to fit to the dashboard
+    return title
 
 def align_grid_position(elements: List[Dict[str, Any]]) -> None:
     """Align grid positions for control layout elements."""
