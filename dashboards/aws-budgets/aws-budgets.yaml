@@ -2103,8 +2103,12 @@ views:
       , CAST(budgetlimit.amount AS decimal) budget_amount
       , CAST(calculatedspend.actualspend.amount AS decimal) actualspend
       , CAST(calculatedspend.forecastedspend.amount AS decimal) forecastedspend
-      , CAST((CAST(calculatedspend.actualspend.amount AS decimal(18, 4)) / CAST(budgetlimit.amount AS decimal(18, 4))) AS decimal(18, 4)) percentage_actuals_vs_budgeted
-      , CAST((CAST(calculatedspend.forecastedspend.amount AS decimal(18, 4)) / CAST(budgetlimit.amount AS decimal(18, 4))) AS decimal(18, 4)) percentage_forecast_vs_budgeted
+      , CASE
+            WHEN CAST(budgetlimit.amount AS decimal(18, 4)) != 0 THEN CAST((CAST(calculatedspend.actualspend.amount AS decimal(18, 4)) / CAST(budgetlimit.amount AS decimal(18, 4))) AS decimal(18, 4)) 
+            ELSE 0 END percentage_actuals_vs_budgeted
+      , CASE
+            WHEN CAST(budgetlimit.amount AS decimal(18, 4)) != 0 THEN CAST((CAST(calculatedspend.forecastedspend.amount AS decimal(18, 4)) / CAST(budgetlimit.amount AS decimal(18, 4))) AS decimal(18, 4)) 
+            ELSE 0 END percentage_forecast_vs_budgeted
       , CAST(CONCAT(year, '-', month, '-01') AS DATE) budget_date
       , timeunit
       , budgettype budget_type
