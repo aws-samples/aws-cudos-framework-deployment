@@ -77,14 +77,20 @@ class Dataset(CidQsResource):
             ]
 
         def _replace_columns(existing_columns, new_columns):
-            '''replace columns but keep the order'''
+            '''replace columns but keep the order, ignore case changes
+                assert _replace_columns(
+                    [{'Name': 'a'}, {'Name': 'B'}, {'Name': 'c'}],
+                    [{'Name': 'A'}, {'Name': 'b'}, {'Name': 'd'}]) \
+                 == [{'Name': 'a'}, {'Name': 'B'}, {'Name': 'd'}]
+            Different types will be replaced
+            '''
             existing_columns = [
                 existing_col
                 for existing_col in existing_columns
-                if existing_col in new_columns
+                if str(existing_col).lower() in [str(c).lower() for c in new_columns]
             ] # filter out old
             for col in new_columns: # add new
-                if col['Name'] not in [c['Name'] for c in existing_columns]:
+                if col['Name'].lower() not in [c['Name'].lower() for c in existing_columns]:
                     existing_columns.append(col)
                 #REFACTOR: what if col is there but another type?
             return existing_columns
@@ -160,7 +166,7 @@ class Dataset(CidQsResource):
 
         # Add all new cols to projected columns
         for col in set(all_columns):
-            if col not in projected_cols:
+            if col.lower() not in [c.lower() for c in projected_cols]:
                 projected_cols.append(col)
 
         # filter out all columns that cannot be used for dataset creation

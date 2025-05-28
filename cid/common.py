@@ -273,7 +273,6 @@ class Cid():
             # FIXME: can be recursive?
             for key, value in res.items():
                 if isinstance(value, str):
-                    print ('DEBUG', repr(params))
                     res[key] = Template(value).safe_substitute(params)
         return res
 
