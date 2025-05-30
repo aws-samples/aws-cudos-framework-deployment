@@ -21681,48 +21681,76 @@ dashboards:
               Elements:
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: eec01553-7af9-48cb-9454-3671bc1d262a
+                ElementId: d11a8309-f138-4074-86f8-ad5d2b8f709f
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 6
+                RowSpan: 3
               - ColumnIndex: 0
                 ColumnSpan: 36
-                ElementId: 7d391a3f-da27-4554-b719-6d3d98832c40
+                ElementId: e1a97ad7-dff0-43a7-b2fc-8f7077dc2520
                 ElementType: TEXT_BOX
-                RowIndex: 6
-                RowSpan: 6
+                RowIndex: 3
+                RowSpan: 12
         Name: About
-        SheetId: 919ac4bb-fe46-4d8d-9928-2e25bd338019
+        SheetControlLayouts:
+        - Configuration:
+            GridLayout:
+              Elements: []
+        SheetId: d6c820aa-877e-4b70-abcb-99e218f3dd4a
         TextBoxes:
-        - Content: "<text-box>\n  <inline font-size=\"54.88px\">Notices</inline>\n  <inline\
-            \ font-size=\"12.8px\">\n    <img src=\"https://d66mvi2kszsvt.cloudfront.net/resources/dashboard-visual-analytics/About/header.png\"\
-            \ width=\"11\"/>\n  </inline>\n  <br/>\n  <br/>\n  <inline font-size=\"22.4px\"\
-            >Customers are responsible for making their own independent assessment of\_\
-            this dashboard and its content.\_This dashboard and its content: (a) is for\
-            \ informational purposes only, (b) represents current AWS product offerings\
-            \ and practices, which are subject to change without notice, and (c) does not\
-            \ create any commitments or assurances from AWS and its affiliates, suppliers\
-            \ or licensors. AWS\_content, products or services are provided \u201Cas is\u201D\
-            \ without warranties, representations, or conditions of any kind, whether express\
-            \ or implied. The responsibilities and liabilities of AWS to its customers are\
-            \ controlled by AWS agreements, and this document is not part of, nor does it\
-            \ modify, any agreement between AWS and its customers.</inline>\n</text-box>"
-          SheetTextBoxId: eec01553-7af9-48cb-9454-3671bc1d262a
-        - Content: "<text-box>\n  End User Computing (EUC) Dashboard v1.0\n  <br/>\n  <br/>\n\
-            \  <block align=\"right\">Created by: Christian O'Donoghue</block>\n  <br/>\n\
-            \  <block align=\"right\">Contributions: James Gaskell, Daniel Matlock</block>\n\
-            \  <br/>\n  <br/>\n  EUC Dashboard is built on top of CUDOS Framework\n  <br/>\n\
-            \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\">\n \
-            \   Learn more\n    <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+        - Content: "<text-box>\n  <inline font-size=\"32px\">Notes</inline>\n  <br/>\n \
+            \ <inline font-size=\"14px\">Customers are responsible for making their own\
+            \ independent assessment of\_this dashboard and its content.\_This dashboard\
+            \ and its content: (a) is for informational purposes only, (b) represents current\
+            \ AWS product offerings and practices, which are subject to change without notice,\
+            \ and (c) does not create any commitments or assurances from AWS and its affiliates,\
+            \ suppliers or licensors. AWS\_content, products or services are provided \u201C\
+            as is\u201D without warranties, representations, or conditions of any kind,\
+            \ whether express or implied. The responsibilities and liabilities of AWS to\
+            \ its customers are controlled by AWS agreements, and this document is not part\
+            \ of, nor does it modify, any agreement between AWS and its customers.</inline>\n\
+            </text-box>"
+          SheetTextBoxId: d11a8309-f138-4074-86f8-ad5d2b8f709f
+        - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\"/>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\"/>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\">\n    <inline font-size=\"64px\">\n      <b>CORA</b>\n    </inline>\n\
+            \  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
+            center\">\n    <inline font-size=\"24px\">\n      <b>C</b>\n    </inline>\n\
+            \    <inline font-size=\"24px\">ost\_</inline>\n    <inline font-size=\"24px\"\
+            >\n      <b>O</b>\n    </inline>\n    <inline font-size=\"24px\">ptimization\_\
+            </inline>\n    <inline font-size=\"24px\">\n      <b>R</b>\n    </inline>\n\
+            \    <inline font-size=\"24px\">ecommended\_</inline>\n    <inline font-size=\"\
+            24px\">\n      <b>A</b>\n    </inline>\n    <inline font-size=\"24px\">ctions</inline>\n\
+            \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
+            >v1.0.0</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
+            \  <block align=\"center\">\n    <inline font-size=\"24px\">\n      <a href=\"\
+            https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/euc-dashboard#usage-guide\"\
+            \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
+            24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-euc.md\"\
+            \ target=\"_blank\">Changelog</a>\n    </inline>\n    <inline font-size=\"24px\"\
+            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/euc-dashboard#deployment\"\
+            \ target=\"_blank\">Deployment</a>\n    </inline>\n    <inline font-size=\"\
+            24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/feedback-support\"\
+            \ target=\"_blank\">Feedback</a>\n    </inline>\n    <inline font-size=\"24px\"\
+            >\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block\
+            \ align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built by: Christian O'Donoghue</block>\n  <block align=\"right\">Contributions: James Gaskell, Daniel Matlock</block>\n\
+            \  <br/>\n  <block align=\"right\">\n    Learn more\n    <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
             \ target=\"_blank\">\_</a>\n    about AWS Cloud Intelligence Dashboards (CID)\
-            \ on\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+            \ on [\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cloud-intelligence-dashboards/\"\
             \ target=\"_blank\">\n        <u>AWS Well-Architected Labs</u>\n      </a>\n\
-            \    </inline>\n    \_and\n    <inline color=\"#61d1d6\">\n      <a href=\"\
+            \    </inline>\n    ]\_and [\n    <inline color=\"#61d1d6\">\n      <a href=\"\
             https://www.youtube.com/channel/UCl0O3ASMCwA_gw0QIKzoU3Q\" target=\"_blank\"\
-            >\n        <u>CID YouTube Channel</u>\n      </a>\n    </inline>\n  </block>\n\
-            \  <br/>\n  <block align=\"right\"/>\n  <br/>\n  <block align=\"right\">Powered\
-            \ by: Amazon QuickSight, Amazon Athena, Amazon S3</block>\n</text-box>"
-          SheetTextBoxId: 7d391a3f-da27-4554-b719-6d3d98832c40
+            >\n        <u>[CID YouTube Channel</u>\n      </a>\n    </inline>\n    ]\n \
+            \ </block>\n  <br/>\n  <block align=\"right\">\n    If you wish to provide feedback\
+            \ please or report an error please email:\n    <inline color=\"#61d1d6\">\_\
+            </inline>\n    <inline background-color=\"#21a0d7\" color=\"#61d1d6\">\n   \
+            \   <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
+            \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
+            \  </block>\n  <br/>\n  <block align=\"right\">Powered by: Amazon QuickSight,\
+            \ Amazon Athena, Amazon S3, Amazon CloudWatch</block>\n  <br/>\n  <block\
+            \ align=\"center\"/>\n</text-box>"
+          SheetTextBoxId: e1a97ad7-dff0-43a7-b2fc-8f7077dc2520
         Visuals: []
 datasets:
   euc_metrics_view:
