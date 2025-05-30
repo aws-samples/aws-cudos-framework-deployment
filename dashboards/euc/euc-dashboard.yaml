@@ -11999,7 +11999,6 @@ dashboards:
       - ContentType: INTERACTIVE
         FilterControls:
         - RelativeDateTime:
-            CommitMode: AUTO
             DisplayOptions:
               DateTimeFormat: MMMM
               InfoIconLabelOptions:
@@ -14271,7 +14270,6 @@ dashboards:
       - ContentType: INTERACTIVE
         FilterControls:
         - RelativeDateTime:
-            CommitMode: AUTO
             DisplayOptions:
               DateTimeFormat: MMMM
               InfoIconLabelOptions:
