@@ -186,6 +186,7 @@ def cid_print(value, **kwargs) -> None:
 
 def set_defaults(data: dict) -> None:
     global defaults
+    logger.debug(f'setting defaults to: {data}')
     if data:
         defaults.update(data)
 
@@ -275,7 +276,9 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         if not isatty():
             raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
         if multi:
-            result = select_and_order(message, choices, (default if isinstance(default, list) else [default]) or [])
+            default = default or []
+            default = default if isinstance(default, list) else [default]
+            result = select_and_order(message, choices, default)
         else:
             if isinstance(choices, dict):
                 choices = [Choice(name=key, value=value, enabled=not (none_as_disabled and value is None)) for key, value in choices.items()]
