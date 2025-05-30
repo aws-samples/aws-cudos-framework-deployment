@@ -28,6 +28,10 @@ Cloud Intelligence Dashboards Framework provides AWS customers with [more then 2
 
 We recommend starting with deployment of [Foundational Dashboards](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy). Then deploy [Data Collection](https://catalog.workshops.aws/awscid/en-US/data-collection) and [Advanced Dashboards](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced). Check for [Additional](https://catalog.workshops.aws/awscid/en-US/dashboards/additional) Dashboards.
 
+
+[![Documentation >](assets/images/documentation.svg)](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy)
+
+
 ## Architecture of Foundational Dashboards
 
 ![Foundational Architecture](assets/images/foundational-architecture.png  "Foundational Architecture")
@@ -36,6 +40,25 @@ We recommend starting with deployment of [Foundational Dashboards](https://catal
 3. [Amazon Athena](https://aws.amazon.com/athena/) allows querying data directly from the S3 bucket using an [AWS Glue](https://aws.amazon.com/glue/) table schema definition.
 4. [Amazon QuickSight](https://aws.amazon.com/quicksight/) creates datasets from [Amazon Athena](https://aws.amazon.com/athena/), refreshes daily and caches in [SPICE](https://docs.aws.amazon.com/quicksight/latest/user/spice.html)(Super-fast, Parallel, In-memory Calculation Engine) for [Amazon QuickSight](https://aws.amazon.com/quicksight/)
 5. User Teams (Executives, FinOps, Engineers) can access Cloud Intelligence Dashboards in [Amazon QuickSight](https://aws.amazon.com/quicksight/). Access is secured through [AWS IAM](https://aws.amazon.com/iam/), IIC ([AWS IAM Identity Center](https://aws.amazon.com/iam/identity-center/), formerly SSO), and optional [Row Level Security](https://catalog.workshops.aws/awscid/en-US/customizations/row-level-security).
+
+This foundational architecture is recommended for starting and allows deployment of [Foundational Dashboards](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational) like CUDOS, CID and KPI.
+
+## Architecture of Advanced Dashboards
+![Advanced Architecture](assets/images/advanced-architecture.png  "Foundational Architecture")
+
+1. [AWS Data Exports](https://aws.amazon.com/aws-cost-management/aws-data-exports/) delivers daily the Cost & Usage Report (CUR2) to an [Amazon S3 Bucket](https://aws.amazon.com/s3/) in the Management Account.
+2. [Amazon S3](https://aws.amazon.com/s3/) replication rule copies Export data to a dedicated Data Collection Account S3 bucket automatically.
+3. [Amazon Athena](https://aws.amazon.com/athena/) allows querying data directly from the S3 bucket using an [AWS Glue](https://aws.amazon.com/glue/) table schema definition.
+4. [Amazon QuickSight](https://aws.amazon.com/quicksight/) creates datasets from [Amazon Athena](https://aws.amazon.com/athena/), refreshes daily and caches in [SPICE](https://docs.aws.amazon.com/quicksight/latest/user/spice.html)(Super-fast, Parallel, In-memory Calculation Engine) for [Amazon QuickSight](https://aws.amazon.com/quicksight/)
+5. User Teams (Executives, FinOps, Engineers) can access Cloud Intelligence Dashboards in [Amazon QuickSight](https://aws.amazon.com/quicksight/). Access is secured through [AWS IAM](https://aws.amazon.com/iam/), IIC ([AWS IAM Identity Center](https://aws.amazon.com/iam/identity-center/), formerly SSO), and optional [Row Level Security](https://catalog.workshops.aws/awscid/en-US/customizations/row-level-security).
+6. Optionally, the Advanced data collection can be deployed to enable advanced dashboards based on [AWS Trusted Advisor](https://aws.amazon.com/premiumsupport/trustedadvisor/), [AWS Health](https://aws.amazon.com/premiumsupport/technology/aws-health-dashboard/) Events and other sources. Additional data is retrieved from [AWS Organizations](https://aws.amazon.com/organizations/) or Linked Accounts. In this case [Amazon EventBridge](https://aws.amazon.com/eventbridge/) rule triggers an [AWS Step Functions](https://aws.amazon.com/step-functions/) workflow for data collection modules on a configurable schedule.
+7. The "Account Collector" [AWS Lambda](https://aws.amazon.com/lambda/) in AWS Step Functions retrieves linked account details using AWS Organizations API.
+8. The "Data Collection" Lambda function in AWS Step Functions assumes role in each linked account to retrieve account-specific data via [AWS SDK](https://aws.amazon.com/developer/tools/).
+9. Retrieved data is stored in a centralized Amazon S3 Bucket.
+10. [Advanced Cloud Intelligence Dashboards](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced) leverage Amazon Athena and Amazon QuickSight for comprehensive data analysis.
+
+This advanced data collection architecture allows deployment of [Advanced Dashboards](https://catalog.workshops.aws/awscid/en-US/dashboards/advanced) like Trusted Advisor Dashboard, Health, Graviton, Compute Optimizer Dashboard and many more.
+
 
 ## Cost
 The following table provides a sample cost breakdown for deploying of Foundational Dashboards with the default parameters in the US East (N. Virginia) Region for one month. 
@@ -104,6 +127,9 @@ There are several ways we can deploy dashboards:
 1. [CloudFormation Template](./cfn-templates/cid-cfn.yml) using cid-cmd tool in Amazon Lambda. (Recommended)
 
 Please refer to the deployment documentation [here](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy).
+
+[![Deployment Guide >](assets/images/deployment-guide-button.svg)](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy)
+
 
 ## Cleanup
 Please refer to the documentation [here](https://catalog.workshops.aws/awscid/en-US/dashboards/teardown).
