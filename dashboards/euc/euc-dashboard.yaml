@@ -21714,15 +21714,8 @@ dashboards:
         - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
             center\"/>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
             center\"/>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
-            center\">\n    <inline font-size=\"64px\">\n      <b>CORA</b>\n    </inline>\n\
-            \  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
-            center\">\n    <inline font-size=\"24px\">\n      <b>C</b>\n    </inline>\n\
-            \    <inline font-size=\"24px\">ost\_</inline>\n    <inline font-size=\"24px\"\
-            >\n      <b>O</b>\n    </inline>\n    <inline font-size=\"24px\">ptimization\_\
-            </inline>\n    <inline font-size=\"24px\">\n      <b>R</b>\n    </inline>\n\
-            \    <inline font-size=\"24px\">ecommended\_</inline>\n    <inline font-size=\"\
-            24px\">\n      <b>A</b>\n    </inline>\n    <inline font-size=\"24px\">ctions</inline>\n\
-            \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
+            center\">\n    <inline font-size=\"64px\">\n      <b>Amazon End User Computing (EUC) Dashboard</b>\n    </inline>\n\
+            \  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
             >v1.0.0</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"24px\">\n      <a href=\"\
             https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/euc-dashboard#usage-guide\"\
@@ -21734,8 +21727,8 @@ dashboards:
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/feedback-support\"\
             \ target=\"_blank\">Feedback</a>\n    </inline>\n    <inline font-size=\"24px\"\
             >\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block\
-            \ align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built by: Christian O'Donoghue</block>\n  <block align=\"right\">Contributions: James Gaskell, Daniel Matlock</block>\n\
-            \  <br/>\n  <block align=\"right\">\n    Learn more\n    <a href=\"https://wellarchitectedlabs.com/cost/200_labs/200_cloud_intelligence/\"\
+            \ align=\"center\"/>\n  <br/>\n  <block align=\"right\">Built by: Christian O'Donoghue</block>\n  <block align=\"right\">Contributions: James Gaskell, Daniel Matlock</block><br/>\n\
+            \  <br/>\n  <block align=\"right\">\n    Learn more\n    <a href=\"https://wellarchitectedlabs.com/cloud-intelligence-dashboards/\"\
             \ target=\"_blank\">\_</a>\n    about AWS Cloud Intelligence Dashboards (CID)\
             \ on [\n    <inline color=\"#61d1d6\">\n      <a href=\"https://wellarchitectedlabs.com/cloud-intelligence-dashboards/\"\
             \ target=\"_blank\">\n        <u>AWS Well-Architected Labs</u>\n      </a>\n\
@@ -21745,7 +21738,7 @@ dashboards:
             \ </block>\n  <br/>\n  <block align=\"right\">\n    If you wish to provide feedback\
             \ please or report an error please email:\n    <inline color=\"#61d1d6\">\_\
             </inline>\n    <inline background-color=\"#21a0d7\" color=\"#61d1d6\">\n   \
-            \   <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
+            \   <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=EUC%20Dashboard%20Feedback\"\
             \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
             \  </block>\n  <br/>\n  <block align=\"right\">Powered by: Amazon QuickSight,\
             \ Amazon Athena, Amazon S3, Amazon CloudWatch</block>\n  <br/>\n  <block\
