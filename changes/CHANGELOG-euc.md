@@ -1,4 +1,4 @@
-# What's new in the EUC Dashboard
+# What's new in the End User Computing (EUC) Dashboard
 The EUC dashboard offers a centralized solution for monitoring and optimizing Amazon WorkSpaces and AppStream 2.0 environments by combining Cost and Usage Report (CUR) data with API-driven insights.
 
 ## Key Features and Capabilities
