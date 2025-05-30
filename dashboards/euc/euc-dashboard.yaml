@@ -22284,7 +22284,7 @@ views:
            "${data_collection_database_name}"."inventory_workspaces_data" wi1
          WHERE ((lastinventoryrun = (SELECT MAX(lastinventoryrun)
       FROM
-        "${data_collection_database_name}""."inventory_workspaces_data" wi2
+        "${data_collection_database_name}"."inventory_workspaces_data" wi2
       WHERE ((wi1.workspaceid = wi2.workspaceid) AND (wi1.accountid = wi2.accountid))
       )) AND (parse_datetime(lastinventoryrun, 'MM/dd/yy HH:mm:ss') >= date_add('day', -14, current_date)))
       )
