@@ -1370,7 +1370,7 @@ class QuickSight(CidBase):
             taxonomy_columns_candidates = [c['Name'] for c in common_columns if c['Type'] == 'STRING' and c['Name'] not in non_taxonomy_cols]
             if taxonomy_columns_candidates:
                 taxonomy = get_parameter('taxonomy',
-                    message='Enter taxonomy fields for dashboards filter',
+                    message='Select taxonomy fields to add as dashboard filters and group by fields',
                     choices=taxonomy_columns_candidates,
                     multi=True,
                     order=True,

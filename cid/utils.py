@@ -397,7 +397,7 @@ def select_and_order(message, all_items, selected_items=None):
         choices = []
         #choices.append(Choice(value={"action": "back"}, name="⬅ Go back"))
         choices.append(Choice(value={"action": "finish"}, name="✔ Looks good"))
-        choices.append(Separator())
+        choices.append(Separator("--- Selected Items ---"))
 
         if selected_items:
             for i, item in enumerate(selected_items):
