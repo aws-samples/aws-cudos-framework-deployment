@@ -1612,7 +1612,8 @@ class Cid():
                 break
         custom_fields = {}
         resource_tags = get_parameters().get('resource-tags', [])
-        if isinstance(resource_tags, str): resource_tags = resource_tags.split(',')
+        if isinstance(resource_tags, str):
+            resource_tags = [t for t in resource_tags.split(',') if t]
         logger.debug(f'dataset {compiled_dataset.get("Name")} resource_tags = {resource_tags}')
         if cur_tags_json_required and resource_tags:
             custom_fields = {
@@ -1844,7 +1845,7 @@ class Cid():
         logger.info(f'tags_and_names = {tags_and_names}')
         logger.info(f'resource_tags = {resource_tags}')
         if isinstance(resource_tags, str):
-            resource_tags = resource_tags.split(',')
+            resource_tags = [tag for tag in resource_tags.split(',') if tag]
         if resource_tags is None:
             resource_tags = get_parameter(
                 param_name,
