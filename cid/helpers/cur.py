@@ -213,7 +213,7 @@ class AbstractCUR(CidBase):
                         if int(line[1]) > 10:
                             cid_print(f' <BOLD>{line[0]:<{max_width}}<END> | {line[1]} ')
                     self._tag_and_cost_category += sorted([f"{tag_type}['{line[0]}']" for line in res])
-                except (self.athena.client.exceptions.ClientError, Exception) as exc:
+                except (self.athena.client.exceptions.ClientError, CidCritical) as exc:
                     logger.error(f'Failed to read {tag_type} from {self.table_name}: {exc}. Will continue without.')
             return self._tag_and_cost_category
         else:
