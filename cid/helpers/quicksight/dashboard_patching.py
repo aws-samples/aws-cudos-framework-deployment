@@ -25,7 +25,7 @@ def get_most_used_dataset(dashboard_definition: Dict[str, Any]) -> str:
     ])
     return dataset_identifiers[-1][1] if dataset_identifiers else None
 
-def format_field_name(field_name: str) -> str:
+def format_field_name(field_name: str, ignore_prefix: bool=False) -> str:
     """Format field name for display in the filter title.
         assert format_field_name('account_name') == 'Account Name'
         assert format_field_name('a_c_r_o_n_y_m') == 'ACRONYM'
@@ -47,8 +47,11 @@ def format_field_name(field_name: str) -> str:
             result.append(parts[i].title())
             i += 1
     title = ' '.join(result)
-    if title.startswith('Cost Category '):
-        title = title.replace('Cost Category ', 'CC ') # this is too long to fit to the dashboard
+    if ignore_prefix:
+        if title.startswith('Cost Category '):
+            title = title.replace('Cost Category ', '')
+        if title.startswith('Tag '):
+            title = title.replace('Tag ', '')
     return title
 
 def align_grid_position(elements: List[Dict[str, Any]]) -> None:
@@ -128,19 +131,15 @@ def add_filter_to_dashboard_definition(dashboard_definition: Dict[str, Any], fie
     """
     # delete all old redundant controls
     mapping = {
-        'payer_account_id': 'payer accounts',
-        'payer_account_id': 'Payer Account ID',
-        'payer_account_id': 'Payer Account IDs',
-        'parent_account_id': 'payer accounts',
-        'linked_account_id': 'Linked Account IDs',
-        'account_id':  'Linked Account IDs',
-        'account_id':  'Account ID',
-        'account_name': 'Account Names',
-        'account_name': 'Account Name',
+        'payer_account_id': ['payer accounts', 'Payer Account ID', 'Payer Account IDs'],
+        'parent_account_id': ['payer accounts'],
+        'linked_account_id': ['Linked Account IDs'],
+        'account_id': [ 'Linked Account IDs', 'Account ID',],
+        'account_name': ['Account Names', 'Account Name'],
     }
     for field_name in field_names:
-        if field_name in mapping:
-           dashboard_definition = delete_parameter_control(dashboard_definition, mapping.get(field_name))
+        for alternative in mapping.get(field_name, []):
+            dashboard_definition = delete_parameter_control(dashboard_definition, alternative)
 
     dataset_identifier = get_most_used_dataset(dashboard_definition)
     filter_ids = []
@@ -180,7 +179,7 @@ def add_filter_to_dashboard_definition(dashboard_definition: Dict[str, Any], fie
                                     "Type": "MULTI_SELECT"
                                 }
                             },
-                            "Title": format_field_name(field_name)
+                            "Title": format_field_name(field_name, ignore_prefix=True)
                         },
                         "FilterId": filter_id
                     }
