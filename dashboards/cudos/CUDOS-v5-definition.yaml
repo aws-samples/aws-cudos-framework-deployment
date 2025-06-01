@@ -65843,15 +65843,9 @@ Sheets:
           FieldSortOptions: []
         TableOptions:
           CellStyle:
-            FontConfiguration:
-              FontSize:
-                Absolute: 20px
             HorizontalTextAlignment: CENTER
           CollapsedRowDimensionsVisibility: VISIBLE
           ColumnHeaderStyle:
-            FontConfiguration:
-              FontSize:
-                Absolute: 16px
             Height: 60
             HorizontalTextAlignment: CENTER
             TextWrap: WRAP
@@ -65861,16 +65855,10 @@ Sheets:
             Status: DISABLED
             UsePrimaryBackgroundColor: ENABLED
           RowFieldNamesStyle:
-            FontConfiguration:
-              FontSize:
-                Absolute: 16px
             Height: 60
             HorizontalTextAlignment: CENTER
             TextWrap: WRAP
           RowHeaderStyle:
-            FontConfiguration:
-              FontSize:
-                Absolute: 16px
             HorizontalTextAlignment: CENTER
           RowsLayout: TABULAR
           SingleMetricVisibility: HIDDEN
