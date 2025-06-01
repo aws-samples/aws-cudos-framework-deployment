@@ -187,31 +187,34 @@ class AbstractCUR(CidBase):
             number_of_rows_scanned = 100000 # empiric value
             for tag_type in ["resource_tags", 'cost_category']:
                 cid_print(f'Scanning {tag_type} in {self.table_name}.')
-                res = self.athena.query(
-                    sql=f'''
-                        SELECT
-                            key,
-                            COUNT(DISTINCT value) as unique_values
-                        FROM (
-                            SELECT {tag_type}
-                            FROM "{self.database}"."{self.table_name}"
-                            WHERE billing_period >= DATE_FORMAT(DATE_ADD('day', -60, CURRENT_DATE), '%Y-%m')
-                            AND line_item_usage_start_date > DATE_ADD('day', -60, CURRENT_DATE)
-                            AND cardinality({tag_type}) > 0
-                            LIMIT {number_of_rows_scanned}
-                        ) t
-                        CROSS JOIN UNNEST({tag_type}) AS t(key, value)
-                        GROUP BY key
-                        ORDER BY unique_values DESC;
-                    ''',
-                    database=self.database,
-                )
-                max_width = max(len(str(line[0])) for line in res)
-                cid_print(f' <BOLD>{tag_type:<{max_width}} | Distinct Values <END> ')
-                for line in res:
-                    if int(line[1]) > 10:
-                        cid_print(f' <BOLD>{line[0]:<{max_width}}<END> | {line[1]} ')
-                self._tag_and_cost_category += sorted([f"{tag_type}['{line[0]}']" for line in res])
+                try:
+                    res = self.athena.query(
+                        sql=f'''
+                            SELECT
+                                key,
+                                COUNT(DISTINCT value) as unique_values
+                            FROM (
+                                SELECT {tag_type}
+                                FROM "{self.database}"."{self.table_name}"
+                                WHERE billing_period >= DATE_FORMAT(DATE_ADD('day', -60, CURRENT_DATE), '%Y-%m')
+                                AND line_item_usage_start_date > DATE_ADD('day', -60, CURRENT_DATE)
+                                AND cardinality({tag_type}) > 0
+                                LIMIT {number_of_rows_scanned}
+                            ) t
+                            CROSS JOIN UNNEST({tag_type}) AS t(key, value)
+                            GROUP BY key
+                            ORDER BY unique_values DESC;
+                        ''',
+                        database=self.database,
+                    )
+                    max_width = max(len(str(line[0])) for line in res)
+                    cid_print(f' <BOLD>{tag_type:<{max_width}} | Distinct Values <END> ')
+                    for line in res:
+                        if int(line[1]) > 10:
+                            cid_print(f' <BOLD>{line[0]:<{max_width}}<END> | {line[1]} ')
+                    self._tag_and_cost_category += sorted([f"{tag_type}['{line[0]}']" for line in res])
+                except self.athena.client.exceptions.ClientError as exc:
+                    logger.error(f'Failed to read {tag_type} from {self.table_name}: {exc}. Will continue without.')
             return self._tag_and_cost_category
         else:
             raise NotImplemented('cur version not known')
