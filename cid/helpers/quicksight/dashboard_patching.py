@@ -138,7 +138,7 @@ def add_filter_to_dashboard_definition(dashboard_definition: Dict[str, Any], fie
         'account_name': ['Account Names', 'Account Name'],
     }
     for field_name in field_names:
-        for alternative in mapping.get(field_name, []):
+        for alternative in mapping.get(field_name.lower(), []):
             dashboard_definition = delete_parameter_control(dashboard_definition, alternative)
 
     dataset_identifier = get_most_used_dataset(dashboard_definition)
@@ -375,7 +375,10 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
             managed_parameters.append(param_name)
             for field in reversed(field_names):
                 expression = f"'{format_field_name(field)}', {{{field}}}," # must be the same as in patch_group_by
-                cf['Expression'] = '\n'.join([line for line in cf['Expression'].splitlines() if expression not in line])
+                cf['Expression'] = '\n'.join([
+                    line for line in cf['Expression'].splitlines()
+                    if expression not in line or '//Keep' in line
+                ])
             logger.trace(f'Added {field_names} to {cf}')
     # 2.2 Remove field to all controls lists
     for parameter in set(managed_parameters):
@@ -389,7 +392,7 @@ def remove_fields(dashboard_definition: Dict[str, Any], field_names: List[str]):
                     control_list = control.get('SelectableValues', {}).get('Values',[])
                     if val in control_list:
                         control_list.remove(val)
-                    logger.trace(f'added {field} to {sheet["Name"]} / {control["Title"]}')
+                    logger.trace(f'removed {field} from {sheet["Name"]} / {control["Title"]} / parameter={parameter}')
 
     return dashboard_definition
 
@@ -466,7 +469,7 @@ def patch_group_by(definition, fields):
         if f'// Add ${{{param_name}}}' in cf['Expression']:
             managed_parameters.append(param_name)
             for field in reversed(fields):
-                new_line = f"${{{param_name}}}='{format_field_name(field)}', {{{field}}}," # must be the same as in remove_fields
+                new_line = f"${{{param_name}}}='{format_field_name(field)}', {{{field}}}, //Added" # must be the same as in remove_fields
                 cf['Expression'] = re.sub(rf'^(\s*)(// Add \${{{param_name}}})', f'\\1{new_line}\n\\1\\2', cf['Expression'], flags=re.MULTILINE)
             logger.trace(f'Added {fields} to {cf}')
     # Add new field to all controls
