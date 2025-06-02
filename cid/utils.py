@@ -273,13 +273,16 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
             logger.debug(f'Using {yes_choice}, as -y flag is active')
             return yes_choice
         print()
-        if not isatty():
-            raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
         if multi:
             default = default or []
             default = default if isinstance(default, list) else [default]
-            result = select_and_order(message, choices, default)
+            if not isatty():
+                result = default
+            else:
+                result = select_and_order(message, choices, default)
         else:
+            if not isatty():
+                raise Exception(f'Please set parameter {param_name}. Unable to request user in environment={exec_env()}')
             if isinstance(choices, dict):
                 choices = [Choice(name=key, value=value, enabled=not (none_as_disabled and value is None)) for key, value in choices.items()]
             elif isinstance(choices, list):
