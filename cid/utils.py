@@ -305,7 +305,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
                 ).execute()
     else: # it is a text entry
         if isinstance(default, str) and template_variables:
-            print(template_variables)
+            logger.debug(f'template_variables = {template_variables}')
             default=default.format(**template_variables)
         print()
         if not isatty():
