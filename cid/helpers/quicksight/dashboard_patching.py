@@ -30,6 +30,7 @@ def format_field_name(field_name: str, ignore_prefix: bool=False) -> str:
         assert format_field_name('account_name') == 'Account Name'
         assert format_field_name('a_c_r_o_n_y_m') == 'ACRONYM'
         assert format_field_name('tag_a_c_r_o_n_y_m') == 'Tag ACRONYM'
+        assert format_field_name('tag_service') == 'Tag Service'
     """
     parts = field_name.split('_')
     result = []
@@ -47,11 +48,15 @@ def format_field_name(field_name: str, ignore_prefix: bool=False) -> str:
             result.append(parts[i].title())
             i += 1
     title = ' '.join(result)
+    title = title.replace('Aws ', 'AWS ')
     if ignore_prefix:
+        new_title = title
         if title.startswith('Cost Category '):
-            title = title.replace('Cost Category ', '')
-        if title.startswith('Tag '):
-            title = title.replace('Tag ', '')
+            new_title = title.replace('Cost Category ', '')
+        elif title.startswith('Tag '):
+            new_title = title.replace('Tag ', '')
+        if title.lower() not in ('service', 'region', 'account'): # leave prefix for special terms
+            title = new_title
     return title
 
 def align_grid_position(elements: List[Dict[str, Any]]) -> None:
