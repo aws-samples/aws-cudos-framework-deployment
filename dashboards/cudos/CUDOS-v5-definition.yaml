@@ -619,6 +619,7 @@ CalculatedFields:
   Expression: |-
     ifelse(
         contains(toLower({usage_type}), 'modelunits'), "Model Units",
+        contains(toLower({usage_type}), 'custommodelimport-storage'), "Model Import Storage",
         contains(toLower({usage_type}), 'cachereadinputtoken'), "Cache Read Input Tokens",
         contains(toLower({usage_type}), 'cachewriteinputtoken'), "Cache Write Input Tokens",
         contains(toLower({usage_type}), 'invokeflow'), 'Bedrock Flows',
@@ -635,7 +636,7 @@ CalculatedFields:
         contains(toLower({usage_type}), 'customization-storage'), 'Model Customization Storage',
         contains(toLower({usage_type}), 'customization-training'),'Model Customization Training',
         contains(toLower({usage_type}), 'guardrail'), 'Guardrails',
-        contains(toLower({usage_type}), 'search_units'), 'Rerank models',
+        contains(toLower({usage_type}), 'search_units') or contains(toLower({usage_type}), 'searchunits'), 'Rerank models',
         {UsageType Short}
     )
   Name: Bedrock UsageType Group
@@ -2484,6 +2485,7 @@ CalculatedFields:
   Expression: |-
     ifelse(
         contains(toLower({usage_type}), 'modelunits'), "Model Units",
+        contains(toLower({usage_type}), 'custommodelimport-storage'), "Model Import Storage",
         contains(toLower({usage_type}), 'cachereadinputtoken'), "Cache Read Input Tokens",
         contains(toLower({usage_type}), 'cachewriteinputtoken'), "Cache Write Input Tokens",
         contains(toLower({usage_type}), 'invokeflow'), 'Bedrock Flows',
@@ -2500,7 +2502,7 @@ CalculatedFields:
         contains(toLower({usage_type}), 'customization-storage'), 'Model Customization Storage',
         contains(toLower({usage_type}), 'customization-training'),'Model Customization Training',
         contains(toLower({usage_type}), 'guardrail'), 'Guardrails',
-        contains(toLower({usage_type}), 'search_units'), 'Rerank models',
+        contains(toLower({usage_type}), 'search_units') or contains(toLower({usage_type}), 'searchunits'), 'Rerank models',
         {UsageType Short}
     )
   Name: Bedrock UsageType Group
@@ -2510,6 +2512,7 @@ CalculatedFields:
     ${BillingSummaryGroupBy} = 'Charge Type Group', {Charge Type Group},
     ${BillingSummaryGroupBy} = 'Payer Account', {payer_account_id},
     ${BillingSummaryGroupBy} = 'Service Category', {Service Category},
+    // Add ${BillingSummaryGroupBy}
     NULL
     )
   Name: Billing Summary Group By
@@ -35356,13 +35359,13 @@ ParameterDeclarations:
 - DateTimeParameterDeclaration:
     DefaultValues:
       StaticValues:
-      - 2021-01-01 01:00:00+01:00
+      - 2020-12-31 16:00:00-08:00
     Name: StartDate
     TimeGranularity: MINUTE
 - DateTimeParameterDeclaration:
     DefaultValues:
       StaticValues:
-      - 2021-01-31 01:00:00+01:00
+      - 2021-01-30 16:00:00-08:00
     Name: EndDate
     TimeGranularity: MINUTE
 Sheets:
@@ -36240,19 +36243,19 @@ Sheets:
         LineDataLabels:
           Overlap: DISABLE_OVERLAP
           Visibility: VISIBLE
-        PrimaryYAxisDisplayOptions:
-          AxisOffset: 69px
         SingleAxisOptions:
           YAxisOptions:
             YAxis: PRIMARY_Y_AXIS
         SortConfiguration:
           CategoryItemsLimit:
+            ItemsLimit: 333
             OtherCategories: INCLUDE
           CategorySort:
           - FieldSort:
               Direction: ASC
               FieldId: 83ed24bb-433d-4de5-af78-a05f4d4e8ed1.63f453f5-36ce-41da-aaa0-147e2f4a77e2.billing_period.0.1585095918566
           ColorItemsLimit:
+            ItemsLimit: 15
             OtherCategories: INCLUDE
         Tooltip:
           FieldBasedTooltip:
@@ -36469,19 +36472,19 @@ Sheets:
               Visibility: VISIBLE
           Overlap: DISABLE_OVERLAP
           Visibility: VISIBLE
-        PrimaryYAxisDisplayOptions:
-          AxisOffset: 61px
         SingleAxisOptions:
           YAxisOptions:
             YAxis: PRIMARY_Y_AXIS
         SortConfiguration:
           CategoryItemsLimit:
+            ItemsLimit: 333
             OtherCategories: INCLUDE
           CategorySort:
           - FieldSort:
               Direction: ASC
               FieldId: 83ed24bb-433d-4de5-af78-a05f4d4e8ed1.63f453f5-36ce-41da-aaa0-147e2f4a77e2.billing_period.0.1585095918566
           ColorItemsLimit:
+            ItemsLimit: 15
             OtherCategories: INCLUDE
         Tooltip:
           FieldBasedTooltip:
@@ -39496,6 +39499,9 @@ Sheets:
             TooltipTitleType: PRIMARY_VALUE
           SelectedTooltipType: BASIC
           TooltipVisibility: VISIBLE
+        ValueLabelOptions:
+          SortIconVisibility: HIDDEN
+          Visibility: HIDDEN
       ColumnHierarchies: []
       Subtitle:
         Visibility: VISIBLE
@@ -39583,6 +39589,9 @@ Sheets:
             TooltipTitleType: PRIMARY_VALUE
           SelectedTooltipType: BASIC
           TooltipVisibility: VISIBLE
+        ValueLabelOptions:
+          SortIconVisibility: HIDDEN
+          Visibility: HIDDEN
       ColumnHierarchies: []
       Subtitle:
         Visibility: VISIBLE
@@ -39741,6 +39750,9 @@ Sheets:
         Trigger: DATA_POINT_CLICK
       ChartConfiguration:
         BarsArrangement: STACKED
+        CategoryLabelOptions:
+          SortIconVisibility: HIDDEN
+          Visibility: HIDDEN
         DataLabels:
           Overlap: DISABLE_OVERLAP
           Visibility: HIDDEN
@@ -40112,6 +40124,9 @@ Sheets:
             TooltipTitleType: PRIMARY_VALUE
           SelectedTooltipType: BASIC
           TooltipVisibility: VISIBLE
+        ValueLabelOptions:
+          SortIconVisibility: HIDDEN
+          Visibility: HIDDEN
         VisualPalette:
           ColorMap:
           - Color: '#AAAAAA'
@@ -40219,6 +40234,9 @@ Sheets:
             TooltipTitleType: PRIMARY_VALUE
           SelectedTooltipType: BASIC
           TooltipVisibility: VISIBLE
+        ValueLabelOptions:
+          SortIconVisibility: HIDDEN
+          Visibility: HIDDEN
       ColumnHierarchies: []
       Subtitle:
         Visibility: VISIBLE
@@ -40884,6 +40902,9 @@ Sheets:
             TooltipTitleType: PRIMARY_VALUE
           SelectedTooltipType: BASIC
           TooltipVisibility: VISIBLE
+        ValueLabelOptions:
+          SortIconVisibility: HIDDEN
+          Visibility: HIDDEN
       ColumnHierarchies: []
       Subtitle:
         Visibility: VISIBLE
@@ -51135,7 +51156,7 @@ Sheets:
       \ your benefits within the cache node family and engine, you can even receive\
       \ more incremental value. As node-based Valkey is priced at a 20% discount relative\
       \ to Redis OSS, you can use your Redis OSS reserved nodes to cover 20% more\
-      \ resourcsrunning Valkey nodes.\_</inline>\n  <inline color=\"#61d1d6\" font-size=\"\
+      \ running Valkey nodes.\_</inline>\n  <inline color=\"#61d1d6\" font-size=\"\
       15px\">\n    <a href=\"https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/CacheNodes.Reserved.html#reserved-nodes-size\"\
       \ target=\"_blank\">More details available here</a>\n  </inline>\n  <inline\
       \ font-size=\"15px\">.</inline>\n</text-box>"
@@ -51274,7 +51295,7 @@ Sheets:
           PrimaryValueFontConfiguration:
             FontColor: '#DFE3E4'
             FontSize:
-              Relative: EXTRA_LARGE
+              Relative: LARGE
           SecondaryValueFontConfiguration:
             FontSize:
               Relative: EXTRA_LARGE
@@ -67439,22 +67460,22 @@ Sheets:
       </text-box>
     SheetTextBoxId: 5da8e477-8274-49b2-9fff-e5ea9421a04d
   - Content: "<text-box>\n  <inline font-size=\"40px\">AWS Glue</inline>\n  <br/>\n\
-      \  <br/>\n  <inline font-size=\"24px\">Recommendations:</inline>\n  <br/>\n\
+      \  <br/>\n  <inline color=\"#fc850d\" font-size=\"24px\">Recommendations:</inline>\n  <br/>\n\
       \  <ul>\n    <li class=\"ql-indent-0\">\n      Glue Crawlers bill per DPU-Hour\
       \ which is billed with per second granularity and a 10-minute minimum per crawler\
       \ run. Make sure your crawler schedule is aligned with data update frequency\
-      \ and business requirements. Learn more\n      <inline color=\"#61d1d6\">\n\
+      \ and business requirements. Learn more\_\n      <inline color=\"#61d1d6\">\n\
       \        <a href=\"https://catalog.us-east-1.prod.workshops.aws/workshops/86e30fc2-daf4-4708-8720-347e2b312075/en-US/playbooks/analytics/glue/2-glue-crawler-optimization\"\
       \ target=\"_blank\">here</a>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\"\
       >\n      Configure Idle session timeouts for Glue interactive sessions and notebook.\n\
-      \      <b>\_</b>\n      Learn more\n      <inline color=\"#61d1d6\">\n     \
+      \      <b>\_</b>\n      Learn more\_\n      <inline color=\"#61d1d6\">\n     \
       \   <a href=\"https://docs.aws.amazon.com/glue/latest/dg/manage-notebook-sessions.html\"\
       \ target=\"_blank\">here</a>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\"\
       >\n      Configure Glue logs in Amazon CloudWatch for Infrequent Access Tier.\
-      \ Learn more\n      <inline color=\"#61d1d6\">\n        <a href=\"https://aws.amazon.com/blogs/big-data/new-amazon-cloudwatch-log-class-to-cost-effectively-scale-your-aws-glue-workloads/\"\
+      \ Learn more\_\n      <inline color=\"#61d1d6\">\n        <a href=\"https://aws.amazon.com/blogs/big-data/new-amazon-cloudwatch-log-class-to-cost-effectively-scale-your-aws-glue-workloads/\"\
       \ target=\"_blank\">here</a>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\"\
       >\n      Use auto scaling, flex execution, and a right sized worker type to\
-      \ cost effectively run ETL jobs. Learn more\n      <inline color=\"#61d1d6\"\
+      \ cost effectively run ETL jobs. Learn more\_\n      <inline color=\"#61d1d6\"\
       >\n        <a href=\"https://aws.amazon.com/blogs/big-data/introducing-aws-glue-flex-jobs-cost-savings-on-etl-workloads/\"\
       \ target=\"_blank\">here</a>\n      </inline>\n    </li>\n  </ul>\n  <br/>\n\
       \  <inline color=\"Accent\">Learn more about cost optimization techniques for\
@@ -67462,7 +67483,7 @@ Sheets:
       \ target=\"_blank\">CFM Tips</a>\n  </inline>\n</text-box>"
     SheetTextBoxId: 8cbe07d6-c970-4fcd-a8ae-ed505fcf263f
   - Content: "<text-box>\n  <inline font-size=\"32px\">Amazon Elastic MapReduce (EMR)</inline>\n\
-      \  <br/>\n  <inline font-size=\"24px\">Insights:</inline>\n  <br/>\n  <i>When\
+      \  <br/>\n  <inline color=\"#fc850d\" font-size=\"24px\">Insights:</inline>\n  <br/>\n  <i>When\
       \ you run applications on Amazon EMR clusters, you\u2019re separately charged\
       \ for the following:</i>\n  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
       >\n      The Amazon EC2 price of running cluster instances (the price for the\
@@ -67472,9 +67493,9 @@ Sheets:
       \    <i>(Refer to Storage &amp; Backup tab of this dashboard)</i>\n    </li>\n\
       \    <li class=\"ql-indent-0\">The Amazon EMR price for the cluster instances.\
       \ These costs are recorded on this tab as \"EMR on EC2\", \"EMR Serverless\"\
-      \ or \"EMR on EKS\" data below.</li>\n  </ul>\n  <br/>\n  <br/>\n  <inline font-size=\"\
+      \ or \"EMR on EKS\" data below.</li>\n  </ul>\n  <br/>\n  <br/>\n  <inline color=\"#fc850d\" font-size=\"\
       24px\">Recommendations:</inline>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
-      >\n      Consider using\n      <inline color=\"#61d1d6\">\n        <a href=\"\
+      >\n      Consider using\_\n      <inline color=\"#61d1d6\">\n        <a href=\"\
       https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/emr-serverless.html\"\
       \ target=\"_blank\">Amazon EMR Serverless</a>\n      </inline>\n      \_to simplify\
       \ the operation of analytics applications that use the latest open-source frameworks,\
@@ -67482,17 +67503,17 @@ Sheets:
       \ have to configure, optimize, secure, or operate clusters to run applications\
       \ with these frameworks. EMR Serverless helps you avoid over- or under-provisioning\
       \ resources for your data processing jobs. Learn how to analyze whether EMR\
-      \ Serverless would be a more efficient alternative for your operations in\n\
+      \ Serverless would be a more efficient alternative for your operations in\_\n\
       \      <inline color=\"#61d1d6\">\n        <a href=\"https://aws.amazon.com/blogs/big-data/amazon-emr-serverless-cost-estimator/\"\
       \ target=\"_blank\">Amazon EMR Serverless cost estimator</a>\n      </inline>\n\
       \      \_blog post.\n    </li>\n    <li class=\"ql-indent-0\">\n      For Amazon\
       \ EMR Serverless: Achieve up to 27% better price-performance for Spark workloads\
-      \ with AWS Graviton2 on Amazon EMR Serverless. Learn more in the\n      <inline\
+      \ with AWS Graviton2 on Amazon EMR Serverless. Learn more in the\_\n      <inline\
       \ color=\"#61d1d6\">\n        <a href=\"https://aws.amazon.com/blogs/big-data/achieve-up-to-27-better-price-performance-for-spark-workloads-with-aws-graviton2-on-amazon-emr-serverless/\"\
       \ target=\"_blank\">blog post</a>\n      </inline>\n      .\n    </li>\n   \
       \ <li class=\"ql-indent-0\">\n      For Amazon EMR on EC2: Achieve up to 30%\
       \ lower cost and up to 15% improved performance for Spark workloads on Graviton-based\
-      \ instances. Learn more in the\n      <inline color=\"#61d1d6\">\n        <a\
+      \ instances. Learn more in the\_\n      <inline color=\"#61d1d6\">\n        <a\
       \ href=\"https://aws.amazon.com/blogs/big-data/amazon-emr-now-provides-up-to-30-lower-cost-and-up-to-15-improved-performance-for-spark-workloads-on-graviton2-based-instances/\"\
       \ target=\"_blank\">blog post</a>\n      </inline>\n      .\n    </li>\n  </ul>\n\
       </text-box>"
@@ -68330,7 +68351,7 @@ Sheets:
         FormatText:
           RichText: |-
             <visual-title>
-              <inline font-size="16px">AWS Glue Spend per Account</inline>
+              <inline font-size="16px">AWS Glue Spend per UsageType Group</inline>
             </visual-title>
         Visibility: VISIBLE
       VisualId: b0140b59-e8a5-491b-9d72-36c7a3e8a41c
@@ -68518,8 +68539,8 @@ Sheets:
           ScrollbarOptions:
             VisibleRange:
               PercentRange:
-                From: 0.0
-                To: 96.6403162055336
+                From: 3.359683794466406
+                To: 100.0
         CategoryLabelOptions:
           SortIconVisibility: HIDDEN
           Visibility: HIDDEN
@@ -74689,7 +74710,9 @@ Sheets:
           RichText: |-
             <visual-title>
               <block align="center">
-                <inline font-size="16px">Resource Cost Per UsageType</inline>
+                <inline font-size="16px">Cost Per UsageType (</inline>
+                <inline font-size="14px">Last 30 days</inline>
+                <inline font-size="16px">)</inline>
               </block>
             </visual-title>
         Visibility: VISIBLE
@@ -74763,7 +74786,9 @@ Sheets:
           RichText: |-
             <visual-title>
               <block align="center">
-                <inline font-size="16px">Resource Cost Per Operation</inline>
+                <inline font-size="16px">Cost Per Operation (</inline>
+                <inline font-size="14px">Last 30 days</inline>
+                <inline font-size="16px">)</inline>
               </block>
             </visual-title>
         Visibility: VISIBLE
@@ -74835,7 +74860,9 @@ Sheets:
           RichText: |-
             <visual-title>
               <block align="center">
-                <inline font-size="16px">Resource Cost Per Service</inline>
+                <inline font-size="16px">Cost Per Service (</inline>
+                <inline font-size="14px">Last 30 days</inline>
+                <inline font-size="16px">)</inline>
               </block>
             </visual-title>
         Visibility: VISIBLE
@@ -75200,7 +75227,19 @@ Sheets:
         Visibility: VISIBLE
       VisualId: cfafd2ed-2977-4f86-a290-a664f64a4a53
   - BarChartVisual:
-      Actions: []
+      Actions:
+      - ActionOperations:
+        - FilterOperation:
+            SelectedFieldsConfiguration:
+              SelectedFields:
+              - c3a83f91-b920-419d-a4fa-d5f023bd1aa6.resource_id.2.1748737005008
+            TargetVisualsConfiguration:
+              SameSheetTargetVisualConfiguration:
+                TargetVisualOptions: ALL_VISUALS
+        CustomActionId: cb6740eb-8974-4a6b-94a7-5fd03c04d7ce
+        Name: Action 1
+        Status: ENABLED
+        Trigger: DATA_POINT_CLICK
       ChartConfiguration:
         BarsArrangement: STACKED
         CategoryLabelOptions:
@@ -75238,8 +75277,6 @@ Sheets:
                   DataSetIdentifier: resource_view
                 FieldId: 669f4d36-5fd8-43f4-838a-b6b51fc3126d.line_item_unblended_cost.1.1599142327092
         Legend:
-          Title:
-            CustomLabel: Usage Type
           Visibility: VISIBLE
           Width: 189px
         Orientation: VERTICAL
