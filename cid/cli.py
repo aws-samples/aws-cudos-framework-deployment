@@ -156,16 +156,18 @@ def export(ctx, **kwargs):
     Command options:
         --analysis-name              Analysis you want to share (not needed if analysis-id is provided).
         --analysis-id                ID of analysis you want to share (open analysis in browser and copy id from url)
+        --one-file (no|yes)          Default=no, if set export generates a single file if omitted (default) the dashboard will be in a separate file     
         --template-id                Template Id
         --dashboard-id               Target Dashboard Id
         --template-version           Version description vX.Y.Z
+        --taxonomy                   list of fields that export will keep as global filters. Only if these global filters exist.
         --reader-account             Account id with whom you want to share with or *
         --dashboard-export-method
                (definition|template) A method (definition=pull json definition of Analysis OR template=create QuickSight Template)
         --export-known-datasets
             (no|yes)                 If 'yes' the export will include DataSets that are already in resources file. Default = no
         --category TEXT              The dashboards category. Default = Custom
-        --output                     A filename (.yaml)
+        --output                     A filename (.yaml) If provided an existing file it will be analyzed for default values and overridden 
     """
     ctx.obj.export(**kwargs)
 

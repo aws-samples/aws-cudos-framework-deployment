@@ -548,6 +548,7 @@ class Athena(CidBase):
                         message=f'The existing view is different. Override?',
                         choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
                         default='retry diff',
+                        yes_choice='proceed and override',
                         fuzzy=False,
                     )
                     if choice == 'retry diff':
