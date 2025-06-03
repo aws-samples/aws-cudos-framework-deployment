@@ -54526,7 +54526,7 @@ Sheets:
       <text-box>
         <inline font-size="40px">DynamoDB Provisioned Capacity - Reservation Coverage &amp; Usage Monitoring</inline>
         <br/>
-        <i>Track Reservation coverage per Region | Commitment Type dimentions, Reserved Capacity historical coverage, savings and unused cost</i>
+        <i>Track Reservation coverage per Region | Commitment Type dimensions, Reserved Capacity historical coverage, savings and unused cost</i>
       </text-box>
     SheetTextBoxId: 81d02e6f-2822-4cf9-b5f7-cecba5027cbf
   - Content: |-
@@ -55750,7 +55750,7 @@ Sheets:
         FormatText:
           RichText: |-
             <visual-subtitle>
-              <block align="center">Select dimention to focus. Check cost and usage in the tooltip</block>
+              <block align="center">Select dimension to focus. Check cost and usage in the tooltip</block>
             </visual-subtitle>
         Visibility: VISIBLE
       Title:
@@ -73889,7 +73889,7 @@ Sheets:
         Visibility: VISIBLE
       VisualId: 9b688b98-3ced-4de5-9ea1-b976f59dd6a8
 - ContentType: INTERACTIVE
-  Description: Gain insights in to Cost per different dimentions of organizational
+  Description: Gain insights in to Cost per different dimensions of organizational
     taxonomy
   FilterControls:
   - Dropdown:
@@ -74039,7 +74039,7 @@ Sheets:
         Values:
         - Account
       SourceParameterName: TaxonomyExplorerGroupBy1
-      Title: Taxonomy Dimention 1
+      Title: Taxonomy Dimension 1
       Type: SINGLE_SELECT
   - List:
       DisplayOptions:
@@ -74059,7 +74059,7 @@ Sheets:
         Values:
         - Account
       SourceParameterName: TaxonomyExplorerGroupBy2
-      Title: Taxonomy Dimention 2
+      Title: Taxonomy Dimension 2
       Type: SINGLE_SELECT
   - Dropdown:
       CascadingControlConfiguration:
@@ -74175,10 +74175,10 @@ Sheets:
       \ width=\"11\"/>\n  <br/>\n  <br/>\n  <inline font-size=\"18px\">1. Use the\_\
       </inline>\n  <inline color=\"#61d1d6\" font-size=\"18px\">\n    <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy\"\
       \ target=\"_blank\">Add Organizational Taxonomy</a>\n  </inline>\n  <inline\
-      \ font-size=\"18px\">\_guide to add different dimentions of your organizational\
+      \ font-size=\"18px\">\_guide to add different dimensions of your organizational\
       \ taxonomy (e.g. tags, cost categories, business unit mapping) to the dashboard.</inline>\n\
-      \  <br/>\n  <inline font-size=\"18px\">2. Use 'Taxonomy Dimention 1' and 'Taxonomy\
-      \ Dimention 2' to select dimentions of your organizational taxonomy which you\
+      \  <br/>\n  <inline font-size=\"18px\">2. Use 'Taxonomy Dimension 1' and 'Taxonomy\
+      \ Dimension 2' to select dimensions of your organizational taxonomy which you\
       \ want to explore.\_</inline>\n  <br/>\n  <inline font-size=\"18px\">3. Select\
       \ any value on any visual to focus and dive deep into cost and usage details</inline>\n\
       </text-box>"
@@ -74254,7 +74254,7 @@ Sheets:
       Title:
         FormatText:
           RichText: "<visual-title>\n  <block align=\"center\">\n    <inline font-size=\"\
-            16px\">Cost by\_</inline>\n    <inline font-size=\"16px\">\n      <parameter>${TaxonomyExplorerGroupBy1}</parameter>\n\
+            16px\">Cost by\_</inline>\n    <inline font-size=\"16px\">\n      <parameter>${TaxonomyExplorerGroupBy2}</parameter>\n\
             \    </inline>\n  </block>\n</visual-title>"
         Visibility: VISIBLE
       VisualId: 86ddb6e5-e665-4212-928c-c6dcbe37aab1
@@ -74963,7 +74963,7 @@ Sheets:
         FormatText:
           RichText: "<visual-title>\n  <block align=\"center\">\n    <inline font-size=\"\
             16px\">Monthly Cost by\_</inline>\n    <inline font-size=\"16px\">\n \
-            \     <parameter>${TaxonomyExplorerGroupBy1}</parameter>\n    </inline>\n\
+            \     <parameter>${TaxonomyExplorerGroupBy2}</parameter>\n    </inline>\n\
             \  </block>\n</visual-title>"
         Visibility: VISIBLE
       VisualId: 488a3c3b-1f67-416f-b61c-ec1c91149285
@@ -75216,14 +75216,9 @@ Sheets:
         Visibility: VISIBLE
       Title:
         FormatText:
-          RichText: |-
-            <visual-title>
-              <block align="center">
-                Cost by
-                <parameter>${TaxonomyExplorerGroupBy1}</parameter>
-                <inline font-size="16px"/>
-              </block>
-            </visual-title>
+          RichText: "<visual-title>\n  <block align=\"center\">\n    <inline font-size=\"\
+            16px\">Cost by\_</inline>\n    <inline font-size=\"16px\">\n      <parameter>${TaxonomyExplorerGroupBy1}</parameter>\n\
+            \    </inline>\n  </block>\n</visual-title>"
         Visibility: VISIBLE
       VisualId: cfafd2ed-2977-4f86-a290-a664f64a4a53
   - BarChartVisual:
@@ -75403,7 +75398,7 @@ Sheets:
       Title:
         FormatText:
           RichText: "<visual-title>\n  <block align=\"center\">\n    <inline font-size=\"\
-            16px\">Cost by\_</inline>\n    <inline font-size=\"16px\">\n      <parameter>${TaxonomyExplorerGroupBy1}</parameter>\n\
+            16px\">Cost by\_</inline>\n    <inline font-size=\"16px\">\n      <parameter>${TaxonomyExplorerGroupBy2}</parameter>\n\
             \    </inline>\n  </block>\n</visual-title>"
         Visibility: VISIBLE
       VisualId: 9b390041-053b-42ed-a710-4405d528b849
