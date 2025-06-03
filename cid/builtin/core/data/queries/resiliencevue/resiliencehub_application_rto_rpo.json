@@ -1,0 +1,101 @@
+{
+    "DatabaseName": "${athena_database_name}",
+    "TableInput": {
+        "Name": "${athena_table_name}",
+        "StorageDescriptor": {
+            "Location": "${s3FolderPath}",
+            "Columns": [
+                {
+                    "Name": "app_arn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "assessment_arn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "assessment_time",
+                    "Type": "string"
+                },
+                {
+                    "Name": "estimated_overall_rto",
+                    "Type": "string"
+                },
+                {
+                    "Name": "estimated_overall_rpo",
+                    "Type": "string"
+                },
+                {
+                    "Name": "target_rto",
+                    "Type": "string"
+                },
+                {
+                    "Name": "target_rpo",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_rto_az",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_rto_hardware",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_rto_software",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_rpo_az",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_rpo_hardware",
+                    "Type": "string"
+                },
+                {
+                    "Name": "current_rpo_software",
+                    "Type": "string"
+                },
+                {
+                    "Name": "target_rto_az",
+                    "Type": "string"
+                },
+                {
+                    "Name": "target_rto_hardware",
+                    "Type": "string"
+                },
+                {
+                    "Name": "target_rto_software",
+                    "Type": "string"
+                },
+                {
+                    "Name": "target_rpo_az",
+                    "Type": "string"
+                },
+                {
+                    "Name": "target_rpo_hardware",
+                    "Type": "string"
+                },
+                {
+                    "Name": "target_rpo_software",
+                    "Type": "string"
+                }
+            ],
+            "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            "SerdeInfo": {
+                "SerializationLibrary": "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe",
+                "Parameters": {
+                    "field.delim": ","
+                }
+            }
+        },
+        "TableType": "EXTERNAL_TABLE",
+        "Parameters": {
+            "EXTERNAL": "TRUE",
+            "skip.header.line.count": "1"
+        },
+        "PartitionKeys": []
+    }
+}

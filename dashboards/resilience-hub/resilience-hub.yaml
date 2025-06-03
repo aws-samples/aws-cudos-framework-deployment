@@ -1,0 +1,1346 @@
+dashboards:
+  RESILIENCEVUE:
+    dependsOn:
+      datasets:
+      - alarm_recommendations
+      - app_recommendations
+      - resiliencehub_complete_view
+      - resiliencehub_daily_assessments
+      - resiliencehub_policies
+      - resiliencehub_resource_types
+      - sop_recommendations
+    name: resiliencevue
+    dashboardId: resiliencehub-complete-view-analysis
+    category: Custom
+    theme: MIDNIGHT
+    templateId: resiliencehub-complete-view-analysisv1
+    sourceAccountId: '277707120426'
+    region: us-east-1
+datasets:
+  app_recommendations:
+    data:
+      DataSetId: 1fd70252-ff4d-4934-9bb6-c7f7177249ab
+      Name: app_recommendations
+      PhysicalTableMap:
+        03ea26c8-dc1c-4194-bb24-6e1e72f90999:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: app_recommendations
+            InputColumns:
+            - Name: app_arn
+              Type: STRING
+            - Name: assessment_arn
+              Type: STRING
+            - Name: app_component_name
+              Type: STRING
+            - Name: description
+              Type: STRING
+            - Name: ha_architecture
+              Type: STRING
+            - Name: optimization_type
+              Type: STRING
+            - Name: suggested_changes
+              Type: STRING
+        70daa49c-dc4d-4500-9390-79d93fad6c78:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: resiliencehub_daily_assessments
+            InputColumns:
+            - Name: daytime
+              Type: STRING
+            - Name: region
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: application_id
+              Type: STRING
+            - Name: application_arn
+              Type: STRING
+            - Name: application_name
+              Type: STRING
+            - Name: assessment_time
+              Type: STRING
+            - Name: assessment_arn
+              Type: STRING
+            - Name: resiliency_status
+              Type: STRING
+            - Name: resiliency_drift_status
+              Type: STRING
+            - Name: compliance_total
+              Type: STRING
+            - Name: fis_tests_total
+              Type: STRING
+            - Name: alarms_total
+              Type: STRING
+            - Name: sops_total
+              Type: STRING
+            - Name: compliance_outstanding
+              Type: STRING
+            - Name: fis_tests_outstanding
+              Type: STRING
+            - Name: alarms_outstanding
+              Type: STRING
+            - Name: sops_outstanding
+              Type: STRING
+            - Name: compliance_excluded
+              Type: STRING
+            - Name: fis_tests_excluded
+              Type: STRING
+            - Name: alarms_excluded
+              Type: STRING
+            - Name: sops_excluded
+              Type: STRING
+            - Name: operational_recommendations_total
+              Type: STRING
+            - Name: operational_recommendations_outstanding
+              Type: STRING
+            - Name: operational_recommendations_excluded
+              Type: STRING
+            - Name: input_source_drifts
+              Type: STRING
+            - Name: app_component_drifts
+              Type: STRING
+            - Name: resiliency_score
+              Type: STRING
+      LogicalTableMap:
+        0ac0e07d-4bfb-4643-896d-406ada9c5f11:
+          Alias: resiliencehub_daily_assessments
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: assessment_arn
+              NewColumnName: assessment_arn[resiliencehub_daily_assessments]
+          Source:
+            PhysicalTableId: 70daa49c-dc4d-4500-9390-79d93fad6c78
+        5957ebc3-97cf-488c-aec4-72451a1807f8:
+          Alias: app_recommendations
+          Source:
+            PhysicalTableId: 03ea26c8-dc1c-4194-bb24-6e1e72f90999
+        c319231a-36eb-43c3-bb26-f2459fa22c58:
+          Alias: Intermediate Table
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - app_arn
+              - assessment_arn
+              - app_component_name
+              - description
+              - ha_architecture
+              - optimization_type
+              - suggested_changes
+              - daytime
+              - region
+              - account_id
+              - application_name
+          Source:
+            JoinInstruction:
+              LeftOperand: 5957ebc3-97cf-488c-aec4-72451a1807f8
+              RightOperand: 0ac0e07d-4bfb-4643-896d-406ada9c5f11
+              Type: LEFT
+              OnClause: '{app_arn} = {application_arn}'
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - app_recommendations
+      - resiliencehub_daily_assessments
+    schedules:
+    - default
+  resiliencehub_policies:
+    data:
+      DataSetId: ebb5290f-8600-424c-a13f-502159f70f0b
+      Name: resiliencehub_policies
+      PhysicalTableMap:
+        63bd35bc-87f6-4bf9-b9ad-290c0e384a6f:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: resiliencehub_policies
+            InputColumns:
+            - Name: region
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: policy_arn
+              Type: STRING
+            - Name: policy_name
+              Type: STRING
+            - Name: policy_type
+              Type: STRING
+            - Name: policy_breaches
+              Type: STRING
+            - Name: policy_met
+              Type: STRING
+            - Name: policy_not_assessed
+              Type: STRING
+      LogicalTableMap:
+        0db68cb9-3f7b-4215-bdbd-e9b2b9528390:
+          Alias: resiliencehub_policies
+          DataTransforms:
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - region
+              - account_id
+              - policy_arn
+              - policy_name
+              - policy_type
+              - policy_breaches
+              - policy_met
+              - policy_not_assessed
+          Source:
+            PhysicalTableId: 63bd35bc-87f6-4bf9-b9ad-290c0e384a6f
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - resiliencehub_policies
+    schedules:
+    - default
+  sop_recommendations:
+    data:
+      DataSetId: ab30036d-1983-42e1-a1f0-f7b389a29d0f
+      Name: sop_recommendations
+      PhysicalTableMap:
+        44994e36-447a-4a2a-95df-cef11eedd96a:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: resiliencehub_complete_view
+            InputColumns:
+            - Name: region
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: application_id
+              Type: STRING
+            - Name: application_arn
+              Type: STRING
+            - Name: application_name
+              Type: STRING
+            - Name: resiliency_policy_id
+              Type: STRING
+            - Name: resiliency_policy_arn
+              Type: STRING
+            - Name: resiliency_policy_name
+              Type: STRING
+            - Name: last_assessment_time
+              Type: STRING
+            - Name: last_assessment_arn
+              Type: STRING
+            - Name: resiliency_status
+              Type: STRING
+            - Name: resiliency_drift_status
+              Type: STRING
+            - Name: compliance_total
+              Type: STRING
+            - Name: fis_tests_total
+              Type: STRING
+            - Name: alarms_total
+              Type: STRING
+            - Name: sops_total
+              Type: STRING
+            - Name: compliance_outstanding
+              Type: STRING
+            - Name: fis_tests_outstanding
+              Type: STRING
+            - Name: alarms_outstanding
+              Type: STRING
+            - Name: sops_outstanding
+              Type: STRING
+            - Name: compliance_excluded
+              Type: STRING
+            - Name: fis_tests_excluded
+              Type: STRING
+            - Name: alarms_excluded
+              Type: STRING
+            - Name: sops_excluded
+              Type: STRING
+            - Name: operational_recommendations_total
+              Type: STRING
+            - Name: operational_recommendations_outstanding
+              Type: STRING
+            - Name: operational_recommendations_excluded
+              Type: STRING
+            - Name: infrastructure_recommendations_total
+              Type: STRING
+            - Name: input_source_drifts
+              Type: STRING
+            - Name: app_component_drifts
+              Type: STRING
+            - Name: resiliency_score
+              Type: STRING
+            - Name: latest_assessment_time
+              Type: STRING
+            - Name: estimated_overall_rto
+              Type: STRING
+            - Name: estimated_overall_rpo
+              Type: STRING
+            - Name: target_rto
+              Type: STRING
+            - Name: target_rpo
+              Type: STRING
+            - Name: current_rto_az
+              Type: STRING
+            - Name: current_rto_hardware
+              Type: STRING
+            - Name: current_rto_software
+              Type: STRING
+            - Name: current_rpo_az
+              Type: STRING
+            - Name: current_rpo_hardware
+              Type: STRING
+            - Name: current_rpo_software
+              Type: STRING
+            - Name: target_rto_az
+              Type: STRING
+            - Name: target_rto_hardware
+              Type: STRING
+            - Name: target_rto_software
+              Type: STRING
+            - Name: target_rpo_az
+              Type: STRING
+            - Name: target_rpo_hardware
+              Type: STRING
+            - Name: target_rpo_software
+              Type: STRING
+        904e3e7e-455e-4bec-be58-cf37677d2ab3:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
+        bf73fbab-d02b-414e-ace9-fb1c01c8b5ce:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: sop_recommendations
+            InputColumns:
+            - Name: app_arn
+              Type: STRING
+            - Name: assessment_arn
+              Type: STRING
+            - Name: app_component_name
+              Type: STRING
+            - Name: description
+              Type: STRING
+            - Name: alreadyimplemented
+              Type: BOOLEAN
+            - Name: excluded
+              Type: BOOLEAN
+            - Name: resourceid
+              Type: STRING
+            - Name: targetaccountid
+              Type: STRING
+            - Name: targetregion
+              Type: STRING
+            - Name: name
+              Type: STRING
+            - Name: recommendationstatus
+              Type: STRING
+      LogicalTableMap:
+        0d843cac-2f99-418d-97ac-702173e22994:
+          Alias: Intermediate Table (2)
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - app_arn
+              - assessment_arn
+              - app_component_name
+              - description
+              - excluded
+              - resourceid
+              - targetaccountid
+              - targetregion
+              - name
+              - recommendationstatus
+              - application_name
+              - account_id[account_map]
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: e30cffdd-1651-4f1d-8259-ee75205530a7
+              RightOperand: 3fa4d3d8-b2fd-4ea6-bef1-c97a660d6a0f
+              Type: LEFT
+              OnClause: '{targetaccountid} = {account_id[account_map]}'
+        32fd5a32-6643-4f36-a2b2-da6f62c9f966:
+          Alias: sop_recommendations
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: alreadyimplemented
+              NewColumnType: STRING
+          - CastColumnTypeOperation:
+              ColumnName: excluded
+              NewColumnType: STRING
+          Source:
+            PhysicalTableId: bf73fbab-d02b-414e-ace9-fb1c01c8b5ce
+        3fa4d3d8-b2fd-4ea6-bef1-c97a660d6a0f:
+          Alias: account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: 904e3e7e-455e-4bec-be58-cf37677d2ab3
+        b9682545-7aa5-43e0-bcca-94a45e1d9637:
+          Alias: resiliencehub_complete_view
+          Source:
+            PhysicalTableId: 44994e36-447a-4a2a-95df-cef11eedd96a
+        e30cffdd-1651-4f1d-8259-ee75205530a7:
+          Alias: Intermediate Table
+          Source:
+            JoinInstruction:
+              LeftOperand: 32fd5a32-6643-4f36-a2b2-da6f62c9f966
+              RightOperand: b9682545-7aa5-43e0-bcca-94a45e1d9637
+              Type: LEFT
+              OnClause: '{app_arn} = {application_arn}'
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - resiliencehub_complete_view
+      - account_map
+      - sop_recommendations
+    schedules:
+    - default
+  resiliencehub_complete_view:
+    data:
+      DataSetId: 7dfed72c-9d26-46a2-8cbb-855393b51622
+      Name: resiliencehub_complete_view
+      PhysicalTableMap:
+        354b2309-5cdb-412c-af97-de719341fab7:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
+        b0da5234-0bbe-4416-969b-454cea033b21:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: resiliencehub_complete_view
+            InputColumns:
+            - Name: region
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: application_id
+              Type: STRING
+            - Name: application_arn
+              Type: STRING
+            - Name: application_name
+              Type: STRING
+            - Name: resiliency_policy_id
+              Type: STRING
+            - Name: resiliency_policy_arn
+              Type: STRING
+            - Name: resiliency_policy_name
+              Type: STRING
+            - Name: last_assessment_time
+              Type: STRING
+            - Name: last_assessment_arn
+              Type: STRING
+            - Name: resiliency_status
+              Type: STRING
+            - Name: resiliency_drift_status
+              Type: STRING
+            - Name: compliance_total
+              Type: STRING
+            - Name: fis_tests_total
+              Type: STRING
+            - Name: alarms_total
+              Type: STRING
+            - Name: sops_total
+              Type: STRING
+            - Name: compliance_outstanding
+              Type: STRING
+            - Name: fis_tests_outstanding
+              Type: STRING
+            - Name: alarms_outstanding
+              Type: STRING
+            - Name: sops_outstanding
+              Type: STRING
+            - Name: compliance_excluded
+              Type: STRING
+            - Name: fis_tests_excluded
+              Type: STRING
+            - Name: alarms_excluded
+              Type: STRING
+            - Name: sops_excluded
+              Type: STRING
+            - Name: operational_recommendations_total
+              Type: STRING
+            - Name: operational_recommendations_outstanding
+              Type: STRING
+            - Name: operational_recommendations_excluded
+              Type: STRING
+            - Name: infrastructure_recommendations_total
+              Type: STRING
+            - Name: input_source_drifts
+              Type: STRING
+            - Name: app_component_drifts
+              Type: STRING
+            - Name: resiliency_score
+              Type: STRING
+            - Name: latest_assessment_time
+              Type: STRING
+            - Name: estimated_overall_rto
+              Type: STRING
+            - Name: estimated_overall_rpo
+              Type: STRING
+            - Name: target_rto
+              Type: STRING
+            - Name: target_rpo
+              Type: STRING
+            - Name: current_rto_az
+              Type: STRING
+            - Name: current_rto_hardware
+              Type: STRING
+            - Name: current_rto_software
+              Type: STRING
+            - Name: current_rpo_az
+              Type: STRING
+            - Name: current_rpo_hardware
+              Type: STRING
+            - Name: current_rpo_software
+              Type: STRING
+            - Name: target_rto_az
+              Type: STRING
+            - Name: target_rto_hardware
+              Type: STRING
+            - Name: target_rto_software
+              Type: STRING
+            - Name: target_rpo_az
+              Type: STRING
+            - Name: target_rpo_hardware
+              Type: STRING
+            - Name: target_rpo_software
+              Type: STRING
+      LogicalTableMap:
+        1e090497-8e8d-403d-ad94-f167f529d1b9:
+          Alias: Intermediate Table
+          DataTransforms:
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: resiliency_score_percent
+                ColumnId: 79960f5f-3124-401a-9ca1-752a2689da40
+                Expression: '{resiliency_score}*100'
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - region
+              - account_id
+              - application_id
+              - application_arn
+              - application_name
+              - resiliency_policy_id
+              - resiliency_policy_arn
+              - resiliency_policy_name
+              - last_assessment_time
+              - last_assessment_arn
+              - resiliency_status
+              - resiliency_drift_status
+              - compliance_total
+              - fis_tests_total
+              - alarms_total
+              - sops_total
+              - compliance_outstanding
+              - fis_tests_outstanding
+              - alarms_outstanding
+              - sops_outstanding
+              - compliance_excluded
+              - fis_tests_excluded
+              - alarms_excluded
+              - sops_excluded
+              - operational_recommendations_total
+              - operational_recommendations_outstanding
+              - operational_recommendations_excluded
+              - infrastructure_recommendations_total
+              - input_source_drifts
+              - app_component_drifts
+              - resiliency_score
+              - latest_assessment_time
+              - estimated_overall_rto
+              - estimated_overall_rpo
+              - target_rto
+              - target_rpo
+              - current_rto_az
+              - current_rto_hardware
+              - current_rto_software
+              - current_rpo_az
+              - current_rpo_hardware
+              - current_rpo_software
+              - target_rto_az
+              - target_rto_hardware
+              - target_rto_software
+              - target_rpo_az
+              - target_rpo_hardware
+              - target_rpo_software
+              - account_id[account_map]
+              - parent_account_id
+              - account_name
+              - account_email_id
+              - resiliency_score_percent
+          Source:
+            JoinInstruction:
+              LeftOperand: be21f777-fe71-41ad-894f-262540dfceb8
+              RightOperand: c629d7db-5a77-4731-a2e4-00d910fa07d2
+              Type: LEFT
+              OnClause: '{account_id} = {account_id[account_map]}'
+        be21f777-fe71-41ad-894f-262540dfceb8:
+          Alias: resiliencehub_complete_view
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: last_assessment_time
+              NewColumnType: DATETIME
+              Format: yyyy-MM-dd HH:mm:ss.SSS
+          - CastColumnTypeOperation:
+              ColumnName: compliance_total
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: fis_tests_total
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: alarms_total
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: sops_total
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: compliance_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: fis_tests_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: alarms_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: sops_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: compliance_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: fis_tests_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: alarms_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: sops_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: operational_recommendations_total
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: operational_recommendations_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: operational_recommendations_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: infrastructure_recommendations_total
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: input_source_drifts
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: app_component_drifts
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: resiliency_score
+              NewColumnType: DECIMAL
+              SubType: FIXED
+          - CastColumnTypeOperation:
+              ColumnName: latest_assessment_time
+              NewColumnType: DATETIME
+              Format: yyyy-MM-dd HH:mm:ss
+          - CastColumnTypeOperation:
+              ColumnName: estimated_overall_rto
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: estimated_overall_rpo
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: target_rto
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: target_rpo
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: current_rto_az
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: current_rto_hardware
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: current_rto_software
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: current_rpo_az
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: current_rpo_hardware
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: current_rpo_software
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: target_rto_az
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: target_rto_hardware
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: target_rto_software
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: target_rpo_az
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: target_rpo_hardware
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: target_rpo_software
+              NewColumnType: INTEGER
+          Source:
+            PhysicalTableId: b0da5234-0bbe-4416-969b-454cea033b21
+        c629d7db-5a77-4731-a2e4-00d910fa07d2:
+          Alias: account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: 354b2309-5cdb-412c-af97-de719341fab7
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - resiliencehub_complete_view
+    schedules:
+    - default
+  resiliencehub_daily_assessments:
+    data:
+      DataSetId: 3ddcd52e-0f02-4ce1-9585-2e73a8b593c6
+      Name: resiliencehub_daily_assessments
+      PhysicalTableMap:
+        db1ae85e-5ef2-42ae-8737-15dbaa7a0192:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: resiliencehub_daily_assessments
+            InputColumns:
+            - Name: daytime
+              Type: STRING
+            - Name: region
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: application_id
+              Type: STRING
+            - Name: application_arn
+              Type: STRING
+            - Name: application_name
+              Type: STRING
+            - Name: assessment_time
+              Type: STRING
+            - Name: assessment_arn
+              Type: STRING
+            - Name: resiliency_status
+              Type: STRING
+            - Name: resiliency_drift_status
+              Type: STRING
+            - Name: compliance_total
+              Type: STRING
+            - Name: fis_tests_total
+              Type: STRING
+            - Name: alarms_total
+              Type: STRING
+            - Name: sops_total
+              Type: STRING
+            - Name: compliance_outstanding
+              Type: STRING
+            - Name: fis_tests_outstanding
+              Type: STRING
+            - Name: alarms_outstanding
+              Type: STRING
+            - Name: sops_outstanding
+              Type: STRING
+            - Name: compliance_excluded
+              Type: STRING
+            - Name: fis_tests_excluded
+              Type: STRING
+            - Name: alarms_excluded
+              Type: STRING
+            - Name: sops_excluded
+              Type: STRING
+            - Name: operational_recommendations_total
+              Type: STRING
+            - Name: operational_recommendations_outstanding
+              Type: STRING
+            - Name: operational_recommendations_excluded
+              Type: STRING
+            - Name: input_source_drifts
+              Type: STRING
+            - Name: app_component_drifts
+              Type: STRING
+            - Name: resiliency_score
+              Type: STRING
+        faa581b7-6db1-4f7b-8c69-2fd8746cd99a:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
+      LogicalTableMap:
+        9d9573a2-0376-448b-a1fb-80c62dc9f5b2:
+          Alias: Intermediate Table
+          DataTransforms:
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: resiliency_score_percent
+                ColumnId: 4237aba9-fb5a-448f-999f-a1cc5b334b2c
+                Expression: '{resiliency_score}*100'
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - daytime
+              - region
+              - account_id
+              - application_id
+              - application_arn
+              - application_name
+              - assessment_time
+              - assessment_arn
+              - resiliency_status
+              - resiliency_drift_status
+              - compliance_total
+              - fis_tests_total
+              - alarms_total
+              - sops_total
+              - compliance_outstanding
+              - fis_tests_outstanding
+              - alarms_outstanding
+              - sops_outstanding
+              - compliance_excluded
+              - fis_tests_excluded
+              - alarms_excluded
+              - sops_excluded
+              - operational_recommendations_total
+              - operational_recommendations_outstanding
+              - operational_recommendations_excluded
+              - input_source_drifts
+              - app_component_drifts
+              - resiliency_score
+              - account_id[account_map]
+              - parent_account_id
+              - account_name
+              - account_email_id
+              - resiliency_score_percent
+          Source:
+            JoinInstruction:
+              LeftOperand: c4ad6c54-5c4c-430f-8c0f-ac455475d3b9
+              RightOperand: b865413c-f342-487d-a4b9-babab9cfe4f1
+              Type: LEFT
+              OnClause: '{account_id} = {account_id[account_map]}'
+        b865413c-f342-487d-a4b9-babab9cfe4f1:
+          Alias: account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: faa581b7-6db1-4f7b-8c69-2fd8746cd99a
+        c4ad6c54-5c4c-430f-8c0f-ac455475d3b9:
+          Alias: resiliencehub_daily_assessments
+          DataTransforms:
+          - CastColumnTypeOperation:
+              ColumnName: daytime
+              NewColumnType: DATETIME
+              Format: yyyy-MM-dd HH:mm:ss.S
+          - CastColumnTypeOperation:
+              ColumnName: assessment_time
+              NewColumnType: DATETIME
+              Format: yyyy-MM-dd HH:mm:ss.SSS
+          - CastColumnTypeOperation:
+              ColumnName: compliance_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: fis_tests_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: alarms_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: sops_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: compliance_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: fis_tests_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: alarms_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: sops_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: operational_recommendations_total
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: operational_recommendations_outstanding
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: operational_recommendations_excluded
+              NewColumnType: INTEGER
+          - CastColumnTypeOperation:
+              ColumnName: resiliency_score
+              NewColumnType: DECIMAL
+              SubType: FIXED
+          Source:
+            PhysicalTableId: db1ae85e-5ef2-42ae-8737-15dbaa7a0192
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - resiliencehub_daily_assessments
+      - account_map
+    schedules:
+    - default
+  alarm_recommendations:
+    data:
+      DataSetId: 54b550fd-e42b-41d5-ab34-7682fe7094af
+      Name: alarm_recommendations
+      PhysicalTableMap:
+        153d1810-ee23-47bd-9c88-83350be84181:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
+        f321c6e1-8cf5-4462-ab8c-8c198e72f912:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: alarm_recommendations
+            InputColumns:
+            - Name: app_arn
+              Type: STRING
+            - Name: assessment_arn
+              Type: STRING
+            - Name: app_component_name
+              Type: STRING
+            - Name: description
+              Type: STRING
+            - Name: alreadyimplemented
+              Type: STRING
+            - Name: excluded
+              Type: STRING
+            - Name: resourceid
+              Type: STRING
+            - Name: targetaccountid
+              Type: STRING
+            - Name: targetregion
+              Type: STRING
+            - Name: name
+              Type: STRING
+            - Name: recommendationstatus
+              Type: STRING
+        fe3f9888-4f28-4a27-8266-6d886c081c64:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: resiliencehub_complete_view
+            InputColumns:
+            - Name: region
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: application_id
+              Type: STRING
+            - Name: application_arn
+              Type: STRING
+            - Name: application_name
+              Type: STRING
+            - Name: resiliency_policy_id
+              Type: STRING
+            - Name: resiliency_policy_arn
+              Type: STRING
+            - Name: resiliency_policy_name
+              Type: STRING
+            - Name: last_assessment_time
+              Type: STRING
+            - Name: last_assessment_arn
+              Type: STRING
+            - Name: resiliency_status
+              Type: STRING
+            - Name: resiliency_drift_status
+              Type: STRING
+            - Name: compliance_total
+              Type: STRING
+            - Name: fis_tests_total
+              Type: STRING
+            - Name: alarms_total
+              Type: STRING
+            - Name: sops_total
+              Type: STRING
+            - Name: compliance_outstanding
+              Type: STRING
+            - Name: fis_tests_outstanding
+              Type: STRING
+            - Name: alarms_outstanding
+              Type: STRING
+            - Name: sops_outstanding
+              Type: STRING
+            - Name: compliance_excluded
+              Type: STRING
+            - Name: fis_tests_excluded
+              Type: STRING
+            - Name: alarms_excluded
+              Type: STRING
+            - Name: sops_excluded
+              Type: STRING
+            - Name: operational_recommendations_total
+              Type: STRING
+            - Name: operational_recommendations_outstanding
+              Type: STRING
+            - Name: operational_recommendations_excluded
+              Type: STRING
+            - Name: infrastructure_recommendations_total
+              Type: STRING
+            - Name: input_source_drifts
+              Type: STRING
+            - Name: app_component_drifts
+              Type: STRING
+            - Name: resiliency_score
+              Type: STRING
+            - Name: latest_assessment_time
+              Type: STRING
+            - Name: estimated_overall_rto
+              Type: STRING
+            - Name: estimated_overall_rpo
+              Type: STRING
+            - Name: target_rto
+              Type: STRING
+            - Name: target_rpo
+              Type: STRING
+            - Name: current_rto_az
+              Type: STRING
+            - Name: current_rto_hardware
+              Type: STRING
+            - Name: current_rto_software
+              Type: STRING
+            - Name: current_rpo_az
+              Type: STRING
+            - Name: current_rpo_hardware
+              Type: STRING
+            - Name: current_rpo_software
+              Type: STRING
+            - Name: target_rto_az
+              Type: STRING
+            - Name: target_rto_hardware
+              Type: STRING
+            - Name: target_rto_software
+              Type: STRING
+            - Name: target_rpo_az
+              Type: STRING
+            - Name: target_rpo_hardware
+              Type: STRING
+            - Name: target_rpo_software
+              Type: STRING
+      LogicalTableMap:
+        28c3b8c4-ff4b-4348-9616-fc87c357198b:
+          Alias: alarm_recommendations
+          Source:
+            PhysicalTableId: f321c6e1-8cf5-4462-ab8c-8c198e72f912
+        48f217d8-f02d-48f2-9a5c-46a4fe0a855e:
+          Alias: resiliencehub_complete_view
+          Source:
+            PhysicalTableId: fe3f9888-4f28-4a27-8266-6d886c081c64
+        5eb03234-63c4-4e26-a630-7f6e4501bec5:
+          Alias: Intermediate Table (2)
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - app_arn
+              - assessment_arn
+              - app_component_name
+              - description
+              - alreadyimplemented
+              - excluded
+              - resourceid
+              - targetaccountid
+              - targetregion
+              - name
+              - recommendationstatus
+              - application_arn
+              - application_name
+              - account_id[account_map]
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: 6f123977-6666-446f-83a3-15c95c8a8978
+              RightOperand: ec8d9e0b-12d0-4b7a-89b9-e55f2c9de03d
+              Type: LEFT
+              OnClause: '{targetaccountid} = {account_id[account_map]}'
+        6f123977-6666-446f-83a3-15c95c8a8978:
+          Alias: Intermediate Table
+          Source:
+            JoinInstruction:
+              LeftOperand: 28c3b8c4-ff4b-4348-9616-fc87c357198b
+              RightOperand: 48f217d8-f02d-48f2-9a5c-46a4fe0a855e
+              Type: LEFT
+              OnClause: '{app_arn} = {application_arn}'
+        ec8d9e0b-12d0-4b7a-89b9-e55f2c9de03d:
+          Alias: account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: 153d1810-ee23-47bd-9c88-83350be84181
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - alarm_recommendations
+      - resiliencehub_complete_view
+    schedules:
+    - default
+  resiliencehub_resource_types:
+    data:
+      DataSetId: 6ecc4d2c-2560-49d0-bdb7-2591635edc7b
+      Name: resiliencehub_resource_types
+      PhysicalTableMap:
+        cf27846e-4ca4-4862-a8fa-09831170078e:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+            - Name: account_id
+              Type: STRING
+            - Name: parent_account_id
+              Type: STRING
+            - Name: account_name
+              Type: STRING
+            - Name: account_email_id
+              Type: STRING
+        d08ae176-035a-4463-8ebc-16579f4ad36f:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: resiliencehub_resource_types
+            InputColumns:
+            - Name: region
+              Type: STRING
+            - Name: account_id
+              Type: STRING
+            - Name: resource_type
+              Type: STRING
+            - Name: app_component_type
+              Type: STRING
+            - Name: applications
+              Type: STRING
+            - Name: recommendations
+              Type: STRING
+      LogicalTableMap:
+        686ec52a-02ca-4606-bd59-f28afe71df84:
+          Alias: Intermediate Table
+          DataTransforms:
+          - TagColumnOperation:
+              ColumnName: region
+              Tags:
+              - ColumnGeographicRole: STATE
+          - ProjectOperation:
+              ProjectedColumns:
+              - region
+              - account_id
+              - resource_type
+              - app_component_type
+              - applications
+              - recommendations
+              - account_id[account_map]
+              - parent_account_id
+              - account_name
+              - account_email_id
+          Source:
+            JoinInstruction:
+              LeftOperand: 84b1c778-9286-44b9-92c4-a79800cf72ec
+              RightOperand: d3469e3f-5dbe-4570-8694-6f713b7cb4b6
+              Type: LEFT
+              OnClause: '{account_id} = {account_id[account_map]}'
+        84b1c778-9286-44b9-92c4-a79800cf72ec:
+          Alias: resiliencehub_resource_types
+          Source:
+            PhysicalTableId: d08ae176-035a-4463-8ebc-16579f4ad36f
+        d3469e3f-5dbe-4570-8694-6f713b7cb4b6:
+          Alias: account_map
+          DataTransforms:
+          - RenameColumnOperation:
+              ColumnName: account_id
+              NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: cf27846e-4ca4-4862-a8fa-09831170078e
+      ImportMode: SPICE
+    dependsOn:
+      views:
+      - account_map
+      - resiliencehub_resource_types
+    schedules:
+    - default
+crawlers: {}
+views:
+  resiliencehub_complete_view:
+    dependsOn:
+      views:
+      - resiliencehub_application_rto_rpo
+      - resiliencehub_applications
+    data: |-
+      CREATE OR REPLACE VIEW "${athena_database_name}".resiliencehub_complete_view AS
+      WITH
+        latest_assessment_rto_rpo AS (
+         SELECT
+           app_arn
+         , assessment_arn
+         , assessment_time
+         , estimated_overall_rto
+         , estimated_overall_rpo
+         , target_rto
+         , target_rpo
+         , current_rto_az
+         , current_rto_hardware
+         , current_rto_software
+         , current_rpo_az
+         , current_rpo_hardware
+         , current_rpo_software
+         , target_rto_az
+         , target_rto_hardware
+         , target_rto_software
+         , target_rpo_az
+         , target_rpo_hardware
+         , target_rpo_software
+         FROM
+           (
+            SELECT
+              *
+            , ROW_NUMBER() OVER (PARTITION BY app_arn ORDER BY CAST(assessment_time AS timestamp) DESC) rn
+            FROM
+              resiliencehub_application_rto_rpo
+         )  ranked
+         WHERE (rn = 1)
+      )
+      SELECT
+        apps.Region
+      , apps.Account_Id
+      , apps.Application_Id
+      , apps.Application_Arn
+      , apps.Application_Name
+      , apps.Resiliency_Policy_Id
+      , apps.Resiliency_Policy_Arn
+      , apps.Resiliency_Policy_Name
+      , apps.Last_Assessment_Time
+      , apps.Last_Assessment_Arn
+      , apps.Resiliency_Status
+      , apps.Resiliency_Drift_Status
+      , apps.Compliance_Total
+      , apps.FIS_Tests_Total
+      , apps.Alarms_Total
+      , apps.SOPs_Total
+      , apps.Compliance_Outstanding
+      , apps.FIS_Tests_Outstanding
+      , apps.Alarms_Outstanding
+      , apps.SOPs_Outstanding
+      , apps.Compliance_Excluded
+      , apps.FIS_Tests_Excluded
+      , apps.Alarms_Excluded
+      , apps.SOPs_Excluded
+      , apps.Operational_Recommendations_Total
+      , apps.Operational_Recommendations_Outstanding
+      , apps.Operational_Recommendations_Excluded
+      , apps.Infrastructure_Recommendations_Total
+      , apps.Input_Source_Drifts
+      , apps.App_Component_Drifts
+      , apps.Resiliency_Score
+      , rto_rpo.assessment_time latest_assessment_time
+      , rto_rpo.estimated_overall_rto
+      , rto_rpo.estimated_overall_rpo
+      , rto_rpo.target_rto
+      , rto_rpo.target_rpo
+      , rto_rpo.current_rto_az
+      , rto_rpo.current_rto_hardware
+      , rto_rpo.current_rto_software
+      , rto_rpo.current_rpo_az
+      , rto_rpo.current_rpo_hardware
+      , rto_rpo.current_rpo_software
+      , rto_rpo.target_rto_az
+      , rto_rpo.target_rto_hardware
+      , rto_rpo.target_rto_software
+      , rto_rpo.target_rpo_az
+      , rto_rpo.target_rpo_hardware
+      , rto_rpo.target_rpo_software
+      FROM
+        (resiliencehub_applications apps
+      LEFT JOIN latest_assessment_rto_rpo rto_rpo ON (regexp_replace(apps.Application_Arn, '"', '') = regexp_replace(rto_rpo.app_arn, '"', '')))
+      WHERE (apps.Application_Arn IS NOT NULL)

@@ -1,0 +1,151 @@
+{
+    "DatabaseName": "${athena_database_name}",
+    "TableInput": {
+        "Name": "${athena_table_name}",
+        "StorageDescriptor": {
+            "Location": "${s3FolderPath}",
+            "Columns": [
+                {
+                    "Name": "region",
+                    "Type": "string"
+                },
+                {
+                    "Name": "account_id",
+                    "Type": "string"
+                },
+                {
+                    "Name": "application_id",
+                    "Type": "string"
+                },
+                {
+                    "Name": "application_arn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "application_name",
+                    "Type": "string"
+                },
+                {
+                    "Name": "resiliency_policy_id",
+                    "Type": "string"
+                },
+                {
+                    "Name": "resiliency_policy_arn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "resiliency_policy_name",
+                    "Type": "string"
+                },
+                {
+                    "Name": "last_assessment_time",
+                    "Type": "string"
+                },
+                {
+                    "Name": "last_assessment_arn",
+                    "Type": "string"
+                },
+                {
+                    "Name": "resiliency_status",
+                    "Type": "string"
+                },
+                {
+                    "Name": "resiliency_drift_status",
+                    "Type": "string"
+                },
+                {
+                    "Name": "compliance_total",
+                    "Type": "string"
+                },
+                {
+                    "Name": "fis_tests_total",
+                    "Type": "string"
+                },
+                {
+                    "Name": "alarms_total",
+                    "Type": "string"
+                },
+                {
+                    "Name": "sops_total",
+                    "Type": "string"
+                },
+                {
+                    "Name": "compliance_outstanding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "fis_tests_outstanding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "alarms_outstanding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "sops_outstanding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "compliance_excluded",
+                    "Type": "string"
+                },
+                {
+                    "Name": "fis_tests_excluded",
+                    "Type": "string"
+                },
+                {
+                    "Name": "alarms_excluded",
+                    "Type": "string"
+                },
+                {
+                    "Name": "sops_excluded",
+                    "Type": "string"
+                },
+                {
+                    "Name": "operational_recommendations_total",
+                    "Type": "string"
+                },
+                {
+                    "Name": "operational_recommendations_outstanding",
+                    "Type": "string"
+                },
+                {
+                    "Name": "operational_recommendations_excluded",
+                    "Type": "string"
+                },
+                {
+                    "Name": "infrastructure_recommendations_total",
+                    "Type": "string"
+                },
+                {
+                    "Name": "input_source_drifts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "app_component_drifts",
+                    "Type": "string"
+                },
+                {
+                    "Name": "resiliency_score",
+                    "Type": "string"
+                }
+            ],
+            "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            "SerdeInfo": {
+                "SerializationLibrary": "org.apache.hadoop.hive.serde2.OpenCSVSerde",
+                "Parameters": {
+                    "separatorChar": ",",
+                    "quoteChar": "\"",
+                    "escapeChar": "\\"
+                }
+            }
+        },
+        "TableType": "EXTERNAL_TABLE",
+        "Parameters": {
+            "EXTERNAL": "TRUE",
+            "skip.header.er.line.count": "1"
+        },
+        "PartitionKeys": []
+    }
+}
