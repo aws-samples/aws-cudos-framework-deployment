@@ -139,6 +139,7 @@ datasets:
         - DataExports
       views:
         - ec2_running_cost
+        - account_map
     schedules:
       - default
   # CID dataset
@@ -149,6 +150,7 @@ datasets:
         - DataExports
       views:
         - compute_savings_plan_eligible_spend
+        - account_map
     schedules:
       - default
   # CID dataset
@@ -906,8 +908,8 @@ views:
         - compute_optimizer_idle_options
 
   # Shared views
-  #account_map:
-  #  File: queries/shared/account_map.sql
+  account_map:
+    File: queries/shared/account_map.sql
   business_units_map:
     File: queries/shared/business_units_map.sql
   aws_accounts:
