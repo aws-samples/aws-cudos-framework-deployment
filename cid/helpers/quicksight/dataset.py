@@ -112,6 +112,7 @@ class Dataset(CidQsResource):
             if 'decimal'   in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
             if 'double'    in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
             if 'real'      in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'} #is it better fit for fixed vs float Decimals
+            if 'boolean'   in athena_type: return {'Name': col, 'Type': 'BOOLEAN'}
             logger.info(f'Unknown Athena type {athena_type} for {col}. Will use STRING. This might affect dashboard.')
             return {'Name': col, 'Type': 'STRING'}
 
