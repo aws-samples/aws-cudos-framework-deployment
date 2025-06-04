@@ -69,7 +69,7 @@ class Dataset(CidQsResource):
         def _get_athena_columns(table, database=None):
             '''returns athena columns'''
             return [
-                line[0].split()
+                line[0].split(None, 1)
                 for line in athena.query(
                     f'SHOW COLUMNS FROM {table}',
                     include_header=True, database=database
@@ -112,7 +112,7 @@ class Dataset(CidQsResource):
             if 'decimal'   in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
             if 'double'    in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'}
             if 'real'      in athena_type: return {'Name': col, 'Type': 'DECIMAL', 'SubType': 'FIXED'} #is it better fit for fixed vs float Decimals
-            logger.warning(f'Unknown Athena type {athena_type} for {col}. Will use STRING. This might affect dashboard.')
+            logger.info(f'Unknown Athena type {athena_type} for {col}. Will use STRING. This might affect dashboard.')
             return {'Name': col, 'Type': 'STRING'}
 
         dataset = deepcopy(dataset)
