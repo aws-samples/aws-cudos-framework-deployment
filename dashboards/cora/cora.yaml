@@ -114,6 +114,7 @@ dashboards:
               ${GroupBy} = 'Source Account Id', {source_account_id},
               ${GroupBy} = 'Tag', Tag1,
               ${GroupBy} = 'Business Unit', 'N/A',
+              // Add ${GroupBy}
               'N/A'
           )
         Name: Group By
