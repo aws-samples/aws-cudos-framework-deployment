@@ -1605,9 +1605,15 @@ class Cid():
         # patch dataset for tags
         cur_tags_json_required = False
         for dep_view_name in dataset_definition.get('dependsOn', {}).get('views', []):
-            cur_tags_json_required = 'tags_json' in str()
-            if self.resources['views'].get(dep_view_name, {}).get('dependsOn',{}).get('tags') == 'json' \
-                or self.resources['views'].get(dep_view_name, {}).get('parameters',{}).get('resource-tags'):
+            try:
+                tags_type = self.resources['views'][dep_view_name]['dependsOn']['tags']
+            except (KeyError, TypeError, AttributeError):
+                tags_type = None
+            try:
+                param_res_tag =  self.resources['views'][dep_view_name]['parameters']['resource-tags']
+            except (KeyError, TypeError, AttributeError):
+                param_res_tag = None
+            if tags_type == 'json' or param_res_tag:
                 cur_tags_json_required = True
                 break
         custom_fields = {}
