@@ -785,7 +785,8 @@ class Cid():
                                 continue
                         recursive = get_parameter(
                             param_name='recursive',
-                            message='\nRecursive update the Datasets and Views in addition to the Dashboard update?\nATTENTION: This could lead to the loss of dataset customization.\nRecursive update?',
+                            message='''\nRecursive update the Datasets and Views in addition to the Dashboard update?\nATTENTION:
+ This could lead to the loss of dataset customization.\nRecursive update?''',
                             choices={
                                 '[→] Simple Update (only dashboard)': 'simple',
                                 '[⇶] Recursive Update (dashboard and all dependencies)': 'recursive',
@@ -1369,8 +1370,10 @@ class Cid():
                 role_arn = self.iam.get_role_arn(role_name)
 
         if not role_arn:
-            quicksight_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].RoleName"))
-            quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')]  # filter out irrelevant roles
+            search_definition = "Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service=='quicksight.amazonaws.com']].RoleName"
+            quicksight_trusted_roles = list(self.iam.iterate_role_names(search=search_definition))
+            # filter out irrelevant roles
+            quicksight_trusted_roles = [role for role in quicksight_trusted_roles if role not in ('aws-quicksight-secretsmanager-role-v0')]
             # TODO: filter only roles with Athena and S3 policies
             cid_role_name = 'CidCmdQuickSightDataSourceRole'
             choices = quicksight_trusted_roles
@@ -1383,7 +1386,8 @@ class Cid():
             choice = get_parameter(
                 'quicksight-datasource-role',
                 message='Please choose a QuickSight role. It must have access to Athena',
-                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight (https://quicksight.aws.amazon.com/sn/admin#aws) and configure S3 and Athena access there)>'] + choices,
+                choices=['<USE DEFAULT QuickSight ROLE (You will need to login to QuickSight (https://quicksight.aws.amazon.com/sn/admin#aws) and configure \
+S3 and Athena access there)>'] + choices,
                 default=default,
             )
             if "<ADD NEW ROLE>" in choice or choice == cid_role_name:  # Create or update role
@@ -1581,7 +1585,7 @@ class Cid():
         compiled_dataset_text = template.safe_substitute(columns_tpl)
         try:
             compiled_dataset = json.loads(compiled_dataset_text)
-        except json.JSONDecodeError as exc:
+        except json.JSONDecodeError:
             logger.error('The json of dataset is not correct. Please check parameters of the dashboard.')
             logger.debug(compiled_dataset_text)
             raise
@@ -1592,8 +1596,8 @@ class Cid():
         cur_tags_json_required = False
         for dep_view_name in dataset_definition.get('dependsOn', {}).get('views', []):
             cur_tags_json_required = 'tags_json' in str()
-            if self.resources['views'].get(dep_view_name, {}).get('dependsOn',{}).get('tags') == 'json' \
-                or self.resources['views'].get(dep_view_name, {}).get('parameters',{}).get('resource-tags'):
+            if self.resources['views'].get(dep_view_name, {}).get('dependsOn', {}).get('tags') == 'json' \
+                    or self.resources['views'].get(dep_view_name, {}).get('parameters', {}).get('resource-tags'):
                 cur_tags_json_required = True
                 break
         custom_fields = {}
@@ -1603,7 +1607,7 @@ class Cid():
         logger.debug(f'dataset {compiled_dataset.get("Name")} resource_tags = {resource_tags}')
         if cur_tags_json_required and resource_tags:
             custom_fields = {
-                name: f"parseJson(tags_json, '$.{name}')" # This syntax does not work:  $[\"{name}\"]
+                name: f"parseJson(tags_json, '$.{name}')"  # This syntax does not work:  $[\"{name}\"]
                 for name in resource_tags
             }
         logger.debug(f'custom_fields = {custom_fields}')
@@ -1621,11 +1625,12 @@ class Cid():
                 while True:
                     diff = self.qs.dataset_diff(found_dataset.raw, compiled_dataset)
                     if diff and diff['diff']:
-                        cid_print(f'<BOLD>Found a difference between existing dataset <YELLOW>{found_dataset.name}<END> <BOLD>and the one we want to deploy. <END>')
+                        cid_print(f'<BOLD>Found a difference between existing dataset <YELLOW>{found_dataset.name}<END> <BOLD>and the one we want to deploy. \
+<END>')
                         cid_print(diff['printable'])
                         choice = get_parameter(
                             param_name='dataset-' + found_dataset.name.lower().replace(' ', '-') + '-override',
-                            message=f'The existing dataset is different. Override?',
+                            message='The existing dataset is different. Override?',
                             choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
                             yes_choice='proceed and override'
                         )
@@ -1641,19 +1646,19 @@ class Cid():
                         else:
                             raise CidCritical(f'User choice is not to update {found_dataset.name}.')
                     elif not diff:
-                        if get_parameter(
-                            param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
-                            message=f'Cannot get sql diff for {found_dataset.name}. Continue?',
-                            choices=['override', 'exit'],
-                            ) != 'override':
+                        if get_parameter(param_name=found_dataset.name.lower().replace(' ', '-') + '-override',
+                                         message=f'Cannot get sql diff for {found_dataset.name}. Continue?',
+                                         choices=['override', 'exit'],
+                                         ) != 'override':
                             raise CidCritical(f'User choice is not to update {found_dataset.name}.')
                         update_dataset = True
                     break
 
-            identical = False # check if dataset needs an update
+            identical = False  # check if dataset needs an update
             if isinstance(found_dataset, Dataset):
                 identical = True
-                for key in 'PhysicalTableMap LogicalTableMap OutputColumns ImportMode DataSetUsageConfiguration RowLevelPermissionDataSet FieldFolders RowLevelPermissionTagConfiguration DatasetParameters'.split():
+                for key in 'PhysicalTableMap LogicalTableMap OutputColumns ImportMode DataSetUsageConfiguration RowLevelPermissionDataSet FieldFolders \
+RowLevelPermissionTagConfiguration DatasetParameters'.split():
                     if found_dataset.raw.get(key) != compiled_dataset.get(key):
                         logger.trace(f'not identical {key} {found_dataset.raw.get(key)} != {compiled_dataset.get(key)}')
                         identical = False
@@ -1678,8 +1683,7 @@ class Cid():
                     self.qs.ensure_dataset_refresh_schedule(dataset_id, schedules_definitions)
         return True
 
-
-    def create_or_update_view(self, view_name: str, recursive: bool=True, update: bool=False) -> None:
+    def create_or_update_view(self, view_name: str, recursive: bool = True, update: bool = False) -> None:
         # Avoid checking a views multiple times in one cid session
         update = update or get_parameters().get('update')
         logger.trace(f'create_or_update_view({view_name}, recursive={recursive}, update={update})')
@@ -1749,7 +1753,7 @@ class Cid():
                     logger.debug('Start waiting')
                     assert self.athena.wait_for_view(view_name), f"Failed to update a view {view_name}"
                     logger.info(f'View "{view_name}" updated')
-        else: # No found -> creation
+        else:  # No found -> creation
             logger.info(f'Creating view: "{view_name}"')
             if view_definition.get('type') == 'Glue_Table':
                 self.glue.create_or_update_table(view_name, view_query)
@@ -1769,7 +1773,8 @@ class Cid():
         if 'crawler' in view_definition:
             if not ('CREATE EXTERNAL TABLE' in view_query.upper() or view_definition.get('type') == 'Glue_Table'):
                 raise CidCritical(f'Crawler cannot be defined for a view ({view_name}). only for a table. Pease fix resource definitions')
-            location = self.glue.get_table(name=view_name, catalog=self.base.account_id, database=self.athena.DatabaseName).get('StorageDescriptor', {}).get('Location')
+            location = self.glue.get_table(name=view_name, catalog=self.base.account_id,
+                                           database=self.athena.DatabaseName).get('StorageDescriptor', {}).get('Location')
             self.create_or_update_crawler(crawler_name=view_definition['crawler'], location=location)
 
     def create_or_update_crawler(self, crawler_name, location):
@@ -1779,7 +1784,8 @@ class Cid():
         template = Template(json.dumps(data))
 
         # Filter roles trusted by Glue
-        glue_trusted_roles = list(self.iam.iterate_role_names(search="Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service == 'glue.amazonaws.com']].RoleName"))
+        search_role = "Roles[?AssumeRolePolicyDocument.Statement[?Principal.Service == 'glue.amazonaws.com']].RoleName"
+        glue_trusted_roles = list(self.iam.iterate_role_names(search=search_role))
         table = [fragment for fragment in location.split('/') if fragment][-1].lower().replace('-', '_')
         crawler_role = get_parameter(
             'crawler-role',
@@ -1807,18 +1813,17 @@ class Cid():
         compiled_definition = json.loads(template.safe_substitute(params))
         self.glue.create_or_update_crawler(crawler_definition=compiled_definition)
 
-
     def generic_tags_json(self, param_name='resource-tags', options=[]) -> str:
         ''' returns an sql for json tag
         '''
         def _tag_to_name(tag):
             tag_name = (tag
-                .replace('resource_tags_', '')
-                .replace('cost_category_', '')
-                .replace("'user_","'tag_")
-                .replace("'aws_","'tag_aws_")
-                .split("['")[-1].split("']")[0]
-            )
+                        .replace('resource_tags_', '')
+                        .replace('cost_category_', '')
+                        .replace("'user_", "'tag_")
+                        .replace("'aws_", "'tag_aws_")
+                        .split("['")[-1].split("']")[0]
+                        )
             if not tag_name.startswith('tag_'):
                 if tag.startswith('cost_category'):
                     tag_name = 'cost_category_' + tag_name
@@ -1827,7 +1832,7 @@ class Cid():
             return tag_name.replace(':', '_')
 
         resource_tags = get_parameters().get(param_name, None)
-        tags_and_names = {_tag_to_name(tag):tag  for tag in sorted(options)}
+        tags_and_names = {_tag_to_name(tag): tag for tag in sorted(options)}
         logger.info(f'tags_and_names = {tags_and_names}')
         logger.info(f'resource_tags = {resource_tags}')
         if isinstance(resource_tags, str):
@@ -1873,17 +1878,17 @@ class Cid():
         cur2_required = view_definition.get('dependsOn', dict()).get('cur2')
         cur_tags_json_required = view_definition.get('dependsOn', dict()).get('tags') == 'json'
 
-        #if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
-        #    view_definition['File'] = view_definition.get('spriFile')
-        #elif cur_required and self.cur.has_savings_plans and view_definition.get('spFile'):
-        #    view_definition['File'] = view_definition.get('spFile')
-        #elif cur_required and self.cur.has_reservations and view_definition.get('riFile'):
-        #    view_definition['File'] = view_definition.get('riFile')
-        #if view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
-        #    pass
-        #else:
-        #    logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
-        #    raise Exception(f'\nCannot find view {view_name}')
+        # if cur_required and self.cur.has_savings_plans and self.cur.has_reservations and view_definition.get('spriFile'):
+        #     view_definition['File'] = view_definition.get('spriFile')
+        # elif cur_required and self.cur.has_savings_plans and view_definition.get('spFile'):
+        #     view_definition['File'] = view_definition.get('spFile')
+        # elif cur_required and self.cur.has_reservations and view_definition.get('riFile'):
+        #     view_definition['File'] = view_definition.get('riFile')
+        # if view_definition.get('File') or view_definition.get('Data') or view_definition.get('data'):
+        #     pass
+        # else:
+        #     logger.critical(f'\nCannot find view {view_name}. View information is incorrect, please check resources.yaml')
+        #     raise Exception(f'\nCannot find view {view_name}')
 
         # Load TPL file
         data = self.get_data_from_definition(view_definition)
@@ -1894,14 +1899,14 @@ class Cid():
 
         # Prepare template parameters
         columns_tpl = {
-            #'athena_datasource_arn': athena_datasource.arn,
+            # 'athena_datasource_arn': athena_datasource.arn,
             'athena_database_name': self.athena.DatabaseName,
             'athena_table_name': view_name,
-            'cur_database':    self.cur1.database   if cur1_required else None, # for backward compatibly
-            'cur_table_name':  self.cur1.table_name if cur1_required else None, # for backward compatibly
-            'cur1_database':   self.cur1.database   if cur1_required else None,
+            'cur_database':    self.cur1.database if cur1_required else None,  # for backward compatibly
+            'cur_table_name':  self.cur1.table_name if cur1_required else None,  # for backward compatibly
+            'cur1_database':   self.cur1.database if cur1_required else None,
             'cur1_table_name': self.cur1.table_name if cur1_required else None,
-            'cur2_database':   self.cur2.database   if cur2_required else None,
+            'cur2_database':   self.cur2.database if cur2_required else None,
             'cur2_table_name': self.cur2.table_name if cur2_required else None,
             'cur_tags_json':
                 self.cur_tags_json(self.cur2 if cur2_required else self.cur1)
@@ -1951,7 +1956,7 @@ class Cid():
 
     @command
     def create_cur_proxy(self, cur_version=None, fields=None, **kwargs):
-        cid_print(f'Using CUR {self.cur.table_name}') # need to call self.cur
+        cid_print(f'Using CUR {self.cur.table_name}')  # need to call self.cur
         cur_version = cur_version or get_parameter(
             'cur-version',
             message='Enter a version of CUR you want to create or update',
@@ -1985,7 +1990,7 @@ class Cid():
             )
         path_fragments = [fragment for fragment in s3path.split('/')[3:] if fragment]
 
-        if path_fragments == ['cur']: # our standard cur created by CID
+        if path_fragments == ['cur']:  # our standard cur created by CID
             set_parameters({
                 'view-cur-partitions': (
                     '[{"Name":"source_account_id","Type":"string"},'
@@ -1995,7 +2000,7 @@ class Cid():
                     '{"Name":"month","Type":"string"}]'
                 )
             })
-        elif len(path_fragments) == 3 and path_fragments[-1] == path_fragments[-2]: # CUR that is not created by CID but still supported
+        elif len(path_fragments) == 3 and path_fragments[-1] == path_fragments[-2]:  # CUR that is not created by CID but still supported
             set_parameters({'view-cur-partitions': '[{"Name":"year","Type":"string"},{"Name":"month","Type":"string"}]'})
         else:
             raise NotImplementedError(f"We support only 2 types of CUR and this is something else ({s3path}).")
