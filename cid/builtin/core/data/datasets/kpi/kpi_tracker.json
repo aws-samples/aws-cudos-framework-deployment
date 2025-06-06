@@ -49,6 +49,11 @@
                         "SubType": "FLOAT"
                     },
                     {
+                        "Name": "ec2_usage_cost",
+                        "Type": "DECIMAL",
+                        "SubType": "FLOAT"
+                    },
+                    {
                         "Name": "ec2_spot_cost",
                         "Type": "DECIMAL",
                         "SubType": "FLOAT"
@@ -397,6 +402,7 @@
                             "linked_account_id",
                             "spend_all_cost",
                             "ec2_all_cost",
+                            "ec2_usage_cost",
                             "ec2_spot_cost",
                             "ec2_spot_potential_savings",
                             "ec2_previous_generation_cost",

@@ -6,6 +6,7 @@ SELECT DISTINCT
 , spend_all.spend_all_cost
 , spend_all.tags_json
 , instance_all.ec2_all_cost
+, instance_all.ec2_usage_cost
 , instance_all.ec2_spot_cost
 , instance_all.ec2_spot_potential_savings
 , instance_all.ec2_previous_generation_cost
@@ -94,6 +95,7 @@ LEFT JOIN (
    , linked_account_id
    , tags_json
    , "sum"("ec2_all_cost") "ec2_all_cost"
+   , "sum"("ec2_usage_cost") "ec2_usage_cost"
    , "sum"("ec2_spot_cost") "ec2_spot_cost"
    , "sum"("ec2_spot_potential_savings") "ec2_spot_potential_savings"
    , "sum"("ec2_previous_generation_cost") "ec2_previous_generation_cost"
