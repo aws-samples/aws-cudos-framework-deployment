@@ -131,10 +131,10 @@ class Cid():
         """ get/create parameters_controller """
         return ParametersController(self.athena)
 
-    def get_cur(self, target_cur_version):
+    def get_cur(self, target_cur_version=None):
         """ get a cur """
         cur_version = self.cur.version
-        if cur_version != target_cur_version or get_parameters().get('use-cur-proxy'):
+        if (target_cur_version and cur_version != target_cur_version) or get_parameters().get('use-cur-proxy'):
             return ProxyCUR(self.cur, target_cur_version=target_cur_version)
         return self.cur
 
@@ -170,7 +170,7 @@ class Cid():
         account_map = AccountMap(
             self.base.session,
             self.athena,
-            self.cur, # can be any CUR. But it is only needed for trends and dummy
+            self.get_cur, # can be any CUR. But it is only needed for trends and dummy
         )
         return account_map.create_or_update(name)
 
