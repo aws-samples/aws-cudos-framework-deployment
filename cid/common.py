@@ -458,7 +458,7 @@ class Cid():
         return merge_objects(params, others or {}, depth=1)
 
     @command
-    def deploy(self, dashboard_id: str=None, recursive=True, update = False, **kwargs):  # noqa
+    def deploy(self, dashboard_id: str = None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard Command"""
         self._deploy(dashboard_id, recursive, update, **kwargs)
 
@@ -496,7 +496,7 @@ class Cid():
         else:
             raise CidCritical('QuickSight is not activated. Please open https://quicksight.aws.amazon.com/ and activate ENTERPRISE subscription.')
 
-    def _deploy(self, dashboard_id: str=None, recursive=True, update=False, **kwargs):  # noqa
+    def _deploy(self, dashboard_id: str = None, recursive=True, update=False, **kwargs):
         """ Deploy Dashboard """
 
         self.ensure_subscription()
@@ -592,7 +592,8 @@ class Cid():
         compatible = self.check_dashboard_version_compatibility(dashboard_id)
         if not recursive and compatible is False:
             if not get_yesno_parameter(param_name='confirm-recursive',
-                                       message='This is a major update and require recursive action. This could lead to the loss of dataset customization. Continue anyway?',  # noqa
+                                       message='This is a major update and require recursive action. This could lead to the loss of dataset customization. \
+Continue anyway?',
                                        default='yes'):
                 return
             logger.info("Switch to recursive mode")
@@ -1177,7 +1178,7 @@ class Cid():
         self.dump_default_parameters()
         return dashboard_id
 
-    def create_datasets(self, _datasets: list, known_datasets: dict={}, recursive: bool=True, update: bool=False) -> dict:  # noqa
+    def create_datasets(self, _datasets: list, known_datasets: dict = {}, recursive: bool = True, update: bool = False) -> dict:
         # Check dependencies
         required_datasets = sorted(_datasets)
         print('\nRequired datasets: \n - {}\n'.format('\n - '.join(list(set(required_datasets)))))
