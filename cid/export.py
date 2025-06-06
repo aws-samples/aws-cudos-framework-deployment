@@ -179,7 +179,7 @@ def export_analysis(qs, athena, glue):
             elif 'CustomSql' in value and 'DataSourceArn' in value['CustomSql']:
                 logger.debug(f"Dataset {dataset.raw['DataSetId']} looks like CustomSql athena dataset")
                 value['CustomSql']['DataSourceArn'] = '${athena_datasource_arn}'
-                databases = [db_['Name'] for db_ in athena.list_databases()]
+                databases = athena.list_databases()
                 for database in databases:
                     if f'{database}.' in value['CustomSql']['SqlQuery'] or f'"{database}".' in value['CustomSql']['SqlQuery']:
                         logger.debug(f"Replacing {database} in text")
