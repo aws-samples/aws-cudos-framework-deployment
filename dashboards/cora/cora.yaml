@@ -261,6 +261,7 @@ dashboards:
           ifelse(
               {action_type} = 'PurchaseReservedInstances', 'Reserved Instance',
               {action_type} = 'PurchaseSavingsPlans', 'Savings Plan',
+              {current_resource_type} = 'Ec2AutoScalingGroup' AND split({resource_arn},'/',2) <> '', split({resource_arn},'/',2), // special treatment for ASG
               split({resource_arn},':',7) <> '', concat(split({resource_arn},':',6), ':',split({resource_arn},':',7)),
               split({resource_arn},':',6)
           )
