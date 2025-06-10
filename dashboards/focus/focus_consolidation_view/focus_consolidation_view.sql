@@ -147,7 +147,7 @@ SELECT
 , SkuPriceId
 , SubAccountId
 , SubAccountName
-, null Tags
+, Tags
 , billing_period
 FROM
   "cid_oci_focus_data_export_dv"."focus"
