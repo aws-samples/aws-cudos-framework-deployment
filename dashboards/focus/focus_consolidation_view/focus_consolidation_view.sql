@@ -1,5 +1,6 @@
 -- This is an example veiw for consolidation of AWS, Azure, GCP and OCI data. 
--- Please modify databases and table names as required
+-- Choose only FOCUS tables that you have deployed. See more https://catalog.workshops.aws/awscid/en-US/dashboards/additional/focus#add-focus-data-from-other-cloud-providers-to-focus-dashboard
+-- Please modify databases and table names as required.
 
 
 CREATE OR REPLACE VIEW "focus_consolidation_view" AS 
