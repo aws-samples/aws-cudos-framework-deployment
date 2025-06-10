@@ -409,7 +409,7 @@ class Cid():
                         res_list = self.athena.query(query)
                     except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
                         raise CidCritical(f'Failed fetching parameter {prefix}{key}: {exc}.') from exc
-                    options = ['-'.join(res) for res in res_list]
+                    options = ['-'.join(res) for res in (res_list or [])]
                     params[key] = self.generic_tags_json(
                         param_name=key,
                         options=options,
