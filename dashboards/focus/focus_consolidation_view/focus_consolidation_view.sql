@@ -1,6 +1,7 @@
--- This is an example veiw for consolidation of AWS, Azure, GCP and OCI data. 
--- Choose only FOCUS tables that you have deployed. See more https://catalog.workshops.aws/awscid/en-US/dashboards/additional/focus#add-focus-data-from-other-cloud-providers-to-focus-dashboard
--- Please modify databases and table names as required.
+-- This is an example of Amazon Athena veiw for consolidation of AWS, Azure, GCP and OCI data from respective Athena tables. 
+-- Leave unions only for FOCUS tables that you have deployed. See more https://catalog.workshops.aws/awscid/en-US/dashboards/additional/focus#add-focus-data-from-other-cloud-providers-to-focus-dashboard.
+-- Update database and table names if you are using names different from the defaults.
+-- IMPORTANT: Null values are used in unions from some cloud providers when a column is missing in their FOCUS data. If the respective provider begins delivering the column, you need to update this view to use the actual column value instead of null. Also please raise an issue to this repository to notify us as well.
 
 
 CREATE OR REPLACE VIEW "focus_consolidation_view" AS 
@@ -52,6 +53,7 @@ SELECT
 FROM
   "cid_data_export"."focus"
 
+-- Include Azure FOCUS table. Remove this union if you don't have Azure FOCUS table deployed
 UNION ALL 
 
 SELECT
@@ -102,6 +104,7 @@ SELECT
 FROM
   "cidgldpdcidazure"."cidgltpdcidazure"
 
+-- Include OCI FOCUS table. Remove this union if you don't have OCI FOCUS table deployed
 UNION ALL
 
 SELECT
@@ -152,6 +155,7 @@ SELECT
 FROM
   "cid_oci_focus_data_export_dv"."focus"
 
+-- Include GCP FOCUS table. Remove this union if you don't have GCP FOCUS table deployed
 UNION ALL
 
 SELECT
