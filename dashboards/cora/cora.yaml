@@ -386,6 +386,7 @@ dashboards:
               'Rightsize',                    'Usage Optimization',
               'Stop',                         'Usage Optimization',
               'Upgrade',                      'Usage Optimization',
+              'Delete',                       'Usage Optimization',
               'NA'
           )
         Name: Type of Saving
@@ -4036,7 +4037,7 @@ dashboards:
             </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: d85839b7-5c5c-48ed-86cc-6ee53ccae5f7
         - Content: "<text-box>\n  <inline font-size=\"40px\">Usage Optimization\_</inline>\n\
-            \  <br/>\n  <inline font-size=\"20px\">Rightsizing, Stop, Update and Migrate\
+            \  <br/>\n  <inline font-size=\"20px\">Rightsizing, Stop, Delete, Update and Migrate\
             \ to Graviton</inline>\n</text-box>"
           SheetTextBoxId: 256981d3-38c8-49eb-8ace-166fc0ec61e0
         Visuals:
