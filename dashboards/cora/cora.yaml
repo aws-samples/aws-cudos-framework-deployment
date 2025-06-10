@@ -261,6 +261,7 @@ dashboards:
           ifelse(
               {action_type} = 'PurchaseReservedInstances', 'Reserved Instance',
               {action_type} = 'PurchaseSavingsPlans', 'Savings Plan',
+              {current_resource_type} = 'Ec2AutoScalingGroup' AND split({resource_arn},'/',2) <> '', split({resource_arn},'/',2), // special treatment for ASG to get ASG name
               split({resource_arn},':',7) <> '', concat(split({resource_arn},':',6), ':',split({resource_arn},':',7)),
               split({resource_arn},':',6)
           )
@@ -272,7 +273,11 @@ dashboards:
               {current_resource_type} = 'Ec2ReservedInstances', 'EC2 Reserved Instances',
               {current_resource_type} = 'Ec2Instance', 'EC2 Instance',
               {current_resource_type} = 'RdsReservedInstances', 'RDS Reserved Instances',
-              {current_resource_type} = 'EbsVolume', 'EBS Volume',
+              {current_resource_type} = 'EbsVolume',
+                  ifelse(
+                      contains({current_resource_details},'Unattached'), 'EBS Volume: Unattached',
+                      'EBS Volume'
+                  ),
               {current_resource_type} = 'ComputeSavingsPlans', 'Compute Savings Plans',
               {current_resource_type} = 'OpenSearchReservedInstances', 'OpenSearch Reserved Instances',
               {current_resource_type} = 'EcsService', 'ECS Service',
@@ -6771,7 +6776,7 @@ dashboards:
             \    <inline font-size=\"24px\">ecommended\_</inline>\n    <inline font-size=\"\
             24px\">\n      <b>A</b>\n    </inline>\n    <inline font-size=\"24px\">ctions</inline>\n\
             \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
-            >v0.0.8</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
+            >v0.0.9</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"24px\">\n      <a href=\"\
             https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
             \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
@@ -6793,7 +6798,7 @@ dashboards:
             \ </block>\n  <br/>\n  <block align=\"right\">\n    If you wish to provide feedback\
             \ please or report an error please email:\n    <inline color=\"#61d1d6\">\_\
             </inline>\n    <inline background-color=\"#21a0d7\" color=\"#61d1d6\">\n   \
-            \   <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CUDOS%20Dashboard%20Feedback\"\
+            \   <a href=\"mailto:cloud-intelligence-dashboards@amazon.com?subject=CORA%20Dashboard%20Feedback\"\
             \ target=\"_blank\">cloud-intelligence-dashboards@amazon.com</a>\n    </inline>\n\
             \  </block>\n  <br/>\n  <block align=\"right\">Powered by: Amazon QuickSight,\
             \ Amazon Athena, Amazon S3, AWS Cost Optimization Hub</block>\n  <br/>\n  <block\

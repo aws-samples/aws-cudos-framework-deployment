@@ -7,7 +7,24 @@
     <description>The Cloud Intelligence Dashboards is an open-source framework, lovingly cultivated and maintained by a group of customer-obsessed AWSers, that gives customers the power to get high-level and granular insight into their cost and usage data. Supported by the Well-Architected framework, the dashboards can be deployed by any customer using a CloudFormation template or a command-line tool in their environment in under 30 minutes. These dashboards help you to drive financial accountability, optimize cost, track usage goals, implement best-practices for governance, and achieve operational excellence across all your organization.</description>
     <lastBuildDate>Mon, 2 Jun 2025 09:00:00 GMT</lastBuildDate>
     <language>en-us</language>
-
+  <item>
+      <title>[Update] CORA Dashboard v0.0.9</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-cora.md#cora---v009
+      </link>
+      <pubDate>Tue, 10 Jun 2025 09:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">4e3c1f84-91c2-46ae-9f9f-bf8141c8c2a6</guid>
+      <description>CORA v0.0.9</description>
+      <content:encoded><![CDATA[
+<div>
+  <ul>
+    <li>Improved the <strong>Resource</strong> calculated field to display the resource name instead of the id for AutoScaling Group recommendations.</li>
+    <li>Enhanced the <strong>ResourceType</strong> categorization to explicitly classify unattached EBS volumes using the new resource type: <em>"EBS Volume: Unattached"</em>.</li>
+  </ul>
+</div>  
+    ]]></content:encoded>    
+    </item>
    <item>
       <title>[New significant feature] Add Organizational Taxonomy with cid-cmd without dashboard customization</title>
       <link>
