@@ -54,13 +54,19 @@ MyAthenaWorkGroup:
 ## Multi-Cloud Considerations
 
 ### FOCUS Dashboard Compatibility
-**Concern**: Customers using FOCUS dashboards with multi-cloud data may hesitate to use AWS-managed storage.
+**Primary Risk**: Customers using FOCUS dashboards with multi-cloud data may not be comfortable with AWS managing their query results, even temporarily.
 
-**Mitigation**:
-- Conservative default (`customer-managed`) for backward compatibility
-- Clear documentation about temporary nature of managed results (24h retention)
-- Emphasis that only query results (aggregated data) are temporarily stored by AWS
-- Source data remains fully under customer control
+**Key Concerns**:
+- Multi-cloud customers may prefer full control over where their data is processed and stored
+- Compliance requirements may mandate customer-managed storage
+- Trust and data sovereignty concerns with AWS-managed storage
+
+**Mitigation Strategy**:
+- **Conservative default**: `customer-managed` mode remains the default
+- **Optional adoption**: Managed mode is opt-in only
+- **Clear documentation**: Emphasize temporary nature (24h) and aggregated data only
+- **Customer choice**: Full flexibility to choose based on their requirements
+- **No pressure**: Implementation doesn't push customers toward managed mode
 
 ### Regional Availability
 - **Available**: All regions where Athena is available
@@ -112,9 +118,11 @@ Comprehensive testing with accounts containing large amounts of data:
 ## Security Considerations
 
 ### Encryption
-- Results encrypted with customer's choice of AWS owned keys or customer managed keys
-- Same encryption options as customer-managed mode
-- KMS key policies updated to support managed results
+- **Full CMK Support**: Results can be encrypted with customer managed keys (CMK)
+- **AWS Owned Keys**: Default option for simplicity
+- **Customer Managed Keys**: Full support with proper KMS key policies
+- **Same Options**: Identical encryption choices as customer-managed mode
+- **Key Policy Requirements**: Special service principal `encryption.athena.amazonaws.com` required for CMK
 
 ### Access Control
 - Results accessible only via workgroup permissions
@@ -152,8 +160,8 @@ Comprehensive testing with accounts containing large amounts of data:
 1. **QuickSight Role Permissions**: Ensure existing roles work with managed buckets
    - **Mitigation**: Comprehensive IAM testing, fallback to customer-managed
    
-2. **Customer Acceptance**: Multi-cloud customers may resist AWS-managed storage
-   - **Mitigation**: Conservative defaults, clear documentation, customer choice
+2. **Multi-Cloud Customer Acceptance**: FOCUS customers with multi-cloud data may resist AWS-managed storage
+   - **Mitigation**: Conservative defaults, optional adoption, no pressure to migrate, clear customer choice
 
 ### Medium Priority Risks
 1. **Regional Availability**: Not available in all regions yet

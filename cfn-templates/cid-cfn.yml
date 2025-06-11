@@ -602,7 +602,8 @@ Resources:
         ResultConfiguration: !If
           - UseAthenaManaged
           - EncryptionConfiguration:
-              EncryptionOption: SSE_S3
+              EncryptionOption: !If [NeedDataBucketsKms, SSE_KMS, SSE_S3]
+              KmsKey: !If [NeedDataBucketsKms, !Select [0, !Split [',', !Ref DataBucketsKmsKeysArns]], !Ref 'AWS::NoValue']
           - EncryptionConfiguration:
               EncryptionOption: SSE_S3
             ExpectedBucketOwner: !Ref AWS::AccountId
