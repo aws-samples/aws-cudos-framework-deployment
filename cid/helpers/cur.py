@@ -184,8 +184,10 @@ class AbstractCUR(CidBase):
                 return self._tag_and_cost_category
 
             self._tag_and_cost_category = []
-            number_of_rows_scanned = 100000 # empiric value
-            for tag_type in ["resource_tags", 'cost_category']:
+            number_of_rows_scanned = 500000 # empiric value
+            for tag_type in ['resource_tags', 'cost_category']:
+                if tag_type not in self.fields:
+                    logging.debug(f'skipping {tag_type} scan')
                 cid_print(f'Scanning {tag_type} in {self.table_name}.')
                 try:
                     res = self.athena.query(
@@ -211,7 +213,9 @@ class AbstractCUR(CidBase):
                     cid_print(f' <BOLD>{tag_type:<{max_width}} | Distinct Values <END> ')
                     for line in res:
                         if int(line[1]) > 10:
-                            cid_print(f' <BOLD>{line[0]:<{max_width}}<END> | {line[1]} ')
+                            name = line[0]
+                            name = name.replace('user_', '')
+                            cid_print(f' <BOLD>{name:<{max_width}}<END> | {line[1]} ')
                     self._tag_and_cost_category += sorted([f"{tag_type}['{line[0]}']" for line in res])
                 except (self.athena.client.exceptions.ClientError, CidCritical, ValueError) as exc:
                     logger.error(f'Failed to read {tag_type} from {self.table_name}: "{exc}". Will continue without.')
