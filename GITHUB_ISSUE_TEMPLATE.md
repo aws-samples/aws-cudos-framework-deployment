@@ -1,14 +1,14 @@
 # Add Support for AWS Athena Managed Query Results
 
-## 🚀 Feature Request
+## Feature Request
 
 ### Summary
 Implement support for AWS Athena managed query results in the Cloud Intelligence Dashboards (CID) framework to reduce customer costs, simplify operations, and enhance security.
 
 ### Background
-AWS launched managed query results for Amazon Athena on June 6, 2025. This feature automatically stores, encrypts, and manages the lifecycle of query results at no additional cost, eliminating the need for customer-managed S3 buckets.
+AWS recently launched managed query results for Amazon Athena. This feature automatically stores, encrypts, and manages the lifecycle of query results at no additional cost, eliminating the need for customer-managed S3 buckets.
 
-## 💰 Business Value
+## Business Value
 
 ### Cost Savings Analysis
 - **Small Organizations**: Save $0.69/month (100 queries/day)
@@ -22,7 +22,7 @@ AWS launched managed query results for Amazon Athena on June 6, 2025. This featu
 - **Enhanced Security**: Results scoped to workgroups instead of S3 buckets
 - **Reduced Support**: Fewer S3-related configuration issues
 
-## 🔧 Technical Implementation
+## Technical Implementation
 
 ### CloudFormation Changes
 ```yaml
@@ -51,7 +51,7 @@ MyAthenaWorkGroup:
 - Add parameter detection for managed vs customer-managed mode
 - Maintain backward compatibility with existing deployments
 
-## 🌍 Multi-Cloud Considerations
+## Multi-Cloud Considerations
 
 ### FOCUS Dashboard Compatibility
 **Concern**: Customers using FOCUS dashboards with multi-cloud data may hesitate to use AWS-managed storage.
@@ -67,7 +67,7 @@ MyAthenaWorkGroup:
 - **Coming Soon**: GovCloud/ADC and China regions
 - **Fallback**: Automatic fallback to customer-managed mode in unsupported regions
 
-## 📊 Performance Analysis
+## Performance Analysis
 
 ### Query Performance Impact
 - ✅ **No Impact**: Query execution time remains identical
@@ -79,7 +79,7 @@ MyAthenaWorkGroup:
 - **200 MB Console Download Limit**: Use UNLOAD for larger results
 - **No Query Result Reuse**: Feature doesn't support result caching
 
-## 🧪 Testing Strategy
+## Testing Strategy
 
 ### Functional Testing
 ```bash
@@ -97,7 +97,7 @@ aws cloudformation deploy \
 ```
 
 ### Performance Testing with Large Datasets
-As requested by @petro, comprehensive testing with accounts containing large amounts of data:
+Comprehensive testing with accounts containing large amounts of data:
 - Test with multi-month CUR data (6+ months)
 - Measure query execution time, result retrieval time, memory usage
 - Compare performance between managed and customer-managed modes
@@ -109,7 +109,7 @@ As requested by @petro, comprehensive testing with accounts containing large amo
 - Validate dataset refresh functionality
 - Confirm compatibility with existing QuickSight roles
 
-## 🔒 Security Considerations
+## Security Considerations
 
 ### Encryption
 - Results encrypted with customer's choice of AWS owned keys or customer managed keys
@@ -126,7 +126,7 @@ As requested by @petro, comprehensive testing with accounts containing large amo
 - **Audit Trail**: Complete access logging
 - **Temporary Storage**: 24-hour automatic deletion
 
-## 🎯 Implementation Plan
+## Implementation Plan
 
 ### Phase 1: Foundation ✅ (Completed)
 - [x] CloudFormation template updates
@@ -146,7 +146,7 @@ As requested by @petro, comprehensive testing with accounts containing large amo
 - [ ] Community announcement
 - [ ] Monitor adoption and feedback
 
-## 🚨 Risk Assessment
+## Risk Assessment
 
 ### High Priority Risks
 1. **QuickSight Role Permissions**: Ensure existing roles work with managed buckets
@@ -162,7 +162,7 @@ As requested by @petro, comprehensive testing with accounts containing large amo
 2. **Performance at Scale**: Unproven with very large datasets
    - **Mitigation**: Comprehensive testing with large CUR data
 
-## 📈 Success Metrics
+## Success Metrics
 
 ### Cost Metrics
 - Track customer S3 cost reduction
@@ -179,28 +179,25 @@ As requested by @petro, comprehensive testing with accounts containing large amo
 - Customer satisfaction feedback
 - Feature usage patterns
 
-## 🔗 References
+## References
 
 - [AWS Blog: Introducing managed query results for Amazon Athena](https://aws.amazon.com/blogs/big-data/introducing-managed-query-results-for-amazon-athena/)
 - [AWS Documentation: Managed query results](https://docs.aws.amazon.com/athena/latest/ug/managed-results.html)
 - [CloudFormation Documentation: AWS::Athena::WorkGroup](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-athena-workgroup.html)
 
-## 💬 Team Feedback Addressed
+## Key Considerations Addressed
 
-### @petro Concerns:
-- ✅ **Cost Analysis**: Comprehensive cost comparison provided
-- ✅ **Performance Testing**: Strategy for testing with large datasets outlined
-- ✅ **Careful Approach**: Conservative defaults, thorough testing plan
+### Cost and Performance Analysis
+- Comprehensive cost comparison provided showing significant savings potential
+- Strategy for testing with large datasets outlined to ensure performance at scale
+- Conservative defaults and thorough testing plan to minimize risk
 
-### @yuriypr Concerns:
-- ✅ **QuickSight Role Permissions**: Detailed testing strategy for role compatibility
-- ✅ **Multi-Cloud Considerations**: Specific mitigation strategies for FOCUS customers
+### Integration and Compatibility
+- Detailed testing strategy for QuickSight role compatibility
+- Specific mitigation strategies for multi-cloud FOCUS customers
+- CloudFormation support confirmed and implemented correctly
 
-### @tolv (Athena Expert) Feedback:
-- ✅ **CloudFormation Support**: Confirmed available and implemented correctly
-- ✅ **Feature Readiness**: Implementation aligns with AWS recommendations
-
-## 🎉 Expected Outcomes
+## Expected Outcomes
 
 1. **Immediate Benefits**: 
    - Reduced customer costs (100% savings on query result storage)
@@ -226,5 +223,4 @@ As requested by @petro, comprehensive testing with accounts containing large amo
 2. Execute comprehensive testing strategy
 3. Proceed with community rollout
 
-*Issue prepared by: @NithinChandranR-AWS*  
 *Analysis Document: [COMPREHENSIVE_ATHENA_MANAGED_QUERY_RESULTS_ANALYSIS.md]*
