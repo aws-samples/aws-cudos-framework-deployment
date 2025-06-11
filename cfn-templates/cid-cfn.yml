@@ -1885,6 +1885,7 @@ Resources:
       Environment:
         Variables:
           athena_workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
+          athena_query_results_mode: !Ref AthenaQueryResultsMode
           quicksight_datasource_id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
           quicksight_datasource_role_arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
           athena_database: !If [NeedDatabase, !Ref CidDatabase, !Ref DatabaseName ]
