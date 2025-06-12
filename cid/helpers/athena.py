@@ -282,16 +282,18 @@ class Athena(CidBase):
         logger.debug(f'WorkGroups: {result.get("WorkGroups")}')
         return result.get('WorkGroups')
 
-    def get_table_metadata(self, table_name: str, database_name: str=None) -> dict:
-        table_metadata = self._metadata.get(table_name)
-        params = {
-            'CatalogName': self.CatalogName,
-            'DatabaseName': database_name or self.DatabaseName,
-            'TableName': table_name
-        }
+    def get_table_metadata(self, table_name: str, database_name: str=None, no_cache: bool=False) -> dict:
+        table_metadata = None
+        if not no_cache:
+            table_metadata = self._metadata.get(table_name)
         if not table_metadata:
+            params = {
+                'CatalogName': self.CatalogName,
+                'DatabaseName': database_name or self.DatabaseName,
+                'TableName': table_name,
+            }
             table_metadata = self.client.get_table_metadata(**params).get('TableMetadata')
-            self._metadata.update({table_name: table_metadata})
+            self._metadata[table_name] = table_metadata
 
         return table_metadata
 

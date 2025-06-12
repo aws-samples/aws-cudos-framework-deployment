@@ -190,7 +190,7 @@ def set_defaults(data: dict) -> None:
     if data:
         defaults.update(data)
 
-def get_defaults() -> None:
+def get_defaults() -> dict:
     global defaults
     return dict(defaults)
 
@@ -250,7 +250,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
     param_name = param_name.replace('_', '-')
 
     # override defaults from code with outside defaults
-    if param_name in defaults:
+    if param_name in get_defaults():
         default = defaults.get(param_name)
         if multi and isinstance(default, str):
             default = split_respecting_quotes(default)
@@ -276,6 +276,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         if multi:
             default = default or []
             default = default if isinstance(default, list) else [default]
+            default = [c for c in defaults if c in choices]
             if not isatty():
                 result = default
             else:

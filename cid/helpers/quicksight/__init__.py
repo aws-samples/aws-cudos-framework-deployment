@@ -1205,6 +1205,8 @@ class QuickSight(CidBase):
             schedule["RefreshType"] = schedule.get("RefreshType", "FULL_REFRESH")
             if "providedBy" in schedule:
                 del schedule["providedBy"]
+            if "source" in schedule:
+                del schedule["source"]
 
             if not existing_schedule:
                 # Avoid adding a new schedule  when customer already has put a schedule manually as this can lead to additional charges.

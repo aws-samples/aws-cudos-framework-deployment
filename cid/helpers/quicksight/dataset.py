@@ -68,32 +68,11 @@ class Dataset(CidQsResource):
         '''
         def _get_athena_columns(table, database=None):
             '''returns athena columns'''
+            metadata = athena.get_table_metadata(table, database_name=database, no_cache=True)
             return [
-                line[0].split(None, 1)
-                for line in athena.query(
-                    f'SHOW COLUMNS FROM {table}',
-                    include_header=True, database=database
-                )
+                (col['Name'], col['Type'])
+                for col in metadata.get('Columns', [])
             ]
-
-        def _replace_columns(existing_columns, new_columns):
-            '''replace columns but keep the order, ignore case changes
-                assert _replace_columns(
-                    [{'Name': 'a'}, {'Name': 'B'}, {'Name': 'c'}],
-                    [{'Name': 'A'}, {'Name': 'b'}, {'Name': 'd'}]) \
-                 == [{'Name': 'a'}, {'Name': 'B'}, {'Name': 'd'}]
-            Different types will be replaced
-            '''
-            existing_columns = [
-                existing_col
-                for existing_col in existing_columns
-                if str(existing_col).lower() in [str(c).lower() for c in new_columns]
-            ] # filter out old
-            for col in new_columns: # add new
-                if col['Name'].lower() not in [c['Name'].lower() for c in existing_columns]:
-                    existing_columns.append(col)
-                #REFACTOR: what if col is there but another type?
-            return existing_columns
 
         def _athena_to_qs_type(col, athena_type):
             '''map athena type to QS type
@@ -125,8 +104,14 @@ class Dataset(CidQsResource):
                 root_lt = dataset['LogicalTableMap'][lt]
                 break
         else:
-            raise ValueError(f'Unable to find a root logical table in the dataset {dataset}')
-        projected_cols = next(ds['ProjectOperation']["ProjectedColumns"] for ds in root_lt['DataTransforms'] if 'ProjectOperation' in ds)
+            # take the first one and let's hope it is fine
+            root_lt = next(iter(dataset['LogicalTableMap'].values()))
+
+        projected_cols = next( # get the first DataTrasform with ProjectOperation
+            ds['ProjectOperation']["ProjectedColumns"]
+            for ds in root_lt['DataTransforms']
+            if 'ProjectOperation' in ds
+        )
 
         # Update each PhysicalTableMap with all columns from athena views
         all_columns = []
@@ -135,12 +120,31 @@ class Dataset(CidQsResource):
             database = pt['RelationalTable']['Schema']
             columns = _get_athena_columns(table_name, database)
             logger.trace(f'columns = {columns}')
+            athena_columns = [
+                _athena_to_qs_type(name, athena_type.lower())
+                for name, athena_type in columns
+            ]
+            logger.trace(f'athena_columns = {columns}')
+            athena_columns_names = [c['Name'].lower() for c in athena_columns]
+            dataset_columns = pt['RelationalTable']['InputColumns']
+            dataset_columns_names = [col['Name'].lower() for col in dataset_columns]
+            dataset_columns_to_keep = [
+                col for col in dataset_columns
+                if col['Name'].lower() in athena_columns_names
+            ]
+            new_columns = [
+                col for col in athena_columns
+                if col['Name'].lower() not in dataset_columns_names
+            ] # BTW what if col is there but another type?
 
-            new_columns = [_athena_to_qs_type(name, athena_type) for name, athena_type in columns]
-            #for col in new_columns:
-            #    if col['Name'] in [existing_col['Name'] for existing_col in all_columns]: #FIXME not all_columns so far but must be all cols before modification
-            #        col['Name'] = f'{col["Name"]}[{table_name}]'
-            pt['RelationalTable']['InputColumns'] = _replace_columns(pt['RelationalTable']['InputColumns'], new_columns)
+            for col in new_columns: # alter names for columns that already exist
+                if col['Name'].lower() in projected_cols:
+                    col['Name'] = f"{col['Name']}[{table_name}]" # What if it is alrady there?
+
+            logger.trace(f'dataset_columns_to_keep = {dataset_columns_to_keep}')
+            if new_columns:
+                logger.trace(f'new_columns = {new_columns}')
+            pt['RelationalTable']['InputColumns'] = dataset_columns_to_keep + new_columns
             all_columns += [col['Name'] for col in pt['RelationalTable']['InputColumns']]
 
         # Add all needed calc fields
