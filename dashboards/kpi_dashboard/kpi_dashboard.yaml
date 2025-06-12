@@ -573,7 +573,7 @@ dashboards:
         Expression: ({EC2 Graviton Coverage})/{EC2 Graviton Goal }
         Name: EC2 Graviton Trend
       - DataSetIdentifier: kpi_tracker
-        Expression: SUM({ec2_previous_generation_cost})/SUM({ec2_all_cost})
+        Expression: SUM({ec2_previous_generation_cost})/SUM({ec2_usage_cost})
         Name: EC2 Previous Generation Coverage
       - DataSetIdentifier: kpi_tracker
         Expression: max(${EC2PreviousGeneration})/100
@@ -587,7 +587,7 @@ dashboards:
         Expression: '{EC2 Previous Generation Goal}/{EC2 Previous Generation Coverage}'
         Name: EC2 Previous Generation Trend
       - DataSetIdentifier: kpi_tracker
-        Expression: SUM({ec2_spot_cost})/SUM({ec2_all_cost})
+        Expression: SUM({ec2_spot_cost})/SUM({ec2_usage_cost})
         Name: EC2 Spot Coverage
       - DataSetIdentifier: kpi_tracker
         Expression: max(${EC2SpotGoal})/100
