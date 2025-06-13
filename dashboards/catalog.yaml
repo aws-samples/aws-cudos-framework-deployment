@@ -15,3 +15,6 @@ Resources:
   - Url: cora/cora.yaml
   - Url: aws-budgets/aws-budgets.yaml
   - Url: data-collection-monitor/data-collection-monitor.yaml
+  - Url: cudos/CUDOS-v5.yaml
+  - Url: kpi_dashboard/kpi_dashboard.yaml
+  - Url: cost-intelligence/cost-intelligence.yaml
