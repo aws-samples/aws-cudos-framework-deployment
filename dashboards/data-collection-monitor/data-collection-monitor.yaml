@@ -1763,6 +1763,8 @@ dashboards:
             \ align=\"right\"/>\n  <br/>\n  <block align=\"right\"/>\n</text-box>"
           SheetTextBoxId: bd4532d8-64e3-4f76-bd7b-3beec005192f
         Visuals: []
+    version: v1.0.0
+    file: ./dc-monitor-definition.yaml
 datasets:
   data_collection_logs:
     data:
@@ -1779,6 +1781,10 @@ datasets:
             - Name: timestamp
               Type: DATETIME
             - Name: module
+              Type: STRING
+            - Name: stackversion
+              Type: STRING
+            - Name: subversion
               Type: STRING
             - Name: params
               Type: STRING
@@ -1818,13 +1824,9 @@ datasets:
               Type: STRING
             - Name: lambda_log_stream
               Type: STRING
-            - Name: statemachine_id
+            - Name: child_state_machine_exid
               Type: STRING
-            - Name: child_exe_uuid
-              Type: STRING
-            - Name: stackversion
-              Type: STRING
-            - Name: subversion
+            - Name: state_machine_arn
               Type: STRING
       LogicalTableMap:
         8a42207f-cff6-470f-80e1-405c2e8992c2:
@@ -1846,10 +1848,22 @@ datasets:
               - ColumnName: status_code_binary_icon
                 ColumnId: 5e311de8-5352-4807-9060-b8425d9e08d6
                 Expression: concat({status_code_icon}, " ", {status_code_binary})
+          - CreateColumnsOperation:
+              Columns:
+              - ColumnName: execution_duration
+                ColumnId: b5c0990b-f123-409e-983d-94b5d0149e02
+                Expression: |-
+                  dateDiff(
+                      maxOver(max(ifelse(modulefunction="sf-entry",timestamp,NULL)), [mainexeuuid]),
+                      maxOver(max(ifelse(modulefunction="sf-exit",timestamp,NULL)), [mainexeuuid]),
+                      "SS"
+                  )
           - ProjectOperation:
               ProjectedColumns:
               - timestamp
               - module
+              - stackversion
+              - subversion
               - params
               - modulefunction
               - payerid
@@ -1869,13 +1883,12 @@ datasets:
               - lambda_request_id
               - lambda_log_group
               - lambda_log_stream
-              - statemachine_id
-              - child_exe_uuid
-              - stackversion
-              - subversion
+              - child_state_machine_exid
+              - state_machine_arn
               - status_code_icon
               - status_code_binary
               - status_code_binary_icon
+              - execution_duration
           Source:
             PhysicalTableId: 8ce332f6-9135-4ebc-be5d-42f9dbb2c549
       ImportMode: SPICE
@@ -1902,7 +1915,6 @@ views:
            "${athena_database_name}".dc_execution_log
          WHERE (modulefunction = 'sf-entry')
          GROUP BY 1, 2
-         ORDER BY 1 ASC, 2 ASC, 3 ASC
       )
       , most_recent_uuid_by_module AS (
          SELECT mainexeuuid
@@ -1913,6 +1925,8 @@ views:
       SELECT
         timestamp
       , module
+      , stackversion
+      , subversion
       , params
       , modulefunction
       , payerid
@@ -1920,9 +1934,9 @@ views:
       , region
       , statuscode
       , subcode
-      , (CASE WHEN (service = 'StepFunction') THEN CAST(null AS integer) ELSE recordcount END) recordcount
+      , recordcount
       , description
-      , (CASE WHEN (length(datalocation) = 0) THEN CAST(null AS varchar) ELSE datalocation END) datalocation
+      , datalocation
       , m.mainexeuuid
       , subuuid
       , service
@@ -1932,10 +1946,8 @@ views:
       , json_extract_scalar(subuuid, '$["lambda-request-id"]') lambda_request_id
       , json_extract_scalar(subuuid, '$["lambda-log-group"]') lambda_log_group
       , json_extract_scalar(subuuid, '$["lambda-log-stream"]') lambda_log_stream
-      , json_extract_scalar(subuuid, '$["statemachine-id"]') statemachine_id
-      , json_extract_scalar(subuuid, '$["child-exe-uuid"]') child_exe_uuid
-      , stackversion
-      , subversion
+      , json_extract_scalar(subuuid, '$["child-state-machine-exid"]') child_state_machine_exid
+      , json_extract_scalar(subuuid, '$["statemachine-id"]') state_machine_arn
       FROM
         ("${athena_database_name}".dc_execution_log m
       LEFT JOIN most_recent_uuid_by_module r ON (m.mainexeuuid = r.mainexeuuid))
