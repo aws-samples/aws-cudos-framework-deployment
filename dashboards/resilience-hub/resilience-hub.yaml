@@ -10,7 +10,7 @@ dashboards:
       - resiliencehub_sop_recommendations
     name: ResilienceVue
     dashboardId: resiliencevueanalysis
-    category: Custom
+    category: Additional
     theme: MIDNIGHT
     templateId: resiliencevueanalysis
     sourceAccountId: '277707120426'
