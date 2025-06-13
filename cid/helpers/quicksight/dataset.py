@@ -107,7 +107,15 @@ class Dataset(CidQsResource):
             # take the first one and let's hope it is fine
             root_lt = next(iter(dataset['LogicalTableMap'].values()))
 
-        projected_cols = next( # get the first DataTrasform with ProjectOperation
+        renames = {}
+        for lt in dataset['LogicalTableMap'].values():
+            for dt in lt.get('DataTransforms', []):
+                if "RenameColumnOperation" in dt:
+                    key = lt['Source'].get('PhysicalTableId', '') + '.' +  dt["RenameColumnOperation"]['ColumnName'] 
+                    renames[key] = dt["RenameColumnOperation"]['NewColumnName']
+        logger.trace(f'renames = {renames}')
+
+        projected_cols = next( # get the first DataTransform with ProjectOperation
             ds['ProjectOperation']["ProjectedColumns"]
             for ds in root_lt['DataTransforms']
             if 'ProjectOperation' in ds
@@ -115,7 +123,7 @@ class Dataset(CidQsResource):
 
         # Update each PhysicalTableMap with all columns from athena views
         all_columns = []
-        for pt in dataset['PhysicalTableMap'].values():
+        for pt_id, pt in dataset['PhysicalTableMap'].items():
             table_name = pt['RelationalTable']['Name']
             database = pt['RelationalTable']['Schema']
             columns = _get_athena_columns(table_name, database)
@@ -137,15 +145,20 @@ class Dataset(CidQsResource):
                 if col['Name'].lower() not in dataset_columns_names
             ] # BTW what if col is there but another type?
 
-            for col in new_columns: # alter names for columns that already exist
-                if col['Name'].lower() in projected_cols:
-                    col['Name'] = f"{col['Name']}[{table_name}]" # What if it is alrady there?
+            # FIXME: need to add RenameColumnOperation!  col['Name'] => f"{col['Name']}[{table_name}]"
+            new_columns = [col for col in new_columns if col['Name'].lower() not in projected_cols] # avoid things that are already there (probably need to take renames into account)
+            new_columns = [col for col in new_columns if col['Name'].lower() not in all_columns] # avoid adding 2nd time
 
             logger.trace(f'dataset_columns_to_keep = {dataset_columns_to_keep}')
             if new_columns:
-                logger.trace(f'new_columns = {new_columns}')
+                logger.trace(f'new_columns = {new_columns} from {pt_id}')
             pt['RelationalTable']['InputColumns'] = dataset_columns_to_keep + new_columns
-            all_columns += [col['Name'] for col in pt['RelationalTable']['InputColumns']]
+
+            for col in new_columns:
+                col_name = col['Name']
+                if f'{pt_id}.{col_name}' in renames:
+                    col_name = renames[f'{pt_id}.{col_name}']
+                all_columns.append(col_name)
 
         # Add all needed calc fields
         existing_create_columns = [dt.get("CreateColumnsOperation", {}).get('Columns', [None])[0] for dt in root_lt.get('DataTransforms', []) if dt.get("CreateColumnsOperation")]
@@ -172,12 +185,12 @@ class Dataset(CidQsResource):
         # Add all new cols to projected columns
         for col in set(all_columns):
             if col.lower() not in [c.lower() for c in projected_cols]:
+                logger.trace(f'adding {col}')
                 projected_cols.append(col)
 
         # filter out all columns that cannot be used for dataset creation
         update_ = {key: value for key, value in dataset.items() if key in 'DataSetId, Name, PhysicalTableMap, LogicalTableMap, ImportMode, ColumnGroups, FieldFolders, RowLevelPermissionDataSet, RowLevelPermissionTagConfiguration, ColumnLevelPermissionRules, DataSetUsageConfiguration, DatasetParameters'.split(', ')}
         logger.trace(f'update_ = {update_}')
-
         return update_
 
 
