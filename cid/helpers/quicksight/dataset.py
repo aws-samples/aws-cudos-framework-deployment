@@ -147,7 +147,7 @@ class Dataset(CidQsResource):
 
             # FIXME: need to add RenameColumnOperation!  col['Name'] => f"{col['Name']}[{table_name}]"
             new_columns = [col for col in new_columns if col['Name'].lower() not in projected_cols] # avoid things that are already there (probably need to take renames into account)
-            new_columns = [col for col in new_columns if col['Name'].lower() not in all_columns] # avoid adding 2nd time
+            new_columns = [col for col in new_columns if col['Name'] not in all_columns] # avoid adding 2nd time
 
             logger.trace(f'dataset_columns_to_keep = {dataset_columns_to_keep}')
             if new_columns:
