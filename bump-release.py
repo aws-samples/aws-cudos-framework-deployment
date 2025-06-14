@@ -1,4 +1,3 @@
-import os
 import sys
 import subprocess
 
@@ -22,7 +21,7 @@ elif bump=='minor':
 else:
 	raise NotImplementedError('only patch and minor are implemented')
 
-os.system(f"git checkout -b 'release/{new_ver}'")
+print(subprocess.check_output(f"git checkout -b 'release/{new_ver}'", shell=True).decode('utf-8').strip())
 
 tx = open('cid/_version.py').read()
 with open('cid/_version.py', "w") as f:
