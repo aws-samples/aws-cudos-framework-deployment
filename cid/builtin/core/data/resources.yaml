@@ -563,7 +563,7 @@ views:
     dependsOn:
       cur2: True
     data: |
-      CREATE OR REPLACE VIEW "cur2" AS
+      CREATE VIEW "cur2" AS
       SELECT *
       FROM "${cur2_database}"."${cur2_table_name}"
 
