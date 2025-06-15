@@ -561,7 +561,6 @@ views:
 
   cur2_view:
     dependsOn:
-      tags: json
       cur2: True
     data: |
       CREATE OR REPLACE VIEW "cur2" AS
