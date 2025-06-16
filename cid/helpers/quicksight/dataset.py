@@ -8,6 +8,12 @@ from cid.helpers.quicksight.resource import CidQsResource
 
 logger = logging.getLogger(__name__)
 
+DATASET_PROPERTIES = [
+    'AwsAccountId', 'DataSetId', 'Name', 'PhysicalTableMap', 'LogicalTableMap', 'ImportMode', 'ColumnGroups',
+    'RowLevelPermissionDataSet', 'RowLevelPermissionTagConfiguration', 'FieldFolders', 'ColumnLevelPermissionRules',
+    'DataSetUsageConfiguration', 'DatasetParameters', 'PerformanceConfiguration'
+]
+
 
 class Dataset(CidQsResource):
 
@@ -189,7 +195,7 @@ class Dataset(CidQsResource):
                 projected_cols.append(col)
 
         # filter out all columns that cannot be used for dataset creation
-        update_ = {key: value for key, value in dataset.items() if key in 'DataSetId, Name, PhysicalTableMap, LogicalTableMap, ImportMode, ColumnGroups, FieldFolders, RowLevelPermissionDataSet, RowLevelPermissionTagConfiguration, ColumnLevelPermissionRules, DataSetUsageConfiguration, DatasetParameters'.split(', ')}
+        update_ = {key: value for key, value in dataset.items() if key in DATASET_PROPERTIES}
         logger.trace(f'update_ = {update_}')
         return update_
 
@@ -231,3 +237,40 @@ class Dataset(CidQsResource):
             if isinstance(data['Data'].get(alias), dict) :
                 data['Data'][alias]['clause'] = join
         return (yaml.safe_dump(data))
+
+    @staticmethod
+    def datasets_are_identical(dataset1, dataset2):
+        ''' Compare 2 datasets and returns True if no difference found
+        '''
+        if (not dataset1 and not dataset2):
+            return True
+        identical = False
+        if (dataset1 and not dataset2) or (not dataset1 and dataset2):
+            return identical
+        dataset1 = dataset1 if isinstance(dataset1, Dataset) else Dataset(dataset1)
+        dataset2 = dataset2 if isinstance(dataset2, Dataset) else Dataset(dataset2)
+        identical = True
+        for key in DATASET_PROPERTIES:
+            if key in ['AwsAccountId', 'DataSetId']:
+                continue
+            if dataset1.raw.get(key) != dataset2.raw.get(key):
+                logger.trace(f'not identical {key} {dataset1.raw.get(key)} != {dataset2.raw.get(key)}')
+                identical = False
+        logger.trace(f'identical to existing = {identical}')
+        return identical
+
+    @staticmethod
+    def merge_datasets(dataset1, dataset2):
+        ''' merge high level 2 datasets. Not a deep merge.
+        '''
+        if not dataset2:
+            return dataset1
+        if not dataset1:
+            return dataset2
+        dataset1 = dataset1 if isinstance(dataset1, Dataset) else Dataset(dataset1)
+        dataset2 = dataset2 if isinstance(dataset2, Dataset) else Dataset(dataset2)
+        result = {}
+        for key in DATASET_PROPERTIES:
+            if dataset1.raw.get(key) or dataset2.raw.get(key):
+                result[key] = dataset1.raw.get(key) or dataset2.raw.get(key)
+        return result
