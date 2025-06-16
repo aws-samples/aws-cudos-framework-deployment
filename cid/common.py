@@ -1668,17 +1668,11 @@ class Cid():
                         update_dataset = True
                     break
 
-            identical = False # check if dataset needs an update
-            if isinstance(found_dataset, Dataset):
-                identical = True
-                for key in 'PhysicalTableMap LogicalTableMap OutputColumns ImportMode DataSetUsageConfiguration RowLevelPermissionDataSet FieldFolders RowLevelPermissionTagConfiguration DatasetParameters'.split():
-                    if found_dataset.raw.get(key) != compiled_dataset.get(key):
-                        logger.trace(f'not identical {key} {found_dataset.raw.get(key)} != {compiled_dataset.get(key)}')
-                        identical = False
-                logger.trace(f'identical to existing = {identical}')
+            identical = Dataset.datasets_are_identical(found_dataset, compiled_dataset) # check if dataset needs an update
 
             if update_dataset and not identical:
-                self.qs.update_dataset(compiled_dataset)
+                merged_dataset = Dataset.merge_datasets(compiled_dataset, found_dataset)
+                self.qs.update_dataset(merged_dataset)
                 if compiled_dataset.get("ImportMode") == "SPICE":
                     dataset_id = compiled_dataset.get('DataSetId')
                     schedules_definitions = []
