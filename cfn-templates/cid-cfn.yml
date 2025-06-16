@@ -605,26 +605,11 @@ Resources:
       Handler: 'index.lambda_handler'
       Code:
         ZipFile: |
-          # This is a legacy lambda. You can delete it. This was kept to disable delete workgroup functionality.
-          import json
-          import urllib3
-
+          # Legacy lambda - will be deleted in next major update
+          import cfnresponse
+          
           def lambda_handler(event, context):
-              url = event.get('ResponseURL')
-              json_body = json.dumps({
-                'Status': 'SUCCESS',
-                'Reason': 'legacy',
-                'PhysicalResourceId': 'keep_it_constant',
-                'StackId': event.get('StackId'),
-                'RequestId': event.get('RequestId'),
-                'LogicalResourceId': event.get('LogicalResourceId'),
-              })
-              try:
-                  http = urllib3.PoolManager()
-                  response = http.request('PUT', url, body=json_body, headers={'content-type' : '', 'content-length' : str(len(json_body))}, retries=False)
-                  print(f"Status code: {response}")
-              except Exception as exc:
-                  print("Failed sending PUT to CFN: " + str(exc))
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, 'keep_it_constant', 'legacy')
     Metadata:
       cfn_nag:
         rules_to_suppress:
