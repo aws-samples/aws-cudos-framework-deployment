@@ -58,7 +58,7 @@ jobs:
         run: |
           cat > ./terraform/terraform.tfvars << EOF
           global_values = {
-            destination_account_id = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
+            destination_account_id = "${{ secrets.AWS_ACCOUNT_ID }}"
             source_account_ids     = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
             aws_region             = "${{ secrets.AWS_REGION }}"
             quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
