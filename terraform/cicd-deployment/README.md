@@ -159,9 +159,11 @@ The module uses an S3 backend for state storage. Configure your backend in a `ba
 ```hcl
 terraform {
   backend "s3" {
-    bucket = "your-terraform-state-bucket"
-    key    = "terraform/cid/terraform.tfstate"
-    region = "us-east-1"
+    bucket       = "your-terraform-state-bucket"
+    key          = "terraform/cid/terraform.tfstate"
+    region       = "us-east-1"   # Replace with your desired region
+    use_lockfile = true          # terraform-state-lock
+    encrypt      = true
   }
 }
 ```
