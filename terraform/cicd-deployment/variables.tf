@@ -1,4 +1,4 @@
-variable "data_exports_child" {
+variable "cid_dataexports_destination" {
   type = object({
     # Prefix used for all named resources
     resource_prefix = string
@@ -29,98 +29,98 @@ variable "data_exports_child" {
   }
 
   validation {
-    condition     = can(regex("^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$", var.data_exports_child.resource_prefix))
+    condition     = can(regex("^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$", var.cid_dataexports_destination.resource_prefix))
     error_message = "ResourcePrefix must match pattern ^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   }
 
   validation {
-    condition     = contains(["yes", "no"], var.data_exports_child.manage_cur2)
+    condition     = contains(["yes", "no"], var.cid_dataexports_destination.manage_cur2)
     error_message = "ManageCUR2 must be yes or no"
   }
 
   validation {
-    condition     = contains(["yes", "no"], var.data_exports_child.manage_focus)
+    condition     = contains(["yes", "no"], var.cid_dataexports_destination.manage_focus)
     error_message = "ManageFOCUS must be yes or no"
   }
 
   validation {
-    condition     = contains(["yes", "no"], var.data_exports_child.manage_coh)
+    condition     = contains(["yes", "no"], var.cid_dataexports_destination.manage_coh)
     error_message = "ManageCOH must be yes or no"
   }
 
   validation {
-    condition     = contains(["yes", "no"], var.data_exports_child.enable_scad)
+    condition     = contains(["yes", "no"], var.cid_dataexports_destination.enable_scad)
     error_message = "EnableSCAD must be yes or no"
   }
 
   validation {
-    condition     = contains(["HOURLY", "DAILY", "MONTHLY"], var.data_exports_child.time_granularity)
+    condition     = contains(["HOURLY", "DAILY", "MONTHLY"], var.cid_dataexports_destination.time_granularity)
     error_message = "TimeGranularity must be HOURLY, DAILY, or MONTHLY"
   }
 }
 
-variable "data_exports_management" {
+variable "cid_dataexports_source" {
   type = object({
     # Prefix used for all named resources in management account
-    mgmt_resource_prefix = string
+    source_resource_prefix = string
     # Enable CUR 2.0 management in management account
-    mgmt_manage_cur2 = string
+    source_manage_cur2 = string
     # Enable FOCUS management in management account
-    mgmt_manage_focus = string
+    source_manage_focus = string
     # Enable Cost Optimization Hub management in management account
-    mgmt_manage_coh = string
+    source_manage_coh = string
     # Enable Split Cost Allocation Data in management account
-    mgmt_enable_scad = string
+    source_enable_scad = string
     # Path for IAM roles in management account
-    mgmt_role_path = string
+    source_role_path = string
     # Time granularity for CUR 2.0 in management account
-    mgmt_time_granularity = string
+    source_time_granularity = string
   })
 
   description = "Configuration for data exports management account settings"
 
   default = {
-    mgmt_resource_prefix  = "cid"
-    mgmt_manage_cur2      = "yes"
-    mgmt_manage_focus     = "no"
-    mgmt_manage_coh       = "no"
-    mgmt_enable_scad      = "yes"
-    mgmt_role_path        = "/"
-    mgmt_time_granularity = "HOURLY"
+    source_resource_prefix  = "cid"
+    source_manage_cur2      = "yes" #
+    source_manage_focus     = "no"
+    source_manage_coh       = "no"
+    source_enable_scad      = "yes"
+    source_role_path        = "/"
+    source_time_granularity = "HOURLY"
   }
 
   validation {
-    condition     = can(regex("^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$", var.data_exports_management.mgmt_resource_prefix))
+    condition     = can(regex("^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$", var.cid_dataexports_source.source_resource_prefix))
     error_message = "ResourcePrefix must match pattern ^[a-z0-9]+[a-z0-9-]{1,61}[a-z0-9]+$"
   }
 
   validation {
-    condition     = contains(["yes", "no"], var.data_exports_management.mgmt_manage_cur2)
+    condition     = contains(["yes", "no"], var.cid_dataexports_source.source_manage_cur2)
     error_message = "ManageCUR2 must be yes or no"
   }
 
   validation {
-    condition     = contains(["yes", "no"], var.data_exports_management.mgmt_manage_focus)
+    condition     = contains(["yes", "no"], var.cid_dataexports_source.source_manage_focus)
     error_message = "ManageFOCUS must be yes or no"
   }
 
   validation {
-    condition     = contains(["yes", "no"], var.data_exports_management.mgmt_manage_coh)
+    condition     = contains(["yes", "no"], var.cid_dataexports_source.source_manage_coh)
     error_message = "ManageCOH must be yes or no"
   }
 
   validation {
-    condition     = contains(["yes", "no"], var.data_exports_management.mgmt_enable_scad)
+    condition     = contains(["yes", "no"], var.cid_dataexports_source.source_enable_scad)
     error_message = "EnableSCAD must be yes or no"
   }
 
   validation {
-    condition     = contains(["HOURLY", "DAILY", "MONTHLY"], var.data_exports_management.mgmt_time_granularity)
+    condition     = contains(["HOURLY", "DAILY", "MONTHLY"], var.cid_dataexports_source.source_time_granularity)
     error_message = "TimeGranularity must be HOURLY, DAILY, or MONTHLY"
   }
 }
 
-variable "cudos_dashboard" {
+variable "cloud_intelligence_dashboards" {
   type = object({
     # Prerequisites Variables
     prerequisites_quicksight             = string
@@ -201,7 +201,6 @@ variable "cudos_dashboard" {
     permissions_boundary  = ""
     role_path             = "/"
   }
-
 }
 
 variable "global_values" {
@@ -214,8 +213,12 @@ variable "global_values" {
     aws_region = string
     # Quicksight user to share the dashboard with
     quicksight_user = string
-    # GitHub tag version using for the deployment (e.g. 4.0.7)
-    tag_version = string
+    # CloudFormation template using for the deployment, see description to get the semantic version number (e.g. 4.1.5) https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/cfn-templates/cid-cfn.yml
+    cid_cfn_version = string
+    # CloudFormation template using for the deployment, see description to get the semantic version number (e.g. 0.5.0) https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/blob/main/data-exports/deploy/data-exports-aggregation.yaml
+    data_export_version = string
+    # Environment name (e.g., dev, staging, prod)
+    environment = string
   })
 
   description = "Global configuration values for AWS environment"
@@ -225,7 +228,9 @@ variable "global_values" {
     source_account_ids     = ""
     aws_region             = ""
     quicksight_user        = null
-    tag_version            = ""
+    cid_cfn_version        = ""
+    data_export_version    = ""
+    environment            = ""
   }
 
   validation {
@@ -244,7 +249,23 @@ variable "global_values" {
   }
 
   validation {
-    condition     = var.global_values.tag_version == "" || can(regex("^\\d+\\.\\d+\\.\\d+$", var.global_values.tag_version))
-    error_message = "The tag_version must be in the format X.Y.Z where X, Y, and Z are digits (e.g., 4.0.7)"
+    condition     = var.global_values.cid_cfn_version == "" || can(regex("^\\d+\\.\\d+\\.\\d+$", var.global_values.cid_cfn_version))
+    error_message = "The cid_cfn_version must be in the format X.Y.Z where X, Y, and Z are digits (e.g., 0.5.0)"
   }
+
+  validation {
+    condition     = var.global_values.data_export_version == "" || can(regex("^\\d+\\.\\d+\\.\\d+$", var.global_values.data_export_version))
+    error_message = "The data_export_version must be in the format X.Y.Z where X, Y, and Z are digits (e.g., 4.1.5)"
+  }
+
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.global_values.environment)
+    error_message = "Environment must be one of: dev, staging, prod"
+  }
+}
+
+variable "destination_role_arn" {
+  description = "ARN of the role to assume in the destination account"
+  type        = string
+  default     = null
 }

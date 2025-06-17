@@ -1,98 +1,131 @@
-resource "aws_cloudformation_stack" "data_exports_child" {
+resource "aws_cloudformation_stack" "cid_dataexports_destination" {
   # checkov:skip=CKV_AWS_124:SNS topic not required for this use case
   provider     = aws.destination_account
-  name         = "data-exports-aggregation-child"
-  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/data-exports-aggregation.yaml"
-  capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
+  name         = "CID-DataExports-Destination"
+  template_url = local.template_urls.data_exports
+  capabilities = local.common_capabilities
+
   parameters = {
     DestinationAccountId = var.global_values.destination_account_id
-    ResourcePrefix       = var.data_exports_child.resource_prefix
-    ManageCUR2           = var.data_exports_child.manage_cur2
-    ManageFOCUS          = var.data_exports_child.manage_focus
-    ManageCOH            = var.data_exports_child.manage_coh
+    ResourcePrefix       = var.cid_dataexports_destination.resource_prefix
+    ManageCUR2           = var.cid_dataexports_destination.manage_cur2
+    ManageFOCUS          = var.cid_dataexports_destination.manage_focus
+    ManageCOH            = var.cid_dataexports_destination.manage_coh
     SourceAccountIds     = var.global_values.source_account_ids
-    EnableSCAD           = var.data_exports_child.enable_scad
-    RolePath             = var.data_exports_child.role_path
-    TimeGranularity      = var.data_exports_child.time_granularity
+    EnableSCAD           = var.cid_dataexports_destination.enable_scad
+    RolePath             = var.cid_dataexports_destination.role_path
+    TimeGranularity      = var.cid_dataexports_destination.time_granularity
+  }
+
+  timeouts {
+    create = lookup(local.default_timeouts, "create", "30m")
+    update = lookup(local.default_timeouts, "update", "30m")
+    delete = lookup(local.default_timeouts, "delete", "30m")
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
 
-resource "aws_cloudformation_stack" "data_exports_management" {
+resource "aws_cloudformation_stack" "cid_dataexports_source" {
   # checkov:skip=CKV_AWS_124:SNS topic not required for this use case
   depends_on = [
-    aws_cloudformation_stack.data_exports_child
+    aws_cloudformation_stack.cid_dataexports_destination
   ]
-  name         = "data-exports-aggregation-mgmt"
+  name         = "CID-DataExports-Source"
   provider     = aws
-  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/data-exports-aggregation.yaml"
-  capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
+  template_url = local.template_urls.data_exports
+  capabilities = local.common_capabilities
+
   parameters = {
     DestinationAccountId = var.global_values.destination_account_id
-    ResourcePrefix       = var.data_exports_management.mgmt_resource_prefix
-    ManageCUR2           = var.data_exports_management.mgmt_manage_cur2
-    ManageFOCUS          = var.data_exports_management.mgmt_manage_focus
-    ManageCOH            = var.data_exports_management.mgmt_manage_coh
+    ResourcePrefix       = var.cid_dataexports_source.source_resource_prefix
+    ManageCUR2           = var.cid_dataexports_source.source_manage_cur2
+    ManageFOCUS          = var.cid_dataexports_source.source_manage_focus
+    ManageCOH            = var.cid_dataexports_source.source_manage_coh
     SourceAccountIds     = var.global_values.source_account_ids
-    EnableSCAD           = var.data_exports_management.mgmt_enable_scad
-    RolePath             = var.data_exports_management.mgmt_role_path
-    TimeGranularity      = var.data_exports_management.mgmt_time_granularity
+    EnableSCAD           = var.cid_dataexports_source.source_enable_scad
+    RolePath             = var.cid_dataexports_source.source_role_path
+    TimeGranularity      = var.cid_dataexports_source.source_time_granularity
+  }
+
+  timeouts {
+    create = lookup(local.default_timeouts, "create", "30m")
+    update = lookup(local.default_timeouts, "update", "30m")
+    delete = lookup(local.default_timeouts, "delete", "30m")
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
 
-resource "aws_cloudformation_stack" "cudos_dashboard" {
+resource "aws_cloudformation_stack" "cloud_intelligence_dashboards" {
   # checkov:skip=CKV_AWS_124:SNS topic not required for this use case
-  name     = "cudos-dashboard-stack"
+  name     = "Cloud-Intelligence-Dashboards"
   provider = aws.destination_account
   depends_on = [
-    aws_cloudformation_stack.data_exports_management,
-    aws_cloudformation_stack.data_exports_child
+    aws_cloudformation_stack.cid_dataexports_source,
+    aws_cloudformation_stack.cid_dataexports_destination
   ]
-  capabilities = ["CAPABILITY_NAMED_IAM", "CAPABILITY_IAM"]
-  template_url = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn/${var.global_values.tag_version}/cid-cfn.yml"
+  capabilities = local.common_capabilities
+  template_url = local.template_urls.cudos
+
   parameters = {
-    PrerequisitesQuickSight            = var.cudos_dashboard.prerequisites_quicksight
-    PrerequisitesQuickSightPermissions = var.cudos_dashboard.prerequisites_quicksight_permissions
+    # Prerequisites Variables
+    PrerequisitesQuickSight            = var.cloud_intelligence_dashboards.prerequisites_quicksight
+    PrerequisitesQuickSightPermissions = var.cloud_intelligence_dashboards.prerequisites_quicksight_permissions
     QuickSightUser                     = var.global_values.quicksight_user
-    LakeFormationEnabled               = var.cudos_dashboard.lake_formation_enabled
+    LakeFormationEnabled               = var.cloud_intelligence_dashboards.lake_formation_enabled
 
     # CUR Parameters
-    CURVersion                      = var.cudos_dashboard.cur_version
-    DeployCUDOSv5                   = var.cudos_dashboard.deploy_cudos_v5
-    DeployCostIntelligenceDashboard = var.cudos_dashboard.deploy_cost_intelligence_dashboard
-    DeployKPIDashboard              = var.cudos_dashboard.deploy_kpi_dashboard
+    CURVersion                      = var.cloud_intelligence_dashboards.cur_version
+    DeployCUDOSv5                   = var.cloud_intelligence_dashboards.deploy_cudos_v5
+    DeployCostIntelligenceDashboard = var.cloud_intelligence_dashboards.deploy_cost_intelligence_dashboard
+    DeployKPIDashboard              = var.cloud_intelligence_dashboards.deploy_kpi_dashboard
 
     # Optimization Parameters
-    OptimizationDataCollectionBucketPath = var.cudos_dashboard.optimization_data_collection_bucket_path
-    DeployTAODashboard                   = var.cudos_dashboard.deploy_tao_dashboard
-    DeployComputeOptimizerDashboard      = var.cudos_dashboard.deploy_compute_optimizer_dashboard
-    PrimaryTagName                       = var.cudos_dashboard.primary_tag_name
-    SecondaryTagName                     = var.cudos_dashboard.secondary_tag_name
+    OptimizationDataCollectionBucketPath = var.cloud_intelligence_dashboards.optimization_data_collection_bucket_path
+    DeployTAODashboard                   = var.cloud_intelligence_dashboards.deploy_tao_dashboard
+    DeployComputeOptimizerDashboard      = var.cloud_intelligence_dashboards.deploy_compute_optimizer_dashboard
+    PrimaryTagName                       = var.cloud_intelligence_dashboards.primary_tag_name
+    SecondaryTagName                     = var.cloud_intelligence_dashboards.secondary_tag_name
 
     # Technical Parameters
-    AthenaWorkgroup                  = var.cudos_dashboard.athena_workgroup
-    AthenaQueryResultsBucket         = var.cudos_dashboard.athena_query_results_bucket
-    DatabaseName                     = var.cudos_dashboard.database_name
-    GlueDataCatalog                  = var.cudos_dashboard.glue_data_catalog
-    Suffix                           = var.cudos_dashboard.suffix
-    QuickSightDataSourceRoleName     = var.cudos_dashboard.quicksight_data_source_role_name
-    QuickSightDataSetRefreshSchedule = var.cudos_dashboard.quicksight_data_set_refresh_schedule
-    LambdaLayerBucketPrefix          = var.cudos_dashboard.lambda_layer_bucket_prefix
-    DeployCUDOSDashboard             = var.cudos_dashboard.deploy_cudos_dashboard
-    DataBucketsKmsKeysArns           = var.cudos_dashboard.data_buckets_kms_keys_arns
-    ShareDashboard                   = var.cudos_dashboard.share_dashboard
+    AthenaWorkgroup                  = var.cloud_intelligence_dashboards.athena_workgroup
+    AthenaQueryResultsBucket         = var.cloud_intelligence_dashboards.athena_query_results_bucket
+    DatabaseName                     = var.cloud_intelligence_dashboards.database_name
+    GlueDataCatalog                  = var.cloud_intelligence_dashboards.glue_data_catalog
+    Suffix                           = var.cloud_intelligence_dashboards.suffix
+    QuickSightDataSourceRoleName     = var.cloud_intelligence_dashboards.quicksight_data_source_role_name
+    QuickSightDataSetRefreshSchedule = var.cloud_intelligence_dashboards.quicksight_data_set_refresh_schedule
+    LambdaLayerBucketPrefix          = var.cloud_intelligence_dashboards.lambda_layer_bucket_prefix
+    DeployCUDOSDashboard             = var.cloud_intelligence_dashboards.deploy_cudos_dashboard
+    DataBucketsKmsKeysArns           = var.cloud_intelligence_dashboards.data_buckets_kms_keys_arns
+    ShareDashboard                   = var.cloud_intelligence_dashboards.share_dashboard
 
     # Legacy Parameters
-    KeepLegacyCURTable  = var.cudos_dashboard.keep_legacy_cur_table
-    CURBucketPath       = var.cudos_dashboard.cur_bucket_path
-    CURTableName        = var.cudos_dashboard.cur_table_name
-    PermissionsBoundary = var.cudos_dashboard.permissions_boundary
-    RolePath            = var.cudos_dashboard.role_path
+    KeepLegacyCURTable  = var.cloud_intelligence_dashboards.keep_legacy_cur_table
+    CURBucketPath       = var.cloud_intelligence_dashboards.cur_bucket_path
+    CURTableName        = var.cloud_intelligence_dashboards.cur_table_name
+    PermissionsBoundary = var.cloud_intelligence_dashboards.permissions_boundary
+    RolePath            = var.cloud_intelligence_dashboards.role_path
   }
+
   timeouts {
     create = "60m"
     update = "60m"
     delete = "60m"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [
+      # Ignore changes to tags
+      tags
+    ]
   }
 }
