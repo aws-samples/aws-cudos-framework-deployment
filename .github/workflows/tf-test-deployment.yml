@@ -1,0 +1,433 @@
+name: Terraform Test Deployment
+
+on:
+  pull_request:
+    branches:
+      - "*"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test-deployment:
+    runs-on: ubuntu-latest
+    
+    env:
+      AWS_DEFAULT_REGION: eu-west-2
+      DATABASE_NAME: cid_data_export
+      QUICKSIGHT_DATASOURCE_ID: CID-CMD-Athena
+      CUR_TABLE: cur2
+
+    outputs:
+      deployment_status: ${{ steps.deployment_status.outputs.status }}
+      error_details: ${{ steps.deployment_status.outputs.errors }}
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install bats
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
+      
+      - name:  Check Bats Version
+        run: |
+          bats -v
+
+      - name: cid-cmd Install
+        run: |
+          pip3 install --upgrade cid-cmd
+
+      - name: Basic check
+        run: |
+          cid-cmd status
+      
+      - name: Get CID versions
+        id: versions
+        run: |
+          # Get CID CFN version
+          CFN_VERSION=$(curl -s https://raw.githubusercontent.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/main/cfn-templates/cid-cfn.yml | grep Description | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "cid_cfn_version=$CFN_VERSION" >> $GITHUB_OUTPUT
+          
+          # Get Data Export version
+          EXPORT_VERSION=$(curl -s https://raw.githubusercontent.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/main/data-exports/deploy/data-exports-aggregation.yaml | grep Description | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "data_export_version=$EXPORT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create terraform.tfvars
+        run: |
+          cat > ./terraform/terraform.tfvars << EOF
+          global_values = {
+            destination_account_id = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
+            source_account_ids     = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
+            aws_region             = "${{ secrets.AWS_REGION }}"
+            quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
+            cid_cfn_version        = "${{ steps.versions.outputs.cid_cfn_version }}"
+            data_export_version    = "${{ steps.versions.outputs.data_export_version }}"
+            environment            = "dev"
+          }
+          EOF
+
+      - name: Create provider override for single-account deployment
+        run: |
+          cat > ./terraform/local_override.tf << EOF
+          provider "aws" {
+            alias = "destination_account"
+            # This will use the same credentials as the default provider
+          }
+          EOF
+
+      - name: Override backend.tf with S3 backend
+        run: |
+          cat > ./terraform/backend.tf << EOF
+          terraform {
+            backend "s3" {
+              bucket = "${{ secrets.BACKEND_S3_BUCKET }}"
+              key    = "terraform/cid-test/terraform.tfstate"
+              region = "${{ secrets.AWS_REGION }}"
+            }
+          }
+          EOF
+
+      # First setup and validate the original code
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.MANAGEMENT_ROLE_ARN }}
+          aws-region: eu-west-2
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Initialize Terraform for validation
+        working-directory: ./terraform
+        run: terraform init
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v3
+
+      - name: Run TFLint
+        working-directory: ./terraform
+        run: tflint --format=compact
+
+      - name: Terraform Format Check
+        working-directory: ./terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: ./terraform
+        run: terraform validate
+
+      # Now modify the files for testing
+      - name: Modify Terraform files for single-account deployment
+        run: |
+          # Create a temporary directory for modified Terraform files
+          TEMP_DIR="./terraform"
+          
+          # First check if the file exists and what it contains
+          echo "Examining main.tf file..."
+          if [ -f "$TEMP_DIR/main.tf" ]; then
+            # Create a backup of the original file
+            cp "$TEMP_DIR/main.tf" "$TEMP_DIR/main.tf.original"
+            
+            # Use grep to find the resource and then use awk to comment it out
+            grep -n "resource \"aws_cloudformation_stack\" \"cid_dataexports_source\"" "$TEMP_DIR/main.tf" | while read -r line; do
+              line_num=$(echo "$line" | cut -d: -f1)
+              echo "Found cid_dataexports_source at line $line_num"
+              
+              # Use awk to comment out the resource block
+              awk -v line="$line_num" 'NR==line {print "# SKIPPED FOR LOCAL TESTING\n# " $0; next} {print}' "$TEMP_DIR/main.tf.original" > "$TEMP_DIR/main.tf.tmp"
+              mv "$TEMP_DIR/main.tf.tmp" "$TEMP_DIR/main.tf"
+              
+              # Find the closing brace of the resource block
+              end_line=$(tail -n +$line_num "$TEMP_DIR/main.tf" | grep -n "^}" | head -1 | cut -d: -f1)
+              end_line=$((line_num + end_line - 1))
+              echo "Resource block ends at line $end_line"
+              
+              # Comment out all lines in the resource block
+              awk -v start="$line_num" -v end="$end_line" 'NR>start && NR<=end {print "# " $0; next} {print}' "$TEMP_DIR/main.tf" > "$TEMP_DIR/main.tf.tmp"
+              mv "$TEMP_DIR/main.tf.tmp" "$TEMP_DIR/main.tf"
+            done
+            
+            # Update dependencies
+            sed -i 's/aws_cloudformation_stack.cid_dataexports_source,/# aws_cloudformation_stack.cid_dataexports_source,/g' "$TEMP_DIR/main.tf"
+          else
+            echo "Error: main.tf not found in $TEMP_DIR"
+            exit 1
+          fi
+          
+          # Check and modify outputs.tf to remove references to deleted resources
+          if [ -f "$TEMP_DIR/outputs.tf" ]; then
+            echo "Modifying outputs.tf to remove references to deleted resources..."
+            
+            # Find and remove the output block for cid_dataexports_source_outputs
+            grep -n "output \"cid_dataexports_source_outputs\"" "$TEMP_DIR/outputs.tf" | while read -r line; do
+              line_num=$(echo "$line" | cut -d: -f1)
+              echo "Found cid_dataexports_source_outputs at line $line_num"
+              
+              # Find the closing brace of the output block
+              end_line=$(tail -n +$line_num "$TEMP_DIR/outputs.tf" | grep -n "^}" | head -1 | cut -d: -f1)
+              end_line=$((line_num + end_line - 1))
+              echo "Output block ends at line $end_line"
+              
+              # Remove the entire output block
+              sed -i "${line_num},${end_line}d" "$TEMP_DIR/outputs.tf"
+            done
+          fi
+          
+          # Fix the unused variable warning in variables.tf
+          if [ -f "$TEMP_DIR/variables.tf" ]; then
+            echo "Commenting out unused variable in variables.tf..."
+            
+            # Find the variable declaration
+            grep -n "variable \"cid_dataexports_source\"" "$TEMP_DIR/variables.tf" | while read -r line; do
+              line_num=$(echo "$line" | cut -d: -f1)
+              echo "Found cid_dataexports_source variable at line $line_num"
+              
+              # Find the closing brace of the variable block
+              end_line=$(tail -n +$line_num "$TEMP_DIR/variables.tf" | grep -n "^}" | head -1 | cut -d: -f1)
+              end_line=$((line_num + end_line - 1))
+              echo "Variable block ends at line $end_line"
+              
+              # Comment out the entire variable block
+              for (( i=line_num; i<=end_line; i++ )); do
+                sed -i "${i}s/^/# UNUSED: /" "$TEMP_DIR/variables.tf"
+              done
+            done
+          fi
+
+      # Initialize again with the modified files
+      - name: Initialize Terraform with modified files
+        working-directory: ./terraform
+        run: terraform init -reconfigure
+
+      - name: Plan Terraform
+        working-directory: ./terraform
+        run: |
+          terraform plan -out=plan.tfplan
+
+      - name: Apply Terraform
+        working-directory: ./terraform
+        run: |
+          terraform apply plan.tfplan
+
+      - name: Get Account ID
+        run: |
+          echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_ENV
+
+      - name: Check Directory Structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+
+      - name: Run Bats Tests
+        run: |
+          # Extract dashboard variables directly from variables.tf file
+          cd terraform
+          
+          # Extract values using grep and sed
+          deploy_cudos_v5=$(grep -A30 'cudos_dashboard' variables.tf | grep 'deploy_cudos_v5' | grep -o '"yes"' | tr -d '"' || echo "no")
+          deploy_cost_intelligence_dashboard=$(grep -A30 'cudos_dashboard' variables.tf | grep 'deploy_cost_intelligence_dashboard' | grep -o '"yes"' | tr -d '"' || echo "no")
+          deploy_kpi_dashboard=$(grep -A30 'cudos_dashboard' variables.tf | grep 'deploy_kpi_dashboard' | grep -o '"yes"' | tr -d '"' || echo "no")
+          
+          # Check if there's a terraform.tfvars file that might override the defaults
+          if [ -f "terraform.tfvars" ]; then
+            echo "Found terraform.tfvars, checking for overrides..."
+            if grep -q "deploy_cudos_v5" terraform.tfvars; then
+              deploy_cudos_v5=$(grep "deploy_cudos_v5" terraform.tfvars | cut -d'=' -f2 | tr -d ' "' || echo "$deploy_cudos_v5")
+            fi
+            if grep -q "deploy_cost_intelligence_dashboard" terraform.tfvars; then
+              deploy_cost_intelligence_dashboard=$(grep "deploy_cost_intelligence_dashboard" terraform.tfvars | cut -d'=' -f2 | tr -d ' "' || echo "$deploy_cost_intelligence_dashboard")
+            fi
+            if grep -q "deploy_kpi_dashboard" terraform.tfvars; then
+              deploy_kpi_dashboard=$(grep "deploy_kpi_dashboard" terraform.tfvars | cut -d'=' -f2 | tr -d ' "' || echo "$deploy_kpi_dashboard")
+            fi
+          fi
+          
+          # Export the variables
+          export deploy_cudos_v5
+          export deploy_cost_intelligence_dashboard
+          export deploy_kpi_dashboard
+          
+          # Echo the dashboard settings
+          echo "Dashboard settings from Terraform configuration:"
+          echo "- cudos-v5: $deploy_cudos_v5"
+          echo "- cost_intelligence_dashboard: $deploy_cost_intelligence_dashboard"
+          echo "- kpi_dashboard: $deploy_kpi_dashboard"
+          
+          cd ..
+          
+          # Set database name from environment variable
+          export database_name="${DATABASE_NAME}"
+          echo "Using database name: $database_name"
+          
+          # Run the tests with the new script
+          echo "Running dashboard tests..."
+          bats cid/tests/dashboards.bats
+        continue-on-error: true
+
+      - name: Display Test Results
+        if: always()
+        run: |
+          echo "=== Dashboard Test Results ==="
+          if [ -f "/tmp/cudos_test/test_output.log" ]; then
+            cat "/tmp/cudos_test/test_output.log"
+          else
+            echo "Test log file not found"
+          fi
+          echo "=== End of Test Results ==="
+  cleanup:
+    needs: test-deployment
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.MANAGEMENT_ROLE_ARN }}
+          aws-region: eu-west-2
+          role-duration-seconds: 3600
+
+      - name: Empty S3 Buckets
+        run: |
+          # Get account ID
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "Account ID: $ACCOUNT_ID"
+          
+          # Empty buckets including versioned objects
+          echo "Emptying buckets including versioned objects..."
+          BUCKETS=(
+            "cid-${ACCOUNT_ID}-data-exports"
+            "cid-${ACCOUNT_ID}-data-local"
+          )
+          
+          # Add any other buckets that might be created by the deployment
+          ADDITIONAL_BUCKETS=$(aws s3api list-buckets --query "Buckets[?contains(Name, 'cid-${ACCOUNT_ID}')].Name" --output text || echo "")
+          for additional_bucket in $ADDITIONAL_BUCKETS; do
+            if [[ ! " ${BUCKETS[@]} " =~ " ${additional_bucket} " ]]; then
+              BUCKETS+=("$additional_bucket")
+            fi
+          done
+          
+          for bucket in "${BUCKETS[@]}"; do
+            if [ ! -z "$bucket" ]; then
+              echo "Checking if bucket $bucket exists..."
+              if aws s3api head-bucket --bucket $bucket 2>/dev/null; then
+                echo "Listing objects in bucket $bucket..."
+                aws s3 ls s3://$bucket --recursive
+                
+                # First delete all non-versioned objects
+                echo "Deleting non-versioned objects..."
+                aws s3 rm s3://$bucket --recursive || true
+                
+                # Loop to ensure all versioned objects are deleted
+                for attempt in {1..3}; do
+                  echo "Attempt $attempt to delete all versions..."
+                  
+                  # Get all versions and delete markers
+                  VERSIONS=$(aws s3api list-object-versions --bucket $bucket --output json 2>/dev/null || echo '{"Versions":[],"DeleteMarkers":[]}')
+                  
+                  # Process versions
+                  VERSION_COUNT=$(echo "$VERSIONS" | jq -r '.Versions | length // 0')
+                  if [ "$VERSION_COUNT" -gt 0 ]; then
+                    echo "Found $VERSION_COUNT versions to delete"
+                    echo "$VERSIONS" | jq -c '{Objects: [.Versions[] | {Key:.Key, VersionId:.VersionId}] | select(length > 0)}' | aws s3api delete-objects --bucket $bucket --delete file:///dev/stdin || true
+                  fi
+                  
+                  # Process delete markers
+                  MARKER_COUNT=$(echo "$VERSIONS" | jq -r '.DeleteMarkers | length // 0')
+                  if [ "$MARKER_COUNT" -gt 0 ]; then
+                    echo "Found $MARKER_COUNT delete markers to remove"
+                    echo "$VERSIONS" | jq -c '{Objects: [.DeleteMarkers[] | {Key:.Key, VersionId:.VersionId}] | select(length > 0)}' | aws s3api delete-objects --bucket $bucket --delete file:///dev/stdin || true
+                  fi
+                  
+                  # Check if bucket is empty
+                  REMAINING=$(aws s3api list-object-versions --bucket $bucket --output json 2>/dev/null || echo '{"Versions":[],"DeleteMarkers":[]}')
+                  VERSION_COUNT=$(echo "$REMAINING" | jq -r '.Versions | length // 0')
+                  MARKER_COUNT=$(echo "$REMAINING" | jq -r '.DeleteMarkers | length // 0')
+                  
+                  if [ "$VERSION_COUNT" -eq 0 ] && [ "$MARKER_COUNT" -eq 0 ]; then
+                    echo "Bucket is now empty!"
+                    break
+                  fi
+                  
+                  echo "Bucket still has objects, continuing..."
+                done
+                
+                # Final verification
+                echo "Verifying bucket is empty..."
+                aws s3 ls s3://$bucket --recursive
+                
+                # Delete the bucket if it's still causing issues
+                echo "Attempting to delete bucket $bucket..."
+                aws s3 rb s3://$bucket --force || true
+              else
+                echo "Bucket $bucket does not exist, skipping."
+              fi
+            fi
+          done
+
+      - name: Get CID versions
+        id: cleanup_versions
+        run: |
+          # Get CID CFN version
+          CFN_VERSION=$(curl -s https://raw.githubusercontent.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/main/cfn-templates/cid-cfn.yml | grep Description | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "cid_cfn_version=$CFN_VERSION" >> $GITHUB_OUTPUT
+          
+          # Get Data Export version
+          EXPORT_VERSION=$(curl -s https://raw.githubusercontent.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/main/data-exports/deploy/data-exports-aggregation.yaml | grep Description | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "data_export_version=$EXPORT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create terraform.tfvars for cleanup
+        run: |
+          cat > ./terraform/terraform.tfvars << EOF
+          global_values = {
+            destination_account_id = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
+            source_account_ids     = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
+            aws_region             = "${{ secrets.AWS_REGION }}"
+            quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
+            cid_cfn_version        = "${{ steps.cleanup_versions.outputs.cid_cfn_version }}"
+            data_export_version    = "${{ steps.cleanup_versions.outputs.data_export_version }}"
+            environment            = "dev"
+          }
+          EOF
+
+      - name: Create provider override for cleanup
+        run: |
+          cat > ./terraform/local_override.tf << EOF
+          provider "aws" {
+            alias = "destination_account"
+            # This will use the same credentials as the default provider
+          }
+          EOF
+
+      - name: Override backend.tf for cleanup
+        run: |
+          cat > ./terraform/backend.tf << EOF
+          terraform {
+            backend "s3" {
+              bucket = "${{ secrets.BACKEND_S3_BUCKET }}"
+              key    = "terraform/cid-test/terraform.tfstate"
+              region = "${{ secrets.AWS_REGION }}"
+            }
+          }
+          EOF
+
+      - name: Initialize Terraform
+        working-directory: ./terraform
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: ./terraform
+        run: |
+          echo "Starting terraform destroy..."
+          terraform plan -destroy -out=destroy.plan
+          terraform apply -auto-approve destroy.plan
