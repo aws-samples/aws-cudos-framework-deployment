@@ -279,6 +279,8 @@ jobs:
             echo "Test log file not found"
           fi
           echo "=== End of Test Results ==="
+
+
   cleanup:
     needs: test-deployment
     if: success()
@@ -431,3 +433,4 @@ jobs:
           echo "Starting terraform destroy..."
           terraform plan -destroy -out=destroy.plan
           terraform apply -auto-approve destroy.plan
+          
