@@ -7,6 +7,24 @@
     <description>The Cloud Intelligence Dashboards is an open-source framework, lovingly cultivated and maintained by a group of customer-obsessed AWSers, that gives customers the power to get high-level and granular insight into their cost and usage data. Supported by the Well-Architected framework, the dashboards can be deployed by any customer using a CloudFormation template or a command-line tool in their environment in under 30 minutes. These dashboards help you to drive financial accountability, optimize cost, track usage goals, implement best-practices for governance, and achieve operational excellence across all your organization.</description>
     <lastBuildDate>Mon, 2 Jun 2025 09:00:00 GMT</lastBuildDate>
     <language>en-us</language>
+    <item>
+      <title>[Update] CUDOS Dashboard v5.6.1</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-cudos.md#cudos---561
+      </link>
+      <pubDate>Mon, 16 Jun 2025 09:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">8f7d3b2e-9c6a-4f1d-b5e7-2d9a8c4f3b1a</guid>
+      <description>CUDOS Dashboard v5.6.1</description>
+      <content:encoded><![CDATA[
+<div>
+  <ul>
+    <li><strong>Executive:Trends:</strong> Fix sort order in Amortized Cost by Account visual. Excluded unused RI and SP costs in the current month.</li>
+    <li><strong>Databases:</strong> Excluded unused RI costs in the current month.</li>
+  </ul>
+</div>
+    ]]></content:encoded>    
+    </item>  
   <item>
       <title>[Update] CORA Dashboard v0.0.9</title>
       <link>
