@@ -282,16 +282,22 @@ class Cid():
         export_analysis(self.qs, self.athena, glue=self.glue)
 
     def track(self, action, dashboard_id):
-        """ Send dashboard_id and account_id to adoption tracker """
+        """ Send dashboard_id and account_id to CID adoption tracker """
         method = {'created':'PUT', 'updated':'PATCH', 'deleted': 'DELETE'}.get(action, None)
         if not method:
             logger.debug(f"This will not fail the deployment. Logging action {action} is not supported. This issue will be ignored")
             return
-        endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/'
+        endpoint = 'https://cid.workshops.aws.dev/adoption-tracking' # AWS Managed
+        if os.environ.get('AWS_DEPLOYMENT_TYPE'):
+            deployment_type = os.environ.get('AWS_DEPLOYMENT_TYPE')
+        elif os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
+            deployment_type = 'Lambda'
+        else:
+            deployment_type = 'CID'
         payload = {
             'dashboard_id': dashboard_id,
             'account_id': self.base.account_id,
-            action + '_via': 'Lambda' if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda') else 'CID',
+            action + '_via': deployment_type,
         }
         try:
             res = requests.request(
