@@ -12,6 +12,13 @@ permissions:
 jobs:
   test-deployment:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - {python-version: '3.9' }
+          - {python-version: '3.12' }
     
     env:
       DATABASE_NAME: cid_data_export
@@ -23,7 +30,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y bats jq
-          pip3 install --upgrade cid-cmd
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install ./
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -34,8 +49,9 @@ jobs:
       - name: Get CID versions
         id: versions
         run: |
-          # Get CID CFN version
-          CFN_VERSION=$(curl -s https://raw.githubusercontent.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/main/cfn-templates/cid-cfn.yml | grep Description | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          # Get CID CFN version from first Description line
+          CFN_VERSION=$(grep "Description.*Cloud Intelligence Dashboards" ../../cfn-templates/cid-cfn.yml | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "Using local CFN version: $CFN_VERSION"
           echo "cid_cfn_version=$CFN_VERSION" >> $GITHUB_OUTPUT
           
           # Get Data Export version
