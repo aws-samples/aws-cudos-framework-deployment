@@ -77,11 +77,14 @@ jobs:
       - name: Initialize Terraform
         working-directory: ./terraform/cicd-deployment
         run: |
-          # Use local backend initially
+          # Replace the existing backend.tf with S3 configuration
           cat > backend.tf << EOF
           terraform {
-            backend "local" {
-              path = "./terraform.tfstate"
+            backend "s3" {
+              bucket       = "${{ secrets.BACKEND_S3_BUCKET }}"
+              key          = "terraform/cid-test/terraform.tfstate"
+              region       = "${{ secrets.AWS_REGION }}"
+              encrypt      = true
             }
           }
           EOF
@@ -90,8 +93,8 @@ jobs:
           echo "Updated backend.tf:"
           cat backend.tf
           
-          # Initialize with local backend
-          terraform init -reconfigure
+          # Initialize with the new backend
+          terraform init
 
       - name: Run TFLint
         working-directory: ./terraform/cicd-deployment
@@ -147,7 +150,9 @@ jobs:
         run: |
           export DATABASE_NAME="cid_data_export"
           export RESOURCE_PREFIX="cid-tf"
-          export BACKEND_TYPE="local"  # Use local backend
+          export BACKEND_TYPE="s3"
+          export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
+          export S3_KEY="terraform/cid-test/terraform.tfstate"
           export S3_REGION="${{ secrets.AWS_REGION }}"
           
           # Debug deploy.sh content
@@ -161,7 +166,9 @@ jobs:
         if: always()
         run: |
           export RESOURCE_PREFIX="cid-tf"
-          export BACKEND_TYPE="local"  # Use local backend
+          export BACKEND_TYPE="s3"
+          export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
+          export S3_KEY="terraform/cid-test/terraform.tfstate"
           export S3_REGION="${{ secrets.AWS_REGION }}"
           
           # Debug cleanup.sh content
