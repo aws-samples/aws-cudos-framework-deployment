@@ -76,7 +76,25 @@ jobs:
 
       - name: Initialize Terraform
         working-directory: ./terraform/cicd-deployment
-        run: terraform init
+        run: |
+          # Replace the existing backend.tf with S3 configuration
+          cat > backend.tf << EOF
+          terraform {
+            backend "s3" {
+              bucket       = "${{ secrets.BACKEND_S3_BUCKET }}"
+              key          = "terraform/cid-test/terraform.tfstate"
+              region       = "${{ secrets.AWS_REGION }}"
+              encrypt      = true
+            }
+          }
+          EOF
+          
+          # Show the updated backend configuration
+          echo "Updated backend.tf:"
+          cat backend.tf
+          
+          # Initialize with the new backend
+          terraform init -reconfigure
 
       - name: Run TFLint
         working-directory: ./terraform/cicd-deployment
@@ -97,38 +115,35 @@ jobs:
           echo "Checking for terraform-test directory:"
           find ./terraform -type d | grep terraform-test || echo "terraform-test directory not found"
           
-          # Check if deploy.sh and cleanup.sh exist
-          if [ -f "./terraform/terraform-test/deploy.sh" ]; then
-            echo "deploy.sh exists"
-          else
-            echo "deploy.sh does not exist"
-          fi
-          
-          if [ -f "./terraform/terraform-test/cleanup.sh" ]; then
-            echo "cleanup.sh exists"
-          else
-            echo "cleanup.sh does not exist"
-          fi
-          ls -l ./terraform/terraform-test/*
-          
-          # Create a new backend.tf file with S3 configuration
-          cat > ./terraform/cicd-deployment/backend.tf << EOF
-          terraform {
-            backend "s3" {
-              bucket = "${{ secrets.BACKEND_S3_BUCKET }}"
-              key    = "terraform/cid-test/terraform.tfstate"
-              region = "${{ secrets.AWS_REGION }}"
-            }
-          }
-          EOF
-          
-          # Create provider override
-          cat > ./terraform/cicd-deployment/local_override.tf << EOF
+          # Update the existing provider.tf file
+          cat > ./terraform/cicd-deployment/providers.tf << EOF
           provider "aws" {
-            alias = "destination_account"
-            # This will use the same credentials as the default provider
+            region = "${{ secrets.AWS_REGION }}"
+          }
+
+          provider "aws" {
+            alias  = "destination_account"
+            region = "${{ secrets.AWS_REGION }}"
+            # Using the same credentials as the default provider
           }
           EOF
+          
+          # Show the updated provider configuration
+          echo "Updated providers.tf:"
+          cat ./terraform/cicd-deployment/providers.tf
+          
+          # Fix path in deploy.sh and cleanup.sh
+          sed -i 's|TERRAFORM_DIR=\"$PROJECT_ROOT/terraform\"|TERRAFORM_DIR=\"$PROJECT_ROOT/cicd-deployment\"|g' ./terraform/terraform-test/deploy.sh
+          sed -i 's|TERRAFORM_DIR=\"$PROJECT_ROOT/terraform\"|TERRAFORM_DIR=\"$PROJECT_ROOT/cicd-deployment\"|g' ./terraform/terraform-test/cleanup.sh
+          
+          # Show the modified paths
+          echo "Modified paths in deploy.sh:"
+          grep -n "TERRAFORM_DIR" ./terraform/terraform-test/deploy.sh
+          
+          echo "Modified paths in cleanup.sh:"
+          grep -n "TERRAFORM_DIR" ./terraform/terraform-test/cleanup.sh
+          
+          # List files
           ls -l ./terraform/*
         
       - name: Run deploy script
