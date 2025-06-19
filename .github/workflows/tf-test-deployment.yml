@@ -1,0 +1,135 @@
+name: Terraform Test Deployment
+
+on:
+  pull_request:
+    branches:
+      - "*"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test-deployment:
+    runs-on: ubuntu-latest
+    
+    env:
+      DATABASE_NAME: cid_data_export
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats jq
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v3
+
+      - name: Get CID versions
+        id: versions
+        run: |
+          # Get CID CFN version from first Description line
+          CFN_VERSION=$(find . -name "cid-cfn.yml" -type f -exec grep "Description.*Cloud Intelligence Dashboards" {} \; | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "Using local CFN version: $CFN_VERSION"
+          echo "cid_cfn_version=$CFN_VERSION" >> $GITHUB_OUTPUT
+          
+          # Get Data Export version
+          EXPORT_VERSION=$(curl -s https://raw.githubusercontent.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/main/data-exports/deploy/data-exports-aggregation.yaml | grep Description | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "data_export_version=$EXPORT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create terraform directory and tfvars file
+        run: |
+          
+          # Create terraform.tfvars file
+          cat > ./terraform/terraform.tfvars << EOF
+          global_values = {
+            destination_account_id = "${{ secrets.AWS_ACCOUNT_ID }}"
+            source_account_ids     = "${{ secrets.AWS_ACCOUNT_ID }}"
+            aws_region             = "${{ secrets.AWS_REGION }}"
+            quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
+            cid_cfn_version        = "${{ steps.versions.outputs.cid_cfn_version }}"
+            data_export_version    = "${{ steps.versions.outputs.data_export_version }}"
+            environment            = "dev"
+          }
+          EOF
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Initialize Terraform
+        working-directory: ./terraform
+        run: terraform init
+
+      - name: Run TFLint
+        working-directory: ./terraform
+        run: tflint --format=compact
+
+      - name: Terraform Format Check
+        working-directory: ./terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: ./terraform
+        run: terraform validate
+
+      - name: Prepare deploy and cleanup scripts
+        run: |
+          
+          # Create a new backend.tf file with S3 configuration
+          cat > ./terraform/backend.tf << EOF
+          terraform {
+            backend "s3" {
+              bucket = "${{ secrets.BACKEND_S3_BUCKET }}"
+              key    = "terraform/cid-test/terraform.tfstate"
+              region = "${{ secrets.AWS_REGION }}"
+            }
+          }
+          EOF
+          
+          # Create provider override
+          cat > ./terraform/local_override.tf << EOF
+          provider "aws" {
+            alias = "destination_account"
+            # This will use the same credentials as the default provider
+          }
+          EOF
+
+      - name: Run deploy script
+        run: |
+          export DATABASE_NAME="cid_data_export"
+          export RESOURCE_PREFIX="cid-tf"
+          export BACKEND_TYPE="s3"
+          export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
+          export S3_KEY="terraform/cid-test/terraform.tfstate"
+          export S3_REGION="${{ secrets.AWS_REGION }}"
+          ./terraform/terraform-test/deploy.sh
+        
+      - name: Run cleanup script
+        if: always()
+        run: |
+          export RESOURCE_PREFIX="cid-tf"
+          export BACKEND_TYPE="s3"
+          export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
+          export S3_KEY="terraform/cid-test/terraform.tfstate"
+          export S3_REGION="${{ secrets.AWS_REGION }}"
+          ./terraform/terraform-test/cleanup.sh
+          
