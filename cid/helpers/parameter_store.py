@@ -73,12 +73,13 @@ class ParametersController(AthenaStore):
                 if line.get('context') == str(context) and line.get('parameter') == key:
                     line['value'] = val
                     line['date'] = date
-                    del params['key']
+                    del params[key]
 
         #add parameters that are new
         for key, val in list(params.items()):
             data.append({
-                'parameter': key, 'value': ','.join(val) if isinstance(val, list) else val,
+                'parameter': key,
+                'value': ','.join([str(v) for v in val]) if isinstance(val, list) else str(val),
                 'context': str(context),
                 'date': date
             })
