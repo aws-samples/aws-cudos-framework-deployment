@@ -287,7 +287,7 @@ class Cid():
         if not method:
             logger.debug(f"This will not fail the deployment. Logging action {action} is not supported. This issue will be ignored")
             return
-        endpoint = 'https://cid.workshops.aws.dev/adoption-tracking' # AWS Managed
+        endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/' # AWS Managed
         if os.environ.get('AWS_DEPLOYMENT_TYPE'):
             deployment_type = os.environ.get('AWS_DEPLOYMENT_TYPE')
         elif os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
@@ -476,17 +476,16 @@ class Cid():
             set_defaults(defaults)
 
     def dump_default_parameters(self):
-
         stop_list = ['profile-name', 'region', 'aws-access-key-id', 'aws-secret-access-key', 'aws-session-token', 'athena-database', 'athena-workgroup']
-        current_defaults = self.parameters_controller.load_parameters(
-            context=get_parameters().get('dashboard-id')
-        )
-        current_defaults = current_defaults | get_parameters()
+        current_defaults = get_parameters()
         for key in list(current_defaults.keys()):
             if key in stop_list:
                 del current_defaults[key]
         logger.trace(f'dumping parameters {current_defaults}')
-        self.parameters_controller.dump_parameters(current_defaults, context=get_parameters().get('dashboard-id'))
+        self.parameters_controller.dump_parameters(
+            current_defaults,
+            context=get_parameters().get('dashboard-id')
+        )
 
 
     def ensure_subscription(self):

@@ -276,7 +276,7 @@ def get_parameter(param_name, message, choices=None, default=None, none_as_disab
         if multi:
             default = default or []
             default = default if isinstance(default, list) else [default]
-            default = [c for c in defaults if c in choices]
+            default = [c for c in default if c in choices]
             if not isatty():
                 result = default
             else:
