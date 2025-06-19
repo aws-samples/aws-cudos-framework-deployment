@@ -62,12 +62,6 @@ jobs:
 
       - name: Create terraform directory and tfvars file
         run: |
-          # Debug terraform directory
-          echo "Looking for terraform directory:"
-          find . -name "terraform" -type d
-          
-          # Create terraform directory if it doesn't exist
-          mkdir -p ./terraform
           
           # Create terraform.tfvars file
           cat > ./terraform/terraform.tfvars << EOF
@@ -76,8 +70,8 @@ jobs:
             source_account_ids     = "${{ secrets.AWS_ACCOUNT_ID }}"
             aws_region             = "${{ secrets.AWS_REGION }}"
             quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
-            cid_cfn_version        = "${{ steps.versions.outputs.cid_cfn_version || '4.2.6' }}"
-            data_export_version    = "${{ steps.versions.outputs.data_export_version || '0.5.0' }}"
+            cid_cfn_version        = "${{ steps.versions.outputs.cid_cfn_version }}"
+            data_export_version    = "${{ steps.versions.outputs.data_export_version }}"
             environment            = "dev"
           }
           EOF
@@ -114,6 +108,8 @@ jobs:
           # Debug directory structure
           echo "Current directory: $(pwd)"
           ls -la
+          echo "Checking terraform directory:"
+          ls -la ./terraform/
           
           # Create a new backend.tf file with S3 configuration
           cat > ./terraform/backend.tf << EOF
@@ -134,15 +130,12 @@ jobs:
           }
           EOF
           
-          # Ensure dashboards.bats exists
-          if [ ! -f "./terraform-test/dashboards.bats" ]; then
-            echo "Copying dashboards.bats from cid/tests to terraform-test"
-            cp ./cid/tests/dashboards.bats ./terraform-test/
-          fi
+          # Check if terraform-test directory exists
+          echo "Looking for terraform-test directory:"
+          find ./terraform -name "terraform-test" -type d || echo "terraform-test directory not found"
           
-          # Make deploy.sh executable
-          chmod +x ./terraform-test/deploy.sh
-          chmod +x ./terraform-test/cleanup.sh
+          # Verify files were created
+          ls -la ./terraform/terraform-test/
 
       - name: Run deploy script
         run: |
@@ -152,7 +145,7 @@ jobs:
           export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
           export S3_KEY="terraform/cid-test/terraform.tfstate"
           export S3_REGION="${{ secrets.AWS_REGION }}"
-          ./terraform-test/deploy.sh
+          ./terraform/terraform-test/deploy.sh
         
       - name: Run cleanup script
         if: always()
@@ -162,5 +155,5 @@ jobs:
           export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
           export S3_KEY="terraform/cid-test/terraform.tfstate"
           export S3_REGION="${{ secrets.AWS_REGION }}"
-          ./terraform-test/cleanup.sh
+          ./terraform/terraform-test/cleanup.sh
           
