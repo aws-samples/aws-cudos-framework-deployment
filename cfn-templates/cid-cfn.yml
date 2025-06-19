@@ -1,6 +1,6 @@
 # https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/cfn-templates/cid-cfn.yml
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deployment of Cloud Intelligence Dashboards v4.2.6 - AWS Solution SO9011
+Description: Deployment of Cloud Intelligence Dashboards v4.2.7 - AWS Solution SO9011
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -40,6 +40,7 @@ Metadata:
           - DeployCUDOSDashboard
           - DataBucketsKmsKeysArns
           - ShareDashboard
+          - DeploymentType
           - CreateLocalAssetsBucket
           - ReferenceAssetsBucket
       - Label:
@@ -105,6 +106,8 @@ Metadata:
         default: "Create Local Assets Bucket"
       ReferenceAssetsBucket:
         default: "Reference Assets Bucket Name"
+      DeploymentType:
+        default: "Type of Deployment - Please do not change"
       CurrencySymbol:
         default: "Currency Symbol"
   cfn-lint:
@@ -262,9 +265,18 @@ Parameters:
   CurrencySymbol:
     Type: String
     Description: 'Currency Symbol. Please align with Currency of your CUR. Only supported for China region.'
-    Default: "USD"
-    AllowedValues: 
+    Default: "$"
+    AllowedValues:
       # Only currency symbols supported by QS
+      - "$" # US Dollar
+      - "£" # British Pound
+      - "€" # Euro
+      - "¥" # Japanese Yen
+      - "₩" # South Korean Won
+      - "kr" # Danish Krone
+      - "NT" # Taiwan Dollar
+      - "₹" # Indian Rupee
+      # for backward compatibility
       - "USD" # US Dollar         $
       - "GBP" # British Pound     £
       - "EUR" # Euro              €
@@ -273,6 +285,13 @@ Parameters:
       - "DKK" # Danish Krone      kr
       - "TWD" # Taiwan Dollar     NT
       - "INR" # Indian Rupee      ₹
+  DeploymentType:
+    Type: String
+    Description: 'Internal Deployment Type'
+    Default: "Lambda"
+    AllowedValues:
+      - "Lambda"
+      - "Terraform"
 
 Conditions:
   NeedCUDOSDashboard: !Equals [ !Ref DeployCUDOSDashboard, "yes" ]
@@ -607,7 +626,7 @@ Resources:
         ZipFile: |
           # Legacy lambda - will be deleted in next major update
           import cfnresponse
-          
+
           def lambda_handler(event, context):
               cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, 'keep_it_constant', 'legacy')
     Metadata:
@@ -1855,6 +1874,7 @@ Resources:
         - !Ref CidResourceLambdaLayer
       Environment:
         Variables:
+          AWS_DEPLOYMENT_TYPE: !Ref DeploymentType
           athena_workgroup: !If [ NeedAthenaWorkgroup, !Ref MyAthenaWorkGroup, !Ref AthenaWorkgroup ]
           quicksight_datasource_id: !Select [ 1, !Split [ '/', !GetAtt CidAthenaDataSource.Arn]]
           quicksight_datasource_role_arn: !If [ NeedQuickSightDataSourceRole, !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${QuickSightDataSourceRole}", "" ]
@@ -2055,7 +2075,7 @@ Resources:
       SourceBucket: !Ref ReferenceAssetsBucket
       DestinationBucket: !Ref LocalAssetsBucket
       Keys:
-        - 'cid-resource-lambda-layer/cid-4.2.6.zip' #replace version here if needed
+        - 'cid-resource-lambda-layer/cid-4.2.7.zip' #replace version here if needed
 
   CidResourceLambdaLayer:
     Type: AWS::Lambda::LayerVersion
@@ -2070,7 +2090,7 @@ Resources:
             - LambdaLayerBucketPrefixIsManaged
             - !FindInMap [RegionMap, !Ref 'AWS::Region', BucketName]
             - !Sub '${LambdaLayerBucketPrefix}-${AWS::Region}' # Region added for backward compatibility
-        S3Key: 'cid-resource-lambda-layer/cid-4.2.6.zip' #replace version here if needed
+        S3Key: 'cid-resource-lambda-layer/cid-4.2.7.zip' #replace version here if needed
       CompatibleRuntimes:
         - python3.10
         - python3.11
