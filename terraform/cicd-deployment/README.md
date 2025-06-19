@@ -222,7 +222,16 @@ All CloudFormation stacks are configured with 60-minute timeouts for create, upd
 ## FAQ
 
 <details>
-<summary><b>Can I deploy everything in a single account?</b></summary>
+<summary><b>How do I backfill historical cost data?</b></summary>
+
+To backfill historical data for the Data Export, follow the instructions in the [CID Workshop Backfill Data Export section](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy#backfill-data-export).
+
+This process allows you to populate your dashboards with historical cost and usage data, ensuring you have a complete view of your AWS spending over time.
+
+</details>
+
+<details>
+<summary><b>Can I deploy everything in a single account instead of using cross-account setup?</b></summary>
 
 While the cross-account setup is recommended for production environments, you can deploy the entire solution in your Payer account without requiring a separate Data Collection account. This single-account approach is simpler for testing or development purposes. To do this:
 
@@ -269,16 +278,7 @@ This configuration will deploy only the Data Exports Destination Stack and the C
 </details>
 
 <details>
-<summary><b>How do I backfill data for the Data Export?</b></summary>
-
-To backfill historical data for the Data Export, follow the instructions in the [CID Workshop Backfill Data Export section](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy#backfill-data-export).
-
-This process allows you to populate your dashboards with historical cost and usage data, ensuring you have a complete view of your AWS spending over time.
-
-</details>
-
-<details>
-<summary><b>Is there a tool available to deploy resources using the single-account method?</b></summary>
+<summary><b>Is there an automated tool for single-account deployment?</b></summary>
 
 Yes, we provide a testing framework in the `terraform-test` directory that simplifies single-account deployment for testing purposes. This framework includes scripts that automatically handle the necessary modifications to deploy everything in a single account.
 
