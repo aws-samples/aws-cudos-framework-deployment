@@ -287,7 +287,7 @@ class Cid():
         if not method:
             logger.debug(f"This will not fail the deployment. Logging action {action} is not supported. This issue will be ignored")
             return
-        endpoint = 'https://cid.workshops.aws.dev/adoption-tracking' # AWS Managed
+        endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/' # AWS Managed
         if os.environ.get('AWS_DEPLOYMENT_TYPE'):
             deployment_type = os.environ.get('AWS_DEPLOYMENT_TYPE')
         elif os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
