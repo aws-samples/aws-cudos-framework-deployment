@@ -1290,8 +1290,7 @@ class QuickSight(CidBase):
             'DashboardId': definition.get('dashboardId'),
             'VersionNumber': created_version
         }
-        logger.debug(f'describe_dashboard {dashboard}')
-        dashboard = self.describe_dashboard(poll=True, **describe_parameters)
+        logger.debug(f"describe_dashboard { definition.get('dashboardId')}")
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
         logger.debug('dashboard={dashboard}')
         self.set_tags(dashboard.arn, cid_version_tag=dashboard.cid_version) # try to update version tag
