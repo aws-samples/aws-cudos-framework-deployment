@@ -93,6 +93,24 @@ jobs:
 
       - name: Prepare deploy and cleanup scripts
         run: |
+          # Debug directory structure
+          echo "Current directory: $(pwd)"
+          echo "Checking for terraform-test directory:"
+          find ./terraform -type d | grep terraform-test || echo "terraform-test directory not found"
+          
+          # Check if deploy.sh and cleanup.sh exist
+          if [ -f "./terraform/terraform-test/deploy.sh" ]; then
+            echo "deploy.sh exists"
+          else
+            echo "deploy.sh does not exist"
+          fi
+          
+          if [ -f "./terraform/terraform-test/cleanup.sh" ]; then
+            echo "cleanup.sh exists"
+          else
+            echo "cleanup.sh does not exist"
+          fi
+          ls -l ./terraform/terraform-test/*
           
           # Create a new backend.tf file with S3 configuration
           cat > ./terraform/backend.tf << EOF
@@ -112,7 +130,8 @@ jobs:
             # This will use the same credentials as the default provider
           }
           EOF
-
+          ls -l ./terraform/*
+        
       - name: Run deploy script
         run: |
           export DATABASE_NAME="cid_data_export"
