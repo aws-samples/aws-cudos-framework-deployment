@@ -14,13 +14,15 @@ This architecture follows AWS best practices by separating the Payer account (So
 
 ## Prerequisites
 
-- Two AWS accounts:
-  - Payer account with billing data
-  - Data Collection account for dashboards and visualization
 - Terraform >= 1.0
+- Access to deploy resources in both accounts:
+  - **Payer account**: Permissions to create IAM roles, S3 buckets, and access billing data
+  - **Data Collection account**: Permissions to create CloudFormation stacks, S3 buckets, and manage QuickSight
 - QuickSight Enterprise subscription in the Data Collection account
-- QuickSight user with appropriate permissions
-- Cross-account IAM roles for data access
+- A configured QuickSight user in the Data Collection account
+- Terraform provider configuration for both accounts:
+  - Default provider for the Payer account
+  - Provider with "destination_account" alias for the Data Collection account
 
 ## Quick Start
 
@@ -216,6 +218,80 @@ provider "aws" {
 ## Timeouts
 
 All CloudFormation stacks are configured with 60-minute timeouts for create, update, and delete operations.
+
+## FAQ
+
+<details>
+<summary><b>Can I deploy everything in a single account?</b></summary>
+
+While the cross-account setup is recommended for production environments, you can deploy the entire solution in your Payer account without requiring a separate Data Collection account. This single-account approach is simpler for testing or development purposes. To do this:
+
+1. **Modify main.tf**:
+   - Comment out or remove the `resource "aws_cloudformation_stack" "cid_dataexports_source"` block
+   - Update any dependencies that reference this resource
+
+2. **Modify outputs.tf**:
+   - Remove or comment out the `output "cid_dataexports_source_outputs"` block
+
+3. **Remove the variable from terraform.tfvars**:
+   - Remove or comment out the `cid_dataexports_source` variable block
+
+4. **Update terraform.tfvars**:
+   ```hcl
+   global_values = {
+     destination_account_id = "123456789012"      # Your Payer account ID
+     source_account_ids     = "123456789012"      # Same Payer account ID
+     aws_region             = "us-east-1"         # AWS region for deployment
+     quicksight_user        = "user/example"      # QuickSight username
+     cid_cfn_version        = "4.2.5"             # CID CloudFormation version
+     data_export_version    = "0.5.0"             # Data Export version
+     environment            = "dev"               # Environment (dev, staging, prod)
+   }
+   ```
+
+5. **Simplify provider.tf**:
+   ```hcl
+   provider "aws" {
+     region = var.global_values.aws_region
+   }
+
+   provider "aws" {
+     alias  = "destination_account"
+     region = var.global_values.aws_region
+     # No assume_role needed as everything is deployed in the Payer account
+   }
+   ```
+
+This configuration will deploy only the Data Exports Destination Stack and the Cloud Intelligence Dashboards Stack directly in your Payer account, skipping the separate Source Stack that would normally be deployed in a cross-account setup.
+
+> **Note:** Single-account deployment in your Payer account is simpler for testing but lacks the security benefits and separation of concerns provided by the recommended cross-account architecture. For production environments, we strongly recommend the cross-account approach. For more details on the recommended architecture, see the [CID Architecture Documentation](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy#architecture).
+
+</details>
+
+<details>
+<summary><b>How do I backfill data for the Data Export?</b></summary>
+
+To backfill historical data for the Data Export, follow the instructions in the [CID Workshop Backfill Data Export section](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy#backfill-data-export).
+
+This process allows you to populate your dashboards with historical cost and usage data, ensuring you have a complete view of your AWS spending over time.
+
+</details>
+
+<details>
+<summary><b>Is there a tool available to deploy resources using the single-account method?</b></summary>
+
+Yes, we provide a testing framework in the `terraform-test` directory that simplifies single-account deployment for testing purposes. This framework includes scripts that automatically handle the necessary modifications to deploy everything in a single account.
+
+For detailed instructions on using this testing framework, refer to the [README.md in the terraform-test directory](../terraform-test/README.md). The testing framework:
+
+1. Automatically comments out the source stack resource
+2. Configures the proper account IDs
+3. Sets up the appropriate provider configuration
+4. Provides options for local or S3 backend configuration
+
+This is the recommended approach for testing and development environments when you want to use a single account.
+
+</details>
 
 ## Additional Resources
 
