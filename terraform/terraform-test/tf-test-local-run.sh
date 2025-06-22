@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_TYPE="local"
 S3_BUCKET=""
 S3_KEY="terraform/cid-test/terraform.tfstate"
-S3_REGION="eu-west-2"
+S3_REGION="us-east-1"     # Replace with your desired region
 SKIP_CLEANUP=false
 RESOURCE_PREFIX="cid-tf"  # Default resource prefix for testing
 

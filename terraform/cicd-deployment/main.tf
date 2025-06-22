@@ -105,6 +105,7 @@ resource "aws_cloudformation_stack" "cloud_intelligence_dashboards" {
     LambdaLayerBucketPrefix          = var.cloud_intelligence_dashboards.lambda_layer_bucket_prefix
     DeployCUDOSDashboard             = var.cloud_intelligence_dashboards.deploy_cudos_dashboard
     DataBucketsKmsKeysArns           = var.cloud_intelligence_dashboards.data_buckets_kms_keys_arns
+    DeploymentType                   = var.cloud_intelligence_dashboards.deployment_type
     ShareDashboard                   = var.cloud_intelligence_dashboards.share_dashboard
 
     # Legacy Parameters

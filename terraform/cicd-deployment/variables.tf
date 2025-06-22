@@ -151,6 +151,7 @@ variable "cloud_intelligence_dashboards" {
     lambda_layer_bucket_prefix           = string
     deploy_cudos_dashboard               = string
     data_buckets_kms_keys_arns           = string
+    deployment_type                      = string
     share_dashboard                      = string
 
     # Legacy Parameters
@@ -192,6 +193,7 @@ variable "cloud_intelligence_dashboards" {
     lambda_layer_bucket_prefix           = "aws-managed-cost-intelligence-dashboards"
     deploy_cudos_dashboard               = "no"
     data_buckets_kms_keys_arns           = ""
+    deployment_type                      = "Terraform"
     share_dashboard                      = "yes"
 
     # Legacy Parameters
