@@ -101,71 +101,77 @@ EOF
 fi
 
 echo "Cleaning up resources..."
+echo "Backend bucket (protected): $S3_BUCKET"
 
 # Get resource prefix from environment variable or use default
 RESOURCE_PREFIX=${RESOURCE_PREFIX:-"cid-tf"}
 
-# Empty S3 buckets
-echo "Emptying S3 buckets..."
-# Look for both default 'cid-' and custom prefix buckets
-BUCKETS=$(aws s3api list-buckets --query "Buckets[?contains(Name, '${RESOURCE_PREFIX}-${ACCOUNT_ID}') || contains(Name, 'cid-${ACCOUNT_ID}')].Name" --output text || echo "")
+# Empty specific CID S3 buckets (but don't delete them)
+echo "Emptying CID S3 buckets..."
 
-for bucket in $BUCKETS; do
-  if [ ! -z "$bucket" ]; then
-    echo "Checking if bucket $bucket exists..."
-    if aws s3api head-bucket --bucket $bucket 2>/dev/null; then
-      echo "Emptying bucket $bucket..."
-      # First delete all non-versioned objects
-      aws s3 rm s3://$bucket --recursive || true
-      
-      # Loop to ensure all versioned objects are deleted
-      for attempt in {1..3}; do
-        echo "Attempt $attempt to delete all versions..."
-        
-        # Get all versions and delete markers
-        VERSIONS=$(aws s3api list-object-versions --bucket $bucket --output json 2>/dev/null || echo '{"Versions":[],"DeleteMarkers":[]}')
-        
-        # Process versions
-        VERSION_COUNT=$(echo "$VERSIONS" | jq -r '.Versions | length // 0')
-        # Fix for empty string values
-        VERSION_COUNT=${VERSION_COUNT:-0}
-        
-        if [ "$VERSION_COUNT" -gt 0 ]; then
-          echo "Found $VERSION_COUNT versions to delete"
-          echo "$VERSIONS" | jq -c '{Objects: [.Versions[] | {Key:.Key, VersionId:.VersionId}] | select(length > 0)}' | aws s3api delete-objects --bucket $bucket --delete file:///dev/stdin || true
-        fi
-        
-        # Process delete markers
-        MARKER_COUNT=$(echo "$VERSIONS" | jq -r '.DeleteMarkers | length // 0')
-        # Fix for empty string values
-        MARKER_COUNT=${MARKER_COUNT:-0}
-        
-        if [ "$MARKER_COUNT" -gt 0 ]; then
-          echo "Found $MARKER_COUNT delete markers to remove"
-          echo "$VERSIONS" | jq -c '{Objects: [.DeleteMarkers[] | {Key:.Key, VersionId:.VersionId}] | select(length > 0)}' | aws s3api delete-objects --bucket $bucket --delete file:///dev/stdin || true
-        fi
-        
-        # Check if bucket is empty
-        REMAINING=$(aws s3api list-object-versions --bucket $bucket --output json 2>/dev/null || echo '{"Versions":[],"DeleteMarkers":[]}')
-        VERSION_COUNT=$(echo "$REMAINING" | jq -r '.Versions | length // 0')
-        MARKER_COUNT=$(echo "$REMAINING" | jq -r '.DeleteMarkers | length // 0')
-        
-        # Fix for empty string values
-        VERSION_COUNT=${VERSION_COUNT:-0}
-        MARKER_COUNT=${MARKER_COUNT:-0}
-        
-        if [ "$VERSION_COUNT" -eq 0 ] && [ "$MARKER_COUNT" -eq 0 ]; then
-          echo "Bucket is now empty!"
-          break
-        fi
-        
-        echo "Bucket still has objects, continuing..."
-      done
-      
-      # Attempt to delete the bucket directly after emptying it
-      echo "Attempting to delete bucket $bucket directly..."
-      aws s3 rb s3://$bucket --force || true
+# Define specific bucket patterns to clean (only data buckets)
+CID_DATA_BUCKETS=(
+  "${RESOURCE_PREFIX}-${ACCOUNT_ID}-data-exports"
+  "${RESOURCE_PREFIX}-${ACCOUNT_ID}-data-local"
+  "aws-athena-query-results-cid-${ACCOUNT_ID}"
+)
+
+for bucket in "${CID_DATA_BUCKETS[@]}"; do
+  echo "Checking if bucket $bucket exists..."
+  if aws s3api head-bucket --bucket $bucket 2>/dev/null; then
+    echo "Emptying bucket $bucket (keeping bucket)..."
+    
+    # Skip if this is the backend bucket
+    if [ "$bucket" = "$S3_BUCKET" ]; then
+      echo "Skipping backend bucket: $bucket"
+      continue
     fi
+    
+    # First delete all non-versioned objects
+    aws s3 rm s3://$bucket --recursive || true
+    
+    # Loop to ensure all versioned objects are deleted
+    for attempt in {1..3}; do
+      echo "Attempt $attempt to delete all versions..."
+      
+      # Get all versions and delete markers
+      VERSIONS=$(aws s3api list-object-versions --bucket $bucket --output json 2>/dev/null || echo '{"Versions":[],"DeleteMarkers":[]}')
+      
+      # Process versions
+      VERSION_COUNT=$(echo "$VERSIONS" | jq -r '.Versions | length // 0')
+      VERSION_COUNT=${VERSION_COUNT:-0}
+      
+      if [ "$VERSION_COUNT" -gt 0 ]; then
+        echo "Found $VERSION_COUNT versions to delete"
+        echo "$VERSIONS" | jq -c '{Objects: [.Versions[] | {Key:.Key, VersionId:.VersionId}] | select(length > 0)}' | aws s3api delete-objects --bucket $bucket --delete file:///dev/stdin || true
+      fi
+      
+      # Process delete markers
+      MARKER_COUNT=$(echo "$VERSIONS" | jq -r '.DeleteMarkers | length // 0')
+      MARKER_COUNT=${MARKER_COUNT:-0}
+      
+      if [ "$MARKER_COUNT" -gt 0 ]; then
+        echo "Found $MARKER_COUNT delete markers to remove"
+        echo "$VERSIONS" | jq -c '{Objects: [.DeleteMarkers[] | {Key:.Key, VersionId:.VersionId}] | select(length > 0)}' | aws s3api delete-objects --bucket $bucket --delete file:///dev/stdin || true
+      fi
+      
+      # Check if bucket is empty
+      REMAINING=$(aws s3api list-object-versions --bucket $bucket --output json 2>/dev/null || echo '{"Versions":[],"DeleteMarkers":[]}')
+      VERSION_COUNT=$(echo "$REMAINING" | jq -r '.Versions | length // 0')
+      MARKER_COUNT=$(echo "$REMAINING" | jq -r '.DeleteMarkers | length // 0')
+      
+      VERSION_COUNT=${VERSION_COUNT:-0}
+      MARKER_COUNT=${MARKER_COUNT:-0}
+      
+      if [ "$VERSION_COUNT" -eq 0 ] && [ "$MARKER_COUNT" -eq 0 ]; then
+        echo "Bucket $bucket is now empty (bucket preserved)!"
+        break
+      fi
+      
+      echo "Bucket still has objects, continuing..."
+    done
+  else
+    echo "Bucket $bucket does not exist or is not accessible"
   fi
 done
 
@@ -199,6 +205,20 @@ fi
 
 terraform destroy "${TFVARS_FILES[@]}" -auto-approve
 cd "$SCRIPT_DIR"
+
+# Final cleanup: Delete the data-exports bucket if it still exists
+echo "Checking for remaining data-exports bucket..."
+DATA_EXPORTS_BUCKET="${RESOURCE_PREFIX}-${ACCOUNT_ID}-data-exports"
+if aws s3api head-bucket --bucket $DATA_EXPORTS_BUCKET 2>/dev/null; then
+  echo "Found remaining bucket: $DATA_EXPORTS_BUCKET - deleting it..."
+  # Ensure it's empty first
+  aws s3 rm s3://$DATA_EXPORTS_BUCKET --recursive || true
+  # Delete the bucket
+  aws s3 rb s3://$DATA_EXPORTS_BUCKET --force || true
+  echo "Deleted bucket: $DATA_EXPORTS_BUCKET"
+else
+  echo "Data-exports bucket already deleted or doesn't exist"
+fi
 
 # Clean up temporary directory
 echo "Cleaning up temporary Terraform directory"
