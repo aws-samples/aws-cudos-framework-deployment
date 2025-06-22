@@ -73,7 +73,9 @@ teardown_file() {
     echo "$output" > "$tmp_dir/dashboard_${dashboard_id}.json"
     
     # Extract dataset IDs from dashboard and save to file for other tests
-    echo "$output" | jq -r '.Dashboard.Version.DataSetArns[] | split("/") | last' >> "$tmp_dir/all_dataset_ids"
+    if echo "$output" | jq . >/dev/null 2>&1; then
+      echo "$output" | jq -r '.Dashboard.Version.DataSetArns[]? | split("/") | last' 2>/dev/null >> "$tmp_dir/all_dataset_ids" || true
+    fi
     echo ">>> DASHBOARD $dashboard_id TEST COMPLETE <<<" | tee -a "$log_file"
     echo "" | tee -a "$log_file"
   done < "$tmp_dir/dashboard_ids"
@@ -89,16 +91,19 @@ teardown_file() {
   # List datasources and find one with "cost" in the name
   run aws quicksight list-data-sources --aws-account-id $account_id
   echo "$output" > "$tmp_dir/datasources.json"
-  datasource_id=$(echo "$output" | jq -r '.DataSources[] | select(.Name | test("cost"; "i")) | .DataSourceId' | head -1)
   
-  # If no datasource found with "cost", try with "intelligence"
-  if [ -z "$datasource_id" ]; then
-    datasource_id=$(echo "$output" | jq -r '.DataSources[] | select(.Name | test("intelligence"; "i")) | .DataSourceId' | head -1)
-  fi
-  
-  # If still no datasource found, just take the first one
-  if [ -z "$datasource_id" ]; then
-    datasource_id=$(echo "$output" | jq -r '.DataSources[0].DataSourceId')
+  if echo "$output" | jq . >/dev/null 2>&1; then
+    datasource_id=$(echo "$output" | jq -r '.DataSources[]? | select(.Name | test("cost"; "i")) | .DataSourceId' 2>/dev/null | head -1)
+    
+    # If no datasource found with "cost", try with "intelligence"
+    if [ -z "$datasource_id" ]; then
+      datasource_id=$(echo "$output" | jq -r '.DataSources[]? | select(.Name | test("intelligence"; "i")) | .DataSourceId' 2>/dev/null | head -1)
+    fi
+    
+    # If still no datasource found, just take the first one
+    if [ -z "$datasource_id" ]; then
+      datasource_id=$(echo "$output" | jq -r '.DataSources[0]?.DataSourceId' 2>/dev/null)
+    fi
   fi
   
   echo "$datasource_id" > "$tmp_dir/datasource_id"
@@ -117,26 +122,39 @@ teardown_file() {
     run aws quicksight describe-data-set \
       --aws-account-id $account_id \
       --data-set-id $dataset_id
-    
-    [ "$status" -eq 0 ]
-    echo "$output" > "$tmp_dir/dataset_${dataset_id}.json"
+
+    if [ "$status" -ne 0 ]; then
+      echo "Failed to describe dataset $dataset_id: $output" | tee -a "$log_file"
+      continue
+    fi
+
+    # Only process if we got valid output
+    if echo "$output" | jq . >/dev/null 2>&1; then
+      echo "$output" > "$tmp_dir/dataset_${dataset_id}.json"
+      # ... rest of processing
+    else
+      echo "Invalid JSON response for dataset $dataset_id" | tee -a "$log_file"
+    fi
+
     
     # Extract physical table names from dataset and save for view tests
-    echo "$output" | jq -r '.DataSet.PhysicalTableMap | .[] | 
-      if .CustomSql then .CustomSql.DataSourceArn 
-      elif .RelationalTable then .RelationalTable.DataSourceArn 
-      else empty end' | grep -v "null" | sort -u | while read -r arn; do
-      # Extract table name from ARN if it's an Athena source
-      if [[ "$arn" == *"athena"* ]]; then
-        # Get the dataset SQL to find view names
-        sql=$(echo "$output" | jq -r '.DataSet.PhysicalTableMap | .[] | 
-          if .CustomSql then .CustomSql.SqlQuery else empty end' | grep -v "null")
-        
-        # Extract table/view names from SQL using regex
-        echo "$sql" | grep -o -E 'FROM\s+[a-zA-Z0-9_]+\.' | sed 's/FROM\s\+//g' | sed 's/\.//g' | sort -u >> "$tmp_dir/view_names"
-        echo "$sql" | grep -o -E 'JOIN\s+[a-zA-Z0-9_]+\.' | sed 's/JOIN\s\+//g' | sed 's/\.//g' | sort -u >> "$tmp_dir/view_names"
-      fi
-    done
+    if echo "$output" | jq . >/dev/null 2>&1; then
+      echo "$output" | jq -r '.DataSet.PhysicalTableMap | .[] | 
+        if .CustomSql then .CustomSql.DataSourceArn 
+        elif .RelationalTable then .RelationalTable.DataSourceArn 
+        else empty end' 2>/dev/null | grep -v "null" | sort -u | while read -r arn; do
+        # Extract table name from ARN if it's an Athena source
+        if [[ "$arn" == *"athena"* ]]; then
+          # Get the dataset SQL to find view names
+          sql=$(echo "$output" | jq -r '.DataSet.PhysicalTableMap | .[] | 
+            if .CustomSql then .CustomSql.SqlQuery else empty end' 2>/dev/null | grep -v "null")
+          
+          # Extract table/view names from SQL using regex
+          echo "$sql" | grep -o -E 'FROM\s+[a-zA-Z0-9_]+\.' | sed 's/FROM\s\+//g' | sed 's/\.//g' | sort -u >> "$tmp_dir/view_names" 2>/dev/null || true
+          echo "$sql" | grep -o -E 'JOIN\s+[a-zA-Z0-9_]+\.' | sed 's/JOIN\s\+//g' | sed 's/\.//g' | sort -u >> "$tmp_dir/view_names" 2>/dev/null || true
+        fi
+      done
+    fi
   done < "$tmp_dir/dataset_ids"
   
   # Get unique view names

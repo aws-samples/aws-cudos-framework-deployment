@@ -18,7 +18,7 @@ echo "Account ID: $ACCOUNT_ID"
 # Get the script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-TERRAFORM_DIR="$PROJECT_ROOT/terraform"
+TERRAFORM_DIR="$PROJECT_ROOT/cicd-deployment"
 
 # Create a temporary directory for modified Terraform files
 TEMP_DIR=$(mktemp -d)

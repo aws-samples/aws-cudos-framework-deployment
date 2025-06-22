@@ -19,7 +19,7 @@ echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 echo "Account ID: $ACCOUNT_ID"
 
-# Get the script directory
+# Get the script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Get the temp directory from the deploy script
@@ -28,8 +28,6 @@ if [ -f "$SCRIPT_DIR/.temp_dir" ]; then
   if [ ! -d "$TEMP_DIR" ]; then
     echo "Temp directory $TEMP_DIR not found. Creating a new one..."
     TEMP_DIR=$(mktemp -d)
-    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-    TERRAFORM_DIR="$PROJECT_ROOT/terraform"
     cp -r "$TERRAFORM_DIR"/* "$TEMP_DIR/"
     
     # Configure backend based on environment variable
@@ -67,7 +65,7 @@ else
   echo "No temp directory found from deploy script. Creating a new one..."
   TEMP_DIR=$(mktemp -d)
   PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-  TERRAFORM_DIR="$PROJECT_ROOT/terraform"
+  TERRAFORM_DIR="$PROJECT_ROOT/cicd-deployment"
   cp -r "$TERRAFORM_DIR"/* "$TEMP_DIR/"
   
   # Configure backend based on environment variable

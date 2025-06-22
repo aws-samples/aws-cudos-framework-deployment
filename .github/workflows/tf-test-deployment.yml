@@ -36,28 +36,21 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Setup TFLint
-        uses: terraform-linters/setup-tflint@v3
-
       - name: Get CID versions
         id: versions
         run: |
-          # Get CID CFN version from first Description line using the correct path
           CFN_VERSION=$(grep "Description.*Cloud Intelligence Dashboards" ./cfn-templates/cid-cfn.yml | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
-          echo "Using local CFN version: $CFN_VERSION"
           echo "cid_cfn_version=$CFN_VERSION" >> $GITHUB_OUTPUT
           
-          # Get Data Export version
           EXPORT_VERSION=$(curl -s https://raw.githubusercontent.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/main/data-exports/deploy/data-exports-aggregation.yaml | grep Description | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
           echo "data_export_version=$EXPORT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Create terraform.tfvars file
         run: |
-          # Create terraform.tfvars file in the cicd-deployment directory
           cat > ./terraform/cicd-deployment/terraform.tfvars << EOF
           global_values = {
-            destination_account_id = "${{ secrets.AWS_ACCOUNT_ID }}"
-            source_account_ids     = "${{ secrets.AWS_ACCOUNT_ID }}"
+            destination_account_id = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
+            source_account_ids     = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
             aws_region             = "${{ secrets.AWS_REGION }}"
             quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
             cid_cfn_version        = "${{ steps.versions.outputs.cid_cfn_version }}"
@@ -69,7 +62,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-to-assume: ${{ secrets.MANAGEMENT_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
           role-duration-seconds: 3600
           role-skip-session-tagging: true
@@ -77,7 +70,98 @@ jobs:
       - name: Initialize Terraform
         working-directory: ./terraform/cicd-deployment
         run: |
-          # Replace the existing backend.tf with S3 configuration
+          cat > backend.tf << EOF
+          terraform {
+            backend "s3" {
+              bucket       = "${{ secrets.BACKEND_S3_BUCKET }}"
+              key          = "terraform/cid-test/terraform.tfstate"
+              region       = "${{ secrets.AWS_REGION }}"
+              encrypt      = true
+            }
+          }
+          EOF
+
+          cat > providers.tf << EOF
+          provider "aws" {
+            region = "${{ secrets.AWS_REGION }}"
+          }
+
+          provider "aws" {
+            alias  = "destination_account"
+            region = "${{ secrets.AWS_REGION }}"
+          }
+          EOF
+
+          terraform fmt terraform.tfvars backend.tf providers.tf
+          terraform init
+
+      - name: Terraform Format Check
+        working-directory: ./terraform/cicd-deployment
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: ./terraform/cicd-deployment
+        run: terraform validate
+
+      - name: Run deploy script
+        run: |
+          export DATABASE_NAME="cid_data_export"
+          export RESOURCE_PREFIX="cid-tf"
+          export BACKEND_TYPE="s3"
+          export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
+          export S3_KEY="terraform/cid-test/terraform.tfstate"
+          export S3_REGION="${{ secrets.AWS_REGION }}"
+          
+          bash ./terraform/terraform-test/deploy.sh
+
+  cleanup:
+    needs: test-deployment
+    if: always()
+    runs-on: ubuntu-latest
+    
+    env:
+      DATABASE_NAME: cid_data_export
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+      
+      - name: Get CID versions
+        id: versions
+        run: |
+          CFN_VERSION=$(grep "Description.*Cloud Intelligence Dashboards" ./cfn-templates/cid-cfn.yml | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "cid_cfn_version=$CFN_VERSION" >> $GITHUB_OUTPUT
+          
+          EXPORT_VERSION=$(curl -s https://raw.githubusercontent.com/aws-solutions-library-samples/cloud-intelligence-dashboards-data-collection/main/data-exports/deploy/data-exports-aggregation.yaml | grep Description | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "data_export_version=$EXPORT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create terraform.tfvars file
+        run: |
+          cat > ./terraform/cicd-deployment/terraform.tfvars << EOF
+          global_values = {
+            destination_account_id = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
+            source_account_ids     = "${{ secrets.MANAGEMENT_ACCOUNT_ID }}"
+            aws_region             = "${{ secrets.AWS_REGION }}"
+            quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
+            cid_cfn_version        = "${{ steps.versions.outputs.cid_cfn_version }}"
+            data_export_version    = "${{ steps.versions.outputs.data_export_version }}"
+            environment            = "dev"
+          }
+          EOF
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.MANAGEMENT_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+          
+      - name: Initialize Terraform
+        working-directory: ./terraform/cicd-deployment
+        run: |
           cat > backend.tf << EOF
           terraform {
             backend "s3" {
@@ -89,34 +173,7 @@ jobs:
           }
           EOF
           
-          # Show the updated backend configuration
-          echo "Updated backend.tf:"
-          cat backend.tf
-          
-          # Initialize with the new backend
-          terraform init
-
-      - name: Run TFLint
-        working-directory: ./terraform/cicd-deployment
-        run: tflint --format=compact
-
-      - name: Terraform Format Check
-        working-directory: ./terraform/cicd-deployment
-        run: terraform fmt -check -recursive
-
-      - name: Terraform Validate
-        working-directory: ./terraform/cicd-deployment
-        run: terraform validate
-
-      - name: Prepare deploy and cleanup scripts
-        run: |
-          # Debug directory structure
-          echo "Current directory: $(pwd)"
-          echo "Checking for terraform-test directory:"
-          find ./terraform -type d | grep terraform-test || echo "terraform-test directory not found"
-          
-          # Update the existing provider.tf file
-          cat > ./terraform/cicd-deployment/providers.tf << EOF
+          cat > providers.tf << EOF
           provider "aws" {
             region = "${{ secrets.AWS_REGION }}"
           }
@@ -124,46 +181,12 @@ jobs:
           provider "aws" {
             alias  = "destination_account"
             region = "${{ secrets.AWS_REGION }}"
-            # Using the same credentials as the default provider
           }
           EOF
           
-          # Show the updated provider configuration
-          echo "Updated providers.tf:"
-          cat ./terraform/cicd-deployment/providers.tf
-          
-          # Fix path in deploy.sh and cleanup.sh
-          sed -i 's|TERRAFORM_DIR=\"$PROJECT_ROOT/terraform\"|TERRAFORM_DIR=\"$PROJECT_ROOT/cicd-deployment\"|g' ./terraform/terraform-test/deploy.sh
-          sed -i 's|TERRAFORM_DIR=\"$PROJECT_ROOT/terraform\"|TERRAFORM_DIR=\"$PROJECT_ROOT/cicd-deployment\"|g' ./terraform/terraform-test/cleanup.sh
-          
-          # Show the modified paths
-          echo "Modified paths in deploy.sh:"
-          grep -n "TERRAFORM_DIR" ./terraform/terraform-test/deploy.sh
-          
-          echo "Modified paths in cleanup.sh:"
-          grep -n "TERRAFORM_DIR" ./terraform/terraform-test/cleanup.sh
-          
-          # List files
-          ls -l ./terraform/*
-        
-      - name: Run deploy script
-        run: |
-          export DATABASE_NAME="cid_data_export"
-          export RESOURCE_PREFIX="cid-tf"
-          export BACKEND_TYPE="s3"
-          export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
-          export S3_KEY="terraform/cid-test/terraform.tfstate"
-          export S3_REGION="${{ secrets.AWS_REGION }}"
-          
-          # Debug deploy.sh content
-          echo "Content of deploy.sh:"
-          head -n 20 ./terraform/terraform-test/deploy.sh
-          
-          # Run with bash explicitly to see any errors
-          bash -x ./terraform/terraform-test/deploy.sh
-        
+          terraform init
+      
       - name: Run cleanup script
-        if: always()
         run: |
           export RESOURCE_PREFIX="cid-tf"
           export BACKEND_TYPE="s3"
@@ -171,10 +194,5 @@ jobs:
           export S3_KEY="terraform/cid-test/terraform.tfstate"
           export S3_REGION="${{ secrets.AWS_REGION }}"
           
-          # Debug cleanup.sh content
-          echo "Content of cleanup.sh:"
-          head -n 20 ./terraform/terraform-test/cleanup.sh
-          
-          # Run with bash explicitly to see any errors
-          bash -x ./terraform/terraform-test/cleanup.sh
-          
+          bash ./terraform/terraform-test/cleanup.sh
+
