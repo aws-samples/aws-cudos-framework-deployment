@@ -1842,7 +1842,7 @@ Resources:
                       'RequestId': event.get('RequestId'),
                       'LogicalResourceId': event.get('LogicalResourceId'),
                       'NoEcho': False,
-                      'Data': {'Reason': reason, 'DashboardURL': dash_url },
+                      'Data': {'DashboardURL': dash_url},
                   }
                   json_body = json.dumps(body)
                   print(json_body)
