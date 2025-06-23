@@ -1836,13 +1836,13 @@ Resources:
                   url = event.get('ResponseURL')
                   body = {
                       'Status': status,
-                      'Reason': reason[:1500] + '\nSee more: ' + log_url,
+                      'Reason': reason[:2000] + '\nSee more: ' + log_url,
                       'PhysicalResourceId': physical_id,
                       'StackId': event.get('StackId'),
                       'RequestId': event.get('RequestId'),
                       'LogicalResourceId': event.get('LogicalResourceId'),
                       'NoEcho': False,
-                      'Data': {'Reason': reason[:1500], 'DashboardURL': dash_url },
+                      'Data': {'DashboardURL': dash_url },
                   }
                   json_body = json.dumps(body)
                   print(json_body)
