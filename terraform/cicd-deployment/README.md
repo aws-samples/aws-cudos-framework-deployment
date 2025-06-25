@@ -48,7 +48,7 @@ global_values = {
   source_account_ids     = "987654321098"      # Comma-separated list of Payer account IDs
   aws_region             = "us-east-1"         # AWS region for deployment
   quicksight_user        = "user/example"      # QuickSight username
-  cid_cfn_version        = "4.2.5"             # CID CloudFormation version
+  cid_cfn_version        = "4.2.7"             # CID CloudFormation version - Supporting from 4.2.7
   data_export_version    = "0.5.0"             # Data Export version
   environment            = "dev"               # Environment (dev, staging, prod)
 }
