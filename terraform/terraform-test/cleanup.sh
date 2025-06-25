@@ -6,6 +6,7 @@ BACKEND_TYPE=${BACKEND_TYPE:-"local"}  # Can be "local" or "s3"
 S3_BUCKET=${S3_BUCKET:-""}
 S3_KEY=${S3_KEY:-"terraform/cid-test/terraform.tfstate"}
 S3_REGION=${S3_REGION:-"eu-west-2"}  # Default to eu-west-2
+BACKEND_REGION=${BACKEND_REGION:-"us-east-1"}  # Backend bucket region
 
 # Set AWS region for AWS CLI commands
 export AWS_DEFAULT_REGION="${S3_REGION}"
@@ -39,7 +40,7 @@ terraform {
   backend "s3" {
     bucket = "$S3_BUCKET"
     key    = "$S3_KEY"
-    region = "$S3_REGION"
+    region = "$BACKEND_REGION"
   }
 }
 EOF
@@ -77,7 +78,7 @@ terraform {
   backend "s3" {
     bucket = "$S3_BUCKET"
     key    = "$S3_KEY"
-    region = "$S3_REGION"
+    region = "$BACKEND_REGION"
   }
 }
 EOF
