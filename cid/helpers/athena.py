@@ -282,16 +282,18 @@ class Athena(CidBase):
         logger.debug(f'WorkGroups: {result.get("WorkGroups")}')
         return result.get('WorkGroups')
 
-    def get_table_metadata(self, table_name: str, database_name: str=None) -> dict:
-        table_metadata = self._metadata.get(table_name)
-        params = {
-            'CatalogName': self.CatalogName,
-            'DatabaseName': database_name or self.DatabaseName,
-            'TableName': table_name
-        }
+    def get_table_metadata(self, table_name: str, database_name: str=None, no_cache: bool=False) -> dict:
+        table_metadata = None
+        if not no_cache:
+            table_metadata = self._metadata.get(table_name)
         if not table_metadata:
+            params = {
+                'CatalogName': self.CatalogName,
+                'DatabaseName': database_name or self.DatabaseName,
+                'TableName': table_name,
+            }
             table_metadata = self.client.get_table_metadata(**params).get('TableMetadata')
-            self._metadata.update({table_name: table_metadata})
+            self._metadata[table_name] = table_metadata
 
         return table_metadata
 
@@ -348,7 +350,8 @@ class Athena(CidBase):
 
     def get_query_results(self, query_id):
         """ Get Query Results """
-        return self.client.get_query_results(QueryExecutionId=query_id)
+        paginator = self.client.get_paginator("get_query_results")
+        return paginator.paginate(QueryExecutionId=query_id).build_full_result()
 
     def parse_response_as_table(self, response, include_header=False):
         """ Return a query response as a table. """
@@ -547,6 +550,7 @@ class Athena(CidBase):
                         message=f'The existing view is different. Override?',
                         choices=['retry diff', 'proceed and override', 'keep existing', 'exit'],
                         default='retry diff',
+                        yes_choice='proceed and override',
                         fuzzy=False,
                     )
                     if choice == 'retry diff':

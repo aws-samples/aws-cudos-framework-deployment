@@ -2,9 +2,7 @@
 
 Cloud Intelligence Dashboards provides a python tool for installation and upgrade of Dashboards. This tool can also export dashboards to deployable artifacts including QuickSight Dashboards, Athena Views, Glue Tables etc.
 
-We recommend cid-cmd tool via [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home), but you can use it from any terminal where you typically run aws commands.
-
-CID is also provided in a form of CloudFormation templates. See detailed instructions in the [Well Architected Labs](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy) site.
+CID is also provided in a form of CloudFormation templates. See detailed instructions in the [Well Architected Workshop](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy) site.
 
 
 ## Before you start
@@ -22,14 +20,7 @@ CID is also provided in a form of CloudFormation templates. See detailed instruc
 
 1. Launch [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home) or your local shell
 
-    Automation requires Python 3
-
-2. Make sure you have the latest pip package installed
-    ```bash
-    python3 -m ensurepip --upgrade
-    ```
-
-4. Install CID Python automation PyPI package
+2. Install Python package cid-cmd
     ```bash
     pip3 install --upgrade cid-cmd
     ```

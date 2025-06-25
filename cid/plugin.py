@@ -6,7 +6,8 @@ from pkg_resources import (
     resource_string,
     resource_listdir,
     resource_isdir,
-    resource_stream
+    resource_stream,
+    resource_filename,
 )
 import logging
 
@@ -52,6 +53,7 @@ class Plugin():
                     for item in v.values():
                         if item is not None:
                             item.update({'providedBy': self.name})
+                            item.update({'source': resource_filename(self.name, f'data/{pkg_resource}')})
         logger.debug(f'Plugin {self.name} initialized')
     
     def provides(self) -> dict:
