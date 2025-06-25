@@ -181,7 +181,7 @@ jobs:
             backend "s3" {
               bucket       = "${{ secrets.BACKEND_S3_BUCKET }}"
               key          = "terraform/cid-test/terraform.tfstate"
-              region       = "${{ secrets.AWS_REGION_TF }}"
+              region       = "${{ secrets.AWS_REGION }}"
               encrypt      = true
             }
           }
