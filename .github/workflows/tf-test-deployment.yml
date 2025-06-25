@@ -51,7 +51,7 @@ jobs:
           global_values = {
             destination_account_id = "${{ secrets.AWS_ACCOUNT_ID }}"
             source_account_ids     = "${{ secrets.AWS_ACCOUNT_ID }}"
-            aws_region             = "${{ secrets.AWS_REGION }}"
+            aws_region             = "${{ secrets.AWS_REGION_TF }}"
             quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
             cid_cfn_version        = "${{ steps.versions.outputs.cid_cfn_version }}"
             data_export_version    = "${{ steps.versions.outputs.data_export_version }}"
@@ -63,7 +63,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION_TF }}
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
@@ -75,7 +75,7 @@ jobs:
             backend "s3" {
               bucket       = "${{ secrets.BACKEND_S3_BUCKET }}"
               key          = "terraform/cid-test/terraform.tfstate"
-              region       = "${{ secrets.AWS_REGION }}"
+              region       = "${{ secrets.AWS_REGION_TF }}"
               encrypt      = true
             }
           }
@@ -83,12 +83,12 @@ jobs:
 
           cat > providers.tf << EOF
           provider "aws" {
-            region = "${{ secrets.AWS_REGION }}"
+            region = "${{ secrets.AWS_REGION_TF }}"
           }
 
           provider "aws" {
             alias  = "destination_account"
-            region = "${{ secrets.AWS_REGION }}"
+            region = "${{ secrets.AWS_REGION_TF }}"
           }
           EOF
 
@@ -110,7 +110,7 @@ jobs:
           export BACKEND_TYPE="s3"
           export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
           export S3_KEY="terraform/cid-test/terraform.tfstate"
-          export S3_REGION="${{ secrets.AWS_REGION }}"
+          export S3_REGION="${{ secrets.AWS_REGION_TF }}"
           
           bash ./terraform/terraform-test/deploy.sh
 
@@ -157,7 +157,7 @@ jobs:
           global_values = {
             destination_account_id = "${{ secrets.AWS_ACCOUNT_ID }}"
             source_account_ids     = "${{ secrets.AWS_ACCOUNT_ID }}"
-            aws_region             = "${{ secrets.AWS_REGION }}"
+            aws_region             = "${{ secrets.AWS_REGION_TF }}"
             quicksight_user        = "${{ secrets.QUICKSIGHT_USER }}"
             cid_cfn_version        = "${{ steps.versions.outputs.cid_cfn_version }}"
             data_export_version    = "${{ steps.versions.outputs.data_export_version }}"
@@ -169,7 +169,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION_TF }}
           role-duration-seconds: 3600
           role-skip-session-tagging: true
           
@@ -181,7 +181,7 @@ jobs:
             backend "s3" {
               bucket       = "${{ secrets.BACKEND_S3_BUCKET }}"
               key          = "terraform/cid-test/terraform.tfstate"
-              region       = "${{ secrets.AWS_REGION }}"
+              region       = "${{ secrets.AWS_REGION_TF }}"
               encrypt      = true
             }
           }
@@ -189,12 +189,12 @@ jobs:
           
           cat > providers.tf << EOF
           provider "aws" {
-            region = "${{ secrets.AWS_REGION }}"
+            region = "${{ secrets.AWS_REGION_TF }}"
           }
 
           provider "aws" {
             alias  = "destination_account"
-            region = "${{ secrets.AWS_REGION }}"
+            region = "${{ secrets.AWS_REGION_TF }}"
           }
           EOF
           
@@ -206,7 +206,7 @@ jobs:
           export BACKEND_TYPE="s3"
           export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
           export S3_KEY="terraform/cid-test/terraform.tfstate"
-          export S3_REGION="${{ secrets.AWS_REGION }}"
+          export S3_REGION="${{ secrets.AWS_REGION_TF }}"
           
           bash ./terraform/terraform-test/cleanup.sh
 
