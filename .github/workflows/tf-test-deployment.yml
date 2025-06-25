@@ -114,6 +114,20 @@ jobs:
           
           bash ./terraform/terraform-test/deploy.sh
 
+      - name: Run dashboard checks
+        run: |
+          export DATABASE_NAME="cid_data_export"
+          
+          # Get the temp directory from deploy script
+          if [ -f "./terraform/terraform-test/.temp_dir" ]; then
+            TEMP_DIR=$(cat "./terraform/terraform-test/.temp_dir")
+            echo "Using temp directory: $TEMP_DIR"
+            bash ./terraform/terraform-test/check_dashboards.sh "$TEMP_DIR"
+          else
+            echo "Error: No temp directory reference found from deploy script"
+            exit 1
+          fi
+
   cleanup:
     needs: test-deployment
     if: always()
