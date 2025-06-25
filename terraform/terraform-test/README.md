@@ -65,7 +65,7 @@ Before running the script, you must set up your AWS credentials from Isengard:
 
 ### 2. Create terraform.tfvars File
 
-Create a `terraform.tfvars` file in the `terraform` directory with your configuration:
+Create a `terraform.tfvars` file in the `terraform/cicd-deployment` directory with your configuration:
 
 ```hcl
 global_values = {
