@@ -73,7 +73,7 @@ global_values = {
   source_account_ids     = "123456789012"      # Same account ID for local testing
   aws_region             = "eu-west-2"         # Your preferred region
   quicksight_user        = "your-username"     # Your QuickSight username
-  cid_cfn_version        = "4.2.5"             # CID CloudFormation version
+  cid_cfn_version        = "4.2.7"             # CID CloudFormation version - Supporting from 4.2.7
   data_export_version    = "0.5.0"             # Data Export version
   environment            = "dev"               # Environment (use "dev" for testing)
 }
