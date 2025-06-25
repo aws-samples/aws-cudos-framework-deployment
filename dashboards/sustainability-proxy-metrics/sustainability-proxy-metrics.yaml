@@ -30,7 +30,7 @@ dashboards:
         Expression: |-
           ifelse(
               isNull({account_name}),
-              {account_id},
+              {usage_account_id},
               {account_name}
           )
         Name: calc_account_name
@@ -3934,6 +3934,7 @@ dashboards:
             Title:
               Visibility: VISIBLE
             VisualId: 3326b9e2-4f12-4ca4-b04d-22cb9998f000
+    version: v4.0.0
 datasets:
   sus_s3_storage_all:
     data:
@@ -3985,13 +3986,13 @@ datasets:
               Type: INTEGER
             - Name: usage_quantity
               Type: DECIMAL
-              SubType: FLOAT
+              SubType: FIXED
             - Name: unblended_cost
               Type: DECIMAL
-              SubType: FLOAT
+              SubType: FIXED
             - Name: public_cost
               Type: DECIMAL
-              SubType: FLOAT
+              SubType: FIXED
         fe1b70ec-a568-4341-9265-db2fe41e6a13:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -4085,6 +4086,11 @@ datasets:
               SubType: FLOAT
             - Name: total_mbm_emissions_unit
               Type: STRING
+            - Name: total_lbm_emissions_value
+              Type: DECIMAL
+              SubType: FLOAT
+            - Name: total_lbm_emissions_unit
+              Type: STRING
             - Name: model_version
               Type: STRING
             - Name: product_code
@@ -4108,7 +4114,7 @@ datasets:
             - Name: usage_period
               Type: STRING
       LogicalTableMap:
-        1fb5949f-9110-4e16-8ef9-16075de15203:
+        8768e73c-c416-440f-9d3c-2b651bcb2127:
           Alias: Intermediate Table
           DataTransforms:
           - ProjectOperation:
@@ -4117,6 +4123,8 @@ datasets:
               - usage_account_id
               - total_mbm_emissions_value
               - total_mbm_emissions_unit
+              - total_lbm_emissions_value
+              - total_lbm_emissions_unit
               - model_version
               - product_code
               - usage_period_start
@@ -4177,13 +4185,13 @@ datasets:
               Type: STRING
             - Name: product_physical_processor
               Type: STRING
-            - Name: vcpu_hours
-              Type: DECIMAL
-              SubType: FLOAT
             - Name: tag_business_metric
               Type: INTEGER
             - Name: account_business_metric
               Type: INTEGER
+            - Name: vcpu_hours
+              Type: DECIMAL
+              SubType: FIXED
         937e5fa9-bb37-4b63-a607-f8c1d0a7ca9b:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -4269,9 +4277,6 @@ datasets:
               Type: STRING
             - Name: pricing_unit
               Type: STRING
-            - Name: sum_line_item_usage_amount
-              Type: DECIMAL
-              SubType: FLOAT
             - Name: resource_tags_user_application
               Type: STRING
             - Name: tagbuskpi
@@ -4279,6 +4284,9 @@ datasets:
             - Name: accbuskpi
               Type: INTEGER
             - Name: sum_line_item_unblended_cost
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: sum_line_item_usage_amount
               Type: DECIMAL
               SubType: FIXED
       LogicalTableMap:
@@ -4347,13 +4355,13 @@ datasets:
               Type: STRING
             - Name: line_item_usage_start_date
               Type: DATETIME
-            - Name: usage
-              Type: DECIMAL
-              SubType: FLOAT
             - Name: tagbuskpi
               Type: INTEGER
             - Name: accbuskpi
               Type: INTEGER
+            - Name: Usage
+              Type: DECIMAL
+              SubType: FIXED
         e7b46e3d-87cf-473e-908b-7870ffa90a32:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -4519,16 +4527,16 @@ datasets:
               Type: STRING
             - Name: line_item_line_item_description
               Type: STRING
-            - Name: usage_amount_in_tb
-              Type: DECIMAL
-              SubType: FLOAT
-            - Name: cost
-              Type: DECIMAL
-              SubType: FLOAT
             - Name: tagbuskpi
               Type: INTEGER
             - Name: accbuskpi
               Type: INTEGER
+            - Name: usage_amount_in_tb
+              Type: DECIMAL
+              SubType: FIXED
+            - Name: cost
+              Type: DECIMAL
+              SubType: FIXED
       LogicalTableMap:
         9d386b3d-9b75-4e72-b307-56678a6e8f96:
           Alias: account_map
@@ -4601,13 +4609,13 @@ datasets:
               Type: STRING
             - Name: line_item_product_code
               Type: STRING
-            - Name: vcpu_hours
-              Type: DECIMAL
-              SubType: FLOAT
             - Name: tag_business_metric
               Type: INTEGER
             - Name: account_business_metric
               Type: INTEGER
+            - Name: vcpu_hours
+              Type: DECIMAL
+              SubType: FIXED
         7c5b80e9-7ba4-42bd-b626-4f8500c0ef00:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
@@ -4691,9 +4699,6 @@ datasets:
               Type: STRING
             - Name: pricing_unit
               Type: STRING
-            - Name: sum_line_item_usage_amount
-              Type: DECIMAL
-              SubType: FLOAT
             - Name: resource_tags_user_application
               Type: STRING
             - Name: sum_line_item_unblended_cost
@@ -4703,6 +4708,9 @@ datasets:
               Type: INTEGER
             - Name: accbuskpi
               Type: INTEGER
+            - Name: sum_line_item_usage_amount
+              Type: DECIMAL
+              SubType: FIXED
       LogicalTableMap:
         6663e8a1-6723-49ae-9312-b51275135aec:
           Alias: sus_idle_natgw
@@ -4810,34 +4818,28 @@ views:
         default: resource_tags_user_application
         description: "Enter tag name that is used to categorize workloads"
         global: True
-  sus_carbon_emissions:
-    parameters:
-        data_exports_database_name:
-          type: athena
-          query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'carbon'
-          default: cid_data_export
-          description: Database of cid data exports
-          global: True
+  sus_buss_kpi:
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".sus_carbon_emissions AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_buss_kpi AS
       SELECT
-        payer_account_id
-      , usage_account_id
-      , total_mbm_emissions_value
-      , total_mbm_emissions_unit
-      , model_version
-      , product_code
-      , usage_period_start
-      , usage_period_end
-      , last_refresh_timestamp
-      , region_code
-      , "location"
-      , source_account_id
-      , report_name
-      , carbon_model_version
-      , usage_period
+        'none' tagValue
+      , line_item_usage_account_id linkedAccountValue
+      , line_item_usage_start_date
+      , CAST(("random"() * 1000) AS int) buss
       FROM
-      "${data_exports_database_name}".carbon
+        "cid_data_export"."cur2" cur
+      GROUP BY line_item_usage_start_date, line_item_usage_account_id, 1
+  account_map:
+    data: |-
+      CREATE OR REPLACE VIEW "${athena_database_name}".account_map AS
+      SELECT DISTINCT
+        line_item_usage_account_id account_id
+      , MAX_BY(line_item_usage_account_name, line_item_usage_start_date) account_name
+      , MAX_BY(bill_payer_account_id, line_item_usage_start_date) parent_account_id
+      , MAX_BY(bill_payer_account_name, line_item_usage_start_date) parent_account_name
+      FROM
+        "cid_data_export"."cur2"
+      GROUP BY line_item_usage_account_id
   sus_compute_ec2:
     dependsOn:
       views:
@@ -4958,17 +4960,6 @@ views:
          GROUP BY line_item_resource_id, bill_billing_period_start_date, product['region'], pricing_unit, line_item_usage_account_id, bill_payer_account_id, 7
       )
       WHERE ((usage_per_resource_and_pricing_unit > 336) AND (pricing_unit_per_resource = 1))
-  sus_carbon_emissions_view:
-    data: |-
-      CREATE VIEW "${athena_database_name}".sus_carbon_emissions_view AS
-      SELECT
-        '123456789789' accountid
-      , '2024-01-01' querydate
-      , '2024-01-01' startdate
-      , 0 mbmcarbon
-      , 'no-data' paceproductcode
-      , 'no-data' regioncode
-      WHERE (1 = 0)
   sus_storage_athena:
     dependsOn:
       views:
@@ -5080,6 +5071,36 @@ views:
       INNER JOIN "${athena_database_name}".sus_aws_regions ON (cur.product['region'] = sus_aws_regions.region_name))
       WHERE (((cur.product['region'] <> '') AND (cur.product['region'] <> 'global')) AND ((cur.bill_billing_period_start_date >= (DATE_TRUNC('month', current_timestamp) - INTERVAL  '7' MONTH)) AND (CAST(CONCAT(cur.billing_period, '-01') AS date) >= (DATE_TRUNC('month', current_date) - INTERVAL  '7' MONTH))))
       GROUP BY 1, 2, 3, 4, 5, 6
+  sus_carbon_emissions:
+    parameters:
+        data_exports_database_name:
+          type: athena
+          query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'carbon'
+          default: cid_data_export
+          description: Database of cid data exports
+          global: True
+    data: |-
+      CREATE OR REPLACE VIEW "${athena_database_name}".sus_carbon_emissions AS
+      SELECT
+        payer_account_id
+      , usage_account_id
+      , total_mbm_emissions_value
+      , total_mbm_emissions_unit
+      , total_lbm_emissions_value
+      , total_lbm_emissions_unit
+      , model_version
+      , product_code
+      , usage_period_start
+      , usage_period_end
+      , last_refresh_timestamp
+      , region_code
+      , "location"
+      , source_account_id
+      , report_name
+      , carbon_model_version
+      , usage_period
+      FROM
+      "${data_exports_database_name}".carbon
   sus_network:
     dependsOn:
       views:
