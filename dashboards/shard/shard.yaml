@@ -14132,9 +14132,6 @@ datasets:
 crawlers: {}
 views:
   security_hub_findings:
-    dependsOn:
-      views:
-      - securityhub_events
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".security_hub_findings AS
       SELECT DISTINCT
