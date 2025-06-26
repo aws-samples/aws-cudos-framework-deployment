@@ -1,11 +1,11 @@
 dashboards:
-  SECURITY HUB ANALYTICS AND REPORTING DASHBOARD V2:
+  SHARD:
     dependsOn:
       datasets:
       - security_hub_findings
-    name: security-hub-analytics-and-reporting-dashboard-v2
-    dashboardId: security-hub-analytics-and-reporting-dashboard-v2
-    category: Custom
+    name: SHARD - Security Hub Analytics and Reporting Dashboard
+    dashboardId: shard
+    category: Security
     theme: MIDNIGHT
     version: v1.0.0
     data:  |-
@@ -14176,39 +14176,14 @@ views:
       , upper(split_part(json_extract_scalar(detail, '$.findings[0].resources[0].id'), ':', 3)) Finding_Service
       , json_format(json_extract(detail, '$.findings[0].resources[0].details')) resource_keyname
       FROM
-        "cid_security_hub"."securityhub_events"
-      WHERE (date_parse(datehour, '%Y/%m/%d') >= date_add('month', -12, current_date))
-  securityhub_events:
-    data: |-
-      CREATE EXTERNAL TABLE `securityhub_events`(
-        `version` string COMMENT 'from deserializer',
-        `id` string COMMENT 'from deserializer',
-        `detail_type` string COMMENT 'from deserializer',
-        `source` string COMMENT 'from deserializer',
-        `account` string COMMENT 'from deserializer',
-        `time` string COMMENT 'from deserializer',
-        `region` string COMMENT 'from deserializer',
-        `resources` array<string> COMMENT 'from deserializer',
-        `detail` string COMMENT 'from deserializer')
-      PARTITIONED BY (
-        `datehour` string)
-      ROW FORMAT SERDE
-        'org.openx.data.jsonserde.JsonSerDe'
-      STORED AS INPUTFORMAT
-        'org.apache.hadoop.mapred.TextInputFormat'
-      OUTPUTFORMAT
-        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
-      LOCATION
-        '${s3path}'
-      TBLPROPERTIES (
-        'projection.datehour.format'='yyyy/MM/dd',
-        'projection.datehour.interval'='1',
-        'projection.datehour.interval.unit'='DAYS',
-        'projection.datehour.range'='2024/07/01,NOW',
-        'projection.datehour.type'='date',
-        'projection.enabled'='true',
-        'storage.location.template'='${s3path}${datehour}')
+        "${securityhub_database_name}"."securityhub_events"
+      WHERE (date_parse(datehour, '%Y/%m/%d') >= date_add('month', -3, current_date))
     parameters:
-      s3path:
-        default: s3://cid-{account_id}-security-hub/securityhub/securityhub_events/
-        description: S3 Path for securityhub_events table
+      securityhub_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'securityhub_events'
+        default: cid_security_hub
+        description: "Enter the name cid_security_hub database"
+        global: True
+
+
