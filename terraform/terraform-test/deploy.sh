@@ -28,6 +28,18 @@ echo "Creating temporary Terraform directory at $TEMP_DIR"
 # Copy Terraform files to temporary directory
 cp -r "$TERRAFORM_DIR"/* "$TEMP_DIR/"
 
+# Modify locals.tf to use local CID template if specified
+if [ ! -z "${LOCAL_CID_TEMPLATE_URL}" ]; then
+  echo "Modifying locals.tf to use local CID template: $LOCAL_CID_TEMPLATE_URL"
+  sed -i.bak "s|cudos        = \"\${local.common_template_url_base}/\${var.global_values.cid_cfn_version}/cid-cfn.yml\"|cudos        = \"$LOCAL_CID_TEMPLATE_URL\"|g" "$TEMP_DIR/locals.tf"
+fi
+
+# Modify variables.tf to use local lambda layer if specified
+if [ ! -z "${LOCAL_LAYER_BUCKET}" ]; then
+  echo "Modifying variables.tf to use local lambda layer bucket: $LOCAL_LAYER_BUCKET"
+  sed -i.bak "s|lambda_layer_bucket_prefix           = \"aws-managed-cost-intelligence-dashboards\"|lambda_layer_bucket_prefix           = \"$LOCAL_LAYER_BUCKET\"|g" "$TEMP_DIR/variables.tf"
+fi
+
 # Create a directory to store the tfstate file
 TFSTATE_DIR="$SCRIPT_DIR/tfstate"
 mkdir -p "$TFSTATE_DIR"

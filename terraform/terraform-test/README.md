@@ -1,164 +1,262 @@
-# Local Testing for Cloud Intelligence Dashboards
+# CID Terraform Testing Framework
 
-This document provides instructions for local testing of the AWS Cloud Intelligence Dashboards (CID) Terraform deployment.
+This directory contains scripts for testing Cloud Intelligence Dashboards (CID) deployments using Terraform with local development capabilities.
 
 ## Overview
 
-The testing framework now uses a modular approach with three scripts:
+The testing framework provides a complete workflow for:
+- Building and testing local CID code changes
+- Using local CloudFormation templates
+- Deploying CID infrastructure via Terraform
+- Validating dashboard deployments
+- Cleaning up test resources
 
-1. **tf-test-local-run.sh**: The main entry script that:
-   - Processes command-line arguments for backend configuration
-   - Sets environment variables for the other scripts
-   - Calls the deploy script
-   - Optionally calls the cleanup script based on user input
+## Scripts
 
-2. **deploy.sh**: Handles the deployment process:
-   - Creates a temporary copy of the Terraform files
-   - Modifies them to work in a single-account setup
-   - Configures the backend (local or S3)
-   - Deploys the infrastructure
-   - Extracts dashboard settings from Terraform configuration
-   - Runs BATS tests to verify the deployment
+### Main Scripts
 
-3. **cleanup.sh**: Handles resource cleanup:
-   - Empties and removes S3 buckets
-   - Runs terraform destroy
-   - Cleans up temporary files
+- **`tf-test-local-run.sh`** - Main wrapper script that orchestrates the complete testing workflow
+- **`deploy.sh`** - Handles Terraform deployment with local asset support
+- **`check_dashboards.sh`** - Validates deployed dashboards and runs tests
+- **`cleanup.sh`** - Cleans up deployed resources and S3 buckets
+
+### Usage
+
+```bash
+# Complete workflow (recommended)
+bash tf-test-local-run.sh
+```
+
+## Configuration
+
+### Environment Variables
+
+Set these variables to customize your testing environment:
+
+```bash
+# Basic Configuration
+export DATABASE_NAME="cid_data_export"           # Database name for CID
+export RESOURCE_PREFIX="cid-tf"                  # Prefix for AWS resources
+export BACKEND_TYPE="local"                      # Terraform backend type ("local" or "s3")
+export S3_REGION="eu-west-2"                     # AWS region for deployment
+
+# S3 Backend Configuration (only needed if BACKEND_TYPE="s3")
+export S3_BUCKET="my-terraform-state-bucket"     # S3 bucket for Terraform state
+export S3_KEY="terraform/cid-test/terraform.tfstate"  # S3 key for state file
+export BACKEND_REGION="us-east-1"                # Region where backend bucket exists
+
+# Local Development Options
+export BUILD_LOCAL_LAYER="true"                  # Build local lambda layer
+export USE_LOCAL_CID_TEMPLATE="true"             # Use local CID template
+export LOCAL_ASSETS_BUCKET="my-cid-test-bucket"  # S3 bucket for local assets
+
+# Advanced Options (DO NOT CHANGE)
+export LAYER_PREFIX="cid-resource-lambda-layer"  # S3 prefix for lambda layers (required by CloudFormation)
+export TEMPLATE_PREFIX="cid-testing/templates"   # S3 prefix for templates
+```
+
+### S3 Bucket Configuration
+
+**Important**: The CloudFormation template automatically adds the region suffix to your bucket name.
+
+If your bucket is named `my-cid-test-bucket-eu-west-2`, set:
+```bash
+export LOCAL_ASSETS_BUCKET="my-cid-test-bucket"  # Without region suffix
+```
+
+The script will automatically upload to `my-cid-test-bucket-eu-west-2`.
+
+**Note**: The `LAYER_PREFIX` must remain as `cid-resource-lambda-layer` as this is required by the CloudFormation template.
+
+## Local Development Features
+
+### 1. Local Lambda Layer Testing
+
+When `BUILD_LOCAL_LAYER=true`:
+- Builds lambda layer from your local CID code using `assets/build_lambda_layer.sh`
+- Uploads to S3 at `s3://my-cid-test-bucket-region/cid-resource-lambda-layer/cid-X.X.X.zip`
+- CloudFormation uses your local layer instead of the official AWS-managed layer
+
+### 2. Local CloudFormation Template Testing
+
+When `USE_LOCAL_CID_TEMPLATE=true`:
+- Uploads your local `cfn-templates/cid-cfn.yml` to S3
+- Terraform uses your local template instead of the remote version
+- Data exports template still uses the official remote version
+
+### 3. Terraform Backend Options
+
+**Local Backend (default)**:
+- Stores Terraform state locally in `tfstate/terraform.tfstate`
+- No additional configuration required
+- Suitable for individual testing
+
+**S3 Backend**:
+- Stores Terraform state in S3 for team collaboration
+- Requires `S3_BUCKET`, `S3_KEY`, and `BACKEND_REGION` variables
+- Supports cross-region setup (backend in us-east-1, resources in eu-west-2)
+
+```bash
+# Example S3 backend configuration
+export BACKEND_TYPE="s3"
+export S3_BUCKET="my-terraform-state-bucket"
+export S3_KEY="terraform/cid-test/terraform.tfstate"
+export BACKEND_REGION="us-east-1"  # Where your state bucket exists
+export S3_REGION="eu-west-2"       # Where CID resources will be deployed
+```
+
+## Workflow Steps
+
+### 1. Local Asset Preparation
+- Builds local lambda layer (if enabled)
+- Uploads local CID template (if enabled)
+- Sets up environment variables for deployment
+
+### 2. Terraform Deployment
+- Creates temporary Terraform configuration
+- Modifies variables to use local assets
+- Deploys CID infrastructure
+- Skips source account stack for local testing
+
+### 3. Dashboard Validation
+- Extracts dashboard configuration from Terraform
+- Runs BATS tests to validate deployments
+- Checks QuickSight dashboard availability
+
+### 4. Resource Cleanup
+- Empties S3 data buckets (preserves buckets)
+- Runs `terraform destroy`
+- Cleans up temporary files
+- Removes any remaining resources
+
+## Testing Scenarios
+
+### Scenario 1: Test Local Code Changes
+```bash
+export BUILD_LOCAL_LAYER="true"
+export USE_LOCAL_CID_TEMPLATE="false"
+bash tf-test-local-run.sh
+```
+
+### Scenario 2: Test Local Template Changes
+```bash
+export BUILD_LOCAL_LAYER="false"
+export USE_LOCAL_CID_TEMPLATE="true"
+bash tf-test-local-run.sh
+```
+
+### Scenario 3: Test Both Local Changes
+```bash
+export BUILD_LOCAL_LAYER="true"
+export USE_LOCAL_CID_TEMPLATE="true"
+bash tf-test-local-run.sh
+```
+
+### Scenario 4: Use Official Assets
+```bash
+export BUILD_LOCAL_LAYER="false"
+export USE_LOCAL_CID_TEMPLATE="false"
+bash tf-test-local-run.sh
+```
+
+## Dashboard Testing
+
+The framework includes dedicated dashboard validation through the `check_dashboards.sh` script, which is automatically executed as part of the main workflow.
+
+Features:
+- Extracts dashboard settings from Terraform configuration
+- Validates QuickSight dashboard deployments
+- Runs comprehensive BATS test suite
+- Provides detailed test results and logs
 
 ## Prerequisites
 
-- AWS CLI installed and configured with appropriate permissions
-- Terraform >= 1.0 installed
-- BATS (Bash Automated Testing System) installed
-- jq installed for JSON processing
-- QuickSight Enterprise subscription in your AWS account
-- QuickSight user with appropriate permissions
+### Required Tools
+- AWS CLI configured with appropriate permissions
+- Terraform >= 1.0.0
+- BATS (Bash Automated Testing System)
+- jq (JSON processor)
+- Python 3.x (for lambda layer building)
 
-## Setup Instructions
+### AWS Permissions
+Your AWS credentials need permissions for:
+- **CloudFormation** (stack create/delete/describe operations)
+- **S3** (bucket create/delete, object upload/download, versioning, lifecycle)
+- **Glue** (database/table/crawler create/delete/start operations)
+- **Athena** (workgroup create/delete, query execution)
+- **Lambda** (function create/delete, layer publish/delete)
+- **QuickSight** (full access for dashboards, datasets, datasources, users)
+- **IAM** (role/policy create/delete/attach, PassRole)
+- **CUR** (Cost and Usage Report definition operations)
+- **BCM Data Exports** (Billing and Cost Management data exports)
+- **KMS** (key operations for encryption/decryption)
+- **CloudWatch Logs** (log group/stream creation for Lambda functions)
 
-### 1. Configure AWS Credentials with Isengard
+**Note**: The framework requires extensive permissions as it creates a complete CID infrastructure including data pipelines, dashboards, and associated AWS resources.
 
-Before running the script, you must set up your AWS credentials from Isengard:
-
-1. **Copy Isengard Temporary Credentials**:
-   - Log into Isengard console and select the account you want to use
-   - Expand bash/zsh, then click on "Copy bash/zsh"
-   - Paste these credentials into your terminal to set the environment variables
-
-2. **Configure AWS CLI Region**:
-   - Ensure your AWS CLI is configured to use the correct region:
-   ```bash
-   aws configure set region eu-west-2  # Replace with your desired region
-   ```
-   - Verify your configuration:
-   ```bash
-   aws configure get region
-   ```
-
-3. **Verify IDE Access**:
-   - Make sure your IDE has access to these environment variables
-   - For VS Code, you may need to launch it from the terminal where you set the credentials
-   - Verify access with:
-   ```bash
-   aws sts get-caller-identity
-   ```
-
-### 2. Create terraform.tfvars File
-
-Create a `terraform.tfvars` file in the `terraform/cicd-deployment` directory with your configuration:
-
-```hcl
-global_values = {
-  destination_account_id = "123456789012"      # Your AWS account ID
-  source_account_ids     = "123456789012"      # Same account ID for local testing
-  aws_region             = "eu-west-2"         # Your preferred region
-  quicksight_user        = "your-username"     # Your QuickSight username
-  cid_cfn_version        = "4.2.7"             # CID CloudFormation version - Supporting from 4.2.7
-  data_export_version    = "0.5.0"             # Data Export version
-  environment            = "dev"               # Environment (use "dev" for testing)
-}
-```
-
-### 3. No Script Configuration Needed
-
-The script automatically uses the values from your `terraform.tfvars` file, so no additional configuration is required in the script itself.
-
-## Running the Tests
-
-1. Make the scripts executable:
-   ```bash
-   chmod +x tf-test-local-run.sh deploy.sh cleanup.sh
-   ```
-
-2. Run the main script:
-   ```bash
-   ./tf-test-local-run.sh
-   ```
-
-3. Advanced usage with options:
-   ```bash
-   # Use S3 backend instead of local
-   ./tf-test-local-run.sh --s3 --bucket your-bucket-name --region eu-west-2
-   
-   # Skip cleanup prompt
-   ./tf-test-local-run.sh --skip-cleanup
-   
-   # Use custom resource prefix
-   ./tf-test-local-run.sh --resource-prefix my-cid-test
-   ```
-
-4. The script will:
-   - Process command-line arguments
-   - Call deploy.sh to deploy the infrastructure and run tests
-   - Display test results
-   - Ask if you want to clean up resources (unless --skip-cleanup is used)
-   - Call cleanup.sh if cleanup is requested
-
-## BATS Tests
-
-The `dashboards.bats` file contains tests that verify:
-
-1. The dashboards exist in QuickSight
-2. The required datasets exist
-3. The Athena data source exists
-4. The dashboard views are properly configured
-
-## Cleanup
-
-When prompted at the end of the script, enter `y` to clean up all resources. The cleanup process:
-
-1. Empties S3 buckets (including versioned objects and delete markers)
-2. Removes the buckets
-3. Runs `terraform destroy` to remove:
-   - CloudFormation stacks
-   - IAM roles and policies
-   - QuickSight resources
-4. Cleans up temporary files
-
-You can also run the cleanup script directly:
-```bash
-./cleanup.sh
-```
-
-Or with specific backend configuration:
-```bash
-BACKEND_TYPE=s3 S3_BUCKET=your-bucket S3_REGION=eu-west-2 ./cleanup.sh
-```
+### S3 Bucket Setup
+- Create an S3 bucket for storing local assets
+- Ensure the bucket name follows the pattern: `my-cid-test-bucket-region`
+- The bucket should be in the same region as your deployment
 
 ## Troubleshooting
 
-- **QuickSight Access**: Ensure your QuickSight user has Enterprise subscription and appropriate permissions
-- **AWS Permissions**: Your AWS credentials must have permissions to create and manage all required resources
-- **Region Issues**: Make sure the AWS_REGION in the script matches your terraform.tfvars configuration
-- **Test Failures**: Check the test output log at `/tmp/cudos_test/test_output.log` for details
-- **Version Detection**: The workflow extracts the CID version from the local cid-cfn.yml file by looking for the line containing "Cloud Intelligence Dashboards" in the Description field
+### Common Issues
 
-## Notes
+1. **"NoSuchBucket" Error**
+   - Ensure your `LOCAL_ASSETS_BUCKET` is set without the region suffix
+   - Verify the bucket exists in the target region
 
-- By default, the scripts use a local Terraform state file stored in the `tfstate` directory
-- You can switch to an S3 backend by using the `--s3` flag with appropriate bucket parameters
-- The deployment script comments out the `cid_dataexports_source` resource to enable single-account deployment
-- All modifications are made to a temporary copy of the Terraform files, preserving your original files
-- The scripts automatically detect which dashboards are configured for deployment in your Terraform variables
-- Resource prefix can be customized with the `--resource-prefix` flag (default: "cid-tf")
-- The cleanup script handles versioned S3 buckets properly by removing all versions and delete markers
+2. **Lambda Layer Validation Error**
+   - Check that the bucket name doesn't contain forward slashes
+   - Ensure the layer is uploaded to the correct S3 path
+
+3. **Region Mismatch**
+   - Verify `S3_REGION` matches your deployment region
+   - Check AWS CLI default region configuration
+
+4. **Permission Errors**
+   - Ensure your AWS credentials have all required permissions
+   - Check IAM policies for CUR, QuickSight, and other services
+
+### Debug Information
+
+The script provides detailed debug output including:
+- Current AWS CLI region settings
+- Environment variable values
+- S3 upload paths and URLs
+- Terraform configuration changes
+
+## CI/CD Integration
+
+For GitHub Actions or other CI/CD systems, use the main wrapper script:
+
+```yaml
+- name: Run CID Testing Workflow
+  run: |
+    export BUILD_LOCAL_LAYER="true"
+    export USE_LOCAL_CID_TEMPLATE="true"
+    export LOCAL_ASSETS_BUCKET="my-cid-test-bucket"
+    bash terraform/terraform-test/tf-test-local-run.sh
+```
+
+## File Structure
+
+```
+terraform-test/
+├── README.md                 # This documentation
+├── tf-test-local-run.sh     # Main wrapper script
+├── deploy.sh                # Terraform deployment
+├── check_dashboards.sh      # Dashboard validation
+├── cleanup.sh               # Resource cleanup
+├── dashboards.bats          # BATS test suite
+└── tfstate/                 # Local Terraform state (created)
+```
+
+## Support
+
+For issues or questions:
+1. Check the debug output for detailed error information
+2. Verify all prerequisites are installed and configured
+3. Ensure AWS permissions are correctly set up
+4. Review the CloudWatch logs for Lambda execution details
