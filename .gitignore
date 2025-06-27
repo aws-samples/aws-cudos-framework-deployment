@@ -61,3 +61,4 @@ sandbox/
 *.hash
 *.zip
 .temp_dir
+terraform/cicd-deployment/terraform.tfvars
