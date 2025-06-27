@@ -84,14 +84,8 @@ global_values = {
   environment            = "dev"               # Environment (dev, staging, prod)
 }
 
-# Optional: Customize dashboard deployment
-cloud_intelligence_dashboards = {
-  deploy_cudos_v5                    = "yes"
-  deploy_cost_intelligence_dashboard = "yes"
-  deploy_kpi_dashboard               = "yes"
-  deploy_tao_dashboard               = "no"
-  deploy_compute_optimizer_dashboard = "no"
-}
+# Note: To customize dashboard deployment options (CUDOS v5, Cost Intelligence, KPI dashboards),
+# modify the default values directly in terraform/cicd-deployment/variables.tf instead of overriding here
 ```
 
 **Important Notes:**
