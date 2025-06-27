@@ -62,3 +62,6 @@ sandbox/
 *.zip
 .temp_dir
 terraform/cicd-deployment/terraform.tfvars
+terraform/terraform-test/tfstate
+terraform/terraform-test/tfstate/terraform.tfstate.backup
+terraform/terraform-test/tfstate/terraform.tfstate
