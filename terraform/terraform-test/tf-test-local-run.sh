@@ -21,7 +21,7 @@ export S3_REGION="${S3_REGION:-eu-west-2}"
 export BUILD_LOCAL_LAYER="${BUILD_LOCAL_LAYER:-true}"
 export USE_LOCAL_CID_TEMPLATE="${USE_LOCAL_CID_TEMPLATE:-true}"
 # Single bucket for all local CID assets with organized prefixes
-export LOCAL_ASSETS_BUCKET="${LOCAL_ASSETS_BUCKET:-cf-templates-s60qae9oawxa}"
+export LOCAL_ASSETS_BUCKET="${LOCAL_ASSETS_BUCKET:-my-cid-test-bucket}"
 export LAYER_PREFIX="${LAYER_PREFIX:-cid-resource-lambda-layer}"
 export TEMPLATE_PREFIX="${TEMPLATE_PREFIX:-cid-testing/templates}"
 

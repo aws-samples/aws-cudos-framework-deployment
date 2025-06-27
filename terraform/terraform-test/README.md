@@ -68,6 +68,38 @@ The script will automatically upload to `my-cid-test-bucket-eu-west-2`.
 
 **Note**: The `LAYER_PREFIX` must remain as `cid-resource-lambda-layer` as this is required by the CloudFormation template.
 
+### Terraform Variables Configuration
+
+Create a `terraform.tfvars` file in the `terraform/cicd-deployment` directory with your configuration:
+
+```hcl
+# terraform/cicd-deployment/terraform.tfvars
+global_values = {
+  destination_account_id = "123456789012"      # Your AWS account ID (12 digits)
+  source_account_ids     = "123456789012"      # Same account ID for single-account testing
+  aws_region             = "eu-west-2"         # AWS region for deployment
+  quicksight_user        = "your-username"     # Your QuickSight username
+  cid_cfn_version        = "4.2.6"             # CID CloudFormation version
+  data_export_version    = "0.5.0"             # Data Export version
+  environment            = "dev"               # Environment (dev, staging, prod)
+}
+
+# Optional: Customize dashboard deployment
+cloud_intelligence_dashboards = {
+  deploy_cudos_v5                    = "yes"
+  deploy_cost_intelligence_dashboard = "yes"
+  deploy_kpi_dashboard               = "yes"
+  deploy_tao_dashboard               = "no"
+  deploy_compute_optimizer_dashboard = "no"
+}
+```
+
+**Important Notes:**
+- Replace `123456789012` with your actual AWS account ID
+- Replace `your-username` with your QuickSight username
+- For single-account testing, use the same account ID for both `destination_account_id` and `source_account_ids`
+- The framework automatically handles single-account deployment by skipping the source stack
+
 ## Local Development Features
 
 ### 1. Local Lambda Layer Testing
