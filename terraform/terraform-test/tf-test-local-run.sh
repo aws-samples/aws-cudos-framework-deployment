@@ -21,7 +21,7 @@ export S3_REGION="${S3_REGION:-$DEFAULT_REGION}"
 # Local development options (set to true/false)
 export BUILD_LOCAL_LAYER="${BUILD_LOCAL_LAYER:-true}"
 export USE_LOCAL_CID_TEMPLATE="${USE_LOCAL_CID_TEMPLATE:-true}"
-export LOCAL_ASSETS_BUCKET_PREFIX="${LOCAL_ASSETS_BUCKET_PREFIX:-cid-${ACCOUNT_ID}-test-}"
+export LOCAL_ASSETS_BUCKET_PREFIX="${LOCAL_ASSETS_BUCKET_PREFIX:-cid-${ACCOUNT_ID}-test}"
 export LAYER_PREFIX="${LAYER_PREFIX:-cid-resource-lambda-layer}"
 export TEMPLATE_PREFIX="${TEMPLATE_PREFIX:-cid-testing/templates}"
 export FULL_BUCKET_NAME="$LOCAL_ASSETS_BUCKET_PREFIX-$S3_REGION"
@@ -62,8 +62,6 @@ ensure_bucket_exists() {
     fi
 }
 
-
-
 echo "Configuration:"
 echo "- Resource Prefix: $RESOURCE_PREFIX"
 echo "- Backend Type: $BACKEND_TYPE"
@@ -100,12 +98,12 @@ fi
 echo "
 # Configuration for one account deployment (not recommended for production)
 global_values = {
-  destination_account_id = \"${ACCOUNT_ID}\"      # Your AWS account ID
-  source_account_ids     = \"${ACCOUNT_ID}\"      # Same account ID for local testing
-  aws_region             = \"${S3_REGION}\"          # Your preferred region
-  quicksight_user        =\"${quicksight_user}\"      # Your QuickSight username
-  cid_cfn_version        = \"${CID_VERSION}\"             # CID CloudFormation version # Will it be local that is used?
-  data_export_version    = \"0.5.0\"             # Data Export version
+  destination_account_id = \"${ACCOUNT_ID}\"        # Your AWS account ID
+  source_account_ids     = \"${ACCOUNT_ID}\"        # Same account ID for local testing
+  aws_region             = \"${S3_REGION}\"         # Your preferred region
+  quicksight_user        = \"${quicksight_user}\"   # Your QuickSight username
+  cid_cfn_version        = \"${CID_VERSION}\"       # CID CloudFormation version # Will it be local that is used?
+  data_export_version    = \"0.5.0\"                # Data Export version
   environment            = \"dev\"
 }
 " | tee $PROJECT_ROOT/terraform/cicd-deployment/terraform.tfvars

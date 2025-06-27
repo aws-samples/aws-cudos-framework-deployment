@@ -29,70 +29,83 @@ bash tf-test-local-run.sh
 
 ## Configuration
 
-### Environment Variables
+### Automatic Configuration
 
-Set these variables to customize your testing environment:
+The script automatically detects and configures:
+- **AWS Account ID** - From `aws sts get-caller-identity`
+- **AWS Region** - From `aws configure get region`
+- **QuickSight User** - From `aws quicksight list-users`
+- **CID Version** - From local Python package
+- **S3 Bucket Creation** - Automatically creates bucket if it doesn't exist
+- **terraform.tfvars Generation** - Automatically creates the configuration file
+
+### Environment Variables (Optional)
+
+You can override the automatic detection by setting these variables:
 
 ```bash
-# Basic Configuration
-export DATABASE_NAME="cid_data_export"           # Database name for CID
-export RESOURCE_PREFIX="cid-tf"                  # Prefix for AWS resources
-export BACKEND_TYPE="local"                      # Terraform backend type ("local" or "s3")
-export S3_REGION="eu-west-2"                     # AWS region for deployment
+# Basic Configuration (auto-detected if not set)
+export RESOURCE_PREFIX="cid-tf"                       # Prefix for AWS resources
+export BACKEND_TYPE="local"                           # Terraform backend type ("local" or "s3")
+export S3_REGION="eu-west-2"                          # AWS region (uses AWS CLI default)
 
 # S3 Backend Configuration (only needed if BACKEND_TYPE="s3")
-export S3_BUCKET="my-terraform-state-bucket"     # S3 bucket for Terraform state
+export S3_BUCKET="my-terraform-state-bucket"          # S3 bucket for Terraform state
 export S3_KEY="terraform/cid-test/terraform.tfstate"  # S3 key for state file
-export BACKEND_REGION="us-east-1"                # Region where backend bucket exists
+export BACKEND_REGION="us-east-1"                     # Region where backend bucket exists
 
 # Local Development Options
-export BUILD_LOCAL_LAYER="true"                  # Build local lambda layer
-export USE_LOCAL_CID_TEMPLATE="true"             # Use local CID template
-export LOCAL_ASSETS_BUCKET="my-cid-test-bucket"  # S3 bucket for local assets
+export BUILD_LOCAL_LAYER="true"                       # Build local lambda layer
+export USE_LOCAL_CID_TEMPLATE="true"                  # Use local CID template
+export LOCAL_ASSETS_BUCKET_PREFIX="cid-123456789012-test"  # S3 bucket prefix (auto-generated)
 
 # Advanced Options (DO NOT CHANGE)
-export LAYER_PREFIX="cid-resource-lambda-layer"  # S3 prefix for lambda layers (required by CloudFormation)
-export TEMPLATE_PREFIX="cid-testing/templates"   # S3 prefix for templates
+export LAYER_PREFIX="cid-resource-lambda-layer"       # S3 prefix for lambda layers (required by CloudFormation)
+export TEMPLATE_PREFIX="cid-testing/templates"        # S3 prefix for templates
 ```
 
 ### S3 Bucket Configuration
 
-**Important**: The CloudFormation template automatically adds the region suffix to your bucket name.
+**Automatic Bucket Management**: The script automatically:
+- Generates bucket name: `cid-{ACCOUNT_ID}-test-{REGION}`
+- Creates the bucket if it doesn't exist
+- Handles region-specific bucket creation (including us-east-1 special case)
 
-If your bucket is named `my-cid-test-bucket-eu-west-2`, set:
+**Manual Override**: Set `LOCAL_ASSETS_BUCKET_PREFIX` to use a custom bucket prefix:
 ```bash
-export LOCAL_ASSETS_BUCKET="my-cid-test-bucket"  # Without region suffix
+export LOCAL_ASSETS_BUCKET_PREFIX="my-custom-prefix"  # Results in: my-custom-prefix-{REGION}
 ```
-
-The script will automatically upload to `my-cid-test-bucket-eu-west-2`.
 
 **Note**: The `LAYER_PREFIX` must remain as `cid-resource-lambda-layer` as this is required by the CloudFormation template.
 
 ### Terraform Variables Configuration
 
-Create a `terraform.tfvars` file in the `terraform/cicd-deployment` directory with your configuration:
+**Automatic Generation**: The script automatically creates `terraform/cicd-deployment/terraform.tfvars` with:
+- Your AWS Account ID (from AWS CLI)
+- Your AWS Region (from AWS CLI)
+- Your QuickSight Username (from QuickSight API)
+- Local CID Version (from Python package)
+- Single-account configuration for testing
 
+**Generated terraform.tfvars Example**:
 ```hcl
-# terraform/cicd-deployment/terraform.tfvars
+# Configuration for one account deployment (not recommended for production)
 global_values = {
-  destination_account_id = "123456789012"      # Your AWS account ID (12 digits)
-  source_account_ids     = "123456789012"      # Same account ID for single-account testing
-  aws_region             = "eu-west-2"         # AWS region for deployment
-  quicksight_user        = "your-username"     # Your QuickSight username
-  cid_cfn_version        = "4.2.6"             # CID CloudFormation version
-  data_export_version    = "0.5.0"             # Data Export version
-  environment            = "dev"               # Environment (dev, staging, prod)
+  destination_account_id = "123456789012"        # Your AWS account ID
+  source_account_ids     = "123456789012"        # Same account ID for local testing
+  aws_region             = "eu-west-2"           # Your preferred region
+  quicksight_user        = "detected-username"   # Your QuickSight username
+  cid_cfn_version        = "4.2.7"               # CID CloudFormation version
+  data_export_version    = "0.5.0"               # Data Export version
+  environment            = "dev"
 }
-
-# Note: To customize dashboard deployment options (CUDOS v5, Cost Intelligence, KPI dashboards),
-# modify the default values directly in terraform/cicd-deployment/variables.tf instead of overriding here
 ```
 
-**Important Notes:**
-- Replace `123456789012` with your actual AWS account ID
-- Replace `your-username` with your QuickSight username
-- For single-account testing, use the same account ID for both `destination_account_id` and `source_account_ids`
-- The framework automatically handles single-account deployment by skipping the source stack
+**Manual Customization**: To customize dashboard deployment options (CUDOS v5, Cost Intelligence, KPI dashboards), modify the default values directly in `terraform/cicd-deployment/variables.tf`.
+
+**Prerequisites**: 
+- AWS CLI must be configured and authenticated
+- QuickSight must be set up with at least one user in the default namespace
 
 ## Local Development Features
 
@@ -133,10 +146,12 @@ export S3_REGION="eu-west-2"       # Where CID resources will be deployed
 
 ## Workflow Steps
 
-### 1. Local Asset Preparation
+### 1. Automatic Configuration & Local Asset Preparation
+- Detects AWS account ID, region, and QuickSight user
+- Generates terraform.tfvars automatically
+- Creates S3 bucket if it doesn't exist
 - Builds local lambda layer (if enabled)
 - Uploads local CID template (if enabled)
-- Sets up environment variables for deployment
 
 ### 2. Terraform Deployment
 - Creates temporary Terraform configuration
@@ -221,17 +236,17 @@ Your AWS credentials need permissions for:
 **Note**: The framework requires extensive permissions as it creates a complete CID infrastructure including data pipelines, dashboards, and associated AWS resources.
 
 ### S3 Bucket Setup
-- Create an S3 bucket for storing local assets
-- Ensure the bucket name follows the pattern: `my-cid-test-bucket-region`
-- The bucket should be in the same region as your deployment
+- **Automatic**: The script automatically creates the required S3 bucket
+- **Naming**: Uses pattern `cid-{ACCOUNT_ID}-test-{REGION}`
+- **Region-aware**: Handles region-specific bucket creation requirements
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **"NoSuchBucket" Error**
-   - Ensure your `LOCAL_ASSETS_BUCKET` is set without the region suffix
-   - Verify the bucket exists in the target region
+   - The script automatically creates buckets, but check AWS permissions if this error occurs
+   - Verify you have S3 bucket creation permissions in the target region
 
 2. **Lambda Layer Validation Error**
    - Check that the bucket name doesn't contain forward slashes
