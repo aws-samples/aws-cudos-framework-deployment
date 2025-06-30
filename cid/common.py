@@ -1938,6 +1938,11 @@ class Cid():
 
         return compiled_query
 
+
+    @command
+    def enable_rls(self, **kwargs):
+        print("Enabling RLS for dashboard")
+
     @command
     def csv2view(self, **kwargs):
         """CSV 2 SQL"""
