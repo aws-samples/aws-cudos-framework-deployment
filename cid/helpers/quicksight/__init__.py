@@ -261,7 +261,9 @@ class QuickSight(CidBase):
             return True
         except self.client.exceptions.AccessDeniedException as exc:
             logger.debug(f'Cannot tag {arn} (AccessDenied).')
-            return False
+        except self.client.exceptions.ClientError as exc:
+            logger.debug(f'Cannot tag {arn} ({exc}).')
+        return False
 
 
     def get_tags(self, arn):
@@ -733,6 +735,7 @@ class QuickSight(CidBase):
                     'AwsAccountId': self.account_id,
                     'DashboardId': dashboard_id
                 }
+                logger.debug(f'describe_dashboard_definition({dashboard_id})')
                 result = self.client.describe_dashboard_definition(**parameters)
                 self._definitions.update({f'{self.account_id}:{self.identityRegion}:{dashboard_id}': CidQsDefinition(result.get('Definition'))})
                 logger.debug(result)
@@ -1287,6 +1290,7 @@ class QuickSight(CidBase):
             'DashboardId': definition.get('dashboardId'),
             'VersionNumber': created_version
         }
+        logger.debug(f"describe_dashboard { definition.get('dashboardId')}")
         dashboard = self.describe_dashboard(poll=True, **describe_parameters)
         logger.debug('dashboard={dashboard}')
         self.set_tags(dashboard.arn, cid_version_tag=dashboard.cid_version) # try to update version tag
@@ -1304,7 +1308,7 @@ class QuickSight(CidBase):
         definition: cid dashboard definition. NOT QS DEFINITION.
         returns: what we need tof create or update API
         """
-
+        cid_print('Preparing dashboard definition')
         create_parameters = {
             'AwsAccountId': self.account_id,
             'DashboardId': definition.get('dashboardId'),

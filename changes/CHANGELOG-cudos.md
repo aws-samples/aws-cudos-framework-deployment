@@ -2,6 +2,11 @@
 
 # CUDOS v5
 
+# CUDOS - 5.6.1
+
+* **Executive: Trends**: Fix sort order in Amortized Cost by Account visual. Excluded unused RI and SP costs in the current month.
+* **Databases**: Excluded unused RI costs in the current month.
+
 # CUDOS - 5.6
 
 * **Executive: Trends**: Sheet 'MoM Trends' renamed to 'Trends'. Added control Trends Type which allows to switch between Monthly, Weekly and Daily Trends. Added control Trends Time Range which allows to adjust a time period when switching between Trend Types. Changed positioning of Product and Account Trends visuals to effectively present more than 3 trends periods. 

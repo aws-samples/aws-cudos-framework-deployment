@@ -1,4 +1,9 @@
+import logging
+from datetime import datetime
+
 from cid.exceptions import CidCritical
+
+logger = logging.getLogger(__name__)
 
 class AthenaStore():
     def __init__(self, athena, view_name='cid_parameters'):
@@ -6,10 +11,13 @@ class AthenaStore():
         self.view_name = view_name
 
     def dump(self, data):
-        ''' load from athena
+        ''' dump data to athena
         '''
-        # FIXME: make it multi view
-        self.athena.query(self._generate_view_query(data, self.view_name))
+        try:
+            # FIXME: make it multi view
+            self.athena.query(self._generate_view_query(data, self.view_name))
+        except (CidCritical, Exception) as exc:
+            logger.debug(f'failed to save parameters store: {exc}')
 
     def load(self):
         ''' load from athena
@@ -44,8 +52,37 @@ class AthenaStore():
 class ParametersController(AthenaStore):
     def load_parameters(self, context):
         data = self.load()
-        return { line.get('parameter'):line.get('value') for line in data}
+        context_parameters = {}
+        any_parameters = {}
+        # get any context and then override with specific context
+        for line in sorted(data, key=lambda x: x.get('date', '')): # latest should override
+            any_parameters[line.get('parameter')] = line.get('value')
+            if line.get('context') == str(context):
+                context_parameters[line.get('parameter')] = line.get('value')
+        return any_parameters | context_parameters
 
     def dump_parameters(self, params, context=None):
-        data = [{'parameter': key, 'value': ','.join(val) if isinstance(val, list) else val, 'context': str(context) } for key, val in params.items()]
+        data = self.load()
+        logger.trace(f'loaded parameters {data}')
+        params = dict(params)
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        #Update parameters if they are present already
+        for line in data:
+            for key, val in list(params.items()):
+                if line.get('context') == str(context) and line.get('parameter') == key:
+                    line['value'] = val
+                    line['date'] = date
+                    del params[key]
+
+        #add parameters that are new
+        for key, val in list(params.items()):
+            data.append({
+                'parameter': key,
+                'value': ','.join([str(v) for v in val]) if isinstance(val, list) else str(val),
+                'context': str(context),
+                'date': date
+            })
+
+        logger.trace(f'dumping parameters {data}')
         self.dump(data)

@@ -282,16 +282,22 @@ class Cid():
         export_analysis(self.qs, self.athena, glue=self.glue)
 
     def track(self, action, dashboard_id):
-        """ Send dashboard_id and account_id to adoption tracker """
+        """ Send dashboard_id and account_id to CID adoption tracker """
         method = {'created':'PUT', 'updated':'PATCH', 'deleted': 'DELETE'}.get(action, None)
         if not method:
             logger.debug(f"This will not fail the deployment. Logging action {action} is not supported. This issue will be ignored")
             return
-        endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/'
+        endpoint = 'https://okakvoavfg.execute-api.eu-west-1.amazonaws.com/' # AWS Managed
+        if os.environ.get('AWS_DEPLOYMENT_TYPE'):
+            deployment_type = os.environ.get('AWS_DEPLOYMENT_TYPE')
+        elif os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda'):
+            deployment_type = 'Lambda'
+        else:
+            deployment_type = 'CID'
         payload = {
             'dashboard_id': dashboard_id,
             'account_id': self.base.account_id,
-            action + '_via': 'Lambda' if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_Lambda') else 'CID',
+            action + '_via': deployment_type,
         }
         try:
             res = requests.request(
@@ -470,17 +476,16 @@ class Cid():
             set_defaults(defaults)
 
     def dump_default_parameters(self):
-
         stop_list = ['profile-name', 'region', 'aws-access-key-id', 'aws-secret-access-key', 'aws-session-token', 'athena-database', 'athena-workgroup']
-        current_defaults = self.parameters_controller.load_parameters(
-            context=get_parameters().get('dashboard-id')
-        )
-        current_defaults = current_defaults | get_parameters()
+        current_defaults = get_parameters()
         for key in list(current_defaults.keys()):
             if key in stop_list:
                 del current_defaults[key]
         logger.trace(f'dumping parameters {current_defaults}')
-        self.parameters_controller.dump_parameters(current_defaults, context=get_parameters().get('dashboard-id'))
+        self.parameters_controller.dump_parameters(
+            current_defaults,
+            context=get_parameters().get('dashboard-id')
+        )
 
 
     def ensure_subscription(self):
@@ -1668,17 +1673,11 @@ class Cid():
                         update_dataset = True
                     break
 
-            identical = False # check if dataset needs an update
-            if isinstance(found_dataset, Dataset):
-                identical = True
-                for key in 'PhysicalTableMap LogicalTableMap OutputColumns ImportMode DataSetUsageConfiguration RowLevelPermissionDataSet FieldFolders RowLevelPermissionTagConfiguration DatasetParameters'.split():
-                    if found_dataset.raw.get(key) != compiled_dataset.get(key):
-                        logger.trace(f'not identical {key} {found_dataset.raw.get(key)} != {compiled_dataset.get(key)}')
-                        identical = False
-                logger.trace(f'identical to existing = {identical}')
+            identical = Dataset.datasets_are_identical(found_dataset, compiled_dataset) # check if dataset needs an update
 
             if update_dataset and not identical:
-                self.qs.update_dataset(compiled_dataset)
+                merged_dataset = Dataset.merge_datasets(compiled_dataset, found_dataset)
+                self.qs.update_dataset(merged_dataset)
                 if compiled_dataset.get("ImportMode") == "SPICE":
                     dataset_id = compiled_dataset.get('DataSetId')
                     schedules_definitions = []

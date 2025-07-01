@@ -4,7 +4,7 @@
 -- IMPORTANT: Null values are used in unions from some cloud providers when a column is missing in their FOCUS data. If the respective provider begins delivering the column, you need to update this view to use the actual column value instead of null. Also please raise an issue to this repository to notify us as well.
 
 
-CREATE OR REPLACE VIEW "focus_consolidation_view" AS 
+CREATE OR REPLACE VIEW "cid_cur"."focus_consolidation_view" AS 
 SELECT
   AvailabilityZone
 , BilledCost
