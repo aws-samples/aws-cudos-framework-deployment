@@ -4829,17 +4829,6 @@ views:
       FROM
         "cid_data_export"."cur2" cur
       GROUP BY line_item_usage_start_date, line_item_usage_account_id, 1
-  account_map:
-    data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".account_map AS
-      SELECT DISTINCT
-        line_item_usage_account_id account_id
-      , MAX_BY(line_item_usage_account_name, line_item_usage_start_date) account_name
-      , MAX_BY(bill_payer_account_id, line_item_usage_start_date) parent_account_id
-      , MAX_BY(bill_payer_account_name, line_item_usage_start_date) parent_account_name
-      FROM
-        "${data_exports_database_name}"."cur2"
-      GROUP BY line_item_usage_account_id
   sus_compute_ec2:
     dependsOn:
       views:
