@@ -175,24 +175,50 @@ class AbstractCUR(CidBase):
 
     @property
     def tag_and_cost_category_fields(self) -> list:
-        """ Returns all tags and cost category fields. """
+        """ Returns all SQL selectable fields with tags and cost category."""
         if self.version == '1':
             return [field for field in self.fields if field.startswith('resource_tags_') or field.startswith('cost_category_')]
         elif self.version == '2':
             if self._tag_and_cost_category is not None: # the query can take few mins so we try to cache it
                 logging.debug(f'Using cached tags.')
                 return self._tag_and_cost_category
-            cid_print(f'Scanning resource_tags in {self.table_name} (can take a while).')
-            keys = self.athena.query(sql=f'''
-                    SELECT DISTINCT key
-                    FROM  {self.table_name}
-                    CROSS JOIN UNNEST(map_keys(resource_tags)) AS t(key)
-                    WHERE billing_period >= DATE_FORMAT(DATE_ADD('month', -1, CURRENT_DATE), '%Y-%m')
-                    AND line_item_usage_start_date > DATE_ADD('day', -7, CURRENT_DATE)
-                ''',
-                database=self.database,
-            )
-            self._tag_and_cost_category = sorted([f"resource_tags['{k[0]}']" for k in keys])
+
+            self._tag_and_cost_category = []
+            number_of_rows_scanned = 500000 # empiric value
+            for tag_type in ['resource_tags', 'cost_category']:
+                if tag_type not in self.fields:
+                    logging.debug(f'skipping {tag_type} scan')
+                cid_print(f'Scanning {tag_type} in {self.table_name}.')
+                try:
+                    res = self.athena.query(
+                        sql=f'''
+                            SELECT
+                                key,
+                                COUNT(DISTINCT value) as unique_values
+                            FROM (
+                                SELECT {tag_type}
+                                FROM "{self.database}"."{self.table_name}"
+                                WHERE billing_period >= DATE_FORMAT(DATE_ADD('day', -60, CURRENT_DATE), '%Y-%m')
+                                AND line_item_usage_start_date > DATE_ADD('day', -60, CURRENT_DATE)
+                                AND cardinality({tag_type}) > 0
+                                LIMIT {number_of_rows_scanned}
+                            ) t
+                            CROSS JOIN UNNEST({tag_type}) AS t(key, value)
+                            GROUP BY key
+                            ORDER BY unique_values DESC;
+                        ''',
+                        database=self.database,
+                    )
+                    max_width = max(len(str(line[0])) for line in res)
+                    cid_print(f' <BOLD>{tag_type:<{max_width}} | Distinct Values <END> ')
+                    for line in res:
+                        if int(line[1]) > 10:
+                            name = line[0]
+                            name = name.replace('user_', '')
+                            cid_print(f' <BOLD>{name:<{max_width}}<END> | {line[1]} ')
+                    self._tag_and_cost_category += sorted([f"{tag_type}['{line[0]}']" for line in res])
+                except (self.athena.client.exceptions.ClientError, CidCritical, ValueError) as exc:
+                    logger.error(f'Failed to read {tag_type} from {self.table_name}: "{exc}". Will continue without.')
             return self._tag_and_cost_category
         else:
             raise NotImplemented('cur version not known')
@@ -246,8 +272,11 @@ class CUR(AbstractCUR):
                     database_name=database,
                 )
                 all_cur_tables += [(database, table) for table in tables]
-            except self.athena.client.exceptions.AccessDenied:
-                logger.info(f'Cannot read from athena database {database}')
+            except self.athena.client.exceptions.ClientError as exc:
+                if 'AccessDenied' in str(exc):
+                    logger.info(f'Cannot read from athena database {database}')
+                else:
+                    raise
 
         if not all_cur_tables:
             # FIXME : distinguish a case where we have NONE tables in any database. This might be because

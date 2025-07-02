@@ -5,7 +5,7 @@
     <link>https://catalog.workshops.aws/awscid/en-US</link>
     <atom:link href="https://cid.workshops.aws.dev/feed/cloud-intelligence-dashboards.rss" rel="self" type="application/rss+xml"/>
     <description>The Cloud Intelligence Dashboards is an open-source framework, lovingly cultivated and maintained by a group of customer-obsessed AWSers, that gives customers the power to get high-level and granular insight into their cost and usage data. Supported by the Well-Architected framework, the dashboards can be deployed by any customer using a CloudFormation template or a command-line tool in their environment in under 30 minutes. These dashboards help you to drive financial accountability, optimize cost, track usage goals, implement best-practices for governance, and achieve operational excellence across all your organization.</description>
-    <lastBuildDate>Mon, 21 Apr 2025 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 2 Jun 2025 09:00:00 GMT</lastBuildDate>
     <language>en-us</language>
     <item>
       <title>[New Dashboard] ResilienceVue Dashboard v1.0.0</title>
@@ -33,6 +33,118 @@
         <li><strong>Categorization of Effort:</strong> Categorizes recommendations based on Availability Architecture and Optimization Type.</li>
       </ul>
     </div>
+      <title>[Update] CUDOS Dashboard v5.6.1</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-cudos.md#cudos---561
+      </link>
+      <pubDate>Mon, 16 Jun 2025 09:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">8f7d3b2e-9c6a-4f1d-b5e7-2d9a8c4f3b1a</guid>
+      <description>CUDOS Dashboard v5.6.1</description>
+      <content:encoded><![CDATA[
+<div>
+  <ul>
+    <li><strong>Executive:Trends:</strong> Fix sort order in Amortized Cost by Account visual. Excluded unused RI and SP costs in the current month.</li>
+    <li><strong>Databases:</strong> Excluded unused RI costs in the current month.</li>
+  </ul>
+</div>
+    ]]></content:encoded>    
+    </item>  
+  <item>
+      <title>[Update] CORA Dashboard v0.0.9</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-cora.md#cora---v009
+      </link>
+      <pubDate>Tue, 10 Jun 2025 09:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">4e3c1f84-91c2-46ae-9f9f-bf8141c8c2a6</guid>
+      <description>CORA v0.0.9</description>
+      <content:encoded><![CDATA[
+<div>
+  <ul>
+    <li>Improved the <strong>Resource</strong> calculated field to display the resource name instead of the id for AutoScaling Group recommendations.</li>
+    <li>Enhanced the <strong>ResourceType</strong> categorization to explicitly classify unattached EBS volumes using the new resource type: <em>"EBS Volume: Unattached"</em>.</li>
+  </ul>
+</div>  
+    ]]></content:encoded>    
+    </item>
+   <item>
+      <title>[New significant feature] Add Organizational Taxonomy with cid-cmd without dashboard customization</title>
+      <link>
+        https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy
+      </link>
+      <pubDate>Mon, 2 Jun 2025 09:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">7d2f3c91-8c10-4265-94e7-7e0c8ef61b58</guid>
+      <description>Add Organizational Taxonomy with cid-cmd without dashboard customization</description>
+      <content:encoded><![CDATA[
+<div>
+  <p>Starting today, you can use <code>cid-cmd</code> to add organizational taxonomy—such as tags, cost categories, and account mappings to Cloud Intelligence Dashboards without needing to customize the dashboards, while retaining the ability to update to the latest versions.</p>
+  <p>Learn more in the new documentation guide: 
+    <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy">Add Organizational Taxonomy</a>
+  </p>
+</div>    
+    ]]></content:encoded>    
+    </item>
+    <item>
+      <title>[Update] CUDOS Dashboard v5.6.0</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHANGELOG-cudos.md#cudos---56
+      </link>
+      <pubDate>Mon, 2 Jun 2025 09:00:00 GMT</pubDate>
+      <category><![CDATA[Dashboard Update]]></category>
+      <guid isPermaLink="false">f3b5e9a2-1c4e-45fa-8c2a-9cf5a93e8e3a</guid>
+      <description>CUDOS Dashboard v5.6.0</description>
+      <content:encoded><![CDATA[
+<div>
+  <ul>
+    <li><strong>Executive: Trends</strong>: Sheet 'MoM Trends' renamed to 'Trends'. Added control <em>Trends Type</em> which allows switching between Monthly, Weekly and Daily Trends. Added control <em>Trends Time Range</em> to adjust the time period when switching between Trend Types. Changed positioning of Product and Account Trends visuals to effectively present more than 3 trends periods.</li>
+
+    <li><strong>Databases</strong>: Added '<em>Amazon ElastiCache Redis Migration to Valkey - Adoption Tracking and Potential Savings</em>' section with visuals:
+      <ul>
+        <li>'ElastiCache Redis vs Valkey: Cost Breakdown'</li>
+        <li>'ElastiCache Valkey: Achieved Cost Efficiency Gains vs Redis'</li>
+        <li>'Monthly Cost Savings Opportunities with Migration to Valkey'</li>
+        <li>'Redis Cache Instances and Serverless Cache: Cost Savings Opportunities with migration to Valkey'</li>
+      </ul>
+    </li>
+
+    <li><strong>Taxonomy Explorer</strong>: 'TAGSplorer' sheet completely redesigned and renamed to <em>Taxonomy Explorer</em>. Now allows interactive exploration of cost and usage across 2 Taxonomy Dimensions (e.g. tags and account-level mappings), added via the new 
+    <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy">Add Organizational Taxonomy</a> capability.</li>
+
+    <li><strong>AI/ML</strong>: Added 'Amazon Bedrock Model Unit Cost' and 'Amazon Bedrock Cost per Legal Entity' visuals. Updated <em>Bedrock UsageType Group</em> for more accurate categorization. Added <em>Model Name</em> calculated field to group different model IDs on 'Amazon Bedrock Daily Cost per Resource'.</li>
+
+    <li><strong>Amazon S3 Summary</strong>: Added <em>'Group By'</em> control to switch between S3 Operation and S3 UsageType Group in the following visuals:
+      <ul>
+        <li>'Total Cost per Bucket by Operation'</li>
+        <li>'Daily Cost Bucket Explorer'</li>
+        <li>'Daily Storage Bucket Explorer'</li>
+      </ul>
+    </li>
+
+    <li><strong>Analytics</strong>: Added new AWS Glue section with visuals:
+      <ul>
+        <li>'AWS Glue Spend per Account'</li>
+        <li>'AWS Glue Spend per UsageType Group'</li>
+        <li>'AWS Glue Spend per Usage Type'</li>
+        <li>'AWS Glue Detailed Resource View'</li>
+      </ul>
+    </li>
+
+    <li><strong>Analytics</strong>: Added new Amazon EMR section with visuals:
+      <ul>
+        <li>'EMR Spend per Account'</li>
+        <li>'EMR Spend Per UsageType Group'</li>
+        <li>'EMR Spend Per UsageType Sub Group'</li>
+        <li>'EMR Spend Per Processor Type'</li>
+        <li>'EMR Daily Cost per Usage Type Sub Group'</li>
+        <li>'EMR Detailed Resource View (Top 20)'</li>
+      </ul>
+    </li>
+
+    <li><strong>Executive: RI/SP Summary</strong>: Added Amazon ElastiCache, OpenSearch, Redshift, DynamoDB, and MemoryDB services to the 'Savings Option for Compute by Owner / Consumer' visual.</li>
+  </ul>
+</div>
     ]]></content:encoded>    
     </item>
     <item>

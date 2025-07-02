@@ -1,3 +1,6 @@
+# DEPRECATED - PLEASE DO NOT USE TERRAFORM MODULES FOR ANY NEW DEPLOYMENT
+We are currently working on a new generation of terraform wrappers. Please stay tunned.
+
 # CID Terraform Modules
 
 We provide Terraform modules for your convenience in deploying CID dashboards.

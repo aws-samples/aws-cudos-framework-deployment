@@ -82,7 +82,7 @@
                     "Type": "string"
                 },
                 {
-                    "Name": "utilizationetricsebsvolumewriteiopsmaximum",
+                    "Name": "utilizationmetricsebsvolumewriteiopsmaximum",
                     "Type": "string"
                 },
                 {

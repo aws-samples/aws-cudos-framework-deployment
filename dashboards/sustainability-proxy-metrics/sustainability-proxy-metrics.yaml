@@ -5057,7 +5057,7 @@ views:
          , ROW ('ap-southeast-4', 'Australia', 'Melbourne', '-37.813629', '144.963058',0)
          , ROW ('ca-west-1', 'Canada', 'Calgary', '51.048615', '-114.070847',0)
          , ROW ('il-central-1', 'Israel', 'Tel Aviv', '32.085300', '34.781769',0)
-         , ROW ('il-central-1', 'Middle East' , 'UAE', '25.276987', '55.296249',0)
+         , ROW ('me-central-1', 'Middle East' , 'UAE', '25.276987', '55.296249',0)
       )  ignored_table_name (region_name, region_country, region_city, region_latitude, region_longitude, is95PercentRenewable)
   sus_geo_region_athena:
     dependsOn:
