@@ -14,4 +14,4 @@ The ResilienceVue Dashboard represents a significant improvement in helping cust
 
 ## ResilienceVue Dashboard - v1.0
 
- * Initial release
+* Initial release
