@@ -66,6 +66,17 @@ datasets:
                 Type: STRING
               - Name: region_code
                 Type: STRING
+        e3c1e20f-e35c-435b-9ec0-2b7e957b0af7:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+              - Name: account_id
+                Type: STRING
+              - Name: account_name
+                Type: STRING
       LogicalTableMap:
         086d4ef2-a6fe-455f-91fe-bd47446001b0:
           Alias: resilience_hub_resiliency_policy_view
@@ -82,6 +93,19 @@ datasets:
                 ColumnName: region_code
                 Tags:
                   - ColumnGeographicRole: STATE
+          Source:
+            PhysicalTableId: 4b549ebe-2b15-409e-b4b9-4dd77bee7438
+        c9536805-8ed0-409e-96d9-9ccc32412026:
+          Alias: account_map
+          DataTransforms:
+            - RenameColumnOperation:
+                ColumnName: account_id
+                NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: e3c1e20f-e35c-435b-9ec0-2b7e957b0af7
+        8815bf7e-f358-46bf-adb3-dea063f1aef1:
+          Alias: Intermediate Table
+          DataTransforms:
             - ProjectOperation:
                 ProjectedColumns:
                   - creationtime
@@ -102,12 +126,18 @@ datasets:
                   - payer_id
                   - account_id
                   - region_code
+                  - account_name
           Source:
-            PhysicalTableId: 4b549ebe-2b15-409e-b4b9-4dd77bee7438
+            JoinInstruction:
+              LeftOperand: 086d4ef2-a6fe-455f-91fe-bd47446001b0
+              RightOperand: c9536805-8ed0-409e-96d9-9ccc32412026
+              Type: LEFT
+              OnClause: "{account_id} = {account_id[account_map]}"
       ImportMode: SPICE
     dependsOn:
       views:
         - resilience_hub_resiliency_policy_view
+        - account_map
     schedules:
       - default
   resiliencehub_alarm_recommendations:
@@ -276,8 +306,6 @@ datasets:
                   - input_source_drifts
                   - app_component_drifts
                   - resiliency_score
-                  - parent_account_id
-                  - parent_account_name
                   - payer_id
           Source:
             JoinInstruction:
@@ -418,6 +446,17 @@ datasets:
                 Type: STRING
               - Name: resiliency_score
                 Type: STRING
+        e3c1e20f-e35c-435b-9ec0-2b7e957b0af8:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+              - Name: account_id
+                Type: STRING
+              - Name: account_name
+                Type: STRING
       LogicalTableMap:
         256e2439-1d61-468b-8ecb-bbd295e61931:
           Alias: resiliencehub_applications_view
@@ -425,12 +464,31 @@ datasets:
             - RenameColumnOperation:
                 ColumnName: payer_id
                 NewColumnName: payer_id[resiliencehub_applications_view] (1)
+            - RenameColumnOperation:
+                ColumnName: account_id
+                NewColumnName: account_id[resiliencehub_applications_view]
           Source:
             PhysicalTableId: 1ae03acd-73e7-4243-bfd2-be72b34c64c1
         375075ed-12a5-429e-b9e8-751fb04e6574:
           Alias: resiliencehub_app_recommendations_view
           Source:
             PhysicalTableId: 0225d787-37df-4a1d-9fdc-17b0f0836318
+        c9536805-8ed0-409e-96d9-9ccc32412027:
+          Alias: account_map
+          DataTransforms:
+            - RenameColumnOperation:
+                ColumnName: account_id
+                NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: e3c1e20f-e35c-435b-9ec0-2b7e957b0af8
+        8815bf7e-f358-46bf-adb3-dea063f1aef2:
+          Alias: Intermediate Table (1)
+          Source:
+            JoinInstruction:
+              LeftOperand: 375075ed-12a5-429e-b9e8-751fb04e6574
+              RightOperand: 256e2439-1d61-468b-8ecb-bbd295e61931
+              Type: LEFT
+              OnClause: "{app_arn} = {application_arn}"
         c0f9f89d-89c5-4f13-b533-26cf20800d8a:
           Alias: Intermediate Table
           DataTransforms:
@@ -446,7 +504,7 @@ datasets:
                   - suggested_changes
                   - cost
                   - region
-                  - account_id
+                  - account_id[resiliencehub_applications_view]
                   - application_id
                   - application_arn
                   - application_name
@@ -476,17 +534,19 @@ datasets:
                   - input_source_drifts
                   - app_component_drifts
                   - resiliency_score
+                  - account_name
           Source:
             JoinInstruction:
-              LeftOperand: 375075ed-12a5-429e-b9e8-751fb04e6574
-              RightOperand: 256e2439-1d61-468b-8ecb-bbd295e61931
+              LeftOperand: 8815bf7e-f358-46bf-adb3-dea063f1aef2
+              RightOperand: c9536805-8ed0-409e-96d9-9ccc32412027
               Type: LEFT
-              OnClause: "{app_arn} = {application_arn}"
+              OnClause: "{account_id[resiliencehub_applications_view]} = {account_id[account_map]}"
       ImportMode: SPICE
     dependsOn:
       views:
         - resiliencehub_app_recommendations_view
         - resiliencehub_applications_view
+        - account_map
     schedules:
       - default
   resiliencehub_applications:
@@ -565,6 +625,17 @@ datasets:
                 Type: STRING
               - Name: payer_id
                 Type: STRING
+        e3c1e20f-e35c-435b-9ec0-2b7e957b0af9:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: account_map
+            InputColumns:
+              - Name: account_id
+                Type: STRING
+              - Name: account_name
+                Type: STRING
       LogicalTableMap:
         cdae6e42-a5c7-4b2f-9fe8-91b7f7851f99:
           Alias: resiliencehub_applications_view
@@ -573,6 +644,19 @@ datasets:
                 ColumnName: region
                 Tags:
                   - ColumnGeographicRole: STATE
+          Source:
+            PhysicalTableId: 374283c9-0f44-482c-aff3-b9bdd0caa0ac
+        c9536805-8ed0-409e-96d9-9ccc32412028:
+          Alias: account_map
+          DataTransforms:
+            - RenameColumnOperation:
+                ColumnName: account_id
+                NewColumnName: account_id[account_map]
+          Source:
+            PhysicalTableId: e3c1e20f-e35c-435b-9ec0-2b7e957b0af9
+        8815bf7e-f358-46bf-adb3-dea063f1aef3:
+          Alias: Intermediate Table
+          DataTransforms:
             - ProjectOperation:
                 ProjectedColumns:
                   - region
@@ -607,12 +691,18 @@ datasets:
                   - app_component_drifts
                   - resiliency_score
                   - payer_id
+                  - account_name
           Source:
-            PhysicalTableId: 374283c9-0f44-482c-aff3-b9bdd0caa0ac
+            JoinInstruction:
+              LeftOperand: cdae6e42-a5c7-4b2f-9fe8-91b7f7851f99
+              RightOperand: c9536805-8ed0-409e-96d9-9ccc32412028
+              Type: LEFT
+              OnClause: "{account_id} = {account_id[account_map]}"
       ImportMode: SPICE
     dependsOn:
       views:
         - resiliencehub_applications_view
+        - account_map
     schedules:
       - default
   resiliencehub_complete_view:
@@ -1104,8 +1194,6 @@ datasets:
                   - account_name
                   - payer_id
                   - resiliency_score_percent
-                  - parent_account_id
-                  - parent_account_name
           Source:
             JoinInstruction:
               LeftOperand: 61f2380f-523f-469f-9905-2ba08521f0f6
@@ -1297,8 +1385,6 @@ datasets:
                   - resiliency_score
                   - account_name
                   - resiliency_score_percent
-                  - parent_account_id
-                  - parent_account_name
                   - payer_id
           Source:
             JoinInstruction:
@@ -1497,8 +1583,6 @@ datasets:
                   - input_source_drifts
                   - app_component_drifts
                   - resiliency_score
-                  - parent_account_id
-                  - parent_account_name
           Source:
             JoinInstruction:
               LeftOperand: 078d6d86-d1bd-4898-8539-82ba7aa3c26c
@@ -1601,8 +1685,6 @@ datasets:
                   - recommendations
                   - account_id[account_map]
                   - account_name
-                  - parent_account_id
-                  - parent_account_name
                   - payer_id
           Source:
             JoinInstruction:
