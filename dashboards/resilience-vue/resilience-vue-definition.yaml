@@ -461,7 +461,7 @@ FilterGroups:
       Configuration:
         CustomFilterListConfiguration:
           CategoryValues:
-          - Internal-Important-App1
+          - SELECT
           MatchOperator: CONTAINS
           NullOption: NON_NULLS_ONLY
       FilterId: 1db9d613-56ab-4f95-9e09-5d2fe87a744b
@@ -694,7 +694,7 @@ FilterGroups:
       Configuration:
         FilterListConfiguration:
           CategoryValues:
-          - Customer-facing-workload2
+          - SELECT
           MatchOperator: CONTAINS
           NullOption: NON_NULLS_ONLY
       FilterId: bb438173-998c-464a-80df-32c3066059b1
