@@ -8,6 +8,34 @@
     <lastBuildDate>Mon, 21 Apr 2025 12:00:00 GMT</lastBuildDate>
     <language>en-us</language>
     <item>
+      <title>[New Dashboard] ResilienceVue Dashboard v1.0.0</title>
+      <link>
+        https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/add-resilience-hub/changes/CHANGELOG-resiliencevue.md
+      </link>
+      <pubDate>Wed, 2 Jul 2025 12:00:00 GMT</pubDate>
+      <category><![CDATA[New Dashboard]]></category>
+      <guid isPermaLink="false">a1b2c3d4-e5f6-7890-abcd-ef1234567890</guid>
+      <description>ResilienceVue Dashboard v1.0.0 - Initial Release</description>
+      <content:encoded><![CDATA[
+    <div>
+      <p>
+        The <strong>ResilienceVue Dashboard</strong> provides customers with a centralized "single pane of glass" 
+        to efficiently track their Resilience posture and evaluate potential improvement opportunities using 
+        <strong>Amazon ResilienceHub</strong> across the organization at scale.
+      </p>
+      
+      <h3>Key Benefits:</h3>
+      <ul>
+        <li><strong>Centralized Visibility:</strong> Consolidates and tracks Amazon ResilienceHub Application assessments across multiple AWS accounts in a single view.</li>
+        <li><strong>Application Resilience Trends:</strong> Dedicated tab for Applications to review existing and past resilience trends, resilience score and other key metrics.</li>
+        <li><strong>Resource-Level Visibility:</strong> Provides granular visibility into suggested changes down to the resource level based on assessments.</li>
+        <li><strong>Projected Cost:</strong> Shows cost associated with suggested changes recommended by AWS Resilience Hub to meet resilience goals.</li>
+        <li><strong>Categorization of Effort:</strong> Categorizes recommendations based on Availability Architecture and Optimization Type.</li>
+      </ul>
+    </div>
+    ]]></content:encoded>    
+    </item>
+    <item>
       <title>[Update] Sustainability Proxy and Carbon emissions data Dashboard v4.0.0</title>
       <link>
         https://github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework/blob/main/changes/CHAMGELOG-sustainability-proxy-metrics.md#sustainability-proxy-and-carbon-emissions-data-dashboard---v400
