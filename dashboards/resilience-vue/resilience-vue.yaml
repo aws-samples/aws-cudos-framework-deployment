@@ -2,7 +2,7 @@ dashboards:
   RESILIENCEVUE:
     dependsOn:
       datasets:
-        - resilience_hub_resiliency_policy_view
+        - resiliencehub_resiliency_policy_view
         - resiliencehub_alarm_recommendations
         - resiliencehub_app_recommendations
         - resiliencehub_applications
@@ -11,24 +11,24 @@ dashboards:
         - resiliencehub_fis_test_recommendations
         - resiliencehub_resource_types
         - resiliencehub_sop_recommendations
-    name: null
+    name: Resilience Vue
     dashboardId: resiliencevue
-    category: Custom
+    category: Additional
     theme: MIDNIGHT
     version: v1.0.0
-    file: ./ResilienceVue_v1.1-definition.yaml
+    file: ./resilience-vue-definition.yaml
 datasets:
-  resilience_hub_resiliency_policy_view:
+  resiliencehub_resiliency_policy_view:
     data:
       DataSetId: f0d8ed52-5851-419a-8f81-eb21aa579aa2
-      Name: resilience_hub_resiliency_policy_view
+      Name: resiliencehub_resiliency_policy_view
       PhysicalTableMap:
         4b549ebe-2b15-409e-b4b9-4dd77bee7438:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
             Schema: ${athena_database_name}
-            Name: resilience_hub_resiliency_policy_view
+            Name: resiliencehub_resiliency_policy_view
             InputColumns:
               - Name: creationtime
                 Type: STRING
@@ -79,7 +79,7 @@ datasets:
                 Type: STRING
       LogicalTableMap:
         086d4ef2-a6fe-455f-91fe-bd47446001b0:
-          Alias: resilience_hub_resiliency_policy_view
+          Alias: resiliencehub_resiliency_policy_view
           DataTransforms:
             - TagColumnOperation:
                 ColumnName: region_rpoinsecs
@@ -136,7 +136,7 @@ datasets:
       ImportMode: SPICE
     dependsOn:
       views:
-        - resilience_hub_resiliency_policy_view
+        - resiliencehub_resiliency_policy_view
         - account_map
     schedules:
       - default
@@ -1226,6 +1226,8 @@ datasets:
                 Type: STRING
               - Name: account_id
                 Type: STRING
+              - Name: payer_id
+                Type: STRING
               - Name: application_id
                 Type: STRING
               - Name: application_arn
@@ -1632,6 +1634,8 @@ datasets:
                 Type: STRING
               - Name: account_id
                 Type: STRING
+              - Name: payer_id
+                Type: STRING
               - Name: resource_type
                 Type: STRING
               - Name: app_component_type
@@ -1905,12 +1909,12 @@ datasets:
       - default
 crawlers: {}
 views:
-  resilience_hub_resiliency_policy_view:
+  resiliencehub_resiliency_policy_view:
     dependsOn:
       views:
         - resilience_hub_resiliency_policy
     data: |-
-      CREATE OR REPLACE VIEW "${athena_database_name}".resilience_hub_resiliency_policy_view AS
+      CREATE OR REPLACE VIEW "${athena_database_name}".resiliencehub_resiliency_policy_view AS
       SELECT
         creationtime
       , datalocationconstraint
@@ -1931,7 +1935,14 @@ views:
       , account_id
       , region_code
       FROM
-        resilience_hub_resiliency_policy
+        "${data_collection_database_name}".resilience_hub_resiliency_policy
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
   resiliencehub_applications_view:
     dependsOn:
       views:
@@ -1950,7 +1961,7 @@ views:
          , COUNT((CASE WHEN (recommendationstatus = 'NotImplemented') THEN 1 END)) sops_outstanding
          , COUNT((CASE WHEN (recommendationstatus = 'Excluded') THEN 1 END)) sops_excluded
          FROM
-           resilience_hub_sop_recommendations_latest
+           "${data_collection_database_name}".resilience_hub_sop_recommendations_latest
          GROUP BY app_id
       )
       , alarm_metrics AS (
@@ -1960,7 +1971,7 @@ views:
          , COUNT((CASE WHEN (recommendationstatus = 'NotImplemented') THEN 1 END)) alarms_outstanding
          , COUNT((CASE WHEN (recommendationstatus = 'Excluded') THEN 1 END)) alarms_excluded
          FROM
-           resilience_hub_alarm_recommendations_latest
+           "${data_collection_database_name}".resilience_hub_alarm_recommendations_latest
          GROUP BY app_id
       )
       , fis_test_metrics AS (
@@ -1970,7 +1981,7 @@ views:
          , COUNT((CASE WHEN (recommendationstatus = 'NotImplemented') THEN 1 END)) fis_tests_outstanding
          , COUNT((CASE WHEN (recommendationstatus = 'Excluded') THEN 1 END)) fis_tests_excluded
          FROM
-           resilience_hub_test_recommendations_latest
+           "${data_collection_database_name}".resilience_hub_test_recommendations_latest
          GROUP BY app_id
       )
       , compliance_metrics AS (
@@ -1981,7 +1992,7 @@ views:
          , COUNT((CASE WHEN (recommendationstatus = 'Excluded') THEN 1 END)) compliance_excluded
          , COUNT(DISTINCT appcomponentname) infrastructure_total
          FROM
-           resilience_hub_app_component_recommendations_latest
+           "${data_collection_database_name}".resilience_hub_app_component_recommendations_latest
          GROUP BY app_id
       )
       SELECT
@@ -2018,20 +2029,27 @@ views:
       , (CASE WHEN (a.driftstatus = 'Drifted') THEN '1' ELSE '0' END) app_component_drifts
       , CAST(a.resiliencyscore AS VARCHAR) resiliency_score
       FROM
-        ((((((resilience_hub_assessments a
-      LEFT JOIN resilience_hub_application_details ad ON (a.apparn = ad.apparn))
-      LEFT JOIN resilience_hub_resiliency_policy rp ON (ad.policyarn = rp.policyarn))
+        (((((("${data_collection_database_name}".resilience_hub_assessments a
+      LEFT JOIN "${data_collection_database_name}".resilience_hub_application_details ad ON (a.apparn = ad.apparn))
+      LEFT JOIN "${data_collection_database_name}".resilience_hub_resiliency_policy rp ON (ad.policyarn = rp.policyarn))
       LEFT JOIN sop_metrics s ON (a.app_id = s.app_id))
       LEFT JOIN alarm_metrics al ON (a.app_id = al.app_id))
       LEFT JOIN fis_test_metrics f ON (a.app_id = f.app_id))
       LEFT JOIN compliance_metrics c ON (a.app_id = c.app_id))
       WHERE (a.assessmentarn = (SELECT assessmentarn
       FROM
-        resilience_hub_assessments
+        "${data_collection_database_name}".resilience_hub_assessments
       WHERE ((app_id = a.app_id) AND (assessmentstatus = 'Success'))
       ORDER BY endtime DESC
       LIMIT 1
       ))
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
   resilience_hub_alarm_recommendations_view:
     dependsOn:
       views:
@@ -2051,9 +2069,16 @@ views:
       , rec.name name
       , rec.recommendationstatus recommendationstatus
       FROM
-        (resilience_hub_alarm_recommendations_latest rec
+        ("${data_collection_database_name}".resilience_hub_alarm_recommendations_latest rec
       CROSS JOIN UNNEST(rec.items) t (item))
       WHERE (rec.items IS NOT NULL)
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
   resiliencehub_app_recommendations_view:
     dependsOn:
       views:
@@ -2071,8 +2096,15 @@ views:
       , ARRAY_JOIN(c.suggestedchanges, '; ') suggested_changes
       , CAST(c.cost.amount AS VARCHAR) cost
       FROM
-        (resilience_hub_app_component_recommendations_latest r
+        ("${data_collection_database_name}".resilience_hub_app_component_recommendations_latest r
       CROSS JOIN UNNEST(r.configrecommendations) t (c))
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
   resiliencehub_complete_view:
     dependsOn:
       views:
@@ -2192,10 +2224,16 @@ views:
       , CAST(p.policy.hardware.rpoinsecs AS VARCHAR) target_rpo_hardware
       , CAST(p.policy.software.rpoinsecs AS VARCHAR) target_rpo_software
       FROM
-        (resilience_hub_app_assessment_latest a
+        ("${data_collection_database_name}".resilience_hub_app_assessment_latest a
       INNER JOIN resilience_hub_resiliency_policy p ON ((a.policy.policyarn = p.policyarn) AND (a.account_id = p.account_id) AND (a.region_code = p.region_code)))
       WHERE (a.assessmentstatus = 'Success')
-
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
   resiliencehub_daily_assessments_view:
     dependsOn:
       views:
@@ -2214,7 +2252,7 @@ views:
          , COUNT((CASE WHEN (recommendationstatus = 'NotImplemented') THEN 1 END)) sops_outstanding
          , COUNT((CASE WHEN (recommendationstatus = 'Excluded') THEN 1 END)) sops_excluded
          FROM
-           resilience_hub_sop_recommendations_latest
+           "${data_collection_database_name}".resilience_hub_sop_recommendations_latest
          GROUP BY app_id
       )
       , alarm_metrics AS (
@@ -2224,7 +2262,7 @@ views:
          , COUNT((CASE WHEN (recommendationstatus = 'NotImplemented') THEN 1 END)) alarms_outstanding
          , COUNT((CASE WHEN (recommendationstatus = 'Excluded') THEN 1 END)) alarms_excluded
          FROM
-           resilience_hub_alarm_recommendations_latest
+           "${data_collection_database_name}".resilience_hub_alarm_recommendations_latest
          GROUP BY app_id
       )
       , fis_test_metrics AS (
@@ -2234,7 +2272,7 @@ views:
          , COUNT((recommendationstatus = 'NotImplemented')) fis_tests_outstanding
          , COUNT((recommendationstatus = 'Excluded')) fis_tests_excluded
          FROM
-           resilience_hub_test_recommendations_latest
+           "${data_collection_database_name}".resilience_hub_test_recommendations_latest
          GROUP BY app_id
       )
       , compliance_metrics AS (
@@ -2244,7 +2282,7 @@ views:
          , COUNT((CASE WHEN (recommendationstatus = 'BreachedCanMeet') THEN 1 END)) compliance_outstanding
          , COUNT((CASE WHEN (recommendationstatus = 'Excluded') THEN 1 END)) compliance_excluded
          FROM
-           resilience_hub_app_component_recommendations_latest
+           "${data_collection_database_name}".resilience_hub_app_component_recommendations_latest
          GROUP BY app_id
       )
       SELECT DISTINCT
@@ -2277,13 +2315,20 @@ views:
       , (CASE WHEN (a.driftstatus = 'Drifted') THEN '1' ELSE '0' END) app_component_drifts
       , CAST(a.resiliencyscore AS VARCHAR) resiliency_score
       FROM
-        (((((resilience_hub_assessments a
-      LEFT JOIN resilience_hub_application_details ad ON (a.apparn = ad.apparn))
+        ((((("${data_collection_database_name}".resilience_hub_assessments a
+      LEFT JOIN "${data_collection_database_name}".resilience_hub_application_details ad ON (a.apparn = ad.apparn))
       LEFT JOIN sop_metrics s ON (a.app_id = s.app_id))
       LEFT JOIN alarm_metrics al ON (a.app_id = al.app_id))
       LEFT JOIN fis_test_metrics t ON (a.app_id = t.app_id))
       LEFT JOIN compliance_metrics c ON (a.app_id = c.app_id))
       WHERE (a.assessmentstatus = 'Success')
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
   resiliencehub_fis_test_recommendations_view:
     dependsOn:
       views:
@@ -2303,8 +2348,15 @@ views:
       , name
       , recommendationstatus
       FROM
-        (resilience_hub_test_recommendations_latest
+        ("${data_collection_database_name}".resilience_hub_test_recommendations_latest
       CROSS JOIN UNNEST(items) t (i))
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
   resiliencehub_resource_types_view:
     dependsOn:
       views:
@@ -2320,7 +2372,7 @@ views:
          , rr.risk
          , ac appcomponent
          FROM
-           ((resilience_hub_app_assessment_latest rhal
+           (("${data_collection_database_name}".resilience_hub_app_assessment_latest rhal
          CROSS JOIN UNNEST(rhal.summary.riskrecommendations) t (rr))
          CROSS JOIN UNNEST(rr.appcomponents) t2 (ac))
       )
@@ -2328,26 +2380,34 @@ views:
          SELECT
            rhavr.region_code region
          , rhavr.account_id
+         , rhavr.payer_id
          , rhavr.resourcetype resource_type
          , ac.type app_component_type
          , count(DISTINCT rhavr.app_id) application_count
          , array_agg(DISTINCT (CASE WHEN (rr.risk IS NOT NULL) THEN concat(rr.risk, ': ', rr.recommendation) ELSE null END)) recommendations
          FROM
-           ((resilience_hub_app_version_resources_latest rhavr
+           (("${data_collection_database_name}".resilience_hub_app_version_resources_latest rhavr
          CROSS JOIN UNNEST(rhavr.appcomponents) t (ac))
          LEFT JOIN resource_recommendations rr ON ((rhavr.app_id = rr.app_id) AND (rhavr.resourcename = rr.appcomponent)))
-         GROUP BY rhavr.region_code, rhavr.account_id, rhavr.resourcetype, ac.type
+         GROUP BY rhavr.region_code, rhavr.payer_id, rhavr.account_id, rhavr.resourcetype, ac.type
       )
       SELECT
         region
       , account_id
+      , payer_id
       , resource_type
       , app_component_type
       , CAST(application_count AS varchar) applications
       , cardinality(array_distinct(recommendations)) recommendations
       FROM
         flattened_resources
-
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
   resiliencehub_sop_recommendations_view:
     dependsOn:
       views:
@@ -2367,5 +2427,12 @@ views:
       , name
       , recommendationstatus
       FROM
-        (resilience_hub_sop_recommendations_latest
+        ("${data_collection_database_name}".resilience_hub_sop_recommendations_latest
       CROSS JOIN UNNEST(items) t (i))
+    parameters:
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'resilience_hub_sop_recommendations_latest'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True

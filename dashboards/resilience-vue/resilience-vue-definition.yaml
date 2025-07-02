@@ -437,7 +437,7 @@ DataSetIdentifierDeclarations:
 - DataSetArn: arn:aws:quicksight:::dataset/29f9c88d-3b1e-47a2-b86a-2dda4a616c42
   Identifier: resiliencehub_app_recommendations
 - DataSetArn: arn:aws:quicksight:::dataset/f0d8ed52-5851-419a-8f81-eb21aa579aa2
-  Identifier: resilience_hub_resiliency_policy_view
+  Identifier: resiliencehub_resiliency_policy_view
 - DataSetArn: arn:aws:quicksight:::dataset/c3cb9b44-be86-4b90-a9a4-d27bfe04bf65
   Identifier: resiliencehub_alarm_recommendations
 - DataSetArn: arn:aws:quicksight:::dataset/ccc6b5b3-578f-410a-a9c8-8e503e61429b
@@ -2394,14 +2394,14 @@ Sheets:
             - CategoricalDimensionField:
                 Column:
                   ColumnName: tier
-                  DataSetIdentifier: resilience_hub_resiliency_policy_view
+                  DataSetIdentifier: resiliencehub_resiliency_policy_view
                 FieldId: 086d4ef2-a6fe-455f-91fe-bd47446001b0.tier.0.1751074398508
             Values:
             - CategoricalMeasureField:
                 AggregationFunction: COUNT
                 Column:
                   ColumnName: policyarn
-                  DataSetIdentifier: resilience_hub_resiliency_policy_view
+                  DataSetIdentifier: resiliencehub_resiliency_policy_view
                 FieldId: 086d4ef2-a6fe-455f-91fe-bd47446001b0.policyarn.1.1751074406304
         Legend:
           Width: 135px
