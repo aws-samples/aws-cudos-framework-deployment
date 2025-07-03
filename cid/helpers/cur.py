@@ -271,7 +271,7 @@ class CUR(AbstractCUR):
                     columns=self.cur_minimal_required_columns,
                     database_name=database,
                 )
-                all_cur_tables += [(database, table) for table in tables]
+                all_cur_tables += [(database, table['Name']) for table in tables]
             except self.athena.client.exceptions.ClientError as exc:
                 if 'AccessDenied' in str(exc):
                     logger.info(f'Cannot read from athena database {database}')
