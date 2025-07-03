@@ -4827,7 +4827,7 @@ views:
       , line_item_usage_start_date
       , CAST(("random"() * 1000) AS int) buss
       FROM
-        "cid_data_export"."cur2" cur
+        "${cur2_database}"."${cur2_table_name}" cur
       GROUP BY line_item_usage_start_date, line_item_usage_account_id, 1
   sus_compute_ec2:
     dependsOn:
