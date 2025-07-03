@@ -3934,7 +3934,7 @@ dashboards:
             Title:
               Visibility: VISIBLE
             VisualId: 3326b9e2-4f12-4ca4-b04d-22cb9998f000
-    version: v4.0.0
+    version: v5.0.0
 datasets:
   sus_s3_storage_all:
     data:
