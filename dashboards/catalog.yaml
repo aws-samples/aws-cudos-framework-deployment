@@ -19,3 +19,4 @@ Resources:
   - Url: kpi_dashboard/kpi_dashboard.yaml
   - Url: cost-intelligence/cost-intelligence.yaml
   - Url: data-collection-monitor/data-collection-monitor.yaml
+  - Url: resilience-vue/resilience-vue.yaml
