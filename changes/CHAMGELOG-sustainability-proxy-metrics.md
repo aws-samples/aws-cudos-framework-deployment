@@ -6,5 +6,5 @@
 * Updated datasets to gain data from the Carbon Data export.
 
 ## Sustainability Proxy and Carbon emissions data Dashboard - v5.0.0
-* Added Location Based Metric (LBM) data from the data export. 
+* Added Location Based Metric (LBM) data from the Carbon Data export. 
 * Fixed null account id issue when account map value not found.
