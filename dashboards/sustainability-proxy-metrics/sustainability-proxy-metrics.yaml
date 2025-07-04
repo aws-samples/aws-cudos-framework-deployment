@@ -13,7 +13,7 @@ dashboards:
       - sus_s3_storage_all
       - sus_storage_athena
     name: Sustainability Proxy and Carbon emissions data
-    dashboardId: sustainability-proxy-metrics3
+    dashboardId: sustainability-proxy-metrics
     theme: MIDNIGHT
     data: |-
       AnalysisDefaults:
