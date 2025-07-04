@@ -39,7 +39,7 @@ dashboards:
         Name: estimated_carbon_emissions_reduction
       - DataSetIdentifier: sus_carbon_emissions
         Expression: |-
-          ifelse(${scope2Method}="mbm", {total_mbm_emissions_value}
+          ifelse(${scope2Method}="market-based method", {total_mbm_emissions_value}
           , {total_lbm_emissions_value}
           )
         Name: scope2_method_total_emissions_value
