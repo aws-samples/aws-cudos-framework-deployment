@@ -272,28 +272,6 @@ dashboards:
       - DataSetArn: arn:aws:quicksight:::dataset/af858de6-f6ef-4961-88c4-964aa1266b9a
         Identifier: sus_storage_athena
       FilterGroups:
-      - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 52f87545-d3b8-45c0-9148-da6b8d46c388
-        Filters:
-        - TimeRangeFilter:
-            Column:
-              ColumnName: MissingColumnId_a084b01d-3aa0-4049-9da8-3cc161b0af88
-              DataSetIdentifier: MissingDataSetId_MissingDataSetId_MissingDataSetId_d01a936f-2b8f-49dd-8f95-d9c7130c5e46
-            FilterId: d82d18d5-82a8-48bb-80e2-0d09dbec7875
-            IncludeMaximum: false
-            IncludeMinimum: true
-            NullOption: NON_NULLS_ONLY
-            RangeMaximumValue:
-              Parameter: EndDate
-            RangeMinimumValue:
-              Parameter: StartDate
-            TimeGranularity: DAY
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: f53c1e71-6dd7-4fb3-9e64-9bed5f908ae1
-        Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 77907915-3979-4880-9750-ac6617fd83ea
         Filters:
@@ -443,25 +421,6 @@ dashboards:
         ScopeConfiguration:
           AllSheets: {}
         Status: ENABLED
-      - CrossDataset: ALL_DATASETS
-        FilterGroupId: 33b9e87f-2253-4bb7-ad36-3d6eb14bb576
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: MissingColumnId_9bb46e55-aeaf-4c09-8f04-d5bdf7adc3e8
-              DataSetIdentifier: MissingDataSetId_MissingDataSetId_12419d71-ec67-4e23-bd1f-fcd7b34c82f9
-            Configuration:
-              FilterListConfiguration:
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-                SelectAllOptions: FILTER_ALL_VALUES
-            FilterId: 4dc7a6e5-19a2-433d-a22f-fb078b17f46a
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 156ba9c5-51b9-43b7-8afe-5bff0eed39f8
-        Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: f244c343-08aa-4e4c-84eb-c9ecfd96664f
         Filters:
@@ -482,47 +441,6 @@ dashboards:
               SheetId: f672a1e2-ddeb-49b9-b89f-2880d60fa7ed
               VisualIds:
               - 53e33142-0c45-4371-b48a-10107bbb5d43
-        Status: ENABLED
-      - CrossDataset: ALL_DATASETS
-        FilterGroupId: b0119f70-3da5-478d-a73b-40afb340c1bd
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: MissingColumnId_1cbef0a7-3530-4462-9005-cad87d137277
-              DataSetIdentifier: MissingDataSetId_MissingDataSetId_12419d71-ec67-4e23-bd1f-fcd7b34c82f9
-            Configuration:
-              FilterListConfiguration:
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-                SelectAllOptions: FILTER_ALL_VALUES
-            FilterId: c51f5f0b-5f99-4d7f-9bfc-1419796a6341
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 156ba9c5-51b9-43b7-8afe-5bff0eed39f8
-        Status: ENABLED
-      - CrossDataset: ALL_DATASETS
-        FilterGroupId: 896e0115-fc5f-4c9a-b2f4-c0ea24cca234
-        Filters:
-        - TimeRangeFilter:
-            Column:
-              ColumnName: MissingColumnId_06b50df5-6796-43e9-be28-ccb967bdc53a
-              DataSetIdentifier: MissingDataSetId_MissingDataSetId_12419d71-ec67-4e23-bd1f-fcd7b34c82f9
-            FilterId: 80c1db3c-7046-4887-b5cd-429be83aa953
-            IncludeMaximum: true
-            IncludeMinimum: true
-            NullOption: NON_NULLS_ONLY
-            RangeMaximumValue:
-              StaticValue: 2023-04-21 02:00:00+02:00
-            RangeMinimumValue:
-              StaticValue: 2023-04-12 02:00:00+02:00
-            TimeGranularity: DAY
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: ALL_VISUALS
-              SheetId: 156ba9c5-51b9-43b7-8afe-5bff0eed39f8
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 16589d28-e102-4d8a-ae41-d3bff092272b
@@ -3394,6 +3312,14 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: STACKED
+              CategoryLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: calc_account_name
+                      DataSetIdentifier: sus_carbon_emissions
+                    FieldId: 92b3fd72-954d-4f94-a85c-05325e2a066e.2.1751617984798
+                  CustomLabel: Account Name
               DataLabels:
                 Overlap: DISABLE_OVERLAP
                 Visibility: HIDDEN
