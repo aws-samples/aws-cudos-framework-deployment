@@ -433,7 +433,7 @@ def patch_spaces(definition):
     ''' put spaces in places
     '''
     def _patch(data):
-        """Recursively set currency_symbol"""
+        """Recursively set spaces in text fields"""
         SPACE = '\u00A0' # special space: non-breaking space
         if isinstance(data, dict):
             return {k: _patch(v) if k not in ['Expression'] else v for k, v in data.items()} # skip patching code
