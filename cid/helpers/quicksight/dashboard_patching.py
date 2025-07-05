@@ -442,7 +442,7 @@ def patch_spaces(definition):
         elif isinstance(data, str):
             text = re.sub(r'([^>\s])(\s*)(\s)(<[^/])', rf'\1{SPACE}\2\3\4', data, re.MULTILINE|re.DOTALL)
             if text != data:
-                logger.critical(f'patch_spaces: {repr(text)} {repr(data)}')
+                logger.trace(f'patch_spaces: {repr(text)} {repr(data)}')
             return text
         return data
     return _patch(definition)
