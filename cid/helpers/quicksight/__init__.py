@@ -14,7 +14,7 @@ from cid.base import CidBase
 from cid.helpers import diff, timezone, randtime
 from cid.helpers.quicksight.dashboard import Dashboard
 from cid.helpers.quicksight.dataset import Dataset
-from cid.helpers.quicksight.dashboard_patching import add_filter_to_dashboard_definition, patch_currency, patch_group_by
+from cid.helpers.quicksight.dashboard_patching import add_filter_to_dashboard_definition, patch_currency, patch_group_by, patch_spaces
 from cid.helpers.quicksight.datasource import Datasource
 from cid.helpers.quicksight.template import Template as CidQsTemplate
 from cid.helpers.quicksight.definition import Definition as CidQsDefinition
@@ -1340,6 +1340,7 @@ class QuickSight(CidBase):
                 create_parameters['Definition'],
                 currency_symbol=get_parameters().get('currency-symbol', 'USD')
             )
+            create_parameters['Definition'] = patch_spaces(create_parameters['Definition'])
             dataset_references = []
             for identifier, arn in definition.get('datasets', {}).items():
                 # Fetch dataset by name (preferably) OR by id

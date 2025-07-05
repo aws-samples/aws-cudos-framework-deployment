@@ -429,6 +429,20 @@ def detect_global_filter_fields(dashboard_definition):
         cols.append(col_name)
 
 
+def patch_spaces(definition):
+    ''' put spaces in places
+    '''
+    def _patch(data):
+        """Recursively set currency_symbol"""
+        if isinstance(data, dict):
+            return {k: _patch(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [_patch(item) for item in data]
+        elif isinstance(data, str):
+            return re.sub(r'([\W]\s*)\s(<[^/])', r'\1\_\2', data, re.MULTILINE|re.DOTALL)
+        return data
+    return _patch(definition)
+
 def patch_currency(definition, currency_symbol):
     ''' patch dashboard by adding currency symbol where the currency is configured already.
     '''
