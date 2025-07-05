@@ -434,12 +434,16 @@ def patch_spaces(definition):
     '''
     def _patch(data):
         """Recursively set currency_symbol"""
+        SPACE = '\u00A0' # special space: non-breaking space
         if isinstance(data, dict):
-            return {k: _patch(v) for k, v in data.items()}
+            return {k: _patch(v) if k not in ['Expression'] else v for k, v in data.items()} # skip patching code
         elif isinstance(data, list):
             return [_patch(item) for item in data]
         elif isinstance(data, str):
-            return re.sub(r'([\W]\s*)\s(<[^/])', r'\1\_\2', data, re.MULTILINE|re.DOTALL)
+            text = re.sub(r'([^>\s])(\s*)(\s)(<[^/])', rf'\1{SPACE}\2\3\4', data, re.MULTILINE|re.DOTALL)
+            if text != data:
+                logger.critical(f'patch_spaces: {repr(text)} {repr(data)}')
+            return text
         return data
     return _patch(definition)
 
