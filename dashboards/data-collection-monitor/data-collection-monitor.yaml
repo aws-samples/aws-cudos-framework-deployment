@@ -1775,7 +1775,7 @@ datasets:
           RelationalTable:
             DataSourceArn: ${athena_datasource_arn}
             Catalog: AwsDataCatalog
-            Schema: ${athena_database_name}
+            Schema: ${data_collection_database_name}
             Name: data_collection_logs
             InputColumns:
             - Name: timestamp
@@ -1900,9 +1900,6 @@ datasets:
 crawlers: {}
 views:
   data_collection_logs:
-    dependsOn:
-      views:
-      - dc_execution_log
     data: |-
       CREATE OR REPLACE VIEW "${athena_database_name}".data_collection_logs AS
       WITH
@@ -1912,14 +1909,14 @@ views:
          , params
          , max("timestamp") "timestamp"
          FROM
-           "${athena_database_name}".dc_execution_log
+           "${data_collection_database_name}".dc_execution_log
          WHERE (modulefunction = 'sf-entry')
          GROUP BY 1, 2
       )
       , most_recent_uuid_by_module AS (
          SELECT mainexeuuid
          FROM
-           ("${athena_database_name}".dc_execution_log m
+           ("${data_collection_database_name}".dc_execution_log m
          INNER JOIN most_recent_by_module r ON ((m.module = r.module) AND (m.params = r.params) AND (m."timestamp" = r."timestamp")))
       )
       SELECT
@@ -1949,9 +1946,12 @@ views:
       , json_extract_scalar(subuuid, '$["child-state-machine-exid"]') child_state_machine_exid
       , json_extract_scalar(subuuid, '$["statemachine-id"]') state_machine_arn
       FROM
-        ("${athena_database_name}".dc_execution_log m
+        ("${data_collection_database_name}".dc_execution_log m
       LEFT JOIN most_recent_uuid_by_module r ON (m.mainexeuuid = r.mainexeuuid))
     parameters:
-      s3path:
-        default: s3://cid-data-{account_id}/logs/modules/
-        description: S3 Path for dc_execution_log table
+      data_collection_database_name:
+        type: athena
+        query: SELECT DISTINCT table_schema FROM information_schema.columns WHERE table_name = 'dc_execution_log'
+        default: optimization_data
+        description: "Enter the name of the data collection database"
+        global: True
