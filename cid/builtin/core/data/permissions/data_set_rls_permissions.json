@@ -1,0 +1,7 @@
+{
+     "RowLevelPermissionDataSet": {
+      "Arn": "${RlsDataSetArn}",
+      "FormatVersion": "VERSION_1",
+      "Status": "${RlsStatus}"
+   }
+}
