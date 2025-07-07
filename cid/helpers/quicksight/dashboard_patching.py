@@ -429,6 +429,24 @@ def detect_global_filter_fields(dashboard_definition):
         cols.append(col_name)
 
 
+def patch_spaces(definition):
+    ''' put spaces in places
+    '''
+    def _patch(data):
+        """Recursively set spaces in text fields"""
+        SPACE = '\u00A0' # special space: non-breaking space
+        if isinstance(data, dict):
+            return {k: _patch(v) if k not in ['Expression'] else v for k, v in data.items()} # skip patching code
+        elif isinstance(data, list):
+            return [_patch(item) for item in data]
+        elif isinstance(data, str):
+            text = re.sub(r'([^>\s])(\s*)(\s)(<[^/])', rf'\1{SPACE}\2\3\4', data, re.MULTILINE|re.DOTALL)
+            if text != data:
+                logger.trace(f'patch_spaces: {repr(text)} {repr(data)}')
+            return text
+        return data
+    return _patch(definition)
+
 def patch_currency(definition, currency_symbol):
     ''' patch dashboard by adding currency symbol where the currency is configured already.
     '''
