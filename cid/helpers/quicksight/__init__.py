@@ -1049,6 +1049,8 @@ class QuickSight(CidBase):
         max_timeout = 60
         columns_tpl = {
             'PrincipalArn': self.get_principal_arn()
+            'RlsDataSetArn': self.get_rls_dataset_arn()
+            'Status': self.get_rls_status()
         }
         data_set_permissions_tpl = Template(resource_string(
             package_or_requirement='cid.builtin.core',
@@ -1068,9 +1070,7 @@ class QuickSight(CidBase):
         data_set_rls_permissions = json.loads(data_set_rls_permissions_tpl.safe_substitute(columns_tpl))
         definition.update({
             'AwsAccountId': self.account_id,
-            'Permissions': [
-                data_set_rls_permissions
-            ]
+            'RowLevelPermissionDataSet': data_set_rls_permissions
         })
         dataset_id = None
         try:
