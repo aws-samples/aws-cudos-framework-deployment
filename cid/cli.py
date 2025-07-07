@@ -105,6 +105,7 @@ def enable_rls(ctx, **kwargs):
     \b
     Command Options:
     --dashboard-id                      The Dashboard to enable RLS for
+    --rls-data-set-id                   The ID of RLS dataset. Default: cid-cmd 
 """
     ctx.obj.enable_rls(**kwargs)
 

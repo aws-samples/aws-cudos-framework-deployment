@@ -1633,6 +1633,8 @@ class Cid():
         compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
         logger.trace(f"compiled_dataset = {json.dumps(compiled_dataset)}")
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
+        # print("#################### JORA ##########################################")
+        # breakpoint()
         if isinstance(found_dataset, Dataset):
             update_dataset = False
             if update:
@@ -1941,6 +1943,7 @@ class Cid():
 
     @command
     def enable_rls(self, **kwargs):
+        print(get_parameters().get('dashboard-id'))
         print("Enabling RLS for dashboard")
 
     @command
