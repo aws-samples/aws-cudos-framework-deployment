@@ -1633,8 +1633,7 @@ class Cid():
         compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
         logger.trace(f"compiled_dataset = {json.dumps(compiled_dataset)}")
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
-        print("#################### JORA ##########################################")
-        breakpoint()
+        breakpoint() ### REMOVE ME LATER
         if isinstance(found_dataset, Dataset):
             update_dataset = False
             if update:
