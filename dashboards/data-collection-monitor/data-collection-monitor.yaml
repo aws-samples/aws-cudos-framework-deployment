@@ -1951,46 +1951,6 @@ views:
       FROM
         ("${athena_database_name}".dc_execution_log m
       LEFT JOIN most_recent_uuid_by_module r ON (m.mainexeuuid = r.mainexeuuid))
-  dc_execution_log:
-    data: |-
-      CREATE EXTERNAL TABLE `dc_execution_log`(
-        `timestamp` timestamp COMMENT 'from deserializer',
-        `datacollectionregion` string COMMENT 'from deserializer',
-        `datacollectionaccountid` string COMMENT 'from deserializer',
-        `module` string COMMENT 'from deserializer',
-        `modulefunction` string COMMENT 'from deserializer',
-        `params` string COMMENT 'from deserializer',
-        `payerid` string COMMENT 'from deserializer',
-        `accountid` string COMMENT 'from deserializer',
-        `region` string COMMENT 'from deserializer',
-        `statuscode` int COMMENT 'from deserializer',
-        `subcode` string COMMENT 'from deserializer',
-        `recordcount` int COMMENT 'from deserializer',
-        `description` string COMMENT 'from deserializer',
-        `datalocation` string COMMENT 'from deserializer',
-        `mainexeuuid` string COMMENT 'from deserializer',
-        `subuuid` string COMMENT 'from deserializer',
-        `service` string COMMENT 'from deserializer',
-        `stackversion` string COMMENT 'from deserializer',
-        `subversion` string COMMENT 'from deserializer')
-      PARTITIONED BY (
-        `logdate` string)
-      ROW FORMAT SERDE
-        'org.openx.data.jsonserde.JsonSerDe'
-      STORED AS INPUTFORMAT
-        'org.apache.hadoop.mapred.TextInputFormat'
-      OUTPUTFORMAT
-        'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
-      LOCATION
-        '${s3path}'
-      TBLPROPERTIES (
-        'projection.enabled'='true',
-        'projection.logdate.format'='yyyy/MM/dd',
-        'projection.logdate.interval'='1',
-        'projection.logdate.interval.unit'='DAYS',
-        'projection.logdate.range'='2025/01/01,NOW',
-        'projection.logdate.type'='date',
-        'storage.location.template'='${s3path}${logdate}')
     parameters:
       s3path:
         default: s3://cid-data-{account_id}/logs/modules/
