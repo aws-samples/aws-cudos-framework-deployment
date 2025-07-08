@@ -103,6 +103,51 @@ jobs:
         working-directory: ./terraform/cicd-deployment
         run: terraform validate
 
+      - name: Check for existing stacks and cleanup if needed
+        run: |
+          export RESOURCE_PREFIX="cid-tf"
+          export BACKEND_TYPE="s3"
+          export S3_BUCKET="${{ secrets.BACKEND_S3_BUCKET }}"
+          export S3_KEY="terraform/cid-test/terraform.tfstate"
+          export S3_REGION="${{ secrets.AWS_REGION_TF }}"
+          export BACKEND_REGION="${{ secrets.AWS_REGION }}"
+          
+          # Check for existing CloudFormation stacks (single-account deployment)
+          STACKS_TO_CHECK=("CID-DataExports-Destination" "Cloud-Intelligence-Dashboards")
+          IN_PROGRESS_STATES=("CREATE_IN_PROGRESS" "DELETE_IN_PROGRESS" "UPDATE_IN_PROGRESS" "UPDATE_ROLLBACK_IN_PROGRESS" "REVIEW_IN_PROGRESS" "IMPORT_IN_PROGRESS" "IMPORT_ROLLBACK_IN_PROGRESS")
+          
+          FOUND_STACKS=()
+          IN_PROGRESS_STACKS=()
+          
+          for stack in "${STACKS_TO_CHECK[@]}"; do
+            if STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "$stack" --region "${{ secrets.AWS_REGION_TF }}" --query 'Stacks[0].StackStatus' --output text 2>/dev/null); then
+              echo "Found existing stack: $stack (Status: $STACK_STATUS)"
+              FOUND_STACKS+=("$stack")
+              
+              if [[ " ${IN_PROGRESS_STATES[*]} " =~ " ${STACK_STATUS} " ]]; then
+                IN_PROGRESS_STACKS+=("$stack")
+              fi
+            fi
+          done
+          
+          # Exit if any stacks are in progress
+          if [ ${#IN_PROGRESS_STACKS[@]} -gt 0 ]; then
+            echo "ERROR: Found stacks in progress states:"
+            for stack in "${IN_PROGRESS_STACKS[@]}"; do
+              echo "  - $stack"
+            done
+            echo "Cannot proceed while stacks are in progress. Please wait for completion."
+            exit 1
+          fi
+          
+          # Auto-cleanup any existing stacks (regardless of state)
+          if [ ${#FOUND_STACKS[@]} -gt 0 ]; then
+            echo "Found existing stacks. Running cleanup before deployment..."
+            bash ./terraform/terraform-test/cleanup.sh
+          else
+            echo "No existing stacks found. Proceeding with fresh deployment."
+          fi
+
       - name: Run deploy script
         run: |
           export DATABASE_NAME="cid_data_export"

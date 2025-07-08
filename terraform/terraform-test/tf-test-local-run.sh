@@ -175,6 +175,85 @@ if [ "${USE_LOCAL_CID_TEMPLATE:-false}" = "true" ]; then
   fi
 fi
 
+# Step 1.5: Check for existing stacks and handle cleanup
+echo ""
+echo "=== Checking for Existing CloudFormation Stacks ==="
+
+# Check for existing CloudFormation stacks (single-account deployment)
+STACKS_TO_CHECK=("CID-DataExports-Destination" "Cloud-Intelligence-Dashboards")
+GOOD_STATES=("CREATE_COMPLETE" "UPDATE_COMPLETE")
+FAILED_STATES=("CREATE_FAILED" "ROLLBACK_COMPLETE" "ROLLBACK_FAILED" "DELETE_FAILED" "UPDATE_ROLLBACK_COMPLETE" "UPDATE_ROLLBACK_FAILED" "IMPORT_ROLLBACK_COMPLETE" "IMPORT_ROLLBACK_FAILED")
+IN_PROGRESS_STATES=("CREATE_IN_PROGRESS" "DELETE_IN_PROGRESS" "UPDATE_IN_PROGRESS" "UPDATE_ROLLBACK_IN_PROGRESS" "REVIEW_IN_PROGRESS" "IMPORT_IN_PROGRESS" "IMPORT_ROLLBACK_IN_PROGRESS")
+
+FOUND_STACKS=()
+GOOD_STACKS=()
+FAILED_STACKS=()
+IN_PROGRESS_STACKS=()
+
+for stack in "${STACKS_TO_CHECK[@]}"; do
+  if STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "$stack" --region "$S3_REGION" --query 'Stacks[0].StackStatus' --output text 2>/dev/null); then
+    echo "Found existing stack: $stack (Status: $STACK_STATUS)"
+    FOUND_STACKS+=("$stack")
+    
+    if [[ " ${GOOD_STATES[*]} " =~ " ${STACK_STATUS} " ]]; then
+      GOOD_STACKS+=("$stack")
+    elif [[ " ${FAILED_STATES[*]} " =~ " ${STACK_STATUS} " ]]; then
+      FAILED_STACKS+=("$stack")
+    elif [[ " ${IN_PROGRESS_STATES[*]} " =~ " ${STACK_STATUS} " ]]; then
+      IN_PROGRESS_STACKS+=("$stack")
+    fi
+  fi
+done
+
+if [ ${#FOUND_STACKS[@]} -gt 0 ]; then
+  # Handle in-progress stacks first
+  if [ ${#IN_PROGRESS_STACKS[@]} -gt 0 ]; then
+    echo ""
+    echo "Found stacks in progress states:"
+    for stack in "${IN_PROGRESS_STACKS[@]}"; do
+      echo "  - $stack"
+    done
+    echo "Cannot proceed while stacks are in progress. Please wait for completion or cancel operations."
+    exit 1
+  # Auto-cleanup if any stacks are in failed states
+  elif [ ${#FAILED_STACKS[@]} -gt 0 ]; then
+    echo ""
+    echo "Found stacks in failed states. Auto-cleaning up:"
+    for stack in "${FAILED_STACKS[@]}"; do
+      echo "  - $stack"
+    done
+    echo "Running cleanup..."
+    bash "$SCRIPT_DIR/cleanup.sh"
+    echo "Cleanup completed. Proceeding with fresh deployment..."
+  # Auto-cleanup if partial deployment (not all stacks in good state)
+  elif [ ${#GOOD_STACKS[@]} -gt 0 ] && [ ${#GOOD_STACKS[@]} -lt ${#STACKS_TO_CHECK[@]} ]; then
+    echo ""
+    echo "Found partial deployment (only ${#GOOD_STACKS[@]} of ${#STACKS_TO_CHECK[@]} stacks in good state)."
+    echo "Auto-cleaning up for fresh deployment..."
+    bash "$SCRIPT_DIR/cleanup.sh"
+    echo "Cleanup completed. Proceeding with fresh deployment..."
+  # Ask for confirmation only if all stacks are in good state
+  elif [ ${#GOOD_STACKS[@]} -eq ${#STACKS_TO_CHECK[@]} ]; then
+    echo ""
+    echo "Found complete deployment with all stacks in good state:"
+    for stack in "${GOOD_STACKS[@]}"; do
+      echo "  - $stack"
+    done
+    echo ""
+    read -p "Do you want to clean up existing deployment before proceeding? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      echo "Running cleanup..."
+      bash "$SCRIPT_DIR/cleanup.sh"
+      echo "Cleanup completed. Proceeding with fresh deployment..."
+    else
+      echo "Keeping existing deployment. Proceeding with current state..."
+    fi
+  fi
+else
+  echo "No existing stacks found. Proceeding with fresh deployment."
+fi
+
 # Step 2: Run deployment
 echo ""
 echo "=== Step 2: Running Deployment ==="
