@@ -11543,7 +11543,6 @@ dashboards:
                   FontConfiguration:
                     FontColor: '#FFFFFF'
                     FontSize:
-                      Absolute: 16px
                       Relative: MEDIUM
                     FontWeight:
                       Name: BOLD
@@ -11557,7 +11556,6 @@ dashboards:
                       Style: NONE
                   FontConfiguration:
                     FontSize:
-                      Absolute: 14px
                       Relative: LARGE
                   Height: 25
                   HorizontalTextAlignment: CENTER
