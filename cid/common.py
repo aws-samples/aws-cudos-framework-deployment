@@ -1604,6 +1604,25 @@ class Cid():
             raise
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
+        breakpoint() ### REMOVE ME LATER
+
+        enable_rls = True  # REPLACE WITH PARAM FROM CLI
+        # if get_parameters().get('rls-dataset-id'):
+        if True: # replace with line above
+            try:
+                rls_data_set_arn = [qs_rls_ds['Arn'] for qs_rls_ds in self.qs.list_data_sets() if qs_rls_ds['Name']=='cid_rls'][0]
+            except:
+                print("dataset not found")
+            rls_columns_tpl = {
+                'RlsDataSetArn': "ARN",
+                'RlsStatus': "ENABLED"
+            }
+            data_set_rls_permissions_tpl = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name='data/permissions/data_set_rls_permissions.json'
+            ).decode('utf-8'))
+            data_set_rls_permissions = json.loads(data_set_rls_permissions_tpl.safe_substitute(rls_columns_tpl))
+            compiled_dataset.update(data_set_rls_permissions)
 
         # patch dataset for tags
         cur_tags_json_required = False
@@ -1633,7 +1652,6 @@ class Cid():
         compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
         logger.trace(f"compiled_dataset = {json.dumps(compiled_dataset)}")
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
-        breakpoint() ### REMOVE ME LATER
         if isinstance(found_dataset, Dataset):
             update_dataset = False
             if update:
