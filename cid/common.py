@@ -1605,6 +1605,24 @@ class Cid():
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
 
+        #enable_rls = True  # REPLACE WITH PARAM FROM CLI
+        #if True: # replace with line above
+        if get_parameters().get('rls-dataset-id'):
+            try:
+                rls_data_set_arn = [qs_rls_ds['Arn'] for qs_rls_ds in self.qs.list_data_sets() if qs_rls_ds['Name']=='cid_rls'][0]
+            except:
+                print("dataset not found")
+            rls_columns_tpl = {
+                'RlsDataSetArn': rls_data_set_arn,
+                'RlsStatus': "ENABLED"
+            }
+            data_set_rls_permissions_tpl = Template(resource_string(
+                package_or_requirement='cid.builtin.core',
+                resource_name='data/permissions/data_set_rls_permissions.json'
+            ).decode('utf-8'))
+            data_set_rls_permissions = json.loads(data_set_rls_permissions_tpl.safe_substitute(rls_columns_tpl))
+            compiled_dataset.update(data_set_rls_permissions)
+
         # patch dataset for tags
         cur_tags_json_required = False
         for dep_view_name in dataset_definition.get('dependsOn', {}).get('views', []):
