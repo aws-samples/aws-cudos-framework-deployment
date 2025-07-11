@@ -94,21 +94,6 @@ def map(ctx, **kwargs):
     """
     ctx.obj.map(**kwargs)
 
-
-
-@click.option('-v', '--verbose', count=True)
-@click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
-@cid_command
-def enable_rls(ctx, **kwargs):
-    """Enable RLS for Dashboard
-
-    \b
-    Command Options:
-    --dashboard-id                      The Dashboard to enable RLS for
-    --rls-data-set-id                   The ID of RLS dataset. Default: cid-cmd 
-"""
-    ctx.obj.enable_rls(**kwargs)
-
 @click.option('-v', '--verbose', count=True)
 @click.option('-y', '--yes', help='confirm all', is_flag=True, default=False)
 @cid_command
