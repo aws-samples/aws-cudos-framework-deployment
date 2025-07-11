@@ -2,6 +2,7 @@
      "RowLevelPermissionDataSet": {
       "Arn": "${RlsDataSetArn}",
       "FormatVersion": "VERSION_1",
+      "PermissionPolicy": "GRANT_ACCESS",
       "Status": "${RlsStatus}"
    }
 }

@@ -1604,7 +1604,6 @@ class Cid():
             raise
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
-        breakpoint() ### REMOVE ME LATER
 
         enable_rls = True  # REPLACE WITH PARAM FROM CLI
         # if get_parameters().get('rls-dataset-id'):
@@ -1614,7 +1613,7 @@ class Cid():
             except:
                 print("dataset not found")
             rls_columns_tpl = {
-                'RlsDataSetArn': "ARN",
+                'RlsDataSetArn': rls_data_set_arn,
                 'RlsStatus': "ENABLED"
             }
             data_set_rls_permissions_tpl = Template(resource_string(
