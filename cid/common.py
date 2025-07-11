@@ -1605,9 +1605,9 @@ class Cid():
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
 
-        enable_rls = True  # REPLACE WITH PARAM FROM CLI
-        # if get_parameters().get('rls-dataset-id'):
-        if True: # replace with line above
+        #enable_rls = True  # REPLACE WITH PARAM FROM CLI
+        #if True: # replace with line above
+        if get_parameters().get('rls-dataset-id'):
             try:
                 rls_data_set_arn = [qs_rls_ds['Arn'] for qs_rls_ds in self.qs.list_data_sets() if qs_rls_ds['Name']=='cid_rls'][0]
             except:
