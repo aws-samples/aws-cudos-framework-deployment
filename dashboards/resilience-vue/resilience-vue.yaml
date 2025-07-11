@@ -2140,7 +2140,7 @@ views:
               *
             , ROW_NUMBER() OVER (PARTITION BY app_arn ORDER BY CAST(assessment_time AS timestamp) DESC) rn
             FROM
-              "${data_collection_database_name}".resiliencehub_application_rto_rpo_view
+              "${athena_database_name}".resiliencehub_application_rto_rpo_view
          )  ranked
          WHERE (rn = 1)
       )
