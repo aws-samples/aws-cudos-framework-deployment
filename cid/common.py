@@ -1605,24 +1605,6 @@ class Cid():
         if dataset_id:
             compiled_dataset.update({'DataSetId': dataset_id})
 
-        #enable_rls = True  # REPLACE WITH PARAM FROM CLI
-        #if True: # replace with line above
-        if get_parameters().get('rls-dataset-id'):
-            try:
-                rls_data_set_arn = [qs_rls_ds['Arn'] for qs_rls_ds in self.qs.list_data_sets() if qs_rls_ds['Name']=='cid_rls'][0]
-            except:
-                print("dataset not found")
-            rls_columns_tpl = {
-                'RlsDataSetArn': rls_data_set_arn,
-                'RlsStatus': "ENABLED"
-            }
-            data_set_rls_permissions_tpl = Template(resource_string(
-                package_or_requirement='cid.builtin.core',
-                resource_name='data/permissions/data_set_rls_permissions.json'
-            ).decode('utf-8'))
-            data_set_rls_permissions = json.loads(data_set_rls_permissions_tpl.safe_substitute(rls_columns_tpl))
-            compiled_dataset.update(data_set_rls_permissions)
-
         # patch dataset for tags
         cur_tags_json_required = False
         for dep_view_name in dataset_definition.get('dependsOn', {}).get('views', []):
@@ -1651,6 +1633,30 @@ class Cid():
         compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
         logger.trace(f"compiled_dataset = {json.dumps(compiled_dataset)}")
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
+
+        rls_dataset_id = get_parameters().get('rls-dataset-id')
+        if rls_dataset_id:
+            rls_dataset = self.qs.describe_dataset(id=rls_dataset_id)
+            if not rls_dataset:
+                raise CidCritical(f"RLS DataSet {rls_dataset_id} not found")
+            if not rls_dataset.is_rls:
+                raise CidCritical(f"DataSet {rls_dataset_id} is not RLS")
+            rls_permissions = {
+                "Arn": rls_dataset.arn,
+                "Status": (get_parameters().get('rls-status')
+                    or (found_dataset and found_dataset.rls_status)
+                    or "ENABLED"
+                ),
+                "PermissionPolicy": "GRANT_ACCESS",
+            }
+            if 'UserName' in rls_dataset.columns or 'GroupName' in rls_dataset.columns:
+                rls_permissions['FormatVersion'] = "VERSION_1"
+            elif 'UserARN' in rls_dataset.columns or 'GroupARN' in rls_dataset.columns:
+                rls_permissions['FormatVersion'] = "VERSION_2"
+            else:
+                raise CidCritical(f"DataSet {rls_dataset_id} must have 'UserName'/'GroupName' or 'UserARN'/'GroupARN' columns.")
+            compiled_dataset["RowLevelPermissionDataSet"] = rls_permissions
+
         if isinstance(found_dataset, Dataset):
             update_dataset = False
             if update:
