@@ -2140,7 +2140,7 @@ views:
               *
             , ROW_NUMBER() OVER (PARTITION BY app_arn ORDER BY CAST(assessment_time AS timestamp) DESC) rn
             FROM
-              resiliencehub_application_rto_rpo_view
+              "${athena_database_name}".resiliencehub_application_rto_rpo_view
          )  ranked
          WHERE (rn = 1)
       )
@@ -2225,7 +2225,7 @@ views:
       , CAST(p.policy.software.rpoinsecs AS VARCHAR) target_rpo_software
       FROM
         ("${data_collection_database_name}".resilience_hub_app_assessment_latest a
-      INNER JOIN resilience_hub_resiliency_policy p ON ((a.policy.policyarn = p.policyarn) AND (a.account_id = p.account_id) AND (a.region_code = p.region_code)))
+      INNER JOIN "${data_collection_database_name}".resilience_hub_resiliency_policy p ON ((a.policy.policyarn = p.policyarn) AND (a.account_id = p.account_id) AND (a.region_code = p.region_code)))
       WHERE (a.assessmentstatus = 'Success')
     parameters:
       data_collection_database_name:
