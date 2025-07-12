@@ -1633,6 +1633,30 @@ class Cid():
         compiled_dataset = Dataset.patch(dataset=compiled_dataset, custom_fields=custom_fields, athena=self.athena)
         logger.trace(f"compiled_dataset = {json.dumps(compiled_dataset)}")
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
+
+        rls_dataset_id = get_parameters().get('rls-dataset-id')
+        if rls_dataset_id:
+            rls_dataset = self.qs.describe_dataset(id=rls_dataset_id)
+            if not rls_dataset:
+                raise CidCritical(f"RLS DataSet {rls_dataset_id} not found")
+            if not rls_dataset.is_rls:
+                raise CidCritical(f"DataSet {rls_dataset_id} is not RLS")
+            rls_permissions = {
+                "Arn": rls_dataset.arn,
+                "Status": (get_parameters().get('rls-status')
+                    or (found_dataset and found_dataset.rls_status)
+                    or "ENABLED"
+                ),
+                "PermissionPolicy": "GRANT_ACCESS",
+            }
+            if 'UserName' in rls_dataset.columns or 'GroupName' in rls_dataset.columns:
+                rls_permissions['FormatVersion'] = "VERSION_1"
+            elif 'UserARN' in rls_dataset.columns or 'GroupARN' in rls_dataset.columns:
+                rls_permissions['FormatVersion'] = "VERSION_2"
+            else:
+                raise CidCritical(f"DataSet {rls_dataset_id} must have 'UserName'/'GroupName' or 'UserARN'/'GroupARN' columns.")
+            compiled_dataset["RowLevelPermissionDataSet"] = rls_permissions
+
         if isinstance(found_dataset, Dataset):
             update_dataset = False
             if update:

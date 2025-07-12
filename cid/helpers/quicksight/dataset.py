@@ -32,6 +32,19 @@ class Dataset(CidQsResource):
         return self.get_property('DataSetId')
 
     @property
+    def is_rls(self):
+        return self.get_property('UseAs') == 'RLS_RULES'
+
+    @property
+    def rls_status(self):
+        return self.get_property('RowLevelPermissionDataSet', {}).get('Status')
+
+    @property
+    def rls_arn(self):
+        return self.get_property('RowLevelPermissionDataSet', {}).get('Arn')
+
+
+    @property
     def columns(self) -> list:
         if not 'OutputColumns' in self.raw: self.describe()
         return self.get_property('OutputColumns')
