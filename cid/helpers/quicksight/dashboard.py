@@ -323,8 +323,10 @@ class Dashboard(CidQsResource):
         if self.datasets:
             cid_print(f"  <BOLD>Datasets:<END>")
             for dataset_name, dataset_id in  sorted(self.datasets.items()):
+                ds = self.qs.describe_dataset(dataset_id)
+                rls = {'ENABLED': '🔐', 'DISABLED': '🔓', None: ' '}.get(ds.rls_status)
                 status = self.qs.get_dataset_last_ingestion(dataset_id) or '<BLUE>DIRECT<END>' #todo fix this Blue using dataset import type.
-                cid_print(f'    {dataset_name: <36} ({dataset_id: <36}) {status}')
+                cid_print(f'   {rls} {dataset_name: <36} ({dataset_id: <36}) {status}')
 
     def display_url(self, url_template: str, launch: bool = False, **kwargs) -> None:
         url = url_template.format(dashboard_id=self.id, **kwargs)

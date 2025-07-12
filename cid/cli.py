@@ -140,6 +140,8 @@ def deploy(ctx, **kwargs):
      --catalog TEXT                        Comma separated list of catalog files or urls (ex: foundational,advanced )
      --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
      --currency TEXT                       A currency symbol instead of default USD (USD|GBP|EUR|JPY|KRW|DKK|TWD|INR)
+     --rls TEXT                            Desired RLS status (CLEAR|ENABLED|DISABLED) Clear = No RLS configuration.
+     --rls-dataset-id TEXT                 ID of RLS Dataset that will be used
      --share-with-account  (yes|no)        Make dashboard visible to other users in the same account by default.
      """
     ctx.obj.deploy(**kwargs)
@@ -201,7 +203,6 @@ def delete(ctx, dashboard_id, **kwargs):
 @click.option('--dashboard-id', help='QuickSight dashboard id', default=None)
 @click.option('--force/--noforce', help='allow selecting  up to date dashboards (flags must be before options)', default=False)
 @click.option('--recursive/--norecursive', help='Recursive update all Datasets and Views (flags must be before options)', default=False)
-@click.option('--rls-dataset-id', help='ID of RLS Dataset that will be used to upgrade dashboard', default=False, type=str)
 @cid_command
 def update(ctx, dashboard_id, force, recursive, **kwargs):
     """Update Dashboard
@@ -210,7 +211,8 @@ def update(ctx, dashboard_id, force, recursive, **kwargs):
      --on-drift (show|override)            Action if a drift of view and dataset is discovered. 'override' = override drift(will destroy customization) or 'show' (default) = show a diff. In Unattended mode (without terminal on-drift will have allways override behaviour)
      --theme TEXT                          A QuickSight Theme (CLASSIC|MIDNIGHT|SEASIDE|RAINIER)
      --currency TEXT                       A currency symbol instead of default USD (USD|GBP|EUR|JPY|KRW|DKK|TWD|INR)
-     --rls-dataset-id TEXT                 ID of RLS Dataset that will be used to upgrade dashboard
+     --rls TEXT                            Desired RLS status (CLEAR|ENABLED|DISABLED) Clear = No RLS configuration.
+     --rls-dataset-id TEXT                 ID of RLS Dataset that will be used
 
     """
     ctx.obj.update(dashboard_id, force=force, recursive=recursive, **kwargs)

@@ -1291,7 +1291,18 @@ class Cid():
         # If there still datasets missing try automatic creation
         if missing_datasets:
             missing_str = ', '.join(missing_datasets)
-            print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
+            cid_print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
+
+            # get rls status of existing datasets
+            found_dataset_objects = [self.qs.describe_dataset(ds_id) for ds_id in found_datasets.values()]
+            rls_dataset_arns = [ds.rls_arn for ds in found_dataset_objects if ds.rls_arn]
+            if rls_dataset_arns:
+                rls_dataset_arn = max(set(rls_dataset_arns), key=rls_dataset_arns.count) #get the most frequent
+                if not get_parameters().get('rls-dataset-id') and not get_parameters().get('rls'):
+                    rls_dataset_id = rls_dataset_arn.split('/')[-1]
+                    cid_print('Existing datasets are linked to RLS {rls_dataset_id}. We will reuse it for {missing_str} datasets.')
+                    set_parameters({'rls-dataset-id': rls_dataset_id})
+
             for dataset_name in missing_datasets[:]:
                 dataset_id = known_datasets.get(dataset_name)
                 print(f'Creating dataset: {dataset_name}')
@@ -1635,7 +1646,26 @@ class Cid():
         found_dataset = self.qs.describe_dataset(compiled_dataset.get('DataSetId'), timeout=0)
 
         rls_dataset_id = get_parameters().get('rls-dataset-id')
-        if rls_dataset_id:
+        rls_dataset_status = get_parameters().get('rls')
+        if rls_dataset_status == 'CLEAR':
+            logger.debug('deleting rls')
+            if "RowLevelPermissionDataSet" in compiled_dataset:
+                del compiled_dataset["RowLevelPermissionDataSet"]
+            if "RowLevelPermissionDataSet" in found_dataset:
+                del found_dataset["RowLevelPermissionDataSet"]
+
+        if rls_dataset_id or rls_dataset_status:
+            if not rls_dataset_id:
+                for ds in self.qs.list_data_sets():
+                    print(ds)
+                choices = {
+                    f"{ds.get('Name')}({ds.get('DataSetId')})":ds.get('DataSetId')
+                    for ds in self.qs.list_data_sets()
+                    if ds.get('UseAs') == 'RLS_RULES'
+                }
+                if not choices:
+                    raise CidCritical(f"Cannot find RLS DataSets")
+                rls_dataset_id = get_parameter('rls-dataset-id', message='Select RLS dataset', choices=choices)
             rls_dataset = self.qs.describe_dataset(id=rls_dataset_id)
             if not rls_dataset:
                 raise CidCritical(f"RLS DataSet {rls_dataset_id} not found")
@@ -1643,15 +1673,16 @@ class Cid():
                 raise CidCritical(f"DataSet {rls_dataset_id} is not RLS")
             rls_permissions = {
                 "Arn": rls_dataset.arn,
-                "Status": (get_parameters().get('rls-status')
+                "Status": (rls_dataset_status
                     or (found_dataset and found_dataset.rls_status)
                     or "ENABLED"
                 ),
                 "PermissionPolicy": "GRANT_ACCESS",
             }
-            if 'UserName' in rls_dataset.columns or 'GroupName' in rls_dataset.columns:
+            cols = [c['Name'] for c in rls_dataset.columns]
+            if 'UserName' in cols or 'GroupName' in cols:
                 rls_permissions['FormatVersion'] = "VERSION_1"
-            elif 'UserARN' in rls_dataset.columns or 'GroupARN' in rls_dataset.columns:
+            elif 'UserARN' in cols or 'GroupARN' in cols:
                 rls_permissions['FormatVersion'] = "VERSION_2"
             else:
                 raise CidCritical(f"DataSet {rls_dataset_id} must have 'UserName'/'GroupName' or 'UserARN'/'GroupARN' columns.")

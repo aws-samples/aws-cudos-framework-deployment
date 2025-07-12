@@ -37,11 +37,11 @@ class Dataset(CidQsResource):
 
     @property
     def rls_status(self):
-        return self.get_property('RowLevelPermissionDataSet', {}).get('Status')
+        return (self.get_property('RowLevelPermissionDataSet') or {}).get('Status')
 
     @property
     def rls_arn(self):
-        return self.get_property('RowLevelPermissionDataSet', {}).get('Arn')
+        return (self.get_property('RowLevelPermissionDataSet') or {}).get('Arn')
 
 
     @property
