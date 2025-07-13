@@ -134,11 +134,13 @@ class Dataset(CidQsResource):
                     renames[key] = dt["RenameColumnOperation"]['NewColumnName']
         logger.trace(f'renames = {renames}')
 
-        projected_cols = next( # get the first DataTransform with ProjectOperation
-            ds['ProjectOperation']["ProjectedColumns"]
-            for ds in root_lt['DataTransforms']
-            if 'ProjectOperation' in ds
-        )
+        projected_cols = []
+        if root_lt.get('DataTransforms'):
+            projected_cols = next( # get the first DataTransform with ProjectOperation
+                ds['ProjectOperation']["ProjectedColumns"]
+                for ds in root_lt.get('DataTransforms', [])
+                if 'ProjectOperation' in ds
+            )
 
         # Update each PhysicalTableMap with all columns from athena views
         all_columns = []
