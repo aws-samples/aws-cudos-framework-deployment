@@ -32,6 +32,19 @@ class Dataset(CidQsResource):
         return self.get_property('DataSetId')
 
     @property
+    def is_rls(self):
+        return self.get_property('UseAs') == 'RLS_RULES'
+
+    @property
+    def rls_status(self):
+        return (self.get_property('RowLevelPermissionDataSet') or {}).get('Status')
+
+    @property
+    def rls_arn(self):
+        return (self.get_property('RowLevelPermissionDataSet') or {}).get('Arn')
+
+
+    @property
     def columns(self) -> list:
         if not 'OutputColumns' in self.raw: self.describe()
         return self.get_property('OutputColumns')
@@ -121,11 +134,13 @@ class Dataset(CidQsResource):
                     renames[key] = dt["RenameColumnOperation"]['NewColumnName']
         logger.trace(f'renames = {renames}')
 
-        projected_cols = next( # get the first DataTransform with ProjectOperation
-            ds['ProjectOperation']["ProjectedColumns"]
-            for ds in root_lt['DataTransforms']
-            if 'ProjectOperation' in ds
-        )
+        projected_cols = []
+        if root_lt.get('DataTransforms'):
+            projected_cols = next( # get the first DataTransform with ProjectOperation
+                ds['ProjectOperation']["ProjectedColumns"]
+                for ds in root_lt.get('DataTransforms', [])
+                if 'ProjectOperation' in ds
+            )
 
         # Update each PhysicalTableMap with all columns from athena views
         all_columns = []
