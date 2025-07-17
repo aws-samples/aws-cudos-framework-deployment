@@ -20450,66 +20450,63 @@ views:
          WHERE (CAST("line_item_usage_end_date" AS date) >= ("date_trunc"('month', current_timestamp) - INTERVAL  '24' MONTH))
       )
       , eml_ri_inventory AS (
-         SELECT
-           SPLIT_PART("reservation_reservation_a_r_n", ':', 7) "reservation_id"
-         , ROUND(("line_item_usage_amount" / DATE_DIFF('hour', date_trunc('hour', CAST("line_item_usage_start_date" AS timestamp)), date_trunc('hour', CAST("line_item_usage_end_date" AS timestamp))))) "reservation_count"
-         , CAST(SPLIT_PART("reservation_start_time", 'T', 1) AS date) "reservation_start_time"
-         , CAST(SPLIT_PART("reservation_end_time", 'T', 1) AS date) "reservation_end_time"
-         , "line_item_usage_account_id" "account_id"
-         , "line_item_line_item_description"
-         , "line_item_usage_type"
-         , "product"['video_pipeline'] "pipeline"
-         , "product"['region'] "region"
-         , "line_item_operation"
-         , "product"['pipeline'] "pipeline"
-         , "product"['region'] "region"
-         , "line_item_operation"
-         , "product"['input'] "input"
-         , "product"['output'] "output"
-         , "product"['resolution'] "resolution"
-         , "product"['bit_rate'] "bit_rate"
-         , "product"['frame_rate'] "frame_rate"
-         , "product"['video_quality'] "video_quality"
-         , SUM("line_item_unblended_cost") "reservation_fee"
-         , ROUND(AVG(((CASE WHEN ("line_item_net_unblended_cost" IS NULL) THEN "line_item_unblended_cost" ELSE "line_item_net_unblended_cost" END) / "line_item_unblended_cost")), 2) "effective_rate_adjust"
-         FROM
-           "core"
-         WHERE ((line_item_product_code = 'AWSElementalMediaLive') AND (line_item_line_item_type = 'RIFee'))
-         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+        SELECT
+          SPLIT_PART("reservation_reservation_a_r_n", ':', 7) "reservation_id"
+        , ROUND(("line_item_usage_amount" / DATE_DIFF('hour', date_trunc('hour', CAST("line_item_usage_start_date" AS timestamp)), date_trunc('hour', CAST("line_item_usage_end_date" AS timestamp))))) "reservation_count"
+        , CAST(SPLIT_PART("reservation_start_time", 'T', 1) AS date) "reservation_start_time"
+        , CAST(SPLIT_PART("reservation_end_time", 'T', 1) AS date) "reservation_end_time"
+        , "line_item_usage_account_id" "account_id"
+        , "line_item_line_item_description"
+        , "line_item_usage_type"
+        , "product"['pipeline'] "pipeline"
+        , "product"['region'] "region"
+        , "line_item_operation"
+        , "product"['input'] "input"
+        , "product"['output'] "output"
+        , "product"['resolution'] "resolution"
+        , "product"['bit_rate'] "bit_rate"
+        , "product"['frame_rate'] "frame_rate"
+        , "product"['video_quality'] "video_quality"
+        , SUM("line_item_unblended_cost") "reservation_fee"
+        , ROUND(AVG(((CASE WHEN ("line_item_net_unblended_cost" IS NULL) THEN "line_item_unblended_cost" ELSE "line_item_net_unblended_cost" END) / "line_item_unblended_cost")), 2) "effective_rate_adjust"
+        FROM
+          "core"
+        WHERE ((line_item_product_code = 'AWSElementalMediaLive') AND (line_item_line_item_type = 'RIFee'))
+        GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
       )
       , eml_usage AS (
-         SELECT
-           SPLIT_PART("reservation_reservation_a_r_n", ':', 7) "reservation_id"
-         , "line_item_usage_start_date"
-         , "line_item_usage_end_date"
-         , "line_item_usage_type"
-         , ROUND(SUM("line_item_usage_amount"), 2) "total_usage"
-         , ROUND(SUM("reservation_effective_cost"), 2) "reservation_effective_cost"
-         , ROUND(SUM("pricing_public_on_demand_cost"), 2) "on_demand_cost"
-         FROM
-           "core"
-         WHERE (("line_item_product_code" = 'AWSElementalMediaLive') AND ("line_item_line_item_type" = 'DiscountedUsage'))
-         GROUP BY 1, 2, 3, 4
+        SELECT
+          SPLIT_PART("reservation_reservation_a_r_n", ':', 7) "reservation_id"
+        , "line_item_usage_start_date"
+        , "line_item_usage_end_date"
+        , "line_item_usage_type"
+        , ROUND(SUM("line_item_usage_amount"), 2) "total_usage"
+        , ROUND(SUM("reservation_effective_cost"), 2) "reservation_effective_cost"
+        , ROUND(SUM("pricing_public_on_demand_cost"), 2) "on_demand_cost"
+        FROM
+          "core"
+        WHERE (("line_item_product_code" = 'AWSElementalMediaLive') AND ("line_item_line_item_type" = 'DiscountedUsage'))
+        GROUP BY 1, 2, 3, 4
       )
       , eml_reservation_count AS (
-         SELECT DISTINCT
-           SPLIT_PART("reservation_reservation_a_r_n", ':', 7) "reservation_id"
-         , CAST(SPLIT_PART("reservation_start_time", 'T', 1) AS date) "reservation_start_time"
-         , CAST(SPLIT_PART("reservation_end_time", 'T', 1) AS date) "reservation_end_time"
-         , ROUND(("line_item_usage_amount" / DATE_DIFF('hour', date_trunc('hour', CAST("line_item_usage_start_date" AS timestamp)), date_trunc('hour', CAST("line_item_usage_end_date" AS timestamp))))) "reservation_count"
-         FROM
-           "core"
-         WHERE (("line_item_product_code" = 'AWSElementalMediaLive') AND ("line_item_line_item_type" = 'RIFee'))
+        SELECT DISTINCT
+          SPLIT_PART("reservation_reservation_a_r_n", ':', 7) "reservation_id"
+        , CAST(SPLIT_PART("reservation_start_time", 'T', 1) AS date) "reservation_start_time"
+        , CAST(SPLIT_PART("reservation_end_time", 'T', 1) AS date) "reservation_end_time"
+        , ROUND(("line_item_usage_amount" / DATE_DIFF('hour', date_trunc('hour', CAST("line_item_usage_start_date" AS timestamp)), date_trunc('hour', CAST("line_item_usage_end_date" AS timestamp))))) "reservation_count"
+        FROM
+          "core"
+        WHERE (("line_item_product_code" = 'AWSElementalMediaLive') AND ("line_item_line_item_type" = 'RIFee'))
       )
       , eml_ri_utilization AS (
-         SELECT
-           u.*
-         , c."reservation_start_time"
-         , c."reservation_end_time"
-         , ROUND((u."total_usage" / (c."reservation_count" * DATE_DIFF('hour', date_trunc('hour', CAST("line_item_usage_start_date" AS timestamp)), date_trunc('hour', CAST("line_item_usage_end_date" AS timestamp))))), 2) "reservation_utilization_percent"
-         FROM
-           ("eml_usage" u
-         INNER JOIN "eml_reservation_count" c ON ((u."reservation_id" = c."reservation_id") AND ((date_trunc('day', u."line_item_usage_start_date") >= date_trunc('day', c."reservation_start_time")) AND (date_trunc('day', u."line_item_usage_end_date") <= date_trunc('day', c."reservation_end_time")))))
+        SELECT
+          u.*
+        , c."reservation_start_time"
+        , c."reservation_end_time"
+        , ROUND((u."total_usage" / (c."reservation_count" * DATE_DIFF('hour', date_trunc('hour', CAST("line_item_usage_start_date" AS timestamp)), date_trunc('hour', CAST("line_item_usage_end_date" AS timestamp))))), 2) "reservation_utilization_percent"
+        FROM
+          ("eml_usage" u
+        INNER JOIN "eml_reservation_count" c ON ((u."reservation_id" = c."reservation_id") AND ((date_trunc('day', u."line_item_usage_start_date") >= date_trunc('day', c."reservation_start_time")) AND (date_trunc('day', u."line_item_usage_end_date") <= date_trunc('day', c."reservation_end_time")))))
       )
       SELECT
         i.*
