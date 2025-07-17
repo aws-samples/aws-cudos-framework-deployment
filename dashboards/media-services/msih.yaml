@@ -20064,13 +20064,7 @@ datasets:
             InputColumns:
             - Name: account_id
               Type: STRING
-            - Name: parent_account_id
-              Type: STRING
             - Name: account_name
-              Type: STRING
-            - Name: account_name_id
-              Type: STRING
-            - Name: org_tags
               Type: STRING
         2574e672-3b49-48a4-a6c8-3dfa24dc0526:
           RelationalTable:
@@ -20172,11 +20166,7 @@ datasets:
               - effective_od_cost
               - effective_savings
               - effective_savings_rate
-              - account_id[account_map]
-              - parent_account_id
               - account_name
-              - account_name_id
-              - org_tags
           Source:
             JoinInstruction:
               LeftOperand: 7d8b97a5-4e20-4a6c-b931-7f155a3b996a
@@ -20216,13 +20206,7 @@ datasets:
             InputColumns:
             - Name: account_id
               Type: STRING
-            - Name: parent_account_id
-              Type: STRING
             - Name: account_name
-              Type: STRING
-            - Name: account_name_id
-              Type: STRING
-            - Name: org_tags
               Type: STRING
         cbea5483-901f-4b2b-abe5-b6df7d6226d6:
           RelationalTable:
