@@ -51,7 +51,7 @@ the GitHub / git source as below.
 
 ```hcl
 module "example" {
-  source = "github.com/aws-samples/aws-cudos-framework-deployment//terraform-modules/<module name>"
+  source = "github.com/aws-samples/aws-cudos-framework-deployment//legacy-terraform/<module name>"
   ...
 }
 ```
