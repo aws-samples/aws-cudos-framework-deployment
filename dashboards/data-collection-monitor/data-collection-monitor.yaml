@@ -680,26 +680,17 @@ dashboards:
                 RowSpan: 1
         SheetId: fac3708e-284a-476a-9a4b-850dffd4a061
         TextBoxes:
-        - Content: "<text-box>\n  <inline font-size=\"40px\">Data Collection Monitor</inline>\n\
-            \  <br/>\n  <br/>\n  <inline font-size=\"18px\">This dashboard allows you to\
-            \ monitor the executions of the Data Collection modules you have installed.\_\
-            </inline>\n  <br/>\n  <br/>\n  <inline font-size=\"18px\">Note:</inline>\n \
-            \ <br/>\n  <ul>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"\
-            16px\">Errors are also reported to CloudWatch, where you can setup triggers\
-            \ for alarms or other alerts</inline>\n    </li>\n    <li class=\"ql-indent-0\"\
-            >\n      <inline font-size=\"16px\">Note: Account IDs are currently not populated\
-            \ for all functions and in some cases only for errors</inline>\n    </li>\n\
-            \    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">Currently\
-            \ only\_</inline>\n      <inline font-size=\"16px\">\n        <i>Backups</i>\n\
-            \      </inline>\n      <inline font-size=\"16px\">,\_</inline>\n      <inline\
-            \ font-size=\"16px\">\n        <i>Budgets</i>\n      </inline>\n      <inline\
-            \ font-size=\"16px\">,\_</inline>\n      <inline font-size=\"16px\">\n     \
-            \   <i>ECS Chargeback</i>\n      </inline>\n      <inline font-size=\"16px\"\
-            >\_and\_</inline>\n      <inline font-size=\"16px\">\n        <i>Health Events</i>\n\
-            \      </inline>\n      <inline font-size=\"16px\">\_include Lambda execution\
-            \ details beyond the results of the common\_</inline>\n      <inline font-size=\"\
-            16px\">\n        <i>Account Collector</i>\n      </inline>\n      <inline font-size=\"\
-            16px\">\_function</inline>\n    </li>\n  </ul>\n</text-box>"
+        - Content: "<text-box>\n  <inline color=\"#f97d2a\" font-size=\"40px\">\n    <b>Data\
+            \ Collection Monitor</b>\n  </inline>\n  <br/>\n  <br/>\n  <inline font-size=\"\
+            18px\">This dashboard allows you to monitor the executions of the Data Collection\
+            \ modules you have installed.\_</inline>\n  <br/>\n  <br/>\n  <inline font-size=\"\
+            18px\">\n    <b>Note:</b>\n  </inline>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
+            >\n      <inline font-size=\"16px\">Errors are also reported to CloudWatch,\
+            \ where you can setup triggers for alarms or other alerts.</inline>\n    </li>\n\
+            \    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">You can run\
+            \ a particular module manually by clicking the Log link in the Most recent executions\
+            \ table and then start a new execution from the State Machine console that opens.</inline>\n\
+            \    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 86cd6b08-035c-4c2b-9a88-912329522c35
         - Content: |-
             <text-box>
