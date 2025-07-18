@@ -1294,7 +1294,7 @@ class Cid():
             cid_print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
 
             # get rls status of existing datasets
-            found_dataset_objects = [self.qs.describe_dataset(ds_id) for ds_id in found_datasets.values()]
+            found_dataset_objects = [self.qs.describe_dataset(ds_id) for ds_id in found_datasets]
             rls_dataset_arns = [ds.rls_arn for ds in found_dataset_objects if ds.rls_arn]
             if rls_dataset_arns:
                 rls_dataset_arn = max(set(rls_dataset_arns), key=rls_dataset_arns.count) #get the most frequent
