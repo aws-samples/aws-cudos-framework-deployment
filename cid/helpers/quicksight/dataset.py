@@ -1,5 +1,6 @@
+import uuid
+import hashlib
 import logging
-from uuid import uuid4
 from copy import deepcopy
 
 import yaml
@@ -15,8 +16,18 @@ DATASET_PROPERTIES = [
 ]
 
 
-class Dataset(CidQsResource):
+def string_to_uuid(input_string):
+    """Generate a UUID from a string using MD5 hash.
+    """
+    # Create MD5 hash of the input string
+    hash_digest = hashlib.md5(input_string.encode('utf-8')).hexdigest()
 
+    # Convert hash to UUID format
+    return uuid.UUID(hash_digest)
+
+class Dataset(CidQsResource):
+    """ Dataset
+    """
     def __init__(self, raw: dict, qs=None, athena=None) -> None:
         super().__init__(raw)
         self.qs = qs
@@ -194,7 +205,7 @@ class Dataset(CidQsResource):
                         "Columns": [
                             {
                                 "ColumnName": col_name,
-                                "ColumnId": str(uuid4()),
+                                "ColumnId": string_to_uuid(dataset['Name'] + col_name),
                                 "Expression": expression
                             }
                         ]
