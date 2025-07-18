@@ -1,5 +1,4 @@
 import uuid
-import hashlib
 import logging
 from copy import deepcopy
 
@@ -17,13 +16,9 @@ DATASET_PROPERTIES = [
 
 
 def string_to_uuid(input_string):
-    """Generate a UUID from a string using MD5 hash.
+    """Generate a UUID from a string using hash.
     """
-    # Create MD5 hash of the input string
-    hash_digest = hashlib.md5(input_string.encode('utf-8')).hexdigest()
-
-    # Convert hash to UUID format
-    return uuid.UUID(hash_digest)
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, input_string))
 
 class Dataset(CidQsResource):
     """ Dataset
