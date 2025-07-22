@@ -7,6 +7,7 @@ S3_BUCKET=${S3_BUCKET:-""}
 S3_KEY=${S3_KEY:-"terraform/cid-test/terraform.tfstate"}
 S3_REGION=${S3_REGION:-"eu-west-2"}  # Default to eu-west-2
 BACKEND_REGION=${BACKEND_REGION:-"us-east-1"}  # Backend bucket region
+TEMPLATE_PREFIX="${TEMPLATE_PREFIX:-cid-testing/templates}"
 
 # Set AWS region for AWS CLI commands
 export AWS_DEFAULT_REGION="${S3_REGION}"
@@ -28,14 +29,19 @@ echo "Creating temporary Terraform directory at $TEMP_DIR"
 # Copy Terraform files to temporary directory
 cp -r "$TERRAFORM_DIR"/* "$TEMP_DIR/"
 
-# Modify locals.tf to use local CID template if specified
-if [ ! -z "${LOCAL_CID_TEMPLATE_URL}" ]; then
-  echo "Modifying locals.tf to use local CID template: $LOCAL_CID_TEMPLATE_URL"
-  sed -i.bak "s|cudos        = \"\${local.common_template_url_base}/\${var.global_values.cid_cfn_version}/cid-cfn.yml\"|cudos        = \"$LOCAL_CID_TEMPLATE_URL\"|g" "$TEMP_DIR/locals.tf"
-fi
 
 # Modify variables.tf to use local lambda layer if specified
 if [ ! -z "${LOCAL_LAYER_BUCKET}" ]; then
+
+  echo "=== Preparing Local CID Template ==="
+  FULL_BUCKET_NAME="$LOCAL_LAYER_BUCKET-$S3_REGION"
+  echo "Uploading local cid-cfn.yml to: s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/"
+  aws s3 cp "$PROJECT_ROOT/cfn-templates/cid-cfn.yml" "s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/cid-cfn.yml"
+  LOCAL_CID_TEMPLATE_URL="https://$FULL_BUCKET_NAME.s3.amazonaws.com/$TEMPLATE_PREFIX/cid-cfn.yml"
+
+  echo "Modifying locals.tf to use local CID template: $LOCAL_CID_TEMPLATE_URL"
+  sed -i.bak "s|cudos        = \"\${local.common_template_url_base}/\${var.global_values.cid_cfn_version}/cid-cfn.yml\"|cudos        = \"$LOCAL_CID_TEMPLATE_URL\"|g" "$TEMP_DIR/locals.tf"
+
   echo "Modifying variables.tf to use local lambda layer bucket: $LOCAL_LAYER_BUCKET"
   sed -i.bak "s|lambda_layer_bucket_prefix           = \"aws-managed-cost-intelligence-dashboards\"|lambda_layer_bucket_prefix           = \"$LOCAL_LAYER_BUCKET\"|g" "$TEMP_DIR/variables.tf"
 fi
