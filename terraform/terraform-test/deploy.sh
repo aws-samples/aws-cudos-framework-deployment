@@ -47,7 +47,7 @@ fi
 
 
 # Create a directory to store the tfstate file
-SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+SCRIPT_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 TFSTATE_DIR="$SCRIPT_DIR/tfstate"
 mkdir -p "$TFSTATE_DIR"
 
