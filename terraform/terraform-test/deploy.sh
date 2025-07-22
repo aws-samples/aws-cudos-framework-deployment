@@ -35,27 +35,20 @@ cp -r "$TERRAFORM_DIR"/* "$TEMP_DIR/"
 ensure_bucket_exists() {
     local bucket_name=$1
     local region=$(aws configure get region)
-    
-    # Default to us-east-1 if no region configured
-    if [ -z "$region" ]; then
-        region="us-east-1"
-    fi
-    
+
     # Check if bucket exists
     if aws s3 ls "s3://$bucket_name" 2>/dev/null; then
         echo "Bucket $bucket_name already exists"
         return 0
     fi
-    
+
     # Create bucket with region-specific logic
     if [ "$region" = "us-east-1" ]; then
-        # us-east-1 doesn't need --region flag
         aws s3 mb "s3://$bucket_name"
     else
-        # All other regions need --region flag
         aws s3 mb "s3://$bucket_name" --region "$region"
     fi
-    
+
     if [ $? -eq 0 ]; then
         echo "Bucket $bucket_name created successfully in $region"
     else
