@@ -32,11 +32,44 @@ echo "Creating temporary Terraform directory at $TEMP_DIR"
 cp -r "$TERRAFORM_DIR"/* "$TEMP_DIR/"
 
 
+ensure_bucket_exists() {
+    local bucket_name=$1
+    local region=$(aws configure get region)
+    
+    # Default to us-east-1 if no region configured
+    if [ -z "$region" ]; then
+        region="us-east-1"
+    fi
+    
+    # Check if bucket exists
+    if aws s3 ls "s3://$bucket_name" 2>/dev/null; then
+        echo "Bucket $bucket_name already exists"
+        return 0
+    fi
+    
+    # Create bucket with region-specific logic
+    if [ "$region" = "us-east-1" ]; then
+        # us-east-1 doesn't need --region flag
+        aws s3 mb "s3://$bucket_name"
+    else
+        # All other regions need --region flag
+        aws s3 mb "s3://$bucket_name" --region "$region"
+    fi
+    
+    if [ $? -eq 0 ]; then
+        echo "Bucket $bucket_name created successfully in $region"
+    else
+        echo "Failed to create bucket $bucket_name"
+        return 1
+    fi
+}
+
 # Modify variables.tf to use local lambda layer if specified
 if [ ! -z "${LOCAL_ASSETS_BUCKET_PREFIX}" ]; then
 
   echo "=== Preparing Local CID Template ==="
   FULL_BUCKET_NAME="$LOCAL_ASSETS_BUCKET_PREFIX-$S3_REGION"
+  ensure_bucket_exists $FULL_BUCKET_NAME
   echo "Uploading local cid-cfn.yml to: s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/"
   aws s3 cp "$PROJECT_ROOT/../cfn-templates/cid-cfn.yml" "s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/cid-cfn.yml"
   LOCAL_CID_TEMPLATE_URL="https://$FULL_BUCKET_NAME.s3.amazonaws.com/$TEMPLATE_PREFIX/cid-cfn.yml"
