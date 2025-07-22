@@ -34,7 +34,7 @@ cp -r "$TERRAFORM_DIR"/* "$TEMP_DIR/"
 
 ensure_bucket_exists() {
     local bucket_name=$1
-    local region=$(aws configure get region)
+    local region=$S3_REGION
 
     # Check if bucket exists
     if aws s3 ls "s3://$bucket_name" 2>/dev/null; then
