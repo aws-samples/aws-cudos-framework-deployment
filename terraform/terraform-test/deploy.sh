@@ -38,7 +38,7 @@ if [ ! -z "${LOCAL_ASSETS_BUCKET_PREFIX}" ]; then
   echo "=== Preparing Local CID Template ==="
   FULL_BUCKET_NAME="$LOCAL_ASSETS_BUCKET_PREFIX-$S3_REGION"
   echo "Uploading local cid-cfn.yml to: s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/"
-  aws s3 cp "$PROJECT_ROOT/cfn-templates/cid-cfn.yml" "s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/cid-cfn.yml"
+  aws s3 cp "$PROJECT_ROOT/../cfn-templates/cid-cfn.yml" "s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/cid-cfn.yml"
   LOCAL_CID_TEMPLATE_URL="https://$FULL_BUCKET_NAME.s3.amazonaws.com/$TEMPLATE_PREFIX/cid-cfn.yml"
 
   echo "Modifying locals.tf to use local CID template: $LOCAL_CID_TEMPLATE_URL"
