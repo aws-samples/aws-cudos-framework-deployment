@@ -81,7 +81,7 @@ jobs:
           }
           EOF
 
-          cat > providers.tf << EOF
+          cat > versions.tf << EOF
           provider "aws" {
             region = "${{ secrets.AWS_REGION_TF }}"
           }
@@ -92,7 +92,7 @@ jobs:
           }
           EOF
 
-          terraform fmt terraform.tfvars backend.tf providers.tf
+          terraform fmt terraform.tfvars backend.tf versions.tf
           terraform init
 
       - name: Terraform Format Check
@@ -233,7 +233,7 @@ jobs:
           }
           EOF
           
-          cat > providers.tf << EOF
+          cat > versions.tf << EOF
           provider "aws" {
             region = "${{ secrets.AWS_REGION_TF }}"
           }

@@ -1,12 +1,4 @@
 locals {
-  # Get destination_role_arn from TF_VAR environment variable
-  destination_role_arn = var.destination_role_arn
-
-  # # Create an effective global_values with the potentially overridden destination_role_arn
-  # effective_global_values = merge(var.global_values, {
-  #   destination_role_arn = local.destination_role_arn != "" ? local.destination_role_arn : var.global_values.destination_role_arn
-  # })
-
   # Common CloudFormation template parameters
   common_template_url_base = "https://aws-managed-cost-intelligence-dashboards.s3.amazonaws.com/cfn"
 

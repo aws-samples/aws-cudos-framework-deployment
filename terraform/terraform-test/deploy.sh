@@ -91,8 +91,8 @@ EOF
   fi
 fi
 
-# Modify provider.tf to use the same account for both providers and set region
-cat > "$TEMP_DIR/local_override.tf" << EOF
+# Add AWS providers for payer and destination account within th esame region
+cat > "$TEMP_DIR/versions.tf" << EOF
 provider "aws" {
   region = "${S3_REGION}"
 }
