@@ -74805,7 +74805,7 @@ Sheets:
   - Content: "<text-box>\n  <inline font-size=\"22.4px\">HOW TO USE:\_</inline>\n\
       \  <img src=\"https://d66mvi2kszsvt.cloudfront.net/resources/dashboard-visual-analytics/TAGsplorer/header.png\"\
       \ width=\"11\"/>\n  <br/>\n  <br/>\n  <inline font-size=\"18px\">1. Use the\_\
-      </inline>\n  <inline color=\"#61d1d6\" font-size=\"18px\">\n    <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy\"\
+      </inline>\n  <inline color=\"#61d1d6\" font-size=\"18px\">\n    <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/add-org-taxonomy.html\"\
       \ target=\"_blank\">Add Organizational Taxonomy</a>\n  </inline>\n  <inline\
       \ font-size=\"18px\">\_guide to add different dimensions of your organizational\
       \ taxonomy (e.g. tags, cost categories, business unit mapping) to the dashboard.</inline>\n\

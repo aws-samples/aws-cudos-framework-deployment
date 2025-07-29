@@ -10,7 +10,7 @@ The module creates the following CloudFormation stacks across two AWS accounts:
 2. **Data Exports Source Stack** - Deployed in the Payer account to collect cost data
 3. **Cloud Intelligence Dashboards Stack** - Deployed in the Data Collection account for QuickSight dashboards
 
-This architecture follows AWS best practices by separating the Payer account (Source/Management account) from the dashboard visualization (Data Collection account). For a detailed architecture diagram, see the [CID Architecture Documentation](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy#architecture).
+This architecture follows AWS best practices by separating the Payer account (Source/Management account) from the dashboard visualization (Data Collection account). For a detailed architecture diagram, see the [CID Architecture Documentation](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/deployment-in-global-regions.html#architecture).
 
 ## Prerequisites
 
@@ -244,7 +244,7 @@ All CloudFormation stacks are configured with 60-minute timeouts for create, upd
 <details>
 <summary><b>How do I backfill historical cost data?</b></summary>
 
-To backfill historical data for the Data Export, follow the instructions in the [CID Workshop Backfill Data Export section](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy#backfill-data-export).
+To backfill historical data for the Data Export, follow the instructions in the [CID Documentation Backfill Data Export section](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/deployment-in-global-regions.html#backfill-data-export).
 
 This process allows you to populate your dashboards with historical cost and usage data, ensuring you have a complete view of your AWS spending over time.
 
@@ -295,7 +295,7 @@ While the cross-account setup is recommended for production environments, you ca
 
 This configuration will deploy only the Data Exports Destination Stack and the Cloud Intelligence Dashboards Stack directly in your Payer account, skipping the separate Source Stack that would normally be deployed in a cross-account setup.
 
-> **Note:** Single-account deployment in your Payer account is simpler for testing but lacks the security benefits and separation of concerns provided by the recommended cross-account architecture. For production environments, we strongly recommend the cross-account approach. For more details on the recommended architecture, see the [CID Architecture Documentation](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy#architecture).
+> **Note:** Single-account deployment in your Payer account is simpler for testing but lacks the security benefits and separation of concerns provided by the recommended cross-account architecture. For production environments, we strongly recommend the cross-account approach. For more details on the recommended architecture, see the [CID Architecture Documentation](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/deployment-in-global-regions.html#architecture).
 
 </details>
 
@@ -317,6 +317,6 @@ This is the recommended approach for testing and development environments when y
 
 ## Additional Resources
 
-* [AWS Cloud Intelligence Dashboards Documentation](https://catalog.workshops.aws/awscid/en-US)
-* [Foundational Dashboards Deployment Workshop](https://catalog.workshops.aws/awscid/en-US/dashboards/foundational)
+* [AWS Cloud Intelligence Dashboards Documentation](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/)
+* [Foundational Dashboards Deployment Documentation](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboard-foundational.html)
 * [QuickSight Documentation](https://docs.aws.amazon.com/quicksight/latest/user/welcome.html)

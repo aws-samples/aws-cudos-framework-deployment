@@ -615,7 +615,7 @@ dashboards:
             \ representing different organizational levels, such as Departments, Business\
             \ Units, Projects, or Applications. The tagging-based structure provides scalable,\
             \ granular budget visibility, consolidated across accounts.\_</inline>\n  <inline\
-            \ font-size=\"16px\">\n    <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/aws-budgets\"\
+            \ font-size=\"16px\">\n    <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/budgets-dashboard.html\"\
             \ target=\"_blank\">Click here</a>\n  </inline>\n  <inline font-size=\"16px\"\
             >\_to learn more about AWS Budgets Dashboard.</inline>\n</text-box>"
           SheetTextBoxId: d870cb24-eab9-4cc9-9bdb-1c6673bf7705

@@ -21718,11 +21718,11 @@ dashboards:
             \  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
             >v1.0.0</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"24px\">\n      <a href=\"\
-            https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/euc-dashboard#usage-guide\"\
+            https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/euc-dashboard.html#usage-guide\"\
             \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-euc.md\"\
             \ target=\"_blank\">Changelog</a>\n    </inline>\n    <inline font-size=\"24px\"\
-            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/euc-dashboard#deployment\"\
+            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/euc-dashboard.html#deployment\"\
             \ target=\"_blank\">Deployment</a>\n    </inline>\n    <inline font-size=\"\
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/feedback-support\"\
             \ target=\"_blank\">Feedback</a>\n    </inline>\n    <inline font-size=\"24px\"\

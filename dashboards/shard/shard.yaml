@@ -8607,7 +8607,7 @@ dashboards:
               <ul>
                 <li>
                   Explore also the dedicated Health Dashboards [
-                  <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/health-events" target="_blank">1</a>
+                  <a href="https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/health-events-dashboard.html" target="_blank">1</a>
                   ]
                 </li>
               </ul>
@@ -13781,11 +13781,11 @@ dashboards:
             \ Dashboard)</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"24px\">v1.0.0</inline>\n\
             \  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
-            center\">\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
+            center\">\n    <inline font-size=\"24px\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/cora-dashboard.html#usage-guide\"\
             \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cora.md\"\
             \ target=\"_blank\">Changelog</a>\n    </inline>\n    <inline font-size=\"24px\"\
-            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#deployment\"\
+            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/cora-dashboard.html#deployment\"\
             \ target=\"_blank\">Deployment</a>\n    </inline>\n    <inline font-size=\"\
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/feedback-support\"\
             \ target=\"_blank\">Feedback</a>\n    </inline>\n    <inline font-size=\"24px\"\
