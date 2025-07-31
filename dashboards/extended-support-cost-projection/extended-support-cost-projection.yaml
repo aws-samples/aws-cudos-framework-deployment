@@ -5015,7 +5015,7 @@ dashboards:
             </text-box>"
           SheetTextBoxId: 95120cae-df6f-4a88-a44e-37b0e5265e84
         - Content: "<text-box>\n  <block align=\"center\"/>\n  <br/>\n  <block align=\"\
-            center\">\n    <inline color=\"#61d1d6\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/extended-support-cost-projection\"\
+            center\">\n    <inline color=\"#61d1d6\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/extended-support.html\"\
             \ target=\"_blank\">\n        <b>\n          <u>Extended Support Cost Projection</u>\n\
             \        </b>\n      </a>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"\
             center\">\n    <b>v4.0.2</b>\n  </block>\n  <br/>\n  <block align=\"right\"\

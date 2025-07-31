@@ -20,7 +20,6 @@ export S3_REGION="${S3_REGION:-$DEFAULT_REGION}"
 
 # Local development options (set to true/false)
 export BUILD_LOCAL_LAYER="${BUILD_LOCAL_LAYER:-true}"
-export USE_LOCAL_CID_TEMPLATE="${USE_LOCAL_CID_TEMPLATE:-true}"
 export LOCAL_ASSETS_BUCKET_PREFIX="${LOCAL_ASSETS_BUCKET_PREFIX:-cid-${ACCOUNT_ID}-test}"
 export LAYER_PREFIX="${LAYER_PREFIX:-cid-resource-lambda-layer}"
 export TEMPLATE_PREFIX="${TEMPLATE_PREFIX:-cid-testing/templates}"
@@ -67,7 +66,6 @@ echo "- Resource Prefix: $RESOURCE_PREFIX"
 echo "- Backend Type: $BACKEND_TYPE"
 echo "- AWS Region: $S3_REGION"
 echo "- Build Local Layer: $BUILD_LOCAL_LAYER"
-echo "- Use Local CID Template: $USE_LOCAL_CID_TEMPLATE"
 echo "- Local Assets Bucket: $FULL_BUCKET_NAME"
 echo "- Layer Prefix: $LAYER_PREFIX"
 echo "- Template Prefix: $TEMPLATE_PREFIX"
@@ -144,34 +142,6 @@ if [ "${BUILD_LOCAL_LAYER:-false}" = "true" ]; then
     cd "$PROJECT_ROOT"
   else
     echo "Error: build_lambda_layer.sh not found at $PROJECT_ROOT/assets/"
-  fi
-fi
-
-# Step 1: Prepare local CID template (if requested)
-if [ "${USE_LOCAL_CID_TEMPLATE:-false}" = "true" ]; then
-  echo ""
-  echo "=== Preparing Local CID Template ==="
-  
-  # Check if local cid-cfn.yml exists
-  if [ -f "$PROJECT_ROOT/cfn-templates/cid-cfn.yml" ]; then
-    echo "Found local cid-cfn.yml, preparing for deployment..."
-    
-    # Create a temporary S3 location for the local template
-    if [ ! -z "${LOCAL_ASSETS_BUCKET_PREFIX}" ]; then
-      # Use full bucket name with region suffix for template upload
-      FULL_BUCKET_NAME="$LOCAL_ASSETS_BUCKET_PREFIX-$S3_REGION"
-      echo "Uploading local cid-cfn.yml to: s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/"
-      aws s3 cp "$PROJECT_ROOT/cfn-templates/cid-cfn.yml" "s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/cid-cfn.yml"
-      
-      # Set environment variable to modify the template URL in deploy script
-      export LOCAL_CID_TEMPLATE_URL="https://$FULL_BUCKET_NAME.s3.amazonaws.com/$TEMPLATE_PREFIX/cid-cfn.yml"
-      echo "Local template URL: $LOCAL_CID_TEMPLATE_URL"
-    else
-      echo "Warning: LOCAL_ASSETS_BUCKET_PREFIX not set. Using local file path."
-      export LOCAL_CID_TEMPLATE_PATH="$PROJECT_ROOT/cfn-templates/cid-cfn.yml"
-    fi
-  else
-    echo "Warning: cfn-templates/cid-cfn.yml not found at $PROJECT_ROOT/cfn-templates/. Using remote template."
   fi
 fi
 

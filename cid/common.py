@@ -410,7 +410,7 @@ class Cid():
                 else:
                     if 'query' not in value:
                         raise CidCritical(f'Failed fetching parameter {prefix}{key}: parameter with type Athena must have query value.')
-                    query = Template(value['query']).safe_substitute(others)
+                    query = Template(value['query']).safe_substitute(params|others)
                     try:
                         res_list = self.athena.query(query)
                     except (self.athena.client.exceptions.ClientError, CidError, CidCritical) as exc:
@@ -1294,7 +1294,7 @@ class Cid():
             cid_print(f'\nThere are still {len(missing_datasets)} datasets missing: {missing_str}')
 
             # get rls status of existing datasets
-            found_dataset_objects = [self.qs.describe_dataset(ds_id) for ds_id in found_datasets.values()]
+            found_dataset_objects = [self.qs.describe_dataset(ds_id) for ds_id in found_datasets]
             rls_dataset_arns = [ds.rls_arn for ds in found_dataset_objects if ds.rls_arn]
             if rls_dataset_arns:
                 rls_dataset_arn = max(set(rls_dataset_arns), key=rls_dataset_arns.count) #get the most frequent
@@ -1916,7 +1916,10 @@ class Cid():
         if not resource_tags:
             return "'{}'"
         logger.debug(f'selected_tag_names = {resource_tags}')
-        array = ',\n                        '.join([f"('{name}', {tags_and_names[name]})" for name in resource_tags])
+        array = ',\n                        '.join(
+            [f"('{name}', {tags_and_names[name]})"
+            for name in resource_tags]
+        )
         res = f'''
             json_format(
                 CAST (

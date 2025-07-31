@@ -362,7 +362,7 @@ def export_analysis(qs, athena, glue):
         # We can potentially reconsider this and use IDs at some point
         'datasets': sorted(list(set(list(datasets.keys()) + resources_datasets)))
     }
-    dashboard_resource['name'] = dashboard_resource.get('name')
+    dashboard_resource['name'] = dashboard_resource.get('name') or analysis['Name']
     dashboard_resource['dashboardId'] = dashboard_id
     dashboard_resource['category'] = get_parameters().get('category', dashboard_resource.get('category', 'Custom'))
 

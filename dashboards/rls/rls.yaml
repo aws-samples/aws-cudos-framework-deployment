@@ -23,11 +23,6 @@ dashboards:
         Identifier: rls_dataset
       FilterGroups: []
       Options:
-        CustomActionDefaults:
-          highlightOperation:
-            Trigger: DATA_POINT_CLICK
-        ExcludedDataSetArns: []
-        QBusinessInsightsStatus: DISABLED
         WeekStart: SUNDAY
       ParameterDeclarations: []
       Sheets:

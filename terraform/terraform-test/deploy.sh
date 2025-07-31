@@ -1,46 +1,53 @@
 #!/bin/bash
 set -e
 
+# Verify account access
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+echo "Account ID: $ACCOUNT_ID"
+
 # Configuration
 BACKEND_TYPE=${BACKEND_TYPE:-"local"}  # Can be "local" or "s3"
 S3_BUCKET=${S3_BUCKET:-""}
 S3_KEY=${S3_KEY:-"terraform/cid-test/terraform.tfstate"}
 S3_REGION=${S3_REGION:-"eu-west-2"}  # Default to eu-west-2
 BACKEND_REGION=${BACKEND_REGION:-"us-east-1"}  # Backend bucket region
+TEMPLATE_PREFIX="${TEMPLATE_PREFIX:-cid-testing/templates}"
+LOCAL_ASSETS_BUCKET_PREFIX="${LOCAL_ASSETS_BUCKET_PREFIX:-cid-${ACCOUNT_ID}-test}"
 
 # Set AWS region for AWS CLI commands
 export AWS_DEFAULT_REGION="${S3_REGION}"
 export AWS_REGION="${S3_REGION}"  # Some AWS tools use this variable instead
-
-# Verify account access
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-echo "Account ID: $ACCOUNT_ID"
-
-# Get the script directory and project root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-TERRAFORM_DIR="$PROJECT_ROOT/cicd-deployment"
 
 # Create a temporary directory for modified Terraform files
 TEMP_DIR=$(mktemp -d)
 echo "Creating temporary Terraform directory at $TEMP_DIR"
 
 # Copy Terraform files to temporary directory
-cp -r "$TERRAFORM_DIR"/* "$TEMP_DIR/"
-
-# Modify locals.tf to use local CID template if specified
-if [ ! -z "${LOCAL_CID_TEMPLATE_URL}" ]; then
-  echo "Modifying locals.tf to use local CID template: $LOCAL_CID_TEMPLATE_URL"
-  sed -i.bak "s|cudos        = \"\${local.common_template_url_base}/\${var.global_values.cid_cfn_version}/cid-cfn.yml\"|cudos        = \"$LOCAL_CID_TEMPLATE_URL\"|g" "$TEMP_DIR/locals.tf"
-fi
+cp -r ./terraform/cicd-deployment/* "$TEMP_DIR/"
 
 # Modify variables.tf to use local lambda layer if specified
-if [ ! -z "${LOCAL_LAYER_BUCKET}" ]; then
-  echo "Modifying variables.tf to use local lambda layer bucket: $LOCAL_LAYER_BUCKET"
-  sed -i.bak "s|lambda_layer_bucket_prefix           = \"aws-managed-cost-intelligence-dashboards\"|lambda_layer_bucket_prefix           = \"$LOCAL_LAYER_BUCKET\"|g" "$TEMP_DIR/variables.tf"
+if [ ! -z "${LOCAL_ASSETS_BUCKET_PREFIX}" ]; then
+
+  echo "=== Preparing Local CID Template ==="
+  FULL_BUCKET_NAME="$LOCAL_ASSETS_BUCKET_PREFIX-$S3_REGION"
+  echo "Uploading local cid-cfn.yml to: s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/"
+  aws s3 cp "./cfn-templates/cid-cfn.yml" "s3://$FULL_BUCKET_NAME/$TEMPLATE_PREFIX/cid-cfn.yml"
+  LOCAL_CID_TEMPLATE_URL="https://$FULL_BUCKET_NAME.s3.amazonaws.com/$TEMPLATE_PREFIX/cid-cfn.yml"
+
+  echo "Modifying locals.tf to use local CID template: $LOCAL_CID_TEMPLATE_URL"
+  sed -i.bak "s|cudos        = \"\${local.common_template_url_base}/\${var.global_values.cid_cfn_version}/cid-cfn.yml\"|cudos        = \"$LOCAL_CID_TEMPLATE_URL\"|g" "$TEMP_DIR/locals.tf"
+
+  LAYER_ZIP=$(./assets/build_lambda_layer.sh)
+  aws s3 cp "$LAYER_ZIP" "s3://$FULL_BUCKET_NAME/cid-resource-lambda-layer/$LAYER_ZIP"
+
+  echo "Modifying variables.tf to use local lambda layer bucket: $LOCAL_ASSETS_BUCKET_PREFIX"
+  sed -i.bak "s|lambda_layer_bucket_prefix           = \"aws-managed-cost-intelligence-dashboards\"|lambda_layer_bucket_prefix           = \"$LOCAL_ASSETS_BUCKET_PREFIX\"|g" "$TEMP_DIR/variables.tf"
 fi
 
+
+
 # Create a directory to store the tfstate file
+SCRIPT_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 TFSTATE_DIR="$SCRIPT_DIR/tfstate"
 mkdir -p "$TFSTATE_DIR"
 

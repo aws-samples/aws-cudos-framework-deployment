@@ -5,7 +5,7 @@
 * Improved ResourceType categorization to explicitly categorize Unattached EBS Volumes with new Resource Type 'EBS Volume: Unattached'
 
 ## CORA - v0.0.8
-Added support for organizational taxonomy https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy
+Added support for organizational taxonomy https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/add-organizational-taxonomy.html
 
 ## CORA - v0.0.7
 * Added Support of Idle recommendations

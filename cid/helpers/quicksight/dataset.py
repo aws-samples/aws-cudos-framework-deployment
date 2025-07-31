@@ -1,5 +1,5 @@
+import uuid
 import logging
-from uuid import uuid4
 from copy import deepcopy
 
 import yaml
@@ -15,8 +15,14 @@ DATASET_PROPERTIES = [
 ]
 
 
-class Dataset(CidQsResource):
+def string_to_uuid(input_string):
+    """Generate a UUID from a string using hash.
+    """
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, input_string))
 
+class Dataset(CidQsResource):
+    """ Dataset
+    """
     def __init__(self, raw: dict, qs=None, athena=None) -> None:
         super().__init__(raw)
         self.qs = qs
@@ -194,7 +200,7 @@ class Dataset(CidQsResource):
                         "Columns": [
                             {
                                 "ColumnName": col_name,
-                                "ColumnId": str(uuid4()),
+                                "ColumnId": string_to_uuid(dataset['Name'] + col_name),
                                 "Expression": expression
                             }
                         ]
