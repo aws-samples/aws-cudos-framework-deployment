@@ -17776,13 +17776,13 @@ dashboards:
                   \ font-size=\"22.4px\">\n      <b>Cost and Usage Dashboard KPI Optimization\
                   \ Solution</b>\n    </inline>\n  </block>\n  <br/>\n  <block align=\"\
                   center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline background-color=\"\
-                  PrimaryBackground\" font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi#kpi-dashboard\"\
+                  PrimaryBackground\" font-size=\"24px\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/cudos-cid-kpi.html#kpi-dashboard\"\
                   \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
                   24px\">\_|\_</inline>\n    <inline background-color=\"PrimaryBackground\"\
                   \ font-size=\"24px\">\n      <a href=\"https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-kpi.md\"\
                   \ target=\"_blank\">Changelog</a>\n    </inline>\n    <inline font-size=\"\
                   24px\">\_|\_</inline>\n    <inline background-color=\"PrimaryBackground\"\
-                  \ font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi/deploy\"\
+                  \ font-size=\"24px\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/deployment-in-global-regions.html\"\
                   \ target=\"_blank\">Deployment</a>\n    </inline>\n    <inline font-size=\"\
                   24px\">\_|\_</inline>\n    <inline background-color=\"PrimaryBackground\"\
                   \ font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/feedback-support\"\

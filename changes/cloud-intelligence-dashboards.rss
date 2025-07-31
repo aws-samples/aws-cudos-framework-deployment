@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>AWS Cloud Intelligence Dashboards</title>
-    <link>https://catalog.workshops.aws/awscid/en-US</link>
+    <link>https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/</link>
     <atom:link href="https://cid.workshops.aws.dev/feed/cloud-intelligence-dashboards.rss" rel="self" type="application/rss+xml"/>
     <description>The Cloud Intelligence Dashboards is an open-source framework, lovingly cultivated and maintained by a group of customer-obsessed AWSers, that gives customers the power to get high-level and granular insight into their cost and usage data. Supported by the Well-Architected framework, the dashboards can be deployed by any customer using a CloudFormation template or a command-line tool in their environment in under 30 minutes. These dashboards help you to drive financial accountability, optimize cost, track usage goals, implement best-practices for governance, and achieve operational excellence across all your organization.</description>
     <lastBuildDate>Mon, 2 Jun 2025 09:00:00 GMT</lastBuildDate>
@@ -71,7 +71,7 @@
    <item>
       <title>[New significant feature] Add Organizational Taxonomy with cid-cmd without dashboard customization</title>
       <link>
-        https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy
+        https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/add-org-taxonomy.html
       </link>
       <pubDate>Mon, 2 Jun 2025 09:00:00 GMT</pubDate>
       <category><![CDATA[Dashboard Update]]></category>
@@ -81,7 +81,7 @@
 <div>
   <p>Starting today, you can use <code>cid-cmd</code> to add organizational taxonomy—such as tags, cost categories, and account mappings to Cloud Intelligence Dashboards without needing to customize the dashboards, while retaining the ability to update to the latest versions.</p>
   <p>Learn more in the new documentation guide: 
-    <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy">Add Organizational Taxonomy</a>
+    <a href="https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/add-org-taxonomy.html">Add Organizational Taxonomy</a>
   </p>
 </div>    
     ]]></content:encoded>    
@@ -110,7 +110,7 @@
     </li>
 
     <li><strong>Taxonomy Explorer</strong>: 'TAGSplorer' sheet completely redesigned and renamed to <em>Taxonomy Explorer</em>. Now allows interactive exploration of cost and usage across 2 Taxonomy Dimensions (e.g. tags and account-level mappings), added via the new 
-    <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/add-organizational-taxonomy">Add Organizational Taxonomy</a> capability.</li>
+    <a href="https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/add-org-taxonomy.html">Add Organizational Taxonomy</a> capability.</li>
 
     <li><strong>AI/ML</strong>: Added 'Amazon Bedrock Model Unit Cost' and 'Amazon Bedrock Cost per Legal Entity' visuals. Updated <em>Bedrock UsageType Group</em> for more accurate categorization. Added <em>Model Name</em> calculated field to group different model IDs on 'Amazon Bedrock Daily Cost per Resource'.</li>
 
@@ -304,7 +304,7 @@ cid-cmd update --dashboard-id extended-support-cost-projection --force --recursi
     <item>
       <title>[Update] Amazon Connect Cost Insight Dashboard v1.1.0</title>
       <link>
-        https://catalog.workshops.aws/awscid/en-US/dashboards/additional/amazon-connect-cost-insight-dashboard
+        https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/connect-cost-insight.html
       </link>
       <pubDate>Fri, 10 Jan 2025 12:00:00 GMT</pubDate>
       <category><![CDATA[Dashboard Update]]></category>
@@ -316,7 +316,7 @@ cid-cmd update --dashboard-id extended-support-cost-projection --force --recursi
     <item>
       <title>[New Dashboard] Amazon Connect Cost Insight Dashboard</title>
       <link>
-        https://catalog.workshops.aws/awscid/en-US/dashboards/additional/amazon-connect-cost-insight-dashboard
+        https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/connect-cost-insight.html
       </link>
       <pubDate>Wed, 18 Dec 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[New Dashboard]]></category>
@@ -354,7 +354,7 @@ cid-cmd update --dashboard-id extended-support-cost-projection --force --recursi
       Each tab progressively moves from broad insights to specific details, helping you effectively monitor your contact center operations.
     </p>
     <p>
-      <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/additional/amazon-connect-cost-insight-dashboard#example-dashboard" target="_blank">
+      <a href="https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/connect-cost-insight.html#example-dashboard" target="_blank">
         Learn more
       </a>
     </p>
@@ -365,7 +365,7 @@ cid-cmd update --dashboard-id extended-support-cost-projection --force --recursi
     <item>
       <title>[New Dashboard] AWS Support Cases Radar</title>
       <link>
-        https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/support-cases-radar
+        https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/support-cases-radar.html
       </link>
       <pubDate>Tue, 17 Dec 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[New Dashboard]]></category>
@@ -380,7 +380,7 @@ cid-cmd update --dashboard-id extended-support-cost-projection --force --recursi
       With a unified view of all support cases, this dashboard empowers cloud governance teams to enhance operational efficiency and maximize the value delivered by AWS Support.
     </p>
     <p>
-      <a href="https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/support-cases-radar" target="_blank">
+      <a href="https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/support-cases-radar.html" target="_blank">
         Learn more
       </a>
     </p>
@@ -492,7 +492,7 @@ cid-cmd update --dashboard-id extended-support-cost-projection --force --recursi
     </item>
     <item>
       <title>[Update] CUDOS v5.4.0</title>
-      <link>https://catalog.workshops.aws/awscid/en-US/dashboards/foundational/cudos-cid-kpi</link>
+      <link>https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/cudos-cid-kpi.html</link>
       <pubDate>Fri, 24 May 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[Update]]></category>
       <guid isPermaLink="false">6f2ce2d1-1695-4c3d-bdf5-2762dcd46d63</guid>
@@ -515,7 +515,7 @@ cid-cmd update --dashboard-id extended-support-cost-projection --force --recursi
 
     <item>
       <title>[Update] Health Events Dashboard v2.0.0</title>
-      <link>https://catalog.workshops.aws/awscid/en-US/dashboards/advanced/health-events</link>
+      <link>https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/health-events-dashboard.html</link>
       <pubDate>Mon, 30 Sep 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[Update]]></category>
       <guid isPermaLink="false">75f32556-7e88-4297-a087-14b4c6ad2a95</guid>
@@ -545,7 +545,7 @@ cid-cmd update --dashboard-id extended-support-cost-projection --force --recursi
     <item>
       <title>[New Dashboard] SCAD Containers Cost Allocation Dashboard v1.0.0</title>
       <link>
-        https://catalog.workshops.aws/awscid/en-US/dashboards/additional/scad-containers-cost-allocation</link>
+        https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/scad-containers-dashboard.html</link>
       <pubDate>Thu, 25 Apr 2024 12:00:00 GMT</pubDate>
       <category><![CDATA[New dashboard]]></category>
       <guid isPermaLink="false">8e97f6a0-0dc2-4ed2-81df-cd43734f0a7d</guid>

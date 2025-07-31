@@ -19,7 +19,7 @@ Metadata:
           - DeployCostIntelligenceDashboard
           - DeployKPIDashboard
       - Label:
-          default: Trusted Advisor and Compute Optimizer Dashboards. To deploy these two dashboard, you must first deploy the Optimization Data Collection Lab (https://catalog.workshops.aws/awscid/en-US/data-collection/)
+          default: Trusted Advisor and Compute Optimizer Dashboards. To deploy these two dashboard, you must first deploy the Optimization Data Collection Lab (https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/data-collection.html)
         Parameters:
           - OptimizationDataCollectionBucketPath
           - DeployTAODashboard
@@ -198,12 +198,12 @@ Parameters:
     AllowedValues: ["yes", "no"]
   DeployTAODashboard:
     Type: String
-    Description: Deploy Trusted Advisor Organizational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://catalog.workshops.aws/awscid/en-US/data-collection/
+    Description: Deploy Trusted Advisor Organizational Dashboard (TAO) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/data-collection.html
     Default: "no"
     AllowedValues: ["yes", "no"]
   DeployComputeOptimizerDashboard:
     Type: String
-    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://catalog.workshops.aws/awscid/en-US/data-collection/
+    Description: Deploy Compute Optimizer Dashboard (COD) - WARNING! Before deploying this dashboard, you need Optimization Data Collection Lab to be installed first https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/data-collection.html
     Default: "no"
     AllowedValues: ["yes", "no"]
   OptimizationDataCollectionBucketPath:

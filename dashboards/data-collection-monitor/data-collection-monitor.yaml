@@ -1788,11 +1788,11 @@ dashboards:
             \    </inline>\n  </block>\n  <br/>\n  <block align=\"center\">\n    <inline\
             \ font-size=\"54.88px\">v1.0.1</inline>\n  </block>\n  <br/>\n  <block align=\"\
             center\"/>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
-            >\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards\" target=\"\
+            >\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboards.html\" target=\"\
             _blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"24px\">\_\
             |\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cod.md\"\
             \ target=\"_blank\">Changelog</a>\n    </inline>\n    <inline font-size=\"24px\"\
-            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards#steps\"\
+            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboards.html#steps\"\
             \ target=\"_blank\">Deployment</a>\n    </inline>\n    <inline font-size=\"\
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/feedback-support\"\
             \ target=\"_blank\">Feedback</a>\n    </inline>\n    <inline font-size=\"24px\"\

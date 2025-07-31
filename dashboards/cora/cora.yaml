@@ -2265,10 +2265,10 @@ dashboards:
             </text-box>
           SheetTextBoxId: 1a5e9b89-f55b-4ed5-82f7-1b8ffd1e02f1
         - Content: "<text-box>\n  <ul>\n    <li>\n      We recommend reviewing rightsizing\
-            \ first and then proceed with commitments. See\_more [\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
+            \ first and then proceed with commitments. See\_more [\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/cora-dashboard.html#usage-guide\"\
             \ target=\"_blank\">1</a>\n      ].\n    </li>\n    <li>\n      There might\
             \ be a\_difference\_with data presented here and on the Console [\n      <a\
-            \ href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#difference-with-ui\"\
+            \ href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/cora-dashboard.html#difference-with-ui\"\
             \ target=\"_blank\">2</a>\n      ].\n    </li>\n    <li>Top Actions are deduplicating\
             \ actions choosing the best per Resource Id.</li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 2bb35924-202f-4467-a958-4feb38e7eff3
@@ -6779,11 +6779,11 @@ dashboards:
             \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
             >v0.0.9</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n\
             \  <block align=\"center\">\n    <inline font-size=\"24px\">\n      <a href=\"\
-            https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#usage-guide\"\
+            https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/cora-dashboard.html#usage-guide\"\
             \ target=\"_blank\">Documentation</a>\n    </inline>\n    <inline font-size=\"\
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://github.com/aws-samples/aws-cudos-framework-deployment/blob/main/changes/CHANGELOG-cora.md\"\
             \ target=\"_blank\">Changelog</a>\n    </inline>\n    <inline font-size=\"24px\"\
-            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/dashboards/additional/cora#deployment\"\
+            >\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/cora-dashboard.html#deployment\"\
             \ target=\"_blank\">Deployment</a>\n    </inline>\n    <inline font-size=\"\
             24px\">\_|\_</inline>\n    <inline font-size=\"24px\">\n      <a href=\"https://catalog.workshops.aws/awscid/en-US/feedback-support\"\
             \ target=\"_blank\">Feedback</a>\n    </inline>\n    <inline font-size=\"24px\"\
