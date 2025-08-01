@@ -13,6 +13,7 @@ SELECT DISTINCT
 "timestamp",
 "accountname",
 "status",
+"aws config rule",
 "acl allows list",
 "bucket name",
 "acl allows upload/delete",
