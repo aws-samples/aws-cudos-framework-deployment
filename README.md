@@ -26,7 +26,7 @@ Cloud Intelligence Dashboards Framework provides AWS customers with [more then 2
 * Advanced Dashboards - Require CID Data Collection and CUR
 * Additional Dashboards - Require various custom datasources or created for very specific use cases.
 
-We recommend starting with deployment of [Foundational Dashboards](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboard-foundational.html). Then deploy [Data Collection](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/data-collection.html) and [Advanced Dashboards](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboards.html#advanced-dashboards). Check for [Additional](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboards.html#additional-dashboards) Dashboards.
+We recommend starting with deployment of [Foundational Dashboards](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboard-foundational.html). Then deploy [Data Collection](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/data-collection.html) and [Advanced Dashboards](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboards.html#advanced-dashboards). Check for [Additional](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/dashboards.html#additional) Dashboards.
 
 
 [![Documentation >](assets/images/documentation.svg)](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/deployment-in-global-regions.html)
