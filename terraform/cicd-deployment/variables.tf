@@ -265,9 +265,3 @@ variable "global_values" {
     error_message = "Environment must be one of: dev, staging, prod"
   }
 }
-
-variable "destination_role_arn" {
-  description = "ARN of the role to assume in the destination account"
-  type        = string
-  default     = null
-}

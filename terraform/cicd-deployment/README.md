@@ -28,8 +28,47 @@ This architecture follows AWS best practices by separating the Payer account (So
 
 ## Quick Start
 
-1. Configure your AWS credentials for both accounts
-2. Create a `terraform.tfvars` file with your global values
+1. Call the Terraform module using the correct AWS providers:
+
+```bash
+module "cloud-intelligence-dashboard" {
+  source = "github.com/aws-solutions-library-samples/cloud-intelligence-dashboards-framework//terraform/cicd-deployment?ref=<release-tag>"
+  
+  providers = {
+    aws = aws.payer
+    aws.destination = aws.destination
+  }
+
+  global_values = {
+    destination_account_id = "123456789012"      # 12-digit Data Collection account ID
+    source_account_ids     = "987654321098"      # Comma-separated list of Payer account IDs
+    aws_region             = "us-east-1"         # AWS region for deployment
+    quicksight_user        = "user/example"      # QuickSight username
+    cid_cfn_version        = "4.2.7"             # CID CloudFormation version - Supporting from 4.2.7
+    data_export_version    = "0.5.0"             # Data Export version
+    environment            = "dev"               # Environment (dev, staging, prod)
+  }
+
+}
+
+provider "aws" {
+  alias  = "payer" # optional
+  region = <region>
+  assume_role { # optional
+    role_arn = <payer iam role (if required)>
+  }
+}
+ 
+provider "aws" {
+  alias  = "destination_account"
+  region = <region>
+  assume_role { # optional
+    role_arn = <destination iam role (if required)>
+  }
+}
+```
+
+2. Configure AWS credentials for both accounts, or use credentials capable of assuming the IAM role defined in the provider(s).
 3. Run the standard Terraform workflow:
 
 ```bash
@@ -42,7 +81,7 @@ terraform apply
 
 ### Required Variables
 
-Configure these values in your `terraform.tfvars` file:
+The module expects the following input variables:
 
 ```hcl
 global_values = {
@@ -174,38 +213,24 @@ Access the dashboard URLs from the outputs to view your dashboards in QuickSight
 
 ## Customization
 
-### Backend Configuration
-
-The module uses an S3 backend for state storage. Configure your backend in a `backend.tf` file:
-
-```hcl
-terraform {
-  backend "s3" {
-    bucket       = "your-terraform-state-bucket"
-    key          = "terraform/cid/terraform.tfstate"
-    region       = "us-east-1"   # Replace with your desired region
-    use_lockfile = true          # terraform-state-lock
-    encrypt      = true
-  }
-}
-```
-
 ### Provider Configuration
 
-Configure the AWS providers for both accounts in a `provider.tf` file:
+The module needs access to both the payer/master and destination accounts to deploy CloudFormation stacks. The configuration below shows a sample providers setup:
 
 ```hcl
 provider "aws" {
-  region = var.global_values.aws_region
-  # Payer account credentials
+  alias  = "payer" # optional
+  region = <region>
+  assume_role { # optional
+    role_arn = <payer iam role (if required)>
+  }
 }
-
+ 
 provider "aws" {
   alias  = "destination_account"
-  region = var.global_values.aws_region
-  # Data Collection account credentials
-  assume_role {
-    role_arn = "arn:aws:iam::${var.global_values.destination_account_id}:role/YourCrossAccountRole"
+  region = <region>
+  assume_role { # optional
+    role_arn = <destination iam role (if required)>
   }
 }
 ```
@@ -253,7 +278,9 @@ This process allows you to populate your dashboards with historical cost and usa
 <details>
 <summary><b>Can I deploy everything in a single account instead of using cross-account setup?</b></summary>
 
-While the cross-account setup is recommended for production environments, you can deploy the entire solution in your Payer account without requiring a separate Data Collection account. This single-account approach is simpler for testing or development purposes. To do this:
+The module is configured by default for cross-account deployment, which is recommended for production environments. 
+If you prefer to deploy in a single account, you can deploy the entire solution within your payer account, without the need for a separate data collection account.
+This single-account setup is simpler and better suited for testing or development purposes.
 
 1. **Modify main.tf**:
    * Comment out or remove the `resource "aws_cloudformation_stack" "cid_dataexports_source"` block
@@ -262,10 +289,10 @@ While the cross-account setup is recommended for production environments, you ca
 2. **Modify outputs.tf**:
    * Remove or comment out the `output "cid_dataexports_source_outputs"` block
 
-3. **Remove the variable from terraform.tfvars**:
+3. **Remove the variable**:
    * Remove or comment out the `cid_dataexports_source` variable block
 
-4. **Update terraform.tfvars**:
+4. **Create terraform.tfvars**:
 
    ```hcl
    global_values = {
@@ -282,15 +309,20 @@ While the cross-account setup is recommended for production environments, you ca
 5. **Simplify provider.tf**:
 
    ```hcl
-   provider "aws" {
-     region = var.global_values.aws_region
-   }
-
-   provider "aws" {
-     alias  = "destination_account"
-     region = var.global_values.aws_region
-     # No assume_role needed as everything is deployed in the Payer account
-   }
+  provider "aws" {
+    region = <region>
+    assume_role { # optional
+      role_arn = <payer iam role (if required)>
+    }
+  }
+  
+  provider "aws" {
+    alias  = "destination_account"
+    region = <region>
+    assume_role { # optional
+      role_arn = <same payer iam role (if required)>
+    }
+  }
    ```
 
 This configuration will deploy only the Data Exports Destination Stack and the Cloud Intelligence Dashboards Stack directly in your Payer account, skipping the separate Source Stack that would normally be deployed in a cross-account setup.
