@@ -8,7 +8,7 @@ dashboards:
     dashboardId: msih
     category: Advanced
     theme: MIDNIGHT
-    version: v0.8.4
+    version: v0.8.5
     data: |-
       AnalysisDefaults:
         DefaultNewSheetConfiguration:
@@ -233,7 +233,33 @@ dashboards:
       - DataSetIdentifier: summary_view
         Expression: concat(region, "-", {video_tier}, " Tier-", {video_codec}, " Codec-",
           {video_resolution}, " Resolution-", {video_quality}, " Quality-", {video_frame_rate})
-        Name: emc_transcode_params_friendly
+        Name: emc_transcode_profile_friendly
+      - DataSetIdentifier: summary_view
+        Expression: |-
+          ifelse(
+              isNull(${EmlIdleResourceType}) and contains(operation, "INACTIVE_"), Cost,
+              ${EmlIdleResourceType} = "Channels" and operation = "INACTIVE_CHANNEL", Cost,
+              ${EmlIdleResourceType} = "Inputs" and operation = "INACTIVE_INPUT", Cost,
+              0
+          )
+        Name: eml_idle_cost
+      - DataSetIdentifier: summary_view
+        Expression: |-
+          ifelse(
+              operation = "INACTIVE_CHANNEL", "Channel",
+              operation = "INACTIVE_INPUT", "Input",
+              ""
+          )
+        Name: eml_idle_resource_type
+      - DataSetIdentifier: summary_view
+        Expression: |-
+          ifelse(
+              isNull(${EmlIdleResourceType}) and contains(operation, "INACTIVE_"), {usage_quantity},
+              ${EmlIdleResourceType} = "Channels" and operation = "INACTIVE_CHANNEL", {usage_quantity},
+              ${EmlIdleResourceType} = "Inputs" and operation = "INACTIVE_INPUT", {usage_quantity},
+              0
+          )
+        Name: eml_idle_usage
       - DataSetIdentifier: summary_view
         Expression: |-
           ifelse(
@@ -384,6 +410,11 @@ dashboards:
         Name: service_resource
       - DataSetIdentifier: summary_view
         Expression: |-
+          /*strlen(${EmlIdleResourceType})*/
+          isNull(${EmlIdleResourceType})
+        Name: t
+      - DataSetIdentifier: summary_view
+        Expression: |-
           ifelse(
               {is_transcode_usage} = 0, NULL,
               contains({product_code}, "MediaLive"), concat(ifelse({video_pipeline}="Single","Single Pipe-","Std. Pipe-"), {eml_input_output}, "-", region, "-", {video_codec}, " Codec-", {video_resolution}, " Res-", {video_frame_rate}, "-", ifelse({video_quality}="Standard", "Std.", "Non-Std."), " Qlty."),
@@ -505,7 +536,6 @@ dashboards:
               - 1b537ee6-da93-4aeb-bd4b-21ac759765e3
               - 22721501-6e92-42a3-afbe-6b121139380a
               - 973a39e9-2e7b-464a-b5ec-228ca63bc806
-              - 6fdf0bdb-fc66-46f0-a39a-414bab03e75b
               - d86c9502-d961-4128-a14c-1a270e5bd7ab
               - a7758050-a37c-4325-9bbb-93da77d55bdc
               - dda80613-fc61-4813-bab4-5ade11b0e377
@@ -518,6 +548,8 @@ dashboards:
               - 06cdaa63-e1ba-4fb3-bcb6-ff1e7084eb79
               - 3907fe91-71ec-41f2-b746-d4045ccbbcca
               - 03fb8657-fa8d-4332-932a-3888d9346922
+              - a8038fd5-0d03-4ecc-ba1a-4fe01ee12ca7
+              - f72c20d2-453a-4002-bc30-13d4b5f7aabc
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: ad7292f8-5b2b-483c-96e5-032b4422b838
@@ -648,7 +680,6 @@ dashboards:
               - 1b597376-b18b-4431-aa95-ac31b89e2aa5
               - 9736ea43-a185-489d-a24d-08c3650f0641
               - 1b537ee6-da93-4aeb-bd4b-21ac759765e3
-              - 6fdf0bdb-fc66-46f0-a39a-414bab03e75b
               - 17dd9f79-c673-4cd9-8a21-63c118574701
               - 71c2c777-681b-4029-9ea8-f4e76e7e6842
               - 4b0fff66-6edd-4323-ae33-ea5bb2cf7364
@@ -660,6 +691,8 @@ dashboards:
               - 0088516c-a8cc-402a-87de-f4bcd3b0e72c
               - ebd8fca8-8a7d-4d71-b1c8-b6995ba75427
               - d86c9502-d961-4128-a14c-1a270e5bd7ab
+              - a8038fd5-0d03-4ecc-ba1a-4fe01ee12ca7
+              - f72c20d2-453a-4002-bc30-13d4b5f7aabc
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 57f4ce55-ed37-4ba7-941e-3f503996b09e
@@ -865,8 +898,8 @@ dashboards:
               - c1385e51-f08f-4346-8afb-860335e07281
               - 22721501-6e92-42a3-afbe-6b121139380a
               - 973a39e9-2e7b-464a-b5ec-228ca63bc806
-              - 6fdf0bdb-fc66-46f0-a39a-414bab03e75b
               - 06cdaa63-e1ba-4fb3-bcb6-ff1e7084eb79
+              - a8038fd5-0d03-4ecc-ba1a-4fe01ee12ca7
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: a6b4a8ed-094a-4167-a0bb-45fd89b8beef
@@ -917,6 +950,7 @@ dashboards:
               - 0088516c-a8cc-402a-87de-f4bcd3b0e72c
               - 0114706e-f2b5-4650-8047-b7264c7643ba
               - d86c9502-d961-4128-a14c-1a270e5bd7ab
+              - f72c20d2-453a-4002-bc30-13d4b5f7aabc
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: 0583a1ea-9c16-4546-b5f2-ed8c3ad71efa
@@ -1817,28 +1851,6 @@ dashboards:
               - 897b5e5b-e5b3-4287-8b42-4a1278455edb
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
-        FilterGroupId: 5048f8df-815a-4750-a422-7541190dbf60
-        Filters:
-        - CategoryFilter:
-            Column:
-              ColumnName: elemental_purchase_option
-              DataSetIdentifier: summary_view
-            Configuration:
-              FilterListConfiguration:
-                CategoryValues:
-                - On Demand
-                MatchOperator: CONTAINS
-                NullOption: NON_NULLS_ONLY
-            FilterId: c7a9c8d3-1207-4656-b76a-70e61a610337
-        ScopeConfiguration:
-          SelectedSheets:
-            SheetVisualScopingConfigurations:
-            - Scope: SELECTED_VISUALS
-              SheetId: 68445e28-b42d-4972-b9d4-8f3afb8c56bf
-              VisualIds:
-              - 1b537ee6-da93-4aeb-bd4b-21ac759765e3
-        Status: ENABLED
-      - CrossDataset: SINGLE_DATASET
         FilterGroupId: 0ecfe9bc-e6c1-4364-83a4-d811fb4a7150
         Filters:
         - TimeRangeFilter:
@@ -2604,8 +2616,8 @@ dashboards:
               SheetId: 68445e28-b42d-4972-b9d4-8f3afb8c56bf
               VisualIds:
               - 07a67f28-ed4c-4d8a-a917-6b1fc21de7ab
-              - 6fdf0bdb-fc66-46f0-a39a-414bab03e75b
               - 4b0fff66-6edd-4323-ae33-ea5bb2cf7364
+              - a8038fd5-0d03-4ecc-ba1a-4fe01ee12ca7
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: ea0f6103-1151-4bd9-8e06-c5a190c54829
@@ -2854,9 +2866,12 @@ dashboards:
               DataSetIdentifier: summary_view
             Configuration:
               FilterListConfiguration:
+                CategoryValues:
+                - CHANNEL_INPUT
+                - CHANNEL_OUTPUT
+                - CHANNEL_BANDWIDTH
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
-                SelectAllOptions: FILTER_ALL_VALUES
             FilterId: 8aebb729-410a-4343-8b43-235fedeb2a74
         ScopeConfiguration:
           SelectedSheets:
@@ -4182,6 +4197,7 @@ dashboards:
               VisualIds:
               - 17dd9f79-c673-4cd9-8a21-63c118574701
               - 0114706e-f2b5-4650-8047-b7264c7643ba
+              - f72c20d2-453a-4002-bc30-13d4b5f7aabc
         Status: ENABLED
       - CrossDataset: SINGLE_DATASET
         FilterGroupId: c5ec3024-d8c7-4208-80e1-b9c0dda2fc5c
@@ -4563,16 +4579,9 @@ dashboards:
               DataSetIdentifier: summary_view
             Configuration:
               FilterListConfiguration:
-                CategoryValues:
-                - Channel Feature (Hrs)
-                - Data Transfer (GB)
-                - Idle Channel (Hrs)
-                - Idle Input (Hrs)
-                - Input Transcoding (Hrs)
-                - Output Transcoding (Hrs)
-                - Reservation Fee ($)
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
             FilterId: 6e007429-1ef1-48f4-a6b1-8439334c4ea7
         ScopeConfiguration:
           SelectedSheets:
@@ -5045,12 +5054,9 @@ dashboards:
               DataSetIdentifier: summary_view
             Configuration:
               FilterListConfiguration:
-                CategoryValues:
-                - DiscountedUsage
-                - RIFee
-                - Usage
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
             FilterId: e7701794-68a0-4b0d-9d05-4fa3a4dc214f
         ScopeConfiguration:
           SelectedSheets:
@@ -5069,10 +5075,9 @@ dashboards:
               DataSetIdentifier: summary_view
             Configuration:
               FilterListConfiguration:
-                CategoryValues:
-                - '163077453322:us-west-2:'
                 MatchOperator: CONTAINS
                 NullOption: NON_NULLS_ONLY
+                SelectAllOptions: FILTER_ALL_VALUES
             FilterId: 847314db-647f-424c-8948-4ba9e64a5cde
         ScopeConfiguration:
           SelectedSheets:
@@ -5141,6 +5146,7 @@ dashboards:
               - 0088516c-a8cc-402a-87de-f4bcd3b0e72c
               - 93368ee2-4b59-4d68-ac79-453f61115e96
               - 07a67f28-ed4c-4d8a-a917-6b1fc21de7ab
+              - f72c20d2-453a-4002-bc30-13d4b5f7aabc
         Status: ENABLED
       - CrossDataset: ALL_DATASETS
         FilterGroupId: 5d54bbc0-14ff-42e9-9a48-bfb8b685ffe2
@@ -5400,6 +5406,48 @@ dashboards:
               VisualIds:
               - 7ece85d0-efa4-4006-893e-071d8395daab
         Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: d1f9dbb5-524d-4e07-b07c-38de8f217722
+        Filters:
+        - CategoryFilter:
+            Column:
+              ColumnName: charge_type
+              DataSetIdentifier: summary_view
+            Configuration:
+              FilterListConfiguration:
+                CategoryValues:
+                - EdpDiscount
+                MatchOperator: DOES_NOT_CONTAIN
+                NullOption: NON_NULLS_ONLY
+            FilterId: 4ff043f4-7ccd-4219-b915-0dfd7b686647
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 68445e28-b42d-4972-b9d4-8f3afb8c56bf
+              VisualIds:
+              - f72c20d2-453a-4002-bc30-13d4b5f7aabc
+        Status: ENABLED
+      - CrossDataset: SINGLE_DATASET
+        FilterGroupId: dab56273-743b-438d-bb68-5192f9684e4f
+        Filters:
+        - NumericEqualityFilter:
+            Column:
+              ColumnName: is_transcode_usage
+              DataSetIdentifier: summary_view
+            FilterId: 24eec0ca-4af0-405c-b565-c0c36d527f96
+            MatchOperator: EQUALS
+            NullOption: ALL_VALUES
+            Value: 1.0
+        ScopeConfiguration:
+          SelectedSheets:
+            SheetVisualScopingConfigurations:
+            - Scope: SELECTED_VISUALS
+              SheetId: 68445e28-b42d-4972-b9d4-8f3afb8c56bf
+              VisualIds:
+              - 06cdaa63-e1ba-4fb3-bcb6-ff1e7084eb79
+              - 973a39e9-2e7b-464a-b5ec-228ca63bc806
+        Status: ENABLED
       Options: {}
       ParameterDeclarations:
       - IntegerParameterDeclaration:
@@ -5567,6 +5615,14 @@ dashboards:
           DefaultValues: {}
           Name: EmtUsageCategoryCost
           ParameterValueType: MULTI_VALUED
+          ValueWhenUnset:
+            ValueWhenUnsetOption: RECOMMENDED_VALUE
+      - StringParameterDeclaration:
+          DefaultValues:
+            StaticValues:
+            - Channels
+          Name: EmlIdleResourceType
+          ParameterValueType: SINGLE_VALUED
           ValueWhenUnset:
             ValueWhenUnsetOption: RECOMMENDED_VALUE
       Sheets:
@@ -8341,156 +8397,156 @@ dashboards:
                 ElementId: 9b2dd7a7-0f08-4323-8bc5-1addd986224b
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 16
                 ColumnSpan: 6
                 ElementId: 12eabb0a-1507-409e-844b-27441f3f761e
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 22
                 ColumnSpan: 7
                 ElementId: 93fdc654-8e79-4fa2-933f-39a907a79661
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: 3309d08e-4c22-4848-bbe8-39394043f87a
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 25ae5434-01af-4fd6-b505-ca73df85ee6e
                 ElementType: TEXT_BOX
-                RowIndex: 9
+                RowIndex: 6
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 33dbd267-4714-46a9-a8aa-6eff045e5b7f
                 ElementType: TEXT_BOX
-                RowIndex: 9
+                RowIndex: 6
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 12
                 ElementId: 8c546d1a-bf61-483d-a4b3-47b0a3428f84
                 ElementType: VISUAL
-                RowIndex: 13
+                RowIndex: 10
                 RowSpan: 9
               - ColumnIndex: 12
                 ColumnSpan: 12
                 ElementId: d7d5c5e5-7c0b-4d6c-83d3-0852335610a4
                 ElementType: VISUAL
-                RowIndex: 13
+                RowIndex: 10
                 RowSpan: 9
               - ColumnIndex: 24
                 ColumnSpan: 12
                 ElementId: 6cbd436e-51c5-4446-a4a3-8e7096c3905b
                 ElementType: VISUAL
-                RowIndex: 13
+                RowIndex: 10
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: d10b8383-8d5a-4f53-8974-d4d257887809
                 ElementType: VISUAL
-                RowIndex: 22
+                RowIndex: 19
                 RowSpan: 11
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: abe48920-11e5-4814-b9d9-0faca7723452
                 ElementType: VISUAL
-                RowIndex: 22
+                RowIndex: 19
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: d51c35cd-d554-4639-82ec-713b929e75a6
                 ElementType: TEXT_BOX
-                RowIndex: 33
+                RowIndex: 30
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 22
                 ElementId: 300c8767-7d3e-4298-8673-deaf041e30a3
                 ElementType: TEXT_BOX
-                RowIndex: 33
+                RowIndex: 30
                 RowSpan: 4
               - ColumnIndex: 30
                 ColumnSpan: 6
                 ElementId: ffff8ae7-1d62-40a2-a607-800bc71a5e55
                 ElementType: FILTER_CONTROL
-                RowIndex: 33
+                RowIndex: 30
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: f482ec03-fd94-411c-bd93-ef01b6c7ef0d
                 ElementType: VISUAL
-                RowIndex: 37
+                RowIndex: 34
                 RowSpan: 6
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 7f921e3b-c060-42dd-acb5-07b95e52ea46
                 ElementType: VISUAL
-                RowIndex: 37
+                RowIndex: 34
                 RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: a0c6bd49-7113-4420-b687-f6cc1a615ebb
                 ElementType: VISUAL
-                RowIndex: 43
+                RowIndex: 40
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 5dd8e396-42f8-4b5b-bd57-323502322696
                 ElementType: VISUAL
-                RowIndex: 43
+                RowIndex: 40
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: e1294587-6364-46a7-b882-8b21fdd8a293
                 ElementType: VISUAL
-                RowIndex: 55
+                RowIndex: 52
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 2ee7a352-2785-4180-815e-06e9fc7fd32d
                 ElementType: VISUAL
-                RowIndex: 64
+                RowIndex: 61
                 RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 10
                 ElementId: 3f2bab35-3767-4932-b8ea-b11eec5dcdae
                 ElementType: TEXT_BOX
-                RowIndex: 70
+                RowIndex: 67
                 RowSpan: 4
               - ColumnIndex: 10
                 ColumnSpan: 26
                 ElementId: fd32d4ba-2d0e-458a-9a42-26cdc6af4f03
                 ElementType: TEXT_BOX
-                RowIndex: 70
+                RowIndex: 67
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: c5431574-ff64-4f24-af38-111b58b53627
                 ElementType: VISUAL
-                RowIndex: 74
+                RowIndex: 71
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 53ae0f36-703c-4976-b815-9ff392ecd222
                 ElementType: VISUAL
-                RowIndex: 74
+                RowIndex: 71
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 26
                 ElementId: 6effb53a-b5ed-4eea-b89a-679621c0fe9b
                 ElementType: VISUAL
-                RowIndex: 83
+                RowIndex: 80
                 RowSpan: 6
               - ColumnIndex: 26
                 ColumnSpan: 10
                 ElementId: facb5ce3-e6bd-47c4-96f3-a607a5a35ec3
                 ElementType: TEXT_BOX
-                RowIndex: 83
+                RowIndex: 80
                 RowSpan: 6
         Name: MediaLive Reservation & Savings
         ParameterControls:
@@ -10926,150 +10982,150 @@ dashboards:
                 ElementId: 7aa11026-e9a8-4278-aea8-0fe2fd7c882c
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 22
                 ColumnSpan: 7
                 ElementId: 59df204e-4e31-47c0-85b7-89f5a905734a
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: 7ece85d0-efa4-4006-893e-071d8395daab
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 0
-                ColumnSpan: 8
+                ColumnSpan: 16
                 ElementId: 2f9afa7f-fe7e-47c0-9f62-31ed2c95ea0d
                 ElementType: TEXT_BOX
-                RowIndex: 5
-                RowSpan: 4
-              - ColumnIndex: 8
-                ColumnSpan: 28
+                RowIndex: 6
+                RowSpan: 5
+              - ColumnIndex: 16
+                ColumnSpan: 20
                 ElementId: 7197ad28-b4f5-4ff8-aef5-50d655812676
                 ElementType: TEXT_BOX
-                RowIndex: 5
-                RowSpan: 4
+                RowIndex: 6
+                RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: a97d1967-0619-42bf-bca2-c7b890527ad4
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: d2d65987-a69b-4fea-abbe-335ed2e61907
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 514851a4-a2bb-441e-bbf8-e50b98a3d7db
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: f52d774e-3440-468c-a112-91ef365beb8a
                 ElementType: VISUAL
-                RowIndex: 16
+                RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 7f560faf-fbe2-4b32-801d-4959297ac28f
                 ElementType: VISUAL
-                RowIndex: 16
+                RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 690e4156-64ab-46ef-ac71-b84c7043bedd
                 ElementType: TEXT_BOX
-                RowIndex: 25
+                RowIndex: 27
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: b30ca718-7f27-4928-a783-9e7abc704ab8
                 ElementType: TEXT_BOX
-                RowIndex: 25
+                RowIndex: 27
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: 400ccb18-8c84-412e-8af0-206b8be1be62
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: 0c9082af-d262-4287-8058-f678ed30c8f3
                 ElementType: VISUAL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: cedbdc7a-5d39-4fb7-9353-420360f6313d
                 ElementType: VISUAL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 72e016d4-7b9e-470a-a387-bfde784fba57
                 ElementType: VISUAL
-                RowIndex: 36
+                RowIndex: 38
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 6608df48-a482-49f0-acbd-e1f34c2476f2
                 ElementType: VISUAL
-                RowIndex: 36
+                RowIndex: 38
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 87a25807-e4fe-4c0f-9892-cc2390aa7177
                 ElementType: TEXT_BOX
-                RowIndex: 45
+                RowIndex: 47
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: d63c4ee9-5296-436e-8647-5ddc1852d03d
                 ElementType: TEXT_BOX
-                RowIndex: 45
+                RowIndex: 47
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 20b60f28-0c82-4aa6-bc8f-b147e0040e83
                 ElementType: VISUAL
-                RowIndex: 49
+                RowIndex: 51
                 RowSpan: 13
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: dec3d3f0-2a61-45d0-b66d-f27a36e11f4c
                 ElementType: VISUAL
-                RowIndex: 49
+                RowIndex: 51
                 RowSpan: 13
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: d0423f38-278b-4dff-968e-4d7a33196e4c
                 ElementType: VISUAL
-                RowIndex: 62
+                RowIndex: 64
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: a1a7d2ae-33c4-4840-b76c-bf43f14fba9d
                 ElementType: TEXT_BOX
-                RowIndex: 73
+                RowIndex: 75
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 0c5ff456-b937-4091-abcf-87caed4220e5
                 ElementType: TEXT_BOX
-                RowIndex: 73
+                RowIndex: 75
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 897b5e5b-e5b3-4287-8b42-4a1278455edb
                 ElementType: VISUAL
-                RowIndex: 77
+                RowIndex: 79
                 RowSpan: 14
         Name: MediaConnect
         ParameterControls:
@@ -11199,15 +11255,20 @@ dashboards:
         - Content: "<text-box>\n  <inline color=\"#fc850d\" font-size=\"40px\">\n    <b>AWS\
             \ Elemental MediaConnect\_</b>\n  </inline>\n  <inline color=\"#fc850d\" font-size=\"\
             40px\">(AEMX)</inline>\n  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
-            >\n      The\n      <inline color=\"#fec48c\">\n        <b>Usage and Cost Summary</b>\n\
-            \      </inline>\n      <inline color=\"#fc850d\">\n        <b>\_</b>\n    \
-            \  </inline>\n      sections look at trends by different dimensions\n    </li>\n\
-            \    <li class=\"ql-indent-0\">\n      The\n      <inline color=\"#fec48c\"\
-            >\n        <b>Data Transfer\_</b>\n      </inline>\n      <b>\_</b>\n      section\
-            \ explores usage and trends for data transfer\n    </li>\n    <li class=\"ql-indent-0\"\
-            >\n      The\n      <inline color=\"#fec48c\">\n        <b>Resource Detail\_\
-            </b>\n      </inline>\n      <b>\_</b>\n      section reveals different dimensions\
-            \ of specific service resources\n    </li>\n  </ul>\n</text-box>"
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Usage Summary</b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\_looks at the overall stream\
+            \ usage from Data Transfer In and Out and running flows, broken down to forecasted,\
+            \ monthly and hourly charts.</inline>\n    </li>\n    <li class=\"ql-indent-0\"\
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Cost Summary</b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\_looks at total costs of\
+            \ streams  cost per usage category breakdowns from flow hours to data transfer.</inline>\n\
+            \    </li>\n    <li class=\"ql-indent-0\">\n      <inline color=\"#fec48c\"\
+            \ font-size=\"16px\">\n        <b>Data Transfer\_</b>\n      </inline>\n   \
+            \   <inline font-size=\"16px\">explores usage and trends specific to differnt\
+            \ types of data transfer</inline>\n    </li>\n    <li class=\"ql-indent-0\"\
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Resource\
+            \ Detail\_</b>\n      </inline>\n      <inline font-size=\"16px\">reveals different\
+            \ dimensions of specific service resources</inline>\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 7aa11026-e9a8-4278-aea8-0fe2fd7c882c
         - Content: "<text-box>\n  <inline color=\"#fec48c\" font-size=\"36px\">R</inline>\n\
             \  <inline color=\"#fec48c\" font-size=\"30px\">ESOURCE</inline>\n  <inline\
@@ -11218,7 +11279,32 @@ dashboards:
             \  <inline color=\"#fec48c\" font-size=\"30px\">SAGE</inline>\n  <inline color=\"\
             #fec48c\" font-size=\"32px\">\_</inline>\n  <inline color=\"#fec48c\" font-size=\"\
             36px\">S</inline>\n  <inline color=\"#fec48c\" font-size=\"30px\">UMMARY</inline>\n\
-            </text-box>"
+            \  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\">\n      <inline color=\"\
+            #fec48c\" font-size=\"16px\">\n        <b>\n          <i>Running Flow (Hrs)</i>\n\
+            \        </b>\n      </inline>\n      <inline color=\"#fec48c\" font-size=\"\
+            16px\">\n        <i>:</i>\n      </inline>\n      <inline font-size=\"16px\"\
+            >\n        <i>\_Tme that single transport streams (flows) are active/running.</i>\n\
+            \      </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n      <inline color=\"\
+            #fec48c\" font-size=\"16px\">\n        <b>\n          <i>Data Ingress (GB):</i>\n\
+            \        </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>\_</i>\n        </b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\n        <i>Volume of video content being ingested into the service\
+            \ (free).</i>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n\
+            \      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>\n        \
+            \  <i>Cross Regions Data Transfer (GB):\_</i>\n        </b>\n      </inline>\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>D</i>\n      \
+            \  </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <i>ata\
+            \ transferred between different AWS regions.</i>\n      </inline>\n    </li>\n\
+            \    <li class=\"ql-indent-0\">\n      <inline color=\"#fec48c\" font-size=\"\
+            16px\">\n        <b>\n          <i>Intra Region Data Transfer (GB) :</i>\n \
+            \       </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <i>\_\
+            Data movement within the same AWS region.</i>\n      </inline>\n    </li>\n\
+            \    <li class=\"ql-indent-0\">\n      <inline color=\"#fec48c\" font-size=\"\
+            16px\">\n        <b>\n          <i>Data Transfer to Internet (GB):\_</i>\n \
+            \       </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>D</i>\n        </b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\n        <i>ata sent to destinations outside AWS.</i>\n      </inline>\n\
+            \    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 2f9afa7f-fe7e-47c0-9f62-31ed2c95ea0d
         - Content: "<text-box>\n  <inline color=\"#fec48c\" font-size=\"36px\">C</inline>\n\
             \  <inline color=\"#fec48c\" font-size=\"30px\">OST\_</inline>\n  <inline color=\"\
@@ -11270,6 +11356,16 @@ dashboards:
                 <li class="ql-indent-0">
                   <inline color="#efefe9" font-size="16px">
                     <i>You can mix categories that measure by differnt units because the end measure of the graphs is cost and not usage consumption</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Identify average internet data transfer; use Reserved Outbound Bandwidth to reduce data transfer cost by up to 70%.</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Check your AMEX flows inventory for flows that has no destination output, which would still incur cost for flow hours.</i>
                   </inline>
                 </li>
               </ul>
@@ -13267,216 +13363,216 @@ dashboards:
                 ElementId: 586a5610-4de3-4aa1-8673-603267630f23
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 15
                 ColumnSpan: 7
                 ElementId: 2a88cc51-83d2-480f-9711-1503d76fc81c
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 22
                 ColumnSpan: 7
                 ElementId: 0bd61869-9072-4de5-a672-40c37fe804a1
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: e08cf408-3d5d-4d49-9d47-cbbb8cb0d26a
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 736e1f30-9ed1-4ee5-b815-b4764c9953f8
                 ElementType: TEXT_BOX
-                RowIndex: 5
+                RowIndex: 6
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 44df5bb7-d1c9-4580-a558-482c09df9b0a
                 ElementType: TEXT_BOX
-                RowIndex: 5
+                RowIndex: 6
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: f023e71b-deb5-46bb-bf3c-f73bc2f5ed8d
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 9
+                RowIndex: 10
                 RowSpan: 6
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: 71f71541-97e2-4c88-a21d-4c77688809cf
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 10
                 RowSpan: 6
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: a3dcfa4a-831c-4368-ac0e-6f8819a6d8cc
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 10
                 RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: eeb7c623-d03d-46b9-bff3-28272f70b419
                 ElementType: VISUAL
-                RowIndex: 15
+                RowIndex: 16
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: b7508161-1c23-4eff-bbb1-b1a3516b202d
                 ElementType: VISUAL
-                RowIndex: 15
+                RowIndex: 16
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: d2467169-52ed-49cb-8481-e29aff270329
                 ElementType: TEXT_BOX
-                RowIndex: 24
+                RowIndex: 25
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: da79575d-03e4-411a-a692-d7b3bf46f4af
                 ElementType: TEXT_BOX
-                RowIndex: 24
+                RowIndex: 25
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: e18bb5e4-db57-41f7-852c-d92793bd1d8d
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 28
+                RowIndex: 29
                 RowSpan: 6
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: 7b118993-41c5-4bac-b6d1-f5b2889eda16
                 ElementType: VISUAL
-                RowIndex: 28
+                RowIndex: 29
                 RowSpan: 6
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 8b986402-373a-44a1-915d-61f80e14350d
                 ElementType: VISUAL
-                RowIndex: 28
+                RowIndex: 29
                 RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 9499978f-754a-47b1-9abb-bef85a3b3614
                 ElementType: VISUAL
-                RowIndex: 34
+                RowIndex: 35
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 14c5bc86-9062-4013-ad6f-24f41ba415c2
                 ElementType: VISUAL
-                RowIndex: 34
+                RowIndex: 35
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 5128925a-37fc-4e10-b0bb-da9aeb493ea0
                 ElementType: TEXT_BOX
-                RowIndex: 43
+                RowIndex: 44
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 1bd82aa9-8494-4952-8595-188a15a1fed0
                 ElementType: TEXT_BOX
-                RowIndex: 43
+                RowIndex: 44
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 6
                 ElementId: 3e3d9581-8f77-47f6-b46b-7bcf07dd7bcb
                 ElementType: FILTER_CONTROL
-                RowIndex: 47
+                RowIndex: 48
                 RowSpan: 6
               - ColumnIndex: 6
                 ColumnSpan: 5
                 ElementId: 75f2db5f-836e-4415-a331-f0db76ccdc3f
                 ElementType: FILTER_CONTROL
-                RowIndex: 47
+                RowIndex: 48
                 RowSpan: 6
               - ColumnIndex: 11
                 ColumnSpan: 5
                 ElementId: b93893af-5753-4dfb-a82f-81d5a9a32ec6
                 ElementType: FILTER_CONTROL
-                RowIndex: 47
+                RowIndex: 48
                 RowSpan: 6
               - ColumnIndex: 16
                 ColumnSpan: 5
                 ElementId: 0b513d8a-3118-48ea-8a4e-66df4fe6709c
                 ElementType: FILTER_CONTROL
-                RowIndex: 47
+                RowIndex: 48
                 RowSpan: 6
               - ColumnIndex: 21
                 ColumnSpan: 5
                 ElementId: e45f3d92-a869-4a82-b474-c90cae6942f0
                 ElementType: FILTER_CONTROL
-                RowIndex: 47
+                RowIndex: 48
                 RowSpan: 6
               - ColumnIndex: 26
                 ColumnSpan: 5
                 ElementId: bf9a90c0-9d16-476e-86cb-21626aabec92
                 ElementType: FILTER_CONTROL
-                RowIndex: 47
+                RowIndex: 48
                 RowSpan: 6
               - ColumnIndex: 31
                 ColumnSpan: 5
                 ElementId: d8b0be39-7178-4ea6-be0a-f0d8b5436133
                 ElementType: FILTER_CONTROL
-                RowIndex: 47
+                RowIndex: 48
                 RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 24
                 ElementId: fe6bfdeb-9c16-4637-9810-203728fcccfb
                 ElementType: VISUAL
-                RowIndex: 53
+                RowIndex: 54
                 RowSpan: 11
               - ColumnIndex: 24
                 ColumnSpan: 12
                 ElementId: dfcdaf3c-9196-453d-a71d-0d7361e04fd3
                 ElementType: TEXT_BOX
-                RowIndex: 53
+                RowIndex: 54
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 0981ccb0-5235-4ec5-a243-f01ebc1c3dd1
                 ElementType: VISUAL
-                RowIndex: 64
+                RowIndex: 65
                 RowSpan: 10
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 4b0842cb-c1ec-4008-bb14-0cba5837a9a2
                 ElementType: VISUAL
-                RowIndex: 64
+                RowIndex: 65
                 RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 495ddd61-1575-4a4c-a328-8cf34708f3d0
                 ElementType: VISUAL
-                RowIndex: 74
+                RowIndex: 75
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 40301eba-826a-462f-8a56-6ded11b11992
                 ElementType: TEXT_BOX
-                RowIndex: 85
+                RowIndex: 86
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: d8fbafbc-61e7-4846-bfb5-a797851e084a
                 ElementType: TEXT_BOX
-                RowIndex: 85
+                RowIndex: 86
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: ad861d10-4df7-4ade-be62-1408995b6b22
                 ElementType: VISUAL
-                RowIndex: 89
+                RowIndex: 90
                 RowSpan: 16
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 80576d99-3156-4945-972f-77cb1ec34fcd
                 ElementType: VISUAL
-                RowIndex: 89
+                RowIndex: 90
                 RowSpan: 16
         Name: MediaConvert
         ParameterControls:
@@ -13602,15 +13698,19 @@ dashboards:
         - Content: "<text-box>\n  <inline color=\"#fc850d\" font-size=\"36px\">\n    <b>AWS\
             \ Elemental MediaConvert\_</b>\n  </inline>\n  <inline color=\"#fc850d\" font-size=\"\
             36px\">(AEMC)</inline>\n  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
-            >\n      The\n      <inline color=\"#fec48c\">\n        <b>Usage and Cost Summary</b>\n\
-            \      </inline>\n      <inline color=\"#fc850d\">\n        <b>\_</b>\n    \
-            \  </inline>\n      sections look at trends by different dimensions\n    </li>\n\
-            \    <li class=\"ql-indent-0\">\n      The\n      <inline color=\"#fec48c\"\
-            >\n        <b>Transcoding\_</b>\n      </inline>\n      section explores trends\
-            \ by parameters\n    </li>\n    <li class=\"ql-indent-0\">\n      The\n    \
-            \  <inline color=\"#fec48c\">\n        <b>Job Detail\_</b>\n      </inline>\n\
-            \      <b>\_</b>\n      section reveals different dimensions of individual jobs\n\
-            \    </li>\n  </ul>\n</text-box>"
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Usage Summary</b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\_looks at channel usage\
+            \ by various categories.</inline>\n    </li>\n    <li class=\"ql-indent-0\"\
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Cost Summary</b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\_provides breakouts by various\
+            \ dimensions</inline>\n    </li>\n    <li class=\"ql-indent-0\">\n      <inline\
+            \ color=\"#fec48c\" font-size=\"16px\">\n        <b>Transcoding\_</b>\n    \
+            \  </inline>\n      <inline font-size=\"16px\">explores trends by parameter\
+            \ profiles</inline>\n    </li>\n    <li class=\"ql-indent-0\">\n      <inline\
+            \ color=\"#fec48c\" font-size=\"16px\">\n        <b>Job Detail\_</b>\n     \
+            \ </inline>\n      <inline font-size=\"16px\">\n        <b>\_</b>\n      </inline>\n\
+            \      <inline font-size=\"16px\">reveals different dimensions of individual\
+            \ jobs</inline>\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 586a5610-4de3-4aa1-8673-603267630f23
         - Content: |-
             <text-box>
@@ -13625,8 +13725,8 @@ dashboards:
           SheetTextBoxId: 40301eba-826a-462f-8a56-6ded11b11992
         - Content: |-
             <text-box>
-              <inline color="#fc850d" font-size="20px">
-                <b>Understanding Usage Type:</b>
+              <inline color="#efefe9" font-size="20px">
+                <b>Understanding usage profiles:</b>
               </inline>
               <br/>
               <br/>
@@ -15166,7 +15266,7 @@ dashboards:
                   Colors:
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: emc_transcode_params_friendly
+                        ColumnName: emc_transcode_profile_friendly
                         DataSetIdentifier: summary_view
                       FieldId: 7ea4779a-76b0-4d52-8d75-91649fc5532f.2.1752603878073
                   Values:
@@ -15196,7 +15296,7 @@ dashboards:
                 Height: 127px
                 Position: RIGHT
                 Title:
-                  CustomLabel: Parameters
+                  CustomLabel: Profile
                 Width: 426px
               PrimaryYAxisLabelOptions:
                 AxisLabelOptions:
@@ -15944,265 +16044,283 @@ dashboards:
                 ElementId: 8cbd6d6e-1de4-4585-bb72-980c3f633759
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 15
                 ColumnSpan: 7
                 ElementId: 04184dab-588f-4a6c-9dc6-732f75b51be6
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 22
                 ColumnSpan: 7
                 ElementId: 1b597376-b18b-4431-aa95-ac31b89e2aa5
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 29
                 ColumnSpan: 7
                 ElementId: b0bbd952-3d33-4821-b0d2-33df59230d4e
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 0
-                ColumnSpan: 8
+                ColumnSpan: 18
                 ElementId: b07b8b49-3bec-463c-8ef0-13527d1eeacf
                 ElementType: TEXT_BOX
-                RowIndex: 5
-                RowSpan: 4
-              - ColumnIndex: 8
-                ColumnSpan: 28
+                RowIndex: 6
+                RowSpan: 5
+              - ColumnIndex: 18
+                ColumnSpan: 18
                 ElementId: 64d7d599-fbbd-4853-aea7-10091f6721ef
                 ElementType: TEXT_BOX
-                RowIndex: 5
-                RowSpan: 4
+                RowIndex: 6
+                RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: e7e78894-c9a2-426f-b33a-b1b4eb0e5fdd
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: dda80613-fc61-4813-bab4-5ade11b0e377
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 71c2c777-681b-4029-9ea8-f4e76e7e6842
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: f9b5c461-5219-478c-a07d-a0333b1c6b70
                 ElementType: VISUAL
-                RowIndex: 16
+                RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 38c23c27-c0f4-425d-9313-16b320dc01b4
                 ElementType: VISUAL
-                RowIndex: 16
+                RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 77c54a41-012c-4163-af3c-eadf6ca440df
                 ElementType: TEXT_BOX
-                RowIndex: 25
+                RowIndex: 27
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 21c73200-f9d4-4667-a54e-7e5138c8b913
                 ElementType: TEXT_BOX
-                RowIndex: 25
+                RowIndex: 27
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: 16380c4b-c5bd-4e9d-ba73-2274befafc4f
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: a7758050-a37c-4325-9bbb-93da77d55bdc
                 ElementType: VISUAL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: b3000de1-64c6-4230-a23e-022d8fd240c5
                 ElementType: VISUAL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 609323f9-61a9-4c38-b444-4c6639e4bc68
                 ElementType: VISUAL
-                RowIndex: 36
+                RowIndex: 38
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: efd1d482-911f-4f4f-b6e3-77d348548193
                 ElementType: VISUAL
-                RowIndex: 36
+                RowIndex: 38
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 143b2dcb-b6ac-4b19-a31d-3523842a0691
                 ElementType: TEXT_BOX
-                RowIndex: 45
-                RowSpan: 4
+                RowIndex: 47
+                RowSpan: 7
               - ColumnIndex: 8
-                ColumnSpan: 28
+                ColumnSpan: 17
                 ElementId: 4c3cb17a-3ae4-41cd-ba7d-de83136f1b0c
                 ElementType: TEXT_BOX
-                RowIndex: 45
-                RowSpan: 4
+                RowIndex: 47
+                RowSpan: 7
+              - ColumnIndex: 25
+                ColumnSpan: 11
+                ElementId: e77d2466-9c09-4144-be75-c202f7707ba6
+                ElementType: TEXT_BOX
+                RowIndex: 47
+                RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 17dd9f79-c673-4cd9-8a21-63c118574701
                 ElementType: VISUAL
-                RowIndex: 49
+                RowIndex: 54
+                RowSpan: 9
+              - ColumnIndex: 18
+                ColumnSpan: 18
+                ElementId: 344471a4-09f4-4574-97d9-cae29cc02ea0
+                ElementType: VISUAL
+                RowIndex: 54
+                RowSpan: 9
+              - ColumnIndex: 0
+                ColumnSpan: 18
+                ElementId: f72c20d2-453a-4002-bc30-13d4b5f7aabc
+                ElementType: VISUAL
+                RowIndex: 63
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 0114706e-f2b5-4650-8047-b7264c7643ba
                 ElementType: VISUAL
-                RowIndex: 49
+                RowIndex: 63
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 16
                 ElementId: 03fb8657-fa8d-4332-932a-3888d9346922
                 ElementType: VISUAL
-                RowIndex: 58
+                RowIndex: 72
                 RowSpan: 9
               - ColumnIndex: 16
                 ColumnSpan: 4
                 ElementId: f15ec21e-aca5-4418-9acc-a6cd986d70b7
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 58
+                RowIndex: 72
                 RowSpan: 9
               - ColumnIndex: 20
                 ColumnSpan: 16
                 ElementId: 3907fe91-71ec-41f2-b746-d4045ccbbcca
                 ElementType: VISUAL
-                RowIndex: 58
+                RowIndex: 72
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 0088516c-a8cc-402a-87de-f4bcd3b0e72c
                 ElementType: VISUAL
-                RowIndex: 67
+                RowIndex: 81
                 RowSpan: 10
               - ColumnIndex: 18
                 ColumnSpan: 18
-                ElementId: 344471a4-09f4-4574-97d9-cae29cc02ea0
-                ElementType: VISUAL
-                RowIndex: 67
-                RowSpan: 10
-              - ColumnIndex: 0
-                ColumnSpan: 12
-                ElementId: d86c9502-d961-4128-a14c-1a270e5bd7ab
-                ElementType: VISUAL
-                RowIndex: 77
-                RowSpan: 10
-              - ColumnIndex: 12
-                ColumnSpan: 12
-                ElementId: ebd8fca8-8a7d-4d71-b1c8-b6995ba75427
-                ElementType: VISUAL
-                RowIndex: 77
-                RowSpan: 10
-              - ColumnIndex: 24
-                ColumnSpan: 12
                 ElementId: 1b537ee6-da93-4aeb-bd4b-21ac759765e3
                 ElementType: VISUAL
-                RowIndex: 77
+                RowIndex: 81
                 RowSpan: 10
               - ColumnIndex: 0
-                ColumnSpan: 8
-                ElementId: 0e3cebf0-8e51-4f8a-8a6d-d7decda31c44
-                ElementType: TEXT_BOX
-                RowIndex: 87
-                RowSpan: 4
-              - ColumnIndex: 8
-                ColumnSpan: 28
-                ElementId: 707620d9-8812-4621-8cce-74a8c94182fa
-                ElementType: TEXT_BOX
-                RowIndex: 87
-                RowSpan: 4
-              - ColumnIndex: 0
                 ColumnSpan: 18
-                ElementId: 6fdf0bdb-fc66-46f0-a39a-414bab03e75b
+                ElementId: d86c9502-d961-4128-a14c-1a270e5bd7ab
                 ElementType: VISUAL
                 RowIndex: 91
-                RowSpan: 9
+                RowSpan: 10
               - ColumnIndex: 18
                 ColumnSpan: 18
-                ElementId: 4b0fff66-6edd-4323-ae33-ea5bb2cf7364
+                ElementId: ebd8fca8-8a7d-4d71-b1c8-b6995ba75427
                 ElementType: VISUAL
                 RowIndex: 91
-                RowSpan: 9
-              - ColumnIndex: 0
-                ColumnSpan: 36
-                ElementId: 07a67f28-ed4c-4d8a-a917-6b1fc21de7ab
-                ElementType: VISUAL
-                RowIndex: 100
-                RowSpan: 9
+                RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 325a9c8b-145f-4eff-a6cd-13d6d611ed94
                 ElementType: TEXT_BOX
-                RowIndex: 109
+                RowIndex: 101
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 3ed3828f-b602-4add-be8c-caf57af4463f
                 ElementType: TEXT_BOX
-                RowIndex: 109
+                RowIndex: 101
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 06cdaa63-e1ba-4fb3-bcb6-ff1e7084eb79
                 ElementType: VISUAL
-                RowIndex: 113
+                RowIndex: 105
                 RowSpan: 11
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 93368ee2-4b59-4d68-ac79-453f61115e96
                 ElementType: VISUAL
-                RowIndex: 113
+                RowIndex: 105
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 973a39e9-2e7b-464a-b5ec-228ca63bc806
                 ElementType: VISUAL
-                RowIndex: 124
+                RowIndex: 116
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 22721501-6e92-42a3-afbe-6b121139380a
                 ElementType: VISUAL
-                RowIndex: 124
+                RowIndex: 116
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: c1385e51-f08f-4346-8afb-860335e07281
                 ElementType: VISUAL
-                RowIndex: 136
+                RowIndex: 128
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 9736ea43-a185-489d-a24d-08c3650f0641
                 ElementType: VISUAL
-                RowIndex: 136
+                RowIndex: 128
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 8d3efefb-42fe-4d6e-9881-5e0d8342c8b6
                 ElementType: VISUAL
-                RowIndex: 148
+                RowIndex: 140
                 RowSpan: 11
+              - ColumnIndex: 0
+                ColumnSpan: 8
+                ElementId: 0e3cebf0-8e51-4f8a-8a6d-d7decda31c44
+                ElementType: TEXT_BOX
+                RowIndex: 151
+                RowSpan: 4
+              - ColumnIndex: 8
+                ColumnSpan: 28
+                ElementId: 707620d9-8812-4621-8cce-74a8c94182fa
+                ElementType: TEXT_BOX
+                RowIndex: 151
+                RowSpan: 4
+              - ColumnIndex: 0
+                ColumnSpan: 16
+                ElementId: 4b0fff66-6edd-4323-ae33-ea5bb2cf7364
+                ElementType: VISUAL
+                RowIndex: 155
+                RowSpan: 9
+              - ColumnIndex: 16
+                ColumnSpan: 4
+                ElementId: af8ada51-0cd6-4d0e-be49-5550c7204191
+                ElementType: PARAMETER_CONTROL
+                RowIndex: 155
+                RowSpan: 9
+              - ColumnIndex: 20
+                ColumnSpan: 16
+                ElementId: a8038fd5-0d03-4ecc-ba1a-4fe01ee12ca7
+                ElementType: VISUAL
+                RowIndex: 155
+                RowSpan: 9
+              - ColumnIndex: 0
+                ColumnSpan: 36
+                ElementId: 07a67f28-ed4c-4d8a-a917-6b1fc21de7ab
+                ElementType: VISUAL
+                RowIndex: 164
+                RowSpan: 9
         Name: MediaLive
         ParameterControls:
         - List:
@@ -16281,6 +16399,27 @@ dashboards:
             SourceParameterName: EmlUsageCategoryCost
             Title: Usage Category (Cost)
             Type: MULTI_SELECT
+        - List:
+            DisplayOptions:
+              InfoIconLabelOptions:
+                Visibility: HIDDEN
+              SearchOptions:
+                Visibility: HIDDEN
+              SelectAllOptions:
+                Visibility: VISIBLE
+              TitleOptions:
+                FontConfiguration:
+                  FontSize:
+                    Relative: LARGE
+                Visibility: VISIBLE
+            ParameterControlId: af8ada51-0cd6-4d0e-be49-5550c7204191
+            SelectableValues:
+              Values:
+              - Channels
+              - Inputs
+            SourceParameterName: EmlIdleResourceType
+            Title: Resource Type
+            Type: SINGLE_SELECT
         - Dropdown:
             DisplayOptions:
               SelectAllOptions:
@@ -16382,17 +16521,23 @@ dashboards:
         - Content: "<text-box>\n  <inline color=\"#fc850d\" font-size=\"40px\">\n    <b>AWS\
             \ Elemental MediaLive\_</b>\n  </inline>\n  <inline color=\"#fc850d\" font-size=\"\
             40px\">(AEML)</inline>\n  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
-            >\n      The\n      <inline color=\"#fec48c\">\n        <b>Usage and Cost Summary</b>\n\
-            \      </inline>\n      <inline color=\"#fc850d\">\n        <b>\_</b>\n    \
-            \  </inline>\n      sections look at trends by different dimensions\n    </li>\n\
-            \    <li class=\"ql-indent-0\">\n      The\n      <inline color=\"#fec48c\"\
-            >\n        <b>Transcoding\_</b>\n      </inline>\n      section explores trends\
-            \ by parameters and purchase option\n    </li>\n    <li class=\"ql-indent-0\"\
-            >\n      The\n      <inline color=\"#fec48c\">\n        <b>Idle resources\_\
-            </b>\n      </inline>\n      section explores idle resource trends and opportunities\n\
-            \    </li>\n    <li class=\"ql-indent-0\">\n      The\n      <inline color=\"\
-            #fec48c\">\n        <b>Channel Detail</b>\n      </inline>\n      \_section\
-            \ explores usage and trends for individual channels\n    </li>\n  </ul>\n</text-box>"
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Usage Summary</b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\_looks at channel usage\
+            \ by various categories.</inline>\n    </li>\n    <li class=\"ql-indent-0\"\
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Cost Summary</b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\_look at total costs of\
+            \ input and output transcoding hours across different profile parameters.</inline>\n\
+            \    </li>\n    <li class=\"ql-indent-0\">\n      <inline color=\"#fec48c\"\
+            \ font-size=\"16px\">\n        <b>Transcoding</b>\n      </inline>\n      <inline\
+            \ font-size=\"16px\">\n        <b>\_looks</b>\n      </inline>\n      <inline\
+            \ font-size=\"16px\">\_at usage and cost by profile and purchase option.</inline>\n\
+            \    </li>\n    <li class=\"ql-indent-0\">\n      <inline color=\"#fec48c\"\
+            \ font-size=\"16px\">\n        <b>Channel Detail</b>\n      </inline>\n    \
+            \  <inline font-size=\"16px\">\_explores usage and trends for individual channels\_\
+            </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n      <inline color=\"\
+            #fec48c\" font-size=\"16px\">\n        <b>Idle Resources</b>\n      </inline>\n\
+            \      <inline font-size=\"16px\">\_explores usage and cost of idle input and\
+            \ channel resources.</inline>\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: 8cbd6d6e-1de4-4585-bb72-980c3f633759
         - Content: |-
             <text-box>
@@ -16409,7 +16554,30 @@ dashboards:
             \  <inline color=\"#fec48c\" font-size=\"30px\">SAGE</inline>\n  <inline color=\"\
             #fec48c\" font-size=\"32px\">\_</inline>\n  <inline color=\"#fec48c\" font-size=\"\
             36px\">S</inline>\n  <inline color=\"#fec48c\" font-size=\"30px\">UMMARY</inline>\n\
-            </text-box>"
+            \  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"\
+            16px\">\n        <b>\n          <i>Channel Feature (Hrs):\_</i>\n        </b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\n        <i>Duration of\
+            \ add-on features, such as Advanced audio and Motion graphics.</i>\n      </inline>\n\
+            \    </li>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\"\
+            >\n        <b>\n          <i>Data Transfer (GB): Amount\_</i>\n        </b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\n        <i>of data transferred\
+            \ as an input to or output from channels</i>\n      </inline>\n    </li>\n \
+            \   <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>Idle Channel (Hrs):\_</i>\n        </b>\n      </inline>\n   \
+            \   <inline font-size=\"16px\">\n        <i>Duration of inactive (stopped) MediaLive\
+            \ channels</i>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>Idle Inputs (Hrs):\
+            \ D</i>\n        </b>\n      </inline>\n      <inline font-size=\"16px\">\n\
+            \        <i>uration in hours for an active MediaLive input not attached to any\
+            \ channel.</i>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n\
+            \      <inline font-size=\"16px\">\n        <b>\n          <i>Input Transcoding\
+            \ (Hrs)</i>\n        </b>\n      </inline>\n      <inline font-size=\"16px\"\
+            >\n        <i>\_:  Duration of actively processing a channel attached input\
+            \ video streams</i>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\"\
+            >\n      <inline font-size=\"16px\">\n        <b>\n          <i>Output Transcoding\
+            \ (Hrs):\_</i>\n        </b>\n      </inline>\n      <inline font-size=\"16px\"\
+            >\n        <i>Duration of actively processing output transcoding profiles</i>\n\
+            \      </inline>\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: b07b8b49-3bec-463c-8ef0-13527d1eeacf
         - Content: "<text-box>\n  <inline color=\"#fec48c\" font-size=\"36px\">C</inline>\n\
             \  <inline color=\"#fec48c\" font-size=\"30px\">OST\_</inline>\n  <inline color=\"\
@@ -16471,7 +16639,12 @@ dashboards:
                 </li>
                 <li class="ql-indent-0">
                   <inline color="#efefe9" font-size="16px">
-                    <i>Spikes in monthly or hourly costs may be driven by reservation purchases. Adjust the Cost Model to show either Invoice or Amortized views of reserved usage</i>
+                    <i>Spikes in monthly or hourly costs may be driven by reservation purchases. Adjust the Cost Model to show either Invoice or Amortized views of reserved usage\</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Consider using MediaPackage or Cloudfront CDN as a destination of the output to reduce/eliminate the cost of Data transfe</i>
                   </inline>
                 </li>
               </ul>
@@ -16486,12 +16659,27 @@ dashboards:
               <ul>
                 <li class="ql-indent-0">
                   <inline color="#efefe9" font-size="16px">
-                    <i>Transcoding metering is based on several parameters, including: the number of pipes, direction, region, codec, bitrate, framerate, resolution and quality</i>
+                    <i>Transcoding metering is based on several parameters that together form a profile. They include: the number of pipes, direction, region, codec, bitrate, framerate, resolution and quality</i>
                   </inline>
                 </li>
                 <li class="ql-indent-0">
                   <inline color="#efefe9" font-size="16px">
                     <i>Use the Parameter Type toggle to compare usage and cost between options for a given parameter. For example, select Resolution to compare SD vs HD</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Identify the transcoding profiles that will have steady or increase traffic for the coming 12 months and proceed with the reservations to reduce their cost.</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Identify most expensive transcoding profile and leverage the reservations for the usage that is expected to be the same or to increase for the next 12 months.</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Review if high-resolution/frame-rate outputs align with viewer needs. Adjust the profiles if needed</i>
                   </inline>
                 </li>
               </ul>
@@ -16506,15 +16694,294 @@ dashboards:
               <ul>
                 <li class="ql-indent-0">
                   <inline color="#efefe9" font-size="16px">
-                    <i>Idle channels should be reviewed for potential cost inefficiencies because they are billed like active channels but at a lower rate.</i>
+                    <i>Idle channels and inputs should be reviewed for potential cost inefficiencies because they are billed like active channels but at a lower rate.</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Idle Input hours usage should be lowered  as much as possible, by deleting MediaLive Inputs that are not attached to any channel.</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Idle channel hours usage should be lowered as much as possible whenever possible, you can do this by deleting stopped channel</i>
                   </inline>
                 </li>
               </ul>
+              <br/>
             </text-box>
           SheetTextBoxId: 707620d9-8812-4621-8cce-74a8c94182fa
         - Content: "<text-box>\_\_</text-box>"
           SheetTextBoxId: 3ed3828f-b602-4add-be8c-caf57af4463f
+        - Content: "<text-box>\n  <inline color=\"#fec48c\" font-size=\"24px\">T</inline>\n\
+            \  <inline color=\"#fec48c\" font-size=\"20px\">RANSCODING</inline>\n  <inline\
+            \ color=\"#fec48c\" font-size=\"24px\">\_P</inline>\n  <inline color=\"#fec48c\"\
+            \ font-size=\"20px\">ROFILE</inline>\n  <inline color=\"#fec48c\" font-size=\"\
+            24px\">\_K</inline>\n  <inline color=\"#fec48c\" font-size=\"20px\">EY</inline>\n\
+            \  <br/>\n  <br/>\n  <inline font-size=\"16px\">Transcoding profiles are combinations\
+            \ of the following:</inline>\n  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
+            >\n      <inline font-size=\"16px\">Standard Pipeline (2 AZs) or a single pipeline</inline>\n\
+            \    </li>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\"\
+            >Region\_</inline>\n    </li>\n    <li class=\"ql-indent-0\">\n      <inline\
+            \ font-size=\"16px\">OUT/IN : Flow direction</inline>\n    </li>\n    <li class=\"\
+            ql-indent-0\">\n      <inline font-size=\"16px\">Codec</inline>\n    </li>\n\
+            \    <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">Resolution,\
+            \ SD vs HD</inline>\n    </li>\n    <li class=\"ql-indent-0\">\n      <inline\
+            \ font-size=\"16px\">Bitrate in frames per second</inline>\n    </li>\n    <li\
+            \ class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\_Framerate in frames-per-second\
+            \ (fps)</inline>\n    </li>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"\
+            16px\">Vdeo quality, standard vs. high</inline>\n    </li>\n  </ul>\n</text-box>"
+          SheetTextBoxId: e77d2466-9c09-4144-be75-c202f7707ba6
         Visuals:
+        - LineChartVisual:
+            Actions: []
+            ChartConfiguration:
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: HIDDEN
+              DefaultSeriesSettings:
+                AxisBinding: PRIMARY_YAXIS
+                LineStyleSettings:
+                  LineInterpolation: SMOOTH
+                  LineWidth: 3px
+              FieldWells:
+                LineChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: billing_period
+                        DataSetIdentifier: summary_view
+                      DateGranularity: MONTH
+                      FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
+                      HierarchyId: 23a3ed5e-52bf-4505-97bf-0c528e86f3b5
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: transcode_params_friendly
+                        DataSetIdentifier: summary_view
+                      FieldId: 4accae47-5149-47f6-ae40-7489bce87488.2.1752629950808
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: usage_quantity
+                        DataSetIdentifier: summary_view
+                      FieldId: 716b8ec0-ae95-4168-88b1-83e0ff6ad473.usage_quantity.2.1754083298440
+              Legend:
+                Height: 107px
+                Position: BOTTOM
+                Title:
+                  CustomLabel: Parameters
+                Width: 240px
+              PrimaryYAxisLabelOptions:
+                SortIconVisibility: HIDDEN
+                Visibility: HIDDEN
+              SortConfiguration:
+                CategoryItemsLimitConfiguration:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: DESC
+                    FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
+                ColorItemsLimitConfiguration:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 4accae47-5149-47f6-ae40-7489bce87488.2.1752629950808
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: 716b8ec0-ae95-4168-88b1-83e0ff6ad473.usage_quantity.2.1754083298440
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+              Type: LINE
+              XAxisDisplayOptions:
+                ScrollbarOptions:
+                  Visibility: HIDDEN
+              XAxisLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: billing_period
+                      DataSetIdentifier: summary_view
+                    FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
+                  CustomLabel: Billing Period
+                Visibility: HIDDEN
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                DrillDownFilters: []
+                HierarchyId: 23a3ed5e-52bf-4505-97bf-0c528e86f3b5
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Transcode\
+                  \ hours by profile (top\_</b>\n  </inline>\n  <inline font-size=\"16px\"\
+                  >\n    <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
+                  \  <inline font-size=\"16px\">)</inline>\n</visual-title>"
+              Visibility: VISIBLE
+            VisualId: f72c20d2-453a-4002-bc30-13d4b5f7aabc
+        - BarChartVisual:
+            Actions:
+            - ActionOperations:
+              - FilterOperation:
+                  SelectedFieldsConfiguration:
+                    SelectedFieldOptions: ALL_FIELDS
+                  TargetVisualsConfiguration:
+                    SameSheetTargetVisualConfiguration:
+                      TargetVisuals:
+                      - c1385e51-f08f-4346-8afb-860335e07281
+                      - 9736ea43-a185-489d-a24d-08c3650f0641
+                      - 38c23c27-c0f4-425d-9313-16b320dc01b4
+                      - 609323f9-61a9-4c38-b444-4c6639e4bc68
+                      - 0088516c-a8cc-402a-87de-f4bcd3b0e72c
+                      - ebd8fca8-8a7d-4d71-b1c8-b6995ba75427
+                      - 344471a4-09f4-4574-97d9-cae29cc02ea0
+                      - f9b5c461-5219-478c-a07d-a0333b1c6b70
+                      - 3cb42bc6-006c-42c1-bea2-d234d1fe3b6e
+                      - efd1d482-911f-4f4f-b6e3-77d348548193
+                      - 93368ee2-4b59-4d68-ac79-453f61115e96
+              CustomActionId: 0d95d121-2883-4567-80b4-66ee66348043
+              Name: Action 1
+              Status: ENABLED
+              Trigger: DATA_POINT_CLICK
+            ChartConfiguration:
+              BarsArrangement: STACKED
+              CategoryAxis:
+                ScrollbarOptions:
+                  Visibility: HIDDEN
+              CategoryLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: billing_period
+                      DataSetIdentifier: summary_view
+                    FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
+                  CustomLabel: Billing Period
+                SortIconVisibility: HIDDEN
+                Visibility: HIDDEN
+              DataLabels:
+                Overlap: DISABLE_OVERLAP
+                Visibility: HIDDEN
+              FieldWells:
+                BarChartAggregatedFieldWells:
+                  Category:
+                  - DateDimensionField:
+                      Column:
+                        ColumnName: billing_period
+                        DataSetIdentifier: summary_view
+                      DateGranularity: MONTH
+                      FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
+                      HierarchyId: 9b418509-13d7-4cb8-8102-7653bbbde0cc
+                  Colors:
+                  - CategoricalDimensionField:
+                      Column:
+                        ColumnName: Resource
+                        DataSetIdentifier: summary_view
+                      FieldId: e1822a96-8014-4d5b-ada3-bc18f6bfec90.2.1744037591007
+                      HierarchyId: 7bf7b956-278b-4625-9338-b662365d1b98
+                  Values:
+                  - NumericalMeasureField:
+                      AggregationFunction:
+                        SimpleNumericalAggregation: SUM
+                      Column:
+                        ColumnName: eml_idle_cost
+                        DataSetIdentifier: summary_view
+                      FieldId: bd7a92c4-e963-4149-bf93-6384f14f947b.2.1754081623415
+                      FormatConfiguration:
+                        FormatConfiguration:
+                          CurrencyDisplayFormatConfiguration:
+                            DecimalPlacesConfiguration:
+                              DecimalPlaces: 2
+                            NegativeValueConfiguration:
+                              DisplayMode: POSITIVE
+                            NullValueFormatConfiguration:
+                              NullString: 'null'
+                            SeparatorConfiguration:
+                              DecimalSeparator: DOT
+                              ThousandsSeparator:
+                                Symbol: COMMA
+                                Visibility: VISIBLE
+                            Symbol: USD
+              Legend:
+                Height: 68px
+                Position: BOTTOM
+                Title:
+                  CustomLabel: Parameters
+                Width: 240px
+              Orientation: VERTICAL
+              SortConfiguration:
+                CategoryItemsLimit:
+                  OtherCategories: INCLUDE
+                CategorySort:
+                - FieldSort:
+                    Direction: ASC
+                    FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
+                ColorItemsLimit:
+                  OtherCategories: INCLUDE
+                SmallMultiplesLimitConfiguration:
+                  OtherCategories: INCLUDE
+              Tooltip:
+                FieldBasedTooltip:
+                  AggregationVisibility: HIDDEN
+                  TooltipFields:
+                  - FieldTooltipItem:
+                      FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: e1822a96-8014-4d5b-ada3-bc18f6bfec90.2.1744037591007
+                      Visibility: VISIBLE
+                  - FieldTooltipItem:
+                      FieldId: bd7a92c4-e963-4149-bf93-6384f14f947b.2.1754081623415
+                      Visibility: VISIBLE
+                  TooltipTitleType: PRIMARY_VALUE
+                SelectedTooltipType: DETAILED
+                TooltipVisibility: VISIBLE
+              ValueLabelOptions:
+                AxisLabelOptions:
+                - ApplyTo:
+                    Column:
+                      ColumnName: eml_idle_cost
+                      DataSetIdentifier: summary_view
+                    FieldId: bd7a92c4-e963-4149-bf93-6384f14f947b.2.1754081623415
+                  CustomLabel: Cost
+                SortIconVisibility: HIDDEN
+            ColumnHierarchies:
+            - DateTimeHierarchy:
+                DrillDownFilters: []
+                HierarchyId: 9b418509-13d7-4cb8-8102-7653bbbde0cc
+            - ExplicitHierarchy:
+                Columns:
+                - ColumnName: Resource
+                  DataSetIdentifier: summary_view
+                - ColumnName: Account
+                  DataSetIdentifier: summary_view
+                - ColumnName: region
+                  DataSetIdentifier: summary_view
+                DrillDownFilters: []
+                HierarchyId: 7bf7b956-278b-4625-9338-b662365d1b98
+            Subtitle:
+              Visibility: VISIBLE
+            Title:
+              FormatText:
+                RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Idle\_\
+                  </b>\n  </inline>\n  <inline font-size=\"16px\">\n    <b>\n      <parameter>${EmlIdleResourceType}</parameter>\n\
+                  \    </b>\n  </inline>\n  <inline font-size=\"16px\">\n    <b>\_resources\
+                  \ cost (top\_</b>\n  </inline>\n  <inline font-size=\"16px\">\n    <b>\n\
+                  \      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n  <inline\
+                  \ font-size=\"16px\">\n    <b>)</b>\n  </inline>\n</visual-title>"
+              Visibility: VISIBLE
+            VisualId: a8038fd5-0d03-4ecc-ba1a-4fe01ee12ca7
         - ComboChartVisual:
             Actions: []
             ChartConfiguration:
@@ -16863,9 +17330,10 @@ dashboards:
             Title:
               FormatText:
                 RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Channel\
-                  \ usage hours - last 12 months (top\_</b>\n  </inline>\n  <inline font-size=\"\
-                  16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
-                  \  <inline font-size=\"16px\">\n    <b>)</b>\n  </inline>\n</visual-title>"
+                  \ transcoding usage hours - last 12 months (top\_</b>\n  </inline>\n \
+                  \ <inline font-size=\"16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n\
+                  \    </b>\n  </inline>\n  <inline font-size=\"16px\">\n    <b>)</b>\n\
+                  \  </inline>\n</visual-title>"
               Visibility: VISIBLE
             VisualId: 06cdaa63-e1ba-4fb3-bcb6-ff1e7084eb79
         - PivotTableVisual:
@@ -16919,11 +17387,16 @@ dashboards:
                   Visibility: VISIBLE
                 - FieldId: 635dc208-ae9d-469e-aa2d-b4cba1fe08e9.4.1752179062717
                   Visibility: VISIBLE
+                - CustomLabel: Resource Type
+                  FieldId: 0b0dfcab-4c6d-4f78-9d66-c2483fa05d75.8.1754082404635
+                  Visibility: VISIBLE
                 - CustomLabel: Region
                   FieldId: 716b8ec0-ae95-4168-88b1-83e0ff6ad473.region.5.1752179077045
                   Visibility: VISIBLE
                 - CustomLabel: Channel
                   FieldId: 4758375a-6b86-44ff-9019-e1018f687b77.5.1752179101285
+                  Visibility: VISIBLE
+                - FieldId: 9c4fd5e4-0346-4ad9-80ab-b231c6f2b592.7.1754082012993
                   Visibility: VISIBLE
                 - CustomLabel: Idle Hours
                   FieldId: 716b8ec0-ae95-4168-88b1-83e0ff6ad473.usage_quantity.3.1752178982012
@@ -16953,6 +17426,11 @@ dashboards:
                       FieldId: 635dc208-ae9d-469e-aa2d-b4cba1fe08e9.4.1752179062717
                   - CategoricalDimensionField:
                       Column:
+                        ColumnName: eml_idle_resource_type
+                        DataSetIdentifier: summary_view
+                      FieldId: 0b0dfcab-4c6d-4f78-9d66-c2483fa05d75.8.1754082404635
+                  - CategoricalDimensionField:
+                      Column:
                         ColumnName: region
                         DataSetIdentifier: summary_view
                       FieldId: 716b8ec0-ae95-4168-88b1-83e0ff6ad473.region.5.1752179077045
@@ -16961,6 +17439,11 @@ dashboards:
                         ColumnName: channel_id
                         DataSetIdentifier: summary_view
                       FieldId: 4758375a-6b86-44ff-9019-e1018f687b77.5.1752179101285
+                  - NumericalDimensionField:
+                      Column:
+                        ColumnName: t
+                        DataSetIdentifier: summary_view
+                      FieldId: 9c4fd5e4-0346-4ad9-80ab-b231c6f2b592.7.1754082012993
                   Values:
                   - NumericalMeasureField:
                       AggregationFunction:
@@ -17037,8 +17520,6 @@ dashboards:
             Actions: []
             ChartConfiguration:
               BarsArrangement: STACKED
-              CategoryAxis:
-                AxisOffset: 99px
               CategoryLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -17068,9 +17549,9 @@ dashboards:
                       AggregationFunction:
                         SimpleNumericalAggregation: SUM
                       Column:
-                        ColumnName: usage_quantity
+                        ColumnName: eml_idle_usage
                         DataSetIdentifier: summary_view
-                      FieldId: 266f487b-417e-4920-a59d-5b2b88c4af09.usage_quantity.1.1744075294369
+                      FieldId: f5aa0e5f-a360-4c32-bad1-3169b6e042b3.1.1754081743942
                       FormatConfiguration:
                         FormatConfiguration:
                           NumberDisplayFormatConfiguration:
@@ -17088,7 +17569,7 @@ dashboards:
                     Calculation:
                       SimpleNumericalAggregation: MIN
                     Column:
-                      ColumnName: usage_quantity
+                      ColumnName: eml_idle_usage
                       DataSetIdentifier: summary_view
                     MeasureAggregationFunction:
                       NumericalAggregationFunction:
@@ -17112,7 +17593,7 @@ dashboards:
                     Calculation:
                       SimpleNumericalAggregation: AVERAGE
                     Column:
-                      ColumnName: usage_quantity
+                      ColumnName: eml_idle_usage
                       DataSetIdentifier: summary_view
                     MeasureAggregationFunction:
                       NumericalAggregationFunction:
@@ -17136,7 +17617,7 @@ dashboards:
                     Calculation:
                       SimpleNumericalAggregation: MAX
                     Column:
-                      ColumnName: usage_quantity
+                      ColumnName: eml_idle_usage
                       DataSetIdentifier: summary_view
                     MeasureAggregationFunction:
                       NumericalAggregationFunction:
@@ -17174,7 +17655,7 @@ dashboards:
                       FieldId: 266f487b-417e-4920-a59d-5b2b88c4af09.usage_date.1.1744074952750
                       Visibility: VISIBLE
                   - FieldTooltipItem:
-                      FieldId: 266f487b-417e-4920-a59d-5b2b88c4af09.usage_quantity.1.1744075294369
+                      FieldId: f5aa0e5f-a360-4c32-bad1-3169b6e042b3.1.1754081743942
                       Visibility: VISIBLE
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
@@ -17183,9 +17664,9 @@ dashboards:
                 AxisLabelOptions:
                 - ApplyTo:
                     Column:
-                      ColumnName: usage_quantity
+                      ColumnName: eml_idle_usage
                       DataSetIdentifier: summary_view
-                    FieldId: 266f487b-417e-4920-a59d-5b2b88c4af09.usage_quantity.1.1744075294369
+                    FieldId: f5aa0e5f-a360-4c32-bad1-3169b6e042b3.1.1754081743942
                   CustomLabel: Idle Hours
             ColumnHierarchies:
             - DateTimeHierarchy:
@@ -17196,7 +17677,10 @@ dashboards:
             Title:
               FormatText:
                 RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Hourly\
-                  \ idle time total hours\_</b>\n  </inline>\n</visual-title>"
+                  \ Idle\_</b>\n  </inline>\n  <inline font-size=\"16px\">\n    <b>\n  \
+                  \    <parameter>${EmlIdleResourceType}</parameter>\n    </b>\n  </inline>\n\
+                  \  <inline font-size=\"16px\">\n    <b>\_resources time total hours\_\
+                  </b>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
             VisualId: 4b0fff66-6edd-4323-ae33-ea5bb2cf7364
         - PivotTableVisual:
@@ -17850,7 +18334,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="16px">
-                      <b>Comparative trendlines for transcoding cost vs. usage</b>
+                      <b>Comparative trendlines for transcoding cost vs. usage hours</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -18136,6 +18620,12 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: CLUSTERED
+              CategoryAxis:
+                ScrollbarOptions:
+                  VisibleRange:
+                    PercentRange:
+                      From: 19.999999999999986
+                      To: 86.66666666666669
               CategoryLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -18143,7 +18633,7 @@ dashboards:
                       ColumnName: transcode_params_friendly
                       DataSetIdentifier: summary_view
                     FieldId: 4accae47-5149-47f6-ae40-7489bce87488.2.1752630843216
-                  CustomLabel: Parameters
+                  CustomLabel: Profile
                 SortIconVisibility: HIDDEN
               DataLabels:
                 Overlap: DISABLE_OVERLAP
@@ -18227,162 +18717,11 @@ dashboards:
             Title:
               FormatText:
                 RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Usage by\
-                  \ transcode parameters (top\_</b>\n  </inline>\n  <inline font-size=\"\
-                  16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
-                  \  <inline font-size=\"16px\">)</inline>\n</visual-title>"
-              Visibility: VISIBLE
-            VisualId: d86c9502-d961-4128-a14c-1a270e5bd7ab
-        - BarChartVisual:
-            Actions:
-            - ActionOperations:
-              - FilterOperation:
-                  SelectedFieldsConfiguration:
-                    SelectedFieldOptions: ALL_FIELDS
-                  TargetVisualsConfiguration:
-                    SameSheetTargetVisualConfiguration:
-                      TargetVisuals:
-                      - c1385e51-f08f-4346-8afb-860335e07281
-                      - 9736ea43-a185-489d-a24d-08c3650f0641
-                      - 38c23c27-c0f4-425d-9313-16b320dc01b4
-                      - 609323f9-61a9-4c38-b444-4c6639e4bc68
-                      - 0088516c-a8cc-402a-87de-f4bcd3b0e72c
-                      - ebd8fca8-8a7d-4d71-b1c8-b6995ba75427
-                      - 344471a4-09f4-4574-97d9-cae29cc02ea0
-                      - f9b5c461-5219-478c-a07d-a0333b1c6b70
-                      - 3cb42bc6-006c-42c1-bea2-d234d1fe3b6e
-                      - efd1d482-911f-4f4f-b6e3-77d348548193
-                      - 93368ee2-4b59-4d68-ac79-453f61115e96
-              CustomActionId: 61c3f5a5-a516-4c9e-a6a6-7b54eb2ec096
-              Name: Action 1
-              Status: ENABLED
-              Trigger: DATA_POINT_CLICK
-            ChartConfiguration:
-              BarsArrangement: STACKED
-              CategoryAxis:
-                ScrollbarOptions:
-                  Visibility: HIDDEN
-              CategoryLabelOptions:
-                AxisLabelOptions:
-                - ApplyTo:
-                    Column:
-                      ColumnName: billing_period
-                      DataSetIdentifier: summary_view
-                    FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
-                  CustomLabel: Billing Period
-                SortIconVisibility: HIDDEN
-                Visibility: HIDDEN
-              DataLabels:
-                Overlap: DISABLE_OVERLAP
-                Visibility: HIDDEN
-              FieldWells:
-                BarChartAggregatedFieldWells:
-                  Category:
-                  - DateDimensionField:
-                      Column:
-                        ColumnName: billing_period
-                        DataSetIdentifier: summary_view
-                      DateGranularity: MONTH
-                      FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
-                      HierarchyId: d649da12-ca9a-42a3-a8ce-442d6e22a0cd
-                  Colors:
-                  - CategoricalDimensionField:
-                      Column:
-                        ColumnName: Resource
-                        DataSetIdentifier: summary_view
-                      FieldId: e1822a96-8014-4d5b-ada3-bc18f6bfec90.2.1744037591007
-                      HierarchyId: d087a966-6efd-4c66-9cc1-77005fc645eb
-                  Values:
-                  - NumericalMeasureField:
-                      AggregationFunction:
-                        SimpleNumericalAggregation: SUM
-                      Column:
-                        ColumnName: Cost
-                        DataSetIdentifier: summary_view
-                      FieldId: 609838ae-8ead-4b69-94f0-4979d7ad74c7.1.1742820308515
-                      FormatConfiguration:
-                        FormatConfiguration:
-                          CurrencyDisplayFormatConfiguration:
-                            DecimalPlacesConfiguration:
-                              DecimalPlaces: 2
-                            NegativeValueConfiguration:
-                              DisplayMode: POSITIVE
-                            NullValueFormatConfiguration:
-                              NullString: 'null'
-                            SeparatorConfiguration:
-                              DecimalSeparator: DOT
-                              ThousandsSeparator:
-                                Symbol: COMMA
-                                Visibility: VISIBLE
-                            Symbol: USD
-              Legend:
-                Height: 68px
-                Position: BOTTOM
-                Title:
-                  CustomLabel: Parameters
-                Width: 240px
-              Orientation: VERTICAL
-              SortConfiguration:
-                CategoryItemsLimit:
-                  OtherCategories: INCLUDE
-                CategorySort:
-                - FieldSort:
-                    Direction: ASC
-                    FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
-                ColorItemsLimit:
-                  OtherCategories: INCLUDE
-                SmallMultiplesLimitConfiguration:
-                  OtherCategories: INCLUDE
-              Tooltip:
-                FieldBasedTooltip:
-                  AggregationVisibility: HIDDEN
-                  TooltipFields:
-                  - FieldTooltipItem:
-                      FieldId: 609838ae-8ead-4b69-94f0-4979d7ad74c7.1.1742820308515
-                      Visibility: VISIBLE
-                  - FieldTooltipItem:
-                      FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.2.1742862746404
-                      Visibility: VISIBLE
-                  - FieldTooltipItem:
-                      FieldId: e1822a96-8014-4d5b-ada3-bc18f6bfec90.2.1744037591007
-                      Visibility: VISIBLE
-                  TooltipTitleType: PRIMARY_VALUE
-                SelectedTooltipType: DETAILED
-                TooltipVisibility: VISIBLE
-              ValueLabelOptions:
-                AxisLabelOptions:
-                - ApplyTo:
-                    Column:
-                      ColumnName: Cost
-                      DataSetIdentifier: summary_view
-                    FieldId: 609838ae-8ead-4b69-94f0-4979d7ad74c7.1.1742820308515
-                  CustomLabel: Cost
-                SortIconVisibility: HIDDEN
-            ColumnHierarchies:
-            - DateTimeHierarchy:
-                DrillDownFilters: []
-                HierarchyId: d649da12-ca9a-42a3-a8ce-442d6e22a0cd
-            - ExplicitHierarchy:
-                Columns:
-                - ColumnName: 77bbe0dd-e845-4cdd-a419-58f47cdd19f6
-                  DataSetIdentifier: summary_view
-                - ColumnName: Resource
-                  DataSetIdentifier: summary_view
-                - ColumnName: Account
-                  DataSetIdentifier: summary_view
-                - ColumnName: region
-                  DataSetIdentifier: summary_view
-                DrillDownFilters: []
-                HierarchyId: d087a966-6efd-4c66-9cc1-77005fc645eb
-            Subtitle:
-              Visibility: VISIBLE
-            Title:
-              FormatText:
-                RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Idle costs\
-                  \ over time (top\_</b>\n  </inline>\n  <inline font-size=\"16px\">\n \
-                  \   <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
+                  \ transcode Profile (top\_</b>\n  </inline>\n  <inline font-size=\"16px\"\
+                  >\n    <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
                   \  <inline font-size=\"16px\">\n    <b>)</b>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
-            VisualId: 6fdf0bdb-fc66-46f0-a39a-414bab03e75b
+            VisualId: d86c9502-d961-4128-a14c-1a270e5bd7ab
         - BarChartVisual:
             Actions: []
             ChartConfiguration:
@@ -18475,8 +18814,8 @@ dashboards:
             Title:
               FormatText:
                 RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Channel\
-                  \ usage by parameters - last 30 days (top\_</b>\n  </inline>\n  <inline\
-                  \ font-size=\"16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n\
+                  \ transcoding usage by profile - last 30 days (top\_</b>\n  </inline>\n\
+                  \  <inline font-size=\"16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n\
                   \    </b>\n  </inline>\n  <inline font-size=\"16px\">\n    <b>)</b>\n\
                   \  </inline>\n</visual-title>"
               Visibility: VISIBLE
@@ -18586,10 +18925,9 @@ dashboards:
             Title:
               FormatText:
                 RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Channel\
-                  \ cost by parameters  - last 30 days (top\_</b>\n  </inline>\n  <inline\
-                  \ font-size=\"16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n\
-                  \    </b>\n  </inline>\n  <inline font-size=\"16px\">\n    <b>)</b>\n\
-                  \  </inline>\n</visual-title>"
+                  \ cost by profile - last 30 days (top\_</b>\n  </inline>\n  <inline font-size=\"\
+                  16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
+                  \  <inline font-size=\"16px\">\n    <b>)</b>\n  </inline>\n</visual-title>"
               Visibility: VISIBLE
             VisualId: 22721501-6e92-42a3-afbe-6b121139380a
         - BarChartVisual:
@@ -19353,8 +19691,8 @@ dashboards:
             Title:
               FormatText:
                 RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Transcode\
-                  \ costs by parameters (top\_</b>\n  </inline>\n  <inline font-size=\"\
-                  16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
+                  \ costs by profile (top\_</b>\n  </inline>\n  <inline font-size=\"16px\"\
+                  >\n    <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
                   \  <inline font-size=\"16px\">)</inline>\n</visual-title>"
               Visibility: VISIBLE
             VisualId: 0114706e-f2b5-4650-8047-b7264c7643ba
@@ -19494,12 +19832,6 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: CLUSTERED
-              CategoryAxis:
-                ScrollbarOptions:
-                  VisibleRange:
-                    PercentRange:
-                      From: 1.7763568394002505e-15
-                      To: 90.9090909090909
               CategoryLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -19507,7 +19839,7 @@ dashboards:
                       ColumnName: transcode_params_friendly
                       DataSetIdentifier: summary_view
                     FieldId: 4accae47-5149-47f6-ae40-7489bce87488.2.1752630779026
-                  CustomLabel: Parameters
+                  CustomLabel: Profile
                 SortIconVisibility: HIDDEN
               DataLabels:
                 LabelFontConfiguration:
@@ -19589,8 +19921,6 @@ dashboards:
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
-              ValueAxis:
-                AxisOffset: 359px
               ValueLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -19609,7 +19939,7 @@ dashboards:
             Title:
               FormatText:
                 RichText: "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Transcode\
-                  \ unit cost by parameters (top\_</b>\n  </inline>\n  <inline font-size=\"\
+                  \ unit cost by profile (top\_</b>\n  </inline>\n  <inline font-size=\"\
                   16px\">\n    <b>\n      <parameter>${TopN}</parameter>\n    </b>\n  </inline>\n\
                   \  <inline font-size=\"16px\">)</inline>\n</visual-title>"
               Visibility: VISIBLE
@@ -19639,6 +19969,12 @@ dashboards:
               Trigger: DATA_POINT_CLICK
             ChartConfiguration:
               BarsArrangement: CLUSTERED
+              CategoryAxis:
+                ScrollbarOptions:
+                  VisibleRange:
+                    PercentRange:
+                      From: 16.66666666666667
+                      To: 100.0
               CategoryLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -19727,6 +20063,8 @@ dashboards:
                   TooltipTitleType: PRIMARY_VALUE
                 SelectedTooltipType: DETAILED
                 TooltipVisibility: VISIBLE
+              ValueAxis:
+                AxisOffset: 352px
               ValueLabelOptions:
                 AxisLabelOptions:
                 - ApplyTo:
@@ -20535,9 +20873,9 @@ dashboards:
                   Category:
                     CategoricalDimensionField:
                       Column:
-                        ColumnName: usage_type
+                        ColumnName: emc_transcode_profile_friendly
                         DataSetIdentifier: summary_view
-                      FieldId: 266f487b-417e-4920-a59d-5b2b88c4af09.usage_type.2.1744389032062
+                      FieldId: 7ea4779a-76b0-4d52-8d75-91649fc5532f.2.1754083800115
                   ComputationId: 186f71fe-aa37-4f75-b66a-b3f80e404993
                   MoverSize: 8
                   Name: TopMovers
@@ -20562,9 +20900,9 @@ dashboards:
                   Category:
                     CategoricalDimensionField:
                       Column:
-                        ColumnName: usage_type
+                        ColumnName: emc_transcode_profile_friendly
                         DataSetIdentifier: summary_view
-                      FieldId: 266f487b-417e-4920-a59d-5b2b88c4af09.usage_type.2.1744389032062
+                      FieldId: 7ea4779a-76b0-4d52-8d75-91649fc5532f.2.1754083800115
                   ComputationId: 09042bf4-4612-4f9d-a370-465be2c90c1e
                   MoverSize: 8
                   Name: BottomMovers
@@ -20659,7 +20997,7 @@ dashboards:
                 RichText: |-
                   <visual-title>
                     <inline font-size="16px">
-                      <b>Average daily usage changes for On Demand transcoding</b>
+                      <b>Average daily Profile usage changes for transcoding hours</b>
                     </inline>
                   </visual-title>
               Visibility: VISIBLE
@@ -20678,132 +21016,132 @@ dashboards:
                 ElementId: 0cac8001-2dc6-4da0-a8ea-e5fff5ad9191
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 18
                 ColumnSpan: 6
                 ElementId: 46045175-a52e-4315-a9af-05c05be1db59
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 24
                 ColumnSpan: 6
                 ElementId: 9b7ef286-392c-4011-8d3b-d3f57ac6070c
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 30
                 ColumnSpan: 6
                 ElementId: a7eb0baf-5094-47dd-bb0e-5f2f2f17aee7
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: cf42ff89-02a6-4e7f-bf54-ce08e4d0e36f
                 ElementType: TEXT_BOX
-                RowIndex: 5
+                RowIndex: 6
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 093dcfbf-b1af-4b26-aa54-f1c6d77b1fd3
                 ElementType: TEXT_BOX
-                RowIndex: 5
+                RowIndex: 6
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: 5c063f6a-ccfa-4ea0-9089-a5045024ee8b
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 9
+                RowIndex: 10
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: 1556fe30-14e3-4ad8-aed3-2595f3fb9562
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 10
                 RowSpan: 7
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: f6f1741e-ce7b-4518-a574-42bf1e2353a5
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 10
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: fae2744d-4435-43b6-a46c-b0e2bd19ba3d
                 ElementType: VISUAL
-                RowIndex: 16
+                RowIndex: 17
                 RowSpan: 8
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 4e614a3f-5c70-43f5-ac1f-c8ded56b9f07
                 ElementType: VISUAL
-                RowIndex: 16
+                RowIndex: 17
                 RowSpan: 8
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: bdbd15b0-4215-4ccd-817e-635f9655e337
                 ElementType: TEXT_BOX
-                RowIndex: 24
+                RowIndex: 25
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 8ebca886-bbab-4af9-ac50-9f6e0c959dce
                 ElementType: TEXT_BOX
-                RowIndex: 24
+                RowIndex: 25
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: af14715a-d9fc-4734-a264-e8b689d4fa0f
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 28
+                RowIndex: 29
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: a0025e26-5fdf-4ce3-90d1-9d33daf2ede0
                 ElementType: VISUAL
-                RowIndex: 28
+                RowIndex: 29
                 RowSpan: 7
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 346d52e4-d430-432e-a17d-dd14110bcce9
                 ElementType: VISUAL
-                RowIndex: 28
+                RowIndex: 29
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: bf5aeacd-589e-46d5-af9b-b33342f7e742
                 ElementType: VISUAL
-                RowIndex: 35
+                RowIndex: 36
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 2c313947-3a82-4d3f-ae07-66f831703dab
                 ElementType: VISUAL
-                RowIndex: 35
+                RowIndex: 36
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: c3cd6f62-f128-4357-a261-e26b408e237d
                 ElementType: TEXT_BOX
-                RowIndex: 44
+                RowIndex: 45
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 1857c1f3-f7a6-48cb-ad00-36e1e83251c3
                 ElementType: TEXT_BOX
-                RowIndex: 44
+                RowIndex: 45
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 80e126f1-cdef-45b6-9e43-e76733777656
                 ElementType: VISUAL
-                RowIndex: 48
+                RowIndex: 49
                 RowSpan: 10
               - ColumnIndex: 0
                 ColumnSpan: 36
                 ElementId: 3547b258-9bfb-4c2b-9af7-719a93149af0
                 ElementType: VISUAL
-                RowIndex: 58
+                RowIndex: 59
                 RowSpan: 10
         Name: MediaTailor
         ParameterControls:
@@ -20931,12 +21269,16 @@ dashboards:
         - Content: "<text-box>\n  <inline color=\"#fc850d\" font-size=\"40px\">\n    <b>AWS\
             \ Elemental MediaTailor\_</b>\n  </inline>\n  <inline color=\"#fc850d\" font-size=\"\
             40px\">(AEMT)</inline>\n  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
-            >\n      The\n      <inline color=\"#fec48c\">\n        <b>Usage and Cost Summary</b>\n\
-            \      </inline>\n      <inline color=\"#fc850d\">\n        <b>\_</b>\n    \
-            \  </inline>\n      sections look at trends by different dimensions\n    </li>\n\
-            \    <li class=\"ql-indent-0\">\n      The\n      <inline color=\"#fec48c\"\
-            >\n        <b>Resource Detail\_</b>\n      </inline>\n      <b>\_</b>\n    \
-            \  section reveals different dimensions of specific service resources\n    </li>\n\
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Usage Summary</b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\_looks at usage by various\
+            \ categories, including usage hours and ad activity.</inline>\n    </li>\n \
+            \   <li class=\"ql-indent-0\">\n      <inline color=\"#fec48c\" font-size=\"\
+            16px\">\n        <b>Cost Summary</b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\_provides breakouts by various dimensions</inline>\n    </li>\n    <li\
+            \ class=\"ql-indent-0\">\n      <inline color=\"#fec48c\" font-size=\"16px\"\
+            >\n        <b>Resource Detail\_</b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\n        <b>\_</b>\n      </inline>\n      <inline font-size=\"16px\"\
+            >reveals different dimensions of specific service resources</inline>\n    </li>\n\
             \  </ul>\n</text-box>"
           SheetTextBoxId: 0cac8001-2dc6-4da0-a8ea-e5fff5ad9191
         - Content: "<text-box>\n  <inline color=\"#fec48c\" font-size=\"36px\">R</inline>\n\
@@ -22739,186 +23081,186 @@ dashboards:
                 ElementId: dbc7cd4f-f576-48b2-ba54-772892f4b9d1
                 ElementType: TEXT_BOX
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 18
                 ColumnSpan: 6
                 ElementId: 6f0be0ca-61fe-406f-8ebc-0750057ca3da
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 24
                 ColumnSpan: 6
                 ElementId: 75bb28b9-a3a1-45bf-ae2a-33b33872c062
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 30
                 ColumnSpan: 6
                 ElementId: c695a7dd-a820-4b50-a71f-9c35c4c22277
                 ElementType: VISUAL
                 RowIndex: 0
-                RowSpan: 5
+                RowSpan: 6
               - ColumnIndex: 0
-                ColumnSpan: 8
+                ColumnSpan: 16
                 ElementId: bb845dfa-29b3-40ea-8f08-284b2a6d528b
                 ElementType: TEXT_BOX
-                RowIndex: 5
-                RowSpan: 4
-              - ColumnIndex: 8
-                ColumnSpan: 28
+                RowIndex: 6
+                RowSpan: 5
+              - ColumnIndex: 16
+                ColumnSpan: 20
                 ElementId: 5d3b3312-351e-4645-aadb-b1eb2448cf72
                 ElementType: TEXT_BOX
-                RowIndex: 5
-                RowSpan: 4
+                RowIndex: 6
+                RowSpan: 5
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: 1ddbdc3c-5e49-4121-86a7-ce54cd1808e5
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: 3ac0db2b-526e-44ea-b6c3-f597a97d67fc
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: bb32f0b6-69fb-44cb-9175-b96853111f06
                 ElementType: VISUAL
-                RowIndex: 9
+                RowIndex: 11
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 3f5d2dcd-fea1-4172-a565-7e315e17ddd3
                 ElementType: VISUAL
-                RowIndex: 16
+                RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: d0964ad3-7d3c-44f8-96f8-e6cfe1dc89d0
                 ElementType: VISUAL
-                RowIndex: 16
+                RowIndex: 18
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 8dc4070d-7ad3-4e36-9fa4-77263127bae7
                 ElementType: TEXT_BOX
-                RowIndex: 25
+                RowIndex: 27
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: d9cebec3-a4ef-454b-a52c-db41332d907b
                 ElementType: TEXT_BOX
-                RowIndex: 25
+                RowIndex: 27
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 5
                 ElementId: 92cc3f45-346c-49c6-a3c1-884db39e7e17
                 ElementType: PARAMETER_CONTROL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 5
                 ColumnSpan: 13
                 ElementId: bb8fe8ea-10bc-4303-b944-a4a761582def
                 ElementType: VISUAL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: eb5edd2c-b930-47a1-9b63-eef1df2d28d7
                 ElementType: VISUAL
-                RowIndex: 29
+                RowIndex: 31
                 RowSpan: 7
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 3a0a691b-6c8f-4f0f-a76f-bb4e404586ad
                 ElementType: VISUAL
-                RowIndex: 36
+                RowIndex: 38
                 RowSpan: 9
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 23e2bc4d-f81e-4f78-91e8-906f660bdc1f
                 ElementType: VISUAL
-                RowIndex: 36
+                RowIndex: 38
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: 607ebdca-5bc2-43ec-b167-e27b8aa54948
                 ElementType: TEXT_BOX
-                RowIndex: 45
+                RowIndex: 47
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 851037d1-1808-443d-9d48-05b45ce74e70
                 ElementType: TEXT_BOX
-                RowIndex: 45
+                RowIndex: 47
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 32be4b5b-fab4-40d0-b5fc-0e40d766a5be
                 ElementType: VISUAL
-                RowIndex: 49
+                RowIndex: 51
                 RowSpan: 11
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: f3f2df44-8c4a-4daf-b1aa-8cfa629cd9fc
                 ElementType: VISUAL
-                RowIndex: 49
+                RowIndex: 51
                 RowSpan: 11
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: d2ffaf3e-fa74-43de-ab9d-aa3a80d35417
                 ElementType: VISUAL
-                RowIndex: 60
+                RowIndex: 62
                 RowSpan: 9
               - ColumnIndex: 0
                 ColumnSpan: 8
                 ElementId: c6ce7b54-7e26-49da-8734-bbfd9a9aca52
                 ElementType: TEXT_BOX
-                RowIndex: 69
+                RowIndex: 71
                 RowSpan: 4
               - ColumnIndex: 8
                 ColumnSpan: 28
                 ElementId: 3abc28a9-72d0-4d28-b46e-97efe5f53625
                 ElementType: TEXT_BOX
-                RowIndex: 69
+                RowIndex: 71
                 RowSpan: 4
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: b2a7663b-783e-4875-9f58-7b83c3fcd8ce
                 ElementType: VISUAL
-                RowIndex: 73
+                RowIndex: 75
                 RowSpan: 13
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 582cf423-49fb-4074-b04f-56d622c0e656
                 ElementType: VISUAL
-                RowIndex: 73
+                RowIndex: 75
                 RowSpan: 13
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: a2dd92e7-536e-484a-ab59-0aa3e17c13e1
                 ElementType: VISUAL
-                RowIndex: 86
+                RowIndex: 88
                 RowSpan: 12
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: ac5f1e0d-0619-448f-81bd-53ebace32688
                 ElementType: VISUAL
-                RowIndex: 86
+                RowIndex: 88
                 RowSpan: 12
               - ColumnIndex: 0
                 ColumnSpan: 18
                 ElementId: 813b07e4-5f98-424b-acfa-8a697c60048e
                 ElementType: VISUAL
-                RowIndex: 98
+                RowIndex: 100
                 RowSpan: 14
               - ColumnIndex: 18
                 ColumnSpan: 18
                 ElementId: 27bf3def-4448-4b98-8d08-faf89764ddcc
                 ElementType: VISUAL
-                RowIndex: 98
+                RowIndex: 100
                 RowSpan: 14
         Name: MediaPackage
         ParameterControls:
@@ -23048,13 +23390,16 @@ dashboards:
         - Content: "<text-box>\n  <inline color=\"#fc850d\" font-size=\"40px\">\n    <b>AWS\
             \ Elemental MediaPackage\_</b>\n  </inline>\n  <inline color=\"#fc850d\" font-size=\"\
             40px\">(AEMP)</inline>\n  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\"\
-            >\n      The\n      <inline color=\"#fec48c\">\n        <b>Usage and Cost Summary</b>\n\
-            \      </inline>\n      <inline color=\"#fc850d\">\n        <b>\_</b>\n    \
-            \  </inline>\n      sections look at trends by different dimensions\n    </li>\n\
-            \    <li class=\"ql-indent-0\">\n      The\n      <inline color=\"#fec48c\"\
-            >\n        <b>Resource Detail\_</b>\n      </inline>\n      <b>\_</b>\n    \
-            \  section reveals different dimensions of specific service resources\n    </li>\n\
-            \  </ul>\n</text-box>"
+            >\n      <inline color=\"#fec48c\" font-size=\"16px\">\n        <b>Usage Summary</b>\n\
+            \      </inline>\n      <inline font-size=\"16px\">\_looks at usage by various\
+            \ categories, including data transfer and packaging</inline>\n    </li>\n  \
+            \  <li class=\"ql-indent-0\">\n      <inline color=\"#fec48c\" font-size=\"\
+            16px\">\n        <b>Cost Summary</b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\_provides breakouts by various dimensions</inline>\n    </li>\n    <li\
+            \ class=\"ql-indent-0\">\n      <inline color=\"#fec48c\" font-size=\"16px\"\
+            >\n        <b>Resource Detail\_</b>\n      </inline>\n      <inline font-size=\"\
+            16px\">reveals different dimensions of specific service resources</inline>\n\
+            \    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: dbc7cd4f-f576-48b2-ba54-772892f4b9d1
         - Content: "<text-box>\n  <inline color=\"#fec48c\" font-size=\"36px\">R</inline>\n\
             \  <inline color=\"#fec48c\" font-size=\"30px\">ESOURCE</inline>\n  <inline\
@@ -23065,7 +23410,25 @@ dashboards:
             \  <inline color=\"#fec48c\" font-size=\"30px\">SAGE</inline>\n  <inline color=\"\
             #fec48c\" font-size=\"32px\">\_</inline>\n  <inline color=\"#fec48c\" font-size=\"\
             36px\">S</inline>\n  <inline color=\"#fec48c\" font-size=\"30px\">UMMARY</inline>\n\
-            </text-box>"
+            \  <br/>\n  <br/>\n  <ul>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"\
+            16px\">\n        <b>\n          <i>Live Ingest (GB)</i>\n        </b>\n    \
+            \  </inline>\n      <inline font-size=\"16px\">\n        <i>\_: Total size of\
+            \ ingested streams into live channels.\_</i>\n      </inline>\n    </li>\n \
+            \   <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>Origination and Packaging (GB):\_</i>\n        </b>\n      </inline>\n\
+            \      <inline font-size=\"16px\">\n        <i>Total size of content delivered\
+            \ as output streams</i>\n      </inline>\n    </li>\n    <li class=\"ql-indent-0\"\
+            >\n      <inline font-size=\"16px\">\n        <b>\n          <i>Data Transfer\
+            \ to CloudFront (GB):\_</i>\n        </b>\n      </inline>\n      <inline font-size=\"\
+            16px\">\n        <i>Data delivered to CloudFront as a destination.</i>\n   \
+            \   </inline>\n    </li>\n    <li class=\"ql-indent-0\">\n      <inline font-size=\"\
+            16px\">\n        <b>\n          <i>Cross Regions Data Transfer (GB):\_</i>\n\
+            \        </b>\n      </inline>\n      <inline font-size=\"16px\">\n        <i>Data\
+            \ transfered to different AWS regions.</i>\n      </inline>\n    </li>\n   \
+            \ <li class=\"ql-indent-0\">\n      <inline font-size=\"16px\">\n        <b>\n\
+            \          <i>Data Transfer to Internet (GB):\_</i>\n        </b>\n      </inline>\n\
+            \      <inline font-size=\"16px\">\n        <i>Data transfered to the internet,\
+            \ outside of AWS.</i>\n      </inline>\n    </li>\n  </ul>\n</text-box>"
           SheetTextBoxId: bb845dfa-29b3-40ea-8f08-284b2a6d528b
         - Content: "<text-box>\n  <inline color=\"#fec48c\" font-size=\"36px\">C</inline>\n\
             \  <inline color=\"#fec48c\" font-size=\"30px\">OST\_</inline>\n  <inline color=\"\
@@ -23089,6 +23452,16 @@ dashboards:
                 <li class="ql-indent-0">
                   <inline color="#efefe9" font-size="16px">
                     <i>You can mix categories that measure by differnt units because the end measure of the graphs is cost and not usage consumption</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Identify the data transfer to Internet usage and consider delivering through CloudFront to optimize its cost.</i>
+                  </inline>
+                </li>
+                <li class="ql-indent-0">
+                  <inline font-size="16px">
+                    <i>Regularly check the CloudFront Cache/hit ratio. The Cache/hit ration is to approach the 100% to reduce the Origination/Packaging costs.</i>
                   </inline>
                 </li>
               </ul>
@@ -25158,6 +25531,7 @@ dashboards:
                     Column:
                       ColumnName: billing_period
                       DataSetIdentifier: summary_view
+                    DateGranularity: WEEK
                     FieldId: f211f5c0-a896-4932-80a0-73cd7f0e2ac8.billing_period.1.1743454138367
                     HierarchyId: 999f5555-61f7-4463-b377-94348fa8e593
                 Values:
@@ -25568,7 +25942,7 @@ dashboards:
           SheetTextBoxId: 8738ed95-db68-48f4-9115-f7a8dcb618cf
         - Content: "<text-box>\n  <block align=\"center\">\n    <inline font-size=\"64px\"\
             >\n      <b>Media Services Insights Hub</b>\n    </inline>\n  </block>\n  <br/>\n\
-            \  <block align=\"center\">\n    <inline font-size=\"64px\">v0.8.4</inline>\n\
+            \  <block align=\"center\">\n    <inline font-size=\"64px\">v0.8.5</inline>\n\
             \  </block>\n  <br/>\n  <block align=\"center\">\n    <inline font-size=\"24px\"\
             >\_</inline>\n  </block>\n  <br/>\n  <block align=\"center\"/>\n  <br/>\n  <block\
             \ align=\"center\">\n    <inline font-size=\"24px\">\n      <a href=\"https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/media-services.html\
@@ -25756,7 +26130,7 @@ dashboards:
                       FieldId: 266f487b-417e-4920-a59d-5b2b88c4af09.usage_type.12.1744082412645
                   - CategoricalDimensionField:
                       Column:
-                        ColumnName: emc_transcode_params_friendly
+                        ColumnName: emc_transcode_profile_friendly
                         DataSetIdentifier: summary_view
                       FieldId: 7ea4779a-76b0-4d52-8d75-91649fc5532f.14.1752697056400
                   - CategoricalDimensionField:
