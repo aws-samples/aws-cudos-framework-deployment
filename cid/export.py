@@ -270,6 +270,8 @@ def export_analysis(qs, athena, glue):
                 logger.debug(f'{dep_view_name} is not cur')
                 if dep_view_name not in all_views_data:
                     logger.debug(f'{dep_view_name} skipping as not in the views list')
+                if dep_view_name in ['account_map']:
+                    logger.debug(f'{dep_view_name} is a special. skip.')
                 non_cur_dep_views.append(dep_view_name)
         if deps.get('views'):
             deps['views'] = non_cur_dep_views
