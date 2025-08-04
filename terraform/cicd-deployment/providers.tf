@@ -10,8 +10,11 @@ provider "aws" {
   alias  = "destination_account"
   region = var.global_values.aws_region
 
-  assume_role {
-    role_arn = local.destination_role_arn
+  dynamic "assume_role" {
+    for_each = local.destination_role_arn != null ? [1] : []
+    content {
+      role_arn = local.destination_role_arn
+    }
   }
 
   default_tags {
