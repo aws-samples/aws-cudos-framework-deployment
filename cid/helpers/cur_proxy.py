@@ -400,8 +400,8 @@ class ProxyView():
                 MAP(ARRAY['key1', 'key2'], ARRAY[value1, value2])
             '''
             arrays = re.findall(r'ARRAY\[(.*?)\]', mapping_string) # Extract arrays from the string
-            keys = arrays[0].strip('\'').split(',') # Split arrays into elements
-            values = arrays[1].strip('\'').split(',')
+            keys = arrays[0].replace("'", '').split(',') # Split arrays into elements
+            values = arrays[1].split(',') # FIXME: the values can be more complex then just columns and ma potentially include comma in some rare cases.
             return {key.strip(): value.strip() for key, value in zip(keys, values)}
 
         _current_sql = '\n'.join([line[0] for line in self.athena.query(f'SHOW CREATE VIEW {self.name}')])
@@ -514,7 +514,7 @@ class ProxyView():
                             map_field_key = f'"{map_field_key}"'
                         map_mapping[key] = map_field_key
                     else:
-                        map_mapping[key] = empty['string'] # all known maps have string vaules for now
+                        map_mapping[key] = empty['string'] # all known maps have string values for now
                 if not map_mapping:
                     return 'cast(NULL AS MAP<VARCHAR, VARCHAR>)'
                 map_mapping = dict(sorted(map_mapping.items())) # ordered dict
