@@ -299,7 +299,7 @@ class CUR(AbstractCUR):
         )
         if answer == '<CREATE CUR TABLE AND CRAWLER>':
             raise CidCritical('CUR creation was requested') # to be captured in common.py
-        database, table = answer
+        database, table = answer.split(".")
         set_parameters({'cur-table-name': table,'cur-database': database, })
         return database, self.athena.get_table_metadata(table, database_name=database)
 
