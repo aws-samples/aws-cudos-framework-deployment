@@ -417,9 +417,9 @@ class ProxyView():
                     logger.warning(f'Cannot find map {field} definition in the view {self.name}. It must be defined as MAP.')
                     continue
                 current_map = _parse_mapping_string(maps[0])
-                logger.debug(f'current definition of {field} of {current_map}')
-                self.exposed_maps[field].update([key[0] for key in current_map])
-        logger.debug(f'{self.exposed_maps}')
+                logger.debug(f'current definition of {field} = {current_map}')
+                self.exposed_maps[field].update([key for key in current_map])
+        logger.debug(f'exposed_maps = {self.exposed_maps}')
 
     def source_column_equivalents(self, field):
         """ Given a field of cur return an equivalent field in the target cur system. This one does not care if field actually exists
@@ -505,7 +505,7 @@ class ProxyView():
             if field_type.lower().startswith('map'):
                 map_field = field.split('[')[0]
                 map_mapping = {}
-                keys_set = set(self.exposed_maps.get(field, set()))
+                keys_set = set(self.exposed_maps.get(map_field, set()))
                 keys_set.update(self.fields_to_expose_in_maps.get(map_field, set()))
                 for key in keys_set:
                     map_field_key = f'{map_field}_{key}'
@@ -566,8 +566,6 @@ class ProxyView():
         lines = {}
         for field in all_target_fields:
             target_field = self.get_fields_from_sql(field)[0]
-            if target_field not in self.exposed_fields:
-                something_changed = True
             target_field_type = self.cur.get_type_of_column(target_field, self.target_cur_version)
             logger.trace(f'get_sql_expression {field} {target_field_type}')
             mapped_expression = self.get_sql_expression(field, target_field_type) #
